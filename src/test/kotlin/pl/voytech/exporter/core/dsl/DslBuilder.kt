@@ -3,7 +3,7 @@ package pl.voytech.exporter.core.dsl
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.dsl.table
-import pl.voytech.exporter.core.model.Table
+import pl.voytech.exporter.core.model.infinite
 import pl.voytech.exporter.data.Product
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -33,7 +33,7 @@ object BasicDslTableDefinitionSpek: Spek({
             }
 
             Then("it should have two columns") {
-                assertTrue { (tableMeta?.columns?.size == 4) }
+                assertTrue { (tableMeta.columns.size == 4) }
             }
 
             Then("columns should be correctly named") {
@@ -48,6 +48,14 @@ object BasicDslTableDefinitionSpek: Spek({
                 assertEquals(Product::name, tableMeta.columns[1].fromField,"second column should get field value using ref 'Product::name'")
                 assertEquals(Product::description, tableMeta.columns[2].fromField,"third column should get field value using ref 'Product::description'")
                 assertEquals(Product::manufacturer, tableMeta.columns[3].fromField,"fourth column should get field value using ref 'Product::manufacturer'")
+            }
+
+            Then("table should have single row range") {
+                assertTrue{ tableMeta.rowRanges.size == 1 }
+            }
+
+            Then("table should have INFINITE row range") {
+                assertEquals(infinite(), tableMeta.rowRanges[0],"table should have single infinite row range")
             }
         }
     }

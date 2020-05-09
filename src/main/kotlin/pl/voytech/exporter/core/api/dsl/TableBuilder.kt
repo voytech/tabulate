@@ -1,26 +1,35 @@
 package pl.voytech.exporter.core.api.dsl
 
 import pl.voytech.exporter.core.model.*
-import pl.voytech.exporter.core.model.hints.CellType
-import pl.voytech.exporter.core.model.hints.CellTypeHint
+import pl.voytech.exporter.core.model.hints.ColumnHint
 import pl.voytech.exporter.core.model.hints.Hint
-import java.time.LocalDate
+import pl.voytech.exporter.core.model.hints.TableHint
 
 fun <T> table(block: TableBuilder<T>.() -> Unit): Table<T> = TableBuilder<T>().apply(block).build()
 
 class TableBuilder<T> {
     private var columns : List<Column<T>> = mutableListOf()
+    private var rowRanges: List<LongRange> = mutableListOf(infinite())
     var showHeader: Boolean? = false
     var showFooter: Boolean? = false
     var name: String? = ""
     var headerText: String? = ""
     var footerText: String? =""
+    private var hints: List<TableHint> = mutableListOf()
 
     fun columns(block: ColumnsBuilder<T>.() -> Unit) {
         columns = ColumnsBuilder<T>().apply(block)
     }
 
-    fun build() : Table<T> = Table(columns, showHeader, showFooter, name, headerText, footerText)
+    fun rowRanges(block: RowRangesBuilder.() -> Unit) {
+        rowRanges = RowRangesBuilder().apply(block)
+    }
+
+    fun hints(block: HintsBuilder<TableHint>.() -> Unit) {
+        hints = HintsBuilder<TableHint>().apply(block)
+    }
+
+    fun build() : Table<T> = Table(columns, rowRanges, showHeader, showFooter, name, headerText, footerText, hints)
 }
 
 class ColumnsBuilder<T> : ArrayList<Column<T>>() {
@@ -36,10 +45,9 @@ class ColumnsBuilder<T> : ArrayList<Column<T>>() {
 }
 
 class ColumnBuilder<T> {
-    private var rowRanges: List<LongRange> = mutableListOf(infinite())
     var columnTitle: String? = ""
     var fromField: (record: T) -> Any? = fun (record: T) { record }
-    private var hints: List<Hint>? = mutableListOf()
+    private var hints: List<ColumnHint>? = mutableListOf()
     private var cells: Map<Row, Cell>? = mutableMapOf()
 
     constructor()
@@ -48,23 +56,19 @@ class ColumnBuilder<T> {
         this.columnTitle = title
     }
 
-    fun hints(block: HintsBuilder.() -> Unit) {
-        hints = HintsBuilder().apply(block)
-    }
-
-    fun rowRanges(block: RowRangesBuilder.() -> Unit) {
-        rowRanges = RowRangesBuilder().apply(block)
+    fun hints(block: HintsBuilder<ColumnHint>.() -> Unit) {
+        hints = HintsBuilder<ColumnHint>().apply(block)
     }
 
     fun cells(block: CellsBuilder.() -> Unit) {
         cells = CellsBuilder().apply(block)
     }
 
-    fun build() : Column<T> = Column(rowRanges, columnTitle, fromField, hints, cells)
+    fun build() : Column<T> = Column(columnTitle, fromField, hints, cells)
 }
 
-class HintsBuilder : ArrayList<Hint>() {
-    fun hint(hint: Hint) {
+class HintsBuilder<T : TableHint> : ArrayList<T>() {
+    fun hint(hint: T) {
         add(hint)
     }
 }
@@ -100,8 +104,8 @@ class CellBuilder {
     private var hints: List<Hint>? = mutableListOf()
     lateinit var value: Any
 
-    fun hints(block: HintsBuilder.() -> Unit) {
-        hints = HintsBuilder().apply(block)
+    fun hints(block: HintsBuilder<Hint>.() -> Unit) {
+        hints = HintsBuilder<Hint>().apply(block)
     }
 
     fun build(): Cell = Cell(hints, value)

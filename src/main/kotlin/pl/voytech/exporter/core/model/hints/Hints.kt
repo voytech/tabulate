@@ -1,5 +1,5 @@
 package pl.voytech.exporter.core.model.hints
 
-data class Hints(
-    val hints: List<Hint>
-)
+open class Hint: ColumnHint()
+open class ColumnHint : TableHint()
+open class TableHint
