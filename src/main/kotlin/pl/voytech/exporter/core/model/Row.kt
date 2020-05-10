@@ -1,23 +1,10 @@
 package pl.voytech.exporter.core.model
 
+import pl.voytech.exporter.core.model.hints.Hint
 
-class Row {
-    enum class Position {
-        END,
-        START
-    }
 
-    val index: Int?
-    val type: Position?
-
-    constructor(index: Int) {
-        this.index = index
-        this.type = null
-    }
-
-    constructor(type: Position) {
-        this.index = null
-        this.type = type
-    }
-
-}
+data class Row<T>(
+    val selector: RowSelector<T>,
+    val hints: List<Hint>?,
+    val cells: Map<String, Cell>?
+)

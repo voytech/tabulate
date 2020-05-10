@@ -19,12 +19,12 @@ import pl.voytech.exporter.core.model.hints.TableHint
  *   and exporter.
  */
 data class Table<T>(
+   val name: String? = "untitled",
    val columns : List<Column<T>> = emptyList(),
-   val rowRanges: List<LongRange> = listOf(infinite()),
+   val rows: List<Row<T>>?,
    val showHeader: Boolean? = false,
    val showFooter: Boolean? = false,
-   val name: String? = "untitled",
-   val headerText: String? = "",
-   val footerText: String? ="",
-   val hints: List<TableHint>? = emptyList()
+   val columnsDescription: Description?,
+   val rowsDescription: Description?,
+   val hints: List<TableHint>?
 )

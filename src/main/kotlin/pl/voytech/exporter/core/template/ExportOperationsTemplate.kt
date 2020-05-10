@@ -8,6 +8,10 @@ open class ExportOperationsTemplate<T> {
         
     }
 
+    fun createColumnTitlesRow() {
+
+    }
+
     fun export(table: Table<T>, collection: Collection<T>) {
         collection.forEach {
             this.exportRow(table, it)

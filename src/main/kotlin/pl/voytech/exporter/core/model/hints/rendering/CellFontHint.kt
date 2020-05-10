@@ -1,4 +1,6 @@
-package pl.voytech.exporter.core.model.hints
+package pl.voytech.exporter.core.model.hints.rendering
+
+import pl.voytech.exporter.core.model.hints.Hint
 
 data class CellFontHint(
     val fontFamily: String,
