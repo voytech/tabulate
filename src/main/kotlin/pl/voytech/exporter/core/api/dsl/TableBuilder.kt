@@ -1,9 +1,8 @@
 package pl.voytech.exporter.core.api.dsl
 
 import pl.voytech.exporter.core.model.*
-import pl.voytech.exporter.core.model.hints.ColumnHint
-import pl.voytech.exporter.core.model.hints.Hint
-import pl.voytech.exporter.core.model.hints.TableHint
+import pl.voytech.exporter.core.model.CellType
+import pl.voytech.exporter.core.model.hints.*
 
 fun <T> table(block: TableBuilder<T>.() -> Unit): Table<T> = TableBuilder<T>().apply(block).build()
 
@@ -15,7 +14,8 @@ class TableBuilder<T> {
     var showFooter: Boolean? = false
     private var columnsDescription: Description? = null
     private var rowsDescription: Description? = null
-    private var hints: List<TableHint>? = null
+    private var tableHints: List<TableHint>? = null
+    private var cellHints: List<CellHint>? = null
 
     init {
         ColumnNextId.reset()
@@ -29,8 +29,12 @@ class TableBuilder<T> {
         rows = RowsBuilder<T>().apply(block)
     }
 
-    fun hints(block: HintsBuilder<TableHint>.() -> Unit) {
-        hints = HintsBuilder<TableHint>().apply(block)
+    fun tableHints(block: HintsBuilder<TableHint>.() -> Unit) {
+        tableHints = HintsBuilder<TableHint>().apply(block)
+    }
+
+    fun cellHints(block: HintsBuilder<CellHint>.() -> Unit) {
+        cellHints = HintsBuilder<CellHint>().apply(block)
     }
 
     fun columnsDescription(block: DescriptionBuilder.() -> Unit) {
@@ -41,7 +45,7 @@ class TableBuilder<T> {
         rowsDescription = DescriptionBuilder().apply(block).build()
     }
 
-    fun build() : Table<T> = Table(name, columns, rows, showHeader, showFooter,  columnsDescription, rowsDescription, hints)
+    fun build() : Table<T> = Table(name, columns, rows, showHeader, showFooter,  columnsDescription, rowsDescription, tableHints, cellHints)
 }
 
 class ColumnsBuilder<T> : ArrayList<Column<T>>() {
@@ -60,7 +64,8 @@ class ColumnBuilder<T> {
     private var columnTitle: Description? = null
     var columnType: CellType = CellType.STRING
     lateinit var fromField: (record: T) -> Any?
-    private var hints: List<ColumnHint>? = null
+    private var columnHints: List<ColumnHint>? = null
+    private var cellHints: List<CellHint>? = null
 
     constructor()
 
@@ -72,11 +77,15 @@ class ColumnBuilder<T> {
         columnTitle = DescriptionBuilder().apply(block).build()
     }
 
-    fun hints(block: HintsBuilder<ColumnHint>.() -> Unit) {
-        hints = HintsBuilder<ColumnHint>().apply(block)
+    fun columnHints(block: HintsBuilder<ColumnHint>.() -> Unit) {
+        columnHints = HintsBuilder<ColumnHint>().apply(block)
     }
 
-    fun build() : Column<T> = Column(id, columnTitle, columnType, fromField, hints)
+    fun cellHints(block: HintsBuilder<CellHint>.() -> Unit) {
+        cellHints = HintsBuilder<CellHint>().apply(block)
+    }
+
+    fun build() : Column<T> = Column(id, columnTitle, columnType, fromField, columnHints, cellHints)
 }
 
 class RowsBuilder<T> : ArrayList<Row<T>>() {
@@ -95,21 +104,21 @@ class RowsBuilder<T> : ArrayList<Row<T>>() {
 
 class RowBuilder<T> {
     private var cells: Map<String, Cell>? = null
-    private var hints: List<Hint>? = null
+    private var rowHints: List<RowHint>? = null
     lateinit var selector: RowSelector<T>
 
-    fun hints(block: HintsBuilder<Hint>.() -> Unit) {
-        hints = HintsBuilder<Hint>().apply(block)
+    fun rowHints(block: HintsBuilder<RowHint>.() -> Unit) {
+        rowHints = HintsBuilder<RowHint>().apply(block)
     }
 
     fun cells(block: CellsBuilder.() -> Unit) {
         cells = CellsBuilder().apply(block)
     }
 
-    fun build() : Row<T> = Row(selector, hints, cells)
+    fun build() : Row<T> = Row(selector, rowHints, cells)
 }
 
-class HintsBuilder<T : TableHint> : ArrayList<T>() {
+class HintsBuilder<T> : ArrayList<T>() {
     fun hint(hint: T) {
         add(hint)
     }
@@ -122,15 +131,15 @@ class CellsBuilder: HashMap<String,Cell>() {
 }
 
 class CellBuilder {
-    private var hints: List<Hint>? = null
+    private var cellHints: List<CellHint>? = null
     var value: Any? = null
     var type: CellType? = null
 
-    fun hints(block: HintsBuilder<Hint>.() -> Unit) {
-        hints = HintsBuilder<Hint>().apply(block)
+    fun cellHints(block: HintsBuilder<CellHint>.() -> Unit) {
+        cellHints = HintsBuilder<CellHint>().apply(block)
     }
 
-    fun build(): Cell = Cell(value, type, hints)
+    fun build(): Cell = Cell(value, type, cellHints)
 }
 
 class DescriptionBuilder {

@@ -1,5 +1,6 @@
 package pl.voytech.exporter.core.model
 
+import pl.voytech.exporter.core.model.hints.CellHint
 import pl.voytech.exporter.core.model.hints.TableHint
 
 /**
@@ -26,5 +27,6 @@ data class Table<T>(
    val showFooter: Boolean? = false,
    val columnsDescription: Description?,
    val rowsDescription: Description?,
-   val hints: List<TableHint>?
+   val tableHints: List<TableHint>?,
+   val cellHints: List<CellHint>?
 )

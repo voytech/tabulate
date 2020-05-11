@@ -1,5 +1,6 @@
 package pl.voytech.exporter.core.model
 
+import pl.voytech.exporter.core.model.hints.CellHint
 import pl.voytech.exporter.core.model.hints.ColumnHint
 
 data class Column<T>(
@@ -7,5 +8,6 @@ data class Column<T>(
    val columnTitle: Description?,
    val columnType: CellType?,
    val fromField: ((record: T) -> Any?)?,
-   val hints: List<ColumnHint>?
+   val columnHints: List<ColumnHint>?,
+   val cellHints: List<CellHint>?
 )

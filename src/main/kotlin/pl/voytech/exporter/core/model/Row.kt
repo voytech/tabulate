@@ -1,10 +1,10 @@
 package pl.voytech.exporter.core.model
 
-import pl.voytech.exporter.core.model.hints.Hint
+import pl.voytech.exporter.core.model.hints.RowHint
 
 
 data class Row<T>(
     val selector: RowSelector<T>,
-    val hints: List<Hint>?,
+    val rowHints: List<RowHint>?,
     val cells: Map<String, Cell>?
 )
