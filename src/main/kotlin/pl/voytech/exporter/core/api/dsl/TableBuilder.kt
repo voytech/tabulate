@@ -105,17 +105,22 @@ class RowsBuilder<T> : ArrayList<Row<T>>() {
 class RowBuilder<T> {
     private var cells: Map<String, Cell>? = null
     private var rowHints: List<RowHint>? = null
+    private var cellHints: List<CellHint>? = null
     lateinit var selector: RowSelector<T>
 
     fun rowHints(block: HintsBuilder<RowHint>.() -> Unit) {
         rowHints = HintsBuilder<RowHint>().apply(block)
     }
 
+    fun cellHints(block: HintsBuilder<CellHint>.() -> Unit) {
+        cellHints = HintsBuilder<CellHint>().apply(block)
+    }
+
     fun cells(block: CellsBuilder.() -> Unit) {
         cells = CellsBuilder().apply(block)
     }
 
-    fun build() : Row<T> = Row(selector, rowHints, cells)
+    fun build() : Row<T> = Row(selector, rowHints, cellHints, cells)
 }
 
 class HintsBuilder<T> : ArrayList<T>() {

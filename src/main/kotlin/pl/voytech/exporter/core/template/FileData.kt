@@ -1,4 +1,7 @@
 package pl.voytech.exporter.core.template
 
-class FileData {
-}
+data class FileData<T>(
+    val content: T,
+    val fileName: String? = "data-export",
+    val fileType: String? = null
+)
