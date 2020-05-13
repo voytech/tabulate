@@ -3,7 +3,6 @@ package pl.voytech.exporter.impl.template.excel
 import org.apache.poi.xssf.streaming.SXSSFCell
 import org.apache.poi.xssf.streaming.SXSSFSheet
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.Description
 import pl.voytech.exporter.core.model.Table
@@ -12,8 +11,11 @@ import pl.voytech.exporter.core.model.hints.RowHint
 import pl.voytech.exporter.core.template.*
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.*
 
 class SXSSFWorkbookExportOperation<T> : ExportOperations<T> {
 
@@ -21,33 +23,47 @@ class SXSSFWorkbookExportOperation<T> : ExportOperations<T> {
 
     private fun tableSheet(state: ExportingState): SXSSFSheet = castState(state).getSheetAt(0)
 
-    private fun toDateValue(value: Any) {
-        when (value) {
-            is LocalDate -> (value as LocalDate)
-            is LocalDateTime -> (value as LocalDateTime)
+    private fun toDateValue(value: Any): Date {
+        return when (value) {
+            is LocalDate -> Date.from(value.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant())
+            is LocalDateTime -> Date.from(value.atZone(ZoneId.systemDefault()).toInstant())
+            is Date -> value
+            is String -> Date.from(Instant.parse(value))
+            else -> throw IllegalArgumentException()
         }
     }
 
     private fun setCellValue(cell: SXSSFCell, value: CellValue?) {
-        if (value!= null) {
-            when (value.type) {
-                CellType.STRING -> cell.setCellValue(value.value as String)
-                CellType.BOOLEAN -> cell.setCellValue(value.value as Boolean)
-                //CellType.DATE -> cell.setCellValue(toDateValue(value.value))
-                CellType.NUMERIC -> cell.setCellValue(value as Double)
+        value?.let { v ->
+            v.type?.let {
+                when (it) {
+                    CellType.STRING -> cell.setCellValue(v.value as String)
+                    CellType.BOOLEAN -> cell.setCellValue(v.value as Boolean)
+                    CellType.DATE -> cell.setCellValue(toDateValue(v.value))
+                    CellType.NUMERIC -> cell.setCellValue((v.value as Number).toDouble())
+                    CellType.NATIVE_FORMULA -> TODO()
+                    CellType.FORMULA -> TODO()
+                    CellType.ERROR -> TODO()
+                }
+            } ?: v.run {
+                when(this.value){
+                    is String -> cell.setCellValue(this.value)
+                    is Boolean -> cell.setCellValue(this.value)
+                    is LocalDate -> cell.setCellValue(toDateValue(this.value))
+                    is LocalDateTime -> cell.setCellValue(toDateValue(this.value))
+                    is Date -> cell.setCellValue(this.value)
+                    is Number -> cell.setCellValue(this.value.toDouble())
+                }
             }
         }
     }
 
     override fun init(table: Table<T>): DelegateState {
-        val workbook = SXSSFWorkbook()
-        workbook.createSheet(table.name)
-        return DelegateState(workbook)
+        return DelegateState(SXSSFWorkbook().also { it.createSheet(table.name) })
     }
 
     override fun renderColumnsTitlesRow(state: ExportingState): ExportingState {
-        val sheet = tableSheet(state)
-        sheet.createRow(0)
+        tableSheet(state).createRow(0)
         return state
     }
 
@@ -56,38 +72,33 @@ class SXSSFWorkbookExportOperation<T> : ExportOperations<T> {
         columnTitle: Description?,
         cellHints: List<CellHint>?
     ): ExportingState {
-        val sheet = tableSheet(state)
-        val cell = sheet.getRow(0).createCell(state.columnIndex)
-        if (columnTitle != null) {
-            cell.setCellValue(columnTitle.title)
+        tableSheet(state).getRow(0).createCell(state.columnIndex).let { cell ->
+            columnTitle?.let { cell.setCellValue(it.title) }
         }
         return state
     }
 
     override fun renderRow(state: ExportingState, rowHints: List<RowHint>?): ExportingState {
-        val sheet = tableSheet(state)
-        sheet.createRow(state.rowIndex+1)
-        return state
+        return tableSheet(state).createRow(state.rowIndex+1).let { state }
     }
 
     override fun renderRowCell(state: ExportingState, value: CellValue?, cellHints: List<CellHint>?): ExportingState {
-        val sheet = tableSheet(state)
-        val cell = sheet.getRow(state.rowIndex+1).createCell(state.columnIndex)
-        setCellValue(cell, value)
-        return state
+        return tableSheet(state).getRow(state.rowIndex+1).createCell(state.columnIndex).also { setCellValue(it,value) }.let { state }
     }
 
     override fun complete(state: ExportingState): FileData<ByteArray> {
         val outputStream = ByteArrayOutputStream()
-        val workbook = (state.delegate.state as XSSFWorkbook)
-        workbook.write(outputStream)
-        workbook.close()
+        castState(state).run {
+            write(outputStream)
+            close()
+        }
         return FileData(content = outputStream.toByteArray())
     }
 
     override fun complete(state: ExportingState, stream: OutputStream) {
-        val workbook = (state.delegate.state as XSSFWorkbook)
-        workbook.write(stream)
-        workbook.close()
+        castState(state).run {
+            write(stream)
+            close()
+        }
     }
 }

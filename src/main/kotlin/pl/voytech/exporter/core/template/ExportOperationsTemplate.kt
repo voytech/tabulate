@@ -11,7 +11,7 @@ import java.io.OutputStream
 open class ExportOperationsTemplate<T>(private val delegate: ExportOperations<T>) {
 
     fun exportToByteArray(table: Table<T>, collection: Collection<T>): FileData<ByteArray> {
-        build(table,collection).also { return delegate.complete(it) }
+        return build(table,collection).let { delegate.complete(it) }
     }
 
     fun exportToStream(table: Table<T>, collection: Collection<T>, stream: OutputStream) {
