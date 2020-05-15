@@ -3,9 +3,9 @@ package pl.voytech.exporter.core.template
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.dsl.table
-import pl.voytech.exporter.core.model.CellType
+import pl.voytech.exporter.core.model.SelectAllRows
 import pl.voytech.exporter.data.Product
-import pl.voytech.exporter.impl.template.excel.SXSSFWorkbookExportOperation
+import pl.voytech.exporter.impl.template.excel.SXSSFWorkbookExport
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.test.assertNotNull
@@ -20,7 +20,7 @@ object BasicDslTableExportSpek: Spek({
             )
             val file = File("test.xls")
             FileOutputStream(file).use {
-                DataExportTemplate<Product>(SXSSFWorkbookExportOperation()).exportToStream(
+                DataExportTemplate<Product>(SXSSFWorkbookExport()).exportToStream(
                     table {
                         name = "Products table"
                         columns {
@@ -32,7 +32,7 @@ object BasicDslTableExportSpek: Spek({
                         }
                         rows {
                             row {
-                                selector = { true }
+                                selector = {true}
                                 cells {
                                     forColumn("nr") { eval = { row -> row.index } }
                                 }

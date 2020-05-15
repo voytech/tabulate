@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-class SXSSFWorkbookExportOperation<T> : ExportOperations<T> {
+class SXSSFWorkbookExport<T> : ExportOperations<T> {
 
     private fun getWorkbook(state: DelegateState): SXSSFWorkbook = state.state as SXSSFWorkbook
 

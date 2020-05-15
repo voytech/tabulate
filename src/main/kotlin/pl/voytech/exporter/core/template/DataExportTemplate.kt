@@ -1,10 +1,8 @@
 package pl.voytech.exporter.core.template
 
-import pl.voytech.exporter.core.model.Column
-import pl.voytech.exporter.core.model.Description
-import pl.voytech.exporter.core.model.RowData
-import pl.voytech.exporter.core.model.Table
+import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.hints.CellHint
+import pl.voytech.exporter.core.model.hints.Hint
 import pl.voytech.exporter.core.model.hints.RowHint
 import java.io.OutputStream
 
@@ -58,11 +56,20 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
         return delegate.renderRowCell(state.delegate, state.coordinates(), value, cellHints).let { state }
     }
 
+    private fun <E : Hint> collectHints(matchingRows: List<Row<T>>?, getHints:(r: Row<T>) -> List<E>?): List<E>? {
+        return matchingRows?.fold(listOf(),{ acc, r -> getHints.invoke(r)?.let { acc.plus(it.asIterable()) } ?: emptyList()})
+    }
+
+    private fun collectCells(matchingRows: List<Row<T>>?): Map<String, Cell<T>>? {
+        return null
+    }
+
     private fun exportRow(state: ExportingState, table: Table<T>, record: T, collection: Collection<T>, rowIndex: Int) {
         RowData(rowIndex, record, collection).let { row ->
-            val rowDef = table.rows?.find { it.selector(row) }
-            val rowHints = rowDef?.rowHints
-            val cells = rowDef?.cells
+            val matchingRows = table.rows?.filter { it.selector(row) }
+            val rowHints: List<RowHint>? = collectHints(matchingRows) { r -> r.rowHints }
+            val rowDefCellHints: List<CellHint>? = collectHints(matchingRows) { r -> r.cellHints }
+            val cells = collectCells(matchingRows)
             renderRow(state.nextRowIndex(rowIndex), rowHints).also {
                 table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
                     val cellDef = cells?.get(column.id)
@@ -70,7 +77,7 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
                     renderRowCell(
                         it.nextColumnIndex(columnIndex),
                         value?.let { CellValue(value, cellDef?.type ?: column.columnType) },
-                        normalizeCellHints(table.cellHints, column.cellHints, rowDef?.cellHints, cellDef?.cellHints)
+                        normalizeCellHints(table.cellHints, column.cellHints, rowDefCellHints, cellDef?.cellHints)
                     )
                 }
             }
