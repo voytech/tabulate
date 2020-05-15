@@ -16,3 +16,5 @@ object ColumnNextId {
 }
 
 typealias RowSelector<T> = (context: RowData<T>) -> Boolean
+
+typealias RowCellEval<T> = (context: RowData<T>) -> Any?

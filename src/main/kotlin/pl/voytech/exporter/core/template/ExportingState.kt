@@ -3,7 +3,6 @@ package pl.voytech.exporter.core.template
 class ExportingState(val delegate: DelegateState) {
     var rowIndex: Int = 0
     var columnIndex: Int = 0
-    lateinit var columnId: String
 
     fun nextColumnIndex(index: Int): ExportingState {
         columnIndex = index
@@ -14,4 +13,12 @@ class ExportingState(val delegate: DelegateState) {
         rowIndex = index
         return this
     }
+
+    fun nextRowIndex(): ExportingState {
+        rowIndex ++
+        return this
+    }
+
+    fun coordinates(): Coordinates = Coordinates(rowIndex, columnIndex)
+
 }

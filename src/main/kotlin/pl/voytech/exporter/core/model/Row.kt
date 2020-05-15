@@ -8,5 +8,5 @@ data class Row<T>(
     val selector: RowSelector<T>,
     val rowHints: List<RowHint>?,
     val cellHints: List<CellHint>?,
-    val cells: Map<String, Cell>?
+    val cells: Map<String, Cell<T>>?
 )

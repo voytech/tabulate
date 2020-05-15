@@ -19,9 +19,9 @@ import java.util.*
 
 class SXSSFWorkbookExportOperation<T> : ExportOperations<T> {
 
-    private fun castState(state: ExportingState): SXSSFWorkbook = state.delegate.state as SXSSFWorkbook
+    private fun getWorkbook(state: DelegateState): SXSSFWorkbook = state.state as SXSSFWorkbook
 
-    private fun tableSheet(state: ExportingState): SXSSFSheet = castState(state).getSheetAt(0)
+    private fun tableSheet(state: DelegateState): SXSSFSheet = getWorkbook(state).getSheetAt(0)
 
     private fun toDateValue(value: Any): Date {
         return when (value) {
@@ -62,41 +62,40 @@ class SXSSFWorkbookExportOperation<T> : ExportOperations<T> {
         return DelegateState(SXSSFWorkbook().also { it.createSheet(table.name) })
     }
 
-    override fun renderColumnsTitlesRow(state: ExportingState): ExportingState {
+    override fun renderColumnsTitlesRow(state: DelegateState, coordinates: Coordinates) {
         tableSheet(state).createRow(0)
-        return state
     }
 
     override fun renderColumnTitleCell(
-        state: ExportingState,
+        state: DelegateState,
+        coordinates: Coordinates,
         columnTitle: Description?,
         cellHints: List<CellHint>?
-    ): ExportingState {
-        tableSheet(state).getRow(0).createCell(state.columnIndex).let { cell ->
+    ) {
+        tableSheet(state).getRow(0).createCell(coordinates.columnIndex).let { cell ->
             columnTitle?.let { cell.setCellValue(it.title) }
         }
-        return state
     }
 
-    override fun renderRow(state: ExportingState, rowHints: List<RowHint>?): ExportingState {
-        return tableSheet(state).createRow(state.rowIndex+1).let { state }
+    override fun renderRow(state: DelegateState, coordinates: Coordinates, rowHints: List<RowHint>?) {
+        tableSheet(state).createRow(coordinates.rowIndex)
     }
 
-    override fun renderRowCell(state: ExportingState, value: CellValue?, cellHints: List<CellHint>?): ExportingState {
-        return tableSheet(state).getRow(state.rowIndex+1).createCell(state.columnIndex).also { setCellValue(it,value) }.let { state }
+    override fun renderRowCell(state: DelegateState, coordinates: Coordinates, value: CellValue?, cellHints: List<CellHint>?) {
+        tableSheet(state).getRow(coordinates.rowIndex).createCell(coordinates.columnIndex).also { setCellValue(it,value) }
     }
 
-    override fun complete(state: ExportingState): FileData<ByteArray> {
+    override fun complete(state: DelegateState, coordinates: Coordinates): FileData<ByteArray> {
         val outputStream = ByteArrayOutputStream()
-        castState(state).run {
+        getWorkbook(state).run {
             write(outputStream)
             close()
         }
         return FileData(content = outputStream.toByteArray())
     }
 
-    override fun complete(state: ExportingState, stream: OutputStream) {
-        castState(state).run {
+    override fun complete(state: DelegateState, coordinates: Coordinates, stream: OutputStream) {
+        getWorkbook(state).run {
             write(stream)
             close()
         }

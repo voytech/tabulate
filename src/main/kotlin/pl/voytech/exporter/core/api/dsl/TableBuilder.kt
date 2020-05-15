@@ -62,8 +62,8 @@ class ColumnsBuilder<T> : ArrayList<Column<T>>() {
 class ColumnBuilder<T> {
     var id: String = "col-${ColumnNextId.nextId()}"
     private var columnTitle: Description? = null
-    var columnType: CellType = CellType.STRING
-    lateinit var fromField: (record: T) -> Any?
+    var columnType: CellType? = null
+    var fromField: ((record: T) -> Any?)? = null
     private var columnHints: List<ColumnHint>? = null
     private var cellHints: List<CellHint>? = null
 
@@ -103,7 +103,7 @@ class RowsBuilder<T> : ArrayList<Row<T>>() {
 }
 
 class RowBuilder<T> {
-    private var cells: Map<String, Cell>? = null
+    private var cells: Map<String, Cell<T>>? = null
     private var rowHints: List<RowHint>? = null
     private var cellHints: List<CellHint>? = null
     lateinit var selector: RowSelector<T>
@@ -116,8 +116,8 @@ class RowBuilder<T> {
         cellHints = HintsBuilder<CellHint>().apply(block)
     }
 
-    fun cells(block: CellsBuilder.() -> Unit) {
-        cells = CellsBuilder().apply(block)
+    fun cells(block: CellsBuilder<T>.() -> Unit) {
+        cells = CellsBuilder<T>().apply(block)
     }
 
     fun build() : Row<T> = Row(selector, rowHints, cellHints, cells)
@@ -129,22 +129,23 @@ class HintsBuilder<T> : ArrayList<T>() {
     }
 }
 
-class CellsBuilder: HashMap<String,Cell>() {
-    fun forColumn(id: String, block: CellBuilder.() -> Unit) {
-        put(id, CellBuilder().apply(block).build())
+class CellsBuilder<T>: HashMap<String,Cell<T>>() {
+    fun forColumn(id: String, block: CellBuilder<T>.() -> Unit) {
+        put(id, CellBuilder<T>().apply(block).build())
     }
 }
 
-class CellBuilder {
+class CellBuilder<T> {
     private var cellHints: List<CellHint>? = null
     var value: Any? = null
+    var eval: RowCellEval<T>? = null
     var type: CellType? = null
 
     fun cellHints(block: HintsBuilder<CellHint>.() -> Unit) {
         cellHints = HintsBuilder<CellHint>().apply(block)
     }
 
-    fun build(): Cell = Cell(value, type, cellHints)
+    fun build(): Cell<T> = Cell(value, eval, type, cellHints)
 }
 
 class DescriptionBuilder {
