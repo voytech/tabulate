@@ -1,14 +1,12 @@
 package pl.voytech.exporter.impl.template.excel
 
 import org.apache.poi.xssf.streaming.SXSSFCell
-import org.apache.poi.xssf.streaming.SXSSFSheet
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
-import pl.voytech.exporter.core.model.Description
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.model.hints.CellHint
-import pl.voytech.exporter.core.model.hints.RowHint
 import pl.voytech.exporter.core.template.*
+import pl.voytech.exporter.impl.template.excel.PoiWrapper.getWorkbook
+import pl.voytech.exporter.impl.template.excel.PoiWrapper.tableSheet
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.time.Instant
@@ -17,11 +15,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-class SXSSFWorkbookExport<T> : ExportOperations<T> {
-
-    private fun getWorkbook(state: DelegateState): SXSSFWorkbook = state.state as SXSSFWorkbook
-
-    private fun tableSheet(state: DelegateState): SXSSFSheet = getWorkbook(state).getSheetAt(0)
+class SXSSFWorkbookExport<T>() : HintsResolvingExportOperations<T>(tableHintsOperations, rowHintsOperations, cellHintsOperations) {
 
     private fun toDateValue(value: Any): Date {
         return when (value) {
@@ -63,25 +57,24 @@ class SXSSFWorkbookExport<T> : ExportOperations<T> {
     }
 
     override fun renderColumnsTitlesRow(state: DelegateState, coordinates: Coordinates) {
-        tableSheet(state).createRow(0)
+        tableSheet(state).createRow(coordinates.rowIndex)
     }
 
     override fun renderColumnTitleCell(
         state: DelegateState,
         coordinates: Coordinates,
-        columnTitle: Description?,
-        cellHints: List<CellHint>?
+        columnTitle: String?
     ) {
         tableSheet(state).getRow(0).createCell(coordinates.columnIndex).let { cell ->
-            columnTitle?.let { cell.setCellValue(it.title) }
+            columnTitle?.let { cell.setCellValue(it) }
         }
     }
 
-    override fun renderRow(state: DelegateState, coordinates: Coordinates, rowHints: List<RowHint>?) {
+    override fun renderRow(state: DelegateState, coordinates: Coordinates) {
         tableSheet(state).createRow(coordinates.rowIndex)
     }
 
-    override fun renderRowCell(state: DelegateState, coordinates: Coordinates, value: CellValue?, cellHints: List<CellHint>?) {
+    override fun renderRowCell(state: DelegateState, coordinates: Coordinates, value: CellValue?) {
         tableSheet(state).getRow(coordinates.rowIndex).createCell(coordinates.columnIndex).also { setCellValue(it,value) }
     }
 

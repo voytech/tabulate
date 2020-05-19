@@ -4,5 +4,5 @@ import pl.voytech.exporter.core.model.hints.Hint
 
 data class Description(
     val title: String,
-    val hints: List<Hint>?
+    val hints: Set<Hint>?
 )

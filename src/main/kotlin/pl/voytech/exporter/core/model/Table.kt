@@ -27,6 +27,6 @@ data class Table<T>(
    val showFooter: Boolean? = false,
    val columnsDescription: Description?,
    val rowsDescription: Description?,
-   val tableHints: List<TableHint>?,
-   val cellHints: List<CellHint>?
+   val tableHints: Set<TableHint>?,
+   val cellHints: Set<CellHint>?
 )

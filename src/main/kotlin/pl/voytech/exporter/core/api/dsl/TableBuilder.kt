@@ -14,8 +14,8 @@ class TableBuilder<T> {
     var showFooter: Boolean? = false
     private var columnsDescription: Description? = null
     private var rowsDescription: Description? = null
-    private var tableHints: List<TableHint>? = null
-    private var cellHints: List<CellHint>? = null
+    private var tableHints: Set<TableHint>? = null
+    private var cellHints: Set<CellHint>? = null
 
     init {
         ColumnNextId.reset()
@@ -64,8 +64,9 @@ class ColumnBuilder<T> {
     private var columnTitle: Description? = null
     var columnType: CellType? = null
     var fromField: ((record: T) -> Any?)? = null
-    private var columnHints: List<ColumnHint>? = null
-    private var cellHints: List<CellHint>? = null
+    var index: Int? = null
+    private var columnHints: Set<ColumnHint>? = null
+    private var cellHints: Set<CellHint>? = null
 
     constructor()
 
@@ -85,7 +86,7 @@ class ColumnBuilder<T> {
         cellHints = HintsBuilder<CellHint>().apply(block)
     }
 
-    fun build() : Column<T> = Column(id, columnTitle, columnType, fromField, columnHints, cellHints)
+    fun build() : Column<T> = Column(id, index, columnTitle, columnType, fromField, columnHints, cellHints)
 }
 
 class RowsBuilder<T> : ArrayList<Row<T>>() {
@@ -104,8 +105,8 @@ class RowsBuilder<T> : ArrayList<Row<T>>() {
 
 class RowBuilder<T> {
     private var cells: Map<String, Cell<T>>? = null
-    private var rowHints: List<RowHint>? = null
-    private var cellHints: List<CellHint>? = null
+    private var rowHints: Set<RowHint>? = null
+    private var cellHints: Set<CellHint>? = null
     lateinit var selector: RowSelector<T>
 
     fun rowHints(block: HintsBuilder<RowHint>.() -> Unit) {
@@ -123,7 +124,7 @@ class RowBuilder<T> {
     fun build() : Row<T> = Row(selector, rowHints, cellHints, cells)
 }
 
-class HintsBuilder<T> : ArrayList<T>() {
+class HintsBuilder<T> : HashSet<T>() {
     fun hint(hint: T) {
         add(hint)
     }
@@ -136,7 +137,7 @@ class CellsBuilder<T>: HashMap<String,Cell<T>>() {
 }
 
 class CellBuilder<T> {
-    private var cellHints: List<CellHint>? = null
+    private var cellHints: Set<CellHint>? = null
     var value: Any? = null
     var eval: RowCellEval<T>? = null
     var type: CellType? = null
@@ -150,7 +151,7 @@ class CellBuilder<T> {
 
 class DescriptionBuilder {
     lateinit var title: String
-    var hints: List<Hint>? = null
+    var hints: Set<Hint>? = null
 
     fun hints(block: HintsBuilder<Hint>.() -> Unit) {
         hints = HintsBuilder<Hint>().apply(block)

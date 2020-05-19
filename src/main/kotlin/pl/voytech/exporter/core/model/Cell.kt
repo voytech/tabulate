@@ -6,5 +6,5 @@ data class Cell<T>(
    val value: Any?,
    val eval: RowCellEval<T>?,
    val type: CellType?,
-   val cellHints: List<CellHint>?
+   val cellHints: Set<CellHint>?
 )

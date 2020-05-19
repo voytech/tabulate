@@ -9,9 +9,9 @@ import java.io.OutputStream
 interface ExportOperations<T> {
     fun init(table: Table<T>): DelegateState
     fun renderColumnsTitlesRow(state: DelegateState, coordinates: Coordinates)
-    fun renderColumnTitleCell(state: DelegateState, coordinates: Coordinates, columnTitle: Description?, cellHints: List<CellHint>?)
-    fun renderRow(state: DelegateState, coordinates: Coordinates, rowHints: List<RowHint>?)
-    fun renderRowCell(state: DelegateState, coordinates: Coordinates, value: CellValue?, cellHints: List<CellHint>?)
+    fun renderColumnTitleCell(state: DelegateState, coordinates: Coordinates, columnTitle: Description?, cellHints: Set<CellHint>?)
+    fun renderRow(state: DelegateState, coordinates: Coordinates, rowHints: Set<RowHint>?)
+    fun renderRowCell(state: DelegateState, coordinates: Coordinates, value: CellValue?, cellHints: Set<CellHint>?)
     fun complete(state: DelegateState, coordinates: Coordinates): FileData<ByteArray>
     fun complete(state: DelegateState, coordinates: Coordinates, stream: OutputStream)
 }

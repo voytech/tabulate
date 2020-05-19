@@ -36,56 +36,58 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
         return delegate.renderColumnsTitlesRow(state.delegate,state.coordinates()).let {
             table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
                  renderColumnTitleCell(
-                    state.nextColumnIndex(columnIndex),
+                    state.nextColumnIndex(column.index ?: columnIndex),
                     column.columnTitle,
-                    normalizeCellHints(table.cellHints, column.cellHints)
+                    collectUniqueCellHints(table.cellHints, column.cellHints)
                 )
             }
         }.let { state.nextRowIndex() }
     }
 
-    private fun renderColumnTitleCell(state: ExportingState, columnTitle: Description?, cellHints: List<CellHint>?): ExportingState {
+    private fun renderColumnTitleCell(state: ExportingState, columnTitle: Description?, cellHints: Set<CellHint>?): ExportingState {
         return columnTitle?.let { delegate.renderColumnTitleCell(state.delegate, state.coordinates(), columnTitle, cellHints); state } ?: state
     }
 
-    private fun renderRow(state: ExportingState, rowHints: List<RowHint>?): ExportingState {
+    private fun renderRow(state: ExportingState, rowHints: Set<RowHint>?): ExportingState {
         return delegate.renderRow(state.delegate, state.coordinates(), rowHints).let { state }
     }
 
-    private fun renderRowCell(state: ExportingState, value: CellValue?, cellHints: List<CellHint>?) : ExportingState {
+    private fun renderRowCell(state: ExportingState, value: CellValue?, cellHints: Set<CellHint>?) : ExportingState {
         return delegate.renderRowCell(state.delegate, state.coordinates(), value, cellHints).let { state }
     }
 
-    private fun <E : Hint> collectHints(matchingRows: List<Row<T>>?, getHints:(r: Row<T>) -> List<E>?): List<E>? {
-        return matchingRows?.fold(listOf(),{ acc, r -> getHints.invoke(r)?.let { acc.plus(it.asIterable()) } ?: emptyList()})
+    private fun <E : Hint> collectHints(matchingRows: List<Row<T>>?, getHints:(r: Row<T>) -> Set<E>?): Set<E>? {
+        return matchingRows?.mapNotNull { e -> getHints.invoke(e) }
+            ?.fold(setOf(),{ acc, r -> acc + r })
     }
 
     private fun collectCells(matchingRows: List<Row<T>>?): Map<String, Cell<T>>? {
-        return null
-    }
+        return matchingRows?.mapNotNull { row -> row.cells }
+            ?.fold(mapOf(),{ acc, m -> acc + m })
+     }
 
     private fun exportRow(state: ExportingState, table: Table<T>, record: T, collection: Collection<T>, rowIndex: Int) {
         RowData(rowIndex, record, collection).let { row ->
             val matchingRows = table.rows?.filter { it.selector(row) }
-            val rowHints: List<RowHint>? = collectHints(matchingRows) { r -> r.rowHints }
-            val rowDefCellHints: List<CellHint>? = collectHints(matchingRows) { r -> r.cellHints }
+            val rowHints: Set<RowHint>? = collectHints(matchingRows) { r -> r.rowHints }
+            val rowDefCellHints: Set<CellHint>? = collectHints(matchingRows) { r -> r.cellHints }
             val cells = collectCells(matchingRows)
             renderRow(state.nextRowIndex(rowIndex), rowHints).also {
                 table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
                     val cellDef = cells?.get(column.id)
                     val value = cellDef?.eval?.invoke(row) ?: cellDef?.value ?: column.fromField?.invoke(record)
                     renderRowCell(
-                        it.nextColumnIndex(columnIndex),
+                        it.nextColumnIndex(column.index ?: columnIndex),
                         value?.let { CellValue(value, cellDef?.type ?: column.columnType) },
-                        normalizeCellHints(table.cellHints, column.cellHints, rowDefCellHints, cellDef?.cellHints)
+                        collectUniqueCellHints(table.cellHints, column.cellHints, rowDefCellHints, cellDef?.cellHints)
                     )
                 }
             }
         }
     }
 
-    private fun normalizeCellHints(vararg hintsOnLevels: List<CellHint>?): List<CellHint> {
-        return listOf()
+    private fun collectUniqueCellHints(vararg hintsOnLevels: Set<CellHint>?): Set<CellHint> {
+        return hintsOnLevels.filterNotNull().fold(setOf(), {acc, s -> acc + s })
     }
 
 }
