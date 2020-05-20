@@ -15,7 +15,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-class SXSSFWorkbookExport<T>() : HintsResolvingExportOperations<T>(tableHintsOperations, rowHintsOperations, cellHintsOperations) {
+class SXSSFWorkbookExport<T>() : HintsResolvingExportOperations<T>(tableHintsOperations, rowHintsOperations, cellHintsOperations, columnHintsOperations) {
 
     private fun toDateValue(value: Any): Date {
         return when (value) {
@@ -53,7 +53,9 @@ class SXSSFWorkbookExport<T>() : HintsResolvingExportOperations<T>(tableHintsOpe
     }
 
     override fun init(table: Table<T>): DelegateState {
-        return DelegateState(SXSSFWorkbook().also { it.createSheet(table.name) })
+        return DelegateState(SXSSFWorkbook().also {
+            it.createSheet(table.name)
+        })
     }
 
     override fun renderColumnsTitlesRow(state: DelegateState, coordinates: Coordinates) {

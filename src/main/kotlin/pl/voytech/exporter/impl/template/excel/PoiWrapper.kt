@@ -1,5 +1,6 @@
 package pl.voytech.exporter.impl.template.excel
 
+import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.xssf.streaming.SXSSFCell
 import org.apache.poi.xssf.streaming.SXSSFRow
 import org.apache.poi.xssf.streaming.SXSSFSheet
@@ -23,5 +24,25 @@ object PoiWrapper {
     fun cell(state: DelegateState, coordinates: Coordinates): SXSSFCell? = assertRow(state,coordinates.rowIndex).getCell(coordinates.columnIndex)
 
     fun assertCell(state: DelegateState, coordinates: Coordinates): SXSSFCell = cell(state,coordinates) ?: createCell(state,coordinates)
-}
 
+    fun cellStyle(state: DelegateState, coordinates: Coordinates): CellStyle {
+        return assertCell(state,coordinates).let {
+                   it.cellStyle = getWorkbook(state).createCellStyle()
+                   it.cellStyle
+               }
+    }
+
+    fun columnStyle(state: DelegateState, columnIndex: Int): CellStyle {
+        return tableSheet(state).getColumnStyle(columnIndex)
+    }
+
+    fun columnWidth(state: DelegateState, columnIndex: Int): Int {
+        return tableSheet(state).getColumnWidth(columnIndex)
+    }
+
+    fun setColumnWidth(state: DelegateState, columnIndex: Int, width: Int) {
+        return tableSheet(state).setColumnWidth(columnIndex,width)
+    }
+
+
+}

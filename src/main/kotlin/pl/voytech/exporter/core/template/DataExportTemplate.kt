@@ -35,6 +35,7 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
     private fun renderColumnsTitlesRow(state: ExportingState, table: Table<T>): ExportingState {
         return delegate.renderColumnsTitlesRow(state.delegate,state.coordinates()).let {
             table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+                 delegate.renderColumn(state.delegate, column.index ?: columnIndex, column.columnHints)
                  renderColumnTitleCell(
                     state.nextColumnIndex(column.index ?: columnIndex),
                     column.columnTitle,

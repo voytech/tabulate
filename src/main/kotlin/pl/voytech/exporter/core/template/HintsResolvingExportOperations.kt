@@ -2,15 +2,21 @@ package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.Description
 import pl.voytech.exporter.core.model.hints.CellHint
+import pl.voytech.exporter.core.model.hints.ColumnHint
 import pl.voytech.exporter.core.model.hints.RowHint
 import pl.voytech.exporter.core.model.hints.TableHint
 
 abstract class HintsResolvingExportOperations<T>(
     tableHints: List<TableHintOperation<out TableHint>>?,
     rowHints: List<RowHintOperation<out RowHint>>?,
-    cellHints: List<CellHintOperation<out CellHint>>?
+    cellHints: List<CellHintOperation<out CellHint>>?,
+    columnHints: List<ColumnHintOperation<out ColumnHint>>?
 ) : ExportOperations<T>  {
-    private val hintOperations: HintsOperations = DelegatingHintsOperations(tableHints, rowHints, cellHints)
+    private val hintOperations: HintsOperations = DelegatingHintsOperations(tableHints, rowHints, cellHints, columnHints)
+
+    override fun renderColumn(state: DelegateState, columnIndex: Int, columnHints: Set<ColumnHint>?) {
+        columnHints?.let { hintOperations.applyColumnHints(state, columnIndex, columnHints) }
+    }
 
     override fun renderColumnTitleCell(
         state: DelegateState,

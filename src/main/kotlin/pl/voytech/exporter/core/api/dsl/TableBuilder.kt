@@ -82,8 +82,16 @@ class ColumnBuilder<T> {
         columnHints = HintsBuilder<ColumnHint>().apply(block)
     }
 
+    fun columnHints(vararg hints: ColumnHint) {
+        columnHints = hints.asList().toHashSet()
+    }
+
     fun cellHints(block: HintsBuilder<CellHint>.() -> Unit) {
         cellHints = HintsBuilder<CellHint>().apply(block)
+    }
+
+    fun cellHints(vararg hints: CellHint) {
+        cellHints = hints.asList().toHashSet()
     }
 
     fun build() : Column<T> = Column(id, index, columnTitle, columnType, fromField, columnHints, cellHints)

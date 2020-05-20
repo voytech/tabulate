@@ -1,9 +1,6 @@
 package pl.voytech.exporter.core.template
 
-import pl.voytech.exporter.core.model.hints.CellHint
-import pl.voytech.exporter.core.model.hints.Hint
-import pl.voytech.exporter.core.model.hints.RowHint
-import pl.voytech.exporter.core.model.hints.TableHint
+import pl.voytech.exporter.core.model.hints.*
 import kotlin.reflect.KClass
 
 
@@ -21,4 +18,8 @@ interface RowHintOperation<T: RowHint> : HintOperation<T> {
 
 interface CellHintOperation<T: CellHint> : HintOperation<T> {
     fun apply(state: DelegateState, coordinates: Coordinates, hint: T)
+}
+
+interface ColumnHintOperation<T: ColumnHint> : HintOperation<T> {
+    fun apply(state: DelegateState, columnIndex: Int, hint: T)
 }
