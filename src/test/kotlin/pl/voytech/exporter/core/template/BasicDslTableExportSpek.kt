@@ -6,6 +6,8 @@ import pl.voytech.exporter.core.api.dsl.table
 import pl.voytech.exporter.core.model.hints.style.CellFontHint
 import pl.voytech.exporter.core.model.hints.style.Color
 import pl.voytech.exporter.core.model.hints.style.ColumnWidthHint
+import pl.voytech.exporter.core.model.hints.style.RowHeightHint
+import pl.voytech.exporter.core.model.hints.style.enums.WeightStyle
 import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.excel.SXSSFWorkbookExport
 import java.io.File
@@ -24,19 +26,23 @@ object BasicDslTableExportSpek: Spek({
                         columns {
                             column("nr") {
                                 columnTitle { title = "Nr.:" }
-                                columnHints(ColumnWidthHint(width = 1000))
+                                columnHints(ColumnWidthHint(width = 50))
                                 cellHints(
                                     CellFontHint(
                                         fontFamily = "Times New Roman",
                                         fontColor = Color(10,100,100),
-                                        fontSize = 12
+                                        fontSize = 12,
+                                        italic = true,
+                                        weight = WeightStyle.BOLD,
+                                        strikeout = true,
+                                        underline = true
                                     )
                                 )
                             }
                             column("code") {
                                 columnTitle { title = "Code" }
                                 fromField = Product::code;
-                                columnHints(ColumnWidthHint(width = 3000))
+                                columnHints(ColumnWidthHint(width = 100))
                                 cellHints(
                                     CellFontHint(
                                         fontFamily = "Times New Roman",
@@ -48,20 +54,24 @@ object BasicDslTableExportSpek: Spek({
                             column("name") {
                                 columnTitle { title = "Name" }
                                 fromField = Product::name
-                                columnHints(ColumnWidthHint(width = 4000))
+                                columnHints(ColumnWidthHint(width = 100))
                             }
                             column("description") {
                                 columnTitle { title = "Description" }
                                 fromField = Product::description
-                                columnHints(ColumnWidthHint(width = 8000))
+                                columnHints(ColumnWidthHint(width = 300))
                             }
                             column("manufacturer") {
                                 columnTitle { title = "Manufacturer" }
                                 fromField = Product::manufacturer
-                                columnHints(ColumnWidthHint(width = 4000))
+                                columnHints(ColumnWidthHint(width = 100))
                             }
                         }
                         rows {
+                            row {
+                                selector = { data -> data.index == 0 }
+                                rowHints(RowHeightHint(height = 220))
+                            }
                             row {
                                 selector = {true}
                                 cells {

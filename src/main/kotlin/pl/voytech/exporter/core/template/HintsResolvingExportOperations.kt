@@ -18,6 +18,12 @@ abstract class HintsResolvingExportOperations<T>(
         columnHints?.let { hintOperations.applyColumnHints(state, columnIndex, columnHints) }
     }
 
+    override fun renderColumnsTitlesRow(state: DelegateState, coordinates: Coordinates, rowHints: Set<RowHint>?){
+        renderColumnsTitlesRow(state,coordinates).also {
+            rowHints?.let { hintOperations.applyRowHints(state, coordinates.rowIndex, it) }
+        }
+    }
+
     override fun renderColumnTitleCell(
         state: DelegateState,
         coordinates: Coordinates,
@@ -40,6 +46,8 @@ abstract class HintsResolvingExportOperations<T>(
             cellHints?.let { hintOperations.applyCellHints(state, coordinates, it) }
         }
     }
+
+    abstract fun renderColumnsTitlesRow(state: DelegateState, coordinates: Coordinates)
 
     abstract fun renderColumnTitleCell(state: DelegateState, coordinates: Coordinates, columnTitle: String?)
 

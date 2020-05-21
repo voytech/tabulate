@@ -9,7 +9,7 @@ import java.io.OutputStream
 
 interface ExportOperations<T> {
     fun init(table: Table<T>): DelegateState
-    fun renderColumnsTitlesRow(state: DelegateState, coordinates: Coordinates)
+    fun renderColumnsTitlesRow(state: DelegateState, coordinates: Coordinates, rowHints: Set<RowHint>?)
     fun renderColumn(state: DelegateState,columnIndex: Int, columnHints: Set<ColumnHint>?)
     fun renderColumnTitleCell(state: DelegateState, coordinates: Coordinates, columnTitle: Description?, cellHints: Set<CellHint>?)
     fun renderRow(state: DelegateState, coordinates: Coordinates, rowHints: Set<RowHint>?)

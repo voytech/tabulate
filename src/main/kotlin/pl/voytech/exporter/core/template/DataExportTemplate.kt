@@ -8,6 +8,28 @@ import java.io.OutputStream
 
 open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
 
+    internal data class MergedRow<T>(val matchingRows: List<Row<T>>?){
+        val rowHints: Set<RowHint>?
+        val rowCellHints: Set<CellHint>?
+        val rowCells: Map<String,Cell<T>>?
+
+        init {
+            rowHints = collectHints(matchingRows) { r -> r.rowHints }
+            rowCellHints = collectHints(matchingRows) { r -> r.cellHints }
+            rowCells = collectCells(matchingRows)
+        }
+
+        private fun <E : Hint> collectHints(matchingRows: List<Row<T>>?, getHints:(r: Row<T>) -> Set<E>?): Set<E>? {
+            return matchingRows?.mapNotNull { e -> getHints.invoke(e) }
+                ?.fold(setOf(),{ acc, r -> acc + r })
+        }
+
+        private fun collectCells(matchingRows: List<Row<T>>?): Map<String, Cell<T>>? {
+            return matchingRows?.mapNotNull { row -> row.cells }
+                ?.fold(mapOf(),{ acc, m -> acc + m })
+        }
+    }
+
     fun exportToByteArray(table: Table<T>, collection: Collection<T>): FileData<ByteArray> {
         return build(table,collection).let { delegate.complete(it.delegate, it.coordinates()) }
     }
@@ -23,7 +45,7 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
     private fun build(table: Table<T>, collection: Collection<T>): ExportingState {
         val state: ExportingState = init(table)
         if (table.showHeader == true || table.columns.any { it.columnTitle != null }) {
-            renderColumnsTitlesRow(state, table)
+            renderColumnsTitlesRow(state, table, collection)
         }
         val startFrom = state.rowIndex
         collection.forEachIndexed { rowIndex: Int, record: T ->
@@ -32,8 +54,9 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
         return state
     }
 
-    private fun renderColumnsTitlesRow(state: ExportingState, table: Table<T>): ExportingState {
-        return delegate.renderColumnsTitlesRow(state.delegate,state.coordinates()).let {
+    private fun renderColumnsTitlesRow(state: ExportingState, table: Table<T>, collection: Collection<T>): ExportingState {
+        val headerRowMeta = collectMatchingRowDefinitions(RowData(index = state.rowIndex,dataset = collection), table.rows)
+        return delegate.renderColumnsTitlesRow(state.delegate, state.coordinates(), headerRowMeta.rowHints).let {
             table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
                  delegate.renderColumn(state.delegate, column.index ?: columnIndex, column.columnHints)
                  renderColumnTitleCell(
@@ -57,35 +80,24 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
         return delegate.renderRowCell(state.delegate, state.coordinates(), value, cellHints).let { state }
     }
 
-    private fun <E : Hint> collectHints(matchingRows: List<Row<T>>?, getHints:(r: Row<T>) -> Set<E>?): Set<E>? {
-        return matchingRows?.mapNotNull { e -> getHints.invoke(e) }
-            ?.fold(setOf(),{ acc, r -> acc + r })
-    }
-
-    private fun collectCells(matchingRows: List<Row<T>>?): Map<String, Cell<T>>? {
-        return matchingRows?.mapNotNull { row -> row.cells }
-            ?.fold(mapOf(),{ acc, m -> acc + m })
-     }
-
     private fun exportRow(state: ExportingState, table: Table<T>, record: T, collection: Collection<T>, rowIndex: Int) {
         RowData(rowIndex, record, collection).let { row ->
-            val matchingRows = table.rows?.filter { it.selector(row) }
-            val rowHints: Set<RowHint>? = collectHints(matchingRows) { r -> r.rowHints }
-            val rowDefCellHints: Set<CellHint>? = collectHints(matchingRows) { r -> r.cellHints }
-            val cells = collectCells(matchingRows)
-            renderRow(state.nextRowIndex(rowIndex), rowHints).also {
+            val rowMeta = collectMatchingRowDefinitions(row, table.rows)
+            renderRow(state.nextRowIndex(rowIndex), rowMeta.rowHints).also {
                 table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                    val cellDef = cells?.get(column.id)
+                    val cellDef = rowMeta.rowCells?.get(column.id)
                     val value = cellDef?.eval?.invoke(row) ?: cellDef?.value ?: column.fromField?.invoke(record)
                     renderRowCell(
                         it.nextColumnIndex(column.index ?: columnIndex),
                         value?.let { CellValue(value, cellDef?.type ?: column.columnType) },
-                        collectUniqueCellHints(table.cellHints, column.cellHints, rowDefCellHints, cellDef?.cellHints)
+                        collectUniqueCellHints(table.cellHints, column.cellHints, rowMeta.rowCellHints, cellDef?.cellHints)
                     )
                 }
             }
         }
     }
+
+    private fun collectMatchingRowDefinitions(row: RowData<T>, tableRows: List<Row<T>>?): MergedRow<T> = MergedRow(tableRows?.filter { it.selector(row) })
 
     private fun collectUniqueCellHints(vararg hintsOnLevels: Set<CellHint>?): Set<CellHint> {
         return hintsOnLevels.filterNotNull().fold(setOf(), {acc, s -> acc + s })

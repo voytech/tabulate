@@ -83,7 +83,7 @@ class ColumnBuilder<T> {
     }
 
     fun columnHints(vararg hints: ColumnHint) {
-        columnHints = hints.asList().toHashSet()
+        columnHints = hints.toHashSet()
     }
 
     fun cellHints(block: HintsBuilder<CellHint>.() -> Unit) {
@@ -91,7 +91,7 @@ class ColumnBuilder<T> {
     }
 
     fun cellHints(vararg hints: CellHint) {
-        cellHints = hints.asList().toHashSet()
+        cellHints = hints.toHashSet()
     }
 
     fun build() : Column<T> = Column(id, index, columnTitle, columnType, fromField, columnHints, cellHints)
@@ -119,6 +119,10 @@ class RowBuilder<T> {
 
     fun rowHints(block: HintsBuilder<RowHint>.() -> Unit) {
         rowHints = HintsBuilder<RowHint>().apply(block)
+    }
+
+    fun rowHints(vararg hints: RowHint) {
+        rowHints = hints.toHashSet()
     }
 
     fun cellHints(block: HintsBuilder<CellHint>.() -> Unit) {
