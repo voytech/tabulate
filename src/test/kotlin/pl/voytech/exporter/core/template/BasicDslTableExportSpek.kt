@@ -3,6 +3,7 @@ package pl.voytech.exporter.core.template
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.dsl.table
+import pl.voytech.exporter.core.model.Key
 import pl.voytech.exporter.core.model.RowSelectors
 import pl.voytech.exporter.core.model.hints.style.*
 import pl.voytech.exporter.core.model.hints.style.enums.BorderStyle
@@ -38,9 +39,8 @@ object BasicDslTableExportSpek: Spek({
                                     )
                                 )
                             }
-                            column("code") {
+                            column(Product::code) {
                                 columnTitle { title = "Code" }
-                                fromField = Product::code;
                                 columnHints(ColumnWidthHint(width = 100))
                                 cellHints(
                                     CellFontHint(
@@ -51,19 +51,16 @@ object BasicDslTableExportSpek: Spek({
                                     CellBackgroundHint(color = Color(10,100,100))
                                 )
                             }
-                            column("name") {
+                            column(Product::name) {
                                 columnTitle { title = "Name" }
-                                fromField = Product::name
                                 columnHints(ColumnWidthHint(width = 100))
                             }
-                            column("description") {
+                            column(Product::description) {
                                 columnTitle { title = "Description" }
-                                fromField = Product::description
                                 columnHints(ColumnWidthHint(width = 300))
                             }
-                            column("manufacturer") {
+                            column(Product::manufacturer) {
                                 columnTitle { title = "Manufacturer" }
-                                fromField = Product::manufacturer
                                 columnHints(ColumnWidthHint(width = 100))
                             }
                         }

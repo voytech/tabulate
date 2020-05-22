@@ -11,7 +11,7 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
     internal data class MergedRow<T>(val matchingRows: List<Row<T>>?){
         val rowHints: Set<RowHint>?
         val rowCellHints: Set<CellHint>?
-        val rowCells: Map<String,Cell<T>>?
+        val rowCells: Map<Key<T>,Cell<T>>?
 
         init {
             rowHints = collectHints(matchingRows) { r -> r.rowHints }
@@ -24,7 +24,7 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
                 ?.fold(setOf(),{ acc, r -> acc + r })
         }
 
-        private fun collectCells(matchingRows: List<Row<T>>?): Map<String, Cell<T>>? {
+        private fun collectCells(matchingRows: List<Row<T>>?): Map<Key<T>, Cell<T>>? {
             return matchingRows?.mapNotNull { row -> row.cells }
                 ?.fold(mapOf(),{ acc, m -> acc + m })
         }
@@ -87,7 +87,7 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
             renderRow(state.nextRowIndex(rowIndex), rowMeta.rowHints).also {
                 table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
                     val cellDef = rowMeta.rowCells?.get(column.id)
-                    val value = cellDef?.eval?.invoke(row) ?: cellDef?.value ?: column.fromField?.invoke(record)
+                    val value = cellDef?.eval?.invoke(row) ?: cellDef?.value ?: column.id.ref?.invoke(record)
                     renderRowCell(
                         it.nextColumnIndex(column.index ?: columnIndex),
                         value?.let { CellValue(value, cellDef?.type ?: column.columnType) },

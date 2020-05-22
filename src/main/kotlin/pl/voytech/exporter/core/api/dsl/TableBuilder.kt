@@ -55,22 +55,25 @@ class ColumnsBuilder<T> : ArrayList<Column<T>>() {
     }
 
     fun column(id: String, block: ColumnBuilder<T>.() -> Unit) {
-        add(ColumnBuilder<T>(id = id).apply(block).build())
+        add(ColumnBuilder<T>(id = Key(id)).apply(block).build())
+    }
+
+    fun column(ref: ((record: T) -> Any?), block: ColumnBuilder<T>.() -> Unit) {
+        add(ColumnBuilder(id = Key(ref = ref)).apply(block).build())
     }
 }
 
 class ColumnBuilder<T> {
-    var id: String = "col-${ColumnNextId.nextId()}"
+    lateinit var id: Key<T>
     private var columnTitle: Description? = null
     var columnType: CellType? = null
-    var fromField: ((record: T) -> Any?)? = null
     var index: Int? = null
     private var columnHints: Set<ColumnHint>? = null
     private var cellHints: Set<CellHint>? = null
 
     constructor()
 
-    constructor(id: String) {
+    constructor(id: Key<T>) {
         this.id = id
     }
 
@@ -94,7 +97,7 @@ class ColumnBuilder<T> {
         cellHints = hints.toHashSet()
     }
 
-    fun build() : Column<T> = Column(id, index, columnTitle, columnType, fromField, columnHints, cellHints)
+    fun build() : Column<T> = Column(id, index, columnTitle, columnType, columnHints, cellHints)
 }
 
 class RowsBuilder<T> : ArrayList<Row<T>>() {
@@ -112,7 +115,7 @@ class RowsBuilder<T> : ArrayList<Row<T>>() {
 }
 
 class RowBuilder<T> {
-    private var cells: Map<String, Cell<T>>? = null
+    private var cells: Map<Key<T>, Cell<T>>? = null
     private var rowHints: Set<RowHint>? = null
     private var cellHints: Set<CellHint>? = null
     lateinit var selector: RowSelector<T>
@@ -146,9 +149,12 @@ class HintsBuilder<T> : HashSet<T>() {
     }
 }
 
-class CellsBuilder<T>: HashMap<String,Cell<T>>() {
+class CellsBuilder<T>: HashMap<Key<T>,Cell<T>>() {
     fun forColumn(id: String, block: CellBuilder<T>.() -> Unit) {
-        put(id, CellBuilder<T>().apply(block).build())
+        put(Key(id), CellBuilder<T>().apply(block).build())
+    }
+    fun forColumn(ref: ((record: T) -> Any?), block: CellBuilder<T>.() -> Unit) {
+        put(Key(ref=ref), CellBuilder<T>().apply(block).build())
     }
 }
 

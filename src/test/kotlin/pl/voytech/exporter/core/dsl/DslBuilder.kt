@@ -22,16 +22,14 @@ object BasicDslTableDefinitionSpek: Spek({
             val tableMeta = table<Product> {
                 name = "Products table"
                 columns {
-                    column("code") {
+                    column(Product::code) {
                         columnTitle { title = "Code" }
-                        fromField = Product::code
                     }
-                    column("name") {
+                    column(Product::name) {
                         columnTitle { title = "Name" }
-                        fromField = Product::name
                     }
-                    column("description") { fromField = Product::description }
-                    column("manufacturer") { fromField = Product::manufacturer}
+                    column(Product::description) {}
+                    column(Product::manufacturer) {}
                 }
             }
 
@@ -44,21 +42,17 @@ object BasicDslTableDefinitionSpek: Spek({
             }
 
             Then("columns should be correctly named") {
-                assertEquals("code", tableMeta.columns[0].id,"first column should be 'code'")
                 assertEquals(Description(title = "Code",hints = null), tableMeta.columns[0].columnTitle, "first column description should be 'Code'")
-                assertEquals("name", tableMeta.columns[1].id,"second column should be 'Name'")
                 assertEquals(Description(title = "Name",hints = null), tableMeta.columns[1].columnTitle, "second column description should be 'Name'")
-                assertEquals("description", tableMeta.columns[2].id,"third column should be 'Description'")
                 assertNull(tableMeta.columns[2].columnTitle, "third column description should be null")
-                assertEquals("manufacturer", tableMeta.columns[3].id,"fourth column should be 'Manufacturer'")
                 assertNull(tableMeta.columns[3].columnTitle, "fourth column description should be null")
             }
 
             Then("columns should have correctly set object field getters") {
-                assertEquals(Product::code, tableMeta.columns[0].fromField,"first column should get field value using ref 'Product::code'")
-                assertEquals(Product::name, tableMeta.columns[1].fromField,"second column should get field value using ref 'Product::name'")
-                assertEquals(Product::description, tableMeta.columns[2].fromField,"third column should get field value using ref 'Product::description'")
-                assertEquals(Product::manufacturer, tableMeta.columns[3].fromField,"fourth column should get field value using ref 'Product::manufacturer'")
+                assertEquals(Product::code, tableMeta.columns[0].id.ref,"first column should get field value using ref 'Product::code'")
+                assertEquals(Product::name, tableMeta.columns[1].id.ref,"second column should get field value using ref 'Product::name'")
+                assertEquals(Product::description, tableMeta.columns[2].id.ref,"third column should get field value using ref 'Product::description'")
+                assertEquals(Product::manufacturer, tableMeta.columns[3].id.ref,"fourth column should get field value using ref 'Product::manufacturer'")
             }
 
         }
