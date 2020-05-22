@@ -5,6 +5,8 @@ import org.apache.poi.xssf.streaming.SXSSFCell
 import org.apache.poi.xssf.streaming.SXSSFRow
 import org.apache.poi.xssf.streaming.SXSSFSheet
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
+import org.apache.poi.xssf.usermodel.XSSFColor
+import pl.voytech.exporter.core.model.hints.style.Color
 import pl.voytech.exporter.core.template.Coordinates
 import pl.voytech.exporter.core.template.DelegateState
 
@@ -19,18 +21,21 @@ object PoiWrapper {
 
     fun assertRow(state: DelegateState, rowIndex: Int): SXSSFRow = row(state,rowIndex) ?: createRow(state,rowIndex)
 
-    fun createCell(state: DelegateState, coordinates: Coordinates): SXSSFCell = assertRow(state,coordinates.rowIndex).createCell(coordinates.columnIndex)
+    fun createCell(state: DelegateState, coordinates: Coordinates): SXSSFCell = assertRow(state,coordinates.rowIndex).let {
+        it.createCell(coordinates.columnIndex).also { cell ->
+            cell.cellStyle = getWorkbook(state).createCellStyle()
+        }
+    }
 
     fun cell(state: DelegateState, coordinates: Coordinates): SXSSFCell? = assertRow(state,coordinates.rowIndex).getCell(coordinates.columnIndex)
 
     fun assertCell(state: DelegateState, coordinates: Coordinates): SXSSFCell = cell(state,coordinates) ?: createCell(state,coordinates)
 
     fun cellStyle(state: DelegateState, coordinates: Coordinates): CellStyle {
-        return assertCell(state,coordinates).let {
-                   it.cellStyle = getWorkbook(state).createCellStyle()
-                   it.cellStyle
-               }
+        return assertCell(state,coordinates).cellStyle
     }
+
+    fun color(color: Color): XSSFColor = XSSFColor(byteArrayOf(color.r.toByte(), color.g.toByte(), color.b.toByte()),null)
 
     fun columnStyle(state: DelegateState, columnIndex: Int): CellStyle {
         return tableSheet(state).getColumnStyle(columnIndex)

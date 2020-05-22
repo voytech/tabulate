@@ -129,6 +129,10 @@ class RowBuilder<T> {
         cellHints = HintsBuilder<CellHint>().apply(block)
     }
 
+    fun cellHints(vararg hints: CellHint) {
+        cellHints = hints.toHashSet()
+    }
+
     fun cells(block: CellsBuilder<T>.() -> Unit) {
         cells = CellsBuilder<T>().apply(block)
     }

@@ -1,17 +1,17 @@
 package pl.voytech.exporter.impl.template.excel
 
+import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.FontUnderline
-import org.apache.poi.xssf.usermodel.XSSFColor
+import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import org.apache.poi.xssf.usermodel.XSSFFont
 import pl.voytech.exporter.core.model.hints.TableHint
-import pl.voytech.exporter.core.model.hints.style.CellBackgroundHint
-import pl.voytech.exporter.core.model.hints.style.CellFontHint
-import pl.voytech.exporter.core.model.hints.style.ColumnWidthHint
-import pl.voytech.exporter.core.model.hints.style.RowHeightHint
+import pl.voytech.exporter.core.model.hints.style.*
+import pl.voytech.exporter.core.model.hints.style.enums.BorderStyle
 import pl.voytech.exporter.core.model.hints.style.enums.WeightStyle
 import pl.voytech.exporter.core.template.*
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertRow
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.cellStyle
+import pl.voytech.exporter.impl.template.excel.PoiWrapper.color
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.getWorkbook
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.tableSheet
 import kotlin.reflect.KClass
@@ -24,7 +24,7 @@ class CellFontHintOperation: CellHintOperation<CellFontHint> {
         cellStyle(state,coordinates).let {
             val font: XSSFFont = getWorkbook(state).createFont() as XSSFFont
             hint.fontFamily?.run { font.fontName = this }
-            hint.fontColor?.run { font.setColor(XSSFColor(byteArrayOf(r.toByte(), g.toByte(), b.toByte()),null)) }
+            hint.fontColor?.run { font.setColor(color(this)) }
             hint.fontSize?.run { font.fontHeightInPoints = toShort() }
             hint.italic?.run { font.italic = this}
             hint.strikeout?.run { font.strikeout = this }
@@ -39,7 +39,35 @@ class CellBackgroundHintOperation: CellHintOperation<CellBackgroundHint> {
     override fun hintType(): KClass<CellBackgroundHint> = CellBackgroundHint::class
 
     override fun apply(state: DelegateState, coordinates: Coordinates, hint: CellBackgroundHint) {
-         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        cellStyle(state,coordinates).let {
+            (it as XSSFCellStyle).setFillForegroundColor(color(hint.color))
+            it.fillPattern = FillPatternType.SOLID_FOREGROUND
+        }
+    }
+}
+
+class CellBordersHintOperation: CellHintOperation<CellBordersHint> {
+    override fun hintType(): KClass<CellBordersHint> = CellBordersHint::class
+
+    override fun apply(state: DelegateState, coordinates: Coordinates, hint: CellBordersHint) {
+        val toPoiStyle = { style: BorderStyle ->
+            when (style) {
+                BorderStyle.DASHED -> org.apache.poi.ss.usermodel.BorderStyle.DASHED
+                BorderStyle.DOTTED -> org.apache.poi.ss.usermodel.BorderStyle.DOTTED
+                BorderStyle.SOLID -> org.apache.poi.ss.usermodel.BorderStyle.THIN
+                else -> org.apache.poi.ss.usermodel.BorderStyle.NONE
+            }
+        }
+        cellStyle(state, coordinates).let {
+            hint.leftBorderColor?.run { (it as XSSFCellStyle).setLeftBorderColor(color(this)) }
+            hint.rightBorderColor?.run { (it as XSSFCellStyle).setRightBorderColor(color(this)) }
+            hint.topBorderColor?.run { (it as XSSFCellStyle).setTopBorderColor(color(this)) }
+            hint.bottomBorderColor?.run { (it as XSSFCellStyle).setBottomBorderColor(color(this)) }
+            hint.leftBorderStyle?.run { it.borderLeft = toPoiStyle(this) }
+            hint.rightBorderStyle?.run { it.borderRight = toPoiStyle(this) }
+            hint.topBorderStyle?.run { it.borderTop = toPoiStyle(this) }
+            hint.bottomBorderStyle?.run{ it.borderBottom = toPoiStyle(this) }
+        }
     }
 }
 
@@ -55,7 +83,6 @@ class RowHeightHintOperation: RowHintOperation<RowHeightHint> {
     }
 }
 
-
 val tableHintsOperations = emptyList<TableHintOperation<TableHint>>()
 
 val rowHintsOperations = listOf(
@@ -64,7 +91,8 @@ val rowHintsOperations = listOf(
 
 val cellHintsOperations = listOf(
     CellFontHintOperation(),
-    CellBackgroundHintOperation()
+    CellBackgroundHintOperation(),
+    CellBordersHintOperation()
 )
 
 val columnHintsOperations = listOf(

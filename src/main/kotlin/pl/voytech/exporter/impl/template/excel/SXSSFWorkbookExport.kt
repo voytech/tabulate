@@ -5,6 +5,9 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.*
+import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertCell
+import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertRow
+import pl.voytech.exporter.impl.template.excel.PoiWrapper.createCell
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.getWorkbook
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.tableSheet
 import java.io.ByteArrayOutputStream
@@ -59,7 +62,7 @@ class SXSSFWorkbookExport<T>() : HintsResolvingExportOperations<T>(tableHintsOpe
     }
 
     override fun renderColumnsTitlesRow(state: DelegateState, coordinates: Coordinates) {
-        tableSheet(state).createRow(coordinates.rowIndex)
+        assertRow(state, coordinates.rowIndex)
     }
 
     override fun renderColumnTitleCell(
@@ -67,17 +70,17 @@ class SXSSFWorkbookExport<T>() : HintsResolvingExportOperations<T>(tableHintsOpe
         coordinates: Coordinates,
         columnTitle: String?
     ) {
-        tableSheet(state).getRow(0).createCell(coordinates.columnIndex).let { cell ->
+        assertCell(state, coordinates).let { cell ->
             columnTitle?.let { cell.setCellValue(it) }
         }
     }
 
     override fun renderRow(state: DelegateState, coordinates: Coordinates) {
-        tableSheet(state).createRow(coordinates.rowIndex)
+        assertRow(state,coordinates.rowIndex)
     }
 
     override fun renderRowCell(state: DelegateState, coordinates: Coordinates, value: CellValue?) {
-        tableSheet(state).getRow(coordinates.rowIndex).createCell(coordinates.columnIndex).also { setCellValue(it,value) }
+        assertCell(state,coordinates).also { setCellValue(it,value) }
     }
 
     override fun complete(state: DelegateState, coordinates: Coordinates): FileData<ByteArray> {

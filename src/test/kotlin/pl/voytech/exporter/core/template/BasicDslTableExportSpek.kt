@@ -3,10 +3,9 @@ package pl.voytech.exporter.core.template
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.dsl.table
-import pl.voytech.exporter.core.model.hints.style.CellFontHint
-import pl.voytech.exporter.core.model.hints.style.Color
-import pl.voytech.exporter.core.model.hints.style.ColumnWidthHint
-import pl.voytech.exporter.core.model.hints.style.RowHeightHint
+import pl.voytech.exporter.core.model.RowSelectors
+import pl.voytech.exporter.core.model.hints.style.*
+import pl.voytech.exporter.core.model.hints.style.enums.BorderStyle
 import pl.voytech.exporter.core.model.hints.style.enums.WeightStyle
 import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.excel.SXSSFWorkbookExport
@@ -48,7 +47,8 @@ object BasicDslTableExportSpek: Spek({
                                         fontFamily = "Times New Roman",
                                         fontColor = Color(0,0,0),
                                         fontSize = 12
-                                    )
+                                    ),
+                                    CellBackgroundHint(color = Color(10,100,100))
                                 )
                             }
                             column("name") {
@@ -69,11 +69,19 @@ object BasicDslTableExportSpek: Spek({
                         }
                         rows {
                             row {
-                                selector = { data -> data.index == 0 }
+                                selector = RowSelectors.at(0)
                                 rowHints(RowHeightHint(height = 220))
+                                cellHints(CellBordersHint(
+                                    leftBorderStyle = BorderStyle.SOLID,
+                                    leftBorderColor = Color(0,0,0),
+                                    rightBorderStyle = BorderStyle.SOLID,
+                                    rightBorderColor = Color(0,0,0),
+                                    bottomBorderStyle = BorderStyle.SOLID,
+                                    bottomBorderColor = Color(0,0,0)
+                                ))
                             }
                             row {
-                                selector = {true}
+                                selector = RowSelectors.all()
                                 cells {
                                     forColumn("nr") { eval = { row -> row.index } }
                                 }

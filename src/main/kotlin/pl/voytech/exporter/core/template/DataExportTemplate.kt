@@ -58,11 +58,12 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
         val headerRowMeta = collectMatchingRowDefinitions(RowData(index = state.rowIndex,dataset = collection), table.rows)
         return delegate.renderColumnsTitlesRow(state.delegate, state.coordinates(), headerRowMeta.rowHints).let {
             table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                 delegate.renderColumn(state.delegate, column.index ?: columnIndex, column.columnHints)
-                 renderColumnTitleCell(
+                delegate.renderColumn(state.delegate, column.index ?: columnIndex, column.columnHints)
+                val cellDef = headerRowMeta.rowCells?.get(column.id)
+                renderColumnTitleCell(
                     state.nextColumnIndex(column.index ?: columnIndex),
                     column.columnTitle,
-                    collectUniqueCellHints(table.cellHints, column.cellHints)
+                    collectUniqueCellHints(table.cellHints, column.cellHints, headerRowMeta.rowCellHints, cellDef?.cellHints)
                 )
             }
         }.let { state.nextRowIndex() }
