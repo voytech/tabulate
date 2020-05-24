@@ -7,6 +7,8 @@ import org.apache.poi.xssf.usermodel.XSSFFont
 import pl.voytech.exporter.core.model.hints.TableHint
 import pl.voytech.exporter.core.model.hints.style.*
 import pl.voytech.exporter.core.model.hints.style.enums.BorderStyle
+import pl.voytech.exporter.core.model.hints.style.enums.HorizontalAlignment
+import pl.voytech.exporter.core.model.hints.style.enums.VerticalAlignment
 import pl.voytech.exporter.core.model.hints.style.enums.WeightStyle
 import pl.voytech.exporter.core.template.*
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertRow
@@ -71,6 +73,45 @@ class CellBordersHintOperation: CellHintOperation<CellBordersHint> {
     }
 }
 
+class CellAlignmentHintOperation: CellHintOperation<CellAlignmentHint> {
+
+    override fun hintType(): KClass<out CellAlignmentHint> = CellAlignmentHint::class
+
+    override fun apply(state: DelegateState, coordinates: Coordinates, hint: CellAlignmentHint) {
+        cellStyle(state, coordinates).let {
+            hint.horizontal?.run { it.alignment =
+                when (this) {
+                    HorizontalAlignment.CENTER ->  org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER
+                    HorizontalAlignment.LEFT -> org.apache.poi.ss.usermodel.HorizontalAlignment.LEFT
+                    HorizontalAlignment.RIGHT -> org.apache.poi.ss.usermodel.HorizontalAlignment.RIGHT
+                    HorizontalAlignment.JUSTIFY -> org.apache.poi.ss.usermodel.HorizontalAlignment.FILL
+                    else -> org.apache.poi.ss.usermodel.HorizontalAlignment.GENERAL
+                }
+            }
+            hint.vertical?.run { it.verticalAlignment =
+                when (this) {
+                    VerticalAlignment.MIDDLE -> org.apache.poi.ss.usermodel.VerticalAlignment.CENTER
+                    VerticalAlignment.BOTTOM -> org.apache.poi.ss.usermodel.VerticalAlignment.BOTTOM
+                    VerticalAlignment.TOP -> org.apache.poi.ss.usermodel.VerticalAlignment.TOP
+                    else -> org.apache.poi.ss.usermodel.VerticalAlignment.TOP
+                }
+            }
+        }
+    }
+
+}
+
+class CellDataFormatHintOperation: CellHintOperation<CellExcelDataFormatHint> {
+    override fun hintType(): KClass<out CellExcelDataFormatHint> = CellExcelDataFormatHint::class
+
+    override fun apply(state: DelegateState, coordinates: Coordinates, hint: CellExcelDataFormatHint) {
+        cellStyle(state, coordinates).let {
+            hint.dataFormat.run { it.dataFormat = getWorkbook(state).createDataFormat().getFormat(this) }
+        }
+    }
+
+}
+
 class ColumnWidthHintOperation: ColumnHintOperation<ColumnWidthHint> {
     override fun hintType(): KClass<out ColumnWidthHint> = ColumnWidthHint::class
     override fun apply(state: DelegateState, columnIndex: Int, hint: ColumnWidthHint) = tableSheet(state).setColumnWidth(columnIndex, PoiUtils.widthFromPixels(hint.width))
@@ -83,6 +124,7 @@ class RowHeightHintOperation: RowHintOperation<RowHeightHint> {
     }
 }
 
+
 val tableHintsOperations = emptyList<TableHintOperation<TableHint>>()
 
 val rowHintsOperations = listOf(
@@ -92,7 +134,9 @@ val rowHintsOperations = listOf(
 val cellHintsOperations = listOf(
     CellFontHintOperation(),
     CellBackgroundHintOperation(),
-    CellBordersHintOperation()
+    CellBordersHintOperation(),
+    CellAlignmentHintOperation(),
+    CellDataFormatHintOperation()
 )
 
 val columnHintsOperations = listOf(

@@ -6,6 +6,7 @@ import pl.voytech.exporter.core.api.dsl.table
 import pl.voytech.exporter.core.model.Description
 import pl.voytech.exporter.core.model.infinite
 import pl.voytech.exporter.data.Product
+import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -14,8 +15,8 @@ import kotlin.test.assertTrue
 object BasicDslTableDefinitionSpek: Spek({
     Feature("Should be able to define table, columns and cells with just a header") {
         val productList by memoized { listOf(
-            Product("camera","Sony Film Beauty","An excellent camera for non-professional usage", "Sony"),
-            Product("camera","Sony Film Sharp","An excellent camera for professional usage", "Sony")
+            Product("camera","Sony Film Beauty","An excellent camera for non-professional usage", "Sony", LocalDate.now()),
+            Product("camera","Sony Film Sharp","An excellent camera for professional usage", "Sony", LocalDate.now())
         ) }
 
         Scenario("defining simple table model through kotlin DSL") {

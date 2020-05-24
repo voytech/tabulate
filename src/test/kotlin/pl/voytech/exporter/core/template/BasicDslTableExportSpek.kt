@@ -6,20 +6,24 @@ import pl.voytech.exporter.core.api.dsl.table
 import pl.voytech.exporter.core.model.RowSelectors
 import pl.voytech.exporter.core.model.hints.style.*
 import pl.voytech.exporter.core.model.hints.style.enums.BorderStyle
+import pl.voytech.exporter.core.model.hints.style.enums.HorizontalAlignment
+import pl.voytech.exporter.core.model.hints.style.enums.VerticalAlignment
 import pl.voytech.exporter.core.model.hints.style.enums.WeightStyle
 import pl.voytech.exporter.data.Product
+import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatHint
 import pl.voytech.exporter.impl.template.excel.excelExport
 import java.io.File
 import java.io.FileOutputStream
+import java.time.LocalDate
 import kotlin.test.assertNotNull
 
 object BasicDslTableExportSpek: Spek({
     Feature("Should be able to define table, columns and export data to excel file") {
         Scenario("defining simple table model and exporting to excel file.") {
-            val productList = (0..1000).map { Product("prod_nr_$it","Name $it", "This is description $it", "manufacturer $it")}
+            val productList = (0..1000).map { Product("prod_nr_$it","Name $it", "This is description $it", "manufacturer $it", LocalDate.now())}
             val file = File("test.xlsx")
             FileOutputStream(file).use {
-                DataExportTemplate<Product>(excelExport()).exportToStream(
+                productList.exportTo(
                     table {
                         name = "Products table"
                         columns {
@@ -62,19 +66,31 @@ object BasicDslTableExportSpek: Spek({
                                 columnTitle { title = "Manufacturer" }
                                 columnHints(ColumnWidthHint(width = 100))
                             }
+                            column(Product::distributionDate) {
+                                columnTitle { title = "Distribution" }
+                                cellHints(
+                                    CellExcelDataFormatHint("dd.mm.YYYY")
+                                )
+                            }
                         }
                         rows {
                             row {
                                 selector = RowSelectors.at(0)
                                 rowHints(RowHeightHint(height = 220))
-                                cellHints(CellBordersHint(
-                                    leftBorderStyle = BorderStyle.SOLID,
-                                    leftBorderColor = Color(0,0,0),
-                                    rightBorderStyle = BorderStyle.SOLID,
-                                    rightBorderColor = Color(0,0,0),
-                                    bottomBorderStyle = BorderStyle.SOLID,
-                                    bottomBorderColor = Color(0,0,0)
-                                ))
+                                cellHints(
+                                    CellBordersHint(
+                                        leftBorderStyle = BorderStyle.SOLID,
+                                        leftBorderColor = Color(0,0,0),
+                                        rightBorderStyle = BorderStyle.SOLID,
+                                        rightBorderColor = Color(0,0,0),
+                                        bottomBorderStyle = BorderStyle.SOLID,
+                                        bottomBorderColor = Color(0,0,0)
+                                    ),
+                                    CellAlignmentHint(
+                                        horizontal = HorizontalAlignment.CENTER,
+                                        vertical = VerticalAlignment.MIDDLE
+                                    )
+                                )
                             }
                             row {
                                 selector = RowSelectors.all()
@@ -84,7 +100,7 @@ object BasicDslTableExportSpek: Spek({
                             }
                         }
                     },
-                    productList,
+                    excelExport(),
                     it
                 )
             }

@@ -1,12 +1,14 @@
 package pl.voytech.exporter.data
 
 import java.math.BigDecimal
+import java.time.LocalDate
 
 data class Product(
     val code: String,
     val name: String,
     val description: String? = "",
-    val manufacturer: String
+    val manufacturer: String,
+    val distributionDate: LocalDate
 )
 
 data class Price(

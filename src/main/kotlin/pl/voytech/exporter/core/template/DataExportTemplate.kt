@@ -30,11 +30,11 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
         }
     }
 
-    fun exportToByteArray(table: Table<T>, collection: Collection<T>): FileData<ByteArray> {
+    fun export(table: Table<T>, collection: Collection<T>): FileData<ByteArray> {
         return build(table,collection).let { delegate.basicOperations.complete(it.delegate, it.coordinates()) }
     }
 
-    fun exportToStream(table: Table<T>, collection: Collection<T>, stream: OutputStream) {
+    fun export(table: Table<T>, collection: Collection<T>, stream: OutputStream) {
         build(table,collection).also { delegate.basicOperations.complete(it.delegate, it.coordinates(),stream) }
     }
 
@@ -104,4 +104,8 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
         return hintsOnLevels.filterNotNull().fold(setOf(), {acc, s -> acc + s })
     }
 
+}
+
+fun <T> Collection<T>.exportTo(table: Table<T>, delegate: ExportOperations<T>, stream: OutputStream) {
+    DataExportTemplate(delegate).export(table,this,stream)
 }
