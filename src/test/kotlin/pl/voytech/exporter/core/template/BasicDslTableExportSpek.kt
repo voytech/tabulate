@@ -65,6 +65,7 @@ object BasicDslTableExportSpek: Spek({
                             column(Product::manufacturer) {
                                 columnTitle { title = "Manufacturer" }
                                 columnHints(ColumnWidthHint(width = 100))
+                                dataFormatter = { field -> (field as String).toUpperCase() }
                             }
                             column(Product::distributionDate) {
                                 columnTitle { title = "Distribution" }

@@ -70,6 +70,7 @@ class ColumnBuilder<T> {
     var index: Int? = null
     private var columnHints: Set<ColumnHint>? = null
     private var cellHints: Set<CellHint>? = null
+    var dataFormatter: ((field: Any) -> Any)? = null
 
     constructor()
 
@@ -97,7 +98,7 @@ class ColumnBuilder<T> {
         cellHints = hints.toHashSet()
     }
 
-    fun build() : Column<T> = Column(id, index, columnTitle, columnType, columnHints, cellHints)
+    fun build() : Column<T> = Column(id, index, columnTitle, columnType, columnHints, cellHints, dataFormatter)
 }
 
 class RowsBuilder<T> : ArrayList<Row<T>>() {

@@ -87,7 +87,9 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
             renderRow(state.nextRowIndex(rowIndex), rowMeta.rowHints).also {
                 table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
                     val cellDef = rowMeta.rowCells?.get(column.id)
-                    val value = cellDef?.eval?.invoke(row) ?: cellDef?.value ?: column.id.ref?.invoke(record)
+                    val value = (cellDef?.eval?.invoke(row) ?: cellDef?.value ?: column.id.ref?.invoke(record))?.let {
+                        column.dataFormatter?.invoke(it) ?: it
+                    }
                     renderRowCell(
                         it.nextColumnIndex(column.index ?: columnIndex),
                         value?.let { CellValue(value, cellDef?.type ?: column.columnType) },

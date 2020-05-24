@@ -9,5 +9,6 @@ data class Column<T>(
    val columnTitle: Description?,
    val columnType: CellType?,
    val columnHints: Set<ColumnHint>?,
-   val cellHints: Set<CellHint>?
+   val cellHints: Set<CellHint>?,
+   val dataFormatter: ((field: Any) -> Any)? = null
 )
