@@ -4,12 +4,12 @@ import org.apache.poi.xssf.streaming.SXSSFCell
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.Table
+import pl.voytech.exporter.core.model.hints.CellHint
+import pl.voytech.exporter.core.model.hints.RowHint
 import pl.voytech.exporter.core.template.*
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertCell
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertRow
-import pl.voytech.exporter.impl.template.excel.PoiWrapper.createCell
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.getWorkbook
-import pl.voytech.exporter.impl.template.excel.PoiWrapper.tableSheet
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.time.Instant
@@ -18,7 +18,48 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-class SXSSFWorkbookExport<T>() : HintsResolvingExportOperations<T>(tableHintsOperations, rowHintsOperations, cellHintsOperations, columnHintsOperations) {
+internal class SXSSFBasicOperationsWithHints<T>(rowHints: List<RowHintOperation<out RowHint>>) : BasicOperationsWithHints<T>(rowHints) {
+    override fun init(table: Table<T>): DelegateState {
+        return DelegateState(SXSSFWorkbook().also {
+            it.createSheet(table.name)
+        })
+    }
+
+    override fun renderHeaderRow(state: DelegateState, coordinates: Coordinates) {
+        assertRow(state, coordinates.rowIndex)
+    }
+
+    override fun renderRow(state: DelegateState, coordinates: Coordinates) {
+        assertRow(state,coordinates.rowIndex)
+    }
+
+    override fun complete(state: DelegateState, coordinates: Coordinates): FileData<ByteArray> {
+        val outputStream = ByteArrayOutputStream()
+        getWorkbook(state).run {
+            write(outputStream)
+            close()
+        }
+        return FileData(content = outputStream.toByteArray())
+    }
+
+    override fun complete(state: DelegateState, coordinates: Coordinates, stream: OutputStream) {
+        getWorkbook(state).run {
+            write(stream)
+            close()
+        }
+    }
+}
+
+internal class SXSSFHeaderCellOperationWithHints(cellHints: List<CellHintOperation<out CellHint>>) : HeaderCellOperationWithHints(cellHints){
+    override fun renderHeaderCell(state: DelegateState, coordinates: Coordinates, columnTitle: String?) {
+        assertCell(state, coordinates).let { cell ->
+            columnTitle?.let { cell.setCellValue(it) }
+        }
+    }
+
+}
+
+internal class SXSSFRowCellOperationWithHints(cellHints: List<CellHintOperation<out CellHint>>) : RowCellOperationWithHints(cellHints){
 
     private fun toDateValue(value: Any): Date {
         return when (value) {
@@ -55,47 +96,15 @@ class SXSSFWorkbookExport<T>() : HintsResolvingExportOperations<T>(tableHintsOpe
         }
     }
 
-    override fun init(table: Table<T>): DelegateState {
-        return DelegateState(SXSSFWorkbook().also {
-            it.createSheet(table.name)
-        })
-    }
-
-    override fun renderColumnsTitlesRow(state: DelegateState, coordinates: Coordinates) {
-        assertRow(state, coordinates.rowIndex)
-    }
-
-    override fun renderColumnTitleCell(
-        state: DelegateState,
-        coordinates: Coordinates,
-        columnTitle: String?
-    ) {
-        assertCell(state, coordinates).let { cell ->
-            columnTitle?.let { cell.setCellValue(it) }
-        }
-    }
-
-    override fun renderRow(state: DelegateState, coordinates: Coordinates) {
-        assertRow(state,coordinates.rowIndex)
-    }
-
     override fun renderRowCell(state: DelegateState, coordinates: Coordinates, value: CellValue?) {
         assertCell(state,coordinates).also { setCellValue(it,value) }
     }
 
-    override fun complete(state: DelegateState, coordinates: Coordinates): FileData<ByteArray> {
-        val outputStream = ByteArrayOutputStream()
-        getWorkbook(state).run {
-            write(outputStream)
-            close()
-        }
-        return FileData(content = outputStream.toByteArray())
-    }
-
-    override fun complete(state: DelegateState, coordinates: Coordinates, stream: OutputStream) {
-        getWorkbook(state).run {
-            write(stream)
-            close()
-        }
-    }
 }
+
+fun <T> excelExport()  = ExportOperations(
+    SXSSFBasicOperationsWithHints<T>(rowHintsOperations),
+    ColumnOperationWithHints(columnHintsOperations),
+    SXSSFHeaderCellOperationWithHints(cellHintsOperations),
+    SXSSFRowCellOperationWithHints(cellHintsOperations)
+)

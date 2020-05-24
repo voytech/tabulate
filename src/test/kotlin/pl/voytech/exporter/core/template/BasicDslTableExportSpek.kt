@@ -3,13 +3,12 @@ package pl.voytech.exporter.core.template
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.dsl.table
-import pl.voytech.exporter.core.model.Key
 import pl.voytech.exporter.core.model.RowSelectors
 import pl.voytech.exporter.core.model.hints.style.*
 import pl.voytech.exporter.core.model.hints.style.enums.BorderStyle
 import pl.voytech.exporter.core.model.hints.style.enums.WeightStyle
 import pl.voytech.exporter.data.Product
-import pl.voytech.exporter.impl.template.excel.SXSSFWorkbookExport
+import pl.voytech.exporter.impl.template.excel.excelExport
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.test.assertNotNull
@@ -20,7 +19,7 @@ object BasicDslTableExportSpek: Spek({
             val productList = (0..1000).map { Product("prod_nr_$it","Name $it", "This is description $it", "manufacturer $it")}
             val file = File("test.xlsx")
             FileOutputStream(file).use {
-                DataExportTemplate<Product>(SXSSFWorkbookExport()).exportToStream(
+                DataExportTemplate<Product>(excelExport()).exportToStream(
                     table {
                         name = "Products table"
                         columns {

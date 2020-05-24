@@ -31,21 +31,21 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
     }
 
     fun exportToByteArray(table: Table<T>, collection: Collection<T>): FileData<ByteArray> {
-        return build(table,collection).let { delegate.complete(it.delegate, it.coordinates()) }
+        return build(table,collection).let { delegate.basicOperations.complete(it.delegate, it.coordinates()) }
     }
 
     fun exportToStream(table: Table<T>, collection: Collection<T>, stream: OutputStream) {
-        build(table,collection).also { delegate.complete(it.delegate, it.coordinates(),stream) }
+        build(table,collection).also { delegate.basicOperations.complete(it.delegate, it.coordinates(),stream) }
     }
 
     private fun init(table: Table<T>): ExportingState {
-        return ExportingState(delegate.init(table))
+        return ExportingState(delegate.basicOperations.init(table))
     }
 
     private fun build(table: Table<T>, collection: Collection<T>): ExportingState {
         val state: ExportingState = init(table)
         if (table.showHeader == true || table.columns.any { it.columnTitle != null }) {
-            renderColumnsTitlesRow(state, table, collection)
+            renderHeaderRow(state, table, collection)
         }
         val startFrom = state.rowIndex
         collection.forEachIndexed { rowIndex: Int, record: T ->
@@ -54,13 +54,13 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
         return state
     }
 
-    private fun renderColumnsTitlesRow(state: ExportingState, table: Table<T>, collection: Collection<T>): ExportingState {
+    private fun renderHeaderRow(state: ExportingState, table: Table<T>, collection: Collection<T>): ExportingState {
         val headerRowMeta = collectMatchingRowDefinitions(RowData(index = state.rowIndex,dataset = collection), table.rows)
-        return delegate.renderColumnsTitlesRow(state.delegate, state.coordinates(), headerRowMeta.rowHints).let {
+        return delegate.basicOperations.renderHeaderRow(state.delegate, state.coordinates(), headerRowMeta.rowHints).let {
             table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                delegate.renderColumn(state.delegate, column.index ?: columnIndex, column.columnHints)
+                delegate.columnOperation?.renderColumn(state.delegate, column.index ?: columnIndex, column.columnHints)
                 val cellDef = headerRowMeta.rowCells?.get(column.id)
-                renderColumnTitleCell(
+                renderHeaderCell(
                     state.nextColumnIndex(column.index ?: columnIndex),
                     column.columnTitle,
                     collectUniqueCellHints(table.cellHints, column.cellHints, headerRowMeta.rowCellHints, cellDef?.cellHints)
@@ -69,16 +69,16 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
         }.let { state.nextRowIndex() }
     }
 
-    private fun renderColumnTitleCell(state: ExportingState, columnTitle: Description?, cellHints: Set<CellHint>?): ExportingState {
-        return columnTitle?.let { delegate.renderColumnTitleCell(state.delegate, state.coordinates(), columnTitle, cellHints); state } ?: state
+    private fun renderHeaderCell(state: ExportingState, columnTitle: Description?, cellHints: Set<CellHint>?): ExportingState {
+        return columnTitle?.let { delegate.headerCellOperation?.renderHeaderCell(state.delegate, state.coordinates(), columnTitle, cellHints); state } ?: state
     }
 
     private fun renderRow(state: ExportingState, rowHints: Set<RowHint>?): ExportingState {
-        return delegate.renderRow(state.delegate, state.coordinates(), rowHints).let { state }
+        return delegate.basicOperations.renderRow(state.delegate, state.coordinates(), rowHints).let { state }
     }
 
     private fun renderRowCell(state: ExportingState, value: CellValue?, cellHints: Set<CellHint>?) : ExportingState {
-        return delegate.renderRowCell(state.delegate, state.coordinates(), value, cellHints).let { state }
+        return delegate.rowCellOperation?.renderRowCell(state.delegate, state.coordinates(), value, cellHints).let { state }
     }
 
     private fun exportRow(state: ExportingState, table: Table<T>, record: T, collection: Collection<T>, rowIndex: Int) {
