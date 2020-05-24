@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-internal class SXSSFBasicOperationsWithHints<T>(rowHints: List<RowHintOperation<out RowHint>>) : BasicOperationsWithHints<T>(rowHints) {
+internal class StreamingExcelBasicTableOperations<T>(rowHints: List<RowHintOperation<out RowHint>>) : BasicOperationsWithHints<T>(rowHints) {
     override fun init(table: Table<T>): DelegateState {
         return DelegateState(SXSSFWorkbook().also {
             it.createSheet(table.name)
@@ -50,7 +50,7 @@ internal class SXSSFBasicOperationsWithHints<T>(rowHints: List<RowHintOperation<
     }
 }
 
-internal class SXSSFHeaderCellOperationWithHints(cellHints: List<CellHintOperation<out CellHint>>) : HeaderCellOperationWithHints(cellHints){
+internal class StreamingExcelHeaderCellOperation(cellHints: List<CellHintOperation<out CellHint>>) : HeaderCellOperationWithHints(cellHints){
     override fun renderHeaderCell(state: DelegateState, coordinates: Coordinates, columnTitle: String?) {
         assertCell(state, coordinates).let { cell ->
             columnTitle?.let { cell.setCellValue(it) }
@@ -59,7 +59,7 @@ internal class SXSSFHeaderCellOperationWithHints(cellHints: List<CellHintOperati
 
 }
 
-internal class SXSSFRowCellOperationWithHints(cellHints: List<CellHintOperation<out CellHint>>) : RowCellOperationWithHints(cellHints){
+internal class StreamingExcelRowCellOperation(cellHints: List<CellHintOperation<out CellHint>>) : RowCellOperationWithHints(cellHints){
 
     private fun toDateValue(value: Any): Date {
         return when (value) {
@@ -103,8 +103,8 @@ internal class SXSSFRowCellOperationWithHints(cellHints: List<CellHintOperation<
 }
 
 fun <T> excelExport()  = ExportOperations(
-    SXSSFBasicOperationsWithHints<T>(rowHintsOperations),
+    StreamingExcelBasicTableOperations<T>(rowHintsOperations),
     ColumnOperationWithHints(columnHintsOperations),
-    SXSSFHeaderCellOperationWithHints(cellHintsOperations),
-    SXSSFRowCellOperationWithHints(cellHintsOperations)
+    StreamingExcelHeaderCellOperation(cellHintsOperations),
+    StreamingExcelRowCellOperation(cellHintsOperations)
 )
