@@ -9,17 +9,17 @@ interface HintOperation<out T : Hint> {
 }
 
 interface TableHintOperation<T: TableHint> : HintOperation<T> {
-    fun apply(state: DelegateState, hint: T)
+    fun apply(state: DelegateAPI, hint: T)
 }
 
 interface RowHintOperation<T: RowHint> : HintOperation<T> {
-    fun apply(state: DelegateState, rowIndex: Int, hint: T)
+    fun apply(state: DelegateAPI, coordinates: Coordinates, hint: T)
 }
 
 interface CellHintOperation<T: CellHint> : HintOperation<T> {
-    fun apply(state: DelegateState, coordinates: Coordinates, hint: T)
+    fun apply(state: DelegateAPI, coordinates: Coordinates, hint: T)
 }
 
 interface ColumnHintOperation<T: ColumnHint> : HintOperation<T> {
-    fun apply(state: DelegateState, columnIndex: Int, hint: T)
+    fun apply(state: DelegateAPI, coordinates: Coordinates, hint: T)
 }

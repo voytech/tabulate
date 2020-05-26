@@ -22,7 +22,7 @@ class CellFontHintOperation: CellHintOperation<CellFontHint> {
 
     override fun hintType(): KClass<CellFontHint>  = CellFontHint::class
 
-    override fun apply(state: DelegateState, coordinates: Coordinates, hint: CellFontHint) {
+    override fun apply(state: DelegateAPI, coordinates: Coordinates, hint: CellFontHint) {
         cellStyle(state,coordinates).let {
             val font: XSSFFont = getWorkbook(state).createFont() as XSSFFont
             hint.fontFamily?.run { font.fontName = this }
@@ -40,7 +40,7 @@ class CellFontHintOperation: CellHintOperation<CellFontHint> {
 class CellBackgroundHintOperation: CellHintOperation<CellBackgroundHint> {
     override fun hintType(): KClass<CellBackgroundHint> = CellBackgroundHint::class
 
-    override fun apply(state: DelegateState, coordinates: Coordinates, hint: CellBackgroundHint) {
+    override fun apply(state: DelegateAPI, coordinates: Coordinates, hint: CellBackgroundHint) {
         cellStyle(state,coordinates).let {
             (it as XSSFCellStyle).setFillForegroundColor(color(hint.color))
             it.fillPattern = FillPatternType.SOLID_FOREGROUND
@@ -51,7 +51,7 @@ class CellBackgroundHintOperation: CellHintOperation<CellBackgroundHint> {
 class CellBordersHintOperation: CellHintOperation<CellBordersHint> {
     override fun hintType(): KClass<CellBordersHint> = CellBordersHint::class
 
-    override fun apply(state: DelegateState, coordinates: Coordinates, hint: CellBordersHint) {
+    override fun apply(state: DelegateAPI, coordinates: Coordinates, hint: CellBordersHint) {
         val toPoiStyle = { style: BorderStyle ->
             when (style) {
                 BorderStyle.DASHED -> org.apache.poi.ss.usermodel.BorderStyle.DASHED
@@ -77,7 +77,7 @@ class CellAlignmentHintOperation: CellHintOperation<CellAlignmentHint> {
 
     override fun hintType(): KClass<out CellAlignmentHint> = CellAlignmentHint::class
 
-    override fun apply(state: DelegateState, coordinates: Coordinates, hint: CellAlignmentHint) {
+    override fun apply(state: DelegateAPI, coordinates: Coordinates, hint: CellAlignmentHint) {
         cellStyle(state, coordinates).let {
             hint.horizontal?.run { it.alignment =
                 when (this) {
@@ -104,7 +104,7 @@ class CellAlignmentHintOperation: CellHintOperation<CellAlignmentHint> {
 class CellDataFormatHintOperation: CellHintOperation<CellExcelDataFormatHint> {
     override fun hintType(): KClass<out CellExcelDataFormatHint> = CellExcelDataFormatHint::class
 
-    override fun apply(state: DelegateState, coordinates: Coordinates, hint: CellExcelDataFormatHint) {
+    override fun apply(state: DelegateAPI, coordinates: Coordinates, hint: CellExcelDataFormatHint) {
         cellStyle(state, coordinates).let {
             hint.dataFormat.run { it.dataFormat = getWorkbook(state).createDataFormat().getFormat(this) }
         }
@@ -114,13 +114,13 @@ class CellDataFormatHintOperation: CellHintOperation<CellExcelDataFormatHint> {
 
 class ColumnWidthHintOperation: ColumnHintOperation<ColumnWidthHint> {
     override fun hintType(): KClass<out ColumnWidthHint> = ColumnWidthHint::class
-    override fun apply(state: DelegateState, columnIndex: Int, hint: ColumnWidthHint) = tableSheet(state).setColumnWidth(columnIndex, PoiUtils.widthFromPixels(hint.width))
+    override fun apply(state: DelegateAPI, coordinates: Coordinates, hint: ColumnWidthHint) = tableSheet(state, coordinates.tableName).setColumnWidth(coordinates.columnIndex, PoiUtils.widthFromPixels(hint.width))
 }
 
 class RowHeightHintOperation: RowHintOperation<RowHeightHint> {
     override fun hintType(): KClass<out RowHeightHint> = RowHeightHint::class
-    override fun apply(state: DelegateState, rowIndex: Int, hint: RowHeightHint) {
-        assertRow(state, rowIndex).height = PoiUtils.heightFromPixels(hint.height)
+    override fun apply(state: DelegateAPI, coordinates: Coordinates, hint: RowHeightHint) {
+        assertRow(state, coordinates).height = PoiUtils.heightFromPixels(hint.height)
     }
 }
 

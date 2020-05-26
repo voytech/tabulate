@@ -6,21 +6,21 @@ import pl.voytech.exporter.core.model.hints.RowHint
 import pl.voytech.exporter.core.model.hints.TableHint
 
 interface TableHintsOperation {
-    fun applyTableHints(state: DelegateState, hints: Set<TableHint>)
+    fun applyTableHints(state: DelegateAPI, hints: Set<TableHint>)
 }
 
 interface ColumnHintsOperation {
-    fun applyColumnHints(state: DelegateState, columnIndex: Int, hints: Set<ColumnHint>)
+    fun applyColumnHints(state: DelegateAPI, coordinates: Coordinates, hints: Set<ColumnHint>)
 }
 
 interface RowHintsOperation {
-    fun applyRowHints(state: DelegateState, rowIndex: Int, hints: Set<RowHint>)
+    fun applyRowHints(state: DelegateAPI, coordinates: Coordinates, hints: Set<RowHint>)
 }
 
 interface HeaderCellsHintsOperation {
-    fun applyHeaderCellHints(state: DelegateState, columnIndex: Int, hints: Set<CellHint>)
+    fun applyHeaderCellHints(state: DelegateAPI, coordinates: Coordinates, hints: Set<CellHint>)
 }
 
 interface CellHintsOperation {
-    fun applyCellHints(state: DelegateState, coordinates: Coordinates, hints: Set<CellHint>)
+    fun applyCellHints(state: DelegateAPI, coordinates: Coordinates, hints: Set<CellHint>)
 }

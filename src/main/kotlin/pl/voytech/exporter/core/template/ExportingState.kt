@@ -1,6 +1,11 @@
 package pl.voytech.exporter.core.template
 
-class ExportingState(val delegate: DelegateState) {
+import pl.voytech.exporter.core.model.NextId
+
+class ExportingState(
+    val delegate: DelegateAPI,
+    val tableName: String = "table-${NextId.nextId()}"
+) {
     var rowIndex: Int = 0
     var columnIndex: Int = 0
 
@@ -19,6 +24,6 @@ class ExportingState(val delegate: DelegateState) {
         return this
     }
 
-    fun coordinates(): Coordinates = Coordinates(rowIndex, columnIndex)
+    fun coordinates(): Coordinates = Coordinates(tableName, rowIndex, columnIndex)
 
 }

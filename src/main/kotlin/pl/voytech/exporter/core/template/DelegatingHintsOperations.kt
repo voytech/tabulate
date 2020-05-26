@@ -12,7 +12,7 @@ class DelegatingTableHintsOperations(
         return tableHints?.find { operation -> operation.hintType() == hint } as TableHintOperation<TableHint>
     }
 
-    override fun applyTableHints(state: DelegateState, hints: Set<TableHint>) {
+    override fun applyTableHints(state: DelegateAPI, hints: Set<TableHint>) {
         hints.forEach { hint ->
             hintOperationByClass(hint::class)?.apply(state, hint)
         }
@@ -28,9 +28,9 @@ class DelegatingRowHintsOperations(
         return rowHints?.find { operation -> operation.hintType() == hint } as RowHintOperation<RowHint>
     }
 
-    override fun applyRowHints(state: DelegateState, rowIndex: Int, hints: Set<RowHint>)  {
+    override fun applyRowHints(state: DelegateAPI, coordinates: Coordinates, hints: Set<RowHint>)  {
         hints.forEach { hint ->
-            hintOperationByClass(hint::class)?.apply(state, rowIndex, hint)
+            hintOperationByClass(hint::class)?.apply(state, coordinates, hint)
         }
     }
 }
@@ -44,9 +44,9 @@ class DelegatingColumnHintsOperations(
         return columnHints?.find { operation -> operation.hintType() == hint } as ColumnHintOperation<ColumnHint>
     }
 
-    override fun applyColumnHints(state: DelegateState, columnIndex: Int, hints: Set<ColumnHint>)  {
+    override fun applyColumnHints(state: DelegateAPI, coordinates: Coordinates, hints: Set<ColumnHint>)  {
         hints.forEach { hint ->
-            hintOperationByClass(hint::class)?.apply(state, columnIndex, hint)
+            hintOperationByClass(hint::class)?.apply(state, coordinates, hint)
         }
     }
 }
@@ -60,7 +60,7 @@ class DelegatingCellHintsOperations(
         return cellHints?.find { operation -> operation.hintType() == hint } as CellHintOperation<CellHint>
     }
 
-    override fun applyCellHints(state: DelegateState, coordinates: Coordinates, hints: Set<CellHint>)  {
+    override fun applyCellHints(state: DelegateAPI, coordinates: Coordinates, hints: Set<CellHint>)  {
         hints.forEach { hint ->
             hintOperationByClass(hint::class)?.apply(state, coordinates, hint)
         }

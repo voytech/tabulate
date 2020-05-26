@@ -1,17 +1,17 @@
 package pl.voytech.exporter.core.model
 
-object ColumnNextId {
+object NextId {
 
-    private var columnNextId: ThreadLocal<Int> = ThreadLocal()
+    private var nextId: ThreadLocal<Int> = ThreadLocal()
 
     fun nextId(): Int {
-        val value = columnNextId.get() ?: 0
-        columnNextId.set(value + 1)
-        return columnNextId.get()
+        val value = nextId.get() ?: 0
+        nextId.set(value + 1)
+        return nextId.get()
     }
 
     fun reset() {
-        columnNextId.set(0)
+        nextId.set(0)
     }
 }
 

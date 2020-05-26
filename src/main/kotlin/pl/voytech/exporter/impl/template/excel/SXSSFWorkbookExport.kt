@@ -18,22 +18,29 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-internal class StreamingExcelBasicTableOperations<T>(rowHints: List<RowHintOperation<out RowHint>>) : BasicOperationsWithHints<T>(rowHints) {
-    override fun init(table: Table<T>): DelegateState {
-        return DelegateState(SXSSFWorkbook().also {
-            it.createSheet(table.name)
-        })
+internal class StreamingExcelRowTableOperations(rowHints: List<RowHintOperation<out RowHint>>) : RowOperationsWithHints(rowHints) {
+
+    override fun renderHeaderRow(state: DelegateAPI, coordinates: Coordinates) {
+        assertRow(state, coordinates)
     }
 
-    override fun renderHeaderRow(state: DelegateState, coordinates: Coordinates) {
-        assertRow(state, coordinates.rowIndex)
+    override fun renderRow(state: DelegateAPI, coordinates: Coordinates) {
+        assertRow(state,coordinates)
     }
 
-    override fun renderRow(state: DelegateState, coordinates: Coordinates) {
-        assertRow(state,coordinates.rowIndex)
+}
+
+internal class StreamingExcelLifecycleOperations<T>(): LifecycleOperations<T> {
+
+    override fun create(): DelegateAPI {
+        return DelegateAPI(SXSSFWorkbook())
     }
 
-    override fun complete(state: DelegateState, coordinates: Coordinates): FileData<ByteArray> {
+    override fun init(state: DelegateAPI, table: Table<T>): DelegateAPI{
+        return getWorkbook(state).createSheet(table.name).let { state }
+    }
+
+    override fun complete(state: DelegateAPI): FileData<ByteArray> {
         val outputStream = ByteArrayOutputStream()
         getWorkbook(state).run {
             write(outputStream)
@@ -42,16 +49,17 @@ internal class StreamingExcelBasicTableOperations<T>(rowHints: List<RowHintOpera
         return FileData(content = outputStream.toByteArray())
     }
 
-    override fun complete(state: DelegateState, coordinates: Coordinates, stream: OutputStream) {
+    override fun complete(state: DelegateAPI, stream: OutputStream) {
         getWorkbook(state).run {
             write(stream)
             close()
         }
     }
+
 }
 
-internal class StreamingExcelHeaderCellOperation(cellHints: List<CellHintOperation<out CellHint>>) : HeaderCellOperationWithHints(cellHints){
-    override fun renderHeaderCell(state: DelegateState, coordinates: Coordinates, columnTitle: String?) {
+internal class StreamingExcelHeaderCellOperations(cellHints: List<CellHintOperation<out CellHint>>) : HeaderCellOperationsWithHints(cellHints){
+    override fun renderHeaderCell(state: DelegateAPI, coordinates: Coordinates, columnTitle: String?) {
         assertCell(state, coordinates).let { cell ->
             columnTitle?.let { cell.setCellValue(it) }
         }
@@ -59,7 +67,7 @@ internal class StreamingExcelHeaderCellOperation(cellHints: List<CellHintOperati
 
 }
 
-internal class StreamingExcelRowCellOperation(cellHints: List<CellHintOperation<out CellHint>>) : RowCellOperationWithHints(cellHints){
+internal class StreamingExcelRowCellOperations(cellHints: List<CellHintOperation<out CellHint>>) : RowCellOperationsWithHints(cellHints){
 
     private fun toDateValue(value: Any): Date {
         return when (value) {
@@ -79,7 +87,7 @@ internal class StreamingExcelRowCellOperation(cellHints: List<CellHintOperation<
                     CellType.BOOLEAN -> cell.setCellValue(v.value as Boolean)
                     CellType.DATE -> cell.setCellValue(toDateValue(v.value))
                     CellType.NUMERIC -> cell.setCellValue((v.value as Number).toDouble())
-                    CellType.NATIVE_FORMULA -> TODO()
+                    CellType.NATIVE_FORMULA -> cell.cellFormula = v.value.toString()
                     CellType.FORMULA -> TODO()
                     CellType.ERROR -> TODO()
                 }
@@ -96,15 +104,16 @@ internal class StreamingExcelRowCellOperation(cellHints: List<CellHintOperation<
         }
     }
 
-    override fun renderRowCell(state: DelegateState, coordinates: Coordinates, value: CellValue?) {
+    override fun renderRowCell(state: DelegateAPI, coordinates: Coordinates, value: CellValue?) {
         assertCell(state,coordinates).also { setCellValue(it,value) }
     }
 
 }
 
-fun <T> excelExport()  = ExportOperations(
-    StreamingExcelBasicTableOperations<T>(rowHintsOperations),
-    ColumnOperationWithHints(columnHintsOperations),
-    StreamingExcelHeaderCellOperation(cellHintsOperations),
-    StreamingExcelRowCellOperation(cellHintsOperations)
+fun <T> excelExport() = ExportOperations(
+    StreamingExcelLifecycleOperations<T>(),
+    StreamingExcelRowTableOperations(rowHintsOperations),
+    ColumnOperationsWithHints(columnHintsOperations),
+    StreamingExcelHeaderCellOperations(cellHintsOperations),
+    StreamingExcelRowCellOperations(cellHintsOperations)
 )

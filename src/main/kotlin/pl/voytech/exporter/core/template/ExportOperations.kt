@@ -7,28 +7,33 @@ import pl.voytech.exporter.core.model.hints.ColumnHint
 import pl.voytech.exporter.core.model.hints.RowHint
 import java.io.OutputStream
 
-interface BasicOperations<T> {
-    fun init(table: Table<T>): DelegateState
-    fun renderHeaderRow(state: DelegateState, coordinates: Coordinates, rowHints: Set<RowHint>?)
-    fun renderRow(state: DelegateState, coordinates: Coordinates, rowHints: Set<RowHint>?)
-    fun complete(state: DelegateState, coordinates: Coordinates): FileData<ByteArray>
-    fun complete(state: DelegateState, coordinates: Coordinates, stream: OutputStream)
+interface RowOperations {
+    fun renderHeaderRow(state: DelegateAPI, coordinates: Coordinates, rowHints: Set<RowHint>?)
+    fun renderRow(state: DelegateAPI, coordinates: Coordinates, rowHints: Set<RowHint>?)
 }
 
+interface LifecycleOperations<T> {
+    fun create(): DelegateAPI
+    fun init(state: DelegateAPI, table: Table<T>): DelegateAPI
+    fun complete(state: DelegateAPI): FileData<ByteArray>
+    fun complete(state: DelegateAPI, stream: OutputStream)
+}
 
 interface ColumnOperation {
-    fun renderColumn(state: DelegateState,columnIndex: Int, columnHints: Set<ColumnHint>?)
+    fun renderColumn(state: DelegateAPI, coordinates: Coordinates, columnHints: Set<ColumnHint>?)
 }
+
 interface HeaderCellOperation {
-    fun renderHeaderCell(state: DelegateState, coordinates: Coordinates, columnTitle: Description?, cellHints: Set<CellHint>?)
+    fun renderHeaderCell(state: DelegateAPI, coordinates: Coordinates, columnTitle: Description?, cellHints: Set<CellHint>?)
 }
 
 interface RowCellOperation {
-    fun renderRowCell(state: DelegateState, coordinates: Coordinates, value: CellValue?, cellHints: Set<CellHint>?)
+    fun renderRowCell(state: DelegateAPI, coordinates: Coordinates, value: CellValue?, cellHints: Set<CellHint>?)
 }
 
 data class ExportOperations<T>(
-    val basicOperations: BasicOperations<T>,
+    val lifecycleOperations: LifecycleOperations<T>,
+    val rowOperations: RowOperations,
     val columnOperation: ColumnOperation? = null,
     val headerCellOperation: HeaderCellOperation? = null,
     val rowCellOperation: RowCellOperation? = null

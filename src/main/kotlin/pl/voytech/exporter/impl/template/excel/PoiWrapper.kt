@@ -8,46 +8,45 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFColor
 import pl.voytech.exporter.core.model.hints.style.Color
 import pl.voytech.exporter.core.template.Coordinates
-import pl.voytech.exporter.core.template.DelegateState
+import pl.voytech.exporter.core.template.DelegateAPI
 
 object PoiWrapper {
-    fun getWorkbook(state: DelegateState): SXSSFWorkbook = state.state as SXSSFWorkbook
+    fun getWorkbook(state: DelegateAPI): SXSSFWorkbook = state.handle as SXSSFWorkbook
 
-    fun tableSheet(state: DelegateState): SXSSFSheet = getWorkbook(state).getSheetAt(0)
+    fun tableSheet(state: DelegateAPI, tableName: String): SXSSFSheet = getWorkbook(state).getSheet(tableName)
 
-    fun createRow(state: DelegateState, rowIndex: Int): SXSSFRow = tableSheet(state).createRow(rowIndex)
+    fun createRow(state: DelegateAPI, coordinates: Coordinates): SXSSFRow = tableSheet(state, coordinates.tableName).createRow(coordinates.rowIndex)
 
-    fun row(state: DelegateState, rowIndex: Int): SXSSFRow? = tableSheet(state).getRow(rowIndex)
+    fun row(state: DelegateAPI, coordinates: Coordinates): SXSSFRow? = tableSheet(state, coordinates.tableName).getRow(coordinates.rowIndex)
 
-    fun assertRow(state: DelegateState, rowIndex: Int): SXSSFRow = row(state,rowIndex) ?: createRow(state,rowIndex)
+    fun assertRow(state: DelegateAPI, coordinates: Coordinates): SXSSFRow = row(state, coordinates) ?: createRow(state, coordinates)
 
-    fun createCell(state: DelegateState, coordinates: Coordinates): SXSSFCell = assertRow(state,coordinates.rowIndex).let {
+    fun createCell(state: DelegateAPI, coordinates: Coordinates): SXSSFCell = assertRow(state, coordinates).let {
         it.createCell(coordinates.columnIndex).also { cell ->
             cell.cellStyle = getWorkbook(state).createCellStyle()
         }
     }
 
-    fun cell(state: DelegateState, coordinates: Coordinates): SXSSFCell? = assertRow(state,coordinates.rowIndex).getCell(coordinates.columnIndex)
+    fun cell(state: DelegateAPI, coordinates: Coordinates): SXSSFCell? = assertRow(state, coordinates).getCell(coordinates.columnIndex)
 
-    fun assertCell(state: DelegateState, coordinates: Coordinates): SXSSFCell = cell(state,coordinates) ?: createCell(state,coordinates)
+    fun assertCell(state: DelegateAPI, coordinates: Coordinates): SXSSFCell = cell(state, coordinates) ?: createCell(state,coordinates)
 
-    fun cellStyle(state: DelegateState, coordinates: Coordinates): CellStyle {
+    fun cellStyle(state: DelegateAPI, coordinates: Coordinates): CellStyle {
         return assertCell(state,coordinates).cellStyle
     }
 
     fun color(color: Color): XSSFColor = XSSFColor(byteArrayOf(color.r.toByte(), color.g.toByte(), color.b.toByte()),null)
 
-    fun columnStyle(state: DelegateState, columnIndex: Int): CellStyle {
-        return tableSheet(state).getColumnStyle(columnIndex)
+    fun columnStyle(state: DelegateAPI, coordinates: Coordinates): CellStyle {
+        return tableSheet(state, coordinates.tableName).getColumnStyle(coordinates.columnIndex)
     }
 
-    fun columnWidth(state: DelegateState, columnIndex: Int): Int {
-        return tableSheet(state).getColumnWidth(columnIndex)
+    fun columnWidth(state: DelegateAPI, coordinates: Coordinates): Int {
+        return tableSheet(state, coordinates.tableName).getColumnWidth(coordinates.columnIndex)
     }
 
-    fun setColumnWidth(state: DelegateState, columnIndex: Int, width: Int) {
-        return tableSheet(state).setColumnWidth(columnIndex,width)
+    fun setColumnWidth(state: DelegateAPI, coordinates: Coordinates, width: Int) {
+        return tableSheet(state,coordinates.tableName).setColumnWidth(coordinates.columnIndex,width)
     }
-
 
 }

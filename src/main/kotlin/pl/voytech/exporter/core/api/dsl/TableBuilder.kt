@@ -18,7 +18,7 @@ class TableBuilder<T> {
     private var cellHints: Set<CellHint>? = null
 
     init {
-        ColumnNextId.reset()
+        NextId.reset()
     }
 
     fun columns(block: ColumnsBuilder<T>.() -> Unit) {
