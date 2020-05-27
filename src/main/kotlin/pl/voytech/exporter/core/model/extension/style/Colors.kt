@@ -1,4 +1,4 @@
-package pl.voytech.exporter.core.model.hints.style
+package pl.voytech.exporter.core.model.extension.style
 
 object Colors {
     val RED = null

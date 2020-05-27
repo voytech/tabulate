@@ -2,7 +2,7 @@ package pl.voytech.exporter.core.api.dsl
 
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.CellType
-import pl.voytech.exporter.core.model.hints.*
+import pl.voytech.exporter.core.model.extension.*
 
 fun <T> table(block: TableBuilder<T>.() -> Unit): Table<T> = TableBuilder<T>().apply(block).build()
 
@@ -14,8 +14,8 @@ class TableBuilder<T> {
     var showFooter: Boolean? = false
     private var columnsDescription: Description? = null
     private var rowsDescription: Description? = null
-    private var tableHints: Set<TableHint>? = null
-    private var cellHints: Set<CellHint>? = null
+    private var tableExtensions: Set<TableExtension>? = null
+    private var cellExtensions: Set<CellExtension>? = null
 
     init {
         NextId.reset()
@@ -29,12 +29,12 @@ class TableBuilder<T> {
         rows = RowsBuilder<T>().apply(block)
     }
 
-    fun tableHints(block: HintsBuilder<TableHint>.() -> Unit) {
-        tableHints = HintsBuilder<TableHint>().apply(block)
+    fun tableExtensions(block: ExtensionsBuilder<TableExtension>.() -> Unit) {
+        tableExtensions = ExtensionsBuilder<TableExtension>().apply(block)
     }
 
-    fun cellHints(block: HintsBuilder<CellHint>.() -> Unit) {
-        cellHints = HintsBuilder<CellHint>().apply(block)
+    fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
+        cellExtensions = ExtensionsBuilder<CellExtension>().apply(block)
     }
 
     fun columnsDescription(block: DescriptionBuilder.() -> Unit) {
@@ -45,7 +45,7 @@ class TableBuilder<T> {
         rowsDescription = DescriptionBuilder().apply(block).build()
     }
 
-    fun build() : Table<T> = Table(name, columns, rows, showHeader, showFooter,  columnsDescription, rowsDescription, tableHints, cellHints)
+    fun build() : Table<T> = Table(name, columns, rows, showHeader, showFooter,  columnsDescription, rowsDescription, tableExtensions, cellExtensions)
 }
 
 class ColumnsBuilder<T> : ArrayList<Column<T>>() {
@@ -68,8 +68,8 @@ class ColumnBuilder<T> {
     private var columnTitle: Description? = null
     var columnType: CellType? = null
     var index: Int? = null
-    private var columnHints: Set<ColumnHint>? = null
-    private var cellHints: Set<CellHint>? = null
+    private var columnExtensions: Set<ColumnExtension>? = null
+    private var cellExtensions: Set<CellExtension>? = null
     var dataFormatter: ((field: Any) -> Any)? = null
 
     constructor()
@@ -82,23 +82,23 @@ class ColumnBuilder<T> {
         columnTitle = DescriptionBuilder().apply(block).build()
     }
 
-    fun columnHints(block: HintsBuilder<ColumnHint>.() -> Unit) {
-        columnHints = HintsBuilder<ColumnHint>().apply(block)
+    fun columnExtensions(block: ExtensionsBuilder<ColumnExtension>.() -> Unit) {
+        columnExtensions = ExtensionsBuilder<ColumnExtension>().apply(block)
     }
 
-    fun columnHints(vararg hints: ColumnHint) {
-        columnHints = hints.toHashSet()
+    fun columnExtensions(vararg extensions: ColumnExtension) {
+        columnExtensions = extensions.toHashSet()
     }
 
-    fun cellHints(block: HintsBuilder<CellHint>.() -> Unit) {
-        cellHints = HintsBuilder<CellHint>().apply(block)
+    fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
+        cellExtensions = ExtensionsBuilder<CellExtension>().apply(block)
     }
 
-    fun cellHints(vararg hints: CellHint) {
-        cellHints = hints.toHashSet()
+    fun cellExtensions(vararg extensions: CellExtension) {
+        cellExtensions = extensions.toHashSet()
     }
 
-    fun build() : Column<T> = Column(id, index, columnTitle, columnType, columnHints, cellHints, dataFormatter)
+    fun build() : Column<T> = Column(id, index, columnTitle, columnType, columnExtensions, cellExtensions, dataFormatter)
 }
 
 class RowsBuilder<T> : ArrayList<Row<T>>() {
@@ -117,36 +117,36 @@ class RowsBuilder<T> : ArrayList<Row<T>>() {
 
 class RowBuilder<T> {
     private var cells: Map<Key<T>, Cell<T>>? = null
-    private var rowHints: Set<RowHint>? = null
-    private var cellHints: Set<CellHint>? = null
+    private var rowExtensions: Set<RowExtension>? = null
+    private var cellExtensions: Set<CellExtension>? = null
     lateinit var selector: RowSelector<T>
 
-    fun rowHints(block: HintsBuilder<RowHint>.() -> Unit) {
-        rowHints = HintsBuilder<RowHint>().apply(block)
+    fun rowExtensions(block: ExtensionsBuilder<RowExtension>.() -> Unit) {
+        rowExtensions = ExtensionsBuilder<RowExtension>().apply(block)
     }
 
-    fun rowHints(vararg hints: RowHint) {
-        rowHints = hints.toHashSet()
+    fun rowExtensions(vararg extensions: RowExtension) {
+        rowExtensions = extensions.toHashSet()
     }
 
-    fun cellHints(block: HintsBuilder<CellHint>.() -> Unit) {
-        cellHints = HintsBuilder<CellHint>().apply(block)
+    fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
+        cellExtensions = ExtensionsBuilder<CellExtension>().apply(block)
     }
 
-    fun cellHints(vararg hints: CellHint) {
-        cellHints = hints.toHashSet()
+    fun cellExtensions(vararg extensions: CellExtension) {
+        cellExtensions = extensions.toHashSet()
     }
 
     fun cells(block: CellsBuilder<T>.() -> Unit) {
         cells = CellsBuilder<T>().apply(block)
     }
 
-    fun build() : Row<T> = Row(selector, rowHints, cellHints, cells)
+    fun build() : Row<T> = Row(selector, rowExtensions, cellExtensions, cells)
 }
 
-class HintsBuilder<T> : HashSet<T>() {
-    fun hint(hint: T) {
-        add(hint)
+class ExtensionsBuilder<T> : HashSet<T>() {
+    fun extend(extension: T) {
+        add(extension)
     }
 }
 
@@ -160,25 +160,33 @@ class CellsBuilder<T>: HashMap<Key<T>,Cell<T>>() {
 }
 
 class CellBuilder<T> {
-    private var cellHints: Set<CellHint>? = null
+    private var cellExtensions: Set<CellExtension>? = null
     var value: Any? = null
     var eval: RowCellEval<T>? = null
     var type: CellType? = null
 
-    fun cellHints(block: HintsBuilder<CellHint>.() -> Unit) {
-        cellHints = HintsBuilder<CellHint>().apply(block)
+    fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
+        cellExtensions = ExtensionsBuilder<CellExtension>().apply(block)
     }
 
-    fun build(): Cell<T> = Cell(value, eval, type, cellHints)
+    fun cellExtensions(vararg extensions: CellExtension) {
+        cellExtensions = extensions.toHashSet()
+    }
+
+    fun build(): Cell<T> = Cell(value, eval, type, cellExtensions)
 }
 
 class DescriptionBuilder {
     lateinit var title: String
-    var hints: Set<Hint>? = null
+    var extensions: Set<Extension>? = null
 
-    fun hints(block: HintsBuilder<Hint>.() -> Unit) {
-        hints = HintsBuilder<Hint>().apply(block)
+    fun extensions(block: ExtensionsBuilder<Extension>.() -> Unit) {
+        extensions = ExtensionsBuilder<Extension>().apply(block)
     }
 
-    fun build(): Description = Description(title, hints)
+    fun extensions(vararg extensions: Extension) {
+        this.extensions = extensions.toHashSet()
+    }
+
+    fun build(): Description = Description(title, extensions)
 }

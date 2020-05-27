@@ -4,12 +4,12 @@ import org.apache.poi.xssf.streaming.SXSSFCell
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.model.hints.CellHint
-import pl.voytech.exporter.core.model.hints.RowHint
+import pl.voytech.exporter.core.model.extension.CellExtension
+import pl.voytech.exporter.core.model.extension.RowExtension
 import pl.voytech.exporter.core.template.*
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertCell
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertRow
-import pl.voytech.exporter.impl.template.excel.PoiWrapper.getWorkbook
+import pl.voytech.exporter.impl.template.excel.PoiWrapper.workbook
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.time.Instant
@@ -18,39 +18,35 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-internal class StreamingExcelRowTableOperations(rowHints: List<RowHintOperation<out RowHint>>) : RowOperationsWithHints(rowHints) {
-
-    override fun renderHeaderRow(state: DelegateAPI, coordinates: Coordinates) {
-        assertRow(state, coordinates)
-    }
+internal class StreamingExcelRowTableOperation(rowHints: List<RowExtensionOperation<out RowExtension>>) : RowOperationWithExtensions(rowHints) {
 
     override fun renderRow(state: DelegateAPI, coordinates: Coordinates) {
-        assertRow(state,coordinates)
+        assertRow(state, coordinates)
     }
 
 }
 
 internal class StreamingExcelLifecycleOperations<T>(): LifecycleOperations<T> {
 
-    override fun create(): DelegateAPI {
+    override fun createDocument(): DelegateAPI {
         return DelegateAPI(SXSSFWorkbook())
     }
 
-    override fun init(state: DelegateAPI, table: Table<T>): DelegateAPI{
-        return getWorkbook(state).createSheet(table.name).let { state }
+    override fun createTable(state: DelegateAPI, table: Table<T>): DelegateAPI{
+        return workbook(state).createSheet(table.name).let { state }
     }
 
-    override fun complete(state: DelegateAPI): FileData<ByteArray> {
+    override fun finishDocument(state: DelegateAPI): FileData<ByteArray> {
         val outputStream = ByteArrayOutputStream()
-        getWorkbook(state).run {
+        workbook(state).run {
             write(outputStream)
             close()
         }
         return FileData(content = outputStream.toByteArray())
     }
 
-    override fun complete(state: DelegateAPI, stream: OutputStream) {
-        getWorkbook(state).run {
+    override fun finishDocument(state: DelegateAPI, stream: OutputStream) {
+        workbook(state).run {
             write(stream)
             close()
         }
@@ -58,7 +54,7 @@ internal class StreamingExcelLifecycleOperations<T>(): LifecycleOperations<T> {
 
 }
 
-internal class StreamingExcelHeaderCellOperations(cellHints: List<CellHintOperation<out CellHint>>) : HeaderCellOperationsWithHints(cellHints){
+internal class StreamingExcelHeaderCellOperations(cellExtensions: List<CellExtensionOperation<out CellExtension>>) : HeaderCellOperationsWithExtensions(cellExtensions){
     override fun renderHeaderCell(state: DelegateAPI, coordinates: Coordinates, columnTitle: String?) {
         assertCell(state, coordinates).let { cell ->
             columnTitle?.let { cell.setCellValue(it) }
@@ -67,7 +63,7 @@ internal class StreamingExcelHeaderCellOperations(cellHints: List<CellHintOperat
 
 }
 
-internal class StreamingExcelRowCellOperations(cellHints: List<CellHintOperation<out CellHint>>) : RowCellOperationsWithHints(cellHints){
+internal class StreamingExcelRowCellOperations(cellExtensions: List<CellExtensionOperation<out CellExtension>>) : RowCellOperationsWithExtensions(cellExtensions){
 
     private fun toDateValue(value: Any): Date {
         return when (value) {
@@ -111,9 +107,10 @@ internal class StreamingExcelRowCellOperations(cellHints: List<CellHintOperation
 }
 
 fun <T> excelExport() = ExportOperations(
-    StreamingExcelLifecycleOperations<T>(),
-    StreamingExcelRowTableOperations(rowHintsOperations),
-    ColumnOperationsWithHints(columnHintsOperations),
-    StreamingExcelHeaderCellOperations(cellHintsOperations),
-    StreamingExcelRowCellOperations(cellHintsOperations)
+    lifecycleOperations = StreamingExcelLifecycleOperations<T>(),
+    headerRowOperation = StreamingExcelRowTableOperation(rowExtensionsOperations),
+    rowOperation = StreamingExcelRowTableOperation(rowExtensionsOperations),
+    columnOperation = ColumnOperationsWithExtensions(columnExtensionsOperations),
+    headerCellOperation = StreamingExcelHeaderCellOperations(cellExtensionsOperations),
+    rowCellOperation = StreamingExcelRowCellOperations(cellExtensionsOperations)
 )

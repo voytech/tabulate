@@ -1,7 +1,7 @@
 package pl.voytech.exporter.core.model
 
-import pl.voytech.exporter.core.model.hints.CellHint
-import pl.voytech.exporter.core.model.hints.TableHint
+import pl.voytech.exporter.core.model.extension.CellExtension
+import pl.voytech.exporter.core.model.extension.TableExtension
 
 /**
  * A top-level model class. Defines how records from repositories will be handled by file rendering strategies.
@@ -27,6 +27,6 @@ data class Table<T>(
    val showFooter: Boolean? = false,
    val columnsDescription: Description?,
    val rowsDescription: Description?,
-   val tableHints: Set<TableHint>?,
-   val cellHints: Set<CellHint>?
+   val tableExtensions: Set<TableExtension>?,
+   val cellExtensions: Set<CellExtension>?
 )

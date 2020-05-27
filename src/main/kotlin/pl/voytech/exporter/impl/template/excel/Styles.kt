@@ -1,7 +1,7 @@
 package pl.voytech.exporter.impl.template.excel
 
-import pl.voytech.exporter.core.model.hints.CellHint
+import pl.voytech.exporter.core.model.extension.CellExtension
 
-data class CellExcelDataFormatHint(
+data class CellExcelDataFormatExtension(
    val dataFormat: String
-): CellHint()
+): CellExtension()

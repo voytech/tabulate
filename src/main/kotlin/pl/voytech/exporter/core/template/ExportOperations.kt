@@ -2,38 +2,38 @@ package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.Description
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.model.hints.CellHint
-import pl.voytech.exporter.core.model.hints.ColumnHint
-import pl.voytech.exporter.core.model.hints.RowHint
+import pl.voytech.exporter.core.model.extension.CellExtension
+import pl.voytech.exporter.core.model.extension.ColumnExtension
+import pl.voytech.exporter.core.model.extension.RowExtension
 import java.io.OutputStream
 
-interface RowOperations {
-    fun renderHeaderRow(state: DelegateAPI, coordinates: Coordinates, rowHints: Set<RowHint>?)
-    fun renderRow(state: DelegateAPI, coordinates: Coordinates, rowHints: Set<RowHint>?)
+interface RowOperation {
+    fun renderRow(state: DelegateAPI, coordinates: Coordinates, extensions: Set<RowExtension>?)
 }
 
 interface LifecycleOperations<T> {
-    fun create(): DelegateAPI
-    fun init(state: DelegateAPI, table: Table<T>): DelegateAPI
-    fun complete(state: DelegateAPI): FileData<ByteArray>
-    fun complete(state: DelegateAPI, stream: OutputStream)
+    fun createDocument(): DelegateAPI
+    fun createTable(state: DelegateAPI, table: Table<T>): DelegateAPI
+    fun finishDocument(state: DelegateAPI): FileData<ByteArray>
+    fun finishDocument(state: DelegateAPI, stream: OutputStream)
 }
 
 interface ColumnOperation {
-    fun renderColumn(state: DelegateAPI, coordinates: Coordinates, columnHints: Set<ColumnHint>?)
+    fun renderColumn(state: DelegateAPI, coordinates: Coordinates, extensions: Set<ColumnExtension>?)
 }
 
 interface HeaderCellOperation {
-    fun renderHeaderCell(state: DelegateAPI, coordinates: Coordinates, columnTitle: Description?, cellHints: Set<CellHint>?)
+    fun renderHeaderCell(state: DelegateAPI, coordinates: Coordinates, columnTitle: Description?, extensions: Set<CellExtension>?)
 }
 
 interface RowCellOperation {
-    fun renderRowCell(state: DelegateAPI, coordinates: Coordinates, value: CellValue?, cellHints: Set<CellHint>?)
+    fun renderRowCell(state: DelegateAPI, coordinates: Coordinates, value: CellValue?, extensions: Set<CellExtension>?)
 }
 
 data class ExportOperations<T>(
     val lifecycleOperations: LifecycleOperations<T>,
-    val rowOperations: RowOperations,
+    val headerRowOperation: RowOperation? = null,
+    val rowOperation: RowOperation,
     val columnOperation: ColumnOperation? = null,
     val headerCellOperation: HeaderCellOperation? = null,
     val rowCellOperation: RowCellOperation? = null

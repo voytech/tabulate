@@ -4,7 +4,6 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.dsl.table
 import pl.voytech.exporter.core.model.Description
-import pl.voytech.exporter.core.model.infinite
 import pl.voytech.exporter.data.Product
 import java.time.LocalDate
 import kotlin.test.assertEquals
@@ -43,8 +42,8 @@ object BasicDslTableDefinitionSpek: Spek({
             }
 
             Then("columns should be correctly named") {
-                assertEquals(Description(title = "Code",hints = null), tableMeta.columns[0].columnTitle, "first column description should be 'Code'")
-                assertEquals(Description(title = "Name",hints = null), tableMeta.columns[1].columnTitle, "second column description should be 'Name'")
+                assertEquals(Description(title = "Code",extensions = null), tableMeta.columns[0].columnTitle, "first column description should be 'Code'")
+                assertEquals(Description(title = "Name",extensions = null), tableMeta.columns[1].columnTitle, "second column description should be 'Name'")
                 assertNull(tableMeta.columns[2].columnTitle, "third column description should be null")
                 assertNull(tableMeta.columns[3].columnTitle, "fourth column description should be null")
             }

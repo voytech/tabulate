@@ -1,8 +1,8 @@
 package pl.voytech.exporter.core.model
 
-import pl.voytech.exporter.core.model.hints.Hint
+import pl.voytech.exporter.core.model.extension.Extension
 
 data class Description(
     val title: String,
-    val hints: Set<Hint>?
+    val extensions: Set<Extension>?
 )

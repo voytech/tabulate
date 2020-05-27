@@ -4,13 +4,13 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.dsl.table
 import pl.voytech.exporter.core.model.RowSelectors
-import pl.voytech.exporter.core.model.hints.style.*
-import pl.voytech.exporter.core.model.hints.style.enums.BorderStyle
-import pl.voytech.exporter.core.model.hints.style.enums.HorizontalAlignment
-import pl.voytech.exporter.core.model.hints.style.enums.VerticalAlignment
-import pl.voytech.exporter.core.model.hints.style.enums.WeightStyle
+import pl.voytech.exporter.core.model.extension.style.*
+import pl.voytech.exporter.core.model.extension.style.enums.BorderStyle
+import pl.voytech.exporter.core.model.extension.style.enums.HorizontalAlignment
+import pl.voytech.exporter.core.model.extension.style.enums.VerticalAlignment
+import pl.voytech.exporter.core.model.extension.style.enums.WeightStyle
 import pl.voytech.exporter.data.Product
-import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatHint
+import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatExtension
 import pl.voytech.exporter.impl.template.excel.excelExport
 import java.io.File
 import java.io.FileOutputStream
@@ -29,9 +29,9 @@ object BasicDslTableExportSpek: Spek({
                         columns {
                             column("nr") {
                                 columnTitle { title = "Nr.:" }
-                                columnHints(ColumnWidthHint(width = 50))
-                                cellHints(
-                                    CellFontHint(
+                                columnExtensions(ColumnWidthExtension(width = 50))
+                                cellExtensions(
+                                    CellFontExtension(
                                         fontFamily = "Times New Roman",
                                         fontColor = Color(10,100,100),
                                         fontSize = 12,
@@ -44,42 +44,42 @@ object BasicDslTableExportSpek: Spek({
                             }
                             column(Product::code) {
                                 columnTitle { title = "Code" }
-                                columnHints(ColumnWidthHint(width = 100))
-                                cellHints(
-                                    CellFontHint(
+                                columnExtensions(ColumnWidthExtension(width = 100))
+                                cellExtensions(
+                                    CellFontExtension(
                                         fontFamily = "Times New Roman",
                                         fontColor = Color(0,0,0),
                                         fontSize = 12
                                     ),
-                                    CellBackgroundHint(color = Color(10,100,100))
+                                    CellBackgroundExtension(color = Color(10,100,100))
                                 )
                             }
                             column(Product::name) {
                                 columnTitle { title = "Name" }
-                                columnHints(ColumnWidthHint(width = 100))
+                                columnExtensions(ColumnWidthExtension(width = 100))
                             }
                             column(Product::description) {
                                 columnTitle { title = "Description" }
-                                columnHints(ColumnWidthHint(width = 300))
+                                columnExtensions(ColumnWidthExtension(width = 300))
                             }
                             column(Product::manufacturer) {
                                 columnTitle { title = "Manufacturer" }
-                                columnHints(ColumnWidthHint(width = 100))
+                                columnExtensions(ColumnWidthExtension(width = 100))
                                 dataFormatter = { field -> (field as String).toUpperCase() }
                             }
                             column(Product::distributionDate) {
                                 columnTitle { title = "Distribution" }
-                                cellHints(
-                                    CellExcelDataFormatHint("dd.mm.YYYY")
+                                cellExtensions(
+                                    CellExcelDataFormatExtension("dd.mm.YYYY")
                                 )
                             }
                         }
                         rows {
                             row {
                                 selector = RowSelectors.at(0)
-                                rowHints(RowHeightHint(height = 220))
-                                cellHints(
-                                    CellBordersHint(
+                                rowExtensions(RowHeightExtension(height = 220))
+                                cellExtensions(
+                                    CellBordersExtension(
                                         leftBorderStyle = BorderStyle.SOLID,
                                         leftBorderColor = Color(0,0,0),
                                         rightBorderStyle = BorderStyle.SOLID,
@@ -87,7 +87,7 @@ object BasicDslTableExportSpek: Spek({
                                         bottomBorderStyle = BorderStyle.SOLID,
                                         bottomBorderColor = Color(0,0,0)
                                     ),
-                                    CellAlignmentHint(
+                                    CellAlignmentExtension(
                                         horizontal = HorizontalAlignment.CENTER,
                                         vertical = VerticalAlignment.MIDDLE
                                     )
@@ -110,4 +110,5 @@ object BasicDslTableExportSpek: Spek({
             }
         }
     }
+
 })

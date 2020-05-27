@@ -1,9 +1,9 @@
-package pl.voytech.exporter.core.model.hints.style
+package pl.voytech.exporter.core.model.extension.style
 
-import pl.voytech.exporter.core.model.hints.CellHint
-import pl.voytech.exporter.core.model.hints.style.enums.BorderStyle
+import pl.voytech.exporter.core.model.extension.CellExtension
+import pl.voytech.exporter.core.model.extension.style.enums.BorderStyle
 
-data class CellBordersHint(
+data class CellBordersExtension(
    val leftBorderStyle: BorderStyle? = null,
    val leftBorderColor: Color? = null,
    val rightBorderStyle: BorderStyle? = null,
@@ -12,4 +12,4 @@ data class CellBordersHint(
    val topBorderColor: Color? = null,
    val bottomBorderStyle: BorderStyle? = null,
    val bottomBorderColor: Color? = null
-): CellHint()
+): CellExtension()

@@ -1,4 +1,4 @@
-package pl.voytech.exporter.core.model.hints.style.enums
+package pl.voytech.exporter.core.model.extension.style.enums
 
 enum class HorizontalAlignment {
     LEFT,

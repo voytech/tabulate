@@ -1,68 +1,68 @@
 package pl.voytech.exporter.core.template
 
-import pl.voytech.exporter.core.model.hints.*
+import pl.voytech.exporter.core.model.extension.*
 import kotlin.reflect.KClass
 
 @Suppress("UNCHECKED_CAST")
-class DelegatingTableHintsOperations(
-    private val tableHints: List<TableHintOperation<out TableHint>>?
-) : TableHintsOperation {
+class DelegatingTableExtensionsOperations(
+    private val extensionOperations: List<TableExtensionOperation<out TableExtension>>?
+) : TableExtensionsOperation {
 
-    private fun hintOperationByClass(hint: KClass<out TableHint>) : TableHintOperation<TableHint>? {
-        return tableHints?.find { operation -> operation.hintType() == hint } as TableHintOperation<TableHint>
+    private fun operationByClass(hint: KClass<out TableExtension>) : TableExtensionOperation<TableExtension>? {
+        return extensionOperations?.find { operation -> operation.extensionType() == hint } as TableExtensionOperation<TableExtension>
     }
 
-    override fun applyTableHints(state: DelegateAPI, hints: Set<TableHint>) {
-        hints.forEach { hint ->
-            hintOperationByClass(hint::class)?.apply(state, hint)
+    override fun applyTableExtensions(state: DelegateAPI, extensions: Set<TableExtension>) {
+        extensions.forEach { hint ->
+            operationByClass(hint::class)?.apply(state, hint)
         }
     }
 }
 
 @Suppress("UNCHECKED_CAST")
-class DelegatingRowHintsOperations(
-    private val rowHints: List<RowHintOperation<out RowHint>>?
-) : RowHintsOperation {
+class DelegatingRowExtensionsOperations(
+    private val extensionOperations: List<RowExtensionOperation<out RowExtension>>?
+) : RowExtensionsOperation {
 
-    private fun hintOperationByClass(hint: KClass<out RowHint>) : RowHintOperation<RowHint>? {
-        return rowHints?.find { operation -> operation.hintType() == hint } as RowHintOperation<RowHint>
+    private fun operationByClass(hint: KClass<out RowExtension>) : RowExtensionOperation<RowExtension>? {
+        return extensionOperations?.find { operation -> operation.extensionType() == hint } as RowExtensionOperation<RowExtension>
     }
 
-    override fun applyRowHints(state: DelegateAPI, coordinates: Coordinates, hints: Set<RowHint>)  {
-        hints.forEach { hint ->
-            hintOperationByClass(hint::class)?.apply(state, coordinates, hint)
+    override fun applyRowExtensions(state: DelegateAPI, coordinates: Coordinates, extensions: Set<RowExtension>)  {
+        extensions.forEach { hint ->
+            operationByClass(hint::class)?.apply(state, coordinates, hint)
         }
     }
 }
 
 @Suppress("UNCHECKED_CAST")
-class DelegatingColumnHintsOperations(
-    private val columnHints: List<ColumnHintOperation<out ColumnHint>>?
-) : ColumnHintsOperation {
+class DelegatingColumnExtensionsOperations(
+    private val extensionOperations: List<ColumnExtensionOperation<out ColumnExtension>>?
+) : ColumnExtensionsOperation {
 
-    private fun hintOperationByClass(hint: KClass<out ColumnHint>) : ColumnHintOperation<ColumnHint>? {
-        return columnHints?.find { operation -> operation.hintType() == hint } as ColumnHintOperation<ColumnHint>
+    private fun operationByClass(hint: KClass<out ColumnExtension>) : ColumnExtensionOperation<ColumnExtension>? {
+        return extensionOperations?.find { operation -> operation.extensionType() == hint } as ColumnExtensionOperation<ColumnExtension>
     }
 
-    override fun applyColumnHints(state: DelegateAPI, coordinates: Coordinates, hints: Set<ColumnHint>)  {
-        hints.forEach { hint ->
-            hintOperationByClass(hint::class)?.apply(state, coordinates, hint)
+    override fun applyColumnExtensions(state: DelegateAPI, coordinates: Coordinates, extensions: Set<ColumnExtension>)  {
+        extensions.forEach { hint ->
+            operationByClass(hint::class)?.apply(state, coordinates, hint)
         }
     }
 }
 
 @Suppress("UNCHECKED_CAST")
-class DelegatingCellHintsOperations(
-    private val cellHints: List<CellHintOperation<out CellHint>>?
-) : CellHintsOperation {
+class DelegatingCellExtensionsOperations(
+    private val extensionOperations: List<CellExtensionOperation<out CellExtension>>?
+) : CellExtensionsOperation {
 
-    private fun hintOperationByClass(hint: KClass<out CellHint>) : CellHintOperation<CellHint>? {
-        return cellHints?.find { operation -> operation.hintType() == hint } as CellHintOperation<CellHint>
+    private fun operationByClass(hint: KClass<out CellExtension>) : CellExtensionOperation<CellExtension>? {
+        return extensionOperations?.find { operation -> operation.extensionType() == hint } as CellExtensionOperation<CellExtension>
     }
 
-    override fun applyCellHints(state: DelegateAPI, coordinates: Coordinates, hints: Set<CellHint>)  {
-        hints.forEach { hint ->
-            hintOperationByClass(hint::class)?.apply(state, coordinates, hint)
+    override fun applyCellExtensions(state: DelegateAPI, coordinates: Coordinates, extensions: Set<CellExtension>)  {
+        extensions.forEach { hint ->
+            operationByClass(hint::class)?.apply(state, coordinates, hint)
         }
     }
 }

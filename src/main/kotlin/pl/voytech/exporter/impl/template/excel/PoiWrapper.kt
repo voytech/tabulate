@@ -6,14 +6,15 @@ import org.apache.poi.xssf.streaming.SXSSFRow
 import org.apache.poi.xssf.streaming.SXSSFSheet
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFColor
-import pl.voytech.exporter.core.model.hints.style.Color
+import pl.voytech.exporter.core.model.extension.style.Color
 import pl.voytech.exporter.core.template.Coordinates
 import pl.voytech.exporter.core.template.DelegateAPI
 
 object PoiWrapper {
-    fun getWorkbook(state: DelegateAPI): SXSSFWorkbook = state.handle as SXSSFWorkbook
 
-    fun tableSheet(state: DelegateAPI, tableName: String): SXSSFSheet = getWorkbook(state).getSheet(tableName)
+    fun workbook(state: DelegateAPI): SXSSFWorkbook = state.handle as SXSSFWorkbook
+
+    fun tableSheet(state: DelegateAPI, tableName: String): SXSSFSheet = workbook(state).getSheet(tableName)
 
     fun createRow(state: DelegateAPI, coordinates: Coordinates): SXSSFRow = tableSheet(state, coordinates.tableName).createRow(coordinates.rowIndex)
 
@@ -23,7 +24,7 @@ object PoiWrapper {
 
     fun createCell(state: DelegateAPI, coordinates: Coordinates): SXSSFCell = assertRow(state, coordinates).let {
         it.createCell(coordinates.columnIndex).also { cell ->
-            cell.cellStyle = getWorkbook(state).createCellStyle()
+            cell.cellStyle = workbook(state).createCellStyle()
         }
     }
 

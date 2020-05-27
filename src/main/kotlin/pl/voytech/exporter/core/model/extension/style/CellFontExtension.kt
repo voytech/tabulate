@@ -1,9 +1,9 @@
-package pl.voytech.exporter.core.model.hints.style
+package pl.voytech.exporter.core.model.extension.style
 
-import pl.voytech.exporter.core.model.hints.CellHint
-import pl.voytech.exporter.core.model.hints.style.enums.WeightStyle
+import pl.voytech.exporter.core.model.extension.CellExtension
+import pl.voytech.exporter.core.model.extension.style.enums.WeightStyle
 
-data class CellFontHint(
+data class CellFontExtension(
     val fontFamily: String?,
     val fontSize: Int? = 12,
     val weight: WeightStyle? = WeightStyle.NORMAL,
@@ -11,4 +11,4 @@ data class CellFontHint(
     val strikeout: Boolean? = false,
     val underline: Boolean? = false,
     val fontColor: Color? = Color(0,0,0)
-) : CellHint()
+) : CellExtension()
