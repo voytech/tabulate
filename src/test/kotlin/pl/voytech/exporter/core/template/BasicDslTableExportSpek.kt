@@ -26,6 +26,7 @@ object BasicDslTableExportSpek: Spek({
                 productList.exportTo(
                     table {
                         name = "Products table"
+                        firstRow = 1
                         columns {
                             column("nr") {
                                 columnTitle { title = "Nr.:" }
@@ -101,7 +102,7 @@ object BasicDslTableExportSpek: Spek({
                             }
                         }
                     },
-                    excelExport(),
+                    excelExport("template.xlsx"),
                     it
                 )
             }

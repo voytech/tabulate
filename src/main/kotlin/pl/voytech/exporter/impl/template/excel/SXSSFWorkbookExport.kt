@@ -1,7 +1,9 @@
 package pl.voytech.exporter.impl.template.excel
 
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.streaming.SXSSFCell
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.extension.CellExtension
@@ -9,8 +11,10 @@ import pl.voytech.exporter.core.model.extension.RowExtension
 import pl.voytech.exporter.core.template.*
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertCell
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertRow
+import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertTableSheet
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.workbook
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.OutputStream
 import java.time.Instant
 import java.time.LocalDate
@@ -26,16 +30,19 @@ internal class StreamingExcelRowTableOperation(rowHints: List<RowExtensionOperat
 
 }
 
-internal class StreamingExcelLifecycleOperations<T>(): LifecycleOperations<T> {
-
+internal class CreateStreamingExcelDocumentOperation(private val templateFile: String?) : CreateDocumentOperation {
     override fun createDocument(): DelegateAPI {
-        return DelegateAPI(SXSSFWorkbook())
+        return DelegateAPI(templateFile?.let { SXSSFWorkbook(WorkbookFactory.create(File(it)) as XSSFWorkbook?,100) } ?: SXSSFWorkbook())
     }
+}
 
-    override fun createTable(state: DelegateAPI, table: Table<T>): DelegateAPI{
-        return workbook(state).createSheet(table.name).let { state }
+internal class CreateStreamingExcelTableOperation<T>: CreateTableOperation<T> {
+    override fun createTable(state: DelegateAPI, table: Table<T>): DelegateAPI {
+        return assertTableSheet(state, table.name).let { state }
     }
+}
 
+internal class FinishStreamingExcelDocumentOperation: FinishDocumentOperations {
     override fun finishDocument(state: DelegateAPI): FileData<ByteArray> {
         val outputStream = ByteArrayOutputStream()
         workbook(state).run {
@@ -51,7 +58,6 @@ internal class StreamingExcelLifecycleOperations<T>(): LifecycleOperations<T> {
             close()
         }
     }
-
 }
 
 internal class StreamingExcelHeaderCellOperations(cellExtensions: List<CellExtensionOperation<out CellExtension>>) : HeaderCellOperationsWithExtensions(cellExtensions){
@@ -106,8 +112,12 @@ internal class StreamingExcelRowCellOperations(cellExtensions: List<CellExtensio
 
 }
 
-fun <T> excelExport() = ExportOperations(
-    lifecycleOperations = StreamingExcelLifecycleOperations<T>(),
+fun <T> excelExport(templateFile: String? = null) = ExportOperations(
+    lifecycleOperations = LifecycleOperations(
+        createDocumentOperation = CreateStreamingExcelDocumentOperation(templateFile),
+        createTableOperation = CreateStreamingExcelTableOperation<T>(),
+        finishDocumentOperations = FinishStreamingExcelDocumentOperation()
+    ),
     headerRowOperation = StreamingExcelRowTableOperation(rowExtensionsOperations),
     rowOperation = StreamingExcelRowTableOperation(rowExtensionsOperations),
     columnOperation = ColumnOperationsWithExtensions(columnExtensionsOperations),

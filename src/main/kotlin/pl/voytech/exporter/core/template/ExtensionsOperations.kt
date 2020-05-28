@@ -17,10 +17,6 @@ interface RowExtensionsOperation {
     fun applyRowExtensions(state: DelegateAPI, coordinates: Coordinates, extensions: Set<RowExtension>)
 }
 
-interface HeaderCellsExtensionsOperation {
-    fun applyHeaderCellExtensions(state: DelegateAPI, coordinates: Coordinates, extensions: Set<CellExtension>)
-}
-
 interface CellExtensionsOperation {
     fun applyCellExtensions(state: DelegateAPI, coordinates: Coordinates, extensions: Set<CellExtension>)
 }
