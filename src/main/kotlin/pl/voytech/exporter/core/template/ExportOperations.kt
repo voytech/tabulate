@@ -11,9 +11,15 @@ interface RowOperation {
     fun renderRow(state: DelegateAPI, coordinates: Coordinates, extensions: Set<RowExtension>?)
 }
 
-interface LifecycleOperations<T> {
+interface CreateDocumentOperation {
     fun createDocument(): DelegateAPI
+}
+
+interface CreateTableOperation<T> {
     fun createTable(state: DelegateAPI, table: Table<T>): DelegateAPI
+}
+
+interface FinishDocumentOperations {
     fun finishDocument(state: DelegateAPI): FileData<ByteArray>
     fun finishDocument(state: DelegateAPI, stream: OutputStream)
 }
@@ -29,6 +35,12 @@ interface HeaderCellOperation {
 interface RowCellOperation {
     fun renderRowCell(state: DelegateAPI, coordinates: Coordinates, value: CellValue?, extensions: Set<CellExtension>?)
 }
+
+data class LifecycleOperations<T>(
+    val createDocumentOperation: CreateDocumentOperation,
+    val createTableOperation: CreateTableOperation<T>,
+    val finishDocumentOperations: FinishDocumentOperations
+)
 
 data class ExportOperations<T>(
     val lifecycleOperations: LifecycleOperations<T>,

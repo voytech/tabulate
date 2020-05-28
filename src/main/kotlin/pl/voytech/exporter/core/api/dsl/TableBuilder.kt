@@ -8,6 +8,8 @@ fun <T> table(block: TableBuilder<T>.() -> Unit): Table<T> = TableBuilder<T>().a
 
 class TableBuilder<T> {
     var name: String? = "untitled"
+    var firstRow: Int? = 0
+    var firstColumn: Int? =0
     private lateinit var columns : List<Column<T>>
     private var rows: List<Row<T>>? = null
     var showHeader: Boolean? = false
@@ -45,7 +47,11 @@ class TableBuilder<T> {
         rowsDescription = DescriptionBuilder().apply(block).build()
     }
 
-    fun build() : Table<T> = Table(name, columns, rows, showHeader, showFooter,  columnsDescription, rowsDescription, tableExtensions, cellExtensions)
+    fun build() : Table<T> = Table(
+        name, firstRow, firstColumn, columns, rows, showHeader,
+        showFooter,  columnsDescription, rowsDescription,
+        tableExtensions, cellExtensions
+    )
 }
 
 class ColumnsBuilder<T> : ArrayList<Column<T>>() {

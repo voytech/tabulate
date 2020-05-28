@@ -21,6 +21,8 @@ import pl.voytech.exporter.core.model.extension.TableExtension
  */
 data class Table<T>(
    val name: String? = "untitled",
+   val firstRow: Int? = 0,
+   val firstColumn: Int? =0,
    val columns : List<Column<T>> = emptyList(),
    val rows: List<Row<T>>?,
    val showHeader: Boolean? = false,

@@ -12,9 +12,11 @@ import pl.voytech.exporter.core.template.DelegateAPI
 
 object PoiWrapper {
 
-    fun workbook(state: DelegateAPI): SXSSFWorkbook = state.handle as SXSSFWorkbook
+    fun workbook(state: DelegateAPI): SXSSFWorkbook = (state.handle as SXSSFWorkbook)
 
     fun tableSheet(state: DelegateAPI, tableName: String): SXSSFSheet = workbook(state).getSheet(tableName)
+
+    fun assertTableSheet(state: DelegateAPI, tableName: String?): SXSSFSheet = workbook(state).getSheet(tableName) ?: workbook(state).createSheet(tableName)
 
     fun createRow(state: DelegateAPI, coordinates: Coordinates): SXSSFRow = tableSheet(state, coordinates.tableName).createRow(coordinates.rowIndex)
 

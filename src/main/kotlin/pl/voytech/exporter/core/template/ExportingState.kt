@@ -4,7 +4,9 @@ import pl.voytech.exporter.core.model.NextId
 
 class ExportingState(
     val delegate: DelegateAPI,
-    val tableName: String = "table-${NextId.nextId()}"
+    val tableName: String = "table-${NextId.nextId()}",
+    val firstRow: Int? = 0,
+    val firstColumn: Int? = 0
 ) {
     var rowIndex: Int = 0
     var columnIndex: Int = 0
@@ -24,6 +26,6 @@ class ExportingState(
         return this
     }
 
-    fun coordinates(): Coordinates = Coordinates(tableName, rowIndex, columnIndex)
+    fun coordinates(): Coordinates = Coordinates(tableName, (firstRow?:0) + rowIndex, (firstColumn?:0) + columnIndex)
 
 }
