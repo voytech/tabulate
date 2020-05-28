@@ -12,8 +12,8 @@ class TableBuilder<T> {
     var firstColumn: Int? =0
     private lateinit var columns : List<Column<T>>
     private var rows: List<Row<T>>? = null
-    var showHeader: Boolean? = false
-    var showFooter: Boolean? = false
+    private var showHeader: Boolean? = false
+    private var showFooter: Boolean? = false
     private var columnsDescription: Description? = null
     private var rowsDescription: Description? = null
     private var tableExtensions: Set<TableExtension>? = null

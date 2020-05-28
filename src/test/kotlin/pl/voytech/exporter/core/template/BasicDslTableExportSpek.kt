@@ -18,7 +18,7 @@ import java.time.LocalDate
 import kotlin.test.assertNotNull
 
 object BasicDslTableExportSpek: Spek({
-    Feature("Should be able to define table, columns and export data to excel file") {
+    Feature("Regular tabular data export to excel") {
         Scenario("defining simple table model and exporting to excel file.") {
             val productList = (0..1000).map { Product("prod_nr_$it","Name $it", "This is description $it", "manufacturer $it", LocalDate.now())}
             val file = File("test.xlsx")
@@ -26,7 +26,6 @@ object BasicDslTableExportSpek: Spek({
                 productList.exportTo(
                     table {
                         name = "Products table"
-                        firstRow = 1
                         columns {
                             column("nr") {
                                 columnTitle { title = "Nr.:" }
@@ -94,6 +93,47 @@ object BasicDslTableExportSpek: Spek({
                                     )
                                 )
                             }
+                            row {
+                                selector = RowSelectors.all()
+                                cells {
+                                    forColumn("nr") { eval = { row -> row.index } }
+                                }
+                            }
+                        }
+                    },
+                    excelExport(),
+                    it
+                )
+            }
+            Then("file should be written successfully") {
+                assertNotNull(file)
+            }
+        }
+    }
+    Feature("Tabular data export to excel using excel template as input.") {
+        Scenario("defining simple table model and exporting to excel file.") {
+            val productList = (0..1000).map { Product("prod_nr_$it","Name $it", "This is description $it", "manufacturer $it", LocalDate.now())}
+            val file = File("test2.xlsx")
+            FileOutputStream(file).use {
+                productList.exportTo(
+                    table {
+                        name = "Products table"
+                        firstRow = 1
+                        columns {
+                            column("nr") {}
+                            column(Product::code) {}
+                            column(Product::name) {}
+                            column(Product::description) {}
+                            column(Product::manufacturer) {
+                                dataFormatter = { field -> (field as String).toUpperCase() }
+                            }
+                            column(Product::distributionDate) {
+                                 cellExtensions(
+                                    CellExcelDataFormatExtension("dd.mm.YYYY")
+                                )
+                            }
+                        }
+                        rows {
                             row {
                                 selector = RowSelectors.all()
                                 cells {
