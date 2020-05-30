@@ -1,5 +1,6 @@
 package pl.voytech.exporter.core.template
 
+import com.google.common.reflect.ClassPath
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.dsl.table
@@ -142,7 +143,7 @@ object BasicDslTableExportSpek: Spek({
                             }
                         }
                     },
-                    excelExport("template.xlsx"),
+                    excelExport(ClassLoader.getSystemResourceAsStream("template.xlsx")),
                     it
                 )
             }

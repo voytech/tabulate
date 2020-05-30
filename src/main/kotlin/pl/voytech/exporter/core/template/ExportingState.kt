@@ -2,8 +2,8 @@ package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.NextId
 
-class ExportingState(
-    val delegate: DelegateAPI,
+class ExportingState<A>(
+    val delegate: DelegateAPI<A>,
     val tableName: String = "table-${NextId.nextId()}",
     val firstRow: Int? = 0,
     val firstColumn: Int? = 0
@@ -11,17 +11,17 @@ class ExportingState(
     var rowIndex: Int = 0
     var columnIndex: Int = 0
 
-    fun nextColumnIndex(index: Int): ExportingState {
+    fun nextColumnIndex(index: Int): ExportingState<A> {
         columnIndex = index
         return this
     }
 
-    fun nextRowIndex(index: Int): ExportingState {
+    fun nextRowIndex(index: Int): ExportingState<A> {
         rowIndex = index
         return this
     }
 
-    fun nextRowIndex(): ExportingState {
+    fun nextRowIndex(): ExportingState<A> {
         rowIndex ++
         return this
     }
