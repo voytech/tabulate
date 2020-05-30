@@ -7,46 +7,46 @@ import pl.voytech.exporter.core.model.extension.ColumnExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
 import java.io.OutputStream
 
-interface RowOperation {
-    fun renderRow(state: DelegateAPI, coordinates: Coordinates, extensions: Set<RowExtension>?)
+interface RowOperation<A> {
+    fun renderRow(state: DelegateAPI<A>, coordinates: Coordinates, extensions: Set<RowExtension>?)
 }
 
-interface CreateDocumentOperation {
-    fun createDocument(): DelegateAPI
+interface CreateDocumentOperation<A> {
+    fun createDocument(): DelegateAPI<A>
 }
 
-interface CreateTableOperation<T> {
-    fun createTable(state: DelegateAPI, table: Table<T>): DelegateAPI
+interface CreateTableOperation<T,A> {
+    fun createTable(state: DelegateAPI<A>, table: Table<T>): DelegateAPI<A>
 }
 
-interface FinishDocumentOperations {
-    fun finishDocument(state: DelegateAPI): FileData<ByteArray>
-    fun finishDocument(state: DelegateAPI, stream: OutputStream)
+interface FinishDocumentOperations<A> {
+    fun finishDocument(state: DelegateAPI<A>): FileData<ByteArray>
+    fun finishDocument(state: DelegateAPI<A>, stream: OutputStream)
 }
 
-interface ColumnOperation {
-    fun renderColumn(state: DelegateAPI, coordinates: Coordinates, extensions: Set<ColumnExtension>?)
+interface ColumnOperation<A> {
+    fun renderColumn(state: DelegateAPI<A>, coordinates: Coordinates, extensions: Set<ColumnExtension>?)
 }
 
-interface HeaderCellOperation {
-    fun renderHeaderCell(state: DelegateAPI, coordinates: Coordinates, columnTitle: Description?, extensions: Set<CellExtension>?)
+interface HeaderCellOperation<A> {
+    fun renderHeaderCell(state: DelegateAPI<A>, coordinates: Coordinates, columnTitle: Description?, extensions: Set<CellExtension>?)
 }
 
-interface RowCellOperation {
-    fun renderRowCell(state: DelegateAPI, coordinates: Coordinates, value: CellValue?, extensions: Set<CellExtension>?)
+interface RowCellOperation<A> {
+    fun renderRowCell(state: DelegateAPI<A>, coordinates: Coordinates, value: CellValue?, extensions: Set<CellExtension>?)
 }
 
-data class LifecycleOperations<T>(
-    val createDocumentOperation: CreateDocumentOperation,
-    val createTableOperation: CreateTableOperation<T>,
-    val finishDocumentOperations: FinishDocumentOperations
+data class LifecycleOperations<T,A>(
+    val createDocumentOperation: CreateDocumentOperation<A>,
+    val createTableOperation: CreateTableOperation<T,A>,
+    val finishDocumentOperations: FinishDocumentOperations<A>
 )
 
-data class ExportOperations<T>(
-    val lifecycleOperations: LifecycleOperations<T>,
-    val headerRowOperation: RowOperation? = null,
-    val rowOperation: RowOperation,
-    val columnOperation: ColumnOperation? = null,
-    val headerCellOperation: HeaderCellOperation? = null,
-    val rowCellOperation: RowCellOperation? = null
+data class ExportOperations<T,A>(
+    val lifecycleOperations: LifecycleOperations<T,A>,
+    val headerRowOperation: RowOperation<A>? = null,
+    val rowOperation: RowOperation<A>,
+    val columnOperation: ColumnOperation<A>? = null,
+    val headerCellOperation: HeaderCellOperation<A>? = null,
+    val rowCellOperation: RowCellOperation<A>? = null
 )

@@ -6,7 +6,7 @@ import pl.voytech.exporter.core.model.extension.Extension
 import pl.voytech.exporter.core.model.extension.RowExtension
 import java.io.OutputStream
 
-open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
+open class DataExportTemplate<T,A>(private val delegate: ExportOperations<T,A>) {
 
     internal data class MergedRow<T>(val matchingRows: List<Row<T>>?){
         val rowHints: Set<RowExtension>?
@@ -30,11 +30,11 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
         }
     }
 
-    fun create(): DelegateAPI {
+    fun create(): DelegateAPI<A> {
         return delegate.lifecycleOperations.createDocumentOperation.createDocument()
     }
 
-    fun add(state: DelegateAPI, table: Table<T>, collection: Collection<T>): DelegateAPI {
+    fun add(state: DelegateAPI<A>, table: Table<T>, collection: Collection<T>): DelegateAPI<A> {
         val exportingState = delegate.lifecycleOperations.createTableOperation.let {
             ExportingState(it.createTable(state,table), table.name ?: "table-${NextId.nextId()}",table.firstRow, table.firstColumn)
         }
@@ -56,11 +56,11 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
         add(create(), table, collection).also { delegate.lifecycleOperations.finishDocumentOperations.finishDocument(it, stream) }
     }
 
-    fun export(state: DelegateAPI, stream: OutputStream) {
+    fun export(state: DelegateAPI<A>, stream: OutputStream) {
         delegate.lifecycleOperations.finishDocumentOperations.finishDocument(state, stream)
     }
 
-    private fun renderHeaderRow(state: ExportingState, table: Table<T>, collection: Collection<T>): ExportingState {
+    private fun renderHeaderRow(state: ExportingState<A>, table: Table<T>, collection: Collection<T>): ExportingState<A> {
         val headerRowMeta = collectMatchingRowDefinitions(RowData(index = state.rowIndex,dataset = collection), table.rows)
         return delegate.rowOperation.renderRow(state.delegate, state.coordinates(), headerRowMeta.rowHints).let {
             table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
@@ -75,19 +75,19 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
         }.let { state.nextRowIndex() }
     }
 
-    private fun renderHeaderCell(state: ExportingState, columnTitle: Description?, cellHints: Set<CellExtension>?): ExportingState {
+    private fun renderHeaderCell(state: ExportingState<A>, columnTitle: Description?, cellHints: Set<CellExtension>?): ExportingState<A> {
         return columnTitle?.let { delegate.headerCellOperation?.renderHeaderCell(state.delegate, state.coordinates(), columnTitle, cellHints); state } ?: state
     }
 
-    private fun renderRow(state: ExportingState, rowHints: Set<RowExtension>?): ExportingState {
+    private fun renderRow(state: ExportingState<A>, rowHints: Set<RowExtension>?): ExportingState<A> {
         return delegate.rowOperation.renderRow(state.delegate, state.coordinates(), rowHints).let { state }
     }
 
-    private fun renderRowCell(state: ExportingState, value: CellValue?, cellHints: Set<CellExtension>?) : ExportingState {
+    private fun renderRowCell(state: ExportingState<A>, value: CellValue?, cellHints: Set<CellExtension>?) : ExportingState<A> {
         return delegate.rowCellOperation?.renderRowCell(state.delegate, state.coordinates(), value, cellHints).let { state }
     }
 
-    private fun exportRow(state: ExportingState, table: Table<T>, record: T, collection: Collection<T>, rowIndex: Int) {
+    private fun exportRow(state: ExportingState<A>, table: Table<T>, record: T, collection: Collection<T>, rowIndex: Int) {
         RowData(rowIndex, record, collection).let { row ->
             val rowMeta = collectMatchingRowDefinitions(row, table.rows)
             renderRow(state.nextRowIndex(rowIndex), rowMeta.rowHints).also {
@@ -114,7 +114,7 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
 
 }
 
-fun <T> Collection<T>.exportTo(table: Table<T>, delegate: ExportOperations<T>, stream: OutputStream) {
+fun <T,A> Collection<T>.exportTo(table: Table<T>, delegate: ExportOperations<T,A>, stream: OutputStream) {
     DataExportTemplate(delegate).export(table, this, stream)
 }
 
