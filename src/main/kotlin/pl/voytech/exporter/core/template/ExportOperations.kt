@@ -36,14 +36,10 @@ interface RowCellOperation<A> {
     fun renderRowCell(state: DelegateAPI<A>, coordinates: Coordinates, value: CellValue?, extensions: Set<CellExtension>?)
 }
 
-data class LifecycleOperations<T,A>(
+data class ExportOperations<T,A>(
     val createDocumentOperation: CreateDocumentOperation<A>,
     val createTableOperation: CreateTableOperation<T,A>,
-    val finishDocumentOperations: FinishDocumentOperations<A>
-)
-
-data class ExportOperations<T,A>(
-    val lifecycleOperations: LifecycleOperations<T,A>,
+    val finishDocumentOperations: FinishDocumentOperations<A>,
     val headerRowOperation: RowOperation<A>? = null,
     val rowOperation: RowOperation<A>,
     val columnOperation: ColumnOperation<A>? = null,

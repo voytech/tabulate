@@ -31,11 +31,11 @@ open class DataExportTemplate<T,A>(private val delegate: ExportOperations<T,A>) 
     }
 
     fun create(): DelegateAPI<A> {
-        return delegate.lifecycleOperations.createDocumentOperation.createDocument()
+        return delegate.createDocumentOperation.createDocument()
     }
 
     fun add(state: DelegateAPI<A>, table: Table<T>, collection: Collection<T>): DelegateAPI<A> {
-        val exportingState = delegate.lifecycleOperations.createTableOperation.let {
+        val exportingState = delegate.createTableOperation.let {
             ExportingState(it.createTable(state,table), table.name ?: "table-${NextId.nextId()}",table.firstRow, table.firstColumn)
         }
         if (table.showHeader == true || table.columns.any { it.columnTitle != null }) {
@@ -49,15 +49,15 @@ open class DataExportTemplate<T,A>(private val delegate: ExportOperations<T,A>) 
     }
 
     fun export(table: Table<T>, collection: Collection<T>): FileData<ByteArray> {
-        return add(create(), table, collection).let { delegate.lifecycleOperations.finishDocumentOperations.finishDocument(it) }
+        return add(create(), table, collection).let { delegate.finishDocumentOperations.finishDocument(it) }
     }
 
     fun export(table: Table<T>, collection: Collection<T>, stream: OutputStream) {
-        add(create(), table, collection).also { delegate.lifecycleOperations.finishDocumentOperations.finishDocument(it, stream) }
+        add(create(), table, collection).also { delegate.finishDocumentOperations.finishDocument(it, stream) }
     }
 
     fun export(state: DelegateAPI<A>, stream: OutputStream) {
-        delegate.lifecycleOperations.finishDocumentOperations.finishDocument(state, stream)
+        delegate.finishDocumentOperations.finishDocument(state, stream)
     }
 
     private fun renderHeaderRow(state: ExportingState<A>, table: Table<T>, collection: Collection<T>): ExportingState<A> {

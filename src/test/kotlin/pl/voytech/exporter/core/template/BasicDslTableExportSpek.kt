@@ -1,8 +1,10 @@
 package pl.voytech.exporter.core.template
 
 import com.google.common.reflect.ClassPath
+import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
+import pl.voytech.exporter.core.api.dsl.export
 import pl.voytech.exporter.core.api.dsl.table
 import pl.voytech.exporter.core.model.RowSelectors
 import pl.voytech.exporter.core.model.extension.style.*
@@ -113,10 +115,18 @@ object BasicDslTableExportSpek: Spek({
     }
     Feature("Tabular data export to excel using excel template as input.") {
         Scenario("defining simple table model and exporting to excel file.") {
-            val productList = (0..1000).map { Product("prod_nr_$it","Name $it", "This is description $it", "manufacturer $it", LocalDate.now())}
+            val productList = (0..1000).map {
+                Product(
+                    "prod_nr_$it",
+                    "Name $it",
+                    "This is description $it",
+                    "manufacturer $it",
+                    LocalDate.now()
+                )
+            }
             val file = File("test2.xlsx")
             FileOutputStream(file).use {
-                productList.exportTo(
+                productList.export<Product,SXSSFWorkbook>(it) {
                     table {
                         name = "Products table"
                         firstRow = 1
@@ -129,7 +139,7 @@ object BasicDslTableExportSpek: Spek({
                                 dataFormatter = { field -> (field as String).toUpperCase() }
                             }
                             column(Product::distributionDate) {
-                                 cellExtensions(
+                                cellExtensions(
                                     CellExcelDataFormatExtension("dd.mm.YYYY")
                                 )
                             }
@@ -142,10 +152,9 @@ object BasicDslTableExportSpek: Spek({
                                 }
                             }
                         }
-                    },
-                    excelExport(ClassLoader.getSystemResourceAsStream("template.xlsx")),
-                    it
-                )
+                    }
+                    operations = excelExport(ClassLoader.getSystemResourceAsStream("template.xlsx"))
+                }
             }
             Then("file should be written successfully") {
                 assertNotNull(file)

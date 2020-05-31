@@ -114,11 +114,9 @@ internal class StreamingExcelRowCellOperations(cellExtensions: List<CellExtensio
 }
 
 fun <T> excelExport(templateFile: InputStream? = null) = ExportOperations(
-    lifecycleOperations = LifecycleOperations(
-        createDocumentOperation = CreateStreamingExcelDocumentOperation(templateFile),
-        createTableOperation = CreateStreamingExcelTableOperation<T>(),
-        finishDocumentOperations = FinishStreamingExcelDocumentOperation()
-    ),
+    createDocumentOperation = CreateStreamingExcelDocumentOperation(templateFile),
+    createTableOperation = CreateStreamingExcelTableOperation<T>(),
+    finishDocumentOperations = FinishStreamingExcelDocumentOperation(),
     headerRowOperation = StreamingExcelRowTableOperation(rowExtensionsOperations),
     rowOperation = StreamingExcelRowTableOperation(rowExtensionsOperations),
     columnOperation = ColumnOperationsWithExtensions(columnExtensionsOperations),
