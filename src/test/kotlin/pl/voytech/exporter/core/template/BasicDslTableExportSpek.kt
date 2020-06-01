@@ -86,7 +86,7 @@ object BasicDslTableExportSpek : Spek({
                         }
                         rows {
                             row {
-                                createAt = productList.size
+                                createAt = productList.size + 1
                                 cells {
                                     forColumn("nr") {
                                         eval = { row -> row.dataset.size}
