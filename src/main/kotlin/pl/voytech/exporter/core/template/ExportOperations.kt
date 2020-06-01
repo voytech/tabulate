@@ -15,7 +15,7 @@ interface CreateDocumentOperation<A> {
     fun createDocument(): DelegateAPI<A>
 }
 
-interface CreateTableOperation<T,A> {
+interface CreateTableOperation<T, A> {
     fun createTable(state: DelegateAPI<A>, table: Table<T>): DelegateAPI<A>
 }
 
@@ -29,16 +29,26 @@ interface ColumnOperation<A> {
 }
 
 interface HeaderCellOperation<A> {
-    fun renderHeaderCell(state: DelegateAPI<A>, coordinates: Coordinates, columnTitle: Description?, extensions: Set<CellExtension>?)
+    fun renderHeaderCell(
+        state: DelegateAPI<A>,
+        coordinates: Coordinates,
+        columnTitle: Description?,
+        extensions: Set<CellExtension>?
+    )
 }
 
 interface RowCellOperation<A> {
-    fun renderRowCell(state: DelegateAPI<A>, coordinates: Coordinates, value: CellValue?, extensions: Set<CellExtension>?)
+    fun renderRowCell(
+        state: DelegateAPI<A>,
+        coordinates: Coordinates,
+        value: CellValue?,
+        extensions: Set<CellExtension>?
+    )
 }
 
-data class ExportOperations<T,A>(
+data class ExportOperations<T, A>(
     val createDocumentOperation: CreateDocumentOperation<A>,
-    val createTableOperation: CreateTableOperation<T,A>,
+    val createTableOperation: CreateTableOperation<T, A>,
     val finishDocumentOperations: FinishDocumentOperations<A>,
     val headerRowOperation: RowOperation<A>? = null,
     val rowOperation: RowOperation<A>,

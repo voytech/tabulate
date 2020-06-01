@@ -6,10 +6,11 @@ import pl.voytech.exporter.core.model.extension.ColumnExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
 
 abstract class RowOperationWithExtensions<A>(
-    extensionOperations: List<RowExtensionOperation<out RowExtension,A>>?
-): RowOperation<A> {
+    extensionOperations: List<RowExtensionOperation<out RowExtension, A>>?
+) : RowOperation<A> {
 
-    private val delegatingExtensionOperations: DelegatingRowExtensionsOperations<A> = DelegatingRowExtensionsOperations(extensionOperations)
+    private val delegatingExtensionOperations: DelegatingRowExtensionsOperations<A> =
+        DelegatingRowExtensionsOperations(extensionOperations)
 
     override fun renderRow(state: DelegateAPI<A>, coordinates: Coordinates, extensions: Set<RowExtension>?) {
         renderRow(state, coordinates).also {
@@ -22,10 +23,11 @@ abstract class RowOperationWithExtensions<A>(
 }
 
 class ColumnOperationsWithExtensions<A>(
-    extensionOperations: List<ColumnExtensionOperation<out ColumnExtension,A>>?
-): ColumnOperation<A> {
+    extensionOperations: List<ColumnExtensionOperation<out ColumnExtension, A>>?
+) : ColumnOperation<A> {
 
-    private val delegatingExtensionOperations: DelegatingColumnExtensionsOperations<A> = DelegatingColumnExtensionsOperations(extensionOperations)
+    private val delegatingExtensionOperations: DelegatingColumnExtensionsOperations<A> =
+        DelegatingColumnExtensionsOperations(extensionOperations)
 
     override fun renderColumn(state: DelegateAPI<A>, coordinates: Coordinates, extensions: Set<ColumnExtension>?) {
         extensions?.let { delegatingExtensionOperations.applyColumnExtensions(state, coordinates, extensions) }
@@ -33,10 +35,11 @@ class ColumnOperationsWithExtensions<A>(
 }
 
 abstract class HeaderCellOperationsWithExtensions<A>(
-    extensionOperations: List<CellExtensionOperation<out CellExtension,A>>?
-): HeaderCellOperation<A> {
+    extensionOperations: List<CellExtensionOperation<out CellExtension, A>>?
+) : HeaderCellOperation<A> {
 
-    private val delegatingExtensionOperations: DelegatingCellExtensionsOperations<A> = DelegatingCellExtensionsOperations(extensionOperations)
+    private val delegatingExtensionOperations: DelegatingCellExtensionsOperations<A> =
+        DelegatingCellExtensionsOperations(extensionOperations)
 
     override fun renderHeaderCell(
         state: DelegateAPI<A>,
@@ -54,12 +57,18 @@ abstract class HeaderCellOperationsWithExtensions<A>(
 }
 
 abstract class RowCellOperationsWithExtensions<A>(
-    extensionOperations: List<CellExtensionOperation<out CellExtension,A>>?
-): RowCellOperation<A> {
+    extensionOperations: List<CellExtensionOperation<out CellExtension, A>>?
+) : RowCellOperation<A> {
 
-    private val delegatingExtensionOperations: DelegatingCellExtensionsOperations<A> = DelegatingCellExtensionsOperations(extensionOperations)
+    private val delegatingExtensionOperations: DelegatingCellExtensionsOperations<A> =
+        DelegatingCellExtensionsOperations(extensionOperations)
 
-    override fun renderRowCell(state: DelegateAPI<A>, coordinates: Coordinates, value: CellValue?, extensions: Set<CellExtension>?) {
+    override fun renderRowCell(
+        state: DelegateAPI<A>,
+        coordinates: Coordinates,
+        value: CellValue?,
+        extensions: Set<CellExtension>?
+    ) {
         renderRowCell(state, coordinates, value).also {
             extensions?.let { delegatingExtensionOperations.applyCellExtensions(state, coordinates, it) }
         }

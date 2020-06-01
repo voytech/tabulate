@@ -1,6 +1,5 @@
 package pl.voytech.exporter.core.template
 
-import com.google.common.reflect.ClassPath
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
@@ -14,16 +13,24 @@ import pl.voytech.exporter.core.model.extension.style.enums.VerticalAlignment
 import pl.voytech.exporter.core.model.extension.style.enums.WeightStyle
 import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatExtension
-import pl.voytech.exporter.impl.template.excel.excelExport
+import pl.voytech.exporter.impl.template.excel.xlsxExport
 import java.io.File
 import java.io.FileOutputStream
 import java.time.LocalDate
 import kotlin.test.assertNotNull
 
-object BasicDslTableExportSpek: Spek({
+object BasicDslTableExportSpek : Spek({
     Feature("Regular tabular data export to excel") {
         Scenario("defining simple table model and exporting to excel file.") {
-            val productList = (0..1000).map { Product("prod_nr_$it","Name $it", "This is description $it", "manufacturer $it", LocalDate.now())}
+            val productList = (0..999).map {
+                Product(
+                    "prod_nr_$it",
+                    "Name $it",
+                    "This is description $it",
+                    "manufacturer $it",
+                    LocalDate.now()
+                )
+            }
             val file = File("test.xlsx")
             FileOutputStream(file).use {
                 productList.exportTo(
@@ -36,7 +43,7 @@ object BasicDslTableExportSpek: Spek({
                                 cellExtensions(
                                     CellFontExtension(
                                         fontFamily = "Times New Roman",
-                                        fontColor = Color(10,100,100),
+                                        fontColor = Color(10, 100, 100),
                                         fontSize = 12,
                                         italic = true,
                                         weight = WeightStyle.BOLD,
@@ -51,10 +58,10 @@ object BasicDslTableExportSpek: Spek({
                                 cellExtensions(
                                     CellFontExtension(
                                         fontFamily = "Times New Roman",
-                                        fontColor = Color(0,0,0),
+                                        fontColor = Color(0, 0, 0),
                                         fontSize = 12
                                     ),
-                                    CellBackgroundExtension(color = Color(10,100,100))
+                                    CellBackgroundExtension(color = Color(10, 100, 100))
                                 )
                             }
                             column(Product::name) {
@@ -79,16 +86,34 @@ object BasicDslTableExportSpek: Spek({
                         }
                         rows {
                             row {
-                                selector = RowSelectors.at(0)
+                                createAt = productList.size
+                                cells {
+                                    forColumn("nr") {
+                                        eval = { row -> row.dataset.size}
+                                    }
+                                    forColumn(Product::distributionDate) {
+                                        value = "This is a date of distribution"
+                                        cellExtensions(CellFontExtension(weight = WeightStyle.BOLD))
+                                    }
+                                    forColumn(Product::manufacturer) {
+                                        value = "A name of manufacturer"
+                                    }
+                                    forColumn(Product::description) {
+                                        value = "A product description"
+                                    }
+                                }
+                            }
+                            row {
+                                selector = RowSelectors.atRowIndex(0)
                                 rowExtensions(RowHeightExtension(height = 220))
                                 cellExtensions(
                                     CellBordersExtension(
                                         leftBorderStyle = BorderStyle.SOLID,
-                                        leftBorderColor = Color(0,0,0),
+                                        leftBorderColor = Color(0, 0, 0),
                                         rightBorderStyle = BorderStyle.SOLID,
-                                        rightBorderColor = Color(0,0,0),
+                                        rightBorderColor = Color(0, 0, 0),
                                         bottomBorderStyle = BorderStyle.SOLID,
-                                        bottomBorderColor = Color(0,0,0)
+                                        bottomBorderColor = Color(0, 0, 0)
                                     ),
                                     CellAlignmentExtension(
                                         horizontal = HorizontalAlignment.CENTER,
@@ -99,12 +124,12 @@ object BasicDslTableExportSpek: Spek({
                             row {
                                 selector = RowSelectors.all()
                                 cells {
-                                    forColumn("nr") { eval = { row -> row.index } }
+                                    forColumn("nr") { eval = { row -> row.objectIndex } }
                                 }
                             }
                         }
                     },
-                    excelExport(),
+                    xlsxExport(),
                     it
                 )
             }
@@ -126,15 +151,15 @@ object BasicDslTableExportSpek: Spek({
             }
             val file = File("test2.xlsx")
             FileOutputStream(file).use {
-                productList.export<Product,SXSSFWorkbook>(it) {
+                productList.export<Product, SXSSFWorkbook>(it) {
                     table {
                         name = "Products table"
                         firstRow = 1
                         columns {
-                            column("nr") {}
-                            column(Product::code) {}
-                            column(Product::name) {}
-                            column(Product::description) {}
+                            column("nr")
+                            column(Product::code)
+                            column(Product::name)
+                            column(Product::description)
                             column(Product::manufacturer) {
                                 dataFormatter = { field -> (field as String).toUpperCase() }
                             }
@@ -148,12 +173,12 @@ object BasicDslTableExportSpek: Spek({
                             row {
                                 selector = RowSelectors.all()
                                 cells {
-                                    forColumn("nr") { eval = { row -> row.index } }
+                                    forColumn("nr") { eval = { row -> row.objectIndex } }
                                 }
                             }
                         }
                     }
-                    operations = excelExport(ClassLoader.getSystemResourceAsStream("template.xlsx"))
+                    operations = xlsxExport(ClassLoader.getSystemResourceAsStream("template.xlsx"))
                 }
             }
             Then("file should be written successfully") {

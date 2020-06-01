@@ -1,7 +1,5 @@
 package pl.voytech.exporter.core.model
 
-import kotlin.reflect.KFunction
-
 data class Key<T>(
     val id: String? = null,
     val ref: ((record: T) -> Any?)? = null

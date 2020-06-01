@@ -1,7 +1,6 @@
 package pl.voytech.exporter.core.api.dsl
 
 import pl.voytech.exporter.core.model.*
-import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.extension.*
 
 fun <T> table(block: TableBuilder<T>.() -> Unit): Table<T> = TableBuilder<T>().apply(block).build()
@@ -9,8 +8,8 @@ fun <T> table(block: TableBuilder<T>.() -> Unit): Table<T> = TableBuilder<T>().a
 class TableBuilder<T> {
     var name: String? = "untitled"
     var firstRow: Int? = 0
-    var firstColumn: Int? =0
-    private lateinit var columns : List<Column<T>>
+    var firstColumn: Int? = 0
+    private lateinit var columns: List<Column<T>>
     private var rows: List<Row<T>>? = null
     private var showHeader: Boolean? = false
     private var showFooter: Boolean? = false
@@ -47,18 +46,14 @@ class TableBuilder<T> {
         rowsDescription = DescriptionBuilder().apply(block).build()
     }
 
-    fun build() : Table<T> = Table(
+    fun build(): Table<T> = Table(
         name, firstRow, firstColumn, columns, rows, showHeader,
-        showFooter,  columnsDescription, rowsDescription,
+        showFooter, columnsDescription, rowsDescription,
         tableExtensions, cellExtensions
     )
 }
 
 class ColumnsBuilder<T> : ArrayList<Column<T>>() {
-
-    fun column(block: ColumnBuilder<T>.() -> Unit) {
-        add(ColumnBuilder<T>().apply(block).build())
-    }
 
     fun column(id: String, block: ColumnBuilder<T>.() -> Unit) {
         add(ColumnBuilder<T>(id = Key(id)).apply(block).build())
@@ -66,6 +61,14 @@ class ColumnsBuilder<T> : ArrayList<Column<T>>() {
 
     fun column(ref: ((record: T) -> Any?), block: ColumnBuilder<T>.() -> Unit) {
         add(ColumnBuilder(id = Key(ref = ref)).apply(block).build())
+    }
+
+    fun column(id: String) {
+        add(ColumnBuilder<T>(id = Key(id)).build())
+    }
+
+    fun column(ref: ((record: T) -> Any?)) {
+        add(ColumnBuilder(id = Key(ref = ref)).build())
     }
 }
 
@@ -104,11 +107,10 @@ class ColumnBuilder<T> {
         cellExtensions = extensions.toHashSet()
     }
 
-    fun build() : Column<T> = Column(id, index, columnTitle, columnType, columnExtensions, cellExtensions, dataFormatter)
+    fun build(): Column<T> = Column(id, index, columnTitle, columnType, columnExtensions, cellExtensions, dataFormatter)
 }
 
 class RowsBuilder<T> : ArrayList<Row<T>>() {
-
     fun row(block: RowBuilder<T>.() -> Unit) {
         add(RowBuilder<T>().apply(block).build())
     }
@@ -119,13 +121,19 @@ class RowsBuilder<T> : ArrayList<Row<T>>() {
         add(builder.apply(block).build())
     }
 
+    fun row(at: Int, block: RowBuilder<T>.() -> Unit) {
+        val builder = RowBuilder<T>()
+        builder.createAt = at
+        add(builder.apply(block).build())
+    }
 }
 
 class RowBuilder<T> {
     private var cells: Map<Key<T>, Cell<T>>? = null
     private var rowExtensions: Set<RowExtension>? = null
     private var cellExtensions: Set<CellExtension>? = null
-    lateinit var selector: RowSelector<T>
+    var selector: RowSelector<T>? = null
+    var createAt: Int? = null
 
     fun rowExtensions(block: ExtensionsBuilder<RowExtension>.() -> Unit) {
         rowExtensions = ExtensionsBuilder<RowExtension>().apply(block)
@@ -147,7 +155,7 @@ class RowBuilder<T> {
         cells = CellsBuilder<T>().apply(block)
     }
 
-    fun build() : Row<T> = Row(selector, rowExtensions, cellExtensions, cells)
+    fun build(): Row<T> = Row(selector, createAt, rowExtensions, cellExtensions, cells)
 }
 
 class ExtensionsBuilder<T> : HashSet<T>() {
@@ -156,12 +164,13 @@ class ExtensionsBuilder<T> : HashSet<T>() {
     }
 }
 
-class CellsBuilder<T>: HashMap<Key<T>,Cell<T>>() {
+class CellsBuilder<T> : HashMap<Key<T>, Cell<T>>() {
     fun forColumn(id: String, block: CellBuilder<T>.() -> Unit) {
         put(Key(id), CellBuilder<T>().apply(block).build())
     }
+
     fun forColumn(ref: ((record: T) -> Any?), block: CellBuilder<T>.() -> Unit) {
-        put(Key(ref=ref), CellBuilder<T>().apply(block).build())
+        put(Key(ref = ref), CellBuilder<T>().apply(block).build())
     }
 }
 
