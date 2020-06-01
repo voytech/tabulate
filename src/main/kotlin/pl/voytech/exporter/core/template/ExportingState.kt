@@ -3,6 +3,10 @@ package pl.voytech.exporter.core.template
 import pl.voytech.exporter.core.model.NextId
 import pl.voytech.exporter.core.model.RowData
 
+/**
+ * A state of single table export.
+ * @author Wojciech Mąka
+ */
 class ExportingState<A>(
     val delegate: DelegateAPI<A>,
     val tableName: String = "table-${NextId.nextId()}",
