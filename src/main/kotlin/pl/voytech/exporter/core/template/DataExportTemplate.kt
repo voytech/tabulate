@@ -7,6 +7,13 @@ import pl.voytech.exporter.core.model.extension.RowExtension
 import java.io.OutputStream
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * Core logic responsible for orchestrating rendering tabular data format file.
+ * Takes delegate object with bunch of specialised interfaces. Each interface defines contract for
+ * single atomic step of data export.
+ * Implementations of interfaces must agree on delegate state or low level api type instance.
+ * @author Wojciech Mąka
+ */
 open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>) {
 
     internal data class MergedRow<T>(val matchingRows: Set<Row<T>>?) {
