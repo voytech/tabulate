@@ -20,15 +20,15 @@ import pl.voytech.exporter.core.model.extension.TableExtension
  *   and exporter.
  */
 data class Table<T>(
-   val name: String? = "untitled",
-   val firstRow: Int? = 0,
-   val firstColumn: Int? =0,
-   val columns : List<Column<T>> = emptyList(),
-   val rows: List<Row<T>>?,
-   val showHeader: Boolean? = false,
-   val showFooter: Boolean? = false,
-   val columnsDescription: Description?,
-   val rowsDescription: Description?,
-   val tableExtensions: Set<TableExtension>?,
-   val cellExtensions: Set<CellExtension>?
+    val name: String? = "untitled",
+    val firstRow: Int? = 0,
+    val firstColumn: Int? = 0,
+    val columns: List<Column<T>> = emptyList(),
+    val rows: List<Row<T>>?,
+    val showHeader: Boolean? = false,
+    val showFooter: Boolean? = false,
+    val columnsDescription: Description?,
+    val rowsDescription: Description?,
+    val tableExtensions: Set<TableExtension>?,
+    val cellExtensions: Set<CellExtension>?
 )

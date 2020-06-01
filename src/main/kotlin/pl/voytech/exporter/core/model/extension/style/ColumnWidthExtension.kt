@@ -9,4 +9,4 @@ enum class LengthUnit {
 data class ColumnWidthExtension(
     val width: Int,
     val unit: LengthUnit = LengthUnit.PIXEL
-): ColumnExtension()
+) : ColumnExtension()

@@ -5,13 +5,14 @@ import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.Extension
 import pl.voytech.exporter.core.model.extension.RowExtension
 import java.io.OutputStream
+import java.util.concurrent.atomic.AtomicInteger
 
-open class DataExportTemplate<T,A>(private val delegate: ExportOperations<T,A>) {
+open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>) {
 
-    internal data class MergedRow<T>(val matchingRows: List<Row<T>>?){
+    internal data class MergedRow<T>(val matchingRows: Set<Row<T>>?) {
         val rowHints: Set<RowExtension>?
         val rowCellHints: Set<CellExtension>?
-        val rowCells: Map<Key<T>,Cell<T>>?
+        val rowCells: Map<Key<T>, Cell<T>>?
 
         init {
             rowHints = collectHints(matchingRows) { r -> r.rowExtensions }
@@ -19,14 +20,17 @@ open class DataExportTemplate<T,A>(private val delegate: ExportOperations<T,A>) 
             rowCells = collectCells(matchingRows)
         }
 
-        private fun <E : Extension> collectHints(matchingRows: List<Row<T>>?, getHints:(r: Row<T>) -> Set<E>?): Set<E>? {
+        private fun <E : Extension> collectHints(
+            matchingRows: Set<Row<T>>?,
+            getHints: (r: Row<T>) -> Set<E>?
+        ): Set<E>? {
             return matchingRows?.mapNotNull { e -> getHints.invoke(e) }
-                ?.fold(setOf(),{ acc, r -> acc + r })
+                ?.fold(setOf(), { acc, r -> acc + r })
         }
 
-        private fun collectCells(matchingRows: List<Row<T>>?): Map<Key<T>, Cell<T>>?{
+        private fun collectCells(matchingRows: Set<Row<T>>?): Map<Key<T>, Cell<T>>? {
             return matchingRows?.mapNotNull { row -> row.cells }
-                ?.fold(mapOf(),{ acc, m -> acc + m })
+                ?.fold(mapOf(), { acc, m -> acc + m })
         }
     }
 
@@ -35,17 +39,47 @@ open class DataExportTemplate<T,A>(private val delegate: ExportOperations<T,A>) 
     }
 
     fun add(state: DelegateAPI<A>, table: Table<T>, collection: Collection<T>): DelegateAPI<A> {
-        val exportingState = delegate.createTableOperation.let {
-            ExportingState(it.createTable(state,table), table.name ?: "table-${NextId.nextId()}",table.firstRow, table.firstColumn)
-        }
+        val exportingState = ExportingState(
+            delegate.createTableOperation.createTable(state, table),
+            table.name ?: "table-${NextId.nextId()}",
+            table.firstRow,
+            table.firstColumn
+        )
         if (table.showHeader == true || table.columns.any { it.columnTitle != null }) {
             renderHeaderRow(exportingState, table, collection)
+            exportingState.nextRowIndex()
         }
-        val startFrom = exportingState.rowIndex
-        collection.forEachIndexed { rowIndex: Int, record: T ->
-            exportRow(exportingState, table, record, collection, rowIndex.plus(startFrom))
-        }
+        renderSubsequentSyntheticRows(exportingState, table, collection)
+        renderCollectionRows(exportingState, table, collection)
+        // renderTrailingSyntheticRows()
+        // completed.
         return exportingState.delegate
+    }
+
+    private fun renderCollectionRows(exportingState: ExportingState<A>, table: Table<T>, collection: Collection<T>) {
+        collection.forEachIndexed { objectIndex: Int, record: T ->
+            exportingState.rowContext(
+                dataset = collection,
+                objectIndex = objectIndex,
+                record = record
+            ).let {
+                renderRow(exportingState, table, it)
+            }
+            renderSubsequentSyntheticRows(exportingState.nextRowIndex(), table, collection)
+        }
+    }
+
+    private fun renderSubsequentSyntheticRows(
+        exportingState: ExportingState<A>,
+        table: Table<T>,
+        collection: Collection<T>
+    ) {
+        subsequentSyntheticRowsStartingAtRowIndex(exportingState.rowIndex, table.rows).let {
+            it?.forEach { _ ->
+                renderRow(exportingState, table, exportingState.rowContext(dataset = collection))
+                exportingState.nextRowIndex()
+            }
+        }
     }
 
     fun export(table: Table<T>, collection: Collection<T>): FileData<ByteArray> {
@@ -60,61 +94,123 @@ open class DataExportTemplate<T,A>(private val delegate: ExportOperations<T,A>) 
         delegate.finishDocumentOperations.finishDocument(state, stream)
     }
 
-    private fun renderHeaderRow(state: ExportingState<A>, table: Table<T>, collection: Collection<T>): ExportingState<A> {
-        val headerRowMeta = collectMatchingRowDefinitions(RowData(index = state.rowIndex,dataset = collection), table.rows)
+    private fun renderHeaderRow(
+        state: ExportingState<A>,
+        table: Table<T>,
+        collection: Collection<T>
+    ): ExportingState<A> {
+        val headerRowMeta =
+            findRowMatchingRules(RowData(rowIndex = state.rowIndex, dataset = collection), table.rows)
         return delegate.rowOperation.renderRow(state.delegate, state.coordinates(), headerRowMeta.rowHints).let {
             table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                delegate.columnOperation?.renderColumn(state.delegate, state.nextColumnIndex(column.index ?: columnIndex).coordinates(), column.columnExtensions)
+                delegate.columnOperation?.renderColumn(
+                    state.delegate,
+                    state.withColumnIndex(column.index ?: columnIndex).coordinates(),
+                    column.columnExtensions
+                )
                 val cellDef = headerRowMeta.rowCells?.get(column.id)
                 renderHeaderCell(
                     state,
                     column.columnTitle,
-                    collectUniqueCellHints(table.cellExtensions, column.cellExtensions, headerRowMeta.rowCellHints, cellDef?.cellExtensions)
+                    collectUniqueCellHints(
+                        table.cellExtensions,
+                        column.cellExtensions,
+                        headerRowMeta.rowCellHints,
+                        cellDef?.cellExtensions
+                    )
                 )
             }
         }.let { state.nextRowIndex() }
     }
 
-    private fun renderHeaderCell(state: ExportingState<A>, columnTitle: Description?, cellHints: Set<CellExtension>?): ExportingState<A> {
-        return columnTitle?.let { delegate.headerCellOperation?.renderHeaderCell(state.delegate, state.coordinates(), columnTitle, cellHints); state } ?: state
+    private fun renderHeaderCell(
+        state: ExportingState<A>,
+        columnTitle: Description?,
+        cellHints: Set<CellExtension>?
+    ): ExportingState<A> {
+        return columnTitle?.let {
+            delegate.headerCellOperation?.renderHeaderCell(
+                state.delegate,
+                state.coordinates(),
+                columnTitle,
+                cellHints
+            ); state
+        } ?: state
     }
 
     private fun renderRow(state: ExportingState<A>, rowHints: Set<RowExtension>?): ExportingState<A> {
         return delegate.rowOperation.renderRow(state.delegate, state.coordinates(), rowHints).let { state }
     }
 
-    private fun renderRowCell(state: ExportingState<A>, value: CellValue?, cellHints: Set<CellExtension>?) : ExportingState<A> {
-        return delegate.rowCellOperation?.renderRowCell(state.delegate, state.coordinates(), value, cellHints).let { state }
+    private fun renderRowCell(
+        state: ExportingState<A>,
+        value: CellValue?,
+        cellHints: Set<CellExtension>?
+    ): ExportingState<A> {
+        return delegate.rowCellOperation?.renderRowCell(state.delegate, state.coordinates(), value, cellHints)
+            .let { state }
     }
 
-    private fun exportRow(state: ExportingState<A>, table: Table<T>, record: T, collection: Collection<T>, rowIndex: Int) {
-        RowData(rowIndex, record, collection).let { row ->
-            val rowMeta = collectMatchingRowDefinitions(row, table.rows)
-            renderRow(state.nextRowIndex(rowIndex), rowMeta.rowHints).also {
-                table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                    val cellDef = rowMeta.rowCells?.get(column.id)
-                    val value = (cellDef?.eval?.invoke(row) ?: cellDef?.value ?: column.id.ref?.invoke(record))?.let {
-                        column.dataFormatter?.invoke(it) ?: it
-                    }
-                    renderRowCell(
-                        it.nextColumnIndex(column.index ?: columnIndex),
-                        value?.let { CellValue(value, cellDef?.type ?: column.columnType) },
-                        collectUniqueCellHints(table.cellExtensions, column.cellExtensions, rowMeta.rowCellHints, cellDef?.cellExtensions)
-                    )
+    private fun evalColumnExpr(column: Column<T>, row: RowData<T>): Any? {
+        return row.record?.let {
+            column.id.ref?.invoke(it)
+        }
+    }
+
+    private fun renderRow(
+        state: ExportingState<A>,
+        table: Table<T>,
+        row: RowData<T>
+    ) {
+        val rowWideRules = findRowMatchingRules(row, table.rows)
+        renderRow(state, rowWideRules.rowHints).also {
+            table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+                val cellDef = rowWideRules.rowCells?.get(column.id)
+                val value = (cellDef?.eval?.invoke(row) ?: cellDef?.value ?: evalColumnExpr(column, row))?.let {
+                    column.dataFormatter?.invoke(it) ?: it
                 }
+                renderRowCell(
+                    it.withColumnIndex(column.index ?: columnIndex),
+                    value?.let { CellValue(value, cellDef?.type ?: column.columnType) },
+                    collectUniqueCellHints(
+                        table.cellExtensions,
+                        column.cellExtensions,
+                        rowWideRules.rowCellHints,
+                        cellDef?.cellExtensions
+                    )
+                )
             }
         }
     }
 
-    private fun collectMatchingRowDefinitions(row: RowData<T>, tableRows: List<Row<T>>?): MergedRow<T> = MergedRow(tableRows?.filter { it.selector(row) })
+    private fun allSelectableRows(tableRows: List<Row<T>>?): List<Row<T>>? = tableRows?.filter { it.selector != null }
 
-    private fun collectUniqueCellHints(vararg hintsOnLevels: Set<CellExtension>?): Set<CellExtension> {
-        return hintsOnLevels.filterNotNull().fold(setOf(), {acc, s -> acc + s })
+    private fun allSyntheticRows(tableRows: List<Row<T>>?): List<Row<T>>? =
+        tableRows?.filter { it.createAt != null }?.sortedBy { it.createAt }
+
+    private fun subsequentSyntheticRowsStartingAtRowIndex(startFrom: Int = 0, tableRows: List<Row<T>>?): List<Row<T>>? {
+        return AtomicInteger(startFrom).let {
+            allSyntheticRows(tableRows)?.filter { row -> row.createAt!! >= it.get() }
+                ?.takeWhile { row -> row.createAt == it.getAndIncrement() }
+        }
     }
 
+    private fun trailingSyntheticRows(tableRows: List<Row<T>>?, startingFrom: Int) {
+        allSyntheticRows(tableRows)?.filter { it.createAt!! >= startingFrom }
+    }
+
+    private fun findRowMatchingRules(row: RowData<T>, tableRows: List<Row<T>>?): MergedRow<T> {
+        val matchingSelectableRows = allSelectableRows(tableRows)?.filter { it.selector!!.invoke(row) }?.toSet()
+        val createAtRow = allSyntheticRows(tableRows)?.filter { it.createAt == row.rowIndex }?.toSet()
+        return MergedRow(createAtRow?.let { matchingSelectableRows?.plus(it) ?: it } ?: matchingSelectableRows)
+    }
+
+    private fun collectUniqueCellHints(vararg hintsOnLevels: Set<CellExtension>?): Set<CellExtension> {
+        return hintsOnLevels.filterNotNull().fold(setOf(), { acc, s -> acc + s })
+    }
 }
 
-fun <T,A> Collection<T>.exportTo(table: Table<T>, delegate: ExportOperations<T,A>, stream: OutputStream) {
+fun <T, A> Collection<T>.exportTo(table: Table<T>, delegate: ExportOperations<T, A>, stream: OutputStream) {
     DataExportTemplate(delegate).export(table, this, stream)
 }
 

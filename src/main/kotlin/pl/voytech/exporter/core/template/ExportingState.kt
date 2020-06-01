@@ -1,6 +1,7 @@
 package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.NextId
+import pl.voytech.exporter.core.model.RowData
 
 class ExportingState<A>(
     val delegate: DelegateAPI<A>,
@@ -8,24 +9,27 @@ class ExportingState<A>(
     val firstRow: Int? = 0,
     val firstColumn: Int? = 0
 ) {
-    var rowIndex: Int = 0
-    var columnIndex: Int = 0
+    var rowIndex: Int = 0 //objectIndex
+    var columnIndex: Int = 0 //objectFieldIndex
 
-    fun nextColumnIndex(index: Int): ExportingState<A> {
+    fun withColumnIndex(index: Int): ExportingState<A> {
         columnIndex = index
         return this
     }
 
-    fun nextRowIndex(index: Int): ExportingState<A> {
+    fun withRowIndex(index: Int): ExportingState<A> {
         rowIndex = index
         return this
     }
 
     fun nextRowIndex(): ExportingState<A> {
-        rowIndex ++
+        rowIndex++
         return this
     }
 
-    fun coordinates(): Coordinates = Coordinates(tableName, (firstRow?:0) + rowIndex, (firstColumn?:0) + columnIndex)
+    fun coordinates(): Coordinates =
+        Coordinates(tableName, (firstRow ?: 0) + rowIndex, (firstColumn ?: 0) + columnIndex)
+
+    fun <T> rowContext(dataset: Collection<T>, record: T? = null, objectIndex: Int? = null) = RowData(rowIndex, objectIndex, record, dataset)
 
 }

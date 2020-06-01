@@ -14,7 +14,6 @@ import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertRow
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertTableSheet
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.workbook
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 import java.time.Instant
@@ -23,7 +22,8 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-internal class StreamingExcelRowTableOperation(rowHints: List<RowExtensionOperation<out RowExtension,SXSSFWorkbook>>) : RowOperationWithExtensions<SXSSFWorkbook>(rowHints) {
+internal class StreamingExcelRowTableOperation(rowHints: List<RowExtensionOperation<out RowExtension, SXSSFWorkbook>>) :
+    RowOperationWithExtensions<SXSSFWorkbook>(rowHints) {
 
     override fun renderRow(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates) {
         assertRow(state, coordinates)
@@ -31,19 +31,21 @@ internal class StreamingExcelRowTableOperation(rowHints: List<RowExtensionOperat
 
 }
 
-internal class CreateStreamingExcelDocumentOperation(private val templateFile: InputStream?) : CreateDocumentOperation<SXSSFWorkbook> {
+internal class CreateStreamingExcelDocumentOperation(private val templateFile: InputStream?) :
+    CreateDocumentOperation<SXSSFWorkbook> {
     override fun createDocument(): DelegateAPI<SXSSFWorkbook> {
-        return DelegateAPI(templateFile?.let { SXSSFWorkbook(WorkbookFactory.create(it) as XSSFWorkbook?,100) } ?: SXSSFWorkbook())
+        return DelegateAPI(templateFile?.let { SXSSFWorkbook(WorkbookFactory.create(it) as XSSFWorkbook?, 100) }
+            ?: SXSSFWorkbook())
     }
 }
 
-internal class CreateStreamingExcelTableOperation<T>: CreateTableOperation<T,SXSSFWorkbook> {
+internal class CreateStreamingExcelTableOperation<T> : CreateTableOperation<T, SXSSFWorkbook> {
     override fun createTable(state: DelegateAPI<SXSSFWorkbook>, table: Table<T>): DelegateAPI<SXSSFWorkbook> {
         return assertTableSheet(state, table.name).let { state }
     }
 }
 
-internal class FinishStreamingExcelDocumentOperation: FinishDocumentOperations<SXSSFWorkbook> {
+internal class FinishStreamingExcelDocumentOperation : FinishDocumentOperations<SXSSFWorkbook> {
     override fun finishDocument(state: DelegateAPI<SXSSFWorkbook>): FileData<ByteArray> {
         val outputStream = ByteArrayOutputStream()
         workbook(state).run {
@@ -61,7 +63,8 @@ internal class FinishStreamingExcelDocumentOperation: FinishDocumentOperations<S
     }
 }
 
-internal class StreamingExcelHeaderCellOperations(cellExtensions: List<CellExtensionOperation<out CellExtension,SXSSFWorkbook>>) : HeaderCellOperationsWithExtensions<SXSSFWorkbook>(cellExtensions){
+internal class StreamingExcelHeaderCellOperations(cellExtensions: List<CellExtensionOperation<out CellExtension, SXSSFWorkbook>>) :
+    HeaderCellOperationsWithExtensions<SXSSFWorkbook>(cellExtensions) {
     override fun renderHeaderCell(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates, columnTitle: String?) {
         assertCell(state, coordinates).let { cell ->
             columnTitle?.let { cell.setCellValue(it) }
@@ -70,7 +73,8 @@ internal class StreamingExcelHeaderCellOperations(cellExtensions: List<CellExten
 
 }
 
-internal class StreamingExcelRowCellOperations(cellExtensions: List<CellExtensionOperation<out CellExtension,SXSSFWorkbook>>) : RowCellOperationsWithExtensions<SXSSFWorkbook>(cellExtensions){
+internal class StreamingExcelRowCellOperations(cellExtensions: List<CellExtensionOperation<out CellExtension, SXSSFWorkbook>>) :
+    RowCellOperationsWithExtensions<SXSSFWorkbook>(cellExtensions) {
 
     private fun toDateValue(value: Any): Date {
         return when (value) {
@@ -95,7 +99,7 @@ internal class StreamingExcelRowCellOperations(cellExtensions: List<CellExtensio
                     CellType.ERROR -> TODO()
                 }
             } ?: v.run {
-                when(this.value){
+                when (this.value) {
                     is String -> cell.setCellValue(this.value)
                     is Boolean -> cell.setCellValue(this.value)
                     is LocalDate -> cell.setCellValue(toDateValue(this.value))
@@ -108,12 +112,12 @@ internal class StreamingExcelRowCellOperations(cellExtensions: List<CellExtensio
     }
 
     override fun renderRowCell(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates, value: CellValue?) {
-        assertCell(state,coordinates).also { setCellValue(it,value) }
+        assertCell(state, coordinates).also { setCellValue(it, value) }
     }
 
 }
 
-fun <T> excelExport(templateFile: InputStream? = null) = ExportOperations(
+fun <T> xlsxExport(templateFile: InputStream? = null) = ExportOperations(
     createDocumentOperation = CreateStreamingExcelDocumentOperation(templateFile),
     createTableOperation = CreateStreamingExcelTableOperation<T>(),
     finishDocumentOperations = FinishStreamingExcelDocumentOperation(),

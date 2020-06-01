@@ -14,31 +14,40 @@ object PoiWrapper {
 
     fun workbook(state: DelegateAPI<SXSSFWorkbook>): SXSSFWorkbook = state.handle
 
-    fun tableSheet(state: DelegateAPI<SXSSFWorkbook>, tableName: String): SXSSFSheet = workbook(state).getSheet(tableName)
+    fun tableSheet(state: DelegateAPI<SXSSFWorkbook>, tableName: String): SXSSFSheet =
+        workbook(state).getSheet(tableName)
 
-    fun assertTableSheet(state: DelegateAPI<SXSSFWorkbook>, tableName: String?): SXSSFSheet = workbook(state).getSheet(tableName) ?: workbook(state).createSheet(tableName)
+    fun assertTableSheet(state: DelegateAPI<SXSSFWorkbook>, tableName: String?): SXSSFSheet =
+        workbook(state).getSheet(tableName) ?: workbook(state).createSheet(tableName)
 
-    fun createRow(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFRow = tableSheet(state, coordinates.tableName).createRow(coordinates.rowIndex)
+    fun createRow(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFRow =
+        tableSheet(state, coordinates.tableName).createRow(coordinates.rowIndex)
 
-    fun row(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFRow? = tableSheet(state, coordinates.tableName).getRow(coordinates.rowIndex)
+    fun row(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFRow? =
+        tableSheet(state, coordinates.tableName).getRow(coordinates.rowIndex)
 
-    fun assertRow(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFRow = row(state, coordinates) ?: createRow(state, coordinates)
+    fun assertRow(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFRow =
+        row(state, coordinates) ?: createRow(state, coordinates)
 
-    fun createCell(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFCell = assertRow(state, coordinates).let {
-        it.createCell(coordinates.columnIndex).also { cell ->
-            cell.cellStyle = workbook(state).createCellStyle()
+    fun createCell(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFCell =
+        assertRow(state, coordinates).let {
+            it.createCell(coordinates.columnIndex).also { cell ->
+                cell.cellStyle = workbook(state).createCellStyle()
+            }
         }
-    }
 
-    fun cell(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFCell? = assertRow(state, coordinates).getCell(coordinates.columnIndex)
+    fun cell(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFCell? =
+        assertRow(state, coordinates).getCell(coordinates.columnIndex)
 
-    fun assertCell(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFCell = cell(state, coordinates) ?: createCell(state,coordinates)
+    fun assertCell(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFCell =
+        cell(state, coordinates) ?: createCell(state, coordinates)
 
     fun cellStyle(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellStyle {
-        return assertCell(state,coordinates).cellStyle
+        return assertCell(state, coordinates).cellStyle
     }
 
-    fun color(color: Color): XSSFColor = XSSFColor(byteArrayOf(color.r.toByte(), color.g.toByte(), color.b.toByte()),null)
+    fun color(color: Color): XSSFColor =
+        XSSFColor(byteArrayOf(color.r.toByte(), color.g.toByte(), color.b.toByte()), null)
 
     fun columnStyle(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellStyle {
         return tableSheet(state, coordinates.tableName).getColumnStyle(coordinates.columnIndex)
@@ -49,7 +58,7 @@ object PoiWrapper {
     }
 
     fun setColumnWidth(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates, width: Int) {
-        return tableSheet(state,coordinates.tableName).setColumnWidth(coordinates.columnIndex,width)
+        return tableSheet(state, coordinates.tableName).setColumnWidth(coordinates.columnIndex, width)
     }
 
 }
