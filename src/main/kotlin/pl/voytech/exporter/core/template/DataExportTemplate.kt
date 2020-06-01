@@ -39,33 +39,42 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     fun add(state: DelegateAPI<A>, table: Table<T>, collection: Collection<T>): DelegateAPI<A> {
-        val exportingState = ExportingState(
-            delegate.createTableOperation.createTable(state, table),
-            table.name ?: "table-${NextId.nextId()}",
-            table.firstRow,
-            table.firstColumn
-        )
-        if (table.showHeader == true || table.columns.any { it.columnTitle != null }) {
-            renderHeaderRow(exportingState, table, collection)
-            exportingState.nextRowIndex()
-        }
-        renderSubsequentSyntheticRows(exportingState, table, collection)
-        renderCollectionRows(exportingState, table, collection)
-        // renderTrailingSyntheticRows()
-        // completed.
-        return exportingState.delegate
+        return ExportingState(
+            delegate = delegate.createTableOperation.createTable(state, table),
+            tableName = table.name ?: "table-${NextId.nextId()}",
+            firstRow = table.firstRow,
+            firstColumn = table.firstColumn
+        ).also {
+            if (table.showHeader == true || table.columns.any { column -> column.columnTitle != null }) {
+                renderHeaderRow(it, table, collection)
+            }
+        }.also {
+            renderSubsequentSyntheticRows(it, table, collection)
+            renderCollectionRows(it, table, collection)
+        }.delegate
+    }
+
+    fun export(table: Table<T>, collection: Collection<T>): FileData<ByteArray> {
+        return add(create(), table, collection).let { delegate.finishDocumentOperations.finishDocument(it) }
+    }
+
+    fun export(table: Table<T>, collection: Collection<T>, stream: OutputStream) {
+        add(create(), table, collection).also { delegate.finishDocumentOperations.finishDocument(it, stream) }
+    }
+
+    fun export(state: DelegateAPI<A>, stream: OutputStream) {
+        delegate.finishDocumentOperations.finishDocument(state, stream)
     }
 
     private fun renderCollectionRows(exportingState: ExportingState<A>, table: Table<T>, collection: Collection<T>) {
         collection.forEachIndexed { objectIndex: Int, record: T ->
-            exportingState.rowContext(
-                dataset = collection,
-                objectIndex = objectIndex,
-                record = record
-            ).let {
-                renderRow(exportingState, table, it)
+            renderRow(
+                exportingState,
+                table,
+                exportingState.rowContext(dataset = collection, objectIndex = objectIndex, record = record)
+            ).also {
+                renderSubsequentSyntheticRows(exportingState.nextRowIndex(), table, collection)
             }
-            renderSubsequentSyntheticRows(exportingState.nextRowIndex(), table, collection)
         }
     }
 
@@ -80,18 +89,6 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                 exportingState.nextRowIndex()
             }
         }
-    }
-
-    fun export(table: Table<T>, collection: Collection<T>): FileData<ByteArray> {
-        return add(create(), table, collection).let { delegate.finishDocumentOperations.finishDocument(it) }
-    }
-
-    fun export(table: Table<T>, collection: Collection<T>, stream: OutputStream) {
-        add(create(), table, collection).also { delegate.finishDocumentOperations.finishDocument(it, stream) }
-    }
-
-    fun export(state: DelegateAPI<A>, stream: OutputStream) {
-        delegate.finishDocumentOperations.finishDocument(state, stream)
     }
 
     private fun renderHeaderRow(
