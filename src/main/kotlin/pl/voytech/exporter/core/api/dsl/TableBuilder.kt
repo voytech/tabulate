@@ -3,16 +3,21 @@ package pl.voytech.exporter.core.api.dsl
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.extension.*
 
+@DslMarker
+annotation class TableMarker
+
+
 fun <T> table(block: TableBuilder<T>.() -> Unit): Table<T> = TableBuilder<T>().apply(block).build()
 
+@TableMarker
 class TableBuilder<T> {
     var name: String? = "untitled"
     var firstRow: Int? = 0
     var firstColumn: Int? = 0
-    private lateinit var columns: List<Column<T>>
+    private var columns: List<Column<T>> = emptyList()
     private var rows: List<Row<T>>? = null
-    private var showHeader: Boolean? = false
-    private var showFooter: Boolean? = false
+    var showHeader: Boolean? = false
+    var showFooter: Boolean? = false
     private var columnsDescription: Description? = null
     private var rowsDescription: Description? = null
     private var tableExtensions: Set<TableExtension>? = null
@@ -23,19 +28,19 @@ class TableBuilder<T> {
     }
 
     fun columns(block: ColumnsBuilder<T>.() -> Unit) {
-        columns = ColumnsBuilder<T>().apply(block)
+        columns = columns + ColumnsBuilder<T>().apply(block)
     }
 
     fun rows(block: RowsBuilder<T>.() -> Unit) {
-        rows = RowsBuilder<T>().apply(block)
+        rows = (rows?: emptyList()) + RowsBuilder<T>().apply(block)
     }
 
     fun tableExtensions(block: ExtensionsBuilder<TableExtension>.() -> Unit) {
-        tableExtensions = ExtensionsBuilder<TableExtension>().apply(block)
+        tableExtensions = (tableExtensions?: emptySet()) + ExtensionsBuilder<TableExtension>().apply(block)
     }
 
     fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
-        cellExtensions = ExtensionsBuilder<CellExtension>().apply(block)
+        cellExtensions = (cellExtensions?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
     }
 
     fun columnsDescription(block: DescriptionBuilder.() -> Unit) {
@@ -53,6 +58,7 @@ class TableBuilder<T> {
     )
 }
 
+@TableMarker
 class ColumnsBuilder<T> : ArrayList<Column<T>>() {
 
     fun column(id: String, block: ColumnBuilder<T>.() -> Unit) {
@@ -72,8 +78,8 @@ class ColumnsBuilder<T> : ArrayList<Column<T>>() {
     }
 }
 
-class ColumnBuilder<T> {
-    lateinit var id: Key<T>
+@TableMarker
+class ColumnBuilder<T>(val id: Key<T>) {
     private var columnTitle: Description? = null
     var columnType: CellType? = null
     var index: Int? = null
@@ -81,35 +87,30 @@ class ColumnBuilder<T> {
     private var cellExtensions: Set<CellExtension>? = null
     var dataFormatter: ((field: Any) -> Any)? = null
 
-    constructor()
-
-    constructor(id: Key<T>) {
-        this.id = id
-    }
-
     fun columnTitle(block: DescriptionBuilder.() -> Unit) {
         columnTitle = DescriptionBuilder().apply(block).build()
     }
 
     fun columnExtensions(block: ExtensionsBuilder<ColumnExtension>.() -> Unit) {
-        columnExtensions = ExtensionsBuilder<ColumnExtension>().apply(block)
+        columnExtensions = (columnExtensions?: emptySet()) + ExtensionsBuilder<ColumnExtension>().apply(block)
     }
 
     fun columnExtensions(vararg extensions: ColumnExtension) {
-        columnExtensions = extensions.toHashSet()
+        columnExtensions = (columnExtensions?: emptySet()) + extensions.toHashSet()
     }
 
     fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
-        cellExtensions = ExtensionsBuilder<CellExtension>().apply(block)
+        cellExtensions = (cellExtensions?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
     }
 
     fun cellExtensions(vararg extensions: CellExtension) {
-        cellExtensions = extensions.toHashSet()
+        cellExtensions = (cellExtensions?: emptySet()) + extensions.toHashSet()
     }
 
     fun build(): Column<T> = Column(id, index, columnTitle, columnType, columnExtensions, cellExtensions, dataFormatter)
 }
 
+@TableMarker
 class RowsBuilder<T> : ArrayList<Row<T>>() {
     fun row(block: RowBuilder<T>.() -> Unit) {
         add(RowBuilder<T>().apply(block).build())
@@ -128,6 +129,7 @@ class RowsBuilder<T> : ArrayList<Row<T>>() {
     }
 }
 
+@TableMarker
 class RowBuilder<T> {
     private var cells: Map<Key<T>, Cell<T>>? = null
     private var rowExtensions: Set<RowExtension>? = null
@@ -136,34 +138,36 @@ class RowBuilder<T> {
     var createAt: Int? = null
 
     fun rowExtensions(block: ExtensionsBuilder<RowExtension>.() -> Unit) {
-        rowExtensions = ExtensionsBuilder<RowExtension>().apply(block)
+        rowExtensions = (rowExtensions?: emptySet()) +  ExtensionsBuilder<RowExtension>().apply(block)
     }
 
     fun rowExtensions(vararg extensions: RowExtension) {
-        rowExtensions = extensions.toHashSet()
+        rowExtensions = (rowExtensions?: emptySet()) +  extensions.toHashSet()
     }
 
     fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
-        cellExtensions = ExtensionsBuilder<CellExtension>().apply(block)
+        cellExtensions = (cellExtensions?: emptySet()) +  ExtensionsBuilder<CellExtension>().apply(block)
     }
 
     fun cellExtensions(vararg extensions: CellExtension) {
-        cellExtensions = extensions.toHashSet()
+        cellExtensions = (cellExtensions?: emptySet()) +  extensions.toHashSet()
     }
 
     fun cells(block: CellsBuilder<T>.() -> Unit) {
-        cells = CellsBuilder<T>().apply(block)
+        cells = (cells?: emptyMap()) + CellsBuilder<T>().apply(block)
     }
 
     fun build(): Row<T> = Row(selector, createAt, rowExtensions, cellExtensions, cells)
 }
 
+@TableMarker
 class ExtensionsBuilder<T> : HashSet<T>() {
     fun extend(extension: T) {
         add(extension)
     }
 }
 
+@TableMarker
 class CellsBuilder<T> : HashMap<Key<T>, Cell<T>>() {
     fun forColumn(id: String, block: CellBuilder<T>.() -> Unit) {
         put(Key(id), CellBuilder<T>().apply(block).build())
@@ -174,6 +178,7 @@ class CellsBuilder<T> : HashMap<Key<T>, Cell<T>>() {
     }
 }
 
+@TableMarker
 class CellBuilder<T> {
     private var cellExtensions: Set<CellExtension>? = null
     var value: Any? = null
@@ -181,26 +186,27 @@ class CellBuilder<T> {
     var type: CellType? = null
 
     fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
-        cellExtensions = ExtensionsBuilder<CellExtension>().apply(block)
+        cellExtensions = (cellExtensions?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
     }
 
     fun cellExtensions(vararg extensions: CellExtension) {
-        cellExtensions = extensions.toHashSet()
+        cellExtensions = (cellExtensions?: emptySet()) + extensions.toHashSet()
     }
 
     fun build(): Cell<T> = Cell(value, eval, type, cellExtensions)
 }
 
+@TableMarker
 class DescriptionBuilder {
     lateinit var title: String
     var extensions: Set<Extension>? = null
 
     fun extensions(block: ExtensionsBuilder<Extension>.() -> Unit) {
-        extensions = ExtensionsBuilder<Extension>().apply(block)
+        extensions = (extensions?: emptySet()) + ExtensionsBuilder<Extension>().apply(block)
     }
 
     fun extensions(vararg extensions: Extension) {
-        this.extensions = extensions.toHashSet()
+        this.extensions = (this.extensions?: emptySet()) + extensions.toHashSet()
     }
 
     fun build(): Description = Description(title, extensions)
