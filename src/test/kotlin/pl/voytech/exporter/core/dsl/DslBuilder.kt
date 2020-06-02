@@ -5,6 +5,7 @@ import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.dsl.table
 import pl.voytech.exporter.core.model.Description
 import pl.voytech.exporter.data.Product
+import pl.voytech.exporter.impl.template.excel.columnExtensionsOperations
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -30,6 +31,9 @@ object BasicDslTableDefinitionSpek: Spek({
                     }
                     column(Product::description) {}
                     column(Product::manufacturer) {}
+                }
+                rows {
+
                 }
             }
 
