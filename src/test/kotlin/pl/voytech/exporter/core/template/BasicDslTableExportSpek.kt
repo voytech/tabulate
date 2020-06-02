@@ -5,6 +5,7 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.dsl.export
 import pl.voytech.exporter.core.api.dsl.table
+import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.RowSelectors
 import pl.voytech.exporter.core.model.extension.style.*
 import pl.voytech.exporter.core.model.extension.style.enums.BorderStyle
@@ -16,19 +17,23 @@ import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatExtension
 import pl.voytech.exporter.impl.template.excel.xlsxExport
 import java.io.File
 import java.io.FileOutputStream
+import java.math.BigDecimal
 import java.time.LocalDate
+import kotlin.random.Random
 import kotlin.test.assertNotNull
 
 object BasicDslTableExportSpek : Spek({
     Feature("Regular tabular data export to excel") {
         Scenario("defining simple table model and exporting to excel file.") {
+            val random = Random(1000)
             val productList = (0..999).map {
                 Product(
                     "prod_nr_$it",
                     "Name $it",
                     "This is description $it",
                     "manufacturer $it",
-                    LocalDate.now()
+                    LocalDate.now(),
+                    BigDecimal(random.nextDouble(200.00, 1000.00))
                 )
             }
             val file = File("test.xlsx")
@@ -36,6 +41,8 @@ object BasicDslTableExportSpek : Spek({
                 productList.exportTo(
                     table {
                         name = "Products table"
+                        firstRow = 10
+                        firstColumn = 5
                         columns {
                             column("nr") {
                                 columnTitle { title = "Nr.:" }
@@ -77,6 +84,7 @@ object BasicDslTableExportSpek : Spek({
                                 columnExtensions(ColumnWidthExtension(width = 100))
                                 dataFormatter = { field -> (field as String).toUpperCase() }
                             }
+                            column(Product::price) { columnTitle { title = "Price" }}
                             column(Product::distributionDate) {
                                 columnTitle { title = "Distribution" }
                                 cellExtensions(
@@ -100,6 +108,10 @@ object BasicDslTableExportSpek : Spek({
                                     }
                                     forColumn(Product::description) {
                                         value = "A product description"
+                                    }
+                                    forColumn(Product::price) {
+                                        value = "=SUM(K12:K111)"
+                                        type = CellType.NATIVE_FORMULA
                                     }
                                 }
                             }
@@ -146,7 +158,8 @@ object BasicDslTableExportSpek : Spek({
                     "Name $it",
                     "This is description $it",
                     "manufacturer $it",
-                    LocalDate.now()
+                    LocalDate.now(),
+                    BigDecimal(Random(1000).nextDouble(200.00, 1000.00))
                 )
             }
             val file = File("test2.xlsx")
