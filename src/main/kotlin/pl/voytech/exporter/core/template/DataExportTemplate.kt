@@ -8,13 +8,21 @@ import java.io.OutputStream
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Core logic responsible for orchestrating rendering tabular data format file.
+ * Core logic responsible for orchestrating rendering of tabular data format file.
  * Takes delegate object with bunch of specialised interfaces. Each interface defines contract for
  * single atomic step of data export.
- * Implementations of interfaces must agree on delegate state or low level api type instance.
+ * Classes implementing interfaces must agree (via generics) on delegate state or low level API class in order to make
+ * low level 3rd party API instance object (like POI workbooks) shared amongst all 'render step' interfaces.
+ * When the type is same on compile time, DataExportTemplate will pass initialized API object/ state amongst those
+ * interface implementations.
  * @author Wojciech Mąka
  */
 open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>) {
+
+    private var selectableRows: List<Row<T>>? = null
+    private var selectableRowsCached = false
+    private var syntheticRows: List<Row<T>>? = null
+    private var syntheticRowsCached = false
 
     internal data class MergedRow<T>(val matchingRows: Set<Row<T>>?) {
         val rowHints: Set<RowExtension>?
@@ -58,6 +66,11 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }.also {
             renderSubsequentSyntheticRows(it, table, collection)
             renderCollectionRows(it, table, collection)
+        }.also {
+            syntheticRows = null
+            selectableRows = null
+            syntheticRowsCached = false
+            selectableRowsCached = false
         }.delegate
     }
 
@@ -187,10 +200,21 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-    private fun allSelectableRows(tableRows: List<Row<T>>?): List<Row<T>>? = tableRows?.filter { it.selector != null }
+    private fun allSelectableRows(tableRows: List<Row<T>>?): List<Row<T>>? {
+        if (selectableRows == null && !selectableRowsCached) {
+            selectableRows = tableRows?.filter { it.selector != null }
+            selectableRowsCached = true
+        }
+        return selectableRows
+    }
 
-    private fun allSyntheticRows(tableRows: List<Row<T>>?): List<Row<T>>? =
-        tableRows?.filter { it.createAt != null }?.sortedBy { it.createAt }
+    private fun allSyntheticRows(tableRows: List<Row<T>>?): List<Row<T>>? {
+        if (syntheticRows == null && !syntheticRowsCached) {
+            syntheticRows = tableRows?.filter { it.createAt != null }?.sortedBy { it.createAt }
+            syntheticRowsCached = true
+        }
+        return syntheticRows
+    }
 
     private fun subsequentSyntheticRowsStartingAtRowIndex(startFrom: Int = 0, tableRows: List<Row<T>>?): List<Row<T>>? {
         return AtomicInteger(startFrom).let {
