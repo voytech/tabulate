@@ -4,5 +4,4 @@
 /.idea/
 /build/
 /gradle/
-/data-exporter-excel/build/
-/data-exporter-core/build/
+/**/build/
