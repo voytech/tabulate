@@ -1,9 +1,26 @@
 package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.Description
+import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.ColumnExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
+import pl.voytech.exporter.core.model.extension.TableExtension
+
+abstract class CreateTableOperationWithExtensions<T,A>(
+    extensionOperations: List<TableExtensionOperation<out TableExtension, A>>?
+) : CreateTableOperation<T,A> {
+
+    private val delegatingExtensionOperations: DelegatingTableExtensionsOperations<A> =
+        DelegatingTableExtensionsOperations(extensionOperations)
+
+    override fun createTable(state: DelegateAPI<A>, table: Table<T>): DelegateAPI<A> {
+        return initializeTable(state, table).also {
+            table.tableExtensions?.let { delegatingExtensionOperations.applyTableExtensions(state, it) }
+        }
+    }
+    abstract fun initializeTable(state: DelegateAPI<A>, table: Table<T>) : DelegateAPI<A>
+}
 
 abstract class RowOperationWithExtensions<A>(
     extensionOperations: List<RowExtensionOperation<out RowExtension, A>>?

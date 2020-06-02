@@ -8,6 +8,7 @@ import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
+import pl.voytech.exporter.core.model.extension.TableExtension
 import pl.voytech.exporter.core.template.*
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertCell
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertRow
@@ -39,8 +40,9 @@ internal class CreateStreamingExcelDocumentOperation(private val templateFile: I
     }
 }
 
-internal class CreateStreamingExcelTableOperation<T> : CreateTableOperation<T, SXSSFWorkbook> {
-    override fun createTable(state: DelegateAPI<SXSSFWorkbook>, table: Table<T>): DelegateAPI<SXSSFWorkbook> {
+internal class CreateStreamingExcelTableOperation<T>(tableExtensionOperations: List<TableExtensionOperation<out TableExtension, SXSSFWorkbook>>) :
+    CreateTableOperationWithExtensions<T, SXSSFWorkbook>(tableExtensionOperations) {
+    override fun initializeTable(state: DelegateAPI<SXSSFWorkbook>, table: Table<T>): DelegateAPI<SXSSFWorkbook> {
         return assertTableSheet(state, table.name).let { state }
     }
 }
@@ -82,7 +84,7 @@ internal class StreamingExcelRowCellOperations(cellExtensions: List<CellExtensio
             is LocalDateTime -> Date.from(value.atZone(ZoneId.systemDefault()).toInstant())
             is Date -> value
             is String -> Date.from(Instant.parse(value))
-            else -> throw IllegalArgumentException()
+            else -> throw IllegalStateException("Could not parse Date.")
         }
     }
 
@@ -95,8 +97,8 @@ internal class StreamingExcelRowCellOperations(cellExtensions: List<CellExtensio
                     CellType.DATE -> cell.setCellValue(toDateValue(v.value))
                     CellType.NUMERIC -> cell.setCellValue((v.value as Number).toDouble())
                     CellType.NATIVE_FORMULA -> cell.cellFormula = v.value.toString()
-                    CellType.FORMULA -> TODO()
-                    CellType.ERROR -> TODO()
+                    CellType.FORMULA -> cell.cellFormula = v.value.toString()
+                    CellType.ERROR -> throw IllegalStateException("CellType.ERROR not supported.")
                 }
             } ?: v.run {
                 when (this.value) {
@@ -119,7 +121,7 @@ internal class StreamingExcelRowCellOperations(cellExtensions: List<CellExtensio
 
 fun <T> xlsxExport(templateFile: InputStream? = null) = ExportOperations(
     createDocumentOperation = CreateStreamingExcelDocumentOperation(templateFile),
-    createTableOperation = CreateStreamingExcelTableOperation<T>(),
+    createTableOperation = CreateStreamingExcelTableOperation<T>(tableExtensionsOperations),
     finishDocumentOperations = FinishStreamingExcelDocumentOperation(),
     headerRowOperation = StreamingExcelRowTableOperation(rowExtensionsOperations),
     rowOperation = StreamingExcelRowTableOperation(rowExtensionsOperations),
