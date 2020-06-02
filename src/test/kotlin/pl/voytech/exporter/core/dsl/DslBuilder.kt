@@ -5,19 +5,38 @@ import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.dsl.table
 import pl.voytech.exporter.core.model.Description
 import pl.voytech.exporter.data.Product
-import pl.voytech.exporter.impl.template.excel.columnExtensionsOperations
+import java.math.BigDecimal
 import java.time.LocalDate
+import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-object BasicDslTableDefinitionSpek: Spek({
+object BasicDslTableDefinitionSpek : Spek({
     Feature("Should be able to define table, columns and cells with just a header") {
-        val productList by memoized { listOf(
-            Product("camera","Sony Film Beauty","An excellent camera for non-professional usage", "Sony", LocalDate.now()),
-            Product("camera","Sony Film Sharp","An excellent camera for professional usage", "Sony", LocalDate.now())
-        ) }
+        val productList by memoized {
+            listOf(
+                Product(
+                    "camera",
+                    "Sony Film Beauty",
+                    "An excellent camera for non-professional usage",
+                    "Sony",
+                    LocalDate.now(),
+                    BigDecimal(
+                        Random(1000).nextDouble(200.00, 1000.00)
+                    )
+                ),
+                Product(
+                    "camera",
+                    "Sony Film Sharp",
+                    "An excellent camera for professional usage",
+                    "Sony",
+                    LocalDate.now(),
+                    BigDecimal(Random(1000).nextDouble(200.00, 1000.00))
+                )
+            )
+        }
 
         Scenario("defining simple table model through kotlin DSL") {
             val tableMeta = table<Product> {
@@ -46,17 +65,41 @@ object BasicDslTableDefinitionSpek: Spek({
             }
 
             Then("columns should be correctly named") {
-                assertEquals(Description(title = "Code",extensions = null), tableMeta.columns[0].columnTitle, "first column description should be 'Code'")
-                assertEquals(Description(title = "Name",extensions = null), tableMeta.columns[1].columnTitle, "second column description should be 'Name'")
+                assertEquals(
+                    Description(title = "Code", extensions = null),
+                    tableMeta.columns[0].columnTitle,
+                    "first column description should be 'Code'"
+                )
+                assertEquals(
+                    Description(title = "Name", extensions = null),
+                    tableMeta.columns[1].columnTitle,
+                    "second column description should be 'Name'"
+                )
                 assertNull(tableMeta.columns[2].columnTitle, "third column description should be null")
                 assertNull(tableMeta.columns[3].columnTitle, "fourth column description should be null")
             }
 
             Then("columns should have correctly set object field getters") {
-                assertEquals(Product::code, tableMeta.columns[0].id.ref,"first column should get field value using ref 'Product::code'")
-                assertEquals(Product::name, tableMeta.columns[1].id.ref,"second column should get field value using ref 'Product::name'")
-                assertEquals(Product::description, tableMeta.columns[2].id.ref,"third column should get field value using ref 'Product::description'")
-                assertEquals(Product::manufacturer, tableMeta.columns[3].id.ref,"fourth column should get field value using ref 'Product::manufacturer'")
+                assertEquals(
+                    Product::code,
+                    tableMeta.columns[0].id.ref,
+                    "first column should get field value using ref 'Product::code'"
+                )
+                assertEquals(
+                    Product::name,
+                    tableMeta.columns[1].id.ref,
+                    "second column should get field value using ref 'Product::name'"
+                )
+                assertEquals(
+                    Product::description,
+                    tableMeta.columns[2].id.ref,
+                    "third column should get field value using ref 'Product::description'"
+                )
+                assertEquals(
+                    Product::manufacturer,
+                    tableMeta.columns[3].id.ref,
+                    "fourth column should get field value using ref 'Product::manufacturer'"
+                )
             }
 
         }

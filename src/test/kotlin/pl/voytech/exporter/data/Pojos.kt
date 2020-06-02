@@ -8,7 +8,8 @@ data class Product(
     val name: String,
     val description: String? = "",
     val manufacturer: String,
-    val distributionDate: LocalDate
+    val distributionDate: LocalDate,
+    val price: BigDecimal
 )
 
 data class Price(
