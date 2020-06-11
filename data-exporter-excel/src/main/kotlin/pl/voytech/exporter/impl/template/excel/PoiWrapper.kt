@@ -5,6 +5,7 @@ import org.apache.poi.xssf.streaming.SXSSFCell
 import org.apache.poi.xssf.streaming.SXSSFRow
 import org.apache.poi.xssf.streaming.SXSSFSheet
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
+import org.apache.poi.xssf.usermodel.XSSFCell
 import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.extension.style.Color
@@ -38,6 +39,13 @@ object PoiWrapper {
                 cell.cellStyle = workbook(state).createCellStyle()
             }
         }
+
+    fun xssfCell(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): XSSFCell? =
+        xssfWorkbook(state)
+            .getSheet(coordinates.tableName)
+            .getRow(coordinates.rowIndex)
+            .getCell(coordinates.columnIndex)
+
 
     fun cell(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFCell? =
         assertRow(state, coordinates).getCell(coordinates.columnIndex)
