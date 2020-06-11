@@ -13,8 +13,12 @@ import pl.voytech.exporter.core.model.extension.style.enums.BorderStyle
 import pl.voytech.exporter.core.model.extension.style.enums.HorizontalAlignment
 import pl.voytech.exporter.core.model.extension.style.enums.VerticalAlignment
 import pl.voytech.exporter.core.model.extension.style.enums.WeightStyle
+import pl.voytech.exporter.core.testutils.CellDefinition
 import pl.voytech.exporter.core.testutils.CellPosition
+import pl.voytech.exporter.core.testutils.CellTest
 import pl.voytech.exporter.core.utils.AssertCellValue
+import pl.voytech.exporter.core.utils.AssertEqualExtension
+import pl.voytech.exporter.core.utils.AssertMany
 import pl.voytech.exporter.core.utils.PoiTableAssert
 import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatExtension
@@ -24,6 +28,7 @@ import java.io.FileOutputStream
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.random.Random
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 object BasicDslTableExportSpek : Spek({
@@ -147,13 +152,26 @@ object BasicDslTableExportSpek : Spek({
                 productList.exportTo(table, xlsxExport(), it)
             }
             Then("file should exists and be valid xlsx readable by POI API") {
-                val loadedFile = File("test.xlsx")
-                assertNotNull(loadedFile)
                 PoiTableAssert<Product>(
                     tableName = "Products table",
-                    file = loadedFile,
+                    file =  File("test.xlsx"),
                     cellTests = mapOf(
-                        CellPosition(2, 2) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
+                        CellPosition(2, 2) to AssertMany(
+                            listOf(
+                                AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
+                                AssertEqualExtension(
+                                    CellFontExtension(
+                                        fontFamily = "Times New Roman",
+                                        fontColor = Color(10, 100, 100),
+                                        fontSize = 12,
+                                        italic = true,
+                                        weight = WeightStyle.BOLD,
+                                        strikeout = true,
+                                        underline = true
+                                    )
+                                )
+                            )
+                        ),
                         CellPosition(2, 3) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
                         CellPosition(2, 4) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
                         CellPosition(2, 5) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Description"),
