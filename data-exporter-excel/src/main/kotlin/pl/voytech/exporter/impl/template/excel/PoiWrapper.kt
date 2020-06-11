@@ -6,6 +6,7 @@ import org.apache.poi.xssf.streaming.SXSSFRow
 import org.apache.poi.xssf.streaming.SXSSFSheet
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFColor
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.extension.style.Color
 import pl.voytech.exporter.core.template.Coordinates
 import pl.voytech.exporter.core.template.DelegateAPI
@@ -13,6 +14,8 @@ import pl.voytech.exporter.core.template.DelegateAPI
 object PoiWrapper {
 
     fun workbook(state: DelegateAPI<SXSSFWorkbook>): SXSSFWorkbook = state.handle
+
+    fun xssfWorkbook(state: DelegateAPI<SXSSFWorkbook>): XSSFWorkbook = state.handle.xssfWorkbook
 
     fun tableSheet(state: DelegateAPI<SXSSFWorkbook>, tableName: String): SXSSFSheet =
         workbook(state).getSheet(tableName)
