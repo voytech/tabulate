@@ -1,14 +1,17 @@
 package pl.voytech.exporter.core.utils
 
+import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
+import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import pl.voytech.exporter.core.model.extension.CellExtension
+import pl.voytech.exporter.core.model.extension.style.CellBackgroundExtension
 import pl.voytech.exporter.core.model.extension.style.CellFontExtension
 import pl.voytech.exporter.core.model.extension.style.Color
 import pl.voytech.exporter.core.model.extension.style.enums.WeightStyle
 import pl.voytech.exporter.core.template.Coordinates
 import pl.voytech.exporter.core.template.DelegateAPI
-import pl.voytech.exporter.core.testutils.ExtensionResolver
+import pl.voytech.exporter.testutils.ExtensionResolver
 import pl.voytech.exporter.impl.template.excel.PoiUtils
 import pl.voytech.exporter.impl.template.excel.PoiWrapper
 
@@ -23,6 +26,16 @@ class PoiCellFontExtensionResolver : ExtensionResolver<SXSSFWorkbook> {
                 strikeout = it?.cellStyle?.font?.strikeout,
                 underline = it?.cellStyle?.font?.underline == Font.U_SINGLE,
                 italic = it?.cellStyle?.font?.italic
+            )
+        }
+    }
+}
+
+class PoiCellBackgroundExtensionResolver : ExtensionResolver<SXSSFWorkbook> {
+    override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellExtension {
+        return PoiWrapper.xssfCell(api,coordinates).let {
+            CellBackgroundExtension(
+                color = it?.cellStyle?.fillForegroundXSSFColor?.let { color -> Color(color.rgb[0].toInt(),color.rgb[1].toInt(),color.rgb[2].toInt()) } ?: Color(-1,-1,-1)
             )
         }
     }
