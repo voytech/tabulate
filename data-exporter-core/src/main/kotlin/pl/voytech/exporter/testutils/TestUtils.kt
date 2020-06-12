@@ -1,4 +1,4 @@
-package pl.voytech.exporter.core.testutils
+package pl.voytech.exporter.testutils
 
 import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.template.CellValue
@@ -28,6 +28,7 @@ interface ValueResolver<E> {
 interface CellTest<E> {
     fun performCellTest(api: DelegateAPI<E>, coordinates: Coordinates, def: CellDefinition? = null)
 }
+
 
 data class CellDefinition(
     val cellExtensions : Set<CellExtension>?,

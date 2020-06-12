@@ -13,22 +13,20 @@ import pl.voytech.exporter.core.model.extension.style.enums.BorderStyle
 import pl.voytech.exporter.core.model.extension.style.enums.HorizontalAlignment
 import pl.voytech.exporter.core.model.extension.style.enums.VerticalAlignment
 import pl.voytech.exporter.core.model.extension.style.enums.WeightStyle
-import pl.voytech.exporter.core.testutils.CellDefinition
-import pl.voytech.exporter.core.testutils.CellPosition
-import pl.voytech.exporter.core.testutils.CellTest
-import pl.voytech.exporter.core.utils.AssertCellValue
-import pl.voytech.exporter.core.utils.AssertEqualExtension
-import pl.voytech.exporter.core.utils.AssertMany
 import pl.voytech.exporter.core.utils.PoiTableAssert
 import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatExtension
 import pl.voytech.exporter.impl.template.excel.xlsxExport
+import pl.voytech.exporter.testutils.CellPosition
+import pl.voytech.exporter.testutils.cellassertions.AssertCellExtensions
+import pl.voytech.exporter.testutils.cellassertions.AssertCellValue
+import pl.voytech.exporter.testutils.cellassertions.AssertEqualExtension
+import pl.voytech.exporter.testutils.cellassertions.AssertMany
 import java.io.File
 import java.io.FileOutputStream
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.random.Random
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 object BasicDslTableExportSpek : Spek({
@@ -157,8 +155,8 @@ object BasicDslTableExportSpek : Spek({
                     file =  File("test.xlsx"),
                     cellTests = mapOf(
                         CellPosition(2, 2) to AssertMany(
-                            listOf(
-                                AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
+                            AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
+                            AssertCellExtensions(
                                 AssertEqualExtension(
                                     CellFontExtension(
                                         fontFamily = "Times New Roman",
@@ -172,7 +170,21 @@ object BasicDslTableExportSpek : Spek({
                                 )
                             )
                         ),
-                        CellPosition(2, 3) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
+                        CellPosition(2, 3) to AssertMany(
+                            AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
+                            AssertCellExtensions(
+                                AssertEqualExtension(
+                                    CellBackgroundExtension(color = Color(10, 100, 100))
+                                ),
+                                AssertEqualExtension(
+                                    CellFontExtension(
+                                        fontFamily = "Times New Roman",
+                                        fontColor = Color(0, 0, 0),
+                                        fontSize = 12
+                                    )
+                                )
+                            )
+                        ),
                         CellPosition(2, 4) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
                         CellPosition(2, 5) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Description"),
                         CellPosition(2, 6) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Manufacturer"),
