@@ -89,7 +89,7 @@ object BasicDslTableExportSpek : Spek({
                         columnExtensions(ColumnWidthExtension(width = 100))
                         dataFormatter = { field -> (field as String).toUpperCase() }
                     }
-                    column(Product::price) { columnTitle { title = "Price" }}
+                    column(Product::price) { columnTitle { title = "Price" } }
                     column(Product::distributionDate) {
                         columnTitle { title = "Distribution" }
                         cellExtensions(
@@ -102,7 +102,7 @@ object BasicDslTableExportSpek : Spek({
                         createAt = productList.size + 1
                         cells {
                             forColumn("nr") {
-                                eval = { row -> row.dataset.size}
+                                eval = { row -> row.dataset.size }
                             }
                             forColumn(Product::distributionDate) {
                                 value = "This is a date of distribution"
@@ -152,7 +152,7 @@ object BasicDslTableExportSpek : Spek({
             Then("file should exists and be valid xlsx readable by POI API") {
                 PoiTableAssert<Product>(
                     tableName = "Products table",
-                    file =  File("test.xlsx"),
+                    file = File("test.xlsx"),
                     cellTests = mapOf(
                         CellPosition(2, 2) to AssertMany(
                             AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
@@ -186,15 +186,24 @@ object BasicDslTableExportSpek : Spek({
                             )
                         ),
                         CellPosition(2, 4) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
-                        CellPosition(2, 5) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Description"),
-                        CellPosition(2, 6) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Manufacturer"),
+                        CellPosition(2, 5) to AssertCellValue(
+                            expectedType = CellType.STRING,
+                            expectedValue = "Description"
+                        ),
+                        CellPosition(2, 6) to AssertCellValue(
+                            expectedType = CellType.STRING,
+                            expectedValue = "Manufacturer"
+                        ),
                         CellPosition(2, 7) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Price"),
-                        CellPosition(2, 8) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Distribution")
+                        CellPosition(2, 8) to AssertCellValue(
+                            expectedType = CellType.STRING,
+                            expectedValue = "Distribution"
+                        )
                     )
                 )
-                .perform().also {
-                    it.cleanup()
-                }
+                    .perform().also {
+                        it.cleanup()
+                    }
             }
         }
     }

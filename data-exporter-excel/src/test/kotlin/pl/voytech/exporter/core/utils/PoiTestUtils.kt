@@ -1,7 +1,6 @@
 package pl.voytech.exporter.core.utils
 
 import org.apache.poi.openxml4j.util.ZipSecureFile
-import org.apache.poi.ss.usermodel.CellType as PoiCellType
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -9,10 +8,11 @@ import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.template.CellValue
 import pl.voytech.exporter.core.template.Coordinates
 import pl.voytech.exporter.core.template.DelegateAPI
-import pl.voytech.exporter.testutils.*
 import pl.voytech.exporter.impl.template.excel.PoiWrapper
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.workbook
+import pl.voytech.exporter.testutils.*
 import java.io.File
+import org.apache.poi.ss.usermodel.CellType as PoiCellType
 
 class PoiStateProvider : StateProvider<SXSSFWorkbook> {
 
@@ -25,7 +25,8 @@ class PoiStateProvider : StateProvider<SXSSFWorkbook> {
         workbook(api).let { (0 until it.numberOfSheets).map { index -> workbook(api).getSheetAt(index).sheetName } }
 
 
-    override fun hasTableNamed(api: DelegateAPI<SXSSFWorkbook>, name: String): Boolean = workbook(api).getSheet(name) != null
+    override fun hasTableNamed(api: DelegateAPI<SXSSFWorkbook>, name: String): Boolean =
+        workbook(api).getSheet(name) != null
 
 }
 
@@ -46,7 +47,7 @@ class PoiTableAssert<T>(
         ),
         cellValueResolver = object : ValueResolver<SXSSFWorkbook> {
             override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellValue {
-                PoiWrapper.xssfCell(api,coordinates)
+                PoiWrapper.xssfCell(api, coordinates)
                     .let {
                         return when (it?.cellType) {
                             PoiCellType.STRING -> CellValue(value = it.stringCellValue, type = CellType.STRING)
