@@ -37,7 +37,13 @@ class PoiTableAssert<T>(
 ) {
     private val assert = TableAssert<T, SXSSFWorkbook>(
         stateProvider = PoiStateProvider(),
-        cellExtensionResolvers = listOf(PoiCellFontExtensionResolver(), PoiCellBackgroundExtensionResolver()),
+        cellExtensionResolvers = listOf(
+            PoiCellFontExtensionResolver(),
+            PoiCellBackgroundExtensionResolver(),
+            PoiCellBordersExtensionResolver(),
+            PoiCellAlignmentExtensionResolver(),
+            PoiCellDataFormatExtensionResolver()
+        ),
         cellValueResolver = object : ValueResolver<SXSSFWorkbook> {
             override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellValue {
                 PoiWrapper.xssfCell(api,coordinates)
