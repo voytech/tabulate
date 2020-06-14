@@ -18,6 +18,7 @@ import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatExtension
 import pl.voytech.exporter.impl.template.excel.xlsxExport
 import pl.voytech.exporter.testutils.CellPosition
+import pl.voytech.exporter.testutils.CellRange
 import pl.voytech.exporter.testutils.cellassertions.AssertCellValue
 import pl.voytech.exporter.testutils.cellassertions.AssertCellValueExpr
 import pl.voytech.exporter.testutils.cellassertions.AssertContainsCellExtensions
@@ -44,7 +45,7 @@ object BasicDslTableExportSpek : Spek({
                     BigDecimal(random.nextDouble(200.00, 1000.00))
                 )
             }
-            val file = File("test.xlsx")
+            val file = File("test0.xlsx")
             val table = table<Product> {
                 name = "Products table"
                 firstRow = 2
@@ -151,27 +152,26 @@ object BasicDslTableExportSpek : Spek({
                 productList.exportTo(table, xlsxExport(), it)
             }
             Then("file should exists and be valid xlsx readable by POI API") {
-                val rowLevelCellAssertions = AssertContainsCellExtensions<SXSSFWorkbook>(
-                    CellBordersExtension(
-                        leftBorderStyle = BorderStyle.SOLID,
-                        leftBorderColor = Color(0, 0, 0),
-                        rightBorderStyle = BorderStyle.SOLID,
-                        rightBorderColor = Color(0, 0, 0),
-                        bottomBorderStyle = BorderStyle.SOLID,
-                        bottomBorderColor = Color(0, 0, 0)
-                    ),
-                    CellAlignmentExtension(
-                        horizontal = HorizontalAlignment.CENTER,
-                        vertical = VerticalAlignment.MIDDLE
-                    )
-                )
                 PoiTableAssert<Product>(
                     tableName = "Products table",
-                    file = File("test.xlsx"),
+                    file = File("test0.xlsx"),
                     cellTests = mapOf(
+                        CellRange((2..2),(2..8)) to AssertContainsCellExtensions(
+                            CellBordersExtension(
+                                leftBorderStyle = BorderStyle.SOLID,
+                                leftBorderColor = Color(0, 0, 0),
+                                rightBorderStyle = BorderStyle.SOLID,
+                                rightBorderColor = Color(0, 0, 0),
+                                bottomBorderStyle = BorderStyle.SOLID,
+                                bottomBorderColor = Color(0, 0, 0)
+                            ),
+                            CellAlignmentExtension(
+                                horizontal = HorizontalAlignment.CENTER,
+                                vertical = VerticalAlignment.MIDDLE
+                            )
+                        ),
                         CellPosition(2, 2) to AssertMany(
                             AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
-                            rowLevelCellAssertions,
                             AssertContainsCellExtensions(
                                 CellFontExtension(
                                     fontFamily = "Times New Roman",
@@ -186,7 +186,6 @@ object BasicDslTableExportSpek : Spek({
                         ),
                         CellPosition(2, 3) to AssertMany(
                             AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
-                            rowLevelCellAssertions,
                             AssertContainsCellExtensions(
                                 CellBackgroundExtension(color = Color(10, 100, 100)),
                                 CellFontExtension(
@@ -196,26 +195,11 @@ object BasicDslTableExportSpek : Spek({
                                 )
                             )
                         ),
-                        CellPosition(2, 4) to AssertMany(
-                            AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
-                            rowLevelCellAssertions
-                        ),
-                        CellPosition(2, 5) to AssertMany(
-                            AssertCellValue(expectedType = CellType.STRING, expectedValue = "Description"),
-                            rowLevelCellAssertions
-                        ),
-                        CellPosition(2, 6) to AssertMany(
-                            AssertCellValue(expectedType = CellType.STRING, expectedValue = "Manufacturer"),
-                            rowLevelCellAssertions
-                        ),
-                        CellPosition(2, 7) to AssertMany(
-                            AssertCellValue(expectedType = CellType.STRING, expectedValue = "Price"),
-                            rowLevelCellAssertions
-                        ),
-                        CellPosition(2, 8) to AssertMany(
-                            AssertCellValue(expectedType = CellType.STRING, expectedValue = "Distribution"),
-                            rowLevelCellAssertions
-                        )
+                        CellPosition(2, 4) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
+                        CellPosition(2, 5) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Description"),
+                        CellPosition(2, 6) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Manufacturer"),
+                        CellPosition(2, 7) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Price"),
+                        CellPosition(2, 8) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Distribution")
                     )
                 )
                     .perform().also {
@@ -237,7 +221,7 @@ object BasicDslTableExportSpek : Spek({
                     BigDecimal(Random(1000).nextDouble(200.00, 1000.00))
                 )
             }
-            val file = File("test.xlsx")
+            val file = File("test1.xlsx")
             ZipSecureFile.setMinInflateRatio(0.001)
             FileOutputStream(file).use {
                 productList.export<Product, SXSSFWorkbook>(it) {
@@ -274,7 +258,7 @@ object BasicDslTableExportSpek : Spek({
                 assertNotNull(file)
                 PoiTableAssert<Product>(
                     tableName = "Products table",
-                    file = File("test.xlsx"),
+                    file = File("test1.xlsx"),
                     cellTests = mapOf(
                         CellPosition(0, 0) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
                         CellPosition(0, 1) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
@@ -292,8 +276,7 @@ object BasicDslTableExportSpek : Spek({
                                 (value as String).filter { c -> c.isLetter() }.all { c -> c.isUpperCase() },
                                 "expected only upper case characters!"
                             )
-                        })
-                        ,
+                        }),
                         CellPosition(0, 5) to AssertCellValue(
                             expectedType = CellType.STRING,
                             expectedValue = "Distribution"
