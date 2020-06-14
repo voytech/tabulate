@@ -34,6 +34,7 @@ class ExportingState<A>(
     fun coordinates(): Coordinates =
         Coordinates(tableName, (firstRow ?: 0) + rowIndex, (firstColumn ?: 0) + columnIndex)
 
-    fun <T> rowContext(dataset: Collection<T>, record: T? = null, objectIndex: Int? = null) = RowData(rowIndex, objectIndex, record, dataset)
+    fun <T> rowContext(dataset: Collection<T>, record: T? = null, objectIndex: Int? = null) =
+        RowData(rowIndex, objectIndex, record, dataset)
 
 }

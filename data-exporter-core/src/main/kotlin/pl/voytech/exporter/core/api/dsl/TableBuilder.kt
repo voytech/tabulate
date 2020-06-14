@@ -32,15 +32,15 @@ class TableBuilder<T> {
     }
 
     fun rows(block: RowsBuilder<T>.() -> Unit) {
-        rows = (rows?: emptyList()) + RowsBuilder<T>().apply(block)
+        rows = (rows ?: emptyList()) + RowsBuilder<T>().apply(block)
     }
 
     fun tableExtensions(block: ExtensionsBuilder<TableExtension>.() -> Unit) {
-        tableExtensions = (tableExtensions?: emptySet()) + ExtensionsBuilder<TableExtension>().apply(block)
+        tableExtensions = (tableExtensions ?: emptySet()) + ExtensionsBuilder<TableExtension>().apply(block)
     }
 
     fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
-        cellExtensions = (cellExtensions?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
+        cellExtensions = (cellExtensions ?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
     }
 
     fun columnsDescription(block: DescriptionBuilder.() -> Unit) {
@@ -92,19 +92,19 @@ class ColumnBuilder<T>(val id: Key<T>) {
     }
 
     fun columnExtensions(block: ExtensionsBuilder<ColumnExtension>.() -> Unit) {
-        columnExtensions = (columnExtensions?: emptySet()) + ExtensionsBuilder<ColumnExtension>().apply(block)
+        columnExtensions = (columnExtensions ?: emptySet()) + ExtensionsBuilder<ColumnExtension>().apply(block)
     }
 
     fun columnExtensions(vararg extensions: ColumnExtension) {
-        columnExtensions = (columnExtensions?: emptySet()) + extensions.toHashSet()
+        columnExtensions = (columnExtensions ?: emptySet()) + extensions.toHashSet()
     }
 
     fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
-        cellExtensions = (cellExtensions?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
+        cellExtensions = (cellExtensions ?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
     }
 
     fun cellExtensions(vararg extensions: CellExtension) {
-        cellExtensions = (cellExtensions?: emptySet()) + extensions.toHashSet()
+        cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
     }
 
     fun build(): Column<T> = Column(id, index, columnTitle, columnType, columnExtensions, cellExtensions, dataFormatter)
@@ -138,23 +138,23 @@ class RowBuilder<T> {
     var createAt: Int? = null
 
     fun rowExtensions(block: ExtensionsBuilder<RowExtension>.() -> Unit) {
-        rowExtensions = (rowExtensions?: emptySet()) +  ExtensionsBuilder<RowExtension>().apply(block)
+        rowExtensions = (rowExtensions ?: emptySet()) + ExtensionsBuilder<RowExtension>().apply(block)
     }
 
     fun rowExtensions(vararg extensions: RowExtension) {
-        rowExtensions = (rowExtensions?: emptySet()) +  extensions.toHashSet()
+        rowExtensions = (rowExtensions ?: emptySet()) + extensions.toHashSet()
     }
 
     fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
-        cellExtensions = (cellExtensions?: emptySet()) +  ExtensionsBuilder<CellExtension>().apply(block)
+        cellExtensions = (cellExtensions ?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
     }
 
     fun cellExtensions(vararg extensions: CellExtension) {
-        cellExtensions = (cellExtensions?: emptySet()) +  extensions.toHashSet()
+        cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
     }
 
     fun cells(block: CellsBuilder<T>.() -> Unit) {
-        cells = (cells?: emptyMap()) + CellsBuilder<T>().apply(block)
+        cells = (cells ?: emptyMap()) + CellsBuilder<T>().apply(block)
     }
 
     fun build(): Row<T> = Row(selector, createAt, rowExtensions, cellExtensions, cells)
@@ -186,11 +186,11 @@ class CellBuilder<T> {
     var type: CellType? = null
 
     fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
-        cellExtensions = (cellExtensions?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
+        cellExtensions = (cellExtensions ?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
     }
 
     fun cellExtensions(vararg extensions: CellExtension) {
-        cellExtensions = (cellExtensions?: emptySet()) + extensions.toHashSet()
+        cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
     }
 
     fun build(): Cell<T> = Cell(value, eval, type, cellExtensions)
@@ -202,11 +202,11 @@ class DescriptionBuilder {
     var extensions: Set<Extension>? = null
 
     fun extensions(block: ExtensionsBuilder<Extension>.() -> Unit) {
-        extensions = (extensions?: emptySet()) + ExtensionsBuilder<Extension>().apply(block)
+        extensions = (extensions ?: emptySet()) + ExtensionsBuilder<Extension>().apply(block)
     }
 
     fun extensions(vararg extensions: Extension) {
-        this.extensions = (this.extensions?: emptySet()) + extensions.toHashSet()
+        this.extensions = (this.extensions ?: emptySet()) + extensions.toHashSet()
     }
 
     fun build(): Description = Description(title, extensions)
