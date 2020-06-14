@@ -2,6 +2,7 @@ package pl.voytech.exporter.testutils.cellassertions
 
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.extension.CellExtension
+import pl.voytech.exporter.core.template.CellValue
 import pl.voytech.exporter.core.template.Coordinates
 import pl.voytech.exporter.core.template.DelegateAPI
 import pl.voytech.exporter.testutils.CellDefinition
@@ -22,12 +23,19 @@ class AssertCellValue<E>(private val expectedValue: Any, private val expectedTyp
     }
 }
 
+class AssertCellValueExpr<E>(private val invoke: (CellValue) -> Unit) : CellTest<E> {
+    override fun performCellTest(api: DelegateAPI<E>, coordinates: Coordinates, def: CellDefinition?) {
+        assertNotNull(def?.cellValue,"Expected cell value to be present")
+        def?.cellValue?.let { invoke.invoke(it) }
+    }
+}
+
 interface AssertCellExtension {
     fun testCellExtension(cellExtension: CellExtension)
     fun extensionClass(): KClass<out CellExtension>
 }
 
-class AssertCellExtensions<E>(private vararg val cellExtensionsTests: AssertCellExtension) : CellTest<E> {
+class CellExtensionsAssertions<E>(private vararg val cellExtensionsTests: AssertCellExtension) : CellTest<E> {
     override fun performCellTest(api: DelegateAPI<E>, coordinates: Coordinates, def: CellDefinition?) {
         val cellExtensionByClass = def?.cellExtensions?.groupBy { it::class }
         cellExtensionsTests.forEach {
@@ -38,6 +46,13 @@ class AssertCellExtensions<E>(private vararg val cellExtensionsTests: AssertCell
                 it.testCellExtension(extension)
             }
         }
+    }
+}
+
+class AssertContainsCellExtensions<E>(private vararg val targets: CellExtension): CellTest<E> {
+    override fun performCellTest(api: DelegateAPI<E>, coordinates: Coordinates, def: CellDefinition?) {
+        val existingExtensions = def?.cellExtensions?.asIterable() ?: emptyList()
+        assertEquals(targets.toSet(), targets.toSet().intersect(existingExtensions), "expected cell extension set to contain all target extension instances")
     }
 }
 

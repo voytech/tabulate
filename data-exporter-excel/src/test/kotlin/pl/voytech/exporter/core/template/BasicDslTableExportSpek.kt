@@ -18,9 +18,9 @@ import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatExtension
 import pl.voytech.exporter.impl.template.excel.xlsxExport
 import pl.voytech.exporter.testutils.CellPosition
-import pl.voytech.exporter.testutils.cellassertions.AssertCellExtensions
 import pl.voytech.exporter.testutils.cellassertions.AssertCellValue
-import pl.voytech.exporter.testutils.cellassertions.AssertEqualExtension
+import pl.voytech.exporter.testutils.cellassertions.AssertCellValueExpr
+import pl.voytech.exporter.testutils.cellassertions.AssertContainsCellExtensions
 import pl.voytech.exporter.testutils.cellassertions.AssertMany
 import java.io.File
 import java.io.FileOutputStream
@@ -28,6 +28,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.random.Random
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 object BasicDslTableExportSpek : Spek({
     Feature("Regular tabular data export to excel") {
@@ -150,54 +151,70 @@ object BasicDslTableExportSpek : Spek({
                 productList.exportTo(table, xlsxExport(), it)
             }
             Then("file should exists and be valid xlsx readable by POI API") {
+                val rowLevelCellAssertions = AssertContainsCellExtensions<SXSSFWorkbook>(
+                    CellBordersExtension(
+                        leftBorderStyle = BorderStyle.SOLID,
+                        leftBorderColor = Color(0, 0, 0),
+                        rightBorderStyle = BorderStyle.SOLID,
+                        rightBorderColor = Color(0, 0, 0),
+                        bottomBorderStyle = BorderStyle.SOLID,
+                        bottomBorderColor = Color(0, 0, 0)
+                    ),
+                    CellAlignmentExtension(
+                        horizontal = HorizontalAlignment.CENTER,
+                        vertical = VerticalAlignment.MIDDLE
+                    )
+                )
                 PoiTableAssert<Product>(
                     tableName = "Products table",
                     file = File("test.xlsx"),
                     cellTests = mapOf(
                         CellPosition(2, 2) to AssertMany(
                             AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
-                            AssertCellExtensions(
-                                AssertEqualExtension(
-                                    CellFontExtension(
-                                        fontFamily = "Times New Roman",
-                                        fontColor = Color(10, 100, 100),
-                                        fontSize = 12,
-                                        italic = true,
-                                        weight = WeightStyle.BOLD,
-                                        strikeout = true,
-                                        underline = true
-                                    )
+                            rowLevelCellAssertions,
+                            AssertContainsCellExtensions(
+                                CellFontExtension(
+                                    fontFamily = "Times New Roman",
+                                    fontColor = Color(10, 100, 100),
+                                    fontSize = 12,
+                                    italic = true,
+                                    weight = WeightStyle.BOLD,
+                                    strikeout = true,
+                                    underline = true
                                 )
                             )
                         ),
                         CellPosition(2, 3) to AssertMany(
                             AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
-                            AssertCellExtensions(
-                                AssertEqualExtension(
-                                    CellBackgroundExtension(color = Color(10, 100, 100))
-                                ),
-                                AssertEqualExtension(
-                                    CellFontExtension(
-                                        fontFamily = "Times New Roman",
-                                        fontColor = Color(0, 0, 0),
-                                        fontSize = 12
-                                    )
+                            rowLevelCellAssertions,
+                            AssertContainsCellExtensions(
+                                CellBackgroundExtension(color = Color(10, 100, 100)),
+                                CellFontExtension(
+                                    fontFamily = "Times New Roman",
+                                    fontColor = Color(0, 0, 0),
+                                    fontSize = 12
                                 )
                             )
                         ),
-                        CellPosition(2, 4) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
-                        CellPosition(2, 5) to AssertCellValue(
-                            expectedType = CellType.STRING,
-                            expectedValue = "Description"
+                        CellPosition(2, 4) to AssertMany(
+                            AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
+                            rowLevelCellAssertions
                         ),
-                        CellPosition(2, 6) to AssertCellValue(
-                            expectedType = CellType.STRING,
-                            expectedValue = "Manufacturer"
+                        CellPosition(2, 5) to AssertMany(
+                            AssertCellValue(expectedType = CellType.STRING, expectedValue = "Description"),
+                            rowLevelCellAssertions
                         ),
-                        CellPosition(2, 7) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Price"),
-                        CellPosition(2, 8) to AssertCellValue(
-                            expectedType = CellType.STRING,
-                            expectedValue = "Distribution"
+                        CellPosition(2, 6) to AssertMany(
+                            AssertCellValue(expectedType = CellType.STRING, expectedValue = "Manufacturer"),
+                            rowLevelCellAssertions
+                        ),
+                        CellPosition(2, 7) to AssertMany(
+                            AssertCellValue(expectedType = CellType.STRING, expectedValue = "Price"),
+                            rowLevelCellAssertions
+                        ),
+                        CellPosition(2, 8) to AssertMany(
+                            AssertCellValue(expectedType = CellType.STRING, expectedValue = "Distribution"),
+                            rowLevelCellAssertions
                         )
                     )
                 )
@@ -220,7 +237,7 @@ object BasicDslTableExportSpek : Spek({
                     BigDecimal(Random(1000).nextDouble(200.00, 1000.00))
                 )
             }
-            val file = File("test2.xlsx")
+            val file = File("test.xlsx")
             ZipSecureFile.setMinInflateRatio(0.001)
             FileOutputStream(file).use {
                 productList.export<Product, SXSSFWorkbook>(it) {
@@ -255,6 +272,40 @@ object BasicDslTableExportSpek : Spek({
             }
             Then("file should be written successfully") {
                 assertNotNull(file)
+                PoiTableAssert<Product>(
+                    tableName = "Products table",
+                    file = File("test.xlsx"),
+                    cellTests = mapOf(
+                        CellPosition(0, 0) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
+                        CellPosition(0, 1) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
+                        CellPosition(0, 2) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
+                        CellPosition(0, 3) to AssertCellValue(
+                            expectedType = CellType.STRING,
+                            expectedValue = "Description"
+                        ),
+                        CellPosition(0, 4) to AssertCellValue(
+                            expectedType = CellType.STRING,
+                            expectedValue = "Manufacturer"
+                        ),
+                        CellPosition(1, 4) to AssertCellValueExpr(invoke = { (value, _) ->
+                            assertTrue(
+                                (value as String).filter { c -> c.isLetter() }.all { c -> c.isUpperCase() },
+                                "expected only upper case characters!"
+                            )
+                        })
+                        ,
+                        CellPosition(0, 5) to AssertCellValue(
+                            expectedType = CellType.STRING,
+                            expectedValue = "Distribution"
+                        ),
+                        CellPosition(1, 5) to AssertContainsCellExtensions(
+                            CellExcelDataFormatExtension("dd.mm.YYYY")
+                        )
+                    )
+                )
+                    .perform().also {
+                        it.cleanup()
+                    }
             }
         }
     }
