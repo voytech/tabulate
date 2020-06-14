@@ -8,19 +8,19 @@ import java.io.File
 
 interface CellSelect
 
-data class CellPosition (
+data class CellPosition(
     val rowIndex: Int,
     val columnIndex: Int
-): CellSelect
+) : CellSelect
 
-data class CellRange (
+data class CellRange(
     val rowIndices: IntRange,
     val columnIndices: IntRange
-): CellSelect
+) : CellSelect
 
-interface StateProvider<E>  {
+interface StateProvider<E> {
     fun createState(file: File): DelegateAPI<E>
-    fun getPresentTableNames(api: DelegateAPI<E>) : List<String>?
+    fun getPresentTableNames(api: DelegateAPI<E>): List<String>?
     fun hasTableNamed(api: DelegateAPI<E>, name: String): Boolean
 }
 
@@ -29,7 +29,7 @@ interface ExtensionResolver<E> {
 }
 
 interface ValueResolver<E> {
-    fun resolve(api : DelegateAPI<E>, coordinates: Coordinates): CellValue
+    fun resolve(api: DelegateAPI<E>, coordinates: Coordinates): CellValue
 }
 
 interface CellTest<E> {
@@ -38,11 +38,11 @@ interface CellTest<E> {
 
 
 data class CellDefinition(
-    val cellExtensions : Set<CellExtension>?,
+    val cellExtensions: Set<CellExtension>?,
     val cellValue: CellValue?
 )
 
-class TableAssert<T,E> (
+class TableAssert<T, E>(
     private val tableName: String,
     private val stateProvider: StateProvider<E>,
     private val cellExtensionResolvers: List<ExtensionResolver<E>>? = emptyList(),
@@ -60,8 +60,9 @@ class TableAssert<T,E> (
                 api = state,
                 coordinates = coordinates,
                 def = CellDefinition(
-                    cellExtensions = cellExtensionResolvers?.map { resolver -> resolver.resolve(state,coordinates) }?.toSet(),
-                    cellValue = cellValueResolver?.resolve(state,coordinates)
+                    cellExtensions = cellExtensionResolvers?.map { resolver -> resolver.resolve(state, coordinates) }
+                        ?.toSet(),
+                    cellValue = cellValueResolver?.resolve(state, coordinates)
                 )
             )
         }
@@ -70,10 +71,10 @@ class TableAssert<T,E> (
     fun perform(): TableAssert<T, E> {
         state = stateProvider.createState(file)
         cellTests.keys.forEach { select ->
-            when(select) {
+            when (select) {
                 is CellPosition -> performTestsOnCell(
                     select = select,
-                    coordinates = Coordinates(tableName,select.rowIndex,select.columnIndex)
+                    coordinates = Coordinates(tableName, select.rowIndex, select.columnIndex)
                 )
                 is CellRange -> select.columnIndices.forEach { columnIndex ->
                     select.rowIndices.forEach { rowIndex ->
@@ -89,7 +90,7 @@ class TableAssert<T,E> (
     }
 
     fun hasTableName(name: String): Boolean {
-        return stateProvider.hasTableNamed(state,  name)
+        return stateProvider.hasTableNamed(state, name)
     }
 
     fun cleanup() {

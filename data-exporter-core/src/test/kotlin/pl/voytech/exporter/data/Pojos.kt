@@ -21,5 +21,5 @@ data class Price(
 
 data class PriceList(
     val code: String,
-    val pricesByProductCode: Map<String, Price>  = mutableMapOf()
+    val pricesByProductCode: Map<String, Price> = mutableMapOf()
 )
