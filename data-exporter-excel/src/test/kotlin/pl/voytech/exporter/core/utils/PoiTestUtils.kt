@@ -33,7 +33,7 @@ class PoiStateProvider : StateProvider<SXSSFWorkbook> {
 
 class PoiTableAssert<T>(
     tableName: String,
-    cellTests: Map<CellPosition, CellTest<SXSSFWorkbook>>,
+    cellTests: Map<CellSelect, CellTest<SXSSFWorkbook>>,
     file: File
 ) {
     private val assert = TableAssert<T, SXSSFWorkbook>(

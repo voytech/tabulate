@@ -6,10 +6,17 @@ import pl.voytech.exporter.core.template.Coordinates
 import pl.voytech.exporter.core.template.DelegateAPI
 import java.io.File
 
-data class CellPosition(
+interface CellSelect
+
+data class CellPosition (
     val rowIndex: Int,
     val columnIndex: Int
-)
+): CellSelect
+
+data class CellRange (
+    val rowIndices: IntRange,
+    val columnIndices: IntRange
+): CellSelect
 
 interface StateProvider<E>  {
     fun createState(file: File): DelegateAPI<E>
@@ -40,26 +47,42 @@ class TableAssert<T,E> (
     private val stateProvider: StateProvider<E>,
     private val cellExtensionResolvers: List<ExtensionResolver<E>>? = emptyList(),
     private val cellValueResolver: ValueResolver<E>? = null,
-    private val cellTests: Map<CellPosition, CellTest<E>>,
+    private val cellTests: Map<CellSelect, CellTest<E>>,
     private val file: File
 ) {
     lateinit var state: DelegateAPI<E>
 
+    private fun performTestsOnCell(coordinates: Coordinates, select: CellSelect) {
+        if (cellExtensionResolvers?.isEmpty() == true && cellValueResolver == null) {
+            cellTests[select]?.performCellTest(api = state, coordinates = coordinates)
+        } else {
+            cellTests[select]?.performCellTest(
+                api = state,
+                coordinates = coordinates,
+                def = CellDefinition(
+                    cellExtensions = cellExtensionResolvers?.map { resolver -> resolver.resolve(state,coordinates) }?.toSet(),
+                    cellValue = cellValueResolver?.resolve(state,coordinates)
+                )
+            )
+        }
+    }
+
     fun perform(): TableAssert<T, E> {
         state = stateProvider.createState(file)
-        cellTests.keys.map { Coordinates(tableName, it.rowIndex, it.columnIndex) }.forEach { it ->
-            val key = CellPosition(it.rowIndex, it.columnIndex)
-            if (cellExtensionResolvers?.isEmpty() == true && cellValueResolver == null) {
-                cellTests[key]?.performCellTest(api = state, coordinates = it)
-            } else {
-                cellTests[key]?.performCellTest(
-                    api = state,
-                    coordinates = it,
-                    def = CellDefinition(
-                        cellExtensions = cellExtensionResolvers?.map { resolver -> resolver.resolve(state,it) }?.toSet(),
-                        cellValue = cellValueResolver?.resolve(state,it)
-                    )
+        cellTests.keys.forEach { select ->
+            when(select) {
+                is CellPosition -> performTestsOnCell(
+                    select = select,
+                    coordinates = Coordinates(tableName,select.rowIndex,select.columnIndex)
                 )
+                is CellRange -> select.columnIndices.forEach { columnIndex ->
+                    select.rowIndices.forEach { rowIndex ->
+                        performTestsOnCell(
+                            select = select,
+                            coordinates = Coordinates(tableName, rowIndex, columnIndex)
+                        )
+                    }
+                }
             }
         }
         return this
