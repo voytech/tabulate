@@ -1,5 +1,6 @@
 package pl.voytech.exporter.core.template
 
+import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.extension.*
 import kotlin.reflect.KClass
 
@@ -9,7 +10,7 @@ interface ExtensionOperation<out T : Extension> {
 }
 
 interface TableExtensionOperation<T : TableExtension, A> : ExtensionOperation<T> {
-    fun apply(state: DelegateAPI<A>, extension: T)
+    fun apply(state: DelegateAPI<A>, table: Table<*>, extension: T)
 }
 
 interface RowExtensionOperation<T : RowExtension, A> : ExtensionOperation<T> {

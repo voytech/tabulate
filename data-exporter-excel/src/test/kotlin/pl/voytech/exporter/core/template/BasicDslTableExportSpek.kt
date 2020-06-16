@@ -8,6 +8,7 @@ import pl.voytech.exporter.core.api.dsl.export
 import pl.voytech.exporter.core.api.dsl.table
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.RowSelectors
+import pl.voytech.exporter.core.model.extension.functional.FilterAndSortTableExtension
 import pl.voytech.exporter.core.model.extension.style.*
 import pl.voytech.exporter.core.model.extension.style.enums.BorderStyle
 import pl.voytech.exporter.core.model.extension.style.enums.HorizontalAlignment
@@ -97,6 +98,13 @@ object BasicDslTableExportSpek : Spek({
                         cellExtensions(
                             CellExcelDataFormatExtension("dd.mm.YYYY")
                         )
+                    }
+                    (0..10).forEach {
+                        column("c$it") {
+                            columnTitle { title = "dynamic column nr. $it" }
+                            columnExtensions(ColumnWidthExtension(110))
+                            cellExtensions(CellBackgroundExtension(Color(255,255,0)))
+                        }
                     }
                 }
                 rows {
@@ -289,6 +297,55 @@ object BasicDslTableExportSpek : Spek({
                     .perform().also {
                         it.cleanup()
                     }
+            }
+        }
+    }
+
+
+    Feature("tabular data export to 'xlsx excel table'") {
+        Scenario("defining simple table and exporting to excel file into so called excel table.") {
+            val random = Random(1000)
+            val productList = (0..999).map {
+                Product(
+                    "prod_nr_$it",
+                    "Name $it",
+                    "This is description $it",
+                    "manufacturer $it",
+                    LocalDate.now(),
+                    BigDecimal(random.nextDouble(200.00, 1000.00))
+                )
+            }
+            val file = File("test2.xlsx")
+            val table = table<Product> {
+                name = "Products table"
+                tableExtensions(FilterAndSortTableExtension(rowRange = (0..999),columnRange = (0..5)))
+                columns {
+                    column(Product::code) {
+                        columnTitle { title = "Code" }
+                    }
+                    column(Product::name) {
+                        columnTitle { title = "Name" }
+                    }
+                    column(Product::description) {
+                        columnTitle { title = "Description" }
+                    }
+                    column(Product::manufacturer) {
+                        columnTitle { title = "Manufacturer" }
+                    }
+                    column(Product::price) { columnTitle { title = "Price" } }
+                    column(Product::distributionDate) {
+                        columnTitle { title = "Distribution" }
+                        cellExtensions(
+                            CellExcelDataFormatExtension("dd.mm.YYYY")
+                        )
+                    }
+                }
+            }
+            FileOutputStream(file).use {
+                productList.exportTo(table, xlsxExport(), it)
+            }
+            Then("file should be written successfully") {
+                assertNotNull(file)
             }
         }
     }
