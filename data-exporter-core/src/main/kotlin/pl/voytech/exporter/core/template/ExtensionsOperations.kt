@@ -1,12 +1,13 @@
 package pl.voytech.exporter.core.template
 
+import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.ColumnExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
 import pl.voytech.exporter.core.model.extension.TableExtension
 
-interface TableExtensionsOperation<A> {
-    fun applyTableExtensions(state: DelegateAPI<A>, extensions: Set<TableExtension>)
+interface TableExtensionsOperation<A,E> {
+    fun applyTableExtensions(state: DelegateAPI<A>, table: Table<E>, extensions: Set<TableExtension>)
 }
 
 interface ColumnExtensionsOperation<A> {

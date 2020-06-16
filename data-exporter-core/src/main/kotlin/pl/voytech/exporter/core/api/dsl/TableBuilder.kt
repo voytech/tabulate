@@ -39,8 +39,16 @@ class TableBuilder<T> {
         tableExtensions = (tableExtensions ?: emptySet()) + ExtensionsBuilder<TableExtension>().apply(block)
     }
 
+    fun tableExtensions(vararg extensions: TableExtension) {
+        tableExtensions = (tableExtensions ?: emptySet()) + extensions.toHashSet()
+    }
+
     fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
         cellExtensions = (cellExtensions ?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
+    }
+
+    fun cellExtensions(vararg extensions: CellExtension) {
+        cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
     }
 
     fun columnsDescription(block: DescriptionBuilder.() -> Unit) {

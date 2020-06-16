@@ -11,12 +11,12 @@ abstract class CreateTableOperationWithExtensions<T, A>(
     extensionOperations: List<TableExtensionOperation<out TableExtension, A>>?
 ) : CreateTableOperation<T, A> {
 
-    private val delegatingExtensionOperations: DelegatingTableExtensionsOperations<A> =
+    private val delegatingExtensionOperations: DelegatingTableExtensionsOperations<A, T> =
         DelegatingTableExtensionsOperations(extensionOperations)
 
     override fun createTable(state: DelegateAPI<A>, table: Table<T>): DelegateAPI<A> {
         return initializeTable(state, table).also {
-            table.tableExtensions?.let { delegatingExtensionOperations.applyTableExtensions(state, it) }
+            table.tableExtensions?.let { delegatingExtensionOperations.applyTableExtensions(state,table, it) }
         }
     }
 

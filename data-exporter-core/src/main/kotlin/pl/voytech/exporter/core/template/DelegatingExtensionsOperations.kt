@@ -1,5 +1,6 @@
 package pl.voytech.exporter.core.template
 
+import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.ColumnExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
@@ -7,17 +8,17 @@ import pl.voytech.exporter.core.model.extension.TableExtension
 import kotlin.reflect.KClass
 
 @Suppress("UNCHECKED_CAST")
-class DelegatingTableExtensionsOperations<A>(
+class DelegatingTableExtensionsOperations<A,E>(
     private val extensionOperations: List<TableExtensionOperation<out TableExtension, A>>?
-) : TableExtensionsOperation<A> {
+) : TableExtensionsOperation<A,E> {
 
     private fun operationByClass(hint: KClass<out TableExtension>): TableExtensionOperation<TableExtension, A>? {
         return extensionOperations?.find { operation -> operation.extensionType() == hint } as TableExtensionOperation<TableExtension, A>
     }
 
-    override fun applyTableExtensions(state: DelegateAPI<A>, extensions: Set<TableExtension>) {
+    override fun applyTableExtensions(state: DelegateAPI<A>, table: Table<E>, extensions: Set<TableExtension>) {
         extensions.forEach { hint ->
-            operationByClass(hint::class)?.apply(state, hint)
+            operationByClass(hint::class)?.apply(state, table, hint)
         }
     }
 }

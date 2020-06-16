@@ -2,10 +2,13 @@ package pl.voytech.exporter.impl.template.excel
 
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.FontUnderline
+import org.apache.poi.ss.util.CellReference
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import org.apache.poi.xssf.usermodel.XSSFFont
-import pl.voytech.exporter.core.model.extension.TableExtension
+import org.apache.poi.xwpf.usermodel.TableWidthType
+import pl.voytech.exporter.core.model.Table
+import pl.voytech.exporter.core.model.extension.functional.FilterAndSortTableExtension
 import pl.voytech.exporter.core.model.extension.style.*
 import pl.voytech.exporter.core.model.extension.style.enums.BorderStyle
 import pl.voytech.exporter.core.model.extension.style.enums.HorizontalAlignment
@@ -143,7 +146,27 @@ class RowHeightExtensionOperation : RowExtensionOperation<RowHeightExtension, SX
     }
 }
 
-val tableExtensionsOperations = emptyList<TableExtensionOperation<TableExtension, SXSSFWorkbook>>()
+class FilterAndSortTableExtensionOperation : TableExtensionOperation<FilterAndSortTableExtension, SXSSFWorkbook> {
+    override fun extensionType(): KClass<out FilterAndSortTableExtension> = FilterAndSortTableExtension::class
+    override fun apply(state: DelegateAPI<SXSSFWorkbook>, table: Table<*>, extension: FilterAndSortTableExtension) {
+        workbook(state).creationHelper.createAreaReference(
+            CellReference(extension.rowRange.first, extension.columnRange.first),
+            CellReference(extension.rowRange.last, extension.columnRange.last)
+        ).let { workbook(state).xssfWorkbook.getSheet(table.name).createTable(it) }
+            .let {
+                extension.columnRange.forEach { index ->
+                    it.ctTable.tableColumns.getTableColumnArray(index).id = (index+1).toLong()
+                }
+                it.name = table.name
+                it.displayName = table.name
+                it.ctTable.addNewAutoFilter().ref = it.area.formatAsString()
+            }
+    }
+}
+
+val tableExtensionsOperations = listOf(
+    FilterAndSortTableExtensionOperation()
+)
 
 val rowExtensionsOperations = listOf(
     RowHeightExtensionOperation()
