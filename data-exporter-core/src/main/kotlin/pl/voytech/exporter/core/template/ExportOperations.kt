@@ -7,6 +7,7 @@ import pl.voytech.exporter.core.model.extension.ColumnExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
 import java.io.OutputStream
 
+
 interface RowOperation<A> {
     fun renderRow(state: DelegateAPI<A>, coordinates: Coordinates, extensions: Set<RowExtension>?)
 }
