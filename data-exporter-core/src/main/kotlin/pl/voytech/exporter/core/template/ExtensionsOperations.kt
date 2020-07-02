@@ -6,18 +6,18 @@ import pl.voytech.exporter.core.model.extension.ColumnExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
 import pl.voytech.exporter.core.model.extension.TableExtension
 
-interface TableExtensionsOperation<A,E> {
-    fun applyTableExtensions(state: DelegateAPI<A>, table: Table<E>, extensions: Set<TableExtension>)
+interface TableExtensionsOperation<T, A> {
+    fun applyTableExtensions(state: DelegateAPI<A>, table: Table<T>, extensions: Set<TableExtension>)
 }
 
-interface ColumnExtensionsOperation<A> {
-    fun applyColumnExtensions(state: DelegateAPI<A>, coordinates: Coordinates, extensions: Set<ColumnExtension>)
+interface ColumnExtensionsOperation<T, A> {
+    fun applyColumnExtensions(state: DelegateAPI<A>, context: OperationContext<T, ColumnOperationTableDataContext<T>>, extensions: Set<ColumnExtension>)
 }
 
-interface RowExtensionsOperation<A> {
-    fun applyRowExtensions(state: DelegateAPI<A>, coordinates: Coordinates, extensions: Set<RowExtension>)
+interface RowExtensionsOperation<T, A> {
+    fun applyRowExtensions(state: DelegateAPI<A>, context: OperationContext<T, RowOperationTableDataContext<T>>, extensions: Set<RowExtension>)
 }
 
-interface CellExtensionsOperation<A> {
-    fun applyCellExtensions(state: DelegateAPI<A>, coordinates: Coordinates, extensions: Set<CellExtension>)
+interface CellExtensionsOperation<T, A> {
+    fun applyCellExtensions(state: DelegateAPI<A>, context: OperationContext<T, CellOperationTableDataContext<T>>, extensions: Set<CellExtension>)
 }

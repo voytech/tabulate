@@ -8,15 +8,15 @@ import pl.voytech.exporter.core.model.extension.TableExtension
 import kotlin.reflect.KClass
 
 @Suppress("UNCHECKED_CAST")
-class DelegatingTableExtensionsOperations<A,E>(
+class DelegatingTableExtensionsOperations<T, A>(
     private val extensionOperations: List<TableExtensionOperation<out TableExtension, A>>?
-) : TableExtensionsOperation<A,E> {
+) : TableExtensionsOperation<T, A> {
 
     private fun operationByClass(hint: KClass<out TableExtension>): TableExtensionOperation<TableExtension, A>? {
         return extensionOperations?.find { operation -> operation.extensionType() == hint } as TableExtensionOperation<TableExtension, A>
     }
 
-    override fun applyTableExtensions(state: DelegateAPI<A>, table: Table<E>, extensions: Set<TableExtension>) {
+    override fun applyTableExtensions(state: DelegateAPI<A>, table: Table<T>, extensions: Set<TableExtension>) {
         extensions.forEach { hint ->
             operationByClass(hint::class)?.apply(state, table, hint)
         }
@@ -24,53 +24,53 @@ class DelegatingTableExtensionsOperations<A,E>(
 }
 
 @Suppress("UNCHECKED_CAST")
-class DelegatingRowExtensionsOperations<A>(
-    private val extensionOperations: List<RowExtensionOperation<out RowExtension, A>>?
-) : RowExtensionsOperation<A> {
+class DelegatingRowExtensionsOperations<T, A>(
+    private val extensionOperations: List<RowExtensionOperation<T, out RowExtension, A>>?
+) : RowExtensionsOperation<T, A> {
 
-    private fun operationByClass(hint: KClass<out RowExtension>): RowExtensionOperation<RowExtension, A>? {
-        return extensionOperations?.find { operation -> operation.extensionType() == hint } as RowExtensionOperation<RowExtension, A>
+    private fun operationByClass(hint: KClass<out RowExtension>): RowExtensionOperation<T, RowExtension, A>? {
+        return extensionOperations?.find { operation -> operation.extensionType() == hint } as RowExtensionOperation<T, RowExtension, A>
     }
 
-    override fun applyRowExtensions(state: DelegateAPI<A>, coordinates: Coordinates, extensions: Set<RowExtension>) {
+    override fun applyRowExtensions(state: DelegateAPI<A>, context: OperationContext<T,RowOperationTableDataContext<T>>, extensions: Set<RowExtension>) {
         extensions.forEach { hint ->
-            operationByClass(hint::class)?.apply(state, coordinates, hint)
+            operationByClass(hint::class)?.apply(state, context, hint)
         }
     }
 }
 
 @Suppress("UNCHECKED_CAST")
-class DelegatingColumnExtensionsOperations<A>(
-    private val extensionOperations: List<ColumnExtensionOperation<out ColumnExtension, A>>?
-) : ColumnExtensionsOperation<A> {
+class DelegatingColumnExtensionsOperations<T, A>(
+    private val extensionOperations: List<ColumnExtensionOperation<T, out ColumnExtension, A>>?
+) : ColumnExtensionsOperation<T, A> {
 
-    private fun operationByClass(hint: KClass<out ColumnExtension>): ColumnExtensionOperation<ColumnExtension, A>? {
-        return extensionOperations?.find { operation -> operation.extensionType() == hint } as ColumnExtensionOperation<ColumnExtension, A>
+    private fun operationByClass(hint: KClass<out ColumnExtension>): ColumnExtensionOperation<T, ColumnExtension, A>? {
+        return extensionOperations?.find { operation -> operation.extensionType() == hint } as ColumnExtensionOperation<T, ColumnExtension, A>
     }
 
     override fun applyColumnExtensions(
         state: DelegateAPI<A>,
-        coordinates: Coordinates,
+        context: OperationContext<T,ColumnOperationTableDataContext<T>>,
         extensions: Set<ColumnExtension>
     ) {
         extensions.forEach { hint ->
-            operationByClass(hint::class)?.apply(state, coordinates, hint)
+            operationByClass(hint::class)?.apply(state, context, hint)
         }
     }
 }
 
 @Suppress("UNCHECKED_CAST")
-class DelegatingCellExtensionsOperations<A>(
-    private val extensionOperations: List<CellExtensionOperation<out CellExtension, A>>?
-) : CellExtensionsOperation<A> {
+class DelegatingCellExtensionsOperations<T, A>(
+    private val extensionOperations: List<CellExtensionOperation<T, out CellExtension, A>>?
+) : CellExtensionsOperation<T, A> {
 
-    private fun operationByClass(hint: KClass<out CellExtension>): CellExtensionOperation<CellExtension, A>? {
-        return extensionOperations?.find { operation -> operation.extensionType() == hint } as CellExtensionOperation<CellExtension, A>
+    private fun operationByClass(hint: KClass<out CellExtension>): CellExtensionOperation<T, CellExtension, A>? {
+        return extensionOperations?.find { operation -> operation.extensionType() == hint } as CellExtensionOperation<T, CellExtension, A>
     }
 
-    override fun applyCellExtensions(state: DelegateAPI<A>, coordinates: Coordinates, extensions: Set<CellExtension>) {
+    override fun applyCellExtensions(state: DelegateAPI<A>, context: OperationContext<T,CellOperationTableDataContext<T>>, extensions: Set<CellExtension>) {
         extensions.forEach { hint ->
-            operationByClass(hint::class)?.apply(state, coordinates, hint)
+            operationByClass(hint::class)?.apply(state, context, hint)
         }
     }
 }

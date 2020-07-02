@@ -22,12 +22,12 @@ import pl.voytech.exporter.impl.template.excel.PoiWrapper.tableSheet
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.workbook
 import kotlin.reflect.KClass
 
-class CellFontExtensionOperation : CellExtensionOperation<CellFontExtension, SXSSFWorkbook> {
+class CellFontExtensionOperation<T> : CellExtensionOperation<T,CellFontExtension, SXSSFWorkbook> {
 
     override fun extensionType(): KClass<CellFontExtension> = CellFontExtension::class
 
-    override fun apply(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates, extension: CellFontExtension) {
-        cellStyle(state, coordinates).let {
+    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableDataContext<T>>, extension: CellFontExtension) {
+        cellStyle(state, context.coordinates!!).let {
             val font: XSSFFont = workbook(state).createFont() as XSSFFont
             extension.fontFamily?.run { font.fontName = this }
             extension.fontColor?.run { font.setColor(color(this)) }
@@ -45,25 +45,25 @@ class CellFontExtensionOperation : CellExtensionOperation<CellFontExtension, SXS
     }
 }
 
-class CellBackgroundExtensionOperation : CellExtensionOperation<CellBackgroundExtension, SXSSFWorkbook> {
+class CellBackgroundExtensionOperation<T> : CellExtensionOperation<T,CellBackgroundExtension, SXSSFWorkbook> {
     override fun extensionType(): KClass<CellBackgroundExtension> = CellBackgroundExtension::class
 
     override fun apply(
         state: DelegateAPI<SXSSFWorkbook>,
-        coordinates: Coordinates,
+        context: OperationContext<T, CellOperationTableDataContext<T>>,
         extension: CellBackgroundExtension
     ) {
-        cellStyle(state, coordinates).let {
+        cellStyle(state, context.coordinates!!).let {
             (it as XSSFCellStyle).setFillForegroundColor(color(extension.color))
             it.fillPattern = FillPatternType.SOLID_FOREGROUND
         }
     }
 }
 
-class CellBordersExtensionOperation : CellExtensionOperation<CellBordersExtension, SXSSFWorkbook> {
+class CellBordersExtensionOperation<T> : CellExtensionOperation<T, CellBordersExtension, SXSSFWorkbook> {
     override fun extensionType(): KClass<CellBordersExtension> = CellBordersExtension::class
 
-    override fun apply(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates, extension: CellBordersExtension) {
+    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableDataContext<T>>, extension: CellBordersExtension) {
         val toPoiStyle = { style: BorderStyle ->
             when (style) {
                 BorderStyle.DASHED -> org.apache.poi.ss.usermodel.BorderStyle.DASHED
@@ -72,7 +72,7 @@ class CellBordersExtensionOperation : CellExtensionOperation<CellBordersExtensio
                 else -> org.apache.poi.ss.usermodel.BorderStyle.NONE
             }
         }
-        cellStyle(state, coordinates).let {
+        cellStyle(state, context.coordinates!!).let {
             extension.leftBorderColor?.run { (it as XSSFCellStyle).setLeftBorderColor(color(this)) }
             extension.rightBorderColor?.run { (it as XSSFCellStyle).setRightBorderColor(color(this)) }
             extension.topBorderColor?.run { (it as XSSFCellStyle).setTopBorderColor(color(this)) }
@@ -85,12 +85,12 @@ class CellBordersExtensionOperation : CellExtensionOperation<CellBordersExtensio
     }
 }
 
-class CellAlignmentExtensionOperation : CellExtensionOperation<CellAlignmentExtension, SXSSFWorkbook> {
+class CellAlignmentExtensionOperation<T> : CellExtensionOperation<T, CellAlignmentExtension, SXSSFWorkbook> {
 
     override fun extensionType(): KClass<out CellAlignmentExtension> = CellAlignmentExtension::class
 
-    override fun apply(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates, extension: CellAlignmentExtension) {
-        cellStyle(state, coordinates).let {
+    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableDataContext<T>>, extension: CellAlignmentExtension) {
+        cellStyle(state, context.coordinates!!).let {
             extension.horizontal?.run {
                 it.alignment =
                     when (this) {
@@ -115,34 +115,34 @@ class CellAlignmentExtensionOperation : CellExtensionOperation<CellAlignmentExte
 
 }
 
-class CellDataFormatExtensionOperation : CellExtensionOperation<CellExcelDataFormatExtension, SXSSFWorkbook> {
+class CellDataFormatExtensionOperation<T> : CellExtensionOperation<T, CellExcelDataFormatExtension, SXSSFWorkbook> {
     override fun extensionType(): KClass<out CellExcelDataFormatExtension> = CellExcelDataFormatExtension::class
 
     override fun apply(
         state: DelegateAPI<SXSSFWorkbook>,
-        coordinates: Coordinates,
+        context: OperationContext<T, CellOperationTableDataContext<T>>,
         extension: CellExcelDataFormatExtension
     ) {
-        cellStyle(state, coordinates).let {
+        cellStyle(state, context.coordinates!!).let {
             extension.dataFormat.run { it.dataFormat = workbook(state).createDataFormat().getFormat(this) }
         }
     }
 
 }
 
-class ColumnWidthExtensionOperation : ColumnExtensionOperation<ColumnWidthExtension, SXSSFWorkbook> {
+class ColumnWidthExtensionOperation<T> : ColumnExtensionOperation<T ,ColumnWidthExtension, SXSSFWorkbook> {
     override fun extensionType(): KClass<out ColumnWidthExtension> = ColumnWidthExtension::class
-    override fun apply(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates, extension: ColumnWidthExtension) =
-        tableSheet(state, coordinates.tableName).setColumnWidth(
-            coordinates.columnIndex,
+    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, ColumnOperationTableDataContext<T>>, extension: ColumnWidthExtension) =
+        tableSheet(state, context.coordinates!!.tableName).setColumnWidth(
+            context.coordinates!!.columnIndex,
             PoiUtils.widthFromPixels(extension.width)
         )
 }
 
-class RowHeightExtensionOperation : RowExtensionOperation<RowHeightExtension, SXSSFWorkbook> {
+class RowHeightExtensionOperation<T> : RowExtensionOperation<T, RowHeightExtension, SXSSFWorkbook> {
     override fun extensionType(): KClass<out RowHeightExtension> = RowHeightExtension::class
-    override fun apply(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates, extension: RowHeightExtension) {
-        assertRow(state, coordinates).height = PoiUtils.heightFromPixels(extension.height)
+    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, RowOperationTableDataContext<T>>, extension: RowHeightExtension) {
+        assertRow(state, context.coordinates!!).height = PoiUtils.heightFromPixels(extension.height)
     }
 }
 
@@ -168,18 +168,18 @@ val tableExtensionsOperations = listOf(
     FilterAndSortTableExtensionOperation()
 )
 
-val rowExtensionsOperations = listOf(
-    RowHeightExtensionOperation()
+fun <T> rowExtensionsOperations() = listOf(
+    RowHeightExtensionOperation<T>()
 )
 
-val cellExtensionsOperations = listOf(
-    CellFontExtensionOperation(),
-    CellBackgroundExtensionOperation(),
-    CellBordersExtensionOperation(),
-    CellAlignmentExtensionOperation(),
-    CellDataFormatExtensionOperation()
+fun <T> cellExtensionsOperations() = listOf(
+    CellFontExtensionOperation<T>(),
+    CellBackgroundExtensionOperation<T>(),
+    CellBordersExtensionOperation<T>(),
+    CellAlignmentExtensionOperation<T>(),
+    CellDataFormatExtensionOperation<T>()
 )
 
-val columnExtensionsOperations = listOf(
-    ColumnWidthExtensionOperation()
+fun <T> columnExtensionsOperations() = listOf(
+    ColumnWidthExtensionOperation<T>()
 )
