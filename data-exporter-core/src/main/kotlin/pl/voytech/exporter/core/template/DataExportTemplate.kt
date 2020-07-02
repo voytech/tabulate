@@ -58,7 +58,8 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             delegate = delegate.createTableOperation.createTable(state, table),
             tableName = table.name ?: "table-${NextId.nextId()}",
             firstRow = table.firstRow,
-            firstColumn = table.firstColumn
+            firstColumn = table.firstColumn,
+            collection = collection
         ).also {
             if (table.showHeader == true || table.columns.any { column -> column.columnTitle != null }) {
                 renderHeaderRow(it, table, collection)
@@ -86,12 +87,12 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         delegate.finishDocumentOperations.finishDocument(state, stream)
     }
 
-    private fun renderCollectionRows(exportingState: ExportingState<A>, table: Table<T>, collection: Collection<T>) {
+    private fun renderCollectionRows(exportingState: ExportingState<T, A>, table: Table<T>, collection: Collection<T>) {
         collection.forEachIndexed { objectIndex: Int, record: T ->
             renderRow(
                 exportingState,
                 table,
-                exportingState.rowContext(dataset = collection, objectIndex = objectIndex, record = record)
+                exportingState.rowData(dataset = collection, objectIndex = objectIndex, record = record)
             ).also {
                 renderSubsequentSyntheticRows(exportingState.nextRowIndex(), table, collection)
             }
@@ -99,30 +100,30 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     private fun renderSubsequentSyntheticRows(
-        exportingState: ExportingState<A>,
+        exportingState: ExportingState<T, A>,
         table: Table<T>,
         collection: Collection<T>
     ) {
         subsequentSyntheticRowsStartingAtRowIndex(exportingState.rowIndex, table.rows).let {
             it?.forEach { _ ->
-                renderRow(exportingState, table, exportingState.rowContext(dataset = collection))
+                renderRow(exportingState, table, exportingState.rowData(dataset = collection))
                 exportingState.nextRowIndex()
             }
         }
     }
 
     private fun renderHeaderRow(
-        state: ExportingState<A>,
+        state: ExportingState<T, A>,
         table: Table<T>,
         collection: Collection<T>
-    ): ExportingState<A> {
+    ): ExportingState<T, A> {
         val headerRowMeta =
             findRowMatchingRules(RowData(rowIndex = state.rowIndex, dataset = collection), table.rows)
-        return delegate.rowOperation.renderRow(state.delegate, state.coordinates(), headerRowMeta.rowHints).let {
+        return delegate.rowOperation.renderRow(state.delegate, state.rowOperationContext(), headerRowMeta.rowHints).let {
             table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
                 delegate.columnOperation?.renderColumn(
                     state.delegate,
-                    state.withColumnIndex(column.index ?: columnIndex).coordinates(),
+                    state.withColumnIndex(column.index ?: columnIndex).columnOperationContext(),
                     column.columnExtensions
                 )
                 val cellDef = headerRowMeta.rowCells?.get(column.id)
@@ -141,30 +142,30 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     private fun renderHeaderCell(
-        state: ExportingState<A>,
+        state: ExportingState<T, A>,
         columnTitle: Description?,
         cellHints: Set<CellExtension>?
-    ): ExportingState<A> {
+    ): ExportingState<T, A> {
         return columnTitle?.let {
             delegate.headerCellOperation?.renderHeaderCell(
                 state.delegate,
-                state.coordinates(),
+                state.cellOperationContext(),
                 columnTitle,
                 cellHints
             ); state
         } ?: state
     }
 
-    private fun renderRow(state: ExportingState<A>, rowHints: Set<RowExtension>?): ExportingState<A> {
-        return delegate.rowOperation.renderRow(state.delegate, state.coordinates(), rowHints).let { state }
+    private fun renderRow(state: ExportingState<T, A>, rowHints: Set<RowExtension>?): ExportingState<T, A> {
+        return delegate.rowOperation.renderRow(state.delegate, state.rowOperationContext(), rowHints).let { state }
     }
 
     private fun renderRowCell(
-        state: ExportingState<A>,
+        state: ExportingState<T, A>,
         value: CellValue?,
         cellHints: Set<CellExtension>?
-    ): ExportingState<A> {
-        return delegate.rowCellOperation?.renderRowCell(state.delegate, state.coordinates(), value, cellHints)
+    ): ExportingState<T, A> {
+        return delegate.rowCellOperation?.renderRowCell(state.delegate, state.cellOperationContext(), value, cellHints)
             .let { state }
     }
 
@@ -175,7 +176,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     private fun renderRow(
-        state: ExportingState<A>,
+        state: ExportingState<T, A>,
         table: Table<T>,
         row: RowData<T>
     ) {
@@ -241,4 +242,3 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
 fun <T, A> Collection<T>.exportTo(table: Table<T>, delegate: ExportOperations<T, A>, stream: OutputStream) {
     DataExportTemplate(delegate).export(table, this, stream)
 }
-

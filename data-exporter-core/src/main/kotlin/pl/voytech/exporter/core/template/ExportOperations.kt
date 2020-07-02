@@ -8,8 +8,8 @@ import pl.voytech.exporter.core.model.extension.RowExtension
 import java.io.OutputStream
 
 
-interface RowOperation<A> {
-    fun renderRow(state: DelegateAPI<A>, coordinates: Coordinates, extensions: Set<RowExtension>?)
+interface RowOperation<T, A> {
+    fun renderRow(state: DelegateAPI<A>, context: OperationContext<T,RowOperationTableDataContext<T>>, extensions: Set<RowExtension>?)
 }
 
 interface CreateDocumentOperation<A> {
@@ -25,23 +25,23 @@ interface FinishDocumentOperations<A> {
     fun finishDocument(state: DelegateAPI<A>, stream: OutputStream)
 }
 
-interface ColumnOperation<A> {
-    fun renderColumn(state: DelegateAPI<A>, coordinates: Coordinates, extensions: Set<ColumnExtension>?)
+interface ColumnOperation<T, A> {
+    fun renderColumn(state: DelegateAPI<A>, context: OperationContext<T, ColumnOperationTableDataContext<T>>, extensions: Set<ColumnExtension>?)
 }
 
-interface HeaderCellOperation<A> {
+interface HeaderCellOperation<T, A> {
     fun renderHeaderCell(
         state: DelegateAPI<A>,
-        coordinates: Coordinates,
+        context: OperationContext<T, CellOperationTableDataContext<T>>,
         columnTitle: Description?,
         extensions: Set<CellExtension>?
     )
 }
 
-interface RowCellOperation<A> {
+interface RowCellOperation<T, A> {
     fun renderRowCell(
         state: DelegateAPI<A>,
-        coordinates: Coordinates,
+        context: OperationContext<T, CellOperationTableDataContext<T>>,
         value: CellValue?,
         extensions: Set<CellExtension>?
     )
@@ -51,9 +51,9 @@ data class ExportOperations<T, A>(
     val createDocumentOperation: CreateDocumentOperation<A>,
     val createTableOperation: CreateTableOperation<T, A>,
     val finishDocumentOperations: FinishDocumentOperations<A>,
-    val headerRowOperation: RowOperation<A>? = null,
-    val rowOperation: RowOperation<A>,
-    val columnOperation: ColumnOperation<A>? = null,
-    val headerCellOperation: HeaderCellOperation<A>? = null,
-    val rowCellOperation: RowCellOperation<A>? = null
+    val headerRowOperation: RowOperation<T, A>? = null,
+    val rowOperation: RowOperation<T, A>,
+    val columnOperation: ColumnOperation<T, A>? = null,
+    val headerCellOperation: HeaderCellOperation<T, A>? = null,
+    val rowCellOperation: RowCellOperation<T, A>? = null
 )

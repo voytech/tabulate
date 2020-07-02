@@ -23,16 +23,16 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-internal class StreamingExcelRowTableOperation(rowHints: List<RowExtensionOperation<out RowExtension, SXSSFWorkbook>>) :
-    RowOperationWithExtensions<SXSSFWorkbook>(rowHints) {
+internal class XlsxRowTableOperation<T>(rowHints: List<RowExtensionOperation<T,out RowExtension, SXSSFWorkbook>>) :
+    RowOperationWithExtensions<T, SXSSFWorkbook>(rowHints) {
 
-    override fun renderRow(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates) {
-        assertRow(state, coordinates)
+    override fun renderRow(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, RowOperationTableDataContext<T>>) {
+        assertRow(state, context.coordinates!!)
     }
 
 }
 
-internal class CreateStreamingExcelDocumentOperation(private val templateFile: InputStream?) :
+internal class XlsxCreateDocumentOperation(private val templateFile: InputStream?) :
     CreateDocumentOperation<SXSSFWorkbook> {
     override fun createDocument(): DelegateAPI<SXSSFWorkbook> {
         return DelegateAPI(templateFile?.let { SXSSFWorkbook(WorkbookFactory.create(it) as XSSFWorkbook?, 100) }
@@ -40,14 +40,14 @@ internal class CreateStreamingExcelDocumentOperation(private val templateFile: I
     }
 }
 
-internal class CreateStreamingExcelTableOperation<T>(tableExtensionOperations: List<TableExtensionOperation<out TableExtension, SXSSFWorkbook>>) :
+internal class XlsxCreateTableOperation<T>(tableExtensionOperations: List<TableExtensionOperation<out TableExtension, SXSSFWorkbook>>) :
     CreateTableOperationWithExtensions<T, SXSSFWorkbook>(tableExtensionOperations) {
     override fun initializeTable(state: DelegateAPI<SXSSFWorkbook>, table: Table<T>): DelegateAPI<SXSSFWorkbook> {
         return assertTableSheet(state, table.name).let { state }
     }
 }
 
-internal class FinishStreamingExcelDocumentOperation : FinishDocumentOperations<SXSSFWorkbook> {
+internal class XlsxFinishDocumentOperation : FinishDocumentOperations<SXSSFWorkbook> {
     override fun finishDocument(state: DelegateAPI<SXSSFWorkbook>): FileData<ByteArray> {
         val outputStream = ByteArrayOutputStream()
         workbook(state).run {
@@ -65,18 +65,18 @@ internal class FinishStreamingExcelDocumentOperation : FinishDocumentOperations<
     }
 }
 
-internal class StreamingExcelHeaderCellOperations(cellExtensions: List<CellExtensionOperation<out CellExtension, SXSSFWorkbook>>) :
-    HeaderCellOperationsWithExtensions<SXSSFWorkbook>(cellExtensions) {
-    override fun renderHeaderCell(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates, columnTitle: String?) {
-        assertCell(state, coordinates).let { cell ->
+internal class XlsxHeaderCellOperations<T>(cellExtensions: List<CellExtensionOperation<T, out CellExtension, SXSSFWorkbook>>) :
+    HeaderCellOperationsWithExtensions<T, SXSSFWorkbook>(cellExtensions) {
+    override fun renderHeaderCell(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableDataContext<T>>, columnTitle: String?) {
+        assertCell(state, context.coordinates!!).let { cell ->
             columnTitle?.let { cell.setCellValue(it) }
         }
     }
 
 }
 
-internal class StreamingExcelRowCellOperations(cellExtensions: List<CellExtensionOperation<out CellExtension, SXSSFWorkbook>>) :
-    RowCellOperationsWithExtensions<SXSSFWorkbook>(cellExtensions) {
+internal class XlsxRowCellOperations<T>(cellExtensions: List<CellExtensionOperation<T,out CellExtension, SXSSFWorkbook>>) :
+    RowCellOperationsWithExtensions<T,SXSSFWorkbook>(cellExtensions) {
 
     private fun toDateValue(value: Any): Date {
         return when (value) {
@@ -113,19 +113,19 @@ internal class StreamingExcelRowCellOperations(cellExtensions: List<CellExtensio
         }
     }
 
-    override fun renderRowCell(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates, value: CellValue?) {
-        assertCell(state, coordinates).also { setCellValue(it, value) }
+    override fun renderRowCell(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableDataContext<T>>, value: CellValue?) {
+        assertCell(state, context.coordinates!!).also { setCellValue(it, value) }
     }
 
 }
 
 fun <T> xlsxExport(templateFile: InputStream? = null) = ExportOperations(
-    createDocumentOperation = CreateStreamingExcelDocumentOperation(templateFile),
-    createTableOperation = CreateStreamingExcelTableOperation<T>(tableExtensionsOperations),
-    finishDocumentOperations = FinishStreamingExcelDocumentOperation(),
-    headerRowOperation = StreamingExcelRowTableOperation(rowExtensionsOperations),
-    rowOperation = StreamingExcelRowTableOperation(rowExtensionsOperations),
-    columnOperation = ColumnOperationsWithExtensions(columnExtensionsOperations),
-    headerCellOperation = StreamingExcelHeaderCellOperations(cellExtensionsOperations),
-    rowCellOperation = StreamingExcelRowCellOperations(cellExtensionsOperations)
+    createDocumentOperation = XlsxCreateDocumentOperation(templateFile),
+    createTableOperation = XlsxCreateTableOperation(tableExtensionsOperations),
+    finishDocumentOperations = XlsxFinishDocumentOperation(),
+    headerRowOperation = XlsxRowTableOperation(rowExtensionsOperations()),
+    rowOperation = XlsxRowTableOperation(rowExtensionsOperations()),
+    columnOperation = ColumnOperationsWithExtensions(columnExtensionsOperations()),
+    headerCellOperation = XlsxHeaderCellOperations(cellExtensionsOperations()),
+    rowCellOperation = XlsxRowCellOperations<T>(cellExtensionsOperations())
 )
