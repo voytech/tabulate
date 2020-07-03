@@ -24,15 +24,15 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     private var syntheticRows: List<Row<T>>? = null
     private var syntheticRowsCached = false
 
-    internal data class MergedRow<T>(val matchingRows: Set<Row<T>>?) {
-        val rowHints: Set<RowExtension>?
-        val rowCellHints: Set<CellExtension>?
+    internal data class ComputedSyntheticRowValue<T>(val matchingRowDefinitions: Set<Row<T>>?) {
+        val rowExtensions: Set<RowExtension>?
+        val rowCellExtensions: Set<CellExtension>?
         val rowCells: Map<Key<T>, Cell<T>>?
 
         init {
-            rowHints = collectHints(matchingRows) { r -> r.rowExtensions }
-            rowCellHints = collectHints(matchingRows) { r -> r.cellExtensions }
-            rowCells = collectCells(matchingRows)
+            rowExtensions = collectHints(matchingRowDefinitions) { r -> r.rowExtensions }
+            rowCellExtensions = collectHints(matchingRowDefinitions) { r -> r.cellExtensions }
+            rowCells = collectCells(matchingRowDefinitions)
         }
 
         private fun <E : Extension> collectHints(
@@ -48,6 +48,13 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                 ?.fold(mapOf(), { acc, m -> acc + m })
         }
     }
+
+    internal data class ComputedRowValue<T>(
+        val rowExtensions: Set<RowExtension>?,
+        val rowCellExtensions: Set<CellExtension>?,
+        val rowCells: Map<Key<T>, Cell<T>>?,
+        val rowCellValues: Map<Key<T>, CellValue?>
+    )
 
     fun create(): DelegateAPI<A> {
         return delegate.createDocumentOperation.createDocument()
@@ -87,6 +94,65 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         delegate.finishDocumentOperations.finishDocument(state, stream)
     }
 
+    /**
+     * Build multidimensional cache of table structure, where each row has associated extensions as long as effective cell values
+     * resolved from synthetic (definition-time) values or source dataset values. After preflight is done we have context data
+     * for each scoped operation (for row, column, cell operations)
+     */
+    private fun preFlightPass(exportingState: ExportingState<T, A>, table: Table<T>, collection: Collection<T>) {
+
+        val preFlightSyntheticRows = {
+            subsequentSyntheticRowsStartingAtRowIndex(exportingState.rowIndex, table.rows).let {
+                it?.forEach { _ ->
+                    computeRowValue(exportingState, table, exportingState.rowData(dataset = collection))
+                    exportingState.nextRowIndex()
+                }
+            }
+        }
+
+        preFlightSyntheticRows().also {
+            collection.forEachIndexed { objectIndex: Int, record: T ->
+                computeRowValue(
+                    exportingState,
+                    table,
+                    exportingState.rowData(dataset = collection, objectIndex = objectIndex, record = record)
+                ).also {
+                    exportingState.nextRowIndex()
+                }.also {
+                    preFlightSyntheticRows()
+                }
+            }
+        }
+    }
+
+    private fun computeRowValue(
+        exportingState: ExportingState<T, A>,
+        table: Table<T>,
+        row: RowData<T>
+    ): ComputedRowValue<T> {
+        val syntheticRowValue = computeSyntheticRowValue(row, table.rows)
+        val cellValues: MutableMap<Key<T>, CellValue?> = mutableMapOf()
+        table.columns.forEachIndexed { _: Int, column: Column<T> ->
+            val syntheticCell = syntheticRowValue.rowCells?.get(column.id)
+            val effectiveRawCellValue =
+                (syntheticCell?.eval?.invoke(row) ?: syntheticCell?.value ?: evalColumnExpr(column, row))?.let {
+                    column.dataFormatter?.invoke(it) ?: it
+                }
+            cellValues[column.id] = effectiveRawCellValue?.let {
+                CellValue(
+                    effectiveRawCellValue,
+                    syntheticCell?.type ?: column.columnType
+                )
+            }
+        }
+        return ComputedRowValue(
+            rowExtensions = syntheticRowValue.rowExtensions,
+            rowCellExtensions = syntheticRowValue.rowCellExtensions,
+            rowCells = syntheticRowValue.rowCells,
+            rowCellValues = cellValues.toMap()
+        )
+    }
+
     private fun renderCollectionRows(exportingState: ExportingState<T, A>, table: Table<T>, collection: Collection<T>) {
         collection.forEachIndexed { objectIndex: Int, record: T ->
             renderRow(
@@ -118,27 +184,28 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         collection: Collection<T>
     ): ExportingState<T, A> {
         val headerRowMeta =
-            findRowMatchingRules(RowData(rowIndex = state.rowIndex, dataset = collection), table.rows)
-        return delegate.rowOperation.renderRow(state.delegate, state.rowOperationContext(), headerRowMeta.rowHints).let {
-            table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                delegate.columnOperation?.renderColumn(
-                    state.delegate,
-                    state.withColumnIndex(column.index ?: columnIndex).columnOperationContext(),
-                    column.columnExtensions
-                )
-                val cellDef = headerRowMeta.rowCells?.get(column.id)
-                renderHeaderCell(
-                    state,
-                    column.columnTitle,
-                    collectUniqueCellHints(
-                        table.cellExtensions,
-                        column.cellExtensions,
-                        headerRowMeta.rowCellHints,
-                        cellDef?.cellExtensions
+            computeSyntheticRowValue(RowData(rowIndex = state.rowIndex, dataset = collection), table.rows)
+        return delegate.rowOperation.renderRow(state.delegate, state.rowOperationContext(), headerRowMeta.rowExtensions)
+            .let {
+                table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+                    delegate.columnOperation?.renderColumn(
+                        state.delegate,
+                        state.withColumnIndex(column.index ?: columnIndex).columnOperationContext(),
+                        column.columnExtensions
                     )
-                )
-            }
-        }.let { state.nextRowIndex() }
+                    val cellDef = headerRowMeta.rowCells?.get(column.id)
+                    renderHeaderCell(
+                        state,
+                        column.columnTitle,
+                        collectUniqueCellHints(
+                            table.cellExtensions,
+                            column.cellExtensions,
+                            headerRowMeta.rowCellExtensions,
+                            cellDef?.cellExtensions
+                        )
+                    )
+                }
+            }.let { state.nextRowIndex() }
     }
 
     private fun renderHeaderCell(
@@ -180,8 +247,8 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         table: Table<T>,
         row: RowData<T>
     ) {
-        val rowWideRules = findRowMatchingRules(row, table.rows)
-        renderRow(state, rowWideRules.rowHints).also {
+        val rowWideRules = computeSyntheticRowValue(row, table.rows)
+        renderRow(state, rowWideRules.rowExtensions).also {
             table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
                 val cellDef = rowWideRules.rowCells?.get(column.id)
                 val value = (cellDef?.eval?.invoke(row) ?: cellDef?.value ?: evalColumnExpr(column, row))?.let {
@@ -193,7 +260,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                     collectUniqueCellHints(
                         table.cellExtensions,
                         column.cellExtensions,
-                        rowWideRules.rowCellHints,
+                        rowWideRules.rowCellExtensions,
                         cellDef?.cellExtensions
                     )
                 )
@@ -228,10 +295,11 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         allSyntheticRows(tableRows)?.filter { it.createAt!! >= startingFrom }
     }
 
-    private fun findRowMatchingRules(row: RowData<T>, tableRows: List<Row<T>>?): MergedRow<T> {
+    private fun computeSyntheticRowValue(row: RowData<T>, tableRows: List<Row<T>>?): ComputedSyntheticRowValue<T> {
         val matchingSelectableRows = allSelectableRows(tableRows)?.filter { it.selector!!.invoke(row) }?.toSet()
         val createAtRow = allSyntheticRows(tableRows)?.filter { it.createAt == row.rowIndex }?.toSet()
-        return MergedRow(createAtRow?.let { matchingSelectableRows?.plus(it) ?: it } ?: matchingSelectableRows)
+        return ComputedSyntheticRowValue(createAtRow?.let { matchingSelectableRows?.plus(it) ?: it }
+            ?: matchingSelectableRows)
     }
 
     private fun collectUniqueCellHints(vararg hintsOnLevels: Set<CellExtension>?): Set<CellExtension> {
