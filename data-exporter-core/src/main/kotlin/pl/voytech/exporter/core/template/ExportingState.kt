@@ -4,7 +4,8 @@ import pl.voytech.exporter.core.model.NextId
 import pl.voytech.exporter.core.model.RowData
 
 /**
- * A state of single table export.
+ * A mutable exporting state representing entire dataset as well as operation-scoped context data and coordinates for
+ * operation execution.
  * @author Wojciech Mąka
  */
 class ExportingState<T, A>(
@@ -14,14 +15,34 @@ class ExportingState<T, A>(
     val firstColumn: Int? = 0,
     val collection: Collection<T>
 ) {
+    /**
+     * Instance of mutable context for row-scope operations. After changing coordinate denoting advancing the row,
+     * coordinate object is recreated, and new row associated context data is being set. Then instance is used on all
+     * kind of given row scoped operations.
+     */
     private val rowOperationContext: OperationContext<T, RowOperationTableDataContext<T>> =
         OperationContext(RowOperationTableDataContext(collection))
+    /**
+     * Instance of mutable context for cell-scope operations. After changing coordinate denoting advancing the cell,
+     * coordinate object is recreated, and new cell associated context data is being set. Then instance is used on all
+     * kind of given cell scoped operations.
+     */
     private val cellOperationContext: OperationContext<T, CellOperationTableDataContext<T>> =
         OperationContext(CellOperationTableDataContext(collection))
+    /**
+     * Instance of mutable context for column-scope operations. After changing coordinate denoting advancing the column,
+     * coordinate object is recreated, and new column associated context data is being set. Then instance is used on all
+     * kind of given column scoped operations.
+     */
     private val columnOperationContext: OperationContext<T, ColumnOperationTableDataContext<T>> =
         OperationContext(ColumnOperationTableDataContext(collection))
-
+    /**
+     * rowIndex is modified for row row change. It is used for recreation of unmodifiable Coordinates object.
+     */
     var rowIndex: Int = 0 //objectIndex
+    /**
+     * columnIndex is modified for column change. It is used for recreation of unmodifiable Coordinates object.
+     */
     var columnIndex: Int = 0 //objectFieldIndex
 
     fun withColumnIndex(index: Int): ExportingState<T, A> {
