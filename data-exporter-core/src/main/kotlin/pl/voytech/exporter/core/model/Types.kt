@@ -1,9 +1,9 @@
 package pl.voytech.exporter.core.model
 
 
-typealias RowSelector<T> = (context: RowData<T>) -> Boolean
+typealias RowSelector<T> = (context: TypedRowData<T>) -> Boolean
 
-typealias RowCellEval<T> = (context: RowData<T>) -> Any?
+typealias RowCellEval<T> = (context: TypedRowData<T>) -> Any?
 
 object RowSelectors {
     fun <T> all(): RowSelector<T> = { _ -> true }
