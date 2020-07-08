@@ -1,7 +1,7 @@
 package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.NextId
-import pl.voytech.exporter.core.model.RowData
+import pl.voytech.exporter.core.model.TypedRowData
 
 /**
  * A mutable exporting state representing entire dataset as well as operation-scoped context data and coordinates for
@@ -36,6 +36,9 @@ class ExportingState<T, A>(
      */
     private val columnOperationContext: OperationContext<T, ColumnOperationTableDataContext<T>> =
         OperationContext(ColumnOperationTableDataContext(collection))
+
+
+    internal val rowValues : MutableList<DataExportTemplate.ComputedRowValue<T>> = mutableListOf()
     /**
      * rowIndex is modified for row row change. It is used for recreation of unmodifiable Coordinates object.
      */
@@ -44,6 +47,7 @@ class ExportingState<T, A>(
      * columnIndex is modified for column change. It is used for recreation of unmodifiable Coordinates object.
      */
     var columnIndex: Int = 0 //objectFieldIndex
+
 
     fun withColumnIndex(index: Int): ExportingState<T, A> {
         columnIndex = index
@@ -60,6 +64,12 @@ class ExportingState<T, A>(
         return this
     }
 
+    fun addRow(rowValue: DataExportTemplate.ComputedRowValue<T>): ExportingState<T, A>  {
+        rowValues.add(rowValue)
+        nextRowIndex()
+        return this
+    }
+
     fun setCurrentRecord(record: T) {
         rowOperationContext.data.record = record
     }
@@ -69,7 +79,7 @@ class ExportingState<T, A>(
     }
 
     fun <T> rowData(dataset: Collection<T>, record: T? = null, objectIndex: Int? = null) =
-        RowData(rowIndex, objectIndex, record, dataset)
+        TypedRowData(rowIndex, objectIndex, record, dataset)
 
     fun rowOperationContext(): OperationContext<T, RowOperationTableDataContext<T>> {
         rowOperationContext.coordinates = coordinates()
@@ -88,5 +98,10 @@ class ExportingState<T, A>(
 
     private fun coordinates(): Coordinates =
         Coordinates(tableName, (firstRow ?: 0) + rowIndex, (firstColumn ?: 0) + columnIndex)
+
+    fun rewind() {
+        rowIndex = 0
+        columnIndex = 0
+    }
 
 }

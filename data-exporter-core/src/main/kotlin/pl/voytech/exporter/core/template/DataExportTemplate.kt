@@ -49,11 +49,12 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-    internal data class ComputedRowValue<T>(
+    data class ComputedRowValue<T>(
         val rowExtensions: Set<RowExtension>?,
         val rowCellExtensions: Set<CellExtension>?,
         val rowCells: Map<Key<T>, Cell<T>>?,
-        val rowCellValues: Map<Key<T>, CellValue?>
+        val rowCellValues: Map<Key<T>, CellValue?>,
+        val typedRow: TypedRowData<T>
     )
 
     fun create(): DelegateAPI<A> {
@@ -67,13 +68,9 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             firstRow = table.firstRow,
             firstColumn = table.firstColumn,
             collection = collection
-        ).also {
-            if (table.showHeader == true || table.columns.any { column -> column.columnTitle != null }) {
-                renderHeaderRow(it, table, collection)
-            }
-        }.also {
-            renderSubsequentSyntheticRows(it, table, collection)
-            renderCollectionRows(it, table, collection)
+        ).also { preFlightPass(it, table, collection)
+        }.also { renderColumns(it, table)
+        }.also { renderRows(it, table)
         }.also {
             syntheticRows = null
             selectableRows = null
@@ -100,42 +97,37 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
      * for each scoped operation (for row, column, cell operations)
      */
     private fun preFlightPass(exportingState: ExportingState<T, A>, table: Table<T>, collection: Collection<T>) {
-
         val preFlightSyntheticRows = {
             subsequentSyntheticRowsStartingAtRowIndex(exportingState.rowIndex, table.rows).let {
                 it?.forEach { _ ->
                     computeRowValue(exportingState, table, exportingState.rowData(dataset = collection))
-                    exportingState.nextRowIndex()
                 }
             }
+            exportingState
         }
-
         preFlightSyntheticRows().also {
             collection.forEachIndexed { objectIndex: Int, record: T ->
                 computeRowValue(
                     exportingState,
                     table,
                     exportingState.rowData(dataset = collection, objectIndex = objectIndex, record = record)
-                ).also {
-                    exportingState.nextRowIndex()
-                }.also {
-                    preFlightSyntheticRows()
-                }
+                )
+                .also { preFlightSyntheticRows() }
             }
-        }
+        }.also { it.rewind() }
     }
 
     private fun computeRowValue(
         exportingState: ExportingState<T, A>,
         table: Table<T>,
-        row: RowData<T>
-    ): ComputedRowValue<T> {
-        val syntheticRowValue = computeSyntheticRowValue(row, table.rows)
+        typedRow: TypedRowData<T>
+    ): ExportingState<T, A> {
+        val syntheticRowValue = computeSyntheticRowValue(typedRow, table.rows)
         val cellValues: MutableMap<Key<T>, CellValue?> = mutableMapOf()
         table.columns.forEachIndexed { _: Int, column: Column<T> ->
             val syntheticCell = syntheticRowValue.rowCells?.get(column.id)
             val effectiveRawCellValue =
-                (syntheticCell?.eval?.invoke(row) ?: syntheticCell?.value ?: evalColumnExpr(column, row))?.let {
+                (syntheticCell?.eval?.invoke(typedRow) ?: syntheticCell?.value ?: evalColumnExpr(column, typedRow))?.let {
                     column.dataFormatter?.invoke(it) ?: it
                 }
             cellValues[column.id] = effectiveRawCellValue?.let {
@@ -145,82 +137,35 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                 )
             }
         }
-        return ComputedRowValue(
+        return exportingState.addRow(ComputedRowValue(
             rowExtensions = syntheticRowValue.rowExtensions,
             rowCellExtensions = syntheticRowValue.rowCellExtensions,
             rowCells = syntheticRowValue.rowCells,
-            rowCellValues = cellValues.toMap()
-        )
+            rowCellValues = cellValues.toMap(),
+            typedRow = typedRow
+        ))
     }
 
-    private fun renderCollectionRows(exportingState: ExportingState<T, A>, table: Table<T>, collection: Collection<T>) {
-        collection.forEachIndexed { objectIndex: Int, record: T ->
-            renderRow(
-                exportingState,
-                table,
-                exportingState.rowData(dataset = collection, objectIndex = objectIndex, record = record)
-            ).also {
-                renderSubsequentSyntheticRows(exportingState.nextRowIndex(), table, collection)
-            }
-        }
-    }
-
-    private fun renderSubsequentSyntheticRows(
+    private fun renderColumns(
         exportingState: ExportingState<T, A>,
-        table: Table<T>,
-        collection: Collection<T>
+        table: Table<T>
     ) {
-        subsequentSyntheticRowsStartingAtRowIndex(exportingState.rowIndex, table.rows).let {
-            it?.forEach { _ ->
-                renderRow(exportingState, table, exportingState.rowData(dataset = collection))
-                exportingState.nextRowIndex()
-            }
+        table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+            delegate.columnOperation?.renderColumn(
+                exportingState.delegate,
+                exportingState.withColumnIndex(column.index ?: columnIndex).columnOperationContext(),
+                column.columnExtensions
+            )
         }
     }
 
-    private fun renderHeaderRow(
-        state: ExportingState<T, A>,
-        table: Table<T>,
-        collection: Collection<T>
-    ): ExportingState<T, A> {
-        val headerRowMeta =
-            computeSyntheticRowValue(RowData(rowIndex = state.rowIndex, dataset = collection), table.rows)
-        return delegate.rowOperation.renderRow(state.delegate, state.rowOperationContext(), headerRowMeta.rowExtensions)
-            .let {
-                table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                    delegate.columnOperation?.renderColumn(
-                        state.delegate,
-                        state.withColumnIndex(column.index ?: columnIndex).columnOperationContext(),
-                        column.columnExtensions
-                    )
-                    val cellDef = headerRowMeta.rowCells?.get(column.id)
-                    renderHeaderCell(
-                        state,
-                        column.columnTitle,
-                        collectUniqueCellHints(
-                            table.cellExtensions,
-                            column.cellExtensions,
-                            headerRowMeta.rowCellExtensions,
-                            cellDef?.cellExtensions
-                        )
-                    )
-                }
-            }.let { state.nextRowIndex() }
-    }
-
-    private fun renderHeaderCell(
-        state: ExportingState<T, A>,
-        columnTitle: Description?,
-        cellHints: Set<CellExtension>?
-    ): ExportingState<T, A> {
-        return columnTitle?.let {
-            delegate.headerCellOperation?.renderHeaderCell(
-                state.delegate,
-                state.cellOperationContext(),
-                columnTitle,
-                cellHints
-            ); state
-        } ?: state
+    private fun renderRows(
+        exportingState: ExportingState<T, A>,
+        table: Table<T>
+    ) {
+        exportingState.rowValues.forEach { rowValue: ComputedRowValue<T> ->
+            renderRow(exportingState, table, rowValue)
+        }
     }
 
     private fun renderRow(state: ExportingState<T, A>, rowHints: Set<RowExtension>?): ExportingState<T, A> {
@@ -236,8 +181,8 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             .let { state }
     }
 
-    private fun evalColumnExpr(column: Column<T>, row: RowData<T>): Any? {
-        return row.record?.let {
+    private fun evalColumnExpr(column: Column<T>, typedRow: TypedRowData<T>): Any? {
+        return typedRow.record?.let {
             column.id.ref?.invoke(it)
         }
     }
@@ -245,23 +190,18 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     private fun renderRow(
         state: ExportingState<T, A>,
         table: Table<T>,
-        row: RowData<T>
+        rowValue: ComputedRowValue<T>
     ) {
-        val rowWideRules = computeSyntheticRowValue(row, table.rows)
-        renderRow(state, rowWideRules.rowExtensions).also {
+        renderRow(state, rowValue.rowExtensions).also {
             table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                val cellDef = rowWideRules.rowCells?.get(column.id)
-                val value = (cellDef?.eval?.invoke(row) ?: cellDef?.value ?: evalColumnExpr(column, row))?.let {
-                    column.dataFormatter?.invoke(it) ?: it
-                }
                 renderRowCell(
                     it.withColumnIndex(column.index ?: columnIndex),
-                    value?.let { CellValue(value, cellDef?.type ?: column.columnType) },
+                    rowValue.rowCellValues[column.id],
                     collectUniqueCellHints(
                         table.cellExtensions,
                         column.cellExtensions,
-                        rowWideRules.rowCellExtensions,
-                        cellDef?.cellExtensions
+                        rowValue.rowCellExtensions,
+                        rowValue.rowCells?.get(column.id)?.cellExtensions
                     )
                 )
             }
@@ -291,13 +231,9 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-    private fun trailingSyntheticRows(tableRows: List<Row<T>>?, startingFrom: Int) {
-        allSyntheticRows(tableRows)?.filter { it.createAt!! >= startingFrom }
-    }
-
-    private fun computeSyntheticRowValue(row: RowData<T>, tableRows: List<Row<T>>?): ComputedSyntheticRowValue<T> {
-        val matchingSelectableRows = allSelectableRows(tableRows)?.filter { it.selector!!.invoke(row) }?.toSet()
-        val createAtRow = allSyntheticRows(tableRows)?.filter { it.createAt == row.rowIndex }?.toSet()
+    private fun computeSyntheticRowValue(typedRow: TypedRowData<T>, tableRows: List<Row<T>>?): ComputedSyntheticRowValue<T> {
+        val matchingSelectableRows = allSelectableRows(tableRows)?.filter { it.selector!!.invoke(typedRow) }?.toSet()
+        val createAtRow = allSyntheticRows(tableRows)?.filter { it.createAt == typedRow.rowIndex }?.toSet()
         return ComputedSyntheticRowValue(createAtRow?.let { matchingSelectableRows?.plus(it) ?: it }
             ?: matchingSelectableRows)
     }
@@ -310,3 +246,53 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
 fun <T, A> Collection<T>.exportTo(table: Table<T>, delegate: ExportOperations<T, A>, stream: OutputStream) {
     DataExportTemplate(delegate).export(table, this, stream)
 }
+
+
+
+
+/*
+TODO REMOVE!
+private fun renderHeaderRow(
+    state: ExportingState<T, A>,
+    table: Table<T>,
+    collection: Collection<T>
+): ExportingState<T, A> {
+    val headerRowMeta =
+        computeSyntheticRowValue(TypedRowData(rowIndex = state.rowIndex, dataset = collection), table.rows)
+    return delegate.rowOperation.renderRow(state.delegate, state.rowOperationContext(), headerRowMeta.rowExtensions)
+        .let {
+            table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+                delegate.columnOperation?.renderColumn(
+                    state.delegate,
+                    state.withColumnIndex(column.index ?: columnIndex).columnOperationContext(),
+                    column.columnExtensions
+                )
+                val cellDef = headerRowMeta.rowCells?.get(column.id)
+                renderHeaderCell(
+                    state,
+                    column.columnTitle,
+                    collectUniqueCellHints(
+                        table.cellExtensions,
+                        column.cellExtensions,
+                        headerRowMeta.rowCellExtensions,
+                        cellDef?.cellExtensions
+                    )
+                )
+            }
+        }.let { state.nextRowIndex() }
+}
+
+private fun renderHeaderCell(
+    state: ExportingState<T, A>,
+    columnTitle: Description?,
+    cellHints: Set<CellExtension>?
+): ExportingState<T, A> {
+    return columnTitle?.let {
+        delegate.headerCellOperation?.renderHeaderCell(
+            state.delegate,
+            state.cellOperationContext(),
+            columnTitle,
+            cellHints
+        ); state
+    } ?: state
+} */
