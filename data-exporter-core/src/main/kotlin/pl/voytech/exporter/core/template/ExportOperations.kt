@@ -26,15 +26,10 @@ interface FinishDocumentOperations<A> {
 }
 
 interface ColumnOperation<T, A> {
-    fun renderColumn(state: DelegateAPI<A>, context: OperationContext<T, ColumnOperationTableDataContext<T>>, extensions: Set<ColumnExtension>?)
-}
-
-interface HeaderCellOperation<T, A> {
-    fun renderHeaderCell(
+    fun renderColumn(
         state: DelegateAPI<A>,
-        context: OperationContext<T, CellOperationTableDataContext<T>>,
-        columnTitle: Description?,
-        extensions: Set<CellExtension>?
+        context: OperationContext<T, ColumnOperationTableDataContext<T>>,
+        extensions: Set<ColumnExtension>?
     )
 }
 
@@ -42,7 +37,6 @@ interface RowCellOperation<T, A> {
     fun renderRowCell(
         state: DelegateAPI<A>,
         context: OperationContext<T, CellOperationTableDataContext<T>>,
-        value: CellValue?,
         extensions: Set<CellExtension>?
     )
 }
@@ -51,9 +45,7 @@ data class ExportOperations<T, A>(
     val createDocumentOperation: CreateDocumentOperation<A>,
     val createTableOperation: CreateTableOperation<T, A>,
     val finishDocumentOperations: FinishDocumentOperations<A>,
-    val headerRowOperation: RowOperation<T, A>? = null,
     val rowOperation: RowOperation<T, A>,
     val columnOperation: ColumnOperation<T, A>? = null,
-    val headerCellOperation: HeaderCellOperation<T, A>? = null,
     val rowCellOperation: RowCellOperation<T, A>? = null
 )

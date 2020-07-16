@@ -1,5 +1,6 @@
 package pl.voytech.exporter.core.template
 
+import pl.voytech.exporter.core.model.Key
 import pl.voytech.exporter.core.model.NextId
 import pl.voytech.exporter.core.model.TypedRowData
 
@@ -70,30 +71,30 @@ class ExportingState<T, A>(
         return this
     }
 
-    fun setCurrentRecord(record: T) {
-        rowOperationContext.data.record = record
-    }
-
-    fun setCurrentFieldValue(propertyValue : Any) {
-        cellOperationContext.data.propertyValue = propertyValue
-    }
 
     fun <T> rowData(dataset: Collection<T>, record: T? = null, objectIndex: Int? = null) =
         TypedRowData(rowIndex, objectIndex, record, dataset)
 
-    fun rowOperationContext(): OperationContext<T, RowOperationTableDataContext<T>> {
+    fun rowOperationContext(rowValue: DataExportTemplate.ComputedRowValue<T>): OperationContext<T, RowOperationTableDataContext<T>> {
         rowOperationContext.coordinates = coordinates()
+        rowOperationContext.data.rowValues = rowValue.rowCellValues
         return rowOperationContext
     }
 
-    fun cellOperationContext(): OperationContext<T, CellOperationTableDataContext<T>> {
-        cellOperationContext.coordinates = coordinates()
-        return cellOperationContext
+    fun cellOperationContext(columnIndex: Int, key: Key<T>, cellValue: CellValue?): OperationContext<T, CellOperationTableDataContext<T>> {
+        return withColumnIndex(columnIndex).let {
+            cellOperationContext.coordinates = coordinates()
+            cellOperationContext.data.cellValue = cellValue
+            cellOperationContext
+        }
     }
 
-    fun columnOperationContext(): OperationContext<T, ColumnOperationTableDataContext<T>> {
-        columnOperationContext.coordinates = coordinates()
-        return columnOperationContext
+    fun columnOperationContext(columnIndex: Int, key: Key<T>): OperationContext<T, ColumnOperationTableDataContext<T>> {
+        return withColumnIndex(columnIndex).let {
+            columnOperationContext.coordinates = coordinates()
+            columnOperationContext.data.columnValues = rowValues.map { v -> v.rowCellValues[key]!! }
+            columnOperationContext
+        }
     }
 
     private fun coordinates(): Coordinates =

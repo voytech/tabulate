@@ -65,16 +65,6 @@ internal class XlsxFinishDocumentOperation : FinishDocumentOperations<SXSSFWorkb
     }
 }
 
-internal class XlsxHeaderCellOperations<T>(cellExtensions: List<CellExtensionOperation<T, out CellExtension, SXSSFWorkbook>>) :
-    HeaderCellOperationsWithExtensions<T, SXSSFWorkbook>(cellExtensions) {
-    override fun renderHeaderCell(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableDataContext<T>>, columnTitle: String?) {
-        assertCell(state, context.coordinates!!).let { cell ->
-            columnTitle?.let { cell.setCellValue(it) }
-        }
-    }
-
-}
-
 internal class XlsxRowCellOperations<T>(cellExtensions: List<CellExtensionOperation<T,out CellExtension, SXSSFWorkbook>>) :
     RowCellOperationsWithExtensions<T,SXSSFWorkbook>(cellExtensions) {
 
@@ -113,8 +103,8 @@ internal class XlsxRowCellOperations<T>(cellExtensions: List<CellExtensionOperat
         }
     }
 
-    override fun renderRowCell(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableDataContext<T>>, value: CellValue?) {
-        assertCell(state, context.coordinates!!).also { setCellValue(it, value) }
+    override fun renderRowCell(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableDataContext<T>>) {
+        assertCell(state, context.coordinates!!).also { setCellValue(it, context.data.cellValue) }
     }
 
 }
@@ -123,9 +113,7 @@ fun <T> xlsxExport(templateFile: InputStream? = null) = ExportOperations(
     createDocumentOperation = XlsxCreateDocumentOperation(templateFile),
     createTableOperation = XlsxCreateTableOperation(tableExtensionsOperations),
     finishDocumentOperations = XlsxFinishDocumentOperation(),
-    headerRowOperation = XlsxRowTableOperation(rowExtensionsOperations()),
     rowOperation = XlsxRowTableOperation(rowExtensionsOperations()),
     columnOperation = ColumnOperationsWithExtensions(columnExtensionsOperations()),
-    headerCellOperation = XlsxHeaderCellOperations(cellExtensionsOperations()),
     rowCellOperation = XlsxRowCellOperations<T>(cellExtensionsOperations())
 )
