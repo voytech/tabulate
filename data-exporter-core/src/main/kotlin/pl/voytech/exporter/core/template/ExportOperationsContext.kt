@@ -1,5 +1,6 @@
 package pl.voytech.exporter.core.template
 
+import pl.voytech.exporter.core.model.Key
 import kotlin.reflect.KProperty1
 
 open class TableDataContext<T>(private val collection: Collection<T>) {
@@ -14,18 +15,17 @@ open class TableDataContext<T>(private val collection: Collection<T>) {
 }
 
 class RowOperationTableDataContext<T>(private val collection: Collection<T>) : TableDataContext<T>(collection) {
-    var record: T? = null
+    var rowValues: Map<Key<T>,CellValue?>?  = null
         internal set
 }
 
 class CellOperationTableDataContext<T>(private val collection: Collection<T>): TableDataContext<T>(collection) {
-    var propertyValue: Any? = null
+    var cellValue: CellValue? = null
         internal set
 }
 
 class ColumnOperationTableDataContext<T>(private val collection: Collection<T>): TableDataContext<T>(collection) {
-    private val cached: MutableMap<KProperty1<T, *>,List<*>> = mutableMapOf()
-    var columnRecords: List<*>? = null
+    var columnValues: List<CellValue>? = null
         internal set
 }
 

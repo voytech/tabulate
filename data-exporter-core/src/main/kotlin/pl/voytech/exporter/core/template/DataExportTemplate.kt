@@ -153,7 +153,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
             delegate.columnOperation?.renderColumn(
                 exportingState.delegate,
-                exportingState.withColumnIndex(column.index ?: columnIndex).columnOperationContext(),
+                exportingState.columnOperationContext(column.index ?: columnIndex, column.id),
                 column.columnExtensions
             )
         }
@@ -168,17 +168,8 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-    private fun renderRow(state: ExportingState<T, A>, rowHints: Set<RowExtension>?): ExportingState<T, A> {
-        return delegate.rowOperation.renderRow(state.delegate, state.rowOperationContext(), rowHints).let { state }
-    }
-
-    private fun renderRowCell(
-        state: ExportingState<T, A>,
-        value: CellValue?,
-        cellHints: Set<CellExtension>?
-    ): ExportingState<T, A> {
-        return delegate.rowCellOperation?.renderRowCell(state.delegate, state.cellOperationContext(), value, cellHints)
-            .let { state }
+    private fun renderRow(state: ExportingState<T, A>, rowValue: ComputedRowValue<T>): ExportingState<T, A> {
+        return delegate.rowOperation.renderRow(state.delegate, state.rowOperationContext(rowValue), rowValue.rowExtensions).let { state }
     }
 
     private fun evalColumnExpr(column: Column<T>, typedRow: TypedRowData<T>): Any? {
@@ -192,11 +183,11 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         table: Table<T>,
         rowValue: ComputedRowValue<T>
     ) {
-        renderRow(state, rowValue.rowExtensions).also {
+        renderRow(state, rowValue).also {
             table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                renderRowCell(
-                    it.withColumnIndex(column.index ?: columnIndex),
-                    rowValue.rowCellValues[column.id],
+                delegate.rowCellOperation?.renderRowCell(
+                    it.delegate,
+                    it.cellOperationContext(columnIndex,column.id, rowValue.rowCellValues[column.id]),
                     collectUniqueCellHints(
                         table.cellExtensions,
                         column.cellExtensions,

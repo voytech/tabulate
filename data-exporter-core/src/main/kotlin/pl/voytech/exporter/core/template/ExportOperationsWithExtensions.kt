@@ -1,6 +1,5 @@
 package pl.voytech.exporter.core.template
 
-import pl.voytech.exporter.core.model.Description
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.ColumnExtension
@@ -52,27 +51,6 @@ class ColumnOperationsWithExtensions<T, A>(
     }
 }
 
-abstract class HeaderCellOperationsWithExtensions<T, A>(
-    extensionOperations: List<CellExtensionOperation<T, out CellExtension, A>>?
-) : HeaderCellOperation<T, A> {
-
-    private val delegatingExtensionOperations: DelegatingCellExtensionsOperations<T, A> =
-        DelegatingCellExtensionsOperations(extensionOperations)
-
-    override fun renderHeaderCell(
-        state: DelegateAPI<A>,
-        context: OperationContext<T, CellOperationTableDataContext<T>>,
-        columnTitle: Description?,
-        extensions: Set<CellExtension>?
-    ) {
-        renderHeaderCell(state, context, columnTitle?.title).also {
-            extensions?.let { delegatingExtensionOperations.applyCellExtensions(state, context, it) }
-        }
-    }
-
-    abstract fun renderHeaderCell(state: DelegateAPI<A>, context: OperationContext<T, CellOperationTableDataContext<T>>, columnTitle: String?)
-
-}
 
 abstract class RowCellOperationsWithExtensions<T, A>(
     extensionOperations: List<CellExtensionOperation<T, out CellExtension, A>>?
@@ -84,14 +62,13 @@ abstract class RowCellOperationsWithExtensions<T, A>(
     override fun renderRowCell(
         state: DelegateAPI<A>,
         context: OperationContext<T, CellOperationTableDataContext<T>>,
-        value: CellValue?,
         extensions: Set<CellExtension>?
     ) {
-        renderRowCell(state, context, value).also {
+        renderRowCell(state, context).also {
             extensions?.let { delegatingExtensionOperations.applyCellExtensions(state, context, it) }
         }
     }
 
-    abstract fun renderRowCell(state: DelegateAPI<A>, context: OperationContext<T, CellOperationTableDataContext<T>>, value: CellValue?)
+    abstract fun renderRowCell(state: DelegateAPI<A>, context: OperationContext<T, CellOperationTableDataContext<T>>)
 
 }
