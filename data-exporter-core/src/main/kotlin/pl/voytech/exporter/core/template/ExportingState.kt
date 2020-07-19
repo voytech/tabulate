@@ -53,16 +53,15 @@ class ExportingState<T, A>(
 
     internal fun addRow(rowValue: DataExportTemplate.ComputedRowValue<T>): ExportingState<T, A>  {
         rowValues.add(rowValue)
-        nextRowIndex()
         return this
     }
 
     internal fun forEachRowValue(block: (rowValue: DataExportTemplate.ComputedRowValue<T>) -> Unit): ExportingState<T, A> {
-        withRowIndex(0)
+        rowIndex = 0
         rowValues.forEachIndexed { index, rowValue ->
-            withRowIndex(index)
-            withColumnIndex(0)
-            withCurrentRowValue(rowValue)
+            rowIndex = index
+            columnIndex = 0
+            this.rowValue = rowValue
             block.invoke(rowValue)
         }
         return this
@@ -75,38 +74,20 @@ class ExportingState<T, A>(
     }
 
     internal fun cellOperationContext(columnIndex: Int, columnId: Key<T>): OperationContext<T, CellOperationTableDataContext<T>> {
-        return withColumnIndex(columnIndex).let {
-            cellOperationContext.coordinates = coordinates()
-            cellOperationContext.data.cellValue = rowValue?.rowCellValues?.get(columnId)
-            cellOperationContext
-        }
+        this.columnIndex = columnIndex
+        cellOperationContext.coordinates = coordinates()
+        cellOperationContext.data.cellValue = rowValue?.rowCellValues?.get(columnId)
+        return cellOperationContext
     }
 
     internal fun columnOperationContext(columnIndex: Int, columnId: Key<T>): OperationContext<T, ColumnOperationTableDataContext<T>> {
-        return withColumnIndex(columnIndex).let {
-            columnOperationContext.coordinates = coordinates()
-            columnOperationContext.data.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[columnId] }
-            columnOperationContext
-        }
+        this.columnIndex = columnIndex
+        columnOperationContext.coordinates = coordinates()
+        columnOperationContext.data.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[columnId] }
+        return columnOperationContext
     }
 
     private fun coordinates(): Coordinates =
         Coordinates(tableName, (firstRow ?: 0) + rowIndex, (firstColumn ?: 0) + columnIndex)
-
-    private fun withColumnIndex(index: Int) {
-        columnIndex = index
-    }
-
-    private fun withRowIndex(index: Int) {
-        rowIndex = index
-    }
-
-    private fun nextRowIndex() {
-        rowIndex++
-    }
-
-    private fun withCurrentRowValue(rowValue: DataExportTemplate.ComputedRowValue<T>) {
-        this.rowValue = rowValue
-    }
 
 }
