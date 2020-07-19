@@ -114,7 +114,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                 )
                 .also { preFlightSyntheticRows() }
             }
-        }.also { it.rewind() }
+        }
     }
 
     private fun computeRowValue(
@@ -147,55 +147,43 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     private fun renderColumns(
-        exportingState: ExportingState<T, A>,
+        state: ExportingState<T, A>,
         table: Table<T>
     ) {
         table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
             delegate.columnOperation?.renderColumn(
-                exportingState.delegate,
-                exportingState.columnOperationContext(column.index ?: columnIndex, column.id),
+                state.delegate,
+                state.columnOperationContext(column.index ?: columnIndex, column.id),
                 column.columnExtensions
             )
         }
     }
 
     private fun renderRows(
-        exportingState: ExportingState<T, A>,
+        state: ExportingState<T, A>,
         table: Table<T>
     ) {
-        exportingState.rowValues.forEach { rowValue: ComputedRowValue<T> ->
-            renderRow(exportingState, table, rowValue)
+        state.forEachRowValue { rowValue: ComputedRowValue<T> ->
+            delegate.rowOperation.renderRow(state.delegate, state.rowOperationContext(), rowValue.rowExtensions).also {
+                table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+                    delegate.rowCellOperation?.renderRowCell(
+                        state.delegate,
+                        state.cellOperationContext(column.index ?: columnIndex, column.id),
+                        collectUniqueCellHints(
+                            table.cellExtensions,
+                            column.cellExtensions,
+                            rowValue.rowCellExtensions,
+                            rowValue.rowCells?.get(column.id)?.cellExtensions
+                        )
+                    )
+                }
+            }
         }
-    }
-
-    private fun renderRow(state: ExportingState<T, A>, rowValue: ComputedRowValue<T>): ExportingState<T, A> {
-        return delegate.rowOperation.renderRow(state.delegate, state.rowOperationContext(rowValue), rowValue.rowExtensions).let { state }
     }
 
     private fun evalColumnExpr(column: Column<T>, typedRow: TypedRowData<T>): Any? {
         return typedRow.record?.let {
             column.id.ref?.invoke(it)
-        }
-    }
-
-    private fun renderRow(
-        state: ExportingState<T, A>,
-        table: Table<T>,
-        rowValue: ComputedRowValue<T>
-    ) {
-        renderRow(state, rowValue).also {
-            table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                delegate.rowCellOperation?.renderRowCell(
-                    it.delegate,
-                    it.cellOperationContext(columnIndex,column.id, rowValue.rowCellValues[column.id]),
-                    collectUniqueCellHints(
-                        table.cellExtensions,
-                        column.cellExtensions,
-                        rowValue.rowCellExtensions,
-                        rowValue.rowCells?.get(column.id)?.cellExtensions
-                    )
-                )
-            }
         }
     }
 

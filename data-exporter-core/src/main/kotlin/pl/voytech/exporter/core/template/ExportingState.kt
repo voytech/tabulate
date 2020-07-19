@@ -40,6 +40,9 @@ class ExportingState<T, A>(
 
 
     internal val rowValues : MutableList<DataExportTemplate.ComputedRowValue<T>> = mutableListOf()
+
+    private var rowValue: DataExportTemplate.ComputedRowValue<T>? = null
+
     /**
      * rowIndex is modified for row row change. It is used for recreation of unmodifiable Coordinates object.
      */
@@ -48,7 +51,6 @@ class ExportingState<T, A>(
      * columnIndex is modified for column change. It is used for recreation of unmodifiable Coordinates object.
      */
     var columnIndex: Int = 0 //objectFieldIndex
-
 
     fun withColumnIndex(index: Int): ExportingState<T, A> {
         columnIndex = index
@@ -65,44 +67,54 @@ class ExportingState<T, A>(
         return this
     }
 
-    fun addRow(rowValue: DataExportTemplate.ComputedRowValue<T>): ExportingState<T, A>  {
+    private fun withCurrentRowValue(rowValue: DataExportTemplate.ComputedRowValue<T>): ExportingState<T, A> {
+        this.rowValue = rowValue
+        return this
+    }
+
+    internal fun addRow(rowValue: DataExportTemplate.ComputedRowValue<T>): ExportingState<T, A>  {
         rowValues.add(rowValue)
         nextRowIndex()
         return this
     }
 
+    fun forEachRowValue(block: (rowValue: DataExportTemplate.ComputedRowValue<T>) -> Unit): ExportingState<T, A> {
+        withRowIndex(0)
+        rowValues.forEachIndexed { index, rowValue ->
+            withRowIndex(index)
+            withColumnIndex(0)
+            withCurrentRowValue(rowValue)
+            block.invoke(rowValue)
+        }
+        return this
+    }
 
     fun <T> rowData(dataset: Collection<T>, record: T? = null, objectIndex: Int? = null) =
         TypedRowData(rowIndex, objectIndex, record, dataset)
 
-    fun rowOperationContext(rowValue: DataExportTemplate.ComputedRowValue<T>): OperationContext<T, RowOperationTableDataContext<T>> {
+    fun rowOperationContext(): OperationContext<T, RowOperationTableDataContext<T>> {
         rowOperationContext.coordinates = coordinates()
-        rowOperationContext.data.rowValues = rowValue.rowCellValues
+        rowOperationContext.data.rowValues = rowValue?.rowCellValues
         return rowOperationContext
     }
 
-    fun cellOperationContext(columnIndex: Int, key: Key<T>, cellValue: CellValue?): OperationContext<T, CellOperationTableDataContext<T>> {
+    fun cellOperationContext(columnIndex: Int, columnId: Key<T>): OperationContext<T, CellOperationTableDataContext<T>> {
         return withColumnIndex(columnIndex).let {
             cellOperationContext.coordinates = coordinates()
-            cellOperationContext.data.cellValue = cellValue
+            cellOperationContext.data.cellValue = rowValue?.rowCellValues?.get(columnId)
             cellOperationContext
         }
     }
 
-    fun columnOperationContext(columnIndex: Int, key: Key<T>): OperationContext<T, ColumnOperationTableDataContext<T>> {
+    fun columnOperationContext(columnIndex: Int, columnId: Key<T>): OperationContext<T, ColumnOperationTableDataContext<T>> {
         return withColumnIndex(columnIndex).let {
             columnOperationContext.coordinates = coordinates()
-            columnOperationContext.data.columnValues = rowValues.map { v -> v.rowCellValues[key]!! }
+            columnOperationContext.data.columnValues = rowValues.map { v -> v.rowCellValues[columnId]!! }
             columnOperationContext
         }
     }
 
     private fun coordinates(): Coordinates =
         Coordinates(tableName, (firstRow ?: 0) + rowIndex, (firstColumn ?: 0) + columnIndex)
-
-    fun rewind() {
-        rowIndex = 0
-        columnIndex = 0
-    }
 
 }
