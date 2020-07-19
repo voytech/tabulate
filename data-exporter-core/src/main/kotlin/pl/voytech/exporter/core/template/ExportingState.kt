@@ -38,39 +38,18 @@ class ExportingState<T, A>(
     private val columnOperationContext: OperationContext<T, ColumnOperationTableDataContext<T>> =
         OperationContext(ColumnOperationTableDataContext(collection))
 
-
-    internal val rowValues : MutableList<DataExportTemplate.ComputedRowValue<T>> = mutableListOf()
+    private val rowValues : MutableList<DataExportTemplate.ComputedRowValue<T>> = mutableListOf()
 
     private var rowValue: DataExportTemplate.ComputedRowValue<T>? = null
 
     /**
      * rowIndex is modified for row row change. It is used for recreation of unmodifiable Coordinates object.
      */
-    var rowIndex: Int = 0 //objectIndex
+    private var rowIndex: Int = 0 //objectIndex
     /**
      * columnIndex is modified for column change. It is used for recreation of unmodifiable Coordinates object.
      */
-    var columnIndex: Int = 0 //objectFieldIndex
-
-    fun withColumnIndex(index: Int): ExportingState<T, A> {
-        columnIndex = index
-        return this
-    }
-
-    fun withRowIndex(index: Int): ExportingState<T, A> {
-        rowIndex = index
-        return this
-    }
-
-    fun nextRowIndex(): ExportingState<T, A> {
-        rowIndex++
-        return this
-    }
-
-    private fun withCurrentRowValue(rowValue: DataExportTemplate.ComputedRowValue<T>): ExportingState<T, A> {
-        this.rowValue = rowValue
-        return this
-    }
+    private var columnIndex: Int = 0 //objectFieldIndex
 
     internal fun addRow(rowValue: DataExportTemplate.ComputedRowValue<T>): ExportingState<T, A>  {
         rowValues.add(rowValue)
@@ -78,7 +57,7 @@ class ExportingState<T, A>(
         return this
     }
 
-    fun forEachRowValue(block: (rowValue: DataExportTemplate.ComputedRowValue<T>) -> Unit): ExportingState<T, A> {
+    internal fun forEachRowValue(block: (rowValue: DataExportTemplate.ComputedRowValue<T>) -> Unit): ExportingState<T, A> {
         withRowIndex(0)
         rowValues.forEachIndexed { index, rowValue ->
             withRowIndex(index)
@@ -89,16 +68,13 @@ class ExportingState<T, A>(
         return this
     }
 
-    fun <T> rowData(dataset: Collection<T>, record: T? = null, objectIndex: Int? = null) =
-        TypedRowData(rowIndex, objectIndex, record, dataset)
-
-    fun rowOperationContext(): OperationContext<T, RowOperationTableDataContext<T>> {
+    internal fun rowOperationContext(): OperationContext<T, RowOperationTableDataContext<T>> {
         rowOperationContext.coordinates = coordinates()
         rowOperationContext.data.rowValues = rowValue?.rowCellValues
         return rowOperationContext
     }
 
-    fun cellOperationContext(columnIndex: Int, columnId: Key<T>): OperationContext<T, CellOperationTableDataContext<T>> {
+    internal fun cellOperationContext(columnIndex: Int, columnId: Key<T>): OperationContext<T, CellOperationTableDataContext<T>> {
         return withColumnIndex(columnIndex).let {
             cellOperationContext.coordinates = coordinates()
             cellOperationContext.data.cellValue = rowValue?.rowCellValues?.get(columnId)
@@ -106,15 +82,31 @@ class ExportingState<T, A>(
         }
     }
 
-    fun columnOperationContext(columnIndex: Int, columnId: Key<T>): OperationContext<T, ColumnOperationTableDataContext<T>> {
+    internal fun columnOperationContext(columnIndex: Int, columnId: Key<T>): OperationContext<T, ColumnOperationTableDataContext<T>> {
         return withColumnIndex(columnIndex).let {
             columnOperationContext.coordinates = coordinates()
-            columnOperationContext.data.columnValues = rowValues.map { v -> v.rowCellValues[columnId]!! }
+            columnOperationContext.data.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[columnId] }
             columnOperationContext
         }
     }
 
     private fun coordinates(): Coordinates =
         Coordinates(tableName, (firstRow ?: 0) + rowIndex, (firstColumn ?: 0) + columnIndex)
+
+    private fun withColumnIndex(index: Int) {
+        columnIndex = index
+    }
+
+    private fun withRowIndex(index: Int) {
+        rowIndex = index
+    }
+
+    private fun nextRowIndex() {
+        rowIndex++
+    }
+
+    private fun withCurrentRowValue(rowValue: DataExportTemplate.ComputedRowValue<T>) {
+        this.rowValue = rowValue
+    }
 
 }

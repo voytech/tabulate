@@ -97,10 +97,15 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
      * for each scoped operation (for row, column, cell operations)
      */
     private fun preFlightPass(exportingState: ExportingState<T, A>, table: Table<T>, collection: Collection<T>) {
+        val rowIndex = AtomicInteger(0)
         val preFlightSyntheticRows = {
-            subsequentSyntheticRowsStartingAtRowIndex(exportingState.rowIndex, table.rows).let {
+            subsequentSyntheticRowsStartingAtRowIndex(rowIndex.get(), table.rows).let {
                 it?.forEach { _ ->
-                    computeRowValue(exportingState, table, exportingState.rowData(dataset = collection))
+                    computeRowValue(
+                        exportingState,
+                        table,
+                        TypedRowData(rowIndex = rowIndex.getAndIncrement(), dataset = collection)
+                    )
                 }
             }
             exportingState
@@ -110,9 +115,13 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                 computeRowValue(
                     exportingState,
                     table,
-                    exportingState.rowData(dataset = collection, objectIndex = objectIndex, record = record)
-                )
-                .also { preFlightSyntheticRows() }
+                    TypedRowData(
+                        dataset = collection,
+                        rowIndex = rowIndex.getAndIncrement(),
+                        objectIndex = objectIndex,
+                        record = record
+                    )
+                ).also { preFlightSyntheticRows() }
             }
         }
     }

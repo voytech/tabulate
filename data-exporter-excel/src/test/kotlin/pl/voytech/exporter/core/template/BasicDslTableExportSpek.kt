@@ -53,7 +53,6 @@ object BasicDslTableExportSpek : Spek({
                 firstColumn = 2
                 columns {
                     column("nr") {
-                        columnTitle { title = "Nr.:" }
                         columnExtensions(ColumnWidthExtension(width = 50))
                         cellExtensions(
                             CellFontExtension(
@@ -68,7 +67,6 @@ object BasicDslTableExportSpek : Spek({
                         )
                     }
                     column(Product::code) {
-                        columnTitle { title = "Code" }
                         columnExtensions(ColumnWidthExtension(width = 100))
                         cellExtensions(
                             CellFontExtension(
@@ -80,34 +78,56 @@ object BasicDslTableExportSpek : Spek({
                         )
                     }
                     column(Product::name) {
-                        columnTitle { title = "Name" }
                         columnExtensions(ColumnWidthExtension(width = 100))
                     }
                     column(Product::description) {
-                        columnTitle { title = "Description" }
                         columnExtensions(ColumnWidthExtension(width = 300))
                     }
                     column(Product::manufacturer) {
-                        columnTitle { title = "Manufacturer" }
                         columnExtensions(ColumnWidthExtension(width = 100))
                         dataFormatter = { field -> (field as String).toUpperCase() }
                     }
-                    column(Product::price) { columnTitle { title = "Price" } }
+                    column(Product::price)
                     column(Product::distributionDate) {
-                        columnTitle { title = "Distribution" }
                         cellExtensions(
                             CellExcelDataFormatExtension("dd.mm.YYYY")
                         )
                     }
                     (0..10).forEach {
                         column("c$it") {
-                            columnTitle { title = "dynamic column nr. $it" }
-                            columnExtensions(ColumnWidthExtension(110))
+                            columnExtensions(ColumnWidthExtension(width = 110))
                             cellExtensions(CellBackgroundExtension(Color(255,255,0)))
                         }
                     }
                 }
                 rows {
+                    row {
+                        createAt = 0
+                        cells {
+                            forColumn("nr") { value = "Nr.:" }
+                            forColumn(Product::code) { value = "Code" }
+                            forColumn(Product::name) { value = "Name" }
+                            forColumn(Product::description) { value = "Description" }
+                            forColumn(Product::manufacturer) { value = "Manufacturer" }
+                            forColumn(Product::price) { value = "Price" }
+                            forColumn(Product::distributionDate) { value = "Distribution" }
+                        }
+                        rowExtensions(RowHeightExtension(height = 220))
+                        cellExtensions(
+                            CellBordersExtension(
+                                leftBorderStyle = BorderStyle.SOLID,
+                                leftBorderColor = Color(0, 0, 0),
+                                rightBorderStyle = BorderStyle.SOLID,
+                                rightBorderColor = Color(0, 0, 0),
+                                bottomBorderStyle = BorderStyle.SOLID,
+                                bottomBorderColor = Color(0, 0, 0)
+                            ),
+                            CellAlignmentExtension(
+                                horizontal = HorizontalAlignment.CENTER,
+                                vertical = VerticalAlignment.MIDDLE
+                            )
+                        )
+                    }
                     row {
                         createAt = productList.size + 1
                         cells {
@@ -131,27 +151,9 @@ object BasicDslTableExportSpek : Spek({
                         }
                     }
                     row {
-                        selector = RowSelectors.atRowIndex(0)
-                        rowExtensions(RowHeightExtension(height = 220))
-                        cellExtensions(
-                            CellBordersExtension(
-                                leftBorderStyle = BorderStyle.SOLID,
-                                leftBorderColor = Color(0, 0, 0),
-                                rightBorderStyle = BorderStyle.SOLID,
-                                rightBorderColor = Color(0, 0, 0),
-                                bottomBorderStyle = BorderStyle.SOLID,
-                                bottomBorderColor = Color(0, 0, 0)
-                            ),
-                            CellAlignmentExtension(
-                                horizontal = HorizontalAlignment.CENTER,
-                                vertical = VerticalAlignment.MIDDLE
-                            )
-                        )
-                    }
-                    row {
                         selector = RowSelectors.all()
                         cells {
-                            forColumn("nr") { eval = { row -> row.objectIndex } }
+                            forColumn("nr") { eval = { row -> row.objectIndex?.plus(1) } }
                         }
                     }
                 }
