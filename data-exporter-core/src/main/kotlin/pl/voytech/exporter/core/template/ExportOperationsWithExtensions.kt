@@ -29,13 +29,13 @@ abstract class RowOperationWithExtensions<T, A>(
     private val delegatingExtensionOperations: DelegatingRowExtensionsOperations<T, A> =
         DelegatingRowExtensionsOperations(extensionOperations)
 
-    override fun renderRow(state: DelegateAPI<A>, context: OperationContext<T,RowOperationTableDataContext<T>>, extensions: Set<RowExtension>?) {
+    override fun renderRow(state: DelegateAPI<A>, context: OperationContext<T,RowOperationTableData<T>>, extensions: Set<RowExtension>?) {
         renderRow(state, context).also {
             extensions?.let { delegatingExtensionOperations.applyRowExtensions(state, context, it) }
         }
     }
 
-    abstract fun renderRow(state: DelegateAPI<A>, context: OperationContext<T,RowOperationTableDataContext<T>>)
+    abstract fun renderRow(state: DelegateAPI<A>, context: OperationContext<T,RowOperationTableData<T>>)
 
 }
 
@@ -46,7 +46,7 @@ class ColumnOperationsWithExtensions<T, A>(
     private val delegatingExtensionOperations: DelegatingColumnExtensionsOperations<T, A> =
         DelegatingColumnExtensionsOperations(extensionOperations)
 
-    override fun renderColumn(state: DelegateAPI<A>, context: OperationContext<T, ColumnOperationTableDataContext<T>>, extensions: Set<ColumnExtension>?) {
+    override fun renderColumn(state: DelegateAPI<A>, context: OperationContext<T, ColumnOperationTableData<T>>, extensions: Set<ColumnExtension>?) {
         extensions?.let { delegatingExtensionOperations.applyColumnExtensions(state, context, extensions) }
     }
 }
@@ -61,7 +61,7 @@ abstract class RowCellOperationsWithExtensions<T, A>(
 
     override fun renderRowCell(
         state: DelegateAPI<A>,
-        context: OperationContext<T, CellOperationTableDataContext<T>>,
+        context: OperationContext<T, CellOperationTableData<T>>,
         extensions: Set<CellExtension>?
     ) {
         renderRowCell(state, context).also {
@@ -69,6 +69,6 @@ abstract class RowCellOperationsWithExtensions<T, A>(
         }
     }
 
-    abstract fun renderRowCell(state: DelegateAPI<A>, context: OperationContext<T, CellOperationTableDataContext<T>>)
+    abstract fun renderRowCell(state: DelegateAPI<A>, context: OperationContext<T, CellOperationTableData<T>>)
 
 }

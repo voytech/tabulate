@@ -32,7 +32,7 @@ class DelegatingRowExtensionsOperations<T, A>(
         return extensionOperations?.find { operation -> operation.extensionType() == hint } as RowExtensionOperation<T, RowExtension, A>
     }
 
-    override fun applyRowExtensions(state: DelegateAPI<A>, context: OperationContext<T,RowOperationTableDataContext<T>>, extensions: Set<RowExtension>) {
+    override fun applyRowExtensions(state: DelegateAPI<A>, context: OperationContext<T,RowOperationTableData<T>>, extensions: Set<RowExtension>) {
         extensions.forEach { hint ->
             operationByClass(hint::class)?.apply(state, context, hint)
         }
@@ -50,7 +50,7 @@ class DelegatingColumnExtensionsOperations<T, A>(
 
     override fun applyColumnExtensions(
         state: DelegateAPI<A>,
-        context: OperationContext<T,ColumnOperationTableDataContext<T>>,
+        context: OperationContext<T,ColumnOperationTableData<T>>,
         extensions: Set<ColumnExtension>
     ) {
         extensions.forEach { hint ->
@@ -68,7 +68,7 @@ class DelegatingCellExtensionsOperations<T, A>(
         return extensionOperations?.find { operation -> operation.extensionType() == hint } as CellExtensionOperation<T, CellExtension, A>
     }
 
-    override fun applyCellExtensions(state: DelegateAPI<A>, context: OperationContext<T,CellOperationTableDataContext<T>>, extensions: Set<CellExtension>) {
+    override fun applyCellExtensions(state: DelegateAPI<A>, context: OperationContext<T,CellOperationTableData<T>>, extensions: Set<CellExtension>) {
         extensions.forEach { hint ->
             operationByClass(hint::class)?.apply(state, context, hint)
         }

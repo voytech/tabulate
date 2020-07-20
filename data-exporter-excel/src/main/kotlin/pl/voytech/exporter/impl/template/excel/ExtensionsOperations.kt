@@ -2,11 +2,12 @@ package pl.voytech.exporter.impl.template.excel
 
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.FontUnderline
+import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.util.CellReference
+import org.apache.poi.ss.util.SheetUtil
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import org.apache.poi.xssf.usermodel.XSSFFont
-import org.apache.poi.xwpf.usermodel.TableWidthType
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.extension.functional.FilterAndSortTableExtension
 import pl.voytech.exporter.core.model.extension.style.*
@@ -15,20 +16,29 @@ import pl.voytech.exporter.core.model.extension.style.enums.HorizontalAlignment
 import pl.voytech.exporter.core.model.extension.style.enums.VerticalAlignment
 import pl.voytech.exporter.core.model.extension.style.enums.WeightStyle
 import pl.voytech.exporter.core.template.*
+import pl.voytech.exporter.impl.template.excel.PoiCache.cachedFont
+import pl.voytech.exporter.impl.template.excel.PoiCache.getCachedFont
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertRow
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.cellStyle
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.color
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.tableSheet
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.workbook
+import java.awt.font.FontRenderContext
+import java.awt.font.TextAttribute
+import java.awt.font.TextLayout
+import java.awt.geom.Rectangle2D
+import java.text.AttributedString
+import kotlin.math.roundToInt
 import kotlin.reflect.KClass
+
 
 class CellFontExtensionOperation<T> : CellExtensionOperation<T,CellFontExtension, SXSSFWorkbook> {
 
     override fun extensionType(): KClass<CellFontExtension> = CellFontExtension::class
 
-    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableDataContext<T>>, extension: CellFontExtension) {
+    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableData<T>>, extension: CellFontExtension) {
         cellStyle(state, context.coordinates!!).let {
-            val font: XSSFFont = workbook(state).createFont() as XSSFFont
+            val font: XSSFFont = cachedFont(context.coordinates!!, extension) { workbook(state).createFont() as XSSFFont }
             extension.fontFamily?.run { font.fontName = this }
             extension.fontColor?.run { font.setColor(color(this)) }
             extension.fontSize?.run { font.fontHeightInPoints = toShort() }
@@ -50,7 +60,7 @@ class CellBackgroundExtensionOperation<T> : CellExtensionOperation<T,CellBackgro
 
     override fun apply(
         state: DelegateAPI<SXSSFWorkbook>,
-        context: OperationContext<T, CellOperationTableDataContext<T>>,
+        context: OperationContext<T, CellOperationTableData<T>>,
         extension: CellBackgroundExtension
     ) {
         cellStyle(state, context.coordinates!!).let {
@@ -63,7 +73,7 @@ class CellBackgroundExtensionOperation<T> : CellExtensionOperation<T,CellBackgro
 class CellBordersExtensionOperation<T> : CellExtensionOperation<T, CellBordersExtension, SXSSFWorkbook> {
     override fun extensionType(): KClass<CellBordersExtension> = CellBordersExtension::class
 
-    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableDataContext<T>>, extension: CellBordersExtension) {
+    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableData<T>>, extension: CellBordersExtension) {
         val toPoiStyle = { style: BorderStyle ->
             when (style) {
                 BorderStyle.DASHED -> org.apache.poi.ss.usermodel.BorderStyle.DASHED
@@ -89,7 +99,7 @@ class CellAlignmentExtensionOperation<T> : CellExtensionOperation<T, CellAlignme
 
     override fun extensionType(): KClass<out CellAlignmentExtension> = CellAlignmentExtension::class
 
-    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableDataContext<T>>, extension: CellAlignmentExtension) {
+    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableData<T>>, extension: CellAlignmentExtension) {
         cellStyle(state, context.coordinates!!).let {
             extension.horizontal?.run {
                 it.alignment =
@@ -120,7 +130,7 @@ class CellDataFormatExtensionOperation<T> : CellExtensionOperation<T, CellExcelD
 
     override fun apply(
         state: DelegateAPI<SXSSFWorkbook>,
-        context: OperationContext<T, CellOperationTableDataContext<T>>,
+        context: OperationContext<T, CellOperationTableData<T>>,
         extension: CellExcelDataFormatExtension
     ) {
         cellStyle(state, context.coordinates!!).let {
@@ -132,16 +142,52 @@ class CellDataFormatExtensionOperation<T> : CellExtensionOperation<T, CellExcelD
 
 class ColumnWidthExtensionOperation<T> : ColumnExtensionOperation<T ,ColumnWidthExtension, SXSSFWorkbook> {
     override fun extensionType(): KClass<out ColumnWidthExtension> = ColumnWidthExtension::class
-    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, ColumnOperationTableDataContext<T>>, extension: ColumnWidthExtension) =
+
+    private fun getStringWidth(text: String, cellFont: XSSFFont, workbook: Workbook): Int {
+        val attributedString = AttributedString(text)
+        attributedString.addAttribute(TextAttribute.FAMILY, cellFont.fontName, 0, text.length)
+        attributedString.addAttribute(TextAttribute.SIZE, cellFont.fontHeightInPoints.toFloat())
+        if (cellFont.bold) attributedString.addAttribute(
+            TextAttribute.WEIGHT,
+            TextAttribute.WEIGHT_BOLD,
+            0,
+            text.length
+        )
+        if (cellFont.italic) attributedString.addAttribute(
+            TextAttribute.POSTURE,
+            TextAttribute.POSTURE_OBLIQUE,
+            0,
+            text.length
+        )
+
+        val fontRenderContext = FontRenderContext(null, true, true)
+        val layout = TextLayout(attributedString.iterator, fontRenderContext)
+        val bounds: Rectangle2D = layout.bounds
+        val frameWidth: Double = bounds.x + bounds.width
+        val defaultCharWidth = SheetUtil.getDefaultCharWidth(workbook)
+        return (frameWidth / defaultCharWidth * 256).roundToInt()
+    }
+
+    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, ColumnOperationTableData<T>>, extension: ColumnWidthExtension) =
         tableSheet(state, context.coordinates!!.tableName).setColumnWidth(
             context.coordinates!!.columnIndex,
-            PoiUtils.widthFromPixels(extension.width)
+            if (extension.auto == true || extension.width == -1) {
+                context.data.columnValues?.maxBy { v -> v.value.toString().length }?.value.toString().let {
+                    getStringWidth(
+                        text = it,
+                        cellFont = getCachedFont(context.coordinates!!)!!,
+                        workbook = workbook(state)
+                    )
+                }
+            } else {
+                PoiUtils.widthFromPixels(extension.width)
+            }
         )
 }
 
 class RowHeightExtensionOperation<T> : RowExtensionOperation<T, RowHeightExtension, SXSSFWorkbook> {
     override fun extensionType(): KClass<out RowHeightExtension> = RowHeightExtension::class
-    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, RowOperationTableDataContext<T>>, extension: RowHeightExtension) {
+    override fun apply(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, RowOperationTableData<T>>, extension: RowHeightExtension) {
         assertRow(state, context.coordinates!!).height = PoiUtils.heightFromPixels(extension.height)
     }
 }

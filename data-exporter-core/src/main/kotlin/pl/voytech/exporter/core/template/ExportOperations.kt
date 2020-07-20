@@ -1,6 +1,5 @@
 package pl.voytech.exporter.core.template
 
-import pl.voytech.exporter.core.model.Description
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.ColumnExtension
@@ -9,7 +8,7 @@ import java.io.OutputStream
 
 
 interface RowOperation<T, A> {
-    fun renderRow(state: DelegateAPI<A>, context: OperationContext<T,RowOperationTableDataContext<T>>, extensions: Set<RowExtension>?)
+    fun renderRow(state: DelegateAPI<A>, context: OperationContext<T,RowOperationTableData<T>>, extensions: Set<RowExtension>?)
 }
 
 interface CreateDocumentOperation<A> {
@@ -28,7 +27,7 @@ interface FinishDocumentOperations<A> {
 interface ColumnOperation<T, A> {
     fun renderColumn(
         state: DelegateAPI<A>,
-        context: OperationContext<T, ColumnOperationTableDataContext<T>>,
+        context: OperationContext<T, ColumnOperationTableData<T>>,
         extensions: Set<ColumnExtension>?
     )
 }
@@ -36,7 +35,7 @@ interface ColumnOperation<T, A> {
 interface RowCellOperation<T, A> {
     fun renderRowCell(
         state: DelegateAPI<A>,
-        context: OperationContext<T, CellOperationTableDataContext<T>>,
+        context: OperationContext<T, CellOperationTableData<T>>,
         extensions: Set<CellExtension>?
     )
 }
