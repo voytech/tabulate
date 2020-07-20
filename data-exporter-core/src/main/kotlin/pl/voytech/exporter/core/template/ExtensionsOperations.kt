@@ -11,13 +11,13 @@ interface TableExtensionsOperation<T, A> {
 }
 
 interface ColumnExtensionsOperation<T, A> {
-    fun applyColumnExtensions(state: DelegateAPI<A>, context: OperationContext<T, ColumnOperationTableDataContext<T>>, extensions: Set<ColumnExtension>)
+    fun applyColumnExtensions(state: DelegateAPI<A>, context: OperationContext<T, ColumnOperationTableData<T>>, extensions: Set<ColumnExtension>)
 }
 
 interface RowExtensionsOperation<T, A> {
-    fun applyRowExtensions(state: DelegateAPI<A>, context: OperationContext<T, RowOperationTableDataContext<T>>, extensions: Set<RowExtension>)
+    fun applyRowExtensions(state: DelegateAPI<A>, context: OperationContext<T, RowOperationTableData<T>>, extensions: Set<RowExtension>)
 }
 
 interface CellExtensionsOperation<T, A> {
-    fun applyCellExtensions(state: DelegateAPI<A>, context: OperationContext<T, CellOperationTableDataContext<T>>, extensions: Set<CellExtension>)
+    fun applyCellExtensions(state: DelegateAPI<A>, context: OperationContext<T, CellOperationTableData<T>>, extensions: Set<CellExtension>)
 }

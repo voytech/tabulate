@@ -26,7 +26,7 @@ import java.util.*
 internal class XlsxRowTableOperation<T>(rowHints: List<RowExtensionOperation<T,out RowExtension, SXSSFWorkbook>>) :
     RowOperationWithExtensions<T, SXSSFWorkbook>(rowHints) {
 
-    override fun renderRow(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, RowOperationTableDataContext<T>>) {
+    override fun renderRow(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, RowOperationTableData<T>>) {
         assertRow(state, context.coordinates!!)
     }
 
@@ -103,7 +103,7 @@ internal class XlsxRowCellOperations<T>(cellExtensions: List<CellExtensionOperat
         }
     }
 
-    override fun renderRowCell(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableDataContext<T>>) {
+    override fun renderRowCell(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableData<T>>) {
         assertCell(state, context.coordinates!!).also { setCellValue(it, context.data.cellValue) }
     }
 

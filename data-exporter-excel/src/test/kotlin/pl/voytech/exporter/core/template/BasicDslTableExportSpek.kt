@@ -38,7 +38,7 @@ object BasicDslTableExportSpek : Spek({
             val random = Random(1000)
             val productList = (0..999).map {
                 Product(
-                    "prod_nr_$it",
+                    if (it % 2 == 0) "prod_nr_${it}_00000${it % 2}" else "prod_nr_$it",
                     "Name $it",
                     "This is description $it",
                     "manufacturer $it",
@@ -67,7 +67,7 @@ object BasicDslTableExportSpek : Spek({
                         )
                     }
                     column(Product::code) {
-                        columnExtensions(ColumnWidthExtension(width = 100))
+                        columnExtensions(ColumnWidthExtension(true))
                         cellExtensions(
                             CellFontExtension(
                                 fontFamily = "Times New Roman",

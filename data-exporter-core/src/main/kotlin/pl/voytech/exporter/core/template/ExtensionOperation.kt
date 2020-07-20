@@ -14,13 +14,13 @@ interface TableExtensionOperation<T : TableExtension, A> : ExtensionOperation<T>
 }
 
 interface RowExtensionOperation<E,T : RowExtension, A> : ExtensionOperation<T> {
-    fun apply(state: DelegateAPI<A>, context: OperationContext<E,RowOperationTableDataContext<E>>, extension: T)
+    fun apply(state: DelegateAPI<A>, context: OperationContext<E,RowOperationTableData<E>>, extension: T)
 }
 
 interface CellExtensionOperation<E, T : CellExtension, A> : ExtensionOperation<T> {
-    fun apply(state: DelegateAPI<A>, context: OperationContext<E,CellOperationTableDataContext<E>>, extension: T)
+    fun apply(state: DelegateAPI<A>, context: OperationContext<E,CellOperationTableData<E>>, extension: T)
 }
 
 interface ColumnExtensionOperation<E, T : ColumnExtension, A> : ExtensionOperation<T> {
-    fun apply(state: DelegateAPI<A>, context: OperationContext<E,ColumnOperationTableDataContext<E>>, extension: T)
+    fun apply(state: DelegateAPI<A>, context: OperationContext<E,ColumnOperationTableData<E>>, extension: T)
 }

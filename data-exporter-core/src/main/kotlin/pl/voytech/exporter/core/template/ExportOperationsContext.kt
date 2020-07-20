@@ -1,41 +1,33 @@
 package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.Key
-import kotlin.reflect.KProperty1
 
-open class TableDataContext<T>(private val collection: Collection<T>) {
-    private var cached: Array<KProperty1<T, *>>? = null
-
+open class TableData<T>(private val collection: Collection<T>) {
     fun recordCount() = collection.size
-
-    fun recordProperties(): Array<KProperty1<T, *>>? {
-        assert(collection!!.isNotEmpty())
-        return null //collection!!.first()!!::class!!.members!!.filterIsInstance<KProperty1<T, *>>()!!.toTypedArray()!!
-    }
 }
 
-class RowOperationTableDataContext<T>(private val collection: Collection<T>) : TableDataContext<T>(collection) {
+class RowOperationTableData<T>(private val collection: Collection<T>) : TableData<T>(collection) {
     var rowValues: Map<Key<T>,CellValue?>?  = null
         internal set
 }
 
-class CellOperationTableDataContext<T>(private val collection: Collection<T>): TableDataContext<T>(collection) {
+class CellOperationTableData<T>(private val collection: Collection<T>): TableData<T>(collection) {
     var cellValue: CellValue? = null
         internal set
 }
 
-class ColumnOperationTableDataContext<T>(private val collection: Collection<T>): TableDataContext<T>(collection) {
+class ColumnOperationTableData<T>(private val collection: Collection<T>): TableData<T>(collection) {
     var columnValues: List<CellValue>? = null
         internal set
 }
 
-class TableOperationTableDataContext<T>(private val collection: Collection<T>): TableDataContext<T>(collection) {
+class TableOperationTableData<T>(private val collection: Collection<T>): TableData<T>(collection) {
     fun getCollection(): Collection<T> {
         return collection
     }
 }
 
-data class OperationContext<T,E : TableDataContext<T>>(
+data class OperationContext<T,E : TableData<T>>(
     val data: E
 ) {
     var coordinates: Coordinates? = null
