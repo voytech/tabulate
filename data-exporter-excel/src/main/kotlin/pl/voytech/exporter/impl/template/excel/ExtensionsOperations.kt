@@ -172,7 +172,7 @@ class ColumnWidthExtensionOperation<T> : ColumnExtensionOperation<T ,ColumnWidth
         tableSheet(state, context.coordinates!!.tableName).setColumnWidth(
             context.coordinates!!.columnIndex,
             if (extension.auto == true || extension.width == -1) {
-                context.data.columnValues?.maxBy { v -> v.value.toString().length }?.value.toString().let {
+                context.value.columnValues?.maxBy { v -> v.value.toString().length }?.value.toString().let {
                     getStringWidth(
                         text = it,
                         cellFont = getCachedFont(context.coordinates!!)!!,

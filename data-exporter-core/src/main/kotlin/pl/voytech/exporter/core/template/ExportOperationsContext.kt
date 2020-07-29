@@ -28,7 +28,8 @@ class TableOperationTableData<T>(private val collection: Collection<T>): TableDa
 }
 
 data class OperationContext<T,E : TableData<T>>(
-    val data: E
+    val value: E,
+    val additionalAttributes: MutableMap<String, Any>
 ) {
     var coordinates: Coordinates? = null
         internal set

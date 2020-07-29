@@ -15,27 +15,28 @@ class ExportingState<T, A>(
     val firstColumn: Int? = 0,
     val collection: Collection<T>
 ) {
+    private val stateAttributes = mutableMapOf<String, Any>()
     /**
      * Instance of mutable context for row-scope operations. After changing coordinate denoting advancing the row,
      * coordinate object is recreated, and new row associated context data is being set. Then instance is used on all
      * kind of given row scoped operations.
      */
     private val rowOperationContext: OperationContext<T, RowOperationTableData<T>> =
-        OperationContext(RowOperationTableData(collection))
+        OperationContext(RowOperationTableData(collection), stateAttributes)
     /**
      * Instance of mutable context for cell-scope operations. After changing coordinate denoting advancing the cell,
      * coordinate object is recreated, and new cell associated context data is being set. Then instance is used on all
      * kind of given cell scoped operations.
      */
     private val cellOperationContext: OperationContext<T, CellOperationTableData<T>> =
-        OperationContext(CellOperationTableData(collection))
+        OperationContext(CellOperationTableData(collection), stateAttributes)
     /**
      * Instance of mutable context for column-scope operations. After changing coordinate denoting advancing the column,
      * coordinate object is recreated, and new column associated context data is being set. Then instance is used on all
      * kind of given column scoped operations.
      */
     private val columnOperationContext: OperationContext<T, ColumnOperationTableData<T>> =
-        OperationContext(ColumnOperationTableData(collection))
+        OperationContext(ColumnOperationTableData(collection), stateAttributes)
 
     private val rowValues : MutableList<DataExportTemplate.ComputedRowValue<T>> = mutableListOf()
 
@@ -68,21 +69,21 @@ class ExportingState<T, A>(
 
     internal fun rowOperationContext(): OperationContext<T, RowOperationTableData<T>> {
         rowOperationContext.coordinates = coordinates()
-        rowOperationContext.data.rowValues = rowValue?.rowCellValues
+        rowOperationContext.value.rowValues = rowValue?.rowCellValues
         return rowOperationContext
     }
 
     internal fun cellOperationContext(columnIndex: Int, columnId: Key<T>): OperationContext<T, CellOperationTableData<T>> {
         this.columnIndex = columnIndex
         cellOperationContext.coordinates = coordinates()
-        cellOperationContext.data.cellValue = rowValue?.rowCellValues?.get(columnId)
+        cellOperationContext.value.cellValue = rowValue?.rowCellValues?.get(columnId)
         return cellOperationContext
     }
 
     internal fun columnOperationContext(columnIndex: Int, columnId: Key<T>): OperationContext<T, ColumnOperationTableData<T>> {
         this.columnIndex = columnIndex
         columnOperationContext.coordinates = coordinates()
-        columnOperationContext.data.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[columnId] }
+        columnOperationContext.value.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[columnId] }
         return columnOperationContext
     }
 
