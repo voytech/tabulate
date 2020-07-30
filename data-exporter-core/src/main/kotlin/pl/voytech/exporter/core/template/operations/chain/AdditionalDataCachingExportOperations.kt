@@ -4,7 +4,7 @@ import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.ColumnExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
 import pl.voytech.exporter.core.template.*
-import pl.voytech.exporter.core.template.operations.chain.AdditionalDataAwareExportOperationsFactory.EXTENSIONS_CACHE_KEY
+import pl.voytech.exporter.core.template.operations.chain.ExtensionsCacheOperationsFactory.EXTENSIONS_CACHE_KEY
 
 class ExtensionKeyDrivenCache {
     private val rowExtToEntry: MutableMap<Set<RowExtension>, MutableMap<String, Any>> = mutableMapOf()
@@ -30,26 +30,26 @@ class ExtensionKeyDrivenCache {
     }
 }
 
-object AdditionalDataAwareExportOperationsFactory {
+object ExtensionsCacheOperationsFactory {
 
     const val EXTENSIONS_CACHE_KEY = "extensionsCacheValue"
 
     private val cache: ExtensionKeyDrivenCache = ExtensionKeyDrivenCache()
 
-    fun <T, A> createRowOperations(): AdditionalDataCachingRowOperation<T, A> {
-        return AdditionalDataCachingRowOperation(cache)
+    fun <T, A> extensionCacheRowOperation(): ExtensionCacheRowOperation<T, A> {
+        return ExtensionCacheRowOperation(cache)
     }
 
-    fun <T, A> createRowCellOperations(): AdditionalDataCachingRowCellOperation<T, A> {
-        return AdditionalDataCachingRowCellOperation(cache)
+    fun <T, A> extensionCacheRowCellOperation(): ExtensionCacheRowCellOperation<T, A> {
+        return ExtensionCacheRowCellOperation(cache)
     }
 
-    fun <T, A> createColumnOperations(): AdditionalDataCachingColumnOperation<T, A> {
-        return AdditionalDataCachingColumnOperation(cache)
+    fun <T, A> extensionCacheColumnOperation(): ExtensionCacheColumnOperation<T, A> {
+        return ExtensionCacheColumnOperation(cache)
     }
 }
 
-class AdditionalDataCachingRowOperation<T, A> internal constructor(private val cache: ExtensionKeyDrivenCache) :
+class ExtensionCacheRowOperation<T, A> internal constructor(private val cache: ExtensionKeyDrivenCache) :
     RowOperation<T, A> {
 
     override fun renderRow(
@@ -64,7 +64,7 @@ class AdditionalDataCachingRowOperation<T, A> internal constructor(private val c
 
 }
 
-class AdditionalDataCachingColumnOperation<T, A> internal constructor(private val cache: ExtensionKeyDrivenCache) :
+class ExtensionCacheColumnOperation<T, A> internal constructor(private val cache: ExtensionKeyDrivenCache) :
     ColumnOperation<T, A> {
 
     override fun renderColumn(
@@ -77,7 +77,7 @@ class AdditionalDataCachingColumnOperation<T, A> internal constructor(private va
 
 }
 
-class AdditionalDataCachingRowCellOperation<T, A> internal constructor(private val cache: ExtensionKeyDrivenCache) :
+class ExtensionCacheRowCellOperation<T, A> internal constructor(private val cache: ExtensionKeyDrivenCache) :
     RowCellOperation<T, A> {
 
     override fun renderRowCell(
