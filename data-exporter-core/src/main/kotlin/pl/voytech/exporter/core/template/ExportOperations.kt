@@ -25,6 +25,8 @@ interface FinishDocumentOperations<A> {
 }
 
 interface ColumnOperation<T, A> {
+    fun beforeFirstRow() : Boolean = true
+    fun afterLastRow(): Boolean = false
     fun renderColumn(
         state: DelegateAPI<A>,
         context: OperationContext<T, ColumnOperationTableData<T>>,

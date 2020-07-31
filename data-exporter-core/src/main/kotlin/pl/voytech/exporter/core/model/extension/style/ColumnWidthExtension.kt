@@ -10,4 +10,7 @@ data class ColumnWidthExtension(
     val auto: Boolean? = false,
     val width: Int = -1,
     val unit: LengthUnit = LengthUnit.PIXEL
-) : ColumnExtension()
+) : ColumnExtension() {
+    override fun beforeFirstRow() = false
+    override fun afterLastRow() = true
+}
