@@ -18,7 +18,7 @@ class DelegatingTableExtensionsOperations<T, A>(
 
     override fun applyTableExtensions(state: DelegateAPI<A>, table: Table<T>, extensions: Set<TableExtension>) {
         extensions.forEach { hint ->
-            operationByClass(hint::class)?.apply(state, table, hint)
+            operationByClass(hint::class)?.renderExtension(state, table, hint)
         }
     }
 }
@@ -34,7 +34,7 @@ class DelegatingRowExtensionsOperations<T, A>(
 
     override fun applyRowExtensions(state: DelegateAPI<A>, context: OperationContext<T,RowOperationTableData<T>>, extensions: Set<RowExtension>) {
         extensions.forEach { hint ->
-            operationByClass(hint::class)?.apply(state, context, hint)
+            operationByClass(hint::class)?.renderExtension(state, context, hint)
         }
     }
 }
@@ -54,7 +54,7 @@ class DelegatingColumnExtensionsOperations<T, A>(
         extensions: Set<ColumnExtension>
     ) {
         extensions.forEach { hint ->
-            operationByClass(hint::class)?.apply(state, context, hint)
+            operationByClass(hint::class)?.renderExtension(state, context, hint)
         }
     }
 }
@@ -70,7 +70,7 @@ class DelegatingCellExtensionsOperations<T, A>(
 
     override fun applyCellExtensions(state: DelegateAPI<A>, context: OperationContext<T,CellOperationTableData<T>>, extensions: Set<CellExtension>) {
         extensions.forEach { hint ->
-            operationByClass(hint::class)?.apply(state, context, hint)
+            operationByClass(hint::class)?.renderExtension(state, context, hint)
         }
     }
 }

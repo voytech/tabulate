@@ -7,7 +7,7 @@ import pl.voytech.exporter.core.template.*
 
 class EmptyOperationChainException : RuntimeException("There is no export operation in the chain.")
 
-class ChainingRowOperation<T, A>(
+class RowOperations<T, A>(
     private vararg val chain: RowOperation<T, A>
 ) : RowOperation<T, A> {
 
@@ -21,9 +21,13 @@ class ChainingRowOperation<T, A>(
     }
 }
 
-class ChainingColumnOperation<T, A>(
+class ColumnOperations<T, A>(
     private vararg val chain: ColumnOperation<T, A>
 ) : ColumnOperation<T, A> {
+
+    override fun beforeFirstRow(): Boolean = true
+
+    override fun afterLastRow(): Boolean = true
 
     override fun renderColumn(
         state: DelegateAPI<A>,
@@ -31,11 +35,17 @@ class ChainingColumnOperation<T, A>(
         extensions: Set<ColumnExtension>?
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
-        chain.forEach { it.renderColumn(state, context, extensions) }
+        chain.forEach {
+            it.renderColumn(
+                state,
+                context,
+                extensions
+            )
+        }
     }
 }
 
-class ChainingRowCellOperation<T, A>(
+class RowCellOperations<T, A>(
     private vararg val chain: RowCellOperation<T, A>
 ) : RowCellOperation<T, A> {
 

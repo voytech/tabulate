@@ -4,6 +4,7 @@ import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.ColumnExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
 import pl.voytech.exporter.core.template.*
+import pl.voytech.exporter.core.template.RowOperation
 import pl.voytech.exporter.core.template.operations.chain.ExtensionsCacheOperationsFactory.EXTENSIONS_CACHE_KEY
 
 class ExtensionKeyDrivenCache {
@@ -74,6 +75,10 @@ class ExtensionCacheColumnOperation<T, A> internal constructor(private val cache
     ) {
         extensions?.let { context.additionalAttributes[EXTENSIONS_CACHE_KEY] = cache.columnEntry(it) }
     }
+
+    override fun beforeFirstRow(): Boolean = true
+
+    override fun afterLastRow(): Boolean = false
 
 }
 

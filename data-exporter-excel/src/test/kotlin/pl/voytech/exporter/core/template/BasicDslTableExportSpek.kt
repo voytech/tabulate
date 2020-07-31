@@ -38,7 +38,7 @@ object BasicDslTableExportSpek : Spek({
             val random = Random(1000)
             val productList = (0..999).map {
                 Product(
-                    if (it % 2 == 0) "prod_nr_${it}_00000${it % 2}" else "prod_nr_$it",
+                    if (it % 2 == 0) "prod_nr_${it}${it % 2}" else "prod_nr_$it",
                     "Name $it",
                     "This is description $it",
                     "manufacturer $it",

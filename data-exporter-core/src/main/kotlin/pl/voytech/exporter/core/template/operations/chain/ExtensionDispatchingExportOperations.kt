@@ -6,6 +6,7 @@ import pl.voytech.exporter.core.model.extension.ColumnExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
 import pl.voytech.exporter.core.model.extension.TableExtension
 import pl.voytech.exporter.core.template.*
+import pl.voytech.exporter.core.template.RowOperation
 
 abstract class ExtensionDispatchingCreateTableOperation<T, A>(
     extensionOperations: List<TableExtensionOperation<out TableExtension, A>>?

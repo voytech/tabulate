@@ -14,6 +14,7 @@ import pl.voytech.exporter.core.template.operations.chain.*
 import pl.voytech.exporter.core.template.operations.chain.ExtensionsCacheOperationsFactory.extensionCacheColumnOperation
 import pl.voytech.exporter.core.template.operations.chain.ExtensionsCacheOperationsFactory.extensionCacheRowCellOperation
 import pl.voytech.exporter.core.template.operations.chain.ExtensionsCacheOperationsFactory.extensionCacheRowOperation
+import pl.voytech.exporter.core.template.operations.chain.RowOperations
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertCell
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertRow
 import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertTableSheet
@@ -27,7 +28,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-internal class XlsxExtensionDispatchingRowTableOperation<T>(rowHints: List<RowExtensionOperation<T, out RowExtension, SXSSFWorkbook>>) :
+internal class XlsxRowTableOperation<T>(rowHints: List<RowExtensionOperation<T, out RowExtension, SXSSFWorkbook>>) :
     ExtensionDispatchingRowOperation<T, SXSSFWorkbook>(rowHints) {
 
     override fun renderRow(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, RowOperationTableData<T>>) {
@@ -44,7 +45,7 @@ internal class XlsxCreateDocumentOperation(private val templateFile: InputStream
     }
 }
 
-internal class XlsxExtensionDispatchingCreateTableOperation<T>(tableExtensionOperations: List<TableExtensionOperation<out TableExtension, SXSSFWorkbook>>) :
+internal class XlsxCreateTableOperation<T>(tableExtensionOperations: List<TableExtensionOperation<out TableExtension, SXSSFWorkbook>>) :
     ExtensionDispatchingCreateTableOperation<T, SXSSFWorkbook>(tableExtensionOperations) {
     override fun initializeTable(state: DelegateAPI<SXSSFWorkbook>, table: Table<T>): DelegateAPI<SXSSFWorkbook> {
         return assertTableSheet(state, table.name).let { state }
@@ -69,7 +70,7 @@ internal class XlsxFinishDocumentOperation : FinishDocumentOperations<SXSSFWorkb
     }
 }
 
-internal class XlsxExtensionDispatchingRowCellOperations<T>(cellExtensions: List<CellExtensionOperation<T, out CellExtension, SXSSFWorkbook>>) :
+internal class XlsxRowCellOperations<T>(cellExtensions: List<CellExtensionOperation<T, out CellExtension, SXSSFWorkbook>>) :
     ExtensionDispatchingRowCellOperation<T, SXSSFWorkbook>(cellExtensions) {
 
     private fun toDateValue(value: Any): Date {
@@ -118,18 +119,18 @@ internal class XlsxExtensionDispatchingRowCellOperations<T>(cellExtensions: List
 
 fun <T> xlsxExport(templateFile: InputStream? = null) = ExportOperations(
     createDocumentOperation = XlsxCreateDocumentOperation(templateFile),
-    createTableOperation = XlsxExtensionDispatchingCreateTableOperation(tableExtensionsOperations),
+    createTableOperation = XlsxCreateTableOperation(tableExtensionsOperations),
     finishDocumentOperations = XlsxFinishDocumentOperation(),
-    rowOperation = ChainingRowOperation(
+    rowOperation = RowOperations(
         extensionCacheRowOperation(),
-        XlsxExtensionDispatchingRowTableOperation<T>(rowExtensionsOperations())
+        XlsxRowTableOperation<T>(rowExtensionsOperations())
     ),
-    columnOperation = ChainingColumnOperation(
+    columnOperation = ColumnOperations(
         extensionCacheColumnOperation(),
         ExtensionDispatchingColumnOperation(columnExtensionsOperations())
     ),
-    rowCellOperation = ChainingRowCellOperation(
+    rowCellOperation = RowCellOperations(
         extensionCacheRowCellOperation(),
-        XlsxExtensionDispatchingRowCellOperations(cellExtensionsOperations())
+        XlsxRowCellOperations(cellExtensionsOperations())
     )
 )

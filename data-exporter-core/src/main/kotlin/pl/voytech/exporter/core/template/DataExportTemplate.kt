@@ -68,9 +68,14 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             firstRow = table.firstRow,
             firstColumn = table.firstColumn,
             collection = collection
-        ).also { preFlightPass(it, table, collection)
-        }.also { renderColumns(it, table)
-        }.also { renderRows(it, table)
+        ).also {
+            preFlightPass(it, table, collection)
+        }.also {
+            renderColumns(it, table, ColumnRenderPolicy.BEFORE_FIRST_ROW)
+        }.also {
+            renderRows(it, table)
+        }.also {
+            renderColumns(it, table, ColumnRenderPolicy.AFTER_LAST_ROW)
         }.also {
             syntheticRows = null
             selectableRows = null
@@ -136,7 +141,10 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         table.columns.forEachIndexed { _: Int, column: Column<T> ->
             val syntheticCell = syntheticRowValue.rowCells?.get(column.id)
             val effectiveRawCellValue =
-                (syntheticCell?.eval?.invoke(typedRow) ?: syntheticCell?.value ?: evalColumnExpr(column, typedRow))?.let {
+                (syntheticCell?.eval?.invoke(typedRow) ?: syntheticCell?.value ?: evalColumnExpr(
+                    column,
+                    typedRow
+                ))?.let {
                     column.dataFormatter?.invoke(it) ?: it
                 }
             cellValues[column.id] = effectiveRawCellValue?.let {
@@ -146,25 +154,42 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                 )
             }
         }
-        return exportingState.addRow(ComputedRowValue(
-            rowExtensions = syntheticRowValue.rowExtensions,
-            rowCellExtensions = syntheticRowValue.rowCellExtensions,
-            rowCells = syntheticRowValue.rowCells,
-            rowCellValues = cellValues.toMap(),
-            typedRow = typedRow
-        ))
+        return exportingState.addRow(
+            ComputedRowValue(
+                rowExtensions = syntheticRowValue.rowExtensions,
+                rowCellExtensions = syntheticRowValue.rowCellExtensions,
+                rowCells = syntheticRowValue.rowCells,
+                rowCellValues = cellValues.toMap(),
+                typedRow = typedRow
+            )
+        )
+    }
+
+    private enum class ColumnRenderPolicy {
+        BEFORE_FIRST_ROW,
+        AFTER_LAST_ROW
     }
 
     private fun renderColumns(
         state: ExportingState<T, A>,
-        table: Table<T>
+        table: Table<T>,
+        renderPolicy: ColumnRenderPolicy
     ) {
         table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-            delegate.columnOperation?.renderColumn(
-                state.delegate,
-                state.columnOperationContext(column.index ?: columnIndex, column.id),
-                column.columnExtensions
-            )
+            delegate.columnOperation?.let {
+                if ((ColumnRenderPolicy.BEFORE_FIRST_ROW == renderPolicy) && it.beforeFirstRow() ||
+                    (ColumnRenderPolicy.AFTER_LAST_ROW == renderPolicy) && it.afterLastRow()
+                ) {
+                    it.renderColumn(
+                        state.delegate,
+                        state.columnOperationContext(column.index ?: columnIndex, column.id),
+                        column.columnExtensions?.filter { ext ->
+                            ((ColumnRenderPolicy.BEFORE_FIRST_ROW == renderPolicy) && ext.beforeFirstRow()) ||
+                                    ((ColumnRenderPolicy.AFTER_LAST_ROW == renderPolicy) && ext.afterLastRow())
+                        }?.toSet()
+                    )
+                }
+            }
         }
     }
 
@@ -219,7 +244,10 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-    private fun computeSyntheticRowValue(typedRow: TypedRowData<T>, tableRows: List<Row<T>>?): ComputedSyntheticRowValue<T> {
+    private fun computeSyntheticRowValue(
+        typedRow: TypedRowData<T>,
+        tableRows: List<Row<T>>?
+    ): ComputedSyntheticRowValue<T> {
         val matchingSelectableRows = allSelectableRows(tableRows)?.filter { it.selector!!.invoke(typedRow) }?.toSet()
         val createAtRow = allSyntheticRows(tableRows)?.filter { it.createAt == typedRow.rowIndex }?.toSet()
         return ComputedSyntheticRowValue(createAtRow?.let { matchingSelectableRows?.plus(it) ?: it }
