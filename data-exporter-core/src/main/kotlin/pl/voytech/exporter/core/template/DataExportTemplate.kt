@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * single atomic step of data export.
  * Classes implementing interfaces must agree (via generics) on delegate state or low level API class in order to make
  * low level 3rd party API instance object (like POI workbooks) shared amongst all 'render step' interfaces.
- * When the type is same on compile time, DataExportTemplate will pass initialized API object/ state amongst those
+ * When delegate state types matches at compile time, DataExportTemplate will pass initialized API object/ state amongst those
  * interface implementations.
  * @author Wojciech Mąka
  */
@@ -203,11 +203,11 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                     delegate.rowCellOperation?.renderRowCell(
                         state.delegate,
                         state.cellOperationContext(column.index ?: columnIndex, column.id),
-                        collectUniqueCellHints(
-                            table.cellExtensions,
-                            column.cellExtensions,
+                        mergeCellHints(
+                            rowValue.rowCells?.get(column.id)?.cellExtensions,
                             rowValue.rowCellExtensions,
-                            rowValue.rowCells?.get(column.id)?.cellExtensions
+                            column.cellExtensions,
+                            table.cellExtensions
                         )
                     )
                 }
@@ -254,7 +254,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             ?: matchingSelectableRows)
     }
 
-    private fun collectUniqueCellHints(vararg hintsOnLevels: Set<CellExtension>?): Set<CellExtension> {
+    private fun mergeCellHints(vararg hintsOnLevels: Set<CellExtension>?): Set<CellExtension> {
         return hintsOnLevels.filterNotNull().fold(setOf(), { acc, s -> acc + s })
     }
 }

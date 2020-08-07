@@ -3,6 +3,7 @@ package pl.voytech.exporter.core.template
 import org.apache.poi.openxml4j.util.ZipSecureFile
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.spekframework.spek2.Spek
+import org.spekframework.spek2.meta.Ignore
 import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.dsl.export
 import pl.voytech.exporter.core.api.dsl.table
@@ -36,7 +37,7 @@ object BasicDslTableExportSpek : Spek({
     Feature("Regular tabular data export to excel") {
         Scenario("defining simple table model and exporting to excel file.") {
             val random = Random(1000)
-            val productList = (0..999).map {
+            val productList = (0..1000).map {
                 Product(
                     if (it % 2 == 0) "prod_nr_${it}${it % 2}" else "prod_nr_$it",
                     "Name $it",
@@ -67,7 +68,7 @@ object BasicDslTableExportSpek : Spek({
                         )
                     }
                     column(Product::code) {
-                        columnExtensions(ColumnWidthExtension(true))
+                        columnExtensions(ColumnWidthExtension(auto = true))
                         cellExtensions(
                             CellFontExtension(
                                 fontFamily = "Times New Roman",
@@ -78,24 +79,26 @@ object BasicDslTableExportSpek : Spek({
                         )
                     }
                     column(Product::name) {
-                        columnExtensions(ColumnWidthExtension(width = 100))
+                        columnExtensions(ColumnWidthExtension(auto = true))
                     }
                     column(Product::description) {
-                        columnExtensions(ColumnWidthExtension(width = 300))
+                        columnExtensions(ColumnWidthExtension(auto = true))
                     }
                     column(Product::manufacturer) {
-                        columnExtensions(ColumnWidthExtension(width = 100))
-                        dataFormatter = { field -> (field as String).toUpperCase() }
+                        columnExtensions(ColumnWidthExtension(auto = true))
                     }
-                    column(Product::price)
+                    column(Product::price) {
+                        columnExtensions(ColumnWidthExtension(auto = true))
+                    }
                     column(Product::distributionDate) {
+                        columnExtensions(ColumnWidthExtension(auto = true))
                         cellExtensions(
                             CellExcelDataFormatExtension("dd.mm.YYYY")
                         )
                     }
-                    (0..10).forEach {
+                    (0..1).forEach {
                         column("c$it") {
-                            columnExtensions(ColumnWidthExtension(width = 110))
+                            columnExtensions(ColumnWidthExtension(auto = true))
                             cellExtensions(CellBackgroundExtension(Color(255,255,0)))
                         }
                     }
@@ -112,7 +115,7 @@ object BasicDslTableExportSpek : Spek({
                             forColumn(Product::price) { value = "Price" }
                             forColumn(Product::distributionDate) { value = "Distribution" }
                         }
-                        rowExtensions(RowHeightExtension(height = 220))
+                        rowExtensions(RowHeightExtension(height = 120))
                         cellExtensions(
                             CellBordersExtension(
                                 leftBorderStyle = BorderStyle.SOLID,
@@ -120,11 +123,20 @@ object BasicDslTableExportSpek : Spek({
                                 rightBorderStyle = BorderStyle.SOLID,
                                 rightBorderColor = Color(0, 0, 0),
                                 bottomBorderStyle = BorderStyle.SOLID,
-                                bottomBorderColor = Color(0, 0, 0)
+                                bottomBorderColor = Color(0, 0, 0),
+                                topBorderStyle = BorderStyle.SOLID,
+                                topBorderColor = Color(0, 0, 0)
                             ),
                             CellAlignmentExtension(
                                 horizontal = HorizontalAlignment.CENTER,
                                 vertical = VerticalAlignment.MIDDLE
+                            ),
+                            CellFontExtension(
+                                fontFamily = "Times New Roman",
+                                fontColor = Color(90, 100, 100),
+                                fontSize = 12,
+                                italic = true,
+                                weight = WeightStyle.BOLD
                             )
                         )
                     }
@@ -132,17 +144,7 @@ object BasicDslTableExportSpek : Spek({
                         createAt = productList.size + 1
                         cells {
                             forColumn("nr") {
-                                eval = { row -> row.dataset.size }
-                            }
-                            forColumn(Product::distributionDate) {
-                                value = "This is a date of distribution"
-                                cellExtensions(CellFontExtension(weight = WeightStyle.BOLD))
-                            }
-                            forColumn(Product::manufacturer) {
-                                value = "A name of manufacturer"
-                            }
-                            forColumn(Product::description) {
-                                value = "A product description"
+                                value = "."
                             }
                             forColumn(Product::price) {
                                 value = "=SUM(K12:K111)"
@@ -173,7 +175,9 @@ object BasicDslTableExportSpek : Spek({
                                 rightBorderStyle = BorderStyle.SOLID,
                                 rightBorderColor = Color(0, 0, 0),
                                 bottomBorderStyle = BorderStyle.SOLID,
-                                bottomBorderColor = Color(0, 0, 0)
+                                bottomBorderColor = Color(0, 0, 0),
+                                topBorderStyle = BorderStyle.SOLID,
+                                topBorderColor = Color(0, 0, 0)
                             ),
                             CellAlignmentExtension(
                                 horizontal = HorizontalAlignment.CENTER,
@@ -212,9 +216,9 @@ object BasicDslTableExportSpek : Spek({
                         CellPosition(2, 8) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Distribution")
                     )
                 )
-                    .perform().also {
-                        it.cleanup()
-                    }
+                .perform().also {
+                   // it.cleanup()
+                }
             }
         }
     }
@@ -256,7 +260,7 @@ object BasicDslTableExportSpek : Spek({
                             row {
                                 selector = RowSelectors.all()
                                 cells {
-                                    forColumn("nr") { eval = { row -> row.objectIndex } }
+                                    forColumn("nr") { eval = { row -> row.objectIndex?.plus(1) } }
                                 }
                             }
                         }
@@ -296,9 +300,9 @@ object BasicDslTableExportSpek : Spek({
                         )
                     )
                 )
-                    .perform().also {
-                        it.cleanup()
-                    }
+                .perform().also {
+                    it.cleanup()
+                }
             }
         }
     }
@@ -322,21 +326,12 @@ object BasicDslTableExportSpek : Spek({
                 name = "Products table"
                 tableExtensions(FilterAndSortTableExtension(rowRange = (0..999),columnRange = (0..5)))
                 columns {
-                    column(Product::code) {
-                        columnTitle { title = "Code" }
-                    }
-                    column(Product::name) {
-                        columnTitle { title = "Name" }
-                    }
-                    column(Product::description) {
-                        columnTitle { title = "Description" }
-                    }
-                    column(Product::manufacturer) {
-                        columnTitle { title = "Manufacturer" }
-                    }
-                    column(Product::price) { columnTitle { title = "Price" } }
+                    column(Product::code)
+                    column(Product::name)
+                    column(Product::description)
+                    column(Product::manufacturer)
+                    column(Product::price)
                     column(Product::distributionDate) {
-                        columnTitle { title = "Distribution" }
                         cellExtensions(
                             CellExcelDataFormatExtension("dd.mm.YYYY")
                         )

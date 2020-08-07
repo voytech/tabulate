@@ -11,6 +11,6 @@ data class ColumnWidthExtension(
     val width: Int = -1,
     val unit: LengthUnit = LengthUnit.PIXEL
 ) : ColumnExtension() {
-    override fun beforeFirstRow() = false
+    override fun beforeFirstRow() = true
     override fun afterLastRow() = true
 }

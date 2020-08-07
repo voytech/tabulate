@@ -13,7 +13,7 @@ import pl.voytech.exporter.core.template.Coordinates
 import pl.voytech.exporter.core.template.DelegateAPI
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatExtension
 import pl.voytech.exporter.impl.template.excel.PoiUtils
-import pl.voytech.exporter.impl.template.excel.PoiWrapper
+import pl.voytech.exporter.impl.template.excel.SXSSFWrapper
 import pl.voytech.exporter.testutils.ExtensionResolver
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 import org.apache.poi.ss.usermodel.HorizontalAlignment as PoiHorizontalAlignment
@@ -24,7 +24,7 @@ private fun parseColor(xssfColor: XSSFColor) =
 
 class PoiCellFontExtensionResolver : ExtensionResolver<SXSSFWorkbook> {
     override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellExtension {
-        return PoiWrapper.xssfCell(api, coordinates).let {
+        return SXSSFWrapper.xssfCell(api, coordinates).let {
             CellFontExtension(
                 fontFamily = it?.cellStyle?.font?.fontName,
                 fontSize = it?.cellStyle?.font?.fontHeight?.toInt()?.let { size -> PoiUtils.pixelsFromHeight(size) },
@@ -46,7 +46,7 @@ class PoiCellFontExtensionResolver : ExtensionResolver<SXSSFWorkbook> {
 
 class PoiCellBackgroundExtensionResolver : ExtensionResolver<SXSSFWorkbook> {
     override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellExtension {
-        return PoiWrapper.xssfCell(api, coordinates).let {
+        return SXSSFWrapper.xssfCell(api, coordinates).let {
             CellBackgroundExtension(
                 color = it?.cellStyle?.fillForegroundXSSFColor?.let { color -> parseColor(color) } ?: Color(-1, -1, -1)
             )
@@ -64,7 +64,7 @@ class PoiCellBordersExtensionResolver : ExtensionResolver<SXSSFWorkbook> {
                 else -> BorderStyle.NONE
             }
         }
-        return PoiWrapper.xssfCell(api, coordinates).let {
+        return SXSSFWrapper.xssfCell(api, coordinates).let {
             CellBordersExtension(
                 leftBorderStyle = it?.cellStyle?.borderLeft?.let { border -> fromPoiStyle(border) },
                 leftBorderColor = it?.cellStyle?.leftBorderXSSFColor?.let { color -> parseColor(color) },
@@ -81,7 +81,7 @@ class PoiCellBordersExtensionResolver : ExtensionResolver<SXSSFWorkbook> {
 
 class PoiCellDataFormatExtensionResolver : ExtensionResolver<SXSSFWorkbook> {
     override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellExtension {
-        return PoiWrapper.xssfCell(api, coordinates).let {
+        return SXSSFWrapper.xssfCell(api, coordinates).let {
             it?.cellStyle?.dataFormatString?.let { dataFormat ->
                 CellExcelDataFormatExtension(
                     dataFormat = dataFormat
@@ -93,7 +93,7 @@ class PoiCellDataFormatExtensionResolver : ExtensionResolver<SXSSFWorkbook> {
 
 class PoiCellAlignmentExtensionResolver : ExtensionResolver<SXSSFWorkbook> {
     override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellExtension {
-        return PoiWrapper.xssfCell(api, coordinates).let {
+        return SXSSFWrapper.xssfCell(api, coordinates).let {
             CellAlignmentExtension(
                 vertical = when (it?.cellStyle?.verticalAlignment) {
                     PoiVerticalAlignment.TOP -> VerticalAlignment.TOP

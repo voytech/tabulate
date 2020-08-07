@@ -8,8 +8,8 @@ import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.template.CellValue
 import pl.voytech.exporter.core.template.Coordinates
 import pl.voytech.exporter.core.template.DelegateAPI
-import pl.voytech.exporter.impl.template.excel.PoiWrapper
-import pl.voytech.exporter.impl.template.excel.PoiWrapper.workbook
+import pl.voytech.exporter.impl.template.excel.SXSSFWrapper
+import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.workbook
 import pl.voytech.exporter.testutils.*
 import java.io.File
 import org.apache.poi.ss.usermodel.CellType as PoiCellType
@@ -47,7 +47,7 @@ class PoiTableAssert<T>(
         ),
         cellValueResolver = object : ValueResolver<SXSSFWorkbook> {
             override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellValue {
-                PoiWrapper.xssfCell(api, coordinates)
+                SXSSFWrapper.xssfCell(api, coordinates)
                     .let {
                         return when (it?.cellType) {
                             PoiCellType.STRING -> CellValue(value = it.stringCellValue, type = CellType.STRING)

@@ -5,8 +5,9 @@ import pl.voytech.exporter.core.model.extension.ColumnExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
 import pl.voytech.exporter.core.template.*
 import pl.voytech.exporter.core.template.RowOperation
-import pl.voytech.exporter.core.template.operations.chain.ExtensionsCacheOperationsFactory.EXTENSIONS_CACHE_KEY
+import pl.voytech.exporter.core.template.operations.chain.ExtensionKeyDrivenCache.Companion.EXTENSIONS_CACHE_KEY
 
+@Suppress("UNCHECKED_CAST")
 class ExtensionKeyDrivenCache {
     private val rowExtToEntry: MutableMap<Set<RowExtension>, MutableMap<String, Any>> = mutableMapOf()
     private val cellExtToEntry: MutableMap<Set<CellExtension>, MutableMap<String, Any>> = mutableMapOf()
@@ -29,11 +30,23 @@ class ExtensionKeyDrivenCache {
             cellExtToEntry[extensions] = mutableMapOf(); cellExtToEntry[extensions]!!
         }
     }
+
+    companion object {
+        const val EXTENSIONS_CACHE_KEY = "extensionsCacheValue"
+
+        fun <T> putCellCachedValue(context: OperationContext<T, CellOperationTableData<T>>, key: String, value: Any): Any {
+            (context.additionalAttributes[EXTENSIONS_CACHE_KEY] as MutableMap<String, Any>)[key] = value
+            return getCellCachedValue(context, key)!!
+        }
+
+        fun <T>  getCellCachedValue(context: OperationContext<T, CellOperationTableData<T>>, key: String): Any? {
+            return ((context.additionalAttributes[EXTENSIONS_CACHE_KEY] as MutableMap<String, Any>)[key])
+        }
+
+    }
 }
 
 object ExtensionsCacheOperationsFactory {
-
-    const val EXTENSIONS_CACHE_KEY = "extensionsCacheValue"
 
     private val cache: ExtensionKeyDrivenCache = ExtensionKeyDrivenCache()
 
