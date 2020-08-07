@@ -42,12 +42,8 @@ object BasicDslTableDefinitionSpek : Spek({
             val tableMeta = table<Product> {
                 name = "Products table"
                 columns {
-                    column(Product::code) {
-                        columnTitle { title = "Code" }
-                    }
-                    column(Product::name) {
-                        columnTitle { title = "Name" }
-                    }
+                    column(Product::code)
+                    column(Product::name)
                     column(Product::description) {}
                     column(Product::manufacturer) {}
                 }
@@ -62,21 +58,6 @@ object BasicDslTableDefinitionSpek : Spek({
 
             Then("it should have two columns") {
                 assertTrue { (tableMeta.columns.size == 4) }
-            }
-
-            Then("columns should be correctly named") {
-                assertEquals(
-                    Description(title = "Code", extensions = null),
-                    tableMeta.columns[0].columnTitle,
-                    "first column description should be 'Code'"
-                )
-                assertEquals(
-                    Description(title = "Name", extensions = null),
-                    tableMeta.columns[1].columnTitle,
-                    "second column description should be 'Name'"
-                )
-                assertNull(tableMeta.columns[2].columnTitle, "third column description should be null")
-                assertNull(tableMeta.columns[3].columnTitle, "fourth column description should be null")
             }
 
             Then("columns should have correctly set object field getters") {
@@ -101,7 +82,6 @@ object BasicDslTableDefinitionSpek : Spek({
                     "fourth column should get field value using ref 'Product::manufacturer'"
                 )
             }
-
         }
     }
 })

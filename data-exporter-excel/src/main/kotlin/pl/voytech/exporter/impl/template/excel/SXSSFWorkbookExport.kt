@@ -14,11 +14,10 @@ import pl.voytech.exporter.core.template.operations.chain.*
 import pl.voytech.exporter.core.template.operations.chain.ExtensionsCacheOperationsFactory.extensionCacheColumnOperation
 import pl.voytech.exporter.core.template.operations.chain.ExtensionsCacheOperationsFactory.extensionCacheRowCellOperation
 import pl.voytech.exporter.core.template.operations.chain.ExtensionsCacheOperationsFactory.extensionCacheRowOperation
-import pl.voytech.exporter.core.template.operations.chain.RowOperations
-import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertCell
-import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertRow
-import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertTableSheet
-import pl.voytech.exporter.impl.template.excel.PoiWrapper.workbook
+import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertCell
+import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertRow
+import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertTableSheet
+import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.workbook
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
@@ -112,7 +111,11 @@ internal class XlsxRowCellOperations<T>(cellExtensions: List<CellExtensionOperat
         state: DelegateAPI<SXSSFWorkbook>,
         context: OperationContext<T, CellOperationTableData<T>>
     ) {
-        assertCell(state, context.coordinates!!).also { setCellValue(it, context.value.cellValue) }
+        assertCell(
+            state,
+            context.coordinates!!,
+            context
+        ).also { setCellValue(it, context.value.cellValue) }
     }
 
 }

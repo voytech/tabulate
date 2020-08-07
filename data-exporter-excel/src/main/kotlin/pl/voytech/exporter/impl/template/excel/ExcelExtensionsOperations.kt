@@ -16,11 +16,13 @@ import pl.voytech.exporter.core.model.extension.style.enums.HorizontalAlignment
 import pl.voytech.exporter.core.model.extension.style.enums.VerticalAlignment
 import pl.voytech.exporter.core.model.extension.style.enums.WeightStyle
 import pl.voytech.exporter.core.template.*
-import pl.voytech.exporter.impl.template.excel.PoiWrapper.assertRow
-import pl.voytech.exporter.impl.template.excel.PoiWrapper.cellStyle
-import pl.voytech.exporter.impl.template.excel.PoiWrapper.color
-import pl.voytech.exporter.impl.template.excel.PoiWrapper.tableSheet
-import pl.voytech.exporter.impl.template.excel.PoiWrapper.workbook
+import pl.voytech.exporter.core.template.operations.chain.ExtensionKeyDrivenCache.Companion.getCellCachedValue
+import pl.voytech.exporter.core.template.operations.chain.ExtensionKeyDrivenCache.Companion.putCellCachedValue
+import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertRow
+import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.cellStyle
+import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.color
+import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.tableSheet
+import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.workbook
 import java.awt.font.FontRenderContext
 import java.awt.font.TextAttribute
 import java.awt.font.TextLayout
@@ -32,23 +34,28 @@ import kotlin.reflect.KClass
 
 class CellFontExtensionOperation<T> : CellExtensionOperation<T,CellFontExtension, SXSSFWorkbook> {
 
+    private val cellFontCacheKey = "cellFont"
+
     override fun extensionType(): KClass<CellFontExtension> = CellFontExtension::class
 
     override fun renderExtension(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableData<T>>, extension: CellFontExtension) {
-        cellStyle(state, context.coordinates!!).let {
-            val font: XSSFFont =  workbook(state).createFont() as XSSFFont
-            extension.fontFamily?.run { font.fontName = this }
-            extension.fontColor?.run { font.setColor(color(this)) }
-            extension.fontSize?.run { font.fontHeightInPoints = toShort() }
-            extension.italic?.run { font.italic = this }
-            extension.strikeout?.run { font.strikeout = this }
-            extension.underline?.let { underline ->
-                if (underline) font.setUnderline(FontUnderline.SINGLE) else font.setUnderline(
-                    FontUnderline.NONE
-                )
+        cellStyle(state, context.coordinates!!, context).let {
+            if (getCellCachedValue(context, cellFontCacheKey) == null) {
+                val font: XSSFFont = workbook(state).createFont() as XSSFFont
+                extension.fontFamily?.run { font.fontName = this }
+                extension.fontColor?.run { font.setColor(color(this)) }
+                extension.fontSize?.run { font.fontHeightInPoints = toShort() }
+                extension.italic?.run { font.italic = this }
+                extension.strikeout?.run { font.strikeout = this }
+                extension.underline?.let { underline ->
+                    if (underline) font.setUnderline(FontUnderline.SINGLE) else font.setUnderline(
+                        FontUnderline.NONE
+                    )
+                }
+                extension.weight?.run { font.bold = this == WeightStyle.BOLD }
+                it.setFont(font)
+                putCellCachedValue(context, cellFontCacheKey, font)
             }
-            extension.weight?.run { font.bold = this == WeightStyle.BOLD }
-            it.setFont(font)
         }
     }
 }
@@ -61,7 +68,7 @@ class CellBackgroundExtensionOperation<T> : CellExtensionOperation<T,CellBackgro
         context: OperationContext<T, CellOperationTableData<T>>,
         extension: CellBackgroundExtension
     ) {
-        cellStyle(state, context.coordinates!!).let {
+        cellStyle(state, context.coordinates!!, context).let {
             (it as XSSFCellStyle).setFillForegroundColor(color(extension.color))
             it.fillPattern = FillPatternType.SOLID_FOREGROUND
         }
@@ -80,7 +87,7 @@ class CellBordersExtensionOperation<T> : CellExtensionOperation<T, CellBordersEx
                 else -> org.apache.poi.ss.usermodel.BorderStyle.NONE
             }
         }
-        cellStyle(state, context.coordinates!!).let {
+        cellStyle(state, context.coordinates!!, context).let {
             extension.leftBorderColor?.run { (it as XSSFCellStyle).setLeftBorderColor(color(this)) }
             extension.rightBorderColor?.run { (it as XSSFCellStyle).setRightBorderColor(color(this)) }
             extension.topBorderColor?.run { (it as XSSFCellStyle).setTopBorderColor(color(this)) }
@@ -98,7 +105,7 @@ class CellAlignmentExtensionOperation<T> : CellExtensionOperation<T, CellAlignme
     override fun extensionType(): KClass<out CellAlignmentExtension> = CellAlignmentExtension::class
 
     override fun renderExtension(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableData<T>>, extension: CellAlignmentExtension) {
-        cellStyle(state, context.coordinates!!).let {
+        cellStyle(state, context.coordinates!!, context).let {
             extension.horizontal?.run {
                 it.alignment =
                     when (this) {
@@ -131,7 +138,7 @@ class CellDataFormatExtensionOperation<T> : CellExtensionOperation<T, CellExcelD
         context: OperationContext<T, CellOperationTableData<T>>,
         extension: CellExcelDataFormatExtension
     ) {
-        cellStyle(state, context.coordinates!!).let {
+        cellStyle(state, context.coordinates!!, context).let {
             extension.dataFormat.run { it.dataFormat = workbook(state).createDataFormat().getFormat(this) }
         }
     }
@@ -166,21 +173,28 @@ class ColumnWidthExtensionOperation<T> : ColumnExtensionOperation<T ,ColumnWidth
         return (frameWidth / defaultCharWidth * 256).roundToInt()
     }
 
-    override fun renderExtension(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, ColumnOperationTableData<T>>, extension: ColumnWidthExtension) =
-        tableSheet(state, context.coordinates!!.tableName).setColumnWidth(
-            context.coordinates!!.columnIndex,
+    private fun customAutoSize(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, ColumnOperationTableData<T>>) {
+        context.value.columnValues?.maxBy { v -> v.value.toString().length }?.value.toString().let {
+            getStringWidth(
+                text = it,
+                cellFont = workbook(state).xssfWorkbook.getFontAt(0),
+                workbook = workbook(state)
+            )
+        }
+    }
+
+    override fun renderExtension(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, ColumnOperationTableData<T>>, extension: ColumnWidthExtension) {
+        tableSheet(state, context.coordinates!!.tableName).let {
             if (extension.auto == true || extension.width == -1) {
-                context.value.columnValues?.maxBy { v -> v.value.toString().length }?.value.toString().let {
-                    getStringWidth(
-                        text = it,
-                        cellFont = workbook(state).xssfWorkbook.getFontAt(0),
-                        workbook = workbook(state)
-                    )
+                if (!it.isColumnTrackedForAutoSizing(context.coordinates!!.columnIndex)) {
+                    it.trackColumnForAutoSizing(context.coordinates!!.columnIndex)
                 }
+                it.autoSizeColumn(context.coordinates!!.columnIndex)
             } else {
                 PoiUtils.widthFromPixels(extension.width)
             }
-        )
+        }
+    }
 }
 
 class RowHeightExtensionOperation<T> : RowExtensionOperation<T, RowHeightExtension, SXSSFWorkbook> {

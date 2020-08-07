@@ -88,16 +88,11 @@ class ColumnsBuilder<T> : ArrayList<Column<T>>() {
 
 @TableMarker
 class ColumnBuilder<T>(val id: Key<T>) {
-    private var columnTitle: Description? = null
     var columnType: CellType? = null
     var index: Int? = null
     private var columnExtensions: Set<ColumnExtension>? = null
     private var cellExtensions: Set<CellExtension>? = null
     var dataFormatter: ((field: Any) -> Any)? = null
-
-    fun columnTitle(block: DescriptionBuilder.() -> Unit) {
-        columnTitle = DescriptionBuilder().apply(block).build()
-    }
 
     fun columnExtensions(block: ExtensionsBuilder<ColumnExtension>.() -> Unit) {
         columnExtensions = (columnExtensions ?: emptySet()) + ExtensionsBuilder<ColumnExtension>().apply(block)
@@ -115,7 +110,7 @@ class ColumnBuilder<T>(val id: Key<T>) {
         cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
     }
 
-    fun build(): Column<T> = Column(id, index, columnTitle, columnType, columnExtensions, cellExtensions, dataFormatter)
+    fun build(): Column<T> = Column(id, index, columnType, columnExtensions, cellExtensions, dataFormatter)
 }
 
 @TableMarker
