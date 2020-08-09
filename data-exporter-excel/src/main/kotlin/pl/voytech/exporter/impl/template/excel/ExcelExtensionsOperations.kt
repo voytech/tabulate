@@ -131,6 +131,9 @@ class CellAlignmentExtensionOperation<T> : CellExtensionOperation<T, CellAlignme
 }
 
 class CellDataFormatExtensionOperation<T> : CellExtensionOperation<T, CellExcelDataFormatExtension, SXSSFWorkbook> {
+
+    private val cellStyleFormatKey = "cellStyleFormatKey"
+
     override fun extensionType(): KClass<out CellExcelDataFormatExtension> = CellExcelDataFormatExtension::class
 
     override fun renderExtension(
@@ -138,8 +141,13 @@ class CellDataFormatExtensionOperation<T> : CellExtensionOperation<T, CellExcelD
         context: OperationContext<T, CellOperationTableData<T>>,
         extension: CellExcelDataFormatExtension
     ) {
-        cellStyle(state, context.coordinates!!, context).let {
-            extension.dataFormat.run { it.dataFormat = workbook(state).createDataFormat().getFormat(this) }
+        if (getCellCachedValue(context, cellStyleFormatKey) == null) {
+            cellStyle(state, context.coordinates!!, context).let {
+                extension.dataFormat.run {
+                    it.dataFormat = workbook(state).createDataFormat().getFormat(this)
+                    putCellCachedValue(context, cellStyleFormatKey, it.dataFormat)
+                }
+            }
         }
     }
 
