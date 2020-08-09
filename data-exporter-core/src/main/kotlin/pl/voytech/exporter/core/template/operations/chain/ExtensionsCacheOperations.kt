@@ -13,19 +13,19 @@ class ExtensionKeyDrivenCache {
     private val cellExtToEntry: MutableMap<Set<CellExtension>, MutableMap<String, Any>> = mutableMapOf()
     private val collExtToEntry: MutableMap<Set<ColumnExtension>, MutableMap<String, Any>> = mutableMapOf()
 
-    fun rowEntry(extensions: Set<RowExtension>): MutableMap<String, Any> {
+    fun prepareRowCacheEntryScope(extensions: Set<RowExtension>): MutableMap<String, Any> {
         return rowExtToEntry[extensions] ?: kotlin.run {
             rowExtToEntry[extensions] = mutableMapOf(); rowExtToEntry[extensions]!!
         }
     }
 
-    fun columnEntry(extensions: Set<ColumnExtension>): MutableMap<String, Any> {
+    fun prepareColumnCacheEntryScope(extensions: Set<ColumnExtension>): MutableMap<String, Any> {
         return collExtToEntry[extensions] ?: kotlin.run {
             collExtToEntry[extensions] = mutableMapOf(); collExtToEntry[extensions]!!
         }
     }
 
-    fun cellEntry(extensions: Set<CellExtension>): MutableMap<String, Any> {
+    fun prepareCellCacheEntryScope(extensions: Set<CellExtension>): MutableMap<String, Any> {
         return cellExtToEntry[extensions] ?: kotlin.run {
             cellExtToEntry[extensions] = mutableMapOf(); cellExtToEntry[extensions]!!
         }
@@ -46,7 +46,7 @@ class ExtensionKeyDrivenCache {
     }
 }
 
-object ExtensionsCacheOperationsFactory {
+class ExtensionsCacheOperationsFactory {
 
     private val cache: ExtensionKeyDrivenCache = ExtensionKeyDrivenCache()
 
@@ -72,7 +72,7 @@ class ExtensionCacheRowOperation<T, A> internal constructor(private val cache: E
         extensions: Set<RowExtension>?
     ) {
         extensions?.let {
-            context.additionalAttributes[EXTENSIONS_CACHE_KEY] = cache.rowEntry(it)
+            context.additionalAttributes[EXTENSIONS_CACHE_KEY] = cache.prepareRowCacheEntryScope(it)
         }
     }
 
@@ -86,7 +86,7 @@ class ExtensionCacheColumnOperation<T, A> internal constructor(private val cache
         context: OperationContext<T, ColumnOperationTableData<T>>,
         extensions: Set<ColumnExtension>?
     ) {
-        extensions?.let { context.additionalAttributes[EXTENSIONS_CACHE_KEY] = cache.columnEntry(it) }
+        extensions?.let { context.additionalAttributes[EXTENSIONS_CACHE_KEY] = cache.prepareColumnCacheEntryScope(it) }
     }
 
     override fun beforeFirstRow(): Boolean = true
@@ -103,7 +103,7 @@ class ExtensionCacheRowCellOperation<T, A> internal constructor(private val cach
         context: OperationContext<T, CellOperationTableData<T>>,
         extensions: Set<CellExtension>?
     ) {
-        extensions?.let { context.additionalAttributes[EXTENSIONS_CACHE_KEY] = cache.cellEntry(it) }
+        extensions?.let { context.additionalAttributes[EXTENSIONS_CACHE_KEY] = cache.prepareCellCacheEntryScope(it) }
     }
 
 }

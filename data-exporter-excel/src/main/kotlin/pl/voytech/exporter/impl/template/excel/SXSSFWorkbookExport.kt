@@ -11,9 +11,6 @@ import pl.voytech.exporter.core.model.extension.RowExtension
 import pl.voytech.exporter.core.model.extension.TableExtension
 import pl.voytech.exporter.core.template.*
 import pl.voytech.exporter.core.template.operations.chain.*
-import pl.voytech.exporter.core.template.operations.chain.ExtensionsCacheOperationsFactory.extensionCacheColumnOperation
-import pl.voytech.exporter.core.template.operations.chain.ExtensionsCacheOperationsFactory.extensionCacheRowCellOperation
-import pl.voytech.exporter.core.template.operations.chain.ExtensionsCacheOperationsFactory.extensionCacheRowOperation
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertCell
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertRow
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertTableSheet
@@ -120,20 +117,24 @@ internal class XlsxRowCellOperations<T>(cellExtensions: List<CellExtensionOperat
 
 }
 
-fun <T> xlsxExport(templateFile: InputStream? = null) = ExportOperations(
-    createDocumentOperation = XlsxCreateDocumentOperation(templateFile),
-    createTableOperation = XlsxCreateTableOperation(tableExtensionsOperations),
-    finishDocumentOperations = XlsxFinishDocumentOperation(),
-    rowOperation = RowOperations(
-        extensionCacheRowOperation(),
-        XlsxRowTableOperation<T>(rowExtensionsOperations())
-    ),
-    columnOperation = ColumnOperations(
-        extensionCacheColumnOperation(),
-        ExtensionDispatchingColumnOperation(columnExtensionsOperations())
-    ),
-    rowCellOperation = RowCellOperations(
-        extensionCacheRowCellOperation(),
-        XlsxRowCellOperations(cellExtensionsOperations())
-    )
-)
+fun <T> xlsxExport(templateFile: InputStream? = null) : ExportOperations<T, SXSSFWorkbook>{
+    return ExtensionsCacheOperationsFactory().let {
+        ExportOperations(
+            createDocumentOperation = XlsxCreateDocumentOperation(templateFile),
+            createTableOperation = XlsxCreateTableOperation(tableExtensionsOperations),
+            finishDocumentOperations = XlsxFinishDocumentOperation(),
+            rowOperation = RowOperations(
+                it.extensionCacheRowOperation(),
+                XlsxRowTableOperation<T>(rowExtensionsOperations())
+            ),
+            columnOperation = ColumnOperations(
+                it.extensionCacheColumnOperation(),
+                ExtensionDispatchingColumnOperation(columnExtensionsOperations())
+            ),
+            rowCellOperation = RowCellOperations(
+                it.extensionCacheRowCellOperation(),
+                XlsxRowCellOperations(cellExtensionsOperations())
+            )
+        )
+    }
+}

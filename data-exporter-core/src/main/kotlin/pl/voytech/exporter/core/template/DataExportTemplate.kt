@@ -35,7 +35,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             rowCells = collectCells(matchingRowDefinitions)
         }
 
-        private fun <E : Extension> collectHints(
+        private inline fun <E : Extension> collectHints(
             matchingRows: Set<Row<T>>?,
             getHints: (r: Row<T>) -> Set<E>?
         ): Set<E>? {

@@ -3,7 +3,6 @@ package pl.voytech.exporter.core.template
 import org.apache.poi.openxml4j.util.ZipSecureFile
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.spekframework.spek2.Spek
-import org.spekframework.spek2.meta.Ignore
 import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.dsl.export
 import pl.voytech.exporter.core.api.dsl.table
@@ -34,7 +33,8 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 object BasicDslTableExportSpek : Spek({
-    Feature("Regular tabular data export to excel") {
+
+     Feature("Regular tabular data export to excel") {
         Scenario("defining simple table model and exporting to excel file.") {
             val random = Random(1000)
             val productList = (0..1000).map {
@@ -224,8 +224,8 @@ object BasicDslTableExportSpek : Spek({
     }
 
     Feature("Tabular data export to excel using excel template as input.") {
-        Scenario("defining simple table model and exporting to excel file.") {
-            val productList = (0..1000).map {
+        Scenario("loading from template file and filling it up.") {
+            val productList = (0..2).map {
                 Product(
                     "prod_nr_$it",
                     "Name $it",
@@ -301,7 +301,7 @@ object BasicDslTableExportSpek : Spek({
                     )
                 )
                 .perform().also {
-                    it.cleanup()
+                    //it.cleanup()
                 }
             }
         }
