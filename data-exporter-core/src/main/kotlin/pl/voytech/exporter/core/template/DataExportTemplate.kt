@@ -58,12 +58,12 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     )
 
     fun create(): DelegateAPI<A> {
-        return delegate.createDocumentOperation.createDocument()
+        return delegate.lifecycleOperations.createDocument()
     }
 
     fun add(state: DelegateAPI<A>, table: Table<T>, collection: Collection<T>): DelegateAPI<A> {
         return ExportingState(
-            delegate = delegate.createTableOperation.createTable(state, table),
+            delegate = delegate.tableOperations.createTable(state, table),
             tableName = table.name ?: "table-${NextId.nextId()}",
             firstRow = table.firstRow,
             firstColumn = table.firstColumn,
@@ -71,11 +71,11 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         ).also {
             preFlightPass(it, table, collection)
         }.also {
-            renderColumns(it, table, ColumnRenderPolicy.BEFORE_FIRST_ROW)
+            renderColumns(it, table, ColumnRenderPhase.BEFORE_FIRST_ROW)
         }.also {
             renderRows(it, table)
         }.also {
-            renderColumns(it, table, ColumnRenderPolicy.AFTER_LAST_ROW)
+            renderColumns(it, table, ColumnRenderPhase.AFTER_LAST_ROW)
         }.also {
             syntheticRows = null
             selectableRows = null
@@ -85,15 +85,15 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     fun export(table: Table<T>, collection: Collection<T>): FileData<ByteArray> {
-        return add(create(), table, collection).let { delegate.finishDocumentOperations.finishDocument(it) }
+        return add(create(), table, collection).let { delegate.lifecycleOperations.saveDocument(it) }
     }
 
     fun export(table: Table<T>, collection: Collection<T>, stream: OutputStream) {
-        add(create(), table, collection).also { delegate.finishDocumentOperations.finishDocument(it, stream) }
+        add(create(), table, collection).also { delegate.lifecycleOperations.saveDocument(it, stream) }
     }
 
     fun export(state: DelegateAPI<A>, stream: OutputStream) {
-        delegate.finishDocumentOperations.finishDocument(state, stream)
+        delegate.lifecycleOperations.saveDocument(state, stream)
     }
 
     /**
@@ -165,30 +165,21 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         )
     }
 
-    private enum class ColumnRenderPolicy {
-        BEFORE_FIRST_ROW,
-        AFTER_LAST_ROW
-    }
-
     private fun renderColumns(
         state: ExportingState<T, A>,
         table: Table<T>,
-        renderPolicy: ColumnRenderPolicy
+        renderPhase: ColumnRenderPhase
     ) {
         table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-            delegate.columnOperation?.let {
-                if ((ColumnRenderPolicy.BEFORE_FIRST_ROW == renderPolicy) && it.beforeFirstRow() ||
-                    (ColumnRenderPolicy.AFTER_LAST_ROW == renderPolicy) && it.afterLastRow()
-                ) {
-                    it.renderColumn(
-                        state.delegate,
-                        state.columnOperationContext(column.index ?: columnIndex, column.id),
-                        column.columnExtensions?.filter { ext ->
-                            ((ColumnRenderPolicy.BEFORE_FIRST_ROW == renderPolicy) && ext.beforeFirstRow()) ||
-                                    ((ColumnRenderPolicy.AFTER_LAST_ROW == renderPolicy) && ext.afterLastRow())
-                        }?.toSet()
-                    )
-                }
+            delegate.tableOperations.let {
+                it.renderColumn(
+                    state.delegate,
+                    state.columnOperationContext(column.index ?: columnIndex, column.id, renderPhase),
+                    column.columnExtensions?.filter { ext ->
+                        ((ColumnRenderPhase.BEFORE_FIRST_ROW == renderPhase) && ext.beforeFirstRow()) ||
+                                ((ColumnRenderPhase.AFTER_LAST_ROW == renderPhase) && ext.afterLastRow())
+                    }?.toSet()
+                )
             }
         }
     }
@@ -198,20 +189,21 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         table: Table<T>
     ) {
         state.forEachRowValue { rowValue: ComputedRowValue<T> ->
-            delegate.rowOperation.renderRow(state.delegate, state.rowOperationContext(), rowValue.rowExtensions).also {
-                table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                    delegate.rowCellOperation?.renderRowCell(
-                        state.delegate,
-                        state.cellOperationContext(column.index ?: columnIndex, column.id),
-                        mergeCellHints(
-                            rowValue.rowCells?.get(column.id)?.cellExtensions,
-                            rowValue.rowCellExtensions,
-                            column.cellExtensions,
-                            table.cellExtensions
+            delegate.tableOperations.renderRow(state.delegate, state.rowOperationContext(), rowValue.rowExtensions)
+                .also {
+                    table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+                        delegate.tableOperations.renderRowCell(
+                            state.delegate,
+                            state.cellOperationContext(column.index ?: columnIndex, column.id),
+                            mergeCellHints(
+                                rowValue.rowCells?.get(column.id)?.cellExtensions,
+                                rowValue.rowCellExtensions,
+                                column.cellExtensions,
+                                table.cellExtensions
+                            )
                         )
-                    )
+                    }
                 }
-            }
         }
     }
 

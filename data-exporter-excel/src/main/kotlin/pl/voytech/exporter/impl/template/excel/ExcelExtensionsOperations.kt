@@ -16,8 +16,8 @@ import pl.voytech.exporter.core.model.extension.style.enums.HorizontalAlignment
 import pl.voytech.exporter.core.model.extension.style.enums.VerticalAlignment
 import pl.voytech.exporter.core.model.extension.style.enums.WeightStyle
 import pl.voytech.exporter.core.template.*
-import pl.voytech.exporter.core.template.operations.chain.ExtensionKeyDrivenCache.Companion.getCellCachedValue
-import pl.voytech.exporter.core.template.operations.chain.ExtensionKeyDrivenCache.Companion.putCellCachedValue
+import pl.voytech.exporter.core.template.operations.ExtensionKeyDrivenCache.Companion.getCellCachedValue
+import pl.voytech.exporter.core.template.operations.ExtensionKeyDrivenCache.Companion.putCellCachedValue
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertRow
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.cellStyle
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.color

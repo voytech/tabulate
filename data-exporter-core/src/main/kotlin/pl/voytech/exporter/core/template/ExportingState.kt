@@ -80,9 +80,10 @@ class ExportingState<T, A>(
         return cellOperationContext
     }
 
-    internal fun columnOperationContext(columnIndex: Int, columnId: Key<T>): OperationContext<T, ColumnOperationTableData<T>> {
+    internal fun columnOperationContext(columnIndex: Int, columnId: Key<T>, phase: ColumnRenderPhase): OperationContext<T, ColumnOperationTableData<T>> {
         this.columnIndex = columnIndex
         columnOperationContext.coordinates = coordinates()
+        columnOperationContext.value.currentPhase = phase
         columnOperationContext.value.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[columnId] }
         return columnOperationContext
     }

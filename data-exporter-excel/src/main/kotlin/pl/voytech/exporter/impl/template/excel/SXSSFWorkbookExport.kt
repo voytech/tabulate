@@ -6,11 +6,10 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.model.extension.CellExtension
-import pl.voytech.exporter.core.model.extension.RowExtension
-import pl.voytech.exporter.core.model.extension.TableExtension
 import pl.voytech.exporter.core.template.*
-import pl.voytech.exporter.core.template.operations.chain.*
+import pl.voytech.exporter.core.template.operations.ExtensionCacheTableOperations
+import pl.voytech.exporter.core.template.operations.ExtensionsHandlingTableOperations
+import pl.voytech.exporter.core.template.operations.chain.TableOperationChain
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertCell
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertRow
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertTableSheet
@@ -24,32 +23,14 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-internal class XlsxRowTableOperation<T>(rowHints: List<RowExtensionOperation<T, out RowExtension, SXSSFWorkbook>>) :
-    ExtensionDispatchingRowOperation<T, SXSSFWorkbook>(rowHints) {
-
-    override fun renderRow(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, RowOperationTableData<T>>) {
-        assertRow(state, context.coordinates!!)
-    }
-
-}
-
-internal class XlsxCreateDocumentOperation(private val templateFile: InputStream?) :
-    CreateDocumentOperation<SXSSFWorkbook> {
+internal class XlsxLifecycleOperation(private val templateFile: InputStream?) :
+    LifecycleOperations<SXSSFWorkbook> {
     override fun createDocument(): DelegateAPI<SXSSFWorkbook> {
         return DelegateAPI(templateFile?.let { SXSSFWorkbook(WorkbookFactory.create(it) as XSSFWorkbook?, 100) }
             ?: SXSSFWorkbook())
     }
-}
 
-internal class XlsxCreateTableOperation<T>(tableExtensionOperations: List<TableExtensionOperation<out TableExtension, SXSSFWorkbook>>) :
-    ExtensionDispatchingCreateTableOperation<T, SXSSFWorkbook>(tableExtensionOperations) {
-    override fun initializeTable(state: DelegateAPI<SXSSFWorkbook>, table: Table<T>): DelegateAPI<SXSSFWorkbook> {
-        return assertTableSheet(state, table.name).let { state }
-    }
-}
-
-internal class XlsxFinishDocumentOperation : FinishDocumentOperations<SXSSFWorkbook> {
-    override fun finishDocument(state: DelegateAPI<SXSSFWorkbook>): FileData<ByteArray> {
+    override fun saveDocument(state: DelegateAPI<SXSSFWorkbook>): FileData<ByteArray> {
         val outputStream = ByteArrayOutputStream()
         workbook(state).run {
             write(outputStream)
@@ -58,7 +39,7 @@ internal class XlsxFinishDocumentOperation : FinishDocumentOperations<SXSSFWorkb
         return FileData(content = outputStream.toByteArray())
     }
 
-    override fun finishDocument(state: DelegateAPI<SXSSFWorkbook>, stream: OutputStream) {
+    override fun saveDocument(state: DelegateAPI<SXSSFWorkbook>, stream: OutputStream) {
         workbook(state).run {
             write(stream)
             close()
@@ -66,8 +47,32 @@ internal class XlsxFinishDocumentOperation : FinishDocumentOperations<SXSSFWorkb
     }
 }
 
-internal class XlsxRowCellOperations<T>(cellExtensions: List<CellExtensionOperation<T, out CellExtension, SXSSFWorkbook>>) :
-    ExtensionDispatchingRowCellOperation<T, SXSSFWorkbook>(cellExtensions) {
+internal class XlsxTableOperations<T> :
+    ExtensionsHandlingTableOperations<T, SXSSFWorkbook>(
+        tableExtensionsOperations,
+        rowExtensionsOperations<T>(),
+        columnExtensionsOperations<T>(),
+        cellExtensionsOperations<T>()
+    ) {
+
+    override fun initializeTable(state: DelegateAPI<SXSSFWorkbook>, table: Table<T>): DelegateAPI<SXSSFWorkbook> {
+        return assertTableSheet(state, table.name).let { state }
+    }
+
+    override fun renderRow(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, RowOperationTableData<T>>) {
+        assertRow(state, context.coordinates!!)
+    }
+
+    override fun renderRowCell(
+        state: DelegateAPI<SXSSFWorkbook>,
+        context: OperationContext<T, CellOperationTableData<T>>
+    ) {
+        assertCell(
+            state,
+            context.coordinates!!,
+            context
+        ).also { setCellValue(it, context.value.cellValue) }
+    }
 
     private fun toDateValue(value: Any): Date {
         return when (value) {
@@ -103,38 +108,13 @@ internal class XlsxRowCellOperations<T>(cellExtensions: List<CellExtensionOperat
             }
         }
     }
-
-    override fun renderRowCell(
-        state: DelegateAPI<SXSSFWorkbook>,
-        context: OperationContext<T, CellOperationTableData<T>>
-    ) {
-        assertCell(
-            state,
-            context.coordinates!!,
-            context
-        ).also { setCellValue(it, context.value.cellValue) }
-    }
-
 }
 
-fun <T> xlsxExport(templateFile: InputStream? = null) : ExportOperations<T, SXSSFWorkbook>{
-    return ExtensionsCacheOperationsFactory().let {
-        ExportOperations(
-            createDocumentOperation = XlsxCreateDocumentOperation(templateFile),
-            createTableOperation = XlsxCreateTableOperation(tableExtensionsOperations),
-            finishDocumentOperations = XlsxFinishDocumentOperation(),
-            rowOperation = RowOperations(
-                it.extensionCacheRowOperation(),
-                XlsxRowTableOperation<T>(rowExtensionsOperations())
-            ),
-            columnOperation = ColumnOperations(
-                it.extensionCacheColumnOperation(),
-                ExtensionDispatchingColumnOperation(columnExtensionsOperations())
-            ),
-            rowCellOperation = RowCellOperations(
-                it.extensionCacheRowCellOperation(),
-                XlsxRowCellOperations(cellExtensionsOperations())
-            )
+
+fun <T> xlsxExport(templateFile: InputStream? = null): ExportOperations<T, SXSSFWorkbook> =
+    ExportOperations(
+        lifecycleOperations = XlsxLifecycleOperation(templateFile),
+        tableOperations = TableOperationChain(
+            ExtensionCacheTableOperations(), XlsxTableOperations()
         )
-    }
-}
+    )

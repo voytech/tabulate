@@ -16,9 +16,15 @@ class CellOperationTableData<T>(private val collection: Collection<T>): TableDat
         internal set
 }
 
+enum class ColumnRenderPhase {
+    BEFORE_FIRST_ROW,
+    AFTER_LAST_ROW
+}
+
 class ColumnOperationTableData<T>(private val collection: Collection<T>): TableData<T>(collection) {
     var columnValues: List<CellValue>? = null
         internal set
+    var currentPhase: ColumnRenderPhase = ColumnRenderPhase.BEFORE_FIRST_ROW
 }
 
 class TableOperationTableData<T>(private val collection: Collection<T>): TableData<T>(collection) {
