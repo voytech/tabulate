@@ -1,11 +1,11 @@
-package pl.voytech.exporter.core.template.operations.chain
+package pl.voytech.exporter.core.template.operations
 
+import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.ColumnExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
 import pl.voytech.exporter.core.template.*
-import pl.voytech.exporter.core.template.RowOperation
-import pl.voytech.exporter.core.template.operations.chain.ExtensionKeyDrivenCache.Companion.EXTENSIONS_CACHE_KEY
+import pl.voytech.exporter.core.template.operations.ExtensionKeyDrivenCache.Companion.EXTENSIONS_CACHE_KEY
 
 @Suppress("UNCHECKED_CAST")
 class ExtensionKeyDrivenCache {
@@ -36,7 +36,10 @@ class ExtensionKeyDrivenCache {
 
         fun <T> putCellCachedValue(context: OperationContext<T, CellOperationTableData<T>>, key: String, value: Any): Any {
             (context.additionalAttributes[EXTENSIONS_CACHE_KEY] as MutableMap<String, Any>)[key] = value
-            return getCellCachedValue(context, key)!!
+            return getCellCachedValue(
+                context,
+                key
+            )!!
         }
 
         fun <T>  getCellCachedValue(context: OperationContext<T, CellOperationTableData<T>>, key: String): Any? {
@@ -46,25 +49,10 @@ class ExtensionKeyDrivenCache {
     }
 }
 
-class ExtensionsCacheOperationsFactory {
+class ExtensionCacheTableOperations<T, A>(private val cache: ExtensionKeyDrivenCache = ExtensionKeyDrivenCache()) :
+    TableOperations<T, A> {
 
-    private val cache: ExtensionKeyDrivenCache = ExtensionKeyDrivenCache()
-
-    fun <T, A> extensionCacheRowOperation(): ExtensionCacheRowOperation<T, A> {
-        return ExtensionCacheRowOperation(cache)
-    }
-
-    fun <T, A> extensionCacheRowCellOperation(): ExtensionCacheRowCellOperation<T, A> {
-        return ExtensionCacheRowCellOperation(cache)
-    }
-
-    fun <T, A> extensionCacheColumnOperation(): ExtensionCacheColumnOperation<T, A> {
-        return ExtensionCacheColumnOperation(cache)
-    }
-}
-
-class ExtensionCacheRowOperation<T, A> internal constructor(private val cache: ExtensionKeyDrivenCache) :
-    RowOperation<T, A> {
+    override fun createTable(state: DelegateAPI<A>, table: Table<T>): DelegateAPI<A>  = state
 
     override fun renderRow(
         state: DelegateAPI<A>,
@@ -76,11 +64,6 @@ class ExtensionCacheRowOperation<T, A> internal constructor(private val cache: E
         }
     }
 
-}
-
-class ExtensionCacheColumnOperation<T, A> internal constructor(private val cache: ExtensionKeyDrivenCache) :
-    ColumnOperation<T, A> {
-
     override fun renderColumn(
         state: DelegateAPI<A>,
         context: OperationContext<T, ColumnOperationTableData<T>>,
@@ -88,15 +71,6 @@ class ExtensionCacheColumnOperation<T, A> internal constructor(private val cache
     ) {
         extensions?.let { context.additionalAttributes[EXTENSIONS_CACHE_KEY] = cache.prepareColumnCacheEntryScope(it) }
     }
-
-    override fun beforeFirstRow(): Boolean = true
-
-    override fun afterLastRow(): Boolean = false
-
-}
-
-class ExtensionCacheRowCellOperation<T, A> internal constructor(private val cache: ExtensionKeyDrivenCache) :
-    RowCellOperation<T, A> {
 
     override fun renderRowCell(
         state: DelegateAPI<A>,

@@ -5,5 +5,8 @@ enum class BorderStyle {
     SOLID,
     DOTTED,
     NONE,
-    DOUBLE
+    DOUBLE,
+    INSET,
+    OUTSET,
+    GROOVE
 }
