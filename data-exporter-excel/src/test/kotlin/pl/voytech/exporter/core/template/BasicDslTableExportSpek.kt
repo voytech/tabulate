@@ -54,17 +54,19 @@ object BasicDslTableExportSpek : Spek({
                 firstColumn = 2
                 columns {
                     column("nr") {
-                        columnExtensions(ColumnWidthExtension(width = 50))
+                        columnExtensions(
+                            size { width = 50 }
+                        )
                         cellExtensions(
-                            CellFontExtension(
-                                fontFamily = "Times New Roman",
-                                fontColor = Color(10, 100, 100),
-                                fontSize = 12,
-                                italic = true,
-                                weight = WeightStyle.BOLD,
-                                strikeout = true,
+                            font {
+                                fontFamily = "Times New Roman"
+                                fontColor = Color(10, 100, 100)
+                                fontSize = 12
+                                italic = true
+                                weight = WeightStyle.BOLD
+                                strikeout = true
                                 underline = true
-                            )
+                            }
                         )
                     }
                     column(Product::code) {
