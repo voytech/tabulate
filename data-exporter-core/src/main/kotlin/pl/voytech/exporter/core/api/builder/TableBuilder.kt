@@ -49,16 +49,6 @@ class TableBuilder<T> : Builder<Table<T>>{
     }
 
     @JvmSynthetic
-    fun tableExtensions(block: ExtensionsBuilder<TableExtension>.() -> Unit) {
-        tableExtensions = (tableExtensions ?: emptySet()) + ExtensionsBuilder<TableExtension>().apply(block)
-    }
-
-    @JvmSynthetic
-    fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
-        cellExtensions = (cellExtensions ?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
-    }
-
-    @JvmSynthetic
     fun columnsDescription(block: DescriptionBuilder.() -> Unit) {
         columnsDescription = DescriptionBuilder().apply(block).build()
     }
@@ -98,6 +88,14 @@ class TableBuilder<T> : Builder<Table<T>>{
 
     fun cellExtensions(vararg extensions: CellExtension) = apply {
         cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
+    }
+
+    fun <T: TableExtensionBuilder> tableExtensions(vararg extensionBuilder: T) = apply {
+        tableExtensions = (tableExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
+    }
+
+    fun <T: CellExtensionBuilder> cellExtensions(vararg extensionBuilder: T) = apply  {
+        cellExtensions = (cellExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
     }
 
     override fun build(): Table<T> = Table(
@@ -161,16 +159,6 @@ class ColumnBuilder<T> : InternalBuilder<Column<T>>() {
     @set:JvmSynthetic
     var dataFormatter: ((field: Any) -> Any)? = null
 
-    @JvmSynthetic
-    fun columnExtensions(block: ExtensionsBuilder<ColumnExtension>.() -> Unit) {
-        columnExtensions = (columnExtensions ?: emptySet()) + ExtensionsBuilder<ColumnExtension>().apply(block)
-    }
-
-    @JvmSynthetic
-    fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
-        cellExtensions = (cellExtensions ?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
-    }
-
     /**
      * JAVA style builder.
      **/
@@ -197,6 +185,14 @@ class ColumnBuilder<T> : InternalBuilder<Column<T>>() {
 
     fun columnExtensions(vararg extensions: ColumnExtension) = apply {
         columnExtensions = (columnExtensions ?: emptySet()) + extensions.toHashSet()
+    }
+
+    fun <T: ColumnExtensionBuilder> columnExtensions(vararg extensionBuilder: T) = apply {
+        columnExtensions = (columnExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
+    }
+
+    fun <T: CellExtensionBuilder> cellExtensions(vararg  extensionBuilder: T) = apply {
+        cellExtensions = (cellExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
     }
 
     override fun build(): Column<T> = Column(id, index, columnType, columnExtensions, cellExtensions, dataFormatter)
@@ -263,16 +259,6 @@ class RowBuilder<T> : InternalBuilder<Row<T>>() {
     var createAt: Int? = null
 
     @JvmSynthetic
-    fun rowExtensions(block: ExtensionsBuilder<RowExtension>.() -> Unit) {
-        rowExtensions = (rowExtensions ?: emptySet()) + ExtensionsBuilder<RowExtension>().apply(block)
-    }
-
-    @JvmSynthetic
-    fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
-        cellExtensions = (cellExtensions ?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
-    }
-
-    @JvmSynthetic
     fun cells(block: CellsBuilder<T>.() -> Unit) {
         cells = (cells ?: emptyMap()) + CellsBuilder<T>().apply(block).build()
     }
@@ -297,18 +283,19 @@ class RowBuilder<T> : InternalBuilder<Row<T>>() {
         cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
     }
 
+    fun <T: RowExtensionBuilder> rowExtensions(vararg extensionBuilder: T) = apply {
+        rowExtensions = (rowExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
+    }
+
+    fun <T: CellExtensionBuilder> cellExtensions(vararg extensionBuilder: T) = apply {
+        cellExtensions = (cellExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
+    }
+
     fun cells(cellsBuilder: CellsBuilder<T>) = apply {
         cells = (cells ?: emptyMap()) + cellsBuilder.build()
     }
 
     override fun build(): Row<T> = Row(selector, createAt, rowExtensions, cellExtensions, cells)
-}
-
-@TableMarker
-class ExtensionsBuilder<T> : HashSet<T>() {
-    fun extend(extension: T) {
-        add(extension)
-    }
 }
 
 @TableMarker
@@ -355,17 +342,16 @@ class CellBuilder<T> : InternalBuilder<Cell<T>>() {
     @set:JvmSynthetic
     var type: CellType? = null
 
-    @JvmSynthetic
-    fun cellExtensions(block: ExtensionsBuilder<CellExtension>.() -> Unit) {
-        cellExtensions = (cellExtensions ?: emptySet()) + ExtensionsBuilder<CellExtension>().apply(block)
-    }
-
     /**
      * JAVA style builder.
      **/
 
     fun cellExtensions(vararg extensions: CellExtension) = apply {
         cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
+    }
+
+    fun <T: CellExtensionBuilder> cellExtensions(vararg extensionBuilder: T) = apply {
+        cellExtensions = (cellExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
     }
 
     fun value(value: Any?) = apply {
@@ -387,11 +373,6 @@ class CellBuilder<T> : InternalBuilder<Cell<T>>() {
 class DescriptionBuilder {
     lateinit var title: String
     private var extensions: Set<Extension>? = null
-
-    @JvmSynthetic
-    fun extensions(block: ExtensionsBuilder<Extension>.() -> Unit) {
-        extensions = (extensions ?: emptySet()) + ExtensionsBuilder<Extension>().apply(block)
-    }
 
     @JvmSynthetic
     fun extensions(vararg extensions: Extension) {
