@@ -8,10 +8,12 @@ import java.io.OutputStream
 @DslMarker
 annotation class OperationMarker
 
+@JvmSynthetic
 fun <T, A> Collection<T>.export(stream: OutputStream, block: ExportBuilder<T, A>.() -> Unit) {
     ExportBuilder<T, A>(this).apply(block).execute(stream)
 }
 
+@JvmSynthetic
 fun <T, A> Collection<T>.export(block: ExportBuilder<T, A>.() -> Unit) {
     ExportBuilder<T, A>(this).apply(block).execute()
 }
@@ -21,14 +23,17 @@ class ExportBuilder<T, A>(private val collection: Collection<T>) {
     lateinit var table: Table<T>
     lateinit var operations: ExportOperations<T, A>
 
+    @JvmSynthetic
     fun table(block: TableBuilder<T>.() -> Unit) {
         table = TableBuilder<T>().apply(block).build()
     }
 
+    @JvmSynthetic
     fun execute(stream: OutputStream) {
         DataExportTemplate(operations).export(table, collection, stream)
     }
 
+    @JvmSynthetic
     fun execute() {
         DataExportTemplate(operations).export(table, collection)
     }
