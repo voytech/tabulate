@@ -54,8 +54,8 @@ object BasicDslTableExportSpek : Spek({
                 firstColumn = 2
                 columns {
                     column("nr") {
-                        columnExtensions(
-                            size { width = 50 }
+                        columnExtensions( //@TODO make single method 'extensions' with dispatching on extension type. Move dispatching logic into base builder class.
+                            width { width = 50 }
                         )
                         cellExtensions(
                             font {
