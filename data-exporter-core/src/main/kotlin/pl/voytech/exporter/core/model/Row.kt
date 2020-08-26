@@ -3,7 +3,7 @@ package pl.voytech.exporter.core.model
 import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
 
-data class Row<T>(
+data class Row<T> internal constructor(
     val selector: RowSelector<T>? = null,
     val createAt: Int? = null,
     val rowExtensions: Set<RowExtension>?,

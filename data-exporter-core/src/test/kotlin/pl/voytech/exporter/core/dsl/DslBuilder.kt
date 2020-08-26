@@ -2,15 +2,13 @@ package pl.voytech.exporter.core.dsl
 
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
-import pl.voytech.exporter.core.api.dsl.table
-import pl.voytech.exporter.core.model.Description
+import pl.voytech.exporter.core.api.builder.table
 import pl.voytech.exporter.data.Product
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 object BasicDslTableDefinitionSpek : Spek({

@@ -1,4 +1,4 @@
-package pl.voytech.exporter.core.api.dsl
+package pl.voytech.exporter.core.api.builder
 
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.DataExportTemplate
@@ -20,7 +20,9 @@ fun <T, A> Collection<T>.export(block: ExportBuilder<T, A>.() -> Unit) {
 
 @OperationMarker
 class ExportBuilder<T, A>(private val collection: Collection<T>) {
+    @JvmSynthetic
     lateinit var table: Table<T>
+    @JvmSynthetic
     lateinit var operations: ExportOperations<T, A>
 
     @JvmSynthetic
