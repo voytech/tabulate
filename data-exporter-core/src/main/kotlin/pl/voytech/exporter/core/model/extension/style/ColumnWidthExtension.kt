@@ -23,5 +23,5 @@ data class ColumnWidthExtension(
     }
 }
 
-fun size(block: ColumnWidthExtension.Builder.() -> Unit): ColumnExtension = ColumnWidthExtension.Builder().apply(block).build()
+fun width(block: ColumnWidthExtension.Builder.() -> Unit): ColumnExtension = ColumnWidthExtension.Builder().apply(block).build()
 
