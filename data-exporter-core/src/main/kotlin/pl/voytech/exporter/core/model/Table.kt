@@ -21,7 +21,7 @@ import pl.voytech.exporter.core.model.extension.TableExtension
  *
  *   @author Wojciech Mąka
  */
-data class Table<T>(
+data class Table<T> internal constructor(
     val name: String? = "untitled",
     val firstRow: Int? = 0,
     val firstColumn: Int? = 0,

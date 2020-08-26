@@ -4,8 +4,8 @@ import org.apache.poi.openxml4j.util.ZipSecureFile
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
-import pl.voytech.exporter.core.api.dsl.export
-import pl.voytech.exporter.core.api.dsl.table
+import pl.voytech.exporter.core.api.builder.export
+import pl.voytech.exporter.core.api.builder.table
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.RowSelectors
 import pl.voytech.exporter.core.model.extension.functional.FilterAndSortTableExtension
@@ -107,7 +107,7 @@ object BasicDslTableExportSpek : Spek({
                     row {
                         createAt = 0
                         cells {
-                            forColumn("nr") { value = "Nr.:" }
+                            forColumn("nr") { value = "Nr.:"  }
                             forColumn(Product::code) { value = "Code" }
                             forColumn(Product::name) { value = "Name" }
                             forColumn(Product::description) { value = "Description" }

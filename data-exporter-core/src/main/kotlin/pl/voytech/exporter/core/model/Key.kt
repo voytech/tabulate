@@ -1,6 +1,6 @@
 package pl.voytech.exporter.core.model
 
-data class Key<T>(
+data class Key<T> internal constructor(
     val id: String? = null,
     val ref: ((record: T) -> Any?)? = null
 ) {
