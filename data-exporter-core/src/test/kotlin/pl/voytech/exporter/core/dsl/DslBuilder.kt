@@ -2,7 +2,7 @@ package pl.voytech.exporter.core.dsl
 
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
-import pl.voytech.exporter.core.api.builder.table
+import pl.voytech.exporter.core.api.builder.dsl.table
 import pl.voytech.exporter.data.Product
 import java.math.BigDecimal
 import java.time.LocalDate

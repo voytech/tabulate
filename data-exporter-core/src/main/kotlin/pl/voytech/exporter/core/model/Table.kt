@@ -1,5 +1,6 @@
 package pl.voytech.exporter.core.model
 
+import pl.voytech.exporter.core.api.builder.fluent.TableBuilder
 import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.TableExtension
 
@@ -33,4 +34,9 @@ data class Table<T> internal constructor(
     val rowsDescription: Description?,
     val tableExtensions: Set<TableExtension>?,
     val cellExtensions: Set<CellExtension>?
-)
+) {
+    companion object {
+        @JvmStatic
+        fun <T> builder() = TableBuilder<T>()
+    }
+}

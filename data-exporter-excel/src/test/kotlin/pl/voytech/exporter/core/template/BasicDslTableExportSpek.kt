@@ -4,8 +4,8 @@ import org.apache.poi.openxml4j.util.ZipSecureFile
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
-import pl.voytech.exporter.core.api.builder.export
-import pl.voytech.exporter.core.api.builder.table
+import pl.voytech.exporter.core.api.builder.dsl.export
+import pl.voytech.exporter.core.api.builder.dsl.table
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.RowSelectors
 import pl.voytech.exporter.core.model.extension.functional.FilterAndSortTableExtension
@@ -101,7 +101,7 @@ object BasicDslTableExportSpek : Spek({
                     (0..1).forEach {
                         column("c$it") {
                             columnExtensions(ColumnWidthExtension(auto = true))
-                            cellExtensions(CellBackgroundExtension(Color(255,255,0)))
+                            cellExtensions(CellBackgroundExtension(Color(255, 255, 0)))
                         }
                     }
                 }
@@ -109,7 +109,7 @@ object BasicDslTableExportSpek : Spek({
                     row {
                         createAt = 0
                         cells {
-                            forColumn("nr") { value = "Nr.:"  }
+                            forColumn("nr") { value = "Nr.:" }
                             forColumn(Product::code) { value = "Code" }
                             forColumn(Product::name) { value = "Name" }
                             forColumn(Product::description) { value = "Description" }
@@ -326,7 +326,7 @@ object BasicDslTableExportSpek : Spek({
             val file = File("test2.xlsx")
             val table = table<Product> {
                 name = "Products table"
-                tableExtensions(FilterAndSortTableExtension(rowRange = (0..999),columnRange = (0..5)))
+                tableExtensions(FilterAndSortTableExtension(rowRange = (0..999), columnRange = (0..5)))
                 columns {
                     column(Product::code)
                     column(Product::name)
