@@ -1,4 +1,4 @@
-package pl.voytech.exporter.core.api.builder
+package pl.voytech.exporter.core.api.builder.dsl
 
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.DataExportTemplate
@@ -27,7 +27,7 @@ class ExportBuilder<T, A>(private val collection: Collection<T>) {
 
     @JvmSynthetic
     fun table(block: TableBuilder<T>.() -> Unit) {
-        table = TableBuilder<T>().apply(block).build()
+        table = TableBuilder.new<T>().apply(block).build()
     }
 
     @JvmSynthetic

@@ -1,5 +1,6 @@
 package pl.voytech.exporter.core.api.builder
 
+import pl.voytech.exporter.core.api.builder.dsl.TableMarker
 import pl.voytech.exporter.core.model.extension.*
 
 @TableMarker

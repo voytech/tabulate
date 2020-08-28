@@ -3,4 +3,3 @@ include 'data-exporter-core'
 include 'data-exporter-excel'
 include 'data-exporter-pdf'
 include 'data-exporter-csv'
-
