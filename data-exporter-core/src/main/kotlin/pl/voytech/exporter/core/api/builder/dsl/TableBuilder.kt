@@ -12,7 +12,8 @@ fun <T> table(block: TableBuilder<T>.() -> Unit): Table<T> = TableBuilder.new<T>
     .apply(block).build()
 
 @TableMarker
-class TableBuilder<T> private constructor() : Builder<Table<T>> {
+class TableBuilder<T> private constructor() : ExtensionsAwareBuilder<Table<T>>() {
+
     @set:JvmSynthetic
     var name: String? = "untitled"
 
@@ -28,86 +29,40 @@ class TableBuilder<T> private constructor() : Builder<Table<T>> {
     @set:JvmSynthetic
     private var rows: List<Row<T>>? = null
 
-    @set:JvmSynthetic
-    var showHeader: Boolean? = false
-
-    @set:JvmSynthetic
-    var showFooter: Boolean? = false
-
-    @set:JvmSynthetic
-    private var columnsDescription: Description? = null
-
-    @set:JvmSynthetic
-    private var rowsDescription: Description? = null
-
-    @set:JvmSynthetic
-    private var tableExtensions: Set<TableExtension>? = null
-
-    @set:JvmSynthetic
-    private var cellExtensions: Set<CellExtension>? = null
-
     init {
         NextId.reset()
     }
 
     @JvmSynthetic
     fun columns(block: ColumnsBuilder<T>.() -> Unit) {
-        columns = columns + ColumnsBuilder.new<T>()
-            .apply(block).build()
+        columns = columns + ColumnsBuilder.new<T>().apply(block).build()
     }
 
     @JvmSynthetic
     fun rows(block: RowsBuilder<T>.() -> Unit) {
-        rows = (rows ?: emptyList()) + RowsBuilder.new<T>()
-            .apply(block).build()
-    }
-
-    @JvmSynthetic
-    fun columnsDescription(block: DescriptionBuilder.() -> Unit) {
-        columnsDescription = DescriptionBuilder().apply(block).build()
-    }
-
-    @JvmSynthetic
-    fun rowsDescription(block: DescriptionBuilder.() -> Unit) {
-        rowsDescription = DescriptionBuilder().apply(block).build()
-    }
-
-    @JvmSynthetic
-    fun tableExtensions(vararg extensions: TableExtension) {
-        tableExtensions = (tableExtensions ?: emptySet()) + extensions.toHashSet()
-    }
-
-    @JvmSynthetic
-    fun cellExtensions(vararg extensions: CellExtension) {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
-    }
-
-    @JvmSynthetic
-    fun <T : TableExtensionBuilder> tableExtensions(vararg extensionBuilder: T) {
-        tableExtensions = (tableExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
-    }
-
-    @JvmSynthetic
-    fun <T : CellExtensionBuilder> cellExtensions(vararg extensionBuilder: T) {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
+        rows = (rows ?: emptyList()) + RowsBuilder.new<T>().apply(block).build()
     }
 
     @JvmSynthetic
     override fun build(): Table<T> = Table(
-        name, firstRow, firstColumn, columns, rows, showHeader,
-        showFooter, columnsDescription, rowsDescription,
-        tableExtensions, cellExtensions
+        name, firstRow, firstColumn, columns, rows,
+        getExtensionsByClass(TableExtension::class.java),
+        getExtensionsByClass(CellExtension::class.java)
     )
+
+    @JvmSynthetic
+    override fun supportedExtensionClasses(): Set<Class<out Extension>> =
+        setOf(TableExtension::class.java, CellExtension::class.java)
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(): TableBuilder<T> =
-            TableBuilder()
+        internal fun <T> new(): TableBuilder<T> = TableBuilder()
     }
+
 }
 
 @TableMarker
-class ColumnsBuilder<T> private constructor() : InternalBuilder<List<Column<T>>>() {
+class ColumnsBuilder<T> private constructor() : Builder<List<Column<T>>> {
 
     @set:JvmSynthetic
     private var columns: List<Column<T>> = emptyList()
@@ -137,13 +92,12 @@ class ColumnsBuilder<T> private constructor() : InternalBuilder<List<Column<T>>>
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(): ColumnsBuilder<T> =
-            ColumnsBuilder()
+        internal fun <T> new(): ColumnsBuilder<T> = ColumnsBuilder()
     }
 }
 
 @TableMarker
-class ColumnBuilder<T> private constructor() : InternalBuilder<Column<T>>() {
+class ColumnBuilder<T> private constructor() : ExtensionsAwareBuilder<Column<T>>() {
     @set:JvmSynthetic
     lateinit var id: Key<T>
 
@@ -154,46 +108,29 @@ class ColumnBuilder<T> private constructor() : InternalBuilder<Column<T>>() {
     var index: Int? = null
 
     @set:JvmSynthetic
-    private var columnExtensions: Set<ColumnExtension>? = null
-
-    @set:JvmSynthetic
-    private var cellExtensions: Set<CellExtension>? = null
-
-    @set:JvmSynthetic
     var dataFormatter: ((field: Any) -> Any)? = null
 
-    @JvmSynthetic
-    fun cellExtensions(vararg extensions: CellExtension) {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
-    }
 
     @JvmSynthetic
-    fun columnExtensions(vararg extensions: ColumnExtension) {
-        columnExtensions = (columnExtensions ?: emptySet()) + extensions.toHashSet()
-    }
+    override fun build(): Column<T> = Column(
+        id, index, columnType,
+        getExtensionsByClass(ColumnExtension::class.java),
+        getExtensionsByClass(CellExtension::class.java),
+        dataFormatter
+    )
 
     @JvmSynthetic
-    fun <T : ColumnExtensionBuilder> columnExtensions(vararg extensionBuilder: T) {
-        columnExtensions = (columnExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
-    }
-
-    @JvmSynthetic
-    fun <T : CellExtensionBuilder> cellExtensions(vararg extensionBuilder: T) {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
-    }
-
-    @JvmSynthetic
-    override fun build(): Column<T> = Column(id, index, columnType, columnExtensions, cellExtensions, dataFormatter)
+    override fun supportedExtensionClasses(): Set<Class<out Extension>> =
+        setOf(ColumnExtension::class.java, CellExtension::class.java)
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(): ColumnBuilder<T> =
-            ColumnBuilder()
+        internal fun <T> new(): ColumnBuilder<T> = ColumnBuilder()
     }
 }
 
 @TableMarker
-class RowsBuilder<T> private constructor() : InternalBuilder<List<Row<T>>>() {
+class RowsBuilder<T> private constructor() : Builder<List<Row<T>>> {
 
     @set:JvmSynthetic
     private var rows: List<Row<T>> = emptyList()
@@ -205,16 +142,12 @@ class RowsBuilder<T> private constructor() : InternalBuilder<List<Row<T>>>() {
 
     @JvmSynthetic
     fun row(selector: RowSelector<T>, block: RowBuilder<T>.() -> Unit) {
-        val builder = RowBuilder.new<T>()
-        builder.selector = selector
-        rows = rows + builder.apply(block).build()
+        rows = rows + RowBuilder.new<T>().apply { this.selector = selector }.apply(block).build()
     }
 
     @JvmSynthetic
     fun row(at: Int, block: RowBuilder<T>.() -> Unit) {
-        val builder = RowBuilder.new<T>()
-        builder.createAt = at
-        rows = rows + builder.apply(block).build()
+        rows = rows + RowBuilder.new<T>().apply { createAt = at }.apply(block).build()
     }
 
     @JvmSynthetic
@@ -222,21 +155,15 @@ class RowsBuilder<T> private constructor() : InternalBuilder<List<Row<T>>>() {
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(): RowsBuilder<T> =
-            RowsBuilder()
+        internal fun <T> new(): RowsBuilder<T> = RowsBuilder()
     }
 }
 
 @TableMarker
-class RowBuilder<T> private constructor() : InternalBuilder<Row<T>>() {
+class RowBuilder<T> private constructor() : ExtensionsAwareBuilder<Row<T>>() {
+
     @set:JvmSynthetic
     private var cells: Map<Key<T>, Cell<T>>? = null
-
-    @set:JvmSynthetic
-    private var rowExtensions: Set<RowExtension>? = null
-
-    @set:JvmSynthetic
-    private var cellExtensions: Set<CellExtension>? = null
 
     @set:JvmSynthetic
     var selector: RowSelector<T>? = null
@@ -246,42 +173,29 @@ class RowBuilder<T> private constructor() : InternalBuilder<Row<T>>() {
 
     @JvmSynthetic
     fun cells(block: CellsBuilder<T>.() -> Unit) {
-        cells = (cells ?: emptyMap()) + CellsBuilder.new<T>()
-            .apply(block).build()
+        cells = (cells ?: emptyMap()) + CellsBuilder.new<T>().apply(block).build()
     }
 
     @JvmSynthetic
-    fun rowExtensions(vararg extensions: RowExtension) {
-        rowExtensions = (rowExtensions ?: emptySet()) + extensions.toHashSet()
-    }
+    override fun build(): Row<T> = Row(
+        selector, createAt,
+        getExtensionsByClass(RowExtension::class.java),
+        getExtensionsByClass(CellExtension::class.java),
+        cells
+    )
 
     @JvmSynthetic
-    fun cellExtensions(vararg extensions: CellExtension) {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
-    }
-
-    @JvmSynthetic
-    fun <T : RowExtensionBuilder> rowExtensions(vararg extensionBuilder: T) {
-        rowExtensions = (rowExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
-    }
-
-    @JvmSynthetic
-    fun <T : CellExtensionBuilder> cellExtensions(vararg extensionBuilder: T) {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
-    }
-
-    @JvmSynthetic
-    override fun build(): Row<T> = Row(selector, createAt, rowExtensions, cellExtensions, cells)
+    override fun supportedExtensionClasses(): Set<Class<out Extension>> =
+        setOf(RowExtension::class.java, CellExtension::class.java)
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(): RowBuilder<T> =
-            RowBuilder()
+        internal fun <T> new(): RowBuilder<T> = RowBuilder()
     }
 }
 
 @TableMarker
-class CellsBuilder<T> private constructor() : InternalBuilder<Map<Key<T>, Cell<T>>>() {
+class CellsBuilder<T> private constructor() : Builder<Map<Key<T>, Cell<T>>> {
 
     @set:JvmSynthetic
     private var cells: Map<Key<T>, Cell<T>> = emptyMap()
@@ -309,15 +223,12 @@ class CellsBuilder<T> private constructor() : InternalBuilder<Map<Key<T>, Cell<T
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(): CellsBuilder<T> =
-            CellsBuilder()
+        internal fun <T> new(): CellsBuilder<T> = CellsBuilder()
     }
 }
 
 @TableMarker
-class CellBuilder<T> private constructor() : InternalBuilder<Cell<T>>() {
-    @set:JvmSynthetic
-    private var cellExtensions: Set<CellExtension>? = null
+class CellBuilder<T> private constructor() : ExtensionsAwareBuilder<Cell<T>>() {
 
     @set:JvmSynthetic
     var value: Any? = null
@@ -328,36 +239,15 @@ class CellBuilder<T> private constructor() : InternalBuilder<Cell<T>>() {
     @set:JvmSynthetic
     var type: CellType? = null
 
-    @JvmSynthetic
-    fun cellExtensions(vararg extensions: CellExtension) {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
-    }
 
     @JvmSynthetic
-    fun <T : CellExtensionBuilder> cellExtensions(vararg extensionBuilder: T) {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
-    }
+    override fun build(): Cell<T> = Cell(value, eval, type, getExtensionsByClass(CellExtension::class.java))
 
     @JvmSynthetic
-    override fun build(): Cell<T> = Cell(value, eval, type, cellExtensions)
+    override fun supportedExtensionClasses(): Set<Class<out Extension>> = setOf(CellExtension::class.java)
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(): CellBuilder<T> =
-            CellBuilder()
+        internal fun <T> new(): CellBuilder<T> = CellBuilder()
     }
-}
-
-@TableMarker
-class DescriptionBuilder {
-    lateinit var title: String
-    private var extensions: Set<Extension>? = null
-
-    @JvmSynthetic
-    fun extensions(vararg extensions: Extension) {
-        this.extensions = (this.extensions ?: emptySet()) + extensions.toHashSet()
-    }
-
-    @JvmSynthetic
-    fun build(): Description = Description(title, extensions)
 }

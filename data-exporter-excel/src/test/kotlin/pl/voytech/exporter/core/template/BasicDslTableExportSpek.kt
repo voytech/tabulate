@@ -54,10 +54,8 @@ object BasicDslTableExportSpek : Spek({
                 firstColumn = 2
                 columns {
                     column("nr") {
-                        columnExtensions( //@TODO make single method 'extensions' with dispatching on extension type. Move dispatching logic into base builder class.
-                            width { width = 50 }
-                        )
-                        cellExtensions(
+                        extensions(
+                            width { width = 50 },
                             font {
                                 fontFamily = "Times New Roman"
                                 fontColor = Color(10, 100, 100)
@@ -70,8 +68,8 @@ object BasicDslTableExportSpek : Spek({
                         )
                     }
                     column(Product::code) {
-                        columnExtensions(ColumnWidthExtension(auto = true))
-                        cellExtensions(
+                        extensions(
+                            ColumnWidthExtension(auto = true),
                             CellFontExtension(
                                 fontFamily = "Times New Roman",
                                 fontColor = Color(0, 0, 0),
@@ -81,27 +79,29 @@ object BasicDslTableExportSpek : Spek({
                         )
                     }
                     column(Product::name) {
-                        columnExtensions(ColumnWidthExtension(auto = true))
+                        extensions(ColumnWidthExtension(auto = true))
                     }
                     column(Product::description) {
-                        columnExtensions(ColumnWidthExtension(auto = true))
+                        extensions(ColumnWidthExtension(auto = true))
                     }
                     column(Product::manufacturer) {
-                        columnExtensions(ColumnWidthExtension(auto = true))
+                        extensions(ColumnWidthExtension(auto = true))
                     }
                     column(Product::price) {
-                        columnExtensions(ColumnWidthExtension(auto = true))
+                        extensions(ColumnWidthExtension(auto = true))
                     }
                     column(Product::distributionDate) {
-                        columnExtensions(ColumnWidthExtension(auto = true))
-                        cellExtensions(
+                        extensions(
+                            ColumnWidthExtension(auto = true),
                             CellExcelDataFormatExtension("dd.mm.YYYY")
                         )
                     }
                     (0..1).forEach {
                         column("c$it") {
-                            columnExtensions(ColumnWidthExtension(auto = true))
-                            cellExtensions(CellBackgroundExtension(Color(255, 255, 0)))
+                            extensions(
+                                ColumnWidthExtension(auto = true),
+                                CellBackgroundExtension(Color(255, 255, 0))
+                            )
                         }
                     }
                 }
@@ -117,8 +117,8 @@ object BasicDslTableExportSpek : Spek({
                             forColumn(Product::price) { value = "Price" }
                             forColumn(Product::distributionDate) { value = "Distribution" }
                         }
-                        rowExtensions(RowHeightExtension(height = 120))
-                        cellExtensions(
+                        extensions(
+                            RowHeightExtension(height = 120),
                             CellBordersExtension(
                                 leftBorderStyle = BorderStyle.SOLID,
                                 leftBorderColor = Color(0, 0, 0),
@@ -253,7 +253,7 @@ object BasicDslTableExportSpek : Spek({
                                 dataFormatter = { field -> (field as String).toUpperCase() }
                             }
                             column(Product::distributionDate) {
-                                cellExtensions(
+                                extensions(
                                     CellExcelDataFormatExtension("dd.mm.YYYY")
                                 )
                             }
@@ -326,7 +326,7 @@ object BasicDslTableExportSpek : Spek({
             val file = File("test2.xlsx")
             val table = table<Product> {
                 name = "Products table"
-                tableExtensions(FilterAndSortTableExtension(rowRange = (0..999), columnRange = (0..5)))
+                extensions(FilterAndSortTableExtension(rowRange = (0..999), columnRange = (0..5)))
                 columns {
                     column(Product::code)
                     column(Product::name)
@@ -334,7 +334,7 @@ object BasicDslTableExportSpek : Spek({
                     column(Product::manufacturer)
                     column(Product::price)
                     column(Product::distributionDate) {
-                        cellExtensions(
+                        extensions(
                             CellExcelDataFormatExtension("dd.mm.YYYY")
                         )
                     }

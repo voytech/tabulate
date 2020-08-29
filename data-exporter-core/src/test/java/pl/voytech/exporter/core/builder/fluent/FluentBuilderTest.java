@@ -11,11 +11,8 @@ public class FluentBuilderTest {
                 Column.<Employee>builder().columnType(CellType.STRING)
             )
             .rows(
-                Row.<Employee>builder()
-                    .createAt(0)
-
+                Row.<Employee>builder().createAt(0)
             )
         .build();
-
     }
 }
