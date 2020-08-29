@@ -16,14 +16,6 @@ class TableBuilder<T> : Builder<Table<T>> {
     @set:JvmSynthetic
     private var rows: List<Row<T>>? = null
     @set:JvmSynthetic
-    private var showHeader: Boolean? = false
-    @set:JvmSynthetic
-    private var showFooter: Boolean? = false
-    @set:JvmSynthetic
-    private var columnsDescription: Description? = null
-    @set:JvmSynthetic
-    private var rowsDescription: Description? = null
-    @set:JvmSynthetic
     private var tableExtensions: Set<TableExtension>? = null
     @set:JvmSynthetic
     private var cellExtensions: Set<CellExtension>? = null
@@ -69,8 +61,7 @@ class TableBuilder<T> : Builder<Table<T>> {
     }
 
     override fun build(): Table<T> = Table(
-        name, firstRow, firstColumn, columns, rows, showHeader,
-        showFooter, columnsDescription, rowsDescription,
+        name, firstRow, firstColumn, columns, rows,
         tableExtensions, cellExtensions
     )
 
@@ -78,7 +69,7 @@ class TableBuilder<T> : Builder<Table<T>> {
 
 fun <T> Table<T>.builder() = TableBuilder<T>()
 
-class ColumnsBuilder<T> : InternalBuilder<List<Column<T>>>() {
+class ColumnsBuilder<T> : Builder<List<Column<T>>> {
 
     @set:JvmSynthetic
     private var columns: List<Column<T>> = emptyList()
@@ -105,7 +96,7 @@ class ColumnsBuilder<T> : InternalBuilder<List<Column<T>>>() {
 
 }
 
-class ColumnBuilder<T> : InternalBuilder<Column<T>>() {
+class ColumnBuilder<T> : Builder<Column<T>> {
     @set:JvmSynthetic
     private lateinit var id: Key<T>
     @set:JvmSynthetic
@@ -159,7 +150,7 @@ class ColumnBuilder<T> : InternalBuilder<Column<T>>() {
 
 }
 
-class RowsBuilder<T> : InternalBuilder<List<Row<T>>>() {
+class RowsBuilder<T> : Builder<List<Row<T>>> {
 
     @set:JvmSynthetic
     private var rows: List<Row<T>> = emptyList()
@@ -180,7 +171,7 @@ class RowsBuilder<T> : InternalBuilder<List<Row<T>>>() {
 
 }
 
-class RowBuilder<T> : InternalBuilder<Row<T>>() {
+class RowBuilder<T> : Builder<Row<T>> {
     @set:JvmSynthetic
     private var cells: Map<Key<T>, Cell<T>>? = null
     @set:JvmSynthetic
@@ -224,7 +215,7 @@ class RowBuilder<T> : InternalBuilder<Row<T>>() {
 
 }
 
-class CellsBuilder<T> : InternalBuilder<Map<Key<T>, Cell<T>>>() {
+class CellsBuilder<T> : Builder<Map<Key<T>, Cell<T>>> {
 
     @set:JvmSynthetic
     private var cells: Map<Key<T>, Cell<T>> = emptyMap()
@@ -243,7 +234,7 @@ class CellsBuilder<T> : InternalBuilder<Map<Key<T>, Cell<T>>>() {
 
 }
 
-class CellBuilder<T> : InternalBuilder<Cell<T>>() {
+class CellBuilder<T> : Builder<Cell<T>> {
     @set:JvmSynthetic
     private var cellExtensions: Set<CellExtension>? = null
 
