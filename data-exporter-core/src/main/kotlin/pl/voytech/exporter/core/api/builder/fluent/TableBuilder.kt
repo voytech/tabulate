@@ -4,7 +4,7 @@ import pl.voytech.exporter.core.api.builder.*
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.extension.*
 
-class TableBuilder<T> : Builder<Table<T>> {
+class TableBuilder<T> : ExtensionsAwareBuilder<Table<T>>() {
     @set:JvmSynthetic
     private var name: String? = "untitled"
     @set:JvmSynthetic
@@ -15,10 +15,6 @@ class TableBuilder<T> : Builder<Table<T>> {
     private var columns: List<Column<T>> = emptyList()
     @set:JvmSynthetic
     private var rows: List<Row<T>>? = null
-    @set:JvmSynthetic
-    private var tableExtensions: Set<TableExtension>? = null
-    @set:JvmSynthetic
-    private var cellExtensions: Set<CellExtension>? = null
 
     init {
         NextId.reset()
@@ -36,77 +32,41 @@ class TableBuilder<T> : Builder<Table<T>> {
         this.firstColumn = firstColumn
     }
 
-    fun columns(vararg columnBuilders: ColumnBuilder<T>) = apply {
-        columns = columns + columnBuilders.map { it.build() }
-    }
+    fun columns() = ColumnsBuilder(this)
 
-    fun rows(vararg rowBuilders: RowBuilder<T>) = apply {
-        rows = (rows ?: emptyList()) + rowBuilders.map { it.build() }
-    }
-
-    fun tableExtensions(vararg extensions: TableExtension) = apply {
-        tableExtensions = (tableExtensions ?: emptySet()) + extensions.toHashSet()
-    }
-
-    fun cellExtensions(vararg extensions: CellExtension) = apply {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
-    }
-
-    fun <T: TableExtensionBuilder> tableExtensions(vararg extensionBuilder: T) = apply {
-        tableExtensions = (tableExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
-    }
-
-    fun <T: CellExtensionBuilder> cellExtensions(vararg extensionBuilder: T) = apply  {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
-    }
+    fun rows() = RowsBuilder(this)
 
     override fun build(): Table<T> = Table(
         name, firstRow, firstColumn, columns, rows,
-        tableExtensions, cellExtensions
+        getExtensionsByClass(TableExtension::class.java),
+        getExtensionsByClass(CellExtension::class.java)
     )
+
+    override fun supportedExtensionClasses(): Set<Class<out Extension>> =
+        setOf(TableExtension::class.java, CellExtension::class.java)
 
 }
 
-fun <T> Table<T>.builder() = TableBuilder<T>()
-
-class ColumnsBuilder<T> : Builder<List<Column<T>>> {
+class ColumnsBuilder<T>(private val tableBuilder: TableBuilder<T>) : Builder<TableBuilder<T>> {
 
     @set:JvmSynthetic
     private var columns: List<Column<T>> = emptyList()
 
-    fun column(id: String, builder: ColumnBuilder<T>) = apply {
-        columns = columns + builder.also { it.id(Key(id = id)) }.build()
-    }
+    fun column(id: String) = ColumnBuilder(this)
 
-    fun column(ref: ((record: T) -> Any?), builder: ColumnBuilder<T>) = apply {
-        columns = columns + builder.also { it.id(Key(ref = ref)) }.build()
-    }
+    fun column(ref: ((record: T) -> Any?)) = ColumnBuilder(this)
 
-    fun column(id: String) = apply {
-        columns = columns + (ColumnBuilder<T>()
-            .also { it.id(Key(id = id)) }.build())
-    }
-
-    fun column(ref: ((record: T) -> Any?)) = apply {
-        columns = columns + (ColumnBuilder<T>()
-            .also { it.id(Key(ref = ref)) }.build())
-    }
-
-    override fun build(): List<Column<T>> = columns
+    override fun build(): TableBuilder<T> = tableBuilder
 
 }
 
-class ColumnBuilder<T> : Builder<Column<T>> {
+class ColumnBuilder<T>(private val columnsBuilder: ColumnsBuilder<T>) : ExtensionsAwareBuilder<ColumnsBuilder<T>>() {
     @set:JvmSynthetic
     private lateinit var id: Key<T>
     @set:JvmSynthetic
     private var columnType: CellType? = null
     @set:JvmSynthetic
     private var index: Int? = null
-    @set:JvmSynthetic
-    private var columnExtensions: Set<ColumnExtension>? = null
-    @set:JvmSynthetic
-    private var cellExtensions: Set<CellExtension>? = null
     @set:JvmSynthetic
     private var dataFormatter: ((field: Any) -> Any)? = null
 
@@ -130,54 +90,41 @@ class ColumnBuilder<T> : Builder<Column<T>> {
         this.columnType = columnType
     }
 
-    fun cellExtensions(vararg extensions: CellExtension) = apply {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
-    }
+    override fun supportedExtensionClasses(): Set<Class<out Extension>> =
+        setOf(ColumnExtension::class.java, CellExtension::class.java)
 
-    fun columnExtensions(vararg extensions: ColumnExtension) = apply {
-        columnExtensions = (columnExtensions ?: emptySet()) + extensions.toHashSet()
+    override fun build(): ColumnsBuilder<T> {
+        return Column(id, index, columnType,
+            getExtensionsByClass(ColumnExtension::class.java),
+            getExtensionsByClass(CellExtension::class.java),
+            dataFormatter
+        ).let {
+            columnsBuilder
+        }
     }
-
-    fun <T: ColumnExtensionBuilder> columnExtensions(vararg extensionBuilder: T) = apply {
-        columnExtensions = (columnExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
-    }
-
-    fun <T: CellExtensionBuilder> cellExtensions(vararg  extensionBuilder: T) = apply {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
-    }
-
-    override fun build(): Column<T> = Column(id, index, columnType, columnExtensions, cellExtensions, dataFormatter)
 
 }
 
-class RowsBuilder<T> : Builder<List<Row<T>>> {
+class RowsBuilder<T>(private val tableBuilder: TableBuilder<T>) : Builder<TableBuilder<T>> {
 
     @set:JvmSynthetic
     private var rows: List<Row<T>> = emptyList()
 
-    fun row(builder: RowBuilder<T>) = apply {
-        rows = rows + builder.build()
-    }
+    fun row() = RowBuilder(this)
 
-    fun row(selector: RowSelector<T>, builder: RowBuilder<T>) = apply {
-        rows = rows + builder.selector(selector).build()
-    }
+    fun row(selector: RowSelector<T>) = RowBuilder(this).apply { selector(selector) }
 
-    fun row(at: Int, builder: RowBuilder<T>) {
-        rows = rows + builder.createAt(at).build()
-    }
+    fun row(at: Int) = RowBuilder(this).apply { createAt(at) }
 
-    override fun build(): List<Row<T>> = rows
+    override fun build(): TableBuilder<T> {
+        return tableBuilder
+    }
 
 }
 
-class RowBuilder<T> : Builder<Row<T>> {
+class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>) : ExtensionsAwareBuilder<RowsBuilder<T>>() {
     @set:JvmSynthetic
     private var cells: Map<Key<T>, Cell<T>>? = null
-    @set:JvmSynthetic
-    private var rowExtensions: Set<RowExtension>? = null
-    @set:JvmSynthetic
-    private var cellExtensions: Set<CellExtension>? = null
     @set:JvmSynthetic
     private var selector: RowSelector<T>? = null
     @set:JvmSynthetic
@@ -191,52 +138,42 @@ class RowBuilder<T> : Builder<Row<T>> {
         this.createAt = createAt
     }
 
-    fun rowExtensions(vararg extensions: RowExtension) = apply {
-        rowExtensions = (rowExtensions ?: emptySet()) + extensions.toHashSet()
-    }
+    fun cells() = CellsBuilder(this)
 
-    fun cellExtensions(vararg extensions: CellExtension) = apply {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
-    }
+    override fun supportedExtensionClasses(): Set<Class<out Extension>> =
+        setOf(RowExtension::class.java, CellExtension::class.java)
 
-    fun <T: RowExtensionBuilder> rowExtensions(vararg extensionBuilder: T) = apply {
-        rowExtensions = (rowExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
+    override fun build(): RowsBuilder<T> {
+        return Row(selector, createAt,
+            getExtensionsByClass(RowExtension::class.java),
+            getExtensionsByClass(CellExtension::class.java),
+            cells
+        ).let {
+            rowsBuilder
+        }
     }
-
-    fun <T: CellExtensionBuilder> cellExtensions(vararg extensionBuilder: T) = apply {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
-    }
-
-    fun cells(cellsBuilder: CellsBuilder<T>) = apply {
-        cells = (cells ?: emptyMap()) + cellsBuilder.build()
-    }
-
-    override fun build(): Row<T> = Row(selector, createAt, rowExtensions, cellExtensions, cells)
 
 }
 
-class CellsBuilder<T> : Builder<Map<Key<T>, Cell<T>>> {
+class CellsBuilder<T>(private val rowBuilder: RowBuilder<T>) : Builder<RowBuilder<T>> {
 
     @set:JvmSynthetic
     private var cells: Map<Key<T>, Cell<T>> = emptyMap()
 
-    fun forColumn(id: String, builder: CellBuilder<T>) {
-        cells = cells  + Pair(Key(id), builder.build())
-    }
+    fun forColumn(id: String) = CellBuilder(id, null, this)
 
-    fun forColumn(ref: ((record: T) -> Any?), builder: CellBuilder<T>) {
-        cells = cells + Pair(Key(ref = ref), builder.build())
-    }
+    fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(null, ref, this)
 
-    override fun build(): Map<Key<T>, Cell<T>> {
-        return cells
+    override fun build(): RowBuilder<T> {
+      return rowBuilder
     }
-
 }
 
-class CellBuilder<T> : Builder<Cell<T>> {
-    @set:JvmSynthetic
-    private var cellExtensions: Set<CellExtension>? = null
+class CellBuilder<T>(
+    private val id: String?,
+    private val ref: ((record: T) -> Any?)?,
+    private val cellsBuilder: CellsBuilder<T>
+) : ExtensionsAwareBuilder<CellsBuilder<T>>() {
 
     @set:JvmSynthetic
     private var value: Any? = null
@@ -246,14 +183,6 @@ class CellBuilder<T> : Builder<Cell<T>> {
 
     @set:JvmSynthetic
     private var type: CellType? = null
-
-    fun cellExtensions(vararg extensions: CellExtension) = apply {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensions.toHashSet()
-    }
-
-    fun <T : CellExtensionBuilder> cellExtensions(vararg extensionBuilder: T) = apply {
-        cellExtensions = (cellExtensions ?: emptySet()) + extensionBuilder.map { it.build() }
-    }
 
     fun value(value: Any?) = apply {
         this.value = value
@@ -267,6 +196,13 @@ class CellBuilder<T> : Builder<Cell<T>> {
         this.type = type
     }
 
-    override fun build(): Cell<T> = Cell(value, eval, type, cellExtensions)
+    override fun supportedExtensionClasses(): Set<Class<out Extension>> =
+        setOf(RowExtension::class.java, CellExtension::class.java)
+
+    override fun build(): CellsBuilder<T> {
+        return Cell(value, eval, type, getExtensionsByClass(CellExtension::class.java)).let {
+           cellsBuilder
+        }
+    }
 
 }
