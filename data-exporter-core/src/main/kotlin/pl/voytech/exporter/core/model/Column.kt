@@ -11,9 +11,4 @@ data class Column<T> internal constructor(
     val columnExtensions: Set<ColumnExtension>?,
     val cellExtensions: Set<CellExtension>?,
     val dataFormatter: ((field: Any) -> Any)? = null
-) {
-    companion object {
-        @JvmStatic
-        fun <T> builder() = ColumnBuilder<T>()
-    }
-}
+)

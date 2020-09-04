@@ -8,9 +8,4 @@ data class Cell<T> internal constructor(
     val eval: RowCellEval<T>?,
     val type: CellType?,
     val cellExtensions: Set<CellExtension>?
-) {
-    companion object {
-        @JvmStatic
-        fun <T> builder() = CellBuilder<T>()
-    }
-}
+)
