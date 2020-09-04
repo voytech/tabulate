@@ -13,7 +13,7 @@ abstract class ExtensionsAwareBuilder<T> : Builder<T> {
     private var extensions: Map<Class<out Extension>, Set<Extension>> = emptyMap()
 
     @JvmSynthetic
-    fun extensions(vararg extension: Extension) {
+    open fun extensions(vararg extension: Extension) {
         extension.forEach {
             supportedExtensionClasses().find { clazz -> clazz.isAssignableFrom(it.javaClass) }
                 ?.let { baseClass ->
@@ -26,13 +26,15 @@ abstract class ExtensionsAwareBuilder<T> : Builder<T> {
     }
 
     @JvmSynthetic
-    fun extensions(vararg builders: ExtensionBuilder<out Extension>) {
+    open fun extensions(vararg builders: ExtensionBuilder<out Extension>) {
         extensions(*(builders.map { it.build() }).toTypedArray())
     }
 
     @Suppress("UNCHECKED_CAST")
+    @JvmSynthetic
     internal fun <C: Extension> getExtensionsByClass(clazz: Class<C>): Set<C>? = extensions[clazz] as Set<C>?
 
+    @JvmSynthetic
     internal abstract fun supportedExtensionClasses(): Set<Class<out Extension>>
 }
 

@@ -10,9 +10,4 @@ data class Row<T> internal constructor(
     val rowExtensions: Set<RowExtension>?,
     val cellExtensions: Set<CellExtension>?,
     val cells: Map<Key<T>, Cell<T>>?
-) {
-    companion object {
-        @JvmStatic
-        fun <T> builder() = RowBuilder<T>()
-    }
-}
+)
