@@ -85,9 +85,6 @@ class ColumnsBuilder<T>(private val tableBuilder: TableBuilder<T>) : Builder<Tab
     fun column(ref: ((record: T) -> Any?)) = ColumnBuilder(this).apply { id(Key(ref = ref)) }
 
     @JvmSynthetic
-    internal fun getParentBuilder() = tableBuilder
-
-    @JvmSynthetic
     internal fun addColumn(column: Column<T>) = apply {
         columns = columns + column
     }
@@ -296,6 +293,12 @@ class CellBuilder<T>(
     @set:JvmSynthetic
     private var type: CellType? = null
 
+    @set:JvmSynthetic
+    private var colSpan: Int? = 1
+
+    @set:JvmSynthetic
+    private var rowSpan: Int? = 1
+
     fun value(value: Any?) = apply {
         this.value = value
     }
@@ -306,6 +309,14 @@ class CellBuilder<T>(
 
     fun type(type: CellType?) = apply {
         this.type = type
+    }
+
+    fun colSpan(colSpan: Int?) = apply {
+        this.colSpan = colSpan
+    }
+
+    fun rowSpan(rowSpan: Int?) = apply {
+        this.rowSpan = rowSpan
     }
 
     fun forColumn(id: String) = CellBuilder(Key(id = id), out())
@@ -325,6 +336,6 @@ class CellBuilder<T>(
 
     @JvmSynthetic
     override fun out(): CellsBuilder<T> =
-        cellsBuilder.addCell(key, Cell(value, eval, type, getExtensionsByClass(CellExtension::class.java)))
+        cellsBuilder.addCell(key, Cell(value, eval, type, colSpan, rowSpan, getExtensionsByClass(CellExtension::class.java)))
 
 }

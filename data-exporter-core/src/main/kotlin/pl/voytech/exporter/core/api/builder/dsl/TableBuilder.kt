@@ -239,9 +239,14 @@ class CellBuilder<T> private constructor() : ExtensionsAwareBuilder<Cell<T>>() {
     @set:JvmSynthetic
     var type: CellType? = null
 
+    @set:JvmSynthetic
+    var colSpan: Int? = 1
+
+    @set:JvmSynthetic
+    var rowSpan: Int? = 1
 
     @JvmSynthetic
-    override fun build(): Cell<T> = Cell(value, eval, type, getExtensionsByClass(CellExtension::class.java))
+    override fun build(): Cell<T> = Cell(value, eval, type, colSpan, rowSpan, getExtensionsByClass(CellExtension::class.java))
 
     @JvmSynthetic
     override fun supportedExtensionClasses(): Set<Class<out Extension>> = setOf(CellExtension::class.java)
