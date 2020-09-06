@@ -1,6 +1,5 @@
 package pl.voytech.exporter.core.model
 
-import pl.voytech.exporter.core.api.builder.fluent.RowBuilder
 import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.RowExtension
 
