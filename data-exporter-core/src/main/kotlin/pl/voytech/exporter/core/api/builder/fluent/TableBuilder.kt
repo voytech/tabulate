@@ -1,19 +1,24 @@
 package pl.voytech.exporter.core.api.builder.fluent
 
 import pl.voytech.exporter.core.api.builder.Builder
-import pl.voytech.exporter.core.api.builder.ExtensionsAwareBuilder
+import pl.voytech.exporter.core.api.builder.ExtensionsAware
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.extension.*
 
-interface BuildPointSwitch<T> {
-    fun out(): T
+
+interface TopLevelBuilder<T> : Builder<Table<T>>
+
+interface MidLevelBuilder<T, E : TopLevelBuilder<T>> : TopLevelBuilder<T> {
+
+    @JvmSynthetic
+    fun out(): E
+
+    override fun build(): Table<T> = out().build()
+
 }
 
-interface TopLevelSwitch<E : Builder<*>> {
-    fun top(): E
-}
 
-class TableBuilder<T> : ExtensionsAwareBuilder<Table<T>>() {
+class TableBuilder<T> : ExtensionsAware(), TopLevelBuilder<T> {
     @set:JvmSynthetic
     private var name: String? = "untitled"
 
@@ -74,8 +79,7 @@ class TableBuilder<T> : ExtensionsAwareBuilder<Table<T>>() {
 
 }
 
-class ColumnsBuilder<T>(private val tableBuilder: TableBuilder<T>) : Builder<Table<T>>,
-    TopLevelSwitch<TableBuilder<T>> {
+class ColumnsBuilder<T>(private val tableBuilder: TableBuilder<T>) : MidLevelBuilder<T, TableBuilder<T>> {
 
     @set:JvmSynthetic
     private var columns: List<Column<T>> = emptyList()
@@ -89,18 +93,14 @@ class ColumnsBuilder<T>(private val tableBuilder: TableBuilder<T>) : Builder<Tab
         columns = columns + column
     }
 
-    override fun build(): Table<T> {
-        return top().build()
-    }
-
-    override fun top(): TableBuilder<T> {
+    override fun out(): TableBuilder<T> {
         return tableBuilder.addColumns(*columns.toTypedArray())
     }
 
 }
 
-class ColumnBuilder<T>(private val columnsBuilder: ColumnsBuilder<T>) : ExtensionsAwareBuilder<Table<T>>(),
-    BuildPointSwitch<ColumnsBuilder<T>> {
+class ColumnBuilder<T>(private val columnsBuilder: ColumnsBuilder<T>) : ExtensionsAware(),
+    MidLevelBuilder<T, ColumnsBuilder<T>> {
     @set:JvmSynthetic
     private lateinit var id: Key<T>
 
@@ -112,10 +112,6 @@ class ColumnBuilder<T>(private val columnsBuilder: ColumnsBuilder<T>) : Extensio
 
     @set:JvmSynthetic
     private var dataFormatter: ((field: Any) -> Any)? = null
-
-    /**
-     * JAVA style builder.
-     **/
 
     fun id(id: Key<T>) = apply {
         this.id = id
@@ -141,20 +137,15 @@ class ColumnBuilder<T>(private val columnsBuilder: ColumnsBuilder<T>) : Extensio
         return ColumnBuilder(out()).apply { id(Key(ref = ref)) }
     }
 
+    fun rows() = out().out().rows()
+
     fun extension(vararg extension: Extension) = apply {
         extensions(*extension)
     }
 
-    fun rows() = out().top().rows()
-
     @JvmSynthetic
     override fun supportedExtensionClasses(): Set<Class<out Extension>> =
         setOf(ColumnExtension::class.java, CellExtension::class.java)
-
-    @JvmSynthetic
-    override fun build(): Table<T> {
-        return out().build()
-    }
 
     @JvmSynthetic
     override fun out(): ColumnsBuilder<T> {
@@ -170,7 +161,7 @@ class ColumnBuilder<T>(private val columnsBuilder: ColumnsBuilder<T>) : Extensio
 
 }
 
-class RowsBuilder<T>(private val tableBuilder: TableBuilder<T>) : Builder<Table<T>>, TopLevelSwitch<TableBuilder<T>> {
+class RowsBuilder<T>(private val tableBuilder: TableBuilder<T>) : MidLevelBuilder<T, TableBuilder<T>> {
 
     @set:JvmSynthetic
     private var rows: List<Row<T>> = emptyList()
@@ -186,19 +177,14 @@ class RowsBuilder<T>(private val tableBuilder: TableBuilder<T>) : Builder<Table<
         rows = rows + row
     }
 
-    override fun build(): Table<T> {
-        return top().build()
-    }
-
     @JvmSynthetic
-    override fun top(): TableBuilder<T> {
+    override fun out(): TableBuilder<T> {
         return tableBuilder.addRows(*rows.toTypedArray())
     }
 
 }
 
-class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>) : ExtensionsAwareBuilder<Table<T>>(),
-    BuildPointSwitch<RowsBuilder<T>> {
+class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>) : ExtensionsAware(), MidLevelBuilder<T, RowsBuilder<T>> {
     @set:JvmSynthetic
     private var cells: Map<Key<T>, Cell<T>>? = null
 
@@ -237,8 +223,6 @@ class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>) : ExtensionsAwareBu
         this.cells = cells
     }
 
-    override fun build(): Table<T> = out().build()
-
     @JvmSynthetic
     override fun out(): RowsBuilder<T> {
         return rowsBuilder.addRow(
@@ -253,7 +237,7 @@ class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>) : ExtensionsAwareBu
 
 }
 
-class CellsBuilder<T>(private val rowBuilder: RowBuilder<T>) : Builder<Table<T>>, BuildPointSwitch<RowBuilder<T>> {
+class CellsBuilder<T>(private val rowBuilder: RowBuilder<T>) : MidLevelBuilder<T, RowBuilder<T>> {
 
     @set:JvmSynthetic
     private var cells: Map<Key<T>, Cell<T>> = emptyMap()
@@ -273,8 +257,6 @@ class CellsBuilder<T>(private val rowBuilder: RowBuilder<T>) : Builder<Table<T>>
 
     fun row(at: Int) = out().apply { createAt(at) }
 
-    override fun build(): Table<T> = out().build()
-
     @JvmSynthetic
     override fun out(): RowBuilder<T> = rowBuilder.addCells(cells)
 }
@@ -282,7 +264,7 @@ class CellsBuilder<T>(private val rowBuilder: RowBuilder<T>) : Builder<Table<T>>
 class CellBuilder<T>(
     private val key: Key<T>,
     private val cellsBuilder: CellsBuilder<T>
-) : ExtensionsAwareBuilder<Table<T>>(), BuildPointSwitch<CellsBuilder<T>> {
+) : ExtensionsAware(), MidLevelBuilder<T, CellsBuilder<T>> {
 
     @set:JvmSynthetic
     private var value: Any? = null
@@ -332,10 +314,11 @@ class CellBuilder<T>(
     override fun supportedExtensionClasses(): Set<Class<out Extension>> =
         setOf(RowExtension::class.java, CellExtension::class.java)
 
-    override fun build(): Table<T> = out().build()
-
     @JvmSynthetic
     override fun out(): CellsBuilder<T> =
-        cellsBuilder.addCell(key, Cell(value, eval, type, colSpan, rowSpan, getExtensionsByClass(CellExtension::class.java)))
+        cellsBuilder.addCell(
+            key,
+            Cell(value, eval, type, colSpan, rowSpan, getExtensionsByClass(CellExtension::class.java))
+        )
 
 }
