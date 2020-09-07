@@ -8,8 +8,7 @@ interface Builder<T> {
     fun build(): T
 }
 
-abstract class ExtensionsAwareBuilder<T> : Builder<T> {
-
+abstract class ExtensionsAware {
     private var extensions: Map<Class<out Extension>, Set<Extension>> = emptyMap()
 
     @JvmSynthetic
@@ -32,11 +31,13 @@ abstract class ExtensionsAwareBuilder<T> : Builder<T> {
 
     @Suppress("UNCHECKED_CAST")
     @JvmSynthetic
-    internal fun <C: Extension> getExtensionsByClass(clazz: Class<C>): Set<C>? = extensions[clazz] as Set<C>?
+    internal fun <C : Extension> getExtensionsByClass(clazz: Class<C>): Set<C>? = extensions[clazz] as Set<C>?
 
     @JvmSynthetic
     internal abstract fun supportedExtensionClasses(): Set<Class<out Extension>>
 }
+
+abstract class ExtensionsAwareBuilder<T> : ExtensionsAware(), Builder<T>
 
 interface ExtensionBuilder<T : Extension> : Builder<T>
 

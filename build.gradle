@@ -33,6 +33,8 @@ subprojects {
         implementation "com.google.guava:guava:$guava_version"
         testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
         testImplementation "org.spekframework.spek2:spek-dsl-jvm:$spek_version"
+        testImplementation "junit:junit:4.13"
+        testImplementation "com.google.truth:truth:1.0.1"
         testRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:$spek_version"
         // spek requires kotlin-reflect, can be omitted if already in the classpath
         testRuntimeOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
