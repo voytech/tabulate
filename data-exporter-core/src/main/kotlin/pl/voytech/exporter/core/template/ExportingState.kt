@@ -1,6 +1,7 @@
 package pl.voytech.exporter.core.template
 
-import pl.voytech.exporter.core.model.Key
+import pl.voytech.exporter.core.model.CellKey
+import pl.voytech.exporter.core.model.ColumnKey
 import pl.voytech.exporter.core.model.NextId
 
 /**
@@ -73,14 +74,14 @@ class ExportingState<T, A>(
         return rowOperationContext
     }
 
-    internal fun cellOperationContext(columnIndex: Int, columnId: Key<T>): OperationContext<T, CellOperationTableData<T>> {
+    internal fun cellOperationContext(columnIndex: Int, columnId: CellKey<T>): OperationContext<T, CellOperationTableData<T>> {
         this.columnIndex = columnIndex
         cellOperationContext.coordinates = coordinates()
         cellOperationContext.value.cellValue = rowValue?.rowCellValues?.get(columnId)
         return cellOperationContext
     }
 
-    internal fun columnOperationContext(columnIndex: Int, columnId: Key<T>, phase: ColumnRenderPhase): OperationContext<T, ColumnOperationTableData<T>> {
+    internal fun columnOperationContext(columnIndex: Int, columnId: ColumnKey<T>, phase: ColumnRenderPhase): OperationContext<T, ColumnOperationTableData<T>> {
         this.columnIndex = columnIndex
         columnOperationContext.coordinates = coordinates()
         columnOperationContext.value.currentPhase = phase

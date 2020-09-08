@@ -84,9 +84,9 @@ class ColumnsBuilder<T>(private val tableBuilder: TableBuilder<T>) : MidLevelBui
     @set:JvmSynthetic
     private var columns: List<Column<T>> = emptyList()
 
-    fun column(id: String) = ColumnBuilder(this).apply { id(Key(id = id)) }
+    fun column(id: String) = ColumnBuilder(this).apply { id(ColumnKey(id = id)) }
 
-    fun column(ref: ((record: T) -> Any?)) = ColumnBuilder(this).apply { id(Key(ref = ref)) }
+    fun column(ref: ((record: T) -> Any?)) = ColumnBuilder(this).apply { id(ColumnKey(ref = ref)) }
 
     @JvmSynthetic
     internal fun addColumn(column: Column<T>) = apply {
@@ -102,7 +102,7 @@ class ColumnsBuilder<T>(private val tableBuilder: TableBuilder<T>) : MidLevelBui
 class ColumnBuilder<T>(private val columnsBuilder: ColumnsBuilder<T>) : ExtensionsAware(),
     MidLevelBuilder<T, ColumnsBuilder<T>> {
     @set:JvmSynthetic
-    private lateinit var id: Key<T>
+    private lateinit var id: ColumnKey<T>
 
     @set:JvmSynthetic
     private var columnType: CellType? = null
@@ -113,7 +113,7 @@ class ColumnBuilder<T>(private val columnsBuilder: ColumnsBuilder<T>) : Extensio
     @set:JvmSynthetic
     private var dataFormatter: ((field: Any) -> Any)? = null
 
-    fun id(id: Key<T>) = apply {
+    fun id(id: ColumnKey<T>) = apply {
         this.id = id
     }
 
@@ -130,11 +130,11 @@ class ColumnBuilder<T>(private val columnsBuilder: ColumnsBuilder<T>) : Extensio
     }
 
     fun column(id: String): ColumnBuilder<T> {
-        return ColumnBuilder(out()).apply { id(Key(id = id)) }
+        return ColumnBuilder(out()).apply { id(ColumnKey(id = id)) }
     }
 
     fun column(ref: ((record: T) -> Any?)): ColumnBuilder<T> {
-        return ColumnBuilder(out()).apply { id(Key(ref = ref)) }
+        return ColumnBuilder(out()).apply { id(ColumnKey(ref = ref)) }
     }
 
     fun rows() = out().out().rows()
@@ -186,7 +186,7 @@ class RowsBuilder<T>(private val tableBuilder: TableBuilder<T>) : MidLevelBuilde
 
 class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>) : ExtensionsAware(), MidLevelBuilder<T, RowsBuilder<T>> {
     @set:JvmSynthetic
-    private var cells: Map<Key<T>, Cell<T>>? = null
+    private var cells: Map<CellKey<T>, Cell<T>>? = null
 
     @set:JvmSynthetic
     private var selector: RowSelector<T>? = null
@@ -219,7 +219,7 @@ class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>) : ExtensionsAware()
 
 
     @JvmSynthetic
-    internal fun addCells(cells: Map<Key<T>, Cell<T>>) = apply {
+    internal fun addCells(cells: Map<CellKey<T>, Cell<T>>) = apply {
         this.cells = cells
     }
 
@@ -240,16 +240,18 @@ class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>) : ExtensionsAware()
 class CellsBuilder<T>(private val rowBuilder: RowBuilder<T>) : MidLevelBuilder<T, RowBuilder<T>> {
 
     @set:JvmSynthetic
-    private var cells: Map<Key<T>, Cell<T>> = emptyMap()
+    private var cells: Map<CellKey<T>, Cell<T>> = emptyMap()
 
     @JvmSynthetic
-    internal fun addCell(key: Key<T>, cell: Cell<T>) = apply {
-        cells = cells + Pair(key, cell)
+    internal fun addCell(columnKey: CellKey<T>, cell: Cell<T>) = apply {
+        cells = cells + Pair(columnKey, cell)
     }
 
-    fun forColumn(id: String) = CellBuilder(Key(id = id), this)
+    fun forColumn(id: String) = CellBuilder(CellKey(id = id), this)
 
-    fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(Key(ref = ref), this)
+    fun forColumn(index: Int) = CellBuilder(CellKey(columnIndex = index), this)
+
+    fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(CellKey(ref = ref), this)
 
     fun row() = RowBuilder(out().out())
 
@@ -262,7 +264,7 @@ class CellsBuilder<T>(private val rowBuilder: RowBuilder<T>) : MidLevelBuilder<T
 }
 
 class CellBuilder<T>(
-    private val key: Key<T>,
+    private val columnKey: CellKey<T>,
     private val cellsBuilder: CellsBuilder<T>
 ) : ExtensionsAware(), MidLevelBuilder<T, CellsBuilder<T>> {
 
@@ -301,9 +303,11 @@ class CellBuilder<T>(
         this.rowSpan = rowSpan
     }
 
-    fun forColumn(id: String) = CellBuilder(Key(id = id), out())
+    fun forColumn(id: String) = CellBuilder(CellKey(id = id), out())
 
-    fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(Key(ref = ref), out())
+    fun forColumn(index: Int) = CellBuilder(CellKey(columnIndex = index), out())
+
+    fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(CellKey(ref = ref), out())
 
     fun row() =  RowBuilder(out().out().out())
 
@@ -317,7 +321,7 @@ class CellBuilder<T>(
     @JvmSynthetic
     override fun out(): CellsBuilder<T> =
         cellsBuilder.addCell(
-            key,
+            columnKey,
             Cell(value, eval, type, colSpan, rowSpan, getExtensionsByClass(CellExtension::class.java))
         )
 

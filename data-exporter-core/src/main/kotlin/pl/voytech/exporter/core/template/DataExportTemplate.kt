@@ -1,6 +1,7 @@
 package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.*
+import pl.voytech.exporter.core.model.CellKey.Companion.cellKey
 import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.Extension
 import pl.voytech.exporter.core.model.extension.RowExtension
@@ -27,7 +28,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     internal data class ComputedSyntheticRowValue<T>(val matchingRowDefinitions: Set<Row<T>>?) {
         val rowExtensions: Set<RowExtension>?
         val rowCellExtensions: Set<CellExtension>?
-        val rowCells: Map<Key<T>, Cell<T>>?
+        val rowCells: Map<CellKey<T>, Cell<T>>?
 
         init {
             rowExtensions = collectHints(matchingRowDefinitions) { r -> r.rowExtensions }
@@ -43,17 +44,17 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                 ?.fold(setOf(), { acc, r -> acc + r })
         }
 
-        private fun collectCells(matchingRows: Set<Row<T>>?): Map<Key<T>, Cell<T>>? {
+        private fun collectCells(matchingRows: Set<Row<T>>?): Map<CellKey<T>, Cell<T>>? {
             return matchingRows?.mapNotNull { row -> row.cells }
                 ?.fold(mapOf(), { acc, m -> acc + m })
         }
     }
 
-    data class ComputedRowValue<T>(
+    internal data class ComputedRowValue<T>(
         val rowExtensions: Set<RowExtension>?,
         val rowCellExtensions: Set<CellExtension>?,
-        val rowCells: Map<Key<T>, Cell<T>>?,
-        val rowCellValues: Map<Key<T>, CellValue?>,
+        val rowCells: Map<CellKey<T>, Cell<T>>?,
+        val rowCellValues: Map<CellKey<T>, CellValue?>,
         val typedRow: TypedRowData<T>
     )
 
@@ -97,9 +98,9 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     /**
-     * Build multidimensional cache of table structure, where each row has associated extensions as long as effective cell values
-     * resolved from synthetic (definition-time) values or source dataset values. After preflight is done we have context data
-     * for each scoped operation (for row, column, cell operations)
+     * Build multidimensional table structure, where each row has associated extensions as long as effective cell values
+     * resolved from synthetic (definitions from builders) values or source dataset values. After pre-flight is everything to build a context data
+     * for scoped operation (for row, column, cell) when exporter is progressing over collection data.
      */
     private fun preFlightPass(exportingState: ExportingState<T, A>, table: Table<T>, collection: Collection<T>) {
         val rowIndex = AtomicInteger(0)
@@ -137,9 +138,9 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         typedRow: TypedRowData<T>
     ): ExportingState<T, A> {
         val syntheticRowValue = computeSyntheticRowValue(typedRow, table.rows)
-        val cellValues: MutableMap<Key<T>, CellValue?> = mutableMapOf()
-        table.columns.forEachIndexed { _: Int, column: Column<T> ->
-            val syntheticCell = syntheticRowValue.rowCells?.get(column.id)
+        val cellValues: MutableMap<CellKey<T>, CellValue?> = mutableMapOf()
+        table.columns.forEachIndexed { index: Int, column: Column<T> ->
+            val syntheticCell = syntheticRowValue.rowCells?.get(column.id, index)
             val effectiveRawCellValue =
                 (syntheticCell?.eval?.invoke(typedRow) ?: syntheticCell?.value ?: evalColumnExpr(
                     column,
@@ -147,10 +148,12 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                 ))?.let {
                     column.dataFormatter?.invoke(it) ?: it
                 }
-            cellValues[column.id] = effectiveRawCellValue?.let {
+            cellValues[cellKey(column.id)] = effectiveRawCellValue?.let {
                 CellValue(
                     effectiveRawCellValue,
-                    syntheticCell?.type ?: column.columnType
+                    syntheticCell?.type ?: column.columnType,
+                    colSpan = syntheticCell?.colSpan ?: 1,
+                    rowSpan = syntheticCell?.rowSpan ?: 1
                 )
             }
         }
@@ -191,12 +194,14 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         state.forEachRowValue { rowValue: ComputedRowValue<T> ->
             delegate.tableOperations.renderRow(state.delegate, state.rowOperationContext(), rowValue.rowExtensions)
                 .also {
-                    table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+                    table.columns.filter {
+                        rowValue.rowCellValues?.containsKey(cellKey(it.id)) ?: false
+                    }.forEachIndexed { columnIndex: Int, column: Column<T> ->
                         delegate.tableOperations.renderRowCell(
                             state.delegate,
-                            state.cellOperationContext(column.index ?: columnIndex, column.id),
+                            state.cellOperationContext(column.index ?: columnIndex, cellKey(column.id)),
                             mergeCellHints(
-                                rowValue.rowCells?.get(column.id)?.cellExtensions,
+                                rowValue.rowCells?.get(cellKey(column.id))?.cellExtensions,
                                 rowValue.rowCellExtensions,
                                 column.cellExtensions,
                                 table.cellExtensions

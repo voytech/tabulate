@@ -4,7 +4,7 @@ import pl.voytech.exporter.core.model.extension.CellExtension
 import pl.voytech.exporter.core.model.extension.ColumnExtension
 
 data class Column<T> internal constructor(
-    val id: Key<T>,
+    val id: ColumnKey<T>,
     val index: Int?,
     val columnType: CellType?,
     val columnExtensions: Set<ColumnExtension>?,
