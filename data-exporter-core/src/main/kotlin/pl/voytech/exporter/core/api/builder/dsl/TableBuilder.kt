@@ -69,22 +69,22 @@ class ColumnsBuilder<T> private constructor() : Builder<List<Column<T>>> {
 
     @JvmSynthetic
     fun column(id: String) {
-        columns = columns + (ColumnBuilder.new<T>().also { it.id = Key(id = id) }.build())
+        columns = columns + (ColumnBuilder.new<T>().also { it.id = ColumnKey(id = id) }.build())
     }
 
     @JvmSynthetic
     fun column(id: String, block: ColumnBuilder<T>.() -> Unit) {
-        columns = columns + (ColumnBuilder.new<T>().also { it.id = Key(id = id) }.apply(block).build())
+        columns = columns + (ColumnBuilder.new<T>().also { it.id = ColumnKey(id = id) }.apply(block).build())
     }
 
     @JvmSynthetic
     fun column(ref: ((record: T) -> Any?), block: ColumnBuilder<T>.() -> Unit) {
-        columns = columns + (ColumnBuilder.new<T>().also { it.id = Key(ref = ref) }.apply(block).build())
+        columns = columns + (ColumnBuilder.new<T>().also { it.id = ColumnKey(ref = ref) }.apply(block).build())
     }
 
     @JvmSynthetic
     fun column(ref: ((record: T) -> Any?)) {
-        columns = columns + (ColumnBuilder.new<T>().also { it.id = Key(ref = ref) }.build())
+        columns = columns + (ColumnBuilder.new<T>().also { it.id = ColumnKey(ref = ref) }.build())
     }
 
     @JvmSynthetic
@@ -99,7 +99,7 @@ class ColumnsBuilder<T> private constructor() : Builder<List<Column<T>>> {
 @TableMarker
 class ColumnBuilder<T> private constructor() : ExtensionsAwareBuilder<Column<T>>() {
     @set:JvmSynthetic
-    lateinit var id: Key<T>
+    lateinit var id: ColumnKey<T>
 
     @set:JvmSynthetic
     var columnType: CellType? = null
@@ -163,7 +163,7 @@ class RowsBuilder<T> private constructor() : Builder<List<Row<T>>> {
 class RowBuilder<T> private constructor() : ExtensionsAwareBuilder<Row<T>>() {
 
     @set:JvmSynthetic
-    private var cells: Map<Key<T>, Cell<T>>? = null
+    private var cells: Map<CellKey<T>, Cell<T>>? = null
 
     @set:JvmSynthetic
     var selector: RowSelector<T>? = null
@@ -195,15 +195,15 @@ class RowBuilder<T> private constructor() : ExtensionsAwareBuilder<Row<T>>() {
 }
 
 @TableMarker
-class CellsBuilder<T> private constructor() : Builder<Map<Key<T>, Cell<T>>> {
+class CellsBuilder<T> private constructor() : Builder<Map<CellKey<T>, Cell<T>>> {
 
     @set:JvmSynthetic
-    private var cells: Map<Key<T>, Cell<T>> = emptyMap()
+    private var cells: Map<CellKey<T>, Cell<T>> = emptyMap()
 
     @JvmSynthetic
     fun forColumn(id: String, block: CellBuilder<T>.() -> Unit) {
         cells = cells + Pair(
-            Key(id), CellBuilder.new<T>()
+            CellKey(id = id), CellBuilder.new<T>()
                 .apply(block).build()
         )
     }
@@ -211,13 +211,13 @@ class CellsBuilder<T> private constructor() : Builder<Map<Key<T>, Cell<T>>> {
     @JvmSynthetic
     fun forColumn(ref: ((record: T) -> Any?), block: CellBuilder<T>.() -> Unit) {
         cells = cells + Pair(
-            Key(ref = ref), CellBuilder.new<T>()
+            CellKey(ref = ref), CellBuilder.new<T>()
                 .apply(block).build()
         )
     }
 
     @JvmSynthetic
-    override fun build(): Map<Key<T>, Cell<T>> {
+    override fun build(): Map<CellKey<T>, Cell<T>> {
         return cells
     }
 
