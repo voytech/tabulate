@@ -2,7 +2,9 @@ package pl.voytech.exporter.core.builder.fluent;
 import kotlin.ranges.IntRange;
 import org.junit.Test;
 import pl.voytech.exporter.core.model.CellType;
+import pl.voytech.exporter.core.model.RowSelectors;
 import pl.voytech.exporter.core.model.Table;
+import pl.voytech.exporter.core.model.TypedRowData;
 import pl.voytech.exporter.core.model.extension.functional.FilterAndSortTableExtension;
 import pl.voytech.exporter.core.model.extension.style.CellFontExtension;
 import pl.voytech.exporter.core.model.extension.style.ColumnWidthExtension;
@@ -35,12 +37,18 @@ public class DslTest {
                         .row(0)
                             .extension(new RowHeightExtension(100))
                             .cells()
+                                .forColumn("rowNumbering")
+                                    .value("Nr")
                                 .forColumn(Employee::getId)
                                     .value("Employee ID")
                                 .forColumn(Employee::getFirstName)
                                     .value("Employee First Name")
                                 .forColumn(Employee::getLastName)
                                     .value("Employee Last Name")
+                        .row(RowSelectors.all())
+                            .cells()
+                                .forColumn("rowNumbering")
+                                    .eval(TypedRowData::getRowIndex)
                 .build();
 
         assertThat(employeeTable).isNotNull();
@@ -50,6 +58,6 @@ public class DslTest {
         assertThat(employeeTable.getCellExtensions().size()).isEqualTo(1);
         assertThat(employeeTable.getTableExtensions().size()).isEqualTo(1);
         assertThat(employeeTable.getColumns().size()).isEqualTo(4);
-        assertThat(employeeTable.getRows().size()).isEqualTo(1);
+        assertThat(employeeTable.getRows().size()).isEqualTo(2);
     }
 }
