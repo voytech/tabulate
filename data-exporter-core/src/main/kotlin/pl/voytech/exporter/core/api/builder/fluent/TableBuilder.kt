@@ -206,9 +206,9 @@ class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>) : ExtensionsAware()
 
     fun row() = RowBuilder(out())
 
-    fun row(selector: RowSelector<T>) = RowBuilder(out()).apply { selector(selector) }
+    fun row(selector: RowSelector<T>) = row().apply { selector(selector) }
 
-    fun row(at: Int) = RowBuilder(out()).apply { createAt(at) }
+    fun row(at: Int) = row().apply { createAt(at) }
 
     fun extension(vararg extension: Extension) = apply {
         extensions(*extension)
@@ -251,11 +251,11 @@ class CellsBuilder<T>(private val rowBuilder: RowBuilder<T>) : MidLevelBuilder<T
 
     fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(Key(ref = ref), this)
 
-    fun row() = out()
+    fun row() = RowBuilder(out().out())
 
-    fun row(selector: RowSelector<T>) = out().apply { selector(selector) }
+    fun row(selector: RowSelector<T>) = row().apply { selector(selector) }
 
-    fun row(at: Int) = out().apply { createAt(at) }
+    fun row(at: Int) = row().apply { createAt(at) }
 
     @JvmSynthetic
     override fun out(): RowBuilder<T> = rowBuilder.addCells(cells)
@@ -305,11 +305,11 @@ class CellBuilder<T>(
 
     fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(Key(ref = ref), out())
 
-    fun row() = out()
+    fun row() =  RowBuilder(out().out().out())
 
-    fun row(selector: RowSelector<T>) = out().out().apply { selector(selector) }
+    fun row(selector: RowSelector<T>?) = row().apply { selector(selector) }
 
-    fun row(at: Int) = out().out().apply { createAt(at) }
+    fun row(at: Int) = row().apply { createAt(at) }
 
     override fun supportedExtensionClasses(): Set<Class<out Extension>> =
         setOf(RowExtension::class.java, CellExtension::class.java)
