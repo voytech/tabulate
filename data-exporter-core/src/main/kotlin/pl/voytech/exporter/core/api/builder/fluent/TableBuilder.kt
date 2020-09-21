@@ -52,7 +52,7 @@ class TableBuilder<T> : ExtensionsAware(), TopLevelBuilder<T> {
 
     fun columns() = ColumnsBuilder(this)
 
-    fun rows() = RowsBuilder(this)
+    fun rows() = RowsBuilder(this,columns)
 
     fun extension(vararg extension: Extension) = apply {
         extensions(*extension)
@@ -161,16 +161,16 @@ class ColumnBuilder<T>(private val columnsBuilder: ColumnsBuilder<T>) : Extensio
 
 }
 
-class RowsBuilder<T>(private val tableBuilder: TableBuilder<T>) : MidLevelBuilder<T, TableBuilder<T>> {
+class RowsBuilder<T>(private val tableBuilder: TableBuilder<T>, private val columns: List<Column<T>>) : MidLevelBuilder<T, TableBuilder<T>> {
 
     @set:JvmSynthetic
     private var rows: List<Row<T>> = emptyList()
 
-    fun row() = RowBuilder(this)
+    fun row() = RowBuilder(this, columns)
 
-    fun row(selector: RowSelector<T>) = RowBuilder(this).apply { selector(selector) }
+    fun row(selector: RowSelector<T>) = RowBuilder(this, columns).apply { selector(selector) }
 
-    fun row(at: Int) = RowBuilder(this).apply { createAt(at) }
+    fun row(at: Int) = RowBuilder(this, columns).apply { createAt(at) }
 
     @JvmSynthetic
     internal fun addRow(row: Row<T>) = apply {
@@ -184,9 +184,9 @@ class RowsBuilder<T>(private val tableBuilder: TableBuilder<T>) : MidLevelBuilde
 
 }
 
-class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>) : ExtensionsAware(), MidLevelBuilder<T, RowsBuilder<T>> {
+class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>, private val columns: List<Column<T>>) : ExtensionsAware(), MidLevelBuilder<T, RowsBuilder<T>> {
     @set:JvmSynthetic
-    private var cells: Map<CellKey<T>, Cell<T>>? = null
+    private var cells: Map<ColumnKey<T>, Cell<T>>? = null
 
     @set:JvmSynthetic
     private var selector: RowSelector<T>? = null
@@ -202,9 +202,9 @@ class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>) : ExtensionsAware()
         this.createAt = createAt
     }
 
-    fun cells() = CellsBuilder(this)
+    fun cells() = CellsBuilder(this, columns)
 
-    fun row() = RowBuilder(out())
+    fun row() = RowBuilder(out(), columns)
 
     fun row(selector: RowSelector<T>) = row().apply { selector(selector) }
 
@@ -219,7 +219,7 @@ class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>) : ExtensionsAware()
 
 
     @JvmSynthetic
-    internal fun addCells(cells: Map<CellKey<T>, Cell<T>>) = apply {
+    internal fun addCells(cells: Map<ColumnKey<T>, Cell<T>>) = apply {
         this.cells = cells
     }
 
@@ -237,23 +237,34 @@ class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>) : ExtensionsAware()
 
 }
 
-class CellsBuilder<T>(private val rowBuilder: RowBuilder<T>) : MidLevelBuilder<T, RowBuilder<T>> {
+class CellsBuilder<T>(private val rowBuilder: RowBuilder<T>, private val columns: List<Column<T>>) : MidLevelBuilder<T, RowBuilder<T>> {
 
     @set:JvmSynthetic
-    private var cells: Map<CellKey<T>, Cell<T>> = emptyMap()
+    private var cells: Map<ColumnKey<T>, Cell<T>> = emptyMap()
+
+    @set:JvmSynthetic
+    private var cellIndex: Int = 0
 
     @JvmSynthetic
-    internal fun addCell(columnKey: CellKey<T>, cell: Cell<T>) = apply {
+    internal fun addCell(columnKey: ColumnKey<T>, cell: Cell<T>) = apply {
         cells = cells + Pair(columnKey, cell)
     }
 
-    fun forColumn(id: String) = CellBuilder(CellKey(id = id), this)
+    fun forColumn(id: String) = CellBuilder(ColumnKey(id = id), this, columns)
 
-    fun forColumn(index: Int) = CellBuilder(CellKey(columnIndex = index), this)
+    fun cell(index: Int) {
+        columns[index].let {
+            CellBuilder(ColumnKey(ref = it.id.ref, id = it.id.id), this, columns)
+        }
+    }
 
-    fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(CellKey(ref = ref), this)
+    fun cell() {
+        cell(cellIndex++)
+    }
 
-    fun row() = RowBuilder(out().out())
+    fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(ColumnKey(ref = ref), this, columns)
+
+    fun row() = RowBuilder(out().out(), columns)
 
     fun row(selector: RowSelector<T>) = row().apply { selector(selector) }
 
@@ -264,8 +275,9 @@ class CellsBuilder<T>(private val rowBuilder: RowBuilder<T>) : MidLevelBuilder<T
 }
 
 class CellBuilder<T>(
-    private val columnKey: CellKey<T>,
-    private val cellsBuilder: CellsBuilder<T>
+    private val columnKey: ColumnKey<T>,
+    private val cellsBuilder: CellsBuilder<T>,
+    private val columns: List<Column<T>>
 ) : ExtensionsAware(), MidLevelBuilder<T, CellsBuilder<T>> {
 
     @set:JvmSynthetic
@@ -303,13 +315,17 @@ class CellBuilder<T>(
         this.rowSpan = rowSpan
     }
 
-    fun forColumn(id: String) = CellBuilder(CellKey(id = id), out())
+    fun forColumn(id: String) = CellBuilder(ColumnKey(id = id), out(), columns)
 
-    fun forColumn(index: Int) = CellBuilder(CellKey(columnIndex = index), out())
+    fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(ColumnKey(ref = ref), out(), columns)
 
-    fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(CellKey(ref = ref), out())
+    fun cell(index: Int) {
+        columns[index].let {
+            CellBuilder(ColumnKey(ref = it.id.ref, id = it.id.id), out(), columns)
+        }
+    }
 
-    fun row() =  RowBuilder(out().out().out())
+    fun row() =  RowBuilder(out().out().out(), columns)
 
     fun row(selector: RowSelector<T>?) = row().apply { selector(selector) }
 

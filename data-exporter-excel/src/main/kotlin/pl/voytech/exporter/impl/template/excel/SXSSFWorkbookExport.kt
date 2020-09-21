@@ -1,6 +1,7 @@
 package pl.voytech.exporter.impl.template.excel
 
 import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.xssf.streaming.SXSSFCell
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -67,11 +68,32 @@ internal class XlsxTableOperations<T> :
         state: DelegateAPI<SXSSFWorkbook>,
         context: OperationContext<T, CellOperationTableData<T>>
     ) {
-        assertCell(
-            state,
-            context.coordinates!!,
-            context
-        ).also { setCellValue(it, context.value.cellValue) }
+        assertCell(state, context.coordinates!!, context).also {
+            setCellValue(it, context.value.cellValue)
+        }.also {
+            mergeCells(state, context)
+        }
+    }
+
+    private fun mergeCells(
+        state: DelegateAPI<SXSSFWorkbook>,
+        context: OperationContext<T, CellOperationTableData<T>>
+    ) {
+        context.value.cellValue?.takeIf { it.colSpan > 1 }?.also {
+            context.coordinates!!.also { coordinates ->
+                (coordinates.columnIndex + 1..coordinates.columnIndex + it.colSpan).forEach { cellIndex ->
+                    assertRow(state, coordinates).createCell(cellIndex)
+                }
+                assertTableSheet(state, coordinates.tableName).addMergedRegion(
+                    CellRangeAddress(
+                        coordinates.rowIndex,
+                        coordinates.rowIndex,
+                        coordinates.columnIndex,
+                        coordinates.columnIndex + it.colSpan - 1
+                    )
+                )
+            }
+        }
     }
 
     private fun toDateValue(value: Any): Date {

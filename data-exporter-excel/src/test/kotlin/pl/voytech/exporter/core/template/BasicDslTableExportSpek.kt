@@ -72,7 +72,7 @@ object BasicDslTableExportSpek : Spek({
                             ColumnWidthExtension(auto = true),
                             CellFontExtension(
                                 fontFamily = "Times New Roman",
-                                fontColor = Color(0, 0, 0),
+                                fontColor = Colors.BLACK,
                                 fontSize = 12
                             ),
                             CellBackgroundExtension(color = Color(10, 100, 100))
@@ -96,18 +96,28 @@ object BasicDslTableExportSpek : Spek({
                             CellExcelDataFormatExtension("dd.mm.YYYY")
                         )
                     }
-                    (0..1).forEach {
-                        column("c$it") {
-                            extensions(
-                                ColumnWidthExtension(auto = true),
-                                CellBackgroundExtension(Color(255, 255, 0))
-                            )
-                        }
-                    }
                 }
                 rows {
                     row {
                         createAt = 0
+                        cells {
+                            cell {
+                                colSpan = 7
+                                value = "This is very long title spanning entire column space."
+                                extensions(
+                                    alignment {
+                                        horizontal = HorizontalAlignment.CENTER
+                                    },
+                                    font {
+                                        strikeout = false
+                                        weight = WeightStyle.BOLD
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    row {
+                        createAt = 1
                         cells {
                             forColumn("nr") { value = "Nr.:" }
                             forColumn(Product::code) { value = "Code" }
