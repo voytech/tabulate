@@ -40,7 +40,7 @@ class TableBuilder<T> private constructor() : ExtensionsAwareBuilder<Table<T>>()
 
     @JvmSynthetic
     fun rows(block: RowsBuilder<T>.() -> Unit) {
-        rows = (rows ?: emptyList()) + RowsBuilder.new<T>().apply(block).build()
+        rows = (rows ?: emptyList()) + RowsBuilder.new<T>(columns).apply(block).build()
     }
 
     @JvmSynthetic
@@ -130,24 +130,24 @@ class ColumnBuilder<T> private constructor() : ExtensionsAwareBuilder<Column<T>>
 }
 
 @TableMarker
-class RowsBuilder<T> private constructor() : Builder<List<Row<T>>> {
+class RowsBuilder<T> private constructor(private val columns: List<Column<T>>) : Builder<List<Row<T>>> {
 
     @set:JvmSynthetic
     private var rows: List<Row<T>> = emptyList()
 
     @JvmSynthetic
     fun row(block: RowBuilder<T>.() -> Unit) {
-        rows = rows + (RowBuilder.new<T>().apply(block).build())
+        rows = rows + (RowBuilder.new<T>(columns).apply(block).build())
     }
 
     @JvmSynthetic
     fun row(selector: RowSelector<T>, block: RowBuilder<T>.() -> Unit) {
-        rows = rows + RowBuilder.new<T>().apply { this.selector = selector }.apply(block).build()
+        rows = rows + RowBuilder.new<T>(columns).apply { this.selector = selector }.apply(block).build()
     }
 
     @JvmSynthetic
     fun row(at: Int, block: RowBuilder<T>.() -> Unit) {
-        rows = rows + RowBuilder.new<T>().apply { createAt = at }.apply(block).build()
+        rows = rows + RowBuilder.new<T>(columns).apply { createAt = at }.apply(block).build()
     }
 
     @JvmSynthetic
@@ -155,15 +155,15 @@ class RowsBuilder<T> private constructor() : Builder<List<Row<T>>> {
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(): RowsBuilder<T> = RowsBuilder()
+        internal fun <T> new(columns: List<Column<T>>): RowsBuilder<T> = RowsBuilder(columns)
     }
 }
 
 @TableMarker
-class RowBuilder<T> private constructor() : ExtensionsAwareBuilder<Row<T>>() {
+class RowBuilder<T> private constructor(private val columns: List<Column<T>>) : ExtensionsAwareBuilder<Row<T>>() {
 
     @set:JvmSynthetic
-    private var cells: Map<CellKey<T>, Cell<T>>? = null
+    private var cells: Map<ColumnKey<T>, Cell<T>>? = null
 
     @set:JvmSynthetic
     var selector: RowSelector<T>? = null
@@ -173,7 +173,7 @@ class RowBuilder<T> private constructor() : ExtensionsAwareBuilder<Row<T>>() {
 
     @JvmSynthetic
     fun cells(block: CellsBuilder<T>.() -> Unit) {
-        cells = (cells ?: emptyMap()) + CellsBuilder.new<T>().apply(block).build()
+        cells = (cells ?: emptyMap()) + CellsBuilder.new<T>(columns).apply(block).build()
     }
 
     @JvmSynthetic
@@ -190,40 +190,58 @@ class RowBuilder<T> private constructor() : ExtensionsAwareBuilder<Row<T>>() {
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(): RowBuilder<T> = RowBuilder()
+        internal fun <T> new(columns: List<Column<T>>): RowBuilder<T> = RowBuilder(columns)
     }
 }
 
 @TableMarker
-class CellsBuilder<T> private constructor() : Builder<Map<CellKey<T>, Cell<T>>> {
+class CellsBuilder<T> private constructor(private val columns: List<Column<T>>) : Builder<Map<ColumnKey<T>, Cell<T>>> {
 
     @set:JvmSynthetic
-    private var cells: Map<CellKey<T>, Cell<T>> = emptyMap()
+    private var cells: Map<ColumnKey<T>, Cell<T>> = emptyMap()
+
+    @set:JvmSynthetic
+    private var cellIndex: Int = 0
 
     @JvmSynthetic
     fun forColumn(id: String, block: CellBuilder<T>.() -> Unit) {
         cells = cells + Pair(
-            CellKey(id = id), CellBuilder.new<T>()
+            ColumnKey(id = id), CellBuilder.new<T>()
                 .apply(block).build()
         )
+    }
+
+    @JvmSynthetic
+    fun cell(index: Int, block: CellBuilder<T>.() -> Unit) {
+        columns[index].let {
+            cells = cells + Pair(
+                ColumnKey(ref = it.id.ref, id = it.id.id), CellBuilder.new<T>()
+                    .apply(block).build()
+            )
+        }
+    }
+
+    @JvmSynthetic
+    fun cell(block: CellBuilder<T>.() -> Unit) {
+        cell(index = cellIndex++, block)
     }
 
     @JvmSynthetic
     fun forColumn(ref: ((record: T) -> Any?), block: CellBuilder<T>.() -> Unit) {
         cells = cells + Pair(
-            CellKey(ref = ref), CellBuilder.new<T>()
+            ColumnKey(ref = ref), CellBuilder.new<T>()
                 .apply(block).build()
         )
     }
 
     @JvmSynthetic
-    override fun build(): Map<CellKey<T>, Cell<T>> {
+    override fun build(): Map<ColumnKey<T>, Cell<T>> {
         return cells
     }
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(): CellsBuilder<T> = CellsBuilder()
+        internal fun <T> new(columns: List<Column<T>>): CellsBuilder<T> = CellsBuilder(columns)
     }
 }
 

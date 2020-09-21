@@ -1,6 +1,5 @@
 package pl.voytech.exporter.core.template
 
-import pl.voytech.exporter.core.model.CellKey
 import pl.voytech.exporter.core.model.ColumnKey
 import pl.voytech.exporter.core.model.NextId
 
@@ -74,7 +73,7 @@ class ExportingState<T, A>(
         return rowOperationContext
     }
 
-    internal fun cellOperationContext(columnIndex: Int, columnId: CellKey<T>): OperationContext<T, CellOperationTableData<T>> {
+    internal fun cellOperationContext(columnIndex: Int, columnId: ColumnKey<T>): OperationContext<T, CellOperationTableData<T>> {
         this.columnIndex = columnIndex
         cellOperationContext.coordinates = coordinates()
         cellOperationContext.value.cellValue = rowValue?.rowCellValues?.get(columnId)

@@ -230,15 +230,15 @@ class FilterAndSortTableExtensionOperation : TableExtensionOperation<FilterAndSo
     }
 }
 
-val tableExtensionsOperations = listOf(
+internal val tableExtensionsOperations = listOf(
     FilterAndSortTableExtensionOperation()
 )
 
-fun <T> rowExtensionsOperations() = listOf(
+internal fun <T> rowExtensionsOperations() = listOf(
     RowHeightExtensionOperation<T>()
 )
 
-fun <T> cellExtensionsOperations() = listOf(
+internal fun <T> cellExtensionsOperations() = listOf(
     CellFontExtensionOperation<T>(),
     CellBackgroundExtensionOperation<T>(),
     CellBordersExtensionOperation<T>(),
@@ -246,6 +246,6 @@ fun <T> cellExtensionsOperations() = listOf(
     CellDataFormatExtensionOperation<T>()
 )
 
-fun <T> columnExtensionsOperations() = listOf(
+internal fun <T> columnExtensionsOperations() = listOf(
     ColumnWidthExtensionOperation<T>()
 )

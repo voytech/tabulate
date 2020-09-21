@@ -37,7 +37,7 @@ public class DslTest {
                         .row(0)
                             .extension(new RowHeightExtension(100))
                             .cells()
-                                .forColumn(0)
+                                .cell(0)
                                     .value("Nr")
                                 .forColumn(Employee::getId)
                                     .value("Employee ID")
