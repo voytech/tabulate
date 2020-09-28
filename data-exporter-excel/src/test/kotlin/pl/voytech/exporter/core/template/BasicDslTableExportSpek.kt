@@ -209,11 +209,13 @@ object BasicDslTableExportSpek : Spek({
                         CellPosition(3, 3) to AssertMany(
                             AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
                             AssertContainsCellExtensions(
-                                /*font {
+                                font {
                                     fontFamily = "Times New Roman"
-                                    fontColor = Colors.BLACK
+                                    fontColor = Color(90, 100, 100)
                                     fontSize = 12
-                                }, */
+                                    italic = true
+                                    weight = WeightStyle.BOLD
+                                },
                                 CellBackgroundExtension(color = Colors.BLUE)
                             )
                         ),
