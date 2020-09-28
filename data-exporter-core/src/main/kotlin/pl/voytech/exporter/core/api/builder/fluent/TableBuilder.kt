@@ -252,15 +252,13 @@ class CellsBuilder<T>(private val rowBuilder: RowBuilder<T>, private val columns
 
     fun forColumn(id: String) = CellBuilder(ColumnKey(id = id), this, columns)
 
-    fun cell(index: Int) {
-        columns[index].let {
+    fun cell(index: Int): CellBuilder<T> {
+        return columns[index].let {
             CellBuilder(ColumnKey(ref = it.id.ref, id = it.id.id), this, columns)
         }
     }
 
-    fun cell() {
-        cell(cellIndex++)
-    }
+    fun cell(): CellBuilder<T> = cell(cellIndex++)
 
     fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(ColumnKey(ref = ref), this, columns)
 
@@ -319,8 +317,8 @@ class CellBuilder<T>(
 
     fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(ColumnKey(ref = ref), out(), columns)
 
-    fun cell(index: Int) {
-        columns[index].let {
+    fun cell(index: Int): CellBuilder<T> {
+        return columns[index].let {
             CellBuilder(ColumnKey(ref = it.id.ref, id = it.id.id), out(), columns)
         }
     }

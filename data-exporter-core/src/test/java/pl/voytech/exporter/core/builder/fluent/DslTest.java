@@ -41,7 +41,7 @@ public class DslTest {
                                     .value("Nr")
                                 .forColumn(Employee::getId)
                                     .value("Employee ID")
-                                .forColumn(2)
+                                .cell(2)
                                     .value("Employee First Name")
                                 .forColumn(Employee::getLastName)
                                     .value("Employee Last Name")

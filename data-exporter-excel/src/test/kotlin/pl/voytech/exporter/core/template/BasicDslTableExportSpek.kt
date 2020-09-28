@@ -69,30 +69,30 @@ object BasicDslTableExportSpek : Spek({
                     }
                     column(Product::code) {
                         extensions(
-                            ColumnWidthExtension(auto = true),
-                            CellFontExtension(
-                                fontFamily = "Times New Roman",
-                                fontColor = Colors.BLACK,
+                            width { auto = true },
+                            font {
+                                fontFamily = "Times New Roman"
+                                fontColor = Colors.BLACK
                                 fontSize = 12
-                            ),
-                            CellBackgroundExtension(color = Color(10, 100, 100))
+                            },
+                            CellBackgroundExtension(color = Colors.BLUE)
                         )
                     }
                     column(Product::name) {
-                        extensions(ColumnWidthExtension(auto = true))
+                        extensions(width { auto = true })
                     }
                     column(Product::description) {
-                        extensions(ColumnWidthExtension(auto = true))
+                        extensions(width { auto = true })
                     }
                     column(Product::manufacturer) {
-                        extensions(ColumnWidthExtension(auto = true))
+                        extensions(width { auto = true })
                     }
                     column(Product::price) {
-                        extensions(ColumnWidthExtension(auto = true))
+                        extensions(width { auto = true })
                     }
                     column(Product::distributionDate) {
                         extensions(
-                            ColumnWidthExtension(auto = true),
+                            width { auto = true },
                             CellExcelDataFormatExtension("dd.mm.YYYY")
                         )
                     }
@@ -131,13 +131,13 @@ object BasicDslTableExportSpek : Spek({
                             RowHeightExtension(height = 120),
                             CellBordersExtension(
                                 leftBorderStyle = BorderStyle.SOLID,
-                                leftBorderColor = Color(0, 0, 0),
+                                leftBorderColor = Colors.BLACK,
                                 rightBorderStyle = BorderStyle.SOLID,
-                                rightBorderColor = Color(0, 0, 0),
+                                rightBorderColor = Colors.BLACK,
                                 bottomBorderStyle = BorderStyle.SOLID,
-                                bottomBorderColor = Color(0, 0, 0),
+                                bottomBorderColor = Colors.BLACK,
                                 topBorderStyle = BorderStyle.SOLID,
-                                topBorderColor = Color(0, 0, 0)
+                                topBorderColor = Colors.BLACK
                             ),
                             CellAlignmentExtension(
                                 horizontal = HorizontalAlignment.CENTER,
@@ -180,56 +180,52 @@ object BasicDslTableExportSpek : Spek({
                     tableName = "Products table",
                     file = File("test0.xlsx"),
                     cellTests = mapOf(
-                        CellRange((2..2),(2..8)) to AssertContainsCellExtensions(
+                        CellRange((3..3),(2..8)) to AssertContainsCellExtensions(
                             CellBordersExtension(
                                 leftBorderStyle = BorderStyle.SOLID,
-                                leftBorderColor = Color(0, 0, 0),
+                                leftBorderColor = Colors.BLACK,
                                 rightBorderStyle = BorderStyle.SOLID,
-                                rightBorderColor = Color(0, 0, 0),
+                                rightBorderColor = Colors.BLACK,
                                 bottomBorderStyle = BorderStyle.SOLID,
-                                bottomBorderColor = Color(0, 0, 0),
+                                bottomBorderColor = Colors.BLACK,
                                 topBorderStyle = BorderStyle.SOLID,
-                                topBorderColor = Color(0, 0, 0)
+                                topBorderColor = Colors.BLACK
                             ),
                             CellAlignmentExtension(
                                 horizontal = HorizontalAlignment.CENTER,
                                 vertical = VerticalAlignment.MIDDLE
+                            ),
+                            CellFontExtension(
+                                fontFamily = "Times New Roman",
+                                fontColor = Color(90, 100, 100),
+                                fontSize = 12,
+                                italic = true,
+                                weight = WeightStyle.BOLD
                             )
                         ),
-                        CellPosition(2, 2) to AssertMany(
+                        CellPosition(3, 2) to AssertMany(
                             AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
-                            AssertContainsCellExtensions(
-                                CellFontExtension(
-                                    fontFamily = "Times New Roman",
-                                    fontColor = Color(10, 100, 100),
-                                    fontSize = 12,
-                                    italic = true,
-                                    weight = WeightStyle.BOLD,
-                                    strikeout = true,
-                                    underline = true
-                                )
-                            )
                         ),
-                        CellPosition(2, 3) to AssertMany(
+                        CellPosition(3, 3) to AssertMany(
                             AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
                             AssertContainsCellExtensions(
-                                CellBackgroundExtension(color = Color(10, 100, 100)),
-                                CellFontExtension(
-                                    fontFamily = "Times New Roman",
-                                    fontColor = Color(0, 0, 0),
+                                /*font {
+                                    fontFamily = "Times New Roman"
+                                    fontColor = Colors.BLACK
                                     fontSize = 12
-                                )
+                                }, */
+                                CellBackgroundExtension(color = Colors.BLUE)
                             )
                         ),
-                        CellPosition(2, 4) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
-                        CellPosition(2, 5) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Description"),
-                        CellPosition(2, 6) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Manufacturer"),
-                        CellPosition(2, 7) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Price"),
-                        CellPosition(2, 8) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Distribution")
+                        CellPosition(3, 4) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
+                        CellPosition(3, 5) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Description"),
+                        CellPosition(3, 6) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Manufacturer"),
+                        CellPosition(3, 7) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Price"),
+                        CellPosition(3, 8) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Distribution")
                     )
                 )
                 .perform().also {
-                   // it.cleanup()
+                   it.cleanup()
                 }
             }
         }
@@ -313,7 +309,7 @@ object BasicDslTableExportSpek : Spek({
                     )
                 )
                 .perform().also {
-                    //it.cleanup()
+                    it.cleanup()
                 }
             }
         }
