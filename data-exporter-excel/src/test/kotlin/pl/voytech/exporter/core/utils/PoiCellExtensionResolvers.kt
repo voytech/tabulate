@@ -20,7 +20,7 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment as PoiHorizontalAlignment
 import org.apache.poi.ss.usermodel.VerticalAlignment as PoiVerticalAlignment
 
 private fun parseColor(xssfColor: XSSFColor) =
-    Color(xssfColor.rgb[0].toInt(), xssfColor.rgb[1].toInt(), xssfColor.rgb[2].toInt())
+    Color(xssfColor.rgb[0].toInt().and(0xFF), xssfColor.rgb[1].toInt().and(0xFF), xssfColor.rgb[2].toInt().and(0xFF))
 
 class PoiCellFontExtensionResolver : ExtensionResolver<SXSSFWorkbook> {
     override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellExtension {
