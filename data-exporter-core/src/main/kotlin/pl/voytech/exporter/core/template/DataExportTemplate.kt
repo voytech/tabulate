@@ -57,11 +57,11 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         val typedRow: TypedRowData<T>
     )
 
-    fun create(): DelegateAPI<A> {
+    private fun create(): DelegateAPI<A> {
         return delegate.lifecycleOperations.createDocument()
     }
 
-    fun add(state: DelegateAPI<A>, table: Table<T>, collection: Collection<T>): DelegateAPI<A> {
+    private fun add(state: DelegateAPI<A>, table: Table<T>, collection: Collection<T>): DelegateAPI<A> {
         return ExportingState(
             delegate = delegate.tableOperations.createTable(state, table),
             tableName = table.name ?: "table-${NextId.nextId()}",

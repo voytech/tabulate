@@ -141,14 +141,14 @@ class CellDataFormatExtensionOperation<T> : CellExtensionOperation<T, CellExcelD
         context: OperationContext<T, CellOperationTableData<T>>,
         extension: CellExcelDataFormatExtension
     ) {
-        if (getCellCachedValue(context, cellStyleFormatKey) == null) {
+        //if (getCellCachedValue(context, cellStyleFormatKey) == null) {
             cellStyle(state, context.coordinates!!, context).let {
                 extension.dataFormat.run {
                     it.dataFormat = workbook(state).createDataFormat().getFormat(this)
                     putCellCachedValue(context, cellStyleFormatKey, it.dataFormat)
                 }
             }
-        }
+        //}
     }
 
 }
