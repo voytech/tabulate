@@ -223,7 +223,8 @@ object BasicDslTableExportSpek : Spek({
                         CellPosition(3, 5) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Description"),
                         CellPosition(3, 6) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Manufacturer"),
                         CellPosition(3, 7) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Price"),
-                        CellPosition(3, 8) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Distribution")
+                        CellPosition(3, 8) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Distribution"),
+                        CellPosition(4, 8) to AssertContainsCellExtensions(CellExcelDataFormatExtension("dd.mm.YYYY"))
                     )
                 )
                 .perform().also {
@@ -309,14 +310,12 @@ object BasicDslTableExportSpek : Spek({
                             CellExcelDataFormatExtension("dd.mm.YYYY")
                         )
                     )
-                )
-                .perform().also {
+                ).perform().also {
                     it.cleanup()
                 }
             }
         }
     }
-
 
     Feature("tabular data export to 'xlsx excel table'") {
         Scenario("defining simple table and exporting to excel file into so called excel table.") {
@@ -353,6 +352,13 @@ object BasicDslTableExportSpek : Spek({
             }
             Then("file should be written successfully") {
                 assertNotNull(file)
+                PoiTableAssert<Product>(
+                    tableName = "Products table",
+                    file = File("test1.xlsx"),
+                    cellTests = mapOf()
+                ).perform().also {
+                    it.cleanup()
+                }
             }
         }
     }
