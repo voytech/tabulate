@@ -2,7 +2,9 @@ package pl.voytech.exporter.core.model.extension
 
 open class Extension
 
-open class CellExtension : Extension()
+abstract class CellExtension : Extension() {
+    abstract fun mergeWith(other: CellExtension): CellExtension
+}
 
 open class ColumnExtension : Extension() {
     open fun beforeFirstRow(): Boolean = true

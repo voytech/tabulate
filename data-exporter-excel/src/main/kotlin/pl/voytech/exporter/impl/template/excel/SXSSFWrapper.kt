@@ -18,11 +18,11 @@ import pl.voytech.exporter.core.template.operations.ExtensionKeyDrivenCache.Comp
 
 object SXSSFWrapper {
 
-    const val CELL_STYLE_CACHE_KEY = "cellStyle"
+    private const val CELL_STYLE_CACHE_KEY = "cellStyle"
 
     fun workbook(state: DelegateAPI<SXSSFWorkbook>): SXSSFWorkbook = state.handle
 
-    fun nonStreamingWorkbook(state: DelegateAPI<SXSSFWorkbook>): XSSFWorkbook = state.handle.xssfWorkbook
+    private fun nonStreamingWorkbook(state: DelegateAPI<SXSSFWorkbook>): XSSFWorkbook = state.handle.xssfWorkbook
 
     fun tableSheet(state: DelegateAPI<SXSSFWorkbook>, tableName: String): SXSSFSheet =
         workbook(state).getSheet(tableName)
@@ -45,6 +45,12 @@ object SXSSFWrapper {
         context: OperationContext<T, CellOperationTableData<T>>
     ): SXSSFCell =
         cell(state, coordinates) ?: createCell(state, coordinates, context)
+
+    fun assertCell(
+        state: DelegateAPI<SXSSFWorkbook>,
+        coordinates: Coordinates
+    ): SXSSFCell =
+        cell(state, coordinates) ?: createCell(state, coordinates)
 
     fun <T> cellStyle(
         state: DelegateAPI<SXSSFWorkbook>,
@@ -86,6 +92,14 @@ object SXSSFWrapper {
                 )
                 cell.cellStyle = cellStyle as CellStyle
             }
+        }
+
+    private fun createCell(
+        state: DelegateAPI<SXSSFWorkbook>,
+        coordinates: Coordinates
+    ): SXSSFCell =
+        assertRow(state, coordinates).let {
+            it.createCell(coordinates.columnIndex)
         }
 
     private fun createRow(state: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): SXSSFRow =
