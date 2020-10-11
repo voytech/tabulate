@@ -202,7 +202,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                 .also {
                     table.columns.filter { rowValue.rowCellValues.containsKey(it.id) }
                         .forEachIndexed { columnIndex: Int, column: Column<T> ->
-                            if (state.noSkip()) {
+                            if (state.noSkip(columnIndex)) {
                                 delegate.tableOperations.renderRowCell(
                                     state.delegate,
                                     state.cellOperationContext(column.index ?: columnIndex, column.id),
