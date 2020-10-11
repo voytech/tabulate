@@ -16,6 +16,7 @@ class ExportingState<T, A>(
     val collection: Collection<T>
 ) {
     private val stateAttributes = mutableMapOf<String, Any>()
+
     /**
      * Instance of mutable context for row-scope operations. After changing coordinate denoting advancing the row,
      * coordinate object is recreated, and new row associated context data is being set. Then instance is used on all
@@ -23,6 +24,7 @@ class ExportingState<T, A>(
      */
     private val rowOperationContext: OperationContext<T, RowOperationTableData<T>> =
         OperationContext(RowOperationTableData(collection), stateAttributes)
+
     /**
      * Instance of mutable context for cell-scope operations. After changing coordinate denoting advancing the cell,
      * coordinate object is recreated, and new cell associated context data is being set. Then instance is used on all
@@ -30,6 +32,7 @@ class ExportingState<T, A>(
      */
     private val cellOperationContext: OperationContext<T, CellOperationTableData<T>> =
         OperationContext(CellOperationTableData(collection), stateAttributes)
+
     /**
      * Instance of mutable context for column-scope operations. After changing coordinate denoting advancing the column,
      * coordinate object is recreated, and new column associated context data is being set. Then instance is used on all
@@ -38,7 +41,7 @@ class ExportingState<T, A>(
     private val columnOperationContext: OperationContext<T, ColumnOperationTableData<T>> =
         OperationContext(ColumnOperationTableData(collection), stateAttributes)
 
-    private val rowValues : MutableList<DataExportTemplate.ComputedRowValue<T>> = mutableListOf()
+    private val rowValues: MutableList<DataExportTemplate.ComputedRowValue<T>> = mutableListOf()
 
     private var rowValue: DataExportTemplate.ComputedRowValue<T>? = null
 
@@ -46,6 +49,7 @@ class ExportingState<T, A>(
      * rowIndex is modified for row row change. It is used for recreation of unmodifiable Coordinates object.
      */
     private var rowIndex: Int = 0 //objectIndex
+
     /**
      * columnIndex is modified for column change. It is used for recreation of unmodifiable Coordinates object.
      */
@@ -54,14 +58,14 @@ class ExportingState<T, A>(
     /**
      * number of column rendering in the row to be skipped
      */
-    internal var colSkipCnt: Int = 0
+    private var colSkipCnt: Int = 0
 
     /**
      * number of row rendering in the column context to be skipped
      */
-    internal val rowSkipCnts: MutableMap<ColumnKey<T>, Int> = mutableMapOf()
+    private val rowSkipCnts: MutableMap<Int, Int> = mutableMapOf()
 
-    internal fun addRow(rowValue: DataExportTemplate.ComputedRowValue<T>): ExportingState<T, A>  {
+    internal fun addRow(rowValue: DataExportTemplate.ComputedRowValue<T>): ExportingState<T, A> {
         rowValues.add(rowValue)
         return this
     }
@@ -69,6 +73,7 @@ class ExportingState<T, A>(
     internal fun forEachRowValue(block: (rowValue: DataExportTemplate.ComputedRowValue<T>) -> Unit): ExportingState<T, A> {
         rowIndex = 0
         rowValues.forEachIndexed { index, rowValue ->
+            colSkipCnt = 0
             rowIndex = index
             columnIndex = 0
             this.rowValue = rowValue
@@ -83,20 +88,27 @@ class ExportingState<T, A>(
         return rowOperationContext
     }
 
-    internal fun noSkip(): Boolean {
-        return colSkipCnt-- <= 0
+    internal fun noSkip(columnIdx: Int): Boolean {
+        return colSkipCnt-- <= 0 && (rowSkipCnts[columnIdx] ?: 0).also { rowSkipCnts[columnIdx] = it - 1 } <= 0
     }
 
-    internal fun cellOperationContext(columnIndex: Int, columnId: ColumnKey<T>): OperationContext<T, CellOperationTableData<T>> {
+    internal fun cellOperationContext(
+        columnIndex: Int,
+        columnId: ColumnKey<T>
+    ): OperationContext<T, CellOperationTableData<T>> {
         this.columnIndex = columnIndex
         this.colSkipCnt = (rowValue?.rowCellValues?.get(columnId)?.colSpan ?: 1) - 1
-        this.rowSkipCnts[columnId] = (rowValue?.rowCellValues?.get(columnId)?.rowSpan ?: 1) - 1
+        this.rowSkipCnts[columnIndex] = (rowValue?.rowCellValues?.get(columnId)?.rowSpan ?: 1) - 1
         cellOperationContext.coordinates = coordinates()
         cellOperationContext.value.cellValue = rowValue?.rowCellValues?.get(columnId)
         return cellOperationContext
     }
 
-    internal fun columnOperationContext(columnIndex: Int, columnId: ColumnKey<T>, phase: ColumnRenderPhase): OperationContext<T, ColumnOperationTableData<T>> {
+    internal fun columnOperationContext(
+        columnIndex: Int,
+        columnId: ColumnKey<T>,
+        phase: ColumnRenderPhase
+    ): OperationContext<T, ColumnOperationTableData<T>> {
         this.columnIndex = columnIndex
         columnOperationContext.coordinates = coordinates()
         columnOperationContext.value.currentPhase = phase
