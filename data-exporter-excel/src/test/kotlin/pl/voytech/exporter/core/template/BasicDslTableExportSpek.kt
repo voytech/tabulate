@@ -75,7 +75,7 @@ object BasicDslTableExportSpek : Spek({
                                 fontColor = Colors.BLACK
                                 fontSize = 12
                             },
-                            CellBackgroundExtension(color = Colors.BLUE)
+                            background { color = Colors.BLUE }
                         )
                     }
                     column(Product::name) {
@@ -97,27 +97,55 @@ object BasicDslTableExportSpek : Spek({
                         )
                     }
                 }
+                val headerStyles = arrayOf(
+                    alignment { horizontal = HorizontalAlignment.CENTER },
+                    background { color = Colors.WHITE },
+                    borders {
+                        leftBorderColor = Colors.BLACK
+                        rightBorderColor = Colors.BLACK
+                        topBorderColor = Colors.BLACK
+                        bottomBorderColor = Colors.BLACK
+                        leftBorderStyle = BorderStyle.SOLID
+                        rightBorderStyle = BorderStyle.SOLID
+                        topBorderStyle = BorderStyle.SOLID
+                        bottomBorderStyle = BorderStyle.SOLID
+                    },
+                    font {
+                        weight = WeightStyle.BOLD
+                        strikeout = false
+                        underline = false
+                        italic = false
+                        fontColor = Colors.BLACK
+                    }
+                )
                 rows {
                     row {
                         createAt = 0
                         cells {
-                            cell {
+                            /*cell {
+                                rowSpan = 2
+                                value = "row span"
+                                extensions(*headerStyles)
+                            }*/
+                            cell(0) {
                                 colSpan = 7
                                 value = "This is very long title spanning entire column space."
-                                extensions(
-                                    alignment {
-                                        horizontal = HorizontalAlignment.CENTER
-                                    },
-                                    font {
-                                        strikeout = false
-                                        weight = WeightStyle.BOLD
-                                    }
-                                )
+                                extensions(*headerStyles)
                             }
                         }
                     }
                     row {
                         createAt = 1
+                        cells {
+                            cell(0) {
+                                colSpan = 7
+                                value = "This is very long title spanning entire column space. Line 2"
+                                extensions(*headerStyles)
+                            }
+                        }
+                    }
+                    row {
+                        createAt = 2
                         cells {
                             forColumn("nr") { value = "Nr.:" }
                             forColumn(Product::code) { value = "Code" }
@@ -228,7 +256,7 @@ object BasicDslTableExportSpek : Spek({
                     )
                 )
                 .perform().also {
-                   it.cleanup()
+                   //it.cleanup()
                 }
             }
         }

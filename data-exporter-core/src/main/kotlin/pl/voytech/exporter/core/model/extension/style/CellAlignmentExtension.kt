@@ -14,6 +14,13 @@ data class CellAlignmentExtension(
         var horizontal: HorizontalAlignment? = null
         override fun build(): CellExtension = CellAlignmentExtension(vertical, horizontal)
     }
+
+    override fun mergeWith(other: CellExtension): CellExtension = CellAlignmentExtension(
+        vertical = if (other is CellAlignmentExtension) other.vertical ?: this.vertical else this.vertical,
+        horizontal = if (other is CellAlignmentExtension) other.horizontal ?: this.horizontal else this.horizontal
+    )
+
 }
 
-fun alignment(block: CellAlignmentExtension.Builder.() -> Unit): CellExtension = CellAlignmentExtension.Builder().apply(block).build()
+fun alignment(block: CellAlignmentExtension.Builder.() -> Unit): CellExtension =
+    CellAlignmentExtension.Builder().apply(block).build()

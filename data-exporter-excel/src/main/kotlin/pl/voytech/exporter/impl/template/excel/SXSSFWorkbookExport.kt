@@ -79,17 +79,19 @@ internal class XlsxTableOperations<T> :
         state: DelegateAPI<SXSSFWorkbook>,
         context: OperationContext<T, CellOperationTableData<T>>
     ) {
-        context.value.cellValue?.takeIf { it.colSpan > 1 }?.also {
+        context.value.cellValue?.takeIf { it.colSpan > 1 || it.rowSpan > 1 }?.also { cell ->
             context.coordinates!!.also { coordinates ->
-                (coordinates.columnIndex + 1..coordinates.columnIndex + it.colSpan).forEach { cellIndex ->
-                    assertRow(state, coordinates).createCell(cellIndex)
+                (coordinates.rowIndex until coordinates.rowIndex + cell.rowSpan).forEach { rowIndex ->
+                    (coordinates.columnIndex until coordinates.columnIndex + cell.colSpan).forEach { colIndex ->
+                        assertCell(state, Coordinates(coordinates.tableName, rowIndex, colIndex), context)
+                    }
                 }
                 assertTableSheet(state, coordinates.tableName).addMergedRegion(
                     CellRangeAddress(
                         coordinates.rowIndex,
-                        coordinates.rowIndex,
+                        coordinates.rowIndex + cell.rowSpan - 1,
                         coordinates.columnIndex,
-                        coordinates.columnIndex + it.colSpan - 1
+                        coordinates.columnIndex + cell.colSpan - 1
                     )
                 )
             }
