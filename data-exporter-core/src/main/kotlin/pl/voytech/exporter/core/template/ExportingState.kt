@@ -84,7 +84,7 @@ class ExportingState<T, A>(
 
     internal fun rowOperationContext(): OperationContext<T, RowOperationTableData<T>> {
         rowOperationContext.coordinates = coordinates()
-        rowOperationContext.value.rowValues = rowValue?.rowCellValues
+        rowOperationContext.value.rowValues = rowValue?.rowCellValues?.map { Pair(it.key, it.value.value) }?.toMap()
         return rowOperationContext
     }
 
@@ -97,10 +97,10 @@ class ExportingState<T, A>(
         columnId: ColumnKey<T>
     ): OperationContext<T, CellOperationTableData<T>> {
         this.columnIndex = columnIndex
-        this.colSkipCnt = (rowValue?.rowCellValues?.get(columnId)?.colSpan ?: 1) - 1
-        this.rowSkipCnts[columnIndex] = (rowValue?.rowCellValues?.get(columnId)?.rowSpan ?: 1) - 1
+        this.colSkipCnt = (rowValue?.rowCellValues?.get(columnId)?.value?.colSpan ?: 1) - 1
+        this.rowSkipCnts[columnIndex] = (rowValue?.rowCellValues?.get(columnId)?.value?.rowSpan ?: 1) - 1
         cellOperationContext.coordinates = coordinates()
-        cellOperationContext.value.cellValue = rowValue?.rowCellValues?.get(columnId)
+        cellOperationContext.value.cellValue = rowValue?.rowCellValues?.get(columnId)?.value
         return cellOperationContext
     }
 
@@ -112,7 +112,7 @@ class ExportingState<T, A>(
         this.columnIndex = columnIndex
         columnOperationContext.coordinates = coordinates()
         columnOperationContext.value.currentPhase = phase
-        columnOperationContext.value.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[columnId] }
+        columnOperationContext.value.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[columnId]?.value }
         return columnOperationContext
     }
 

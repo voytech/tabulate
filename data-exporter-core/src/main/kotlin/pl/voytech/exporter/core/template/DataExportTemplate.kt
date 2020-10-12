@@ -25,9 +25,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
 
     internal data class ComputedRowValue<T>(
         val rowExtensions: Set<RowExtension>?,
-        val rowCellExtensions: Set<CellExtension>?,
-        val rowCells: Map<ColumnKey<T>, Cell<T>>?,
-        val rowCellValues: Map<ColumnKey<T>, CellValue?>,
+        val rowCellValues: Map<ColumnKey<T>, ComputedCell>,
         val typedRow: TypedRowData<T>
     )
 
@@ -133,18 +131,13 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         state.forEachRowValue { rowValue: ComputedRowValue<T> ->
             delegate.tableOperations.renderRow(state.delegate, state.rowOperationContext(), rowValue.rowExtensions)
                 .also {
-                    table.columns.filter { rowValue.rowCellValues.containsKey(it.id) }
+                    table.columns // .filter { rowValue.rowCellValues.containsKey(it.id) }
                         .forEachIndexed { columnIndex: Int, column: Column<T> ->
                             if (state.noSkip(columnIndex)) {
                                 delegate.tableOperations.renderRowCell(
                                     state.delegate,
                                     state.cellOperationContext(column.index ?: columnIndex, column.id),
-                                    mergeExtensions(
-                                        table.cellExtensions,
-                                        column.cellExtensions,
-                                        rowValue.rowCellExtensions,
-                                        rowValue.rowCells?.get(column.id)?.cellExtensions
-                                    )
+                                    rowValue.rowCellValues[column.id]?.extensions
                                 )
                             }
                         }
@@ -187,7 +180,6 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-
     private fun computeRowValue(
         table: Table<T>,
         typedRow: TypedRowData<T>
@@ -202,29 +194,37 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             mergeExtensions(*(matchingRowDefinitions?.mapNotNull { it.cellExtensions }!!.toTypedArray()))
         val mergedRowCells: Map<ColumnKey<T>, Cell<T>>? =
             matchingRowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })
-        val cellValues: MutableMap<ColumnKey<T>, CellValue?> = mutableMapOf()
+        val cellValues: MutableMap<ColumnKey<T>, ComputedCell> = mutableMapOf()
         table.columns.forEach { column: Column<T> ->
             val syntheticCell = mergedRowCells?.get(column.id)
-            val computedCellValue = computeCellValue(column, syntheticCell, typedRow)
-            cellValues[column.id] = computedCellValue?.let {
-                CellValue(
-                    computedCellValue,
-                    syntheticCell?.type ?: column.columnType,
-                    colSpan = syntheticCell?.colSpan ?: 1,
-                    rowSpan = syntheticCell?.rowSpan ?: 1
+            val computedCell = computeCellValue(column, syntheticCell, typedRow)?.let {
+                ComputedCell(
+                    value = CellValue(
+                        it,
+                        syntheticCell?.type ?: column.columnType,
+                        colSpan = syntheticCell?.colSpan ?: 1,
+                        rowSpan = syntheticCell?.rowSpan ?: 1
+                    ),
+                    extensions = mergeExtensions(
+                        table.cellExtensions,
+                        column.cellExtensions,
+                        mergedCellExtensions,
+                        syntheticCell?.cellExtensions
+                    )
                 )
+            }
+            if (computedCell != null) {
+                cellValues[column.id] = computedCell
             }
         }
         return ComputedRowValue(
             rowExtensions = mergedRowExtensions,
-            rowCellExtensions = mergedCellExtensions,
-            rowCells = mergedRowCells,
             rowCellValues = cellValues.toMap(),
             typedRow = typedRow
         )
     }
 
-    private fun mergeExtensions(vararg hintsOnLevels: Set<CellExtension>?): Set<CellExtension> {
+    private fun mergeExtensions(vararg hintsOnLevels: Set<CellExtension>?): Set<CellExtension>? {
         return hintsOnLevels.filterNotNull()
             .map { set -> set.groupBy { it.javaClass }.map { Pair(it.key, it.value.first()) }.toMap() }
             .fold(

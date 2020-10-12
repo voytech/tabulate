@@ -128,7 +128,7 @@ object BasicDslTableExportSpek : Spek({
                                 extensions(*headerStyles)
                             }
                             cell {
-                                colSpan = 7
+                                colSpan = 6
                                 value = "This is very long title spanning entire column space."
                                 extensions(*headerStyles)
                             }
@@ -138,7 +138,7 @@ object BasicDslTableExportSpek : Spek({
                         createAt = 1
                         cells {
                             cell(1) {
-                                colSpan = 7
+                                colSpan = 6
                                 value = "This is very long title spanning entire column space. Line 2"
                                 extensions(*headerStyles)
                             }
