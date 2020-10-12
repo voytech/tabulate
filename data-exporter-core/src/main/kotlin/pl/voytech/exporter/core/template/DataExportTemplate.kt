@@ -2,7 +2,6 @@ package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.extension.CellExtension
-import pl.voytech.exporter.core.model.extension.Extension
 import pl.voytech.exporter.core.model.extension.RowExtension
 import java.io.OutputStream
 import java.util.concurrent.atomic.AtomicInteger
@@ -23,31 +22,6 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     private var selectableRowsCached = false
     private var syntheticRows: List<Row<T>>? = null
     private var syntheticRowsCached = false
-
-    internal data class ComputedSyntheticRowValue<T>(val matchingRowDefinitions: Set<Row<T>>?) {
-        val rowExtensions: Set<RowExtension>?
-        val rowCellExtensions: Set<CellExtension>?
-        val rowCells: Map<ColumnKey<T>, Cell<T>>?
-
-        init {
-            rowExtensions = collectHints(matchingRowDefinitions) { r -> r.rowExtensions }
-            rowCellExtensions = collectHints(matchingRowDefinitions) { r -> r.cellExtensions }
-            rowCells = collectCells(matchingRowDefinitions)
-        }
-
-        private inline fun <E : Extension> collectHints(
-            matchingRows: Set<Row<T>>?,
-            getHints: (r: Row<T>) -> Set<E>?
-        ): Set<E>? {
-            return matchingRows?.mapNotNull { e -> getHints.invoke(e) }
-                ?.fold(setOf(), { acc, r -> acc + r })
-        }
-
-        private fun collectCells(matchingRows: Set<Row<T>>?): Map<ColumnKey<T>, Cell<T>>? {
-            return matchingRows?.mapNotNull { row -> row.cells }
-                ?.fold(mapOf(), { acc, m -> acc + m })
-        }
-    }
 
     internal data class ComputedRowValue<T>(
         val rowExtensions: Set<RowExtension>?,
@@ -106,10 +80,11 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         val preFlightSyntheticRows = {
             subsequentSyntheticRowsStartingAtRowIndex(rowIndex.get(), table.rows).let {
                 it?.forEach { _ ->
-                    computeRowValue(
-                        exportingState,
-                        table,
-                        TypedRowData(rowIndex = rowIndex.getAndIncrement(), dataset = collection)
+                    exportingState.addRow(
+                        computeRowValue(
+                            table,
+                            TypedRowData(rowIndex = rowIndex.getAndIncrement(), dataset = collection)
+                        )
                     )
                 }
             }
@@ -117,61 +92,19 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
         preFlightSyntheticRows().also {
             collection.forEachIndexed { objectIndex: Int, record: T ->
-                computeRowValue(
-                    exportingState,
-                    table,
-                    TypedRowData(
-                        dataset = collection,
-                        rowIndex = rowIndex.getAndIncrement(),
-                        objectIndex = objectIndex,
-                        record = record
+                exportingState.addRow(
+                    computeRowValue(
+                        table,
+                        TypedRowData(
+                            dataset = collection,
+                            rowIndex = rowIndex.getAndIncrement(),
+                            objectIndex = objectIndex,
+                            record = record
+                        )
                     )
                 ).also { preFlightSyntheticRows() }
             }
         }
-    }
-
-    private inline fun computeCellValue(
-        column: Column<T>,
-        syntheticRow: ComputedSyntheticRowValue<T>,
-        typedRow: TypedRowData<T>
-    ): Any? {
-        val syntheticCell = syntheticRow.rowCells?.get(column.id)
-        return (syntheticCell?.eval?.invoke(typedRow) ?: syntheticCell?.value ?: typedRow.record?.let {
-            column.id.ref?.invoke(it)
-        })?.let {
-            column.dataFormatter?.invoke(it) ?: it
-        }
-    }
-
-    private fun computeRowValue(
-        exportingState: ExportingState<T, A>,
-        table: Table<T>,
-        typedRow: TypedRowData<T>
-    ): ExportingState<T, A> {
-        val syntheticRowValue = computeSyntheticRowValue(typedRow, table.rows)
-        val cellValues: MutableMap<ColumnKey<T>, CellValue?> = mutableMapOf()
-        table.columns.forEach { column: Column<T> ->
-            val syntheticCell = syntheticRowValue.rowCells?.get(column.id)
-            val computedCellValue = computeCellValue(column, syntheticRowValue, typedRow)
-            cellValues[column.id] = computedCellValue?.let {
-                CellValue(
-                    computedCellValue,
-                    syntheticCell?.type ?: column.columnType,
-                    colSpan = syntheticCell?.colSpan ?: 1,
-                    rowSpan = syntheticCell?.rowSpan ?: 1
-                )
-            }
-        }
-        return exportingState.addRow(
-            ComputedRowValue(
-                rowExtensions = syntheticRowValue.rowExtensions,
-                rowCellExtensions = syntheticRowValue.rowCellExtensions,
-                rowCells = syntheticRowValue.rowCells,
-                rowCellValues = cellValues.toMap(),
-                typedRow = typedRow
-            )
-        )
     }
 
     private fun renderColumns(
@@ -206,7 +139,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                                 delegate.tableOperations.renderRowCell(
                                     state.delegate,
                                     state.cellOperationContext(column.index ?: columnIndex, column.id),
-                                    mergeCellHints(
+                                    mergeExtensions(
                                         table.cellExtensions,
                                         column.cellExtensions,
                                         rowValue.rowCellExtensions,
@@ -242,27 +175,66 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-    private fun computeSyntheticRowValue(
-        typedRow: TypedRowData<T>,
-        tableRows: List<Row<T>>?
-    ): ComputedSyntheticRowValue<T> {
-        val matchingSelectableRows = allSelectableRows(tableRows)?.filter { it.selector!!.invoke(typedRow) }?.toSet()
-        val createAtRow = allSyntheticRows(tableRows)?.filter { it.createAt == typedRow.rowIndex }?.toSet()
-        return ComputedSyntheticRowValue(createAtRow?.let { matchingSelectableRows?.plus(it) ?: it }
-            ?: matchingSelectableRows)
+    private inline fun computeCellValue(
+        column: Column<T>,
+        syntheticCell: Cell<T>?,
+        typedRow: TypedRowData<T>
+    ): Any? {
+        return (syntheticCell?.eval?.invoke(typedRow) ?: syntheticCell?.value ?: typedRow.record?.let {
+            column.id.ref?.invoke(it)
+        })?.let {
+            column.dataFormatter?.invoke(it) ?: it
+        }
     }
 
-    private fun mergeCellHints(vararg hintsOnLevels: Set<CellExtension>?): Set<CellExtension> {
+
+    private fun computeRowValue(
+        table: Table<T>,
+        typedRow: TypedRowData<T>
+    ): ComputedRowValue<T> {
+        val matchingSelectableRows = allSelectableRows(table.rows)?.filter { it.selector!!.invoke(typedRow) }?.toSet()
+        val createAtRow = allSyntheticRows(table.rows)?.filter { it.createAt == typedRow.rowIndex }?.toSet()
+        val matchingRowDefinitions =
+            createAtRow?.let { matchingSelectableRows?.plus(it) ?: it } ?: matchingSelectableRows
+        val mergedRowExtensions: Set<RowExtension>? =
+            matchingRowDefinitions?.mapNotNull { it.rowExtensions }?.fold(setOf(), { acc, r -> acc + r })
+        val mergedCellExtensions =
+            mergeExtensions(*(matchingRowDefinitions?.mapNotNull { it.cellExtensions }!!.toTypedArray()))
+        val mergedRowCells: Map<ColumnKey<T>, Cell<T>>? =
+            matchingRowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })
+        val cellValues: MutableMap<ColumnKey<T>, CellValue?> = mutableMapOf()
+        table.columns.forEach { column: Column<T> ->
+            val syntheticCell = mergedRowCells?.get(column.id)
+            val computedCellValue = computeCellValue(column, syntheticCell, typedRow)
+            cellValues[column.id] = computedCellValue?.let {
+                CellValue(
+                    computedCellValue,
+                    syntheticCell?.type ?: column.columnType,
+                    colSpan = syntheticCell?.colSpan ?: 1,
+                    rowSpan = syntheticCell?.rowSpan ?: 1
+                )
+            }
+        }
+        return ComputedRowValue(
+            rowExtensions = mergedRowExtensions,
+            rowCellExtensions = mergedCellExtensions,
+            rowCells = mergedRowCells,
+            rowCellValues = cellValues.toMap(),
+            typedRow = typedRow
+        )
+    }
+
+    private fun mergeExtensions(vararg hintsOnLevels: Set<CellExtension>?): Set<CellExtension> {
         return hintsOnLevels.filterNotNull()
             .map { set -> set.groupBy { it.javaClass }.map { Pair(it.key, it.value.first()) }.toMap() }
             .fold(
                 mapOf<Class<CellExtension>, CellExtension>(),
-                { accumulated, currentLevel -> merge(accumulated, currentLevel) })
+                { accumulated, currentLevel -> mergeExtensions(accumulated, currentLevel) })
             .values
             .toSet()
     }
 
-    private fun merge(
+    private fun mergeExtensions(
         first: Map<Class<CellExtension>, CellExtension>,
         second: Map<Class<CellExtension>, CellExtension>
     ): Map<Class<CellExtension>, CellExtension> {
