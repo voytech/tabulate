@@ -25,7 +25,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
 
     internal data class ComputedRowValue<T>(
         val rowExtensions: Set<RowExtension>?,
-        val rowCellValues: Map<ColumnKey<T>, ComputedCell>,
+        val rowCellValues: Map<ColumnKey<T>, AttributedCell>,
         val typedRow: TypedRowData<T>
     )
 
@@ -75,13 +75,15 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
      */
     private fun preFlightPass(exportingState: ExportingState<T, A>, table: Table<T>, collection: Collection<T>) {
         val rowIndex = AtomicInteger(0)
+        val rowSkips = mutableMapOf<ColumnKey<T>, Int>()
         val preFlightSyntheticRows = {
             subsequentSyntheticRowsStartingAtRowIndex(rowIndex.get(), table.rows).let {
                 it?.forEach { _ ->
                     exportingState.addRow(
                         computeRowValue(
                             table,
-                            TypedRowData(rowIndex = rowIndex.getAndIncrement(), dataset = collection)
+                            TypedRowData(rowIndex = rowIndex.getAndIncrement(), dataset = collection),
+                            rowSkips
                         )
                     )
                 }
@@ -98,7 +100,8 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                             rowIndex = rowIndex.getAndIncrement(),
                             objectIndex = objectIndex,
                             record = record
-                        )
+                        ),
+                        rowSkips
                     )
                 ).also { preFlightSyntheticRows() }
             }
@@ -131,21 +134,20 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         state.forEachRowValue { rowValue: ComputedRowValue<T> ->
             delegate.tableOperations.renderRow(state.delegate, state.rowOperationContext(), rowValue.rowExtensions)
                 .also {
-                    table.columns // .filter { rowValue.rowCellValues.containsKey(it.id) }
-                        .forEachIndexed { columnIndex: Int, column: Column<T> ->
-                            if (state.noSkip(columnIndex)) {
-                                delegate.tableOperations.renderRowCell(
-                                    state.delegate,
-                                    state.cellOperationContext(column.index ?: columnIndex, column.id),
-                                    rowValue.rowCellValues[column.id]?.extensions
-                                )
-                            }
+                    table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+                        if (rowValue.rowCellValues.containsKey(column.id)) {
+                            delegate.tableOperations.renderRowCell(
+                                state.delegate,
+                                state.cellOperationContext(column.index ?: columnIndex, column.id),
+                                rowValue.rowCellValues[column.id]?.extensions
+                            )
                         }
+                    }
                 }
         }
     }
 
-    private fun allSelectableRows(tableRows: List<Row<T>>?): List<Row<T>>? {
+    private fun allPredicateRows(tableRows: List<Row<T>>?): List<Row<T>>? {
         if (selectableRows == null && !selectableRowsCached) {
             selectableRows = tableRows?.filter { it.selector != null }
             selectableRowsCached = true
@@ -153,7 +155,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         return selectableRows
     }
 
-    private fun allSyntheticRows(tableRows: List<Row<T>>?): List<Row<T>>? {
+    private fun allCustomRows(tableRows: List<Row<T>>?): List<Row<T>>? {
         if (syntheticRows == null && !syntheticRowsCached) {
             syntheticRows = tableRows?.filter { it.createAt != null }?.sortedBy { it.createAt }
             syntheticRowsCached = true
@@ -163,7 +165,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
 
     private fun subsequentSyntheticRowsStartingAtRowIndex(startFrom: Int = 0, tableRows: List<Row<T>>?): List<Row<T>>? {
         return AtomicInteger(startFrom).let {
-            allSyntheticRows(tableRows)?.filter { row -> row.createAt!! >= it.get() }
+            allCustomRows(tableRows)?.filter { row -> row.createAt!! >= it.get() }
                 ?.takeWhile { row -> row.createAt == it.getAndIncrement() }
         }
     }
@@ -180,41 +182,56 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
+    private inline fun matchingPredicateRows(table: Table<T>, typedRow: TypedRowData<T>): Set<Row<T>>? =
+        allPredicateRows(table.rows)?.filter { it.selector!!.invoke(typedRow) }?.toSet()
+
+    private inline fun matchingCustomRows(table: Table<T>, typedRow: TypedRowData<T>): Set<Row<T>>? =
+        allCustomRows(table.rows)?.filter { it.createAt == typedRow.rowIndex }?.toSet()
+
+    private inline fun matchingRows(table: Table<T>, typedRow: TypedRowData<T>): Set<Row<T>>? {
+        val matchingPredicateRows = matchingPredicateRows(table, typedRow)
+        return matchingCustomRows(table, typedRow)?.let { matchingPredicateRows?.plus(it) ?: it }
+            ?: matchingPredicateRows
+    }
+
     private fun computeRowValue(
         table: Table<T>,
-        typedRow: TypedRowData<T>
+        typedRow: TypedRowData<T>,
+        rowSkips: MutableMap<ColumnKey<T>, Int>
     ): ComputedRowValue<T> {
-        val matchingSelectableRows = allSelectableRows(table.rows)?.filter { it.selector!!.invoke(typedRow) }?.toSet()
-        val createAtRow = allSyntheticRows(table.rows)?.filter { it.createAt == typedRow.rowIndex }?.toSet()
-        val matchingRowDefinitions =
-            createAtRow?.let { matchingSelectableRows?.plus(it) ?: it } ?: matchingSelectableRows
+        val rowDefinitions = matchingRows(table, typedRow)
         val mergedRowExtensions: Set<RowExtension>? =
-            matchingRowDefinitions?.mapNotNull { it.rowExtensions }?.fold(setOf(), { acc, r -> acc + r })
+            rowDefinitions?.mapNotNull { it.rowExtensions }?.fold(setOf(), { acc, r -> acc + r })
         val mergedCellExtensions =
-            mergeExtensions(*(matchingRowDefinitions?.mapNotNull { it.cellExtensions }!!.toTypedArray()))
+            mergeExtensions(*(rowDefinitions?.mapNotNull { it.cellExtensions }!!.toTypedArray()))
         val mergedRowCells: Map<ColumnKey<T>, Cell<T>>? =
-            matchingRowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })
-        val cellValues: MutableMap<ColumnKey<T>, ComputedCell> = mutableMapOf()
+            rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })
+        val cellValues: MutableMap<ColumnKey<T>, AttributedCell> = mutableMapOf()
+        var columnSkips = 0
         table.columns.forEach { column: Column<T> ->
-            val syntheticCell = mergedRowCells?.get(column.id)
-            val computedCell = computeCellValue(column, syntheticCell, typedRow)?.let {
-                ComputedCell(
-                    value = CellValue(
-                        it,
-                        syntheticCell?.type ?: column.columnType,
-                        colSpan = syntheticCell?.colSpan ?: 1,
-                        rowSpan = syntheticCell?.rowSpan ?: 1
-                    ),
-                    extensions = mergeExtensions(
-                        table.cellExtensions,
-                        column.cellExtensions,
-                        mergedCellExtensions,
-                        syntheticCell?.cellExtensions
+            if (columnSkips-- <= 0 && (rowSkips[column.id] ?: 0).also { rowSkips[column.id] = it - 1 } <= 0) {
+                val customCell = mergedRowCells?.get(column.id)
+                columnSkips = (customCell?.colSpan?.minus(1)) ?: 0
+                rowSkips[column.id] = (customCell?.rowSpan?.minus(1)) ?: 0
+                val computedCell = computeCellValue(column, customCell, typedRow)?.let {
+                    AttributedCell(
+                        value = CellValue(
+                            it,
+                            customCell?.type ?: column.columnType,
+                            colSpan = customCell?.colSpan ?: 1,
+                            rowSpan = customCell?.rowSpan ?: 1
+                        ),
+                        extensions = mergeExtensions(
+                            table.cellExtensions,
+                            column.cellExtensions,
+                            mergedCellExtensions,
+                            customCell?.cellExtensions
+                        )
                     )
-                )
-            }
-            if (computedCell != null) {
-                cellValues[column.id] = computedCell
+                }
+                if (computedCell != null) {
+                    cellValues[column.id] = computedCell
+                }
             }
         }
         return ComputedRowValue(
