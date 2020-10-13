@@ -55,16 +55,6 @@ class ExportingState<T, A>(
      */
     private var columnIndex: Int = 0 //objectFieldIndex
 
-    /**
-     * number of column rendering in the row to be skipped
-     */
-    private var colSkipCnt: Int = 0
-
-    /**
-     * number of row rendering in the column context to be skipped
-     */
-    private val rowSkipCnts: MutableMap<Int, Int> = mutableMapOf()
-
     internal fun addRow(rowValue: DataExportTemplate.ComputedRowValue<T>): ExportingState<T, A> {
         rowValues.add(rowValue)
         return this
@@ -73,7 +63,6 @@ class ExportingState<T, A>(
     internal fun forEachRowValue(block: (rowValue: DataExportTemplate.ComputedRowValue<T>) -> Unit): ExportingState<T, A> {
         rowIndex = 0
         rowValues.forEachIndexed { index, rowValue ->
-            colSkipCnt = 0
             rowIndex = index
             columnIndex = 0
             this.rowValue = rowValue
@@ -88,17 +77,11 @@ class ExportingState<T, A>(
         return rowOperationContext
     }
 
-    internal fun noSkip(columnIdx: Int): Boolean {
-        return colSkipCnt-- <= 0 && (rowSkipCnts[columnIdx] ?: 0).also { rowSkipCnts[columnIdx] = it - 1 } <= 0
-    }
-
     internal fun cellOperationContext(
         columnIndex: Int,
         columnId: ColumnKey<T>
     ): OperationContext<T, CellOperationTableData<T>> {
         this.columnIndex = columnIndex
-        this.colSkipCnt = (rowValue?.rowCellValues?.get(columnId)?.value?.colSpan ?: 1) - 1
-        this.rowSkipCnts[columnIndex] = (rowValue?.rowCellValues?.get(columnId)?.value?.rowSpan ?: 1) - 1
         cellOperationContext.coordinates = coordinates()
         cellOperationContext.value.cellValue = rowValue?.rowCellValues?.get(columnId)?.value
         return cellOperationContext
