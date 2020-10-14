@@ -80,8 +80,8 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     private fun preFlightPass(exportingState: ExportingState<T, A>, table: Table<T>, collection: Collection<T>) {
         val rowIndex = AtomicInteger(0)
         val rowSkips = mutableMapOf<ColumnKey<T>, Int>()
-        val preFlightSyntheticRows = {
-            subsequentSyntheticRowsStartingAtRowIndex(rowIndex.get(), table.rows).let {
+        val preFlightCustomRows = {
+            subsequentCustomRowsStartingAtRowIndex(rowIndex.get(), table.rows).let {
                 it?.forEach { _ ->
                     exportingState.addRow(
                         computeRowValue(
@@ -94,20 +94,22 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             }
             exportingState
         }
-        preFlightSyntheticRows().also {
-            collection.forEachIndexed { objectIndex: Int, record: T ->
-                exportingState.addRow(
-                    computeRowValue(
-                        table,
-                        TypedRowData(
-                            dataset = collection,
-                            rowIndex = rowIndex.getAndIncrement(),
-                            objectIndex = objectIndex,
-                            record = record
-                        ),
-                        rowSkips
-                    )
-                ).also { preFlightSyntheticRows() }
+        if (!collection.isEmpty()) {
+            preFlightCustomRows().also {
+                collection.forEachIndexed { objectIndex: Int, record: T ->
+                    exportingState.addRow(
+                        computeRowValue(
+                            table,
+                            TypedRowData(
+                                dataset = collection,
+                                rowIndex = rowIndex.getAndIncrement(),
+                                objectIndex = objectIndex,
+                                record = record
+                            ),
+                            rowSkips
+                        )
+                    ).also { preFlightCustomRows() }
+                }
             }
         }
     }
@@ -167,7 +169,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         return syntheticRows
     }
 
-    private fun subsequentSyntheticRowsStartingAtRowIndex(startFrom: Int = 0, tableRows: List<Row<T>>?): List<Row<T>>? {
+    private fun subsequentCustomRowsStartingAtRowIndex(startFrom: Int = 0, tableRows: List<Row<T>>?): List<Row<T>>? {
         return AtomicInteger(startFrom).let {
             allCustomRows(tableRows)?.filter { row -> row.createAt!! >= it.get() }
                 ?.takeWhile { row -> row.createAt == it.getAndIncrement() }
