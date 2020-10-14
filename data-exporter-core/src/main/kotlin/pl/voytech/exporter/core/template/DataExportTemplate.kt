@@ -64,6 +64,10 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         add(create(), table, collection).also { delegate.lifecycleOperations.saveDocument(it, stream) }
     }
 
+    fun export(table: Table<T>, stream: OutputStream) {
+        add(create(), table, emptyList()).also { delegate.lifecycleOperations.saveDocument(it, stream) }
+    }
+
     fun export(state: DelegateAPI<A>, stream: OutputStream) {
         delegate.lifecycleOperations.saveDocument(state, stream)
     }
@@ -267,4 +271,8 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
 
 fun <T, A> Collection<T>.exportTo(table: Table<T>, delegate: ExportOperations<T, A>, stream: OutputStream) {
     DataExportTemplate(delegate).export(table, this, stream)
+}
+
+fun <T, A> Table<T>.exportTo(delegate: ExportOperations<T, A>, stream: OutputStream) {
+    DataExportTemplate(delegate).export(this,  stream)
 }

@@ -17,6 +17,7 @@ import pl.voytech.exporter.core.model.extension.style.enums.WeightStyle
 import pl.voytech.exporter.core.utils.PoiTableAssert
 import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatExtension
+import pl.voytech.exporter.impl.template.excel.dataFormat
 import pl.voytech.exporter.impl.template.excel.xlsxExport
 import pl.voytech.exporter.testutils.CellPosition
 import pl.voytech.exporter.testutils.CellRange
@@ -34,19 +35,20 @@ import kotlin.test.assertTrue
 
 object BasicDslTableExportSpek : Spek({
 
-     Feature("Regular tabular data export to excel") {
+    Feature("Regular tabular data export to excel") {
+        val random = Random(1000)
+        val productList = (0..1000).map {
+            Product(
+                if (it % 2 == 0) "prod_nr_${it}${it % 2}" else "prod_nr_$it",
+                "Name $it",
+                "This is description $it",
+                "manufacturer $it",
+                LocalDate.now(),
+                BigDecimal(random.nextDouble(200.00, 1000.00))
+            )
+        }
+
         Scenario("defining simple table model and exporting to excel file.") {
-            val random = Random(1000)
-            val productList = (0..1000).map {
-                Product(
-                    if (it % 2 == 0) "prod_nr_${it}${it % 2}" else "prod_nr_$it",
-                    "Name $it",
-                    "This is description $it",
-                    "manufacturer $it",
-                    LocalDate.now(),
-                    BigDecimal(random.nextDouble(200.00, 1000.00))
-                )
-            }
             val file = File("test0.xlsx")
             val table = table<Product> {
                 name = "Products table"
@@ -93,59 +95,13 @@ object BasicDslTableExportSpek : Spek({
                     column(Product::distributionDate) {
                         extensions(
                             width { auto = true },
-                            CellExcelDataFormatExtension("dd.mm.YYYY")
+                            dataFormat { value = "dd.mm.YYYY" }
                         )
                     }
                 }
-                val headerStyles = arrayOf(
-                    alignment { horizontal = HorizontalAlignment.CENTER },
-                    background { color = Colors.WHITE },
-                    borders {
-                        leftBorderColor = Colors.BLACK
-                        rightBorderColor = Colors.BLACK
-                        topBorderColor = Colors.BLACK
-                        bottomBorderColor = Colors.BLACK
-                        leftBorderStyle = BorderStyle.SOLID
-                        rightBorderStyle = BorderStyle.SOLID
-                        topBorderStyle = BorderStyle.SOLID
-                        bottomBorderStyle = BorderStyle.SOLID
-                    },
-                    font {
-                        weight = WeightStyle.BOLD
-                        strikeout = false
-                        underline = false
-                        italic = false
-                        fontColor = Colors.BLACK
-                    }
-                )
                 rows {
                     row {
                         createAt = 0
-                        cells {
-                            cell {
-                                rowSpan = 2
-                                value = "row span"
-                                extensions(*headerStyles)
-                            }
-                            cell {
-                                colSpan = 6
-                                value = "This is very long title spanning entire column space."
-                                extensions(*headerStyles)
-                            }
-                        }
-                    }
-                    row {
-                        createAt = 1
-                        cells {
-                            cell(1) {
-                                colSpan = 6
-                                value = "This is very long title spanning entire column space. Line 2"
-                                extensions(*headerStyles)
-                            }
-                        }
-                    }
-                    row {
-                        createAt = 2
                         cells {
                             forColumn("nr") { value = "Nr.:" }
                             forColumn(Product::code) { value = "Code" }
@@ -181,18 +137,6 @@ object BasicDslTableExportSpek : Spek({
                         )
                     }
                     row {
-                        createAt = productList.size + 1
-                        cells {
-                            forColumn("nr") {
-                                value = "."
-                            }
-                            forColumn(Product::price) {
-                                value = "=SUM(K12:K111)"
-                                type = CellType.NATIVE_FORMULA
-                            }
-                        }
-                    }
-                    row {
                         selector = RowSelectors.all()
                         cells {
                             forColumn("nr") { eval = { row -> row.objectIndex?.plus(1) } }
@@ -200,15 +144,13 @@ object BasicDslTableExportSpek : Spek({
                     }
                 }
             }
-            FileOutputStream(file).use {
-                productList.exportTo(table, xlsxExport(), it)
-            }
+            FileOutputStream(file).use { productList.exportTo(table, xlsxExport(), it) }
             Then("file should exists and be valid xlsx readable by POI API") {
                 PoiTableAssert<Product>(
                     tableName = "Products table",
                     file = File("test0.xlsx"),
                     cellTests = mapOf(
-                        CellRange((3..3),(2..8)) to AssertContainsCellExtensions(
+                        CellRange((2..2), (2..8)) to AssertContainsCellExtensions(
                             CellBordersExtension(
                                 leftBorderStyle = BorderStyle.SOLID,
                                 leftBorderColor = Colors.BLACK,
@@ -231,10 +173,10 @@ object BasicDslTableExportSpek : Spek({
                                 weight = WeightStyle.BOLD
                             )
                         ),
-                        CellPosition(3, 2) to AssertMany(
+                        CellPosition(2, 2) to AssertMany(
                             AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
                         ),
-                        CellPosition(3, 3) to AssertMany(
+                        CellPosition(2, 3) to AssertMany(
                             AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
                             AssertContainsCellExtensions(
                                 font {
@@ -247,17 +189,85 @@ object BasicDslTableExportSpek : Spek({
                                 CellBackgroundExtension(color = Colors.BLUE)
                             )
                         ),
-                        CellPosition(3, 4) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
-                        CellPosition(3, 5) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Description"),
-                        CellPosition(3, 6) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Manufacturer"),
-                        CellPosition(3, 7) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Price"),
-                        CellPosition(3, 8) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Distribution"),
-                        CellPosition(4, 8) to AssertContainsCellExtensions(CellExcelDataFormatExtension("dd.mm.YYYY"))
+                        CellPosition(2, 4) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
+                        CellPosition(2, 5) to AssertCellValue(
+                            expectedType = CellType.STRING,
+                            expectedValue = "Description"
+                        ),
+                        CellPosition(2, 6) to AssertCellValue(
+                            expectedType = CellType.STRING,
+                            expectedValue = "Manufacturer"
+                        ),
+                        CellPosition(2, 7) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Price"),
+                        CellPosition(2, 8) to AssertCellValue(
+                            expectedType = CellType.STRING,
+                            expectedValue = "Distribution"
+                        ),
+                        CellPosition(3, 8) to AssertContainsCellExtensions(CellExcelDataFormatExtension("dd.mm.YYYY"))
                     )
-                )
-                .perform().also {
-                   //it.cleanup()
+                ).perform().also {
+                    it.cleanup()
                 }
+            }
+        }
+        Scenario("defining simple table model with cell column and row spans") {
+            val file = File("test1.xlsx")
+            val headerStyles = arrayOf(
+                alignment { horizontal = HorizontalAlignment.CENTER },
+                background { color = Colors.WHITE },
+                borders {
+                    leftBorderColor = Colors.BLACK
+                    rightBorderColor = Colors.BLACK
+                    topBorderColor = Colors.BLACK
+                    bottomBorderColor = Colors.BLACK
+                    leftBorderStyle = BorderStyle.SOLID
+                    rightBorderStyle = BorderStyle.SOLID
+                    topBorderStyle = BorderStyle.SOLID
+                    bottomBorderStyle = BorderStyle.SOLID
+                },
+                font {
+                    weight = WeightStyle.BOLD
+                    strikeout = false
+                    underline = false
+                    italic = false
+                    fontColor = Colors.BLACK
+                }
+            )
+            FileOutputStream(file).use {
+                table<Any> {
+                    columns {
+                        column("col-0")
+                        column("col-1")
+                        column("col-2")
+                    }
+                    rows {
+                        row {
+                            createAt = 0
+                            cells {
+                                cell {
+                                    rowSpan = 2
+                                    value = "row span"
+                                    extensions(*headerStyles)
+                                }
+                                cell {
+                                    colSpan = 2
+                                    value = "This is very long title spanning entire column space."
+                                    extensions(*headerStyles)
+                                }
+                            }
+                        }
+                        row {
+                            createAt = 1
+                            cells {
+                                cell(1) {
+                                    colSpan = 2
+                                    value = "This is very long title spanning entire column space. Line 2"
+                                    extensions(*headerStyles)
+                                }
+                            }
+                        }
+                    }
+                }.exportTo(xlsxExport(), it)
             }
         }
     }
@@ -274,7 +284,7 @@ object BasicDslTableExportSpek : Spek({
                     BigDecimal(Random(1000).nextDouble(200.00, 1000.00))
                 )
             }
-            val file = File("test1.xlsx")
+            val file = File("test2.xlsx")
             ZipSecureFile.setMinInflateRatio(0.001)
             FileOutputStream(file).use {
                 productList.export<Product, SXSSFWorkbook>(it) {
@@ -311,7 +321,7 @@ object BasicDslTableExportSpek : Spek({
                 assertNotNull(file)
                 PoiTableAssert<Product>(
                     tableName = "Products table",
-                    file = File("test1.xlsx"),
+                    file = File("test2.xlsx"),
                     cellTests = mapOf(
                         CellPosition(0, 0) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
                         CellPosition(0, 1) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
@@ -358,7 +368,7 @@ object BasicDslTableExportSpek : Spek({
                     BigDecimal(random.nextDouble(200.00, 1000.00))
                 )
             }
-            val file = File("test2.xlsx")
+            val file = File("test3.xlsx")
             val table = table<Product> {
                 name = "Products table"
                 extensions(FilterAndSortTableExtension(rowRange = (0..999), columnRange = (0..5)))
@@ -382,7 +392,7 @@ object BasicDslTableExportSpek : Spek({
                 assertNotNull(file)
                 PoiTableAssert<Product>(
                     tableName = "Products table",
-                    file = File("test1.xlsx"),
+                    file = File("test3.xlsx"),
                     cellTests = mapOf()
                 ).perform().also {
                     it.cleanup()
