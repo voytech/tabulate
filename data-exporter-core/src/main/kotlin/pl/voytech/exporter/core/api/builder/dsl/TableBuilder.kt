@@ -1,6 +1,7 @@
 package pl.voytech.exporter.core.api.builder.dsl
 
-import pl.voytech.exporter.core.api.builder.*
+import pl.voytech.exporter.core.api.builder.Builder
+import pl.voytech.exporter.core.api.builder.ExtensionsAwareBuilder
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.extension.*
 
@@ -135,20 +136,25 @@ class RowsBuilder<T> private constructor(private val columns: List<Column<T>>) :
     @set:JvmSynthetic
     private var rows: List<Row<T>> = emptyList()
 
+    private var rowIndex: Int = 0
+
     @JvmSynthetic
     fun row(block: RowBuilder<T>.() -> Unit) {
-        rows = rows + (RowBuilder.new<T>(columns).apply(block).build())
+        rows = rows + (RowBuilder.new(columns).apply { createAt = this@RowsBuilder.rowIndex }.apply(block).build())
+            .also { rowIndex = it.createAt?.plus(1) ?: rowIndex }
     }
 
     @JvmSynthetic
     fun row(selector: RowSelector<T>, block: RowBuilder<T>.() -> Unit) {
-        rows = rows + RowBuilder.new<T>(columns).apply { this.selector = selector }.apply(block).build()
+        rows = rows + RowBuilder.new(columns).apply { this.selector = selector }.apply(block).build()
     }
 
     @JvmSynthetic
     fun row(at: Int, block: RowBuilder<T>.() -> Unit) {
-        rows = rows + RowBuilder.new<T>(columns).apply { createAt = at }.apply(block).build()
+        rowIndex = at
+        rows = rows + RowBuilder.new(columns).apply { createAt = this@RowsBuilder.rowIndex++ }.apply(block).build()
     }
+
 
     @JvmSynthetic
     override fun build(): List<Row<T>> = rows
@@ -166,14 +172,34 @@ class RowBuilder<T> private constructor(private val columns: List<Column<T>>) : 
     private var cells: Map<ColumnKey<T>, Cell<T>>? = null
 
     @set:JvmSynthetic
-    var selector: RowSelector<T>? = null
+    private var _createAt: Int? = null
 
     @set:JvmSynthetic
-    var createAt: Int? = null
+    private var _selector: RowSelector<T>? = null
+
+    @set:JvmSynthetic
+    var selector: RowSelector<T>?
+        get() {
+            return _selector
+        }
+        set(value) {
+            _selector = value
+            _createAt = null
+        }
+
+    @set:JvmSynthetic
+    var createAt: Int?
+        get() {
+            return _createAt
+        }
+        set(value) {
+            _createAt = value
+            _selector = null
+        }
 
     @JvmSynthetic
     fun cells(block: CellsBuilder<T>.() -> Unit) {
-        cells = (cells ?: emptyMap()) + CellsBuilder.new<T>(columns).apply(block).build()
+        cells = (cells ?: emptyMap()) + CellsBuilder.new(columns).apply(block).build()
     }
 
     @JvmSynthetic
@@ -264,7 +290,8 @@ class CellBuilder<T> private constructor() : ExtensionsAwareBuilder<Cell<T>>() {
     var rowSpan: Int? = 1
 
     @JvmSynthetic
-    override fun build(): Cell<T> = Cell(value, eval, type, colSpan, rowSpan, getExtensionsByClass(CellExtension::class.java))
+    override fun build(): Cell<T> =
+        Cell(value, eval, type, colSpan, rowSpan, getExtensionsByClass(CellExtension::class.java))
 
     @JvmSynthetic
     override fun supportedExtensionClasses(): Set<Class<out Extension>> = setOf(CellExtension::class.java)

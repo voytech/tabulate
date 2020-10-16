@@ -101,7 +101,6 @@ object BasicDslTableExportSpek : Spek({
                 }
                 rows {
                     row {
-                        createAt = 0
                         cells {
                             forColumn("nr") { value = "Nr.:" }
                             forColumn(Product::code) { value = "Code" }
@@ -206,7 +205,7 @@ object BasicDslTableExportSpek : Spek({
                         CellPosition(3, 8) to AssertContainsCellExtensions(CellExcelDataFormatExtension("dd.mm.YYYY"))
                     )
                 ).perform().also {
-                    it.cleanup()
+                    // it.cleanup()
                 }
             }
         }
@@ -242,7 +241,6 @@ object BasicDslTableExportSpek : Spek({
                     }
                     rows {
                         row {
-                            createAt = 0
                             cells {
                                 cell {
                                     rowSpan = 2
@@ -257,7 +255,6 @@ object BasicDslTableExportSpek : Spek({
                             }
                         }
                         row {
-                            createAt = 1
                             cells {
                                 cell(1) {
                                     colSpan = 2

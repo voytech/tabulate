@@ -94,8 +94,8 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             }
             exportingState
         }
-        if (!collection.isEmpty()) {
-            preFlightCustomRows().also {
+        preFlightCustomRows().also {
+            if (!collection.isEmpty()) {
                 collection.forEachIndexed { objectIndex: Int, record: T ->
                     exportingState.addRow(
                         computeRowValue(
@@ -197,7 +197,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     private inline fun matchingRows(table: Table<T>, typedRow: TypedRowData<T>): Set<Row<T>>? {
         val matchingPredicateRows = matchingPredicateRows(table, typedRow)
         return matchingCustomRows(table, typedRow)?.let { matchingPredicateRows?.plus(it) ?: it }
-            ?: matchingPredicateRows
+            ?: matchingPredicateRows ?: emptySet()
     }
 
     private fun computeRowValue(
@@ -205,9 +205,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         typedRow: TypedRowData<T>,
         rowSkips: MutableMap<ColumnKey<T>, Int>
     ): ComputedRowValue<T> {
-        val rowDefinitions = matchingRows(table, typedRow)
-        val mergedRowExtensions: Set<RowExtension>? =
-            rowDefinitions?.mapNotNull { it.rowExtensions }?.fold(setOf(), { acc, r -> acc + r })
+        val rowDefinitions: Set<Row<T>>? = matchingRows(table, typedRow)
         val mergedCellExtensions =
             mergeExtensions(*(rowDefinitions?.mapNotNull { it.cellExtensions }!!.toTypedArray()))
         val mergedRowCells: Map<ColumnKey<T>, Cell<T>>? =
@@ -241,7 +239,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             }
         }
         return ComputedRowValue(
-            rowExtensions = mergedRowExtensions,
+            rowExtensions = rowDefinitions.mapNotNull { it.rowExtensions }.fold(setOf(), { acc, r -> acc + r }),
             rowCellValues = cellValues.toMap(),
             typedRow = typedRow
         )
@@ -276,5 +274,5 @@ fun <T, A> Collection<T>.exportTo(table: Table<T>, delegate: ExportOperations<T,
 }
 
 fun <T, A> Table<T>.exportTo(delegate: ExportOperations<T, A>, stream: OutputStream) {
-    DataExportTemplate(delegate).export(this,  stream)
+    DataExportTemplate(delegate).export(this, stream)
 }
