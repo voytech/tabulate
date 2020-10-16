@@ -205,7 +205,7 @@ object BasicDslTableExportSpek : Spek({
                         CellPosition(3, 8) to AssertContainsCellExtensions(CellExcelDataFormatExtension("dd.mm.YYYY"))
                     )
                 ).perform().also {
-                    // it.cleanup()
+                    it.cleanup()
                 }
             }
         }
@@ -265,6 +265,15 @@ object BasicDslTableExportSpek : Spek({
                         }
                     }
                 }.exportTo(xlsxExport(), it)
+            }
+            Then("file should exists and be valid xlsx readable by POI API") {
+                PoiTableAssert<Product>(
+                    tableName = "Products table",
+                    file = File("test1.xlsx"),
+                    cellTests = mapOf()
+                ).perform().also {
+                    it.cleanup()
+                }
             }
         }
     }
