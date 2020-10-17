@@ -269,10 +269,10 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 }
 
-fun <T, A> Collection<T>.exportTo(table: Table<T>, delegate: ExportOperations<T, A>, stream: OutputStream) {
+fun <T, A> Collection<T>.exportTable(table: Table<T>, delegate: ExportOperations<T, A>, stream: OutputStream) {
     DataExportTemplate(delegate).export(table, this, stream)
 }
 
-fun <T, A> Table<T>.exportTo(delegate: ExportOperations<T, A>, stream: OutputStream) {
+fun <T, A> Table<T>.exportWith(delegate: ExportOperations<T, A>, stream: OutputStream) {
     DataExportTemplate(delegate).export(this, stream)
 }
