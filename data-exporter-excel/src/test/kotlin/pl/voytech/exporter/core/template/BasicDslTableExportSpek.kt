@@ -22,7 +22,6 @@ import pl.voytech.exporter.impl.template.excel.xlsxExport
 import pl.voytech.exporter.testutils.CellPosition
 import pl.voytech.exporter.testutils.CellRange
 import pl.voytech.exporter.testutils.cellassertions.AssertCellValue
-import pl.voytech.exporter.testutils.cellassertions.AssertCellValueExpr
 import pl.voytech.exporter.testutils.cellassertions.AssertContainsCellExtensions
 import pl.voytech.exporter.testutils.cellassertions.AssertMany
 import java.io.File
@@ -31,7 +30,6 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.random.Random
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 object BasicDslTableExportSpek : Spek({
 
@@ -143,7 +141,7 @@ object BasicDslTableExportSpek : Spek({
                     }
                 }
             }
-            FileOutputStream(file).use { productList.exportTo(table, xlsxExport(), it) }
+            FileOutputStream(file).use { productList.exportTable(table, xlsxExport(), it) }
             Then("file should exists and be valid xlsx readable by POI API") {
                 PoiTableAssert<Product>(
                     tableName = "Products table",
@@ -236,11 +234,7 @@ object BasicDslTableExportSpek : Spek({
             )
             FileOutputStream(file).use {
                 table<Any> {
-                    columns {
-                        column("col-0")
-                        column("col-1")
-                        column("col-2")
-                    }
+                    columns { count = 3 }
                     rows {
                         row {
                             cells {
@@ -258,7 +252,7 @@ object BasicDslTableExportSpek : Spek({
                         }
                         row {
                             cells {
-                                cell(1) {
+                                cell {
                                     colSpan = 2
                                     value = "This is very long title spanning entire column space. Line 2"
                                     extensions(*styles)
@@ -266,7 +260,7 @@ object BasicDslTableExportSpek : Spek({
                             }
                         }
                     }
-                }.exportTo(xlsxExport(), it)
+                }.exportWith(xlsxExport(), it)
             }
             Then("file should exists and be valid xlsx readable by POI API") {
                 PoiTableAssert<Product>(
@@ -279,6 +273,7 @@ object BasicDslTableExportSpek : Spek({
             }
         }
     }
+
     Feature("Excel file interpolation with dynamic tabular data") {
         Scenario("loading from template file and filling it up.") {
             val productList = (0..2).map {
@@ -303,12 +298,10 @@ object BasicDslTableExportSpek : Spek({
                             column(Product::code)
                             column(Product::name)
                             column(Product::description)
-                            column(Product::manufacturer) {
-                                dataFormatter = { field -> (field as String).toUpperCase() }
-                            }
+                            column(Product::manufacturer)
                             column(Product::distributionDate) {
                                 extensions(
-                                    CellExcelDataFormatExtension("dd.mm.YYYY")
+                                    dataFormat {  value = "dd.mm.YYYY" }
                                 )
                             }
                         }
@@ -341,12 +334,6 @@ object BasicDslTableExportSpek : Spek({
                             expectedType = CellType.STRING,
                             expectedValue = "Manufacturer"
                         ),
-                        CellPosition(1, 4) to AssertCellValueExpr(invoke = { (value, _) ->
-                            assertTrue(
-                                (value as String).filter { c -> c.isLetter() }.all { c -> c.isUpperCase() },
-                                "expected only upper case characters!"
-                            )
-                        }),
                         CellPosition(0, 5) to AssertCellValue(
                             expectedType = CellType.STRING,
                             expectedValue = "Distribution"
@@ -387,13 +374,13 @@ object BasicDslTableExportSpek : Spek({
                     column(Product::price)
                     column(Product::distributionDate) {
                         extensions(
-                            CellExcelDataFormatExtension("dd.mm.YYYY")
+                            dataFormat {  value = "dd.mm.YYYY" }
                         )
                     }
                 }
             }
             FileOutputStream(file).use {
-                productList.exportTo(table, xlsxExport(), it)
+                productList.exportTable(table, xlsxExport(), it)
             }
             Then("file should be written successfully") {
                 assertNotNull(file)

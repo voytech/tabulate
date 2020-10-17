@@ -68,6 +68,9 @@ class ColumnsBuilder<T> private constructor() : Builder<List<Column<T>>> {
     @set:JvmSynthetic
     private var columns: List<Column<T>> = emptyList()
 
+    @set:JvmSynthetic
+    var count: Int? = null
+
     @JvmSynthetic
     fun column(id: String) {
         columns = columns + (ColumnBuilder.new<T>().also { it.id = ColumnKey(id = id) }.build())
@@ -89,7 +92,12 @@ class ColumnsBuilder<T> private constructor() : Builder<List<Column<T>>> {
     }
 
     @JvmSynthetic
-    override fun build(): List<Column<T>> = columns
+    override fun build(): List<Column<T>> {
+        if (columns.isEmpty() && count != null) {
+            (1..count!!).forEach { column("column-$it") }
+        }
+        return columns
+    }
 
     companion object {
         @JvmSynthetic
@@ -133,31 +141,63 @@ class ColumnBuilder<T> private constructor() : ExtensionsAwareBuilder<Column<T>>
 @TableMarker
 class RowsBuilder<T> private constructor(private val columns: List<Column<T>>) : Builder<List<Row<T>>> {
 
-    @set:JvmSynthetic
     private var rows: List<Row<T>> = emptyList()
 
     private var rowIndex: Int = 0
 
+    private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int> = mutableMapOf()
+
     @JvmSynthetic
     fun row(block: RowBuilder<T>.() -> Unit) {
-        rows = rows + (RowBuilder.new(columns).apply { createAt = this@RowsBuilder.rowIndex }.apply(block).build())
+        rows = rows + (RowBuilder.new(columns, interceptedRowSpans)
+            .apply { createAt = this@RowsBuilder.rowIndex }
+            .apply(block).build())
             .also { rowIndex = it.createAt?.plus(1) ?: rowIndex }
+        interceptRowSpans()
     }
 
     @JvmSynthetic
     fun row(selector: RowSelector<T>, block: RowBuilder<T>.() -> Unit) {
-        rows = rows + RowBuilder.new(columns).apply { this.selector = selector }.apply(block).build()
+        rows =
+            rows + RowBuilder.new(columns, interceptedRowSpans)
+                .apply { this.selector = selector }
+                .apply(block).build()
+        interceptRowSpans()
     }
 
     @JvmSynthetic
     fun row(at: Int, block: RowBuilder<T>.() -> Unit) {
         rowIndex = at
-        rows = rows + RowBuilder.new(columns).apply { createAt = this@RowsBuilder.rowIndex++ }.apply(block).build()
+        rows = rows + RowBuilder.new(columns, interceptedRowSpans)
+            .apply { createAt = this@RowsBuilder.rowIndex++ }
+            .apply(block).build()
+        interceptRowSpans()
     }
 
-
     @JvmSynthetic
-    override fun build(): List<Row<T>> = rows
+    override fun build(): List<Row<T>> {
+        return sortedNullsLast()
+    }
+
+    private fun interceptRowSpans() {
+        val customRows = sortedNullsLast().filter { it.createAt != null }
+        if (customRows.isNotEmpty()) {
+            customRows.last { it.createAt != null }.let { lastRow ->
+                columns.forEach { column ->
+                    val cell: Cell<T>? = lastRow.cells?.get(column.id)
+                    interceptedRowSpans[column.id] = if (cell != null) {
+                        (cell.rowSpan ?: 1) - 1
+                    } else {
+                        (interceptedRowSpans[column.id]?.let { it - 1 } ?: 0).coerceAtLeast(0)
+                    }
+                }
+            }
+        }
+    }
+
+    private inline fun sortedNullsLast(): List<Row<T>> {
+        return rows.sortedWith(compareBy(nullsLast()) { it.createAt })
+    }
 
     companion object {
         @JvmSynthetic
@@ -166,7 +206,10 @@ class RowsBuilder<T> private constructor(private val columns: List<Column<T>>) :
 }
 
 @TableMarker
-class RowBuilder<T> private constructor(private val columns: List<Column<T>>) : ExtensionsAwareBuilder<Row<T>>() {
+class RowBuilder<T> private constructor(
+    private val columns: List<Column<T>>,
+    private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int>
+) : ExtensionsAwareBuilder<Row<T>>() {
 
     @set:JvmSynthetic
     private var cells: Map<ColumnKey<T>, Cell<T>>? = null
@@ -199,7 +242,7 @@ class RowBuilder<T> private constructor(private val columns: List<Column<T>>) : 
 
     @JvmSynthetic
     fun cells(block: CellsBuilder<T>.() -> Unit) {
-        cells = (cells ?: emptyMap()) + CellsBuilder.new(columns).apply(block).build()
+        cells = (cells ?: emptyMap()) + CellsBuilder.new(columns, interceptedRowSpans).apply(block).build()
     }
 
     @JvmSynthetic
@@ -216,12 +259,18 @@ class RowBuilder<T> private constructor(private val columns: List<Column<T>>) : 
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(columns: List<Column<T>>): RowBuilder<T> = RowBuilder(columns)
+        internal fun <T> new(
+            columns: List<Column<T>>,
+            interceptedRowSpans: MutableMap<ColumnKey<T>, Int>
+        ): RowBuilder<T> = RowBuilder(columns, interceptedRowSpans)
     }
 }
 
 @TableMarker
-class CellsBuilder<T> private constructor(private val columns: List<Column<T>>) : Builder<Map<ColumnKey<T>, Cell<T>>> {
+class CellsBuilder<T> private constructor(
+    private val columns: List<Column<T>>,
+    private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int>
+) : Builder<Map<ColumnKey<T>, Cell<T>>> {
 
     @set:JvmSynthetic
     private var cells: Map<ColumnKey<T>, Cell<T>> = emptyMap()
@@ -249,7 +298,7 @@ class CellsBuilder<T> private constructor(private val columns: List<Column<T>>) 
 
     @JvmSynthetic
     fun cell(block: CellBuilder<T>.() -> Unit) {
-        cell(index = cellIndex++, block)
+        cell(index = resolveNextCellIndex(), block)
     }
 
     @JvmSynthetic
@@ -265,9 +314,19 @@ class CellsBuilder<T> private constructor(private val columns: List<Column<T>>) 
         return cells
     }
 
+    private fun resolveNextCellIndex(): Int {
+        while ((interceptedRowSpans[columns[cellIndex].id] ?: 0) > 0 && cellIndex < columns.size - 1) {
+            cellIndex++
+        }
+        return cellIndex++
+    }
+
     companion object {
         @JvmSynthetic
-        internal fun <T> new(columns: List<Column<T>>): CellsBuilder<T> = CellsBuilder(columns)
+        internal fun <T> new(
+            columns: List<Column<T>>,
+            interceptedRowSpans: MutableMap<ColumnKey<T>, Int>
+        ): CellsBuilder<T> = CellsBuilder(columns, interceptedRowSpans)
     }
 }
 
