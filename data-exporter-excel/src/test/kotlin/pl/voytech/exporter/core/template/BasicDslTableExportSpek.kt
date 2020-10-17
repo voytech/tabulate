@@ -209,9 +209,11 @@ object BasicDslTableExportSpek : Spek({
                 }
             }
         }
-        Scenario("defining simple table model with cell column and row spans") {
+    }
+    Feature("Tabular data consisting only from custom cells - no dynamic data set included") {
+        Scenario("Defining simple table with static cells (different column spans and row spans) and reusable styles.") {
             val file = File("test1.xlsx")
-            val headerStyles = arrayOf(
+            val styles = arrayOf(
                 alignment { horizontal = HorizontalAlignment.CENTER },
                 background { color = Colors.WHITE },
                 borders {
@@ -245,12 +247,12 @@ object BasicDslTableExportSpek : Spek({
                                 cell {
                                     rowSpan = 2
                                     value = "row span"
-                                    extensions(*headerStyles)
+                                    extensions(*styles)
                                 }
                                 cell {
                                     colSpan = 2
                                     value = "This is very long title spanning entire column space."
-                                    extensions(*headerStyles)
+                                    extensions(*styles)
                                 }
                             }
                         }
@@ -259,7 +261,7 @@ object BasicDslTableExportSpek : Spek({
                                 cell(1) {
                                     colSpan = 2
                                     value = "This is very long title spanning entire column space. Line 2"
-                                    extensions(*headerStyles)
+                                    extensions(*styles)
                                 }
                             }
                         }
@@ -277,8 +279,7 @@ object BasicDslTableExportSpek : Spek({
             }
         }
     }
-
-    Feature("Tabular data export to excel using excel template as input.") {
+    Feature("Excel file interpolation with dynamic tabular data") {
         Scenario("loading from template file and filling it up.") {
             val productList = (0..2).map {
                 Product(
@@ -361,8 +362,8 @@ object BasicDslTableExportSpek : Spek({
         }
     }
 
-    Feature("tabular data export to 'xlsx excel table'") {
-        Scenario("defining simple table and exporting to excel file into so called excel table.") {
+    Feature("Excel specific table filtering and sorting") {
+        Scenario("defining simple table and exporting to excel file into filterable, sortable 'excel table'.") {
             val random = Random(1000)
             val productList = (0..999).map {
                 Product(
