@@ -29,6 +29,7 @@ import java.io.FileOutputStream
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.random.Random
+import kotlin.system.measureTimeMillis
 import kotlin.test.assertNotNull
 
 object BasicDslTableExportSpek : Spek({
@@ -141,8 +142,11 @@ object BasicDslTableExportSpek : Spek({
                     }
                 }
             }
-            FileOutputStream(file).use { productList.exportTable(table, xlsxExport(), it) }
+            val elapsedTime = FileOutputStream(file).use { outputStream ->
+                measureTimeMillis { productList.exportTable(table, xlsxExport(), outputStream) }
+            }
             Then("file should exists and be valid xlsx readable by POI API") {
+                println("Elapsed time: $elapsedTime")
                 PoiTableAssert<Product>(
                     tableName = "Products table",
                     file = File("test0.xlsx"),

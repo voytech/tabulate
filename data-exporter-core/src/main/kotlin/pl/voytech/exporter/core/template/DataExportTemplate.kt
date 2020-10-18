@@ -178,10 +178,10 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
 
     private inline fun computeCellValue(
         column: Column<T>,
-        syntheticCell: Cell<T>?,
-        typedRow: TypedRowData<T>
+        customCell: Cell<T>?,
+        rowData: TypedRowData<T>
     ): Any? {
-        return (syntheticCell?.eval?.invoke(typedRow) ?: syntheticCell?.value ?: typedRow.record?.let {
+        return (customCell?.eval?.invoke(rowData) ?: customCell?.value ?: rowData.record?.let {
             column.id.ref?.invoke(it)
         })?.let {
             column.dataFormatter?.invoke(it) ?: it
