@@ -1,8 +1,8 @@
 package pl.voytech.exporter.core.model
 
 import pl.voytech.exporter.core.api.builder.fluent.TableBuilder
-import pl.voytech.exporter.core.model.extension.CellExtension
-import pl.voytech.exporter.core.model.extension.TableExtension
+import pl.voytech.exporter.core.model.attributes.CellAttribute
+import pl.voytech.exporter.core.model.attributes.TableAttribute
 
 /**
  * A top-level model class. Defines how records from repositories will be handled by file rendering strategies.
@@ -28,8 +28,8 @@ data class Table<T> internal constructor(
     val firstColumn: Int? = 0,
     val columns: List<Column<T>> = emptyList(),
     val rows: List<Row<T>>?,
-    val tableExtensions: Set<TableExtension>?,
-    val cellExtensions: Set<CellExtension>?
+    val tableAttributes: Set<TableAttribute>?,
+    val cellAttributes: Set<CellAttribute>?
 ) {
     companion object {
         @JvmStatic

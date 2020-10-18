@@ -1,9 +1,9 @@
 package pl.voytech.exporter.core.api.builder.dsl
 
 import pl.voytech.exporter.core.api.builder.Builder
-import pl.voytech.exporter.core.api.builder.ExtensionsAwareBuilder
+import pl.voytech.exporter.core.api.builder.AttributesAwareBuilder
 import pl.voytech.exporter.core.model.*
-import pl.voytech.exporter.core.model.extension.*
+import pl.voytech.exporter.core.model.attributes.*
 
 @DslMarker
 annotation class TableMarker
@@ -13,7 +13,7 @@ fun <T> table(block: TableBuilder<T>.() -> Unit): Table<T> = TableBuilder.new<T>
     .apply(block).build()
 
 @TableMarker
-class TableBuilder<T> private constructor() : ExtensionsAwareBuilder<Table<T>>() {
+class TableBuilder<T> private constructor() : AttributesAwareBuilder<Table<T>>() {
 
     @set:JvmSynthetic
     var name: String? = "untitled"
@@ -47,13 +47,13 @@ class TableBuilder<T> private constructor() : ExtensionsAwareBuilder<Table<T>>()
     @JvmSynthetic
     override fun build(): Table<T> = Table(
         name, firstRow, firstColumn, columns, rows,
-        getExtensionsByClass(TableExtension::class.java),
-        getExtensionsByClass(CellExtension::class.java)
+        getAttributesByClass(TableAttribute::class.java),
+        getAttributesByClass(CellAttribute::class.java)
     )
 
     @JvmSynthetic
-    override fun supportedExtensionClasses(): Set<Class<out Extension>> =
-        setOf(TableExtension::class.java, CellExtension::class.java)
+    override fun supportedAttributeClasses(): Set<Class<out Attribute>> =
+        setOf(TableAttribute::class.java, CellAttribute::class.java)
 
     companion object {
         @JvmSynthetic
@@ -106,7 +106,7 @@ class ColumnsBuilder<T> private constructor() : Builder<List<Column<T>>> {
 }
 
 @TableMarker
-class ColumnBuilder<T> private constructor() : ExtensionsAwareBuilder<Column<T>>() {
+class ColumnBuilder<T> private constructor() : AttributesAwareBuilder<Column<T>>() {
     @set:JvmSynthetic
     lateinit var id: ColumnKey<T>
 
@@ -123,14 +123,14 @@ class ColumnBuilder<T> private constructor() : ExtensionsAwareBuilder<Column<T>>
     @JvmSynthetic
     override fun build(): Column<T> = Column(
         id, index, columnType,
-        getExtensionsByClass(ColumnExtension::class.java),
-        getExtensionsByClass(CellExtension::class.java),
+        getAttributesByClass(ColumnAttribute::class.java),
+        getAttributesByClass(CellAttribute::class.java),
         dataFormatter
     )
 
     @JvmSynthetic
-    override fun supportedExtensionClasses(): Set<Class<out Extension>> =
-        setOf(ColumnExtension::class.java, CellExtension::class.java)
+    override fun supportedAttributeClasses(): Set<Class<out Attribute>> =
+        setOf(ColumnAttribute::class.java, CellAttribute::class.java)
 
     companion object {
         @JvmSynthetic
@@ -214,7 +214,7 @@ class RowsBuilder<T> private constructor(private val columns: List<Column<T>>) :
 class RowBuilder<T> private constructor(
     private val columns: List<Column<T>>,
     private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int>
-) : ExtensionsAwareBuilder<Row<T>>() {
+) : AttributesAwareBuilder<Row<T>>() {
 
     @set:JvmSynthetic
     private var cells: Map<ColumnKey<T>, Cell<T>>? = null
@@ -253,14 +253,14 @@ class RowBuilder<T> private constructor(
     @JvmSynthetic
     override fun build(): Row<T> = Row(
         selector, createAt,
-        getExtensionsByClass(RowExtension::class.java),
-        getExtensionsByClass(CellExtension::class.java),
+        getAttributesByClass(RowAttribute::class.java),
+        getAttributesByClass(CellAttribute::class.java),
         cells
     )
 
     @JvmSynthetic
-    override fun supportedExtensionClasses(): Set<Class<out Extension>> =
-        setOf(RowExtension::class.java, CellExtension::class.java)
+    override fun supportedAttributeClasses(): Set<Class<out Attribute>> =
+        setOf(RowAttribute::class.java, CellAttribute::class.java)
 
     companion object {
         @JvmSynthetic
@@ -345,7 +345,7 @@ class CellsBuilder<T> private constructor(
 }
 
 @TableMarker
-class CellBuilder<T> private constructor() : ExtensionsAwareBuilder<Cell<T>>() {
+class CellBuilder<T> private constructor() : AttributesAwareBuilder<Cell<T>>() {
 
     @set:JvmSynthetic
     var value: Any? = null
@@ -364,10 +364,10 @@ class CellBuilder<T> private constructor() : ExtensionsAwareBuilder<Cell<T>>() {
 
     @JvmSynthetic
     override fun build(): Cell<T> =
-        Cell(value, eval, type, colSpan, rowSpan, getExtensionsByClass(CellExtension::class.java))
+        Cell(value, eval, type, colSpan, rowSpan, getAttributesByClass(CellAttribute::class.java))
 
     @JvmSynthetic
-    override fun supportedExtensionClasses(): Set<Class<out Extension>> = setOf(CellExtension::class.java)
+    override fun supportedAttributeClasses(): Set<Class<out Attribute>> = setOf(CellAttribute::class.java)
 
     companion object {
         @JvmSynthetic

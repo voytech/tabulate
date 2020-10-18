@@ -1,9 +1,9 @@
 package pl.voytech.exporter.core.api.builder.fluent
 
 import pl.voytech.exporter.core.api.builder.Builder
-import pl.voytech.exporter.core.api.builder.ExtensionsAware
+import pl.voytech.exporter.core.api.builder.AttributesAware
 import pl.voytech.exporter.core.model.*
-import pl.voytech.exporter.core.model.extension.*
+import pl.voytech.exporter.core.model.attributes.*
 
 
 interface TopLevelBuilder<T> : Builder<Table<T>>
@@ -18,7 +18,7 @@ interface MidLevelBuilder<T, E : TopLevelBuilder<T>> : TopLevelBuilder<T> {
 }
 
 
-class TableBuilder<T> : ExtensionsAware(), TopLevelBuilder<T> {
+class TableBuilder<T> : AttributesAware(), TopLevelBuilder<T> {
     @set:JvmSynthetic
     private var name: String? = "untitled"
 
@@ -54,14 +54,14 @@ class TableBuilder<T> : ExtensionsAware(), TopLevelBuilder<T> {
 
     fun rows() = RowsBuilder(this,columns)
 
-    fun extension(vararg extension: Extension) = apply {
-        extensions(*extension)
+    fun attribute(vararg attribute: Attribute) = apply {
+        attributes(*attribute)
     }
 
     override fun build(): Table<T> = Table(
         name, firstRow, firstColumn, columns, rows,
-        getExtensionsByClass(TableExtension::class.java),
-        getExtensionsByClass(CellExtension::class.java)
+        getAttributesByClass(TableAttribute::class.java),
+        getAttributesByClass(CellAttribute::class.java)
     )
 
     @JvmSynthetic
@@ -74,8 +74,8 @@ class TableBuilder<T> : ExtensionsAware(), TopLevelBuilder<T> {
         rows = (rows ?: emptyList()) + row
     }
 
-    internal override fun supportedExtensionClasses(): Set<Class<out Extension>> =
-        setOf(TableExtension::class.java, CellExtension::class.java)
+    internal override fun supportedAttributeClasses(): Set<Class<out Attribute>> =
+        setOf(TableAttribute::class.java, CellAttribute::class.java)
 
 }
 
@@ -99,7 +99,7 @@ class ColumnsBuilder<T>(private val tableBuilder: TableBuilder<T>) : MidLevelBui
 
 }
 
-class ColumnBuilder<T>(private val columnsBuilder: ColumnsBuilder<T>) : ExtensionsAware(),
+class ColumnBuilder<T>(private val columnsBuilder: ColumnsBuilder<T>) : AttributesAware(),
     MidLevelBuilder<T, ColumnsBuilder<T>> {
     @set:JvmSynthetic
     private lateinit var id: ColumnKey<T>
@@ -139,21 +139,21 @@ class ColumnBuilder<T>(private val columnsBuilder: ColumnsBuilder<T>) : Extensio
 
     fun rows() = out().out().rows()
 
-    fun extension(vararg extension: Extension) = apply {
-        extensions(*extension)
+    fun attribute(vararg attribute: Attribute) = apply {
+        attributes(*attribute)
     }
 
     @JvmSynthetic
-    override fun supportedExtensionClasses(): Set<Class<out Extension>> =
-        setOf(ColumnExtension::class.java, CellExtension::class.java)
+    override fun supportedAttributeClasses(): Set<Class<out Attribute>> =
+        setOf(ColumnAttribute::class.java, CellAttribute::class.java)
 
     @JvmSynthetic
     override fun out(): ColumnsBuilder<T> {
         return columnsBuilder.addColumn(
             Column(
                 id, index, columnType,
-                getExtensionsByClass(ColumnExtension::class.java),
-                getExtensionsByClass(CellExtension::class.java),
+                getAttributesByClass(ColumnAttribute::class.java),
+                getAttributesByClass(CellAttribute::class.java),
                 dataFormatter
             )
         )
@@ -184,7 +184,7 @@ class RowsBuilder<T>(private val tableBuilder: TableBuilder<T>, private val colu
 
 }
 
-class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>, private val columns: List<Column<T>>) : ExtensionsAware(), MidLevelBuilder<T, RowsBuilder<T>> {
+class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>, private val columns: List<Column<T>>) : AttributesAware(), MidLevelBuilder<T, RowsBuilder<T>> {
     @set:JvmSynthetic
     private var cells: Map<ColumnKey<T>, Cell<T>>? = null
 
@@ -210,12 +210,12 @@ class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>, private val columns
 
     fun row(at: Int) = row().apply { createAt(at) }
 
-    fun extension(vararg extension: Extension) = apply {
-        extensions(*extension)
+    fun attribute(vararg attribute: Attribute) = apply {
+        attributes(*attribute)
     }
 
-    override fun supportedExtensionClasses(): Set<Class<out Extension>> =
-        setOf(RowExtension::class.java, CellExtension::class.java)
+    override fun supportedAttributeClasses(): Set<Class<out Attribute>> =
+        setOf(RowAttribute::class.java, CellAttribute::class.java)
 
 
     @JvmSynthetic
@@ -228,8 +228,8 @@ class RowBuilder<T>(private val rowsBuilder: RowsBuilder<T>, private val columns
         return rowsBuilder.addRow(
             Row(
                 selector, createAt,
-                getExtensionsByClass(RowExtension::class.java),
-                getExtensionsByClass(CellExtension::class.java),
+                getAttributesByClass(RowAttribute::class.java),
+                getAttributesByClass(CellAttribute::class.java),
                 cells
             )
         )
@@ -276,7 +276,7 @@ class CellBuilder<T>(
     private val columnKey: ColumnKey<T>,
     private val cellsBuilder: CellsBuilder<T>,
     private val columns: List<Column<T>>
-) : ExtensionsAware(), MidLevelBuilder<T, CellsBuilder<T>> {
+) : AttributesAware(), MidLevelBuilder<T, CellsBuilder<T>> {
 
     @set:JvmSynthetic
     private var value: Any? = null
@@ -329,14 +329,14 @@ class CellBuilder<T>(
 
     fun row(at: Int) = row().apply { createAt(at) }
 
-    override fun supportedExtensionClasses(): Set<Class<out Extension>> =
-        setOf(RowExtension::class.java, CellExtension::class.java)
+    override fun supportedAttributeClasses(): Set<Class<out Attribute>> =
+        setOf(RowAttribute::class.java, CellAttribute::class.java)
 
     @JvmSynthetic
     override fun out(): CellsBuilder<T> =
         cellsBuilder.addCell(
             columnKey,
-            Cell(value, eval, type, colSpan, rowSpan, getExtensionsByClass(CellExtension::class.java))
+            Cell(value, eval, type, colSpan, rowSpan, getAttributesByClass(CellAttribute::class.java))
         )
 
 }

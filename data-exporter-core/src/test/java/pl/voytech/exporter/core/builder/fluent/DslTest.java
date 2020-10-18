@@ -5,10 +5,10 @@ import pl.voytech.exporter.core.model.CellType;
 import pl.voytech.exporter.core.model.RowSelectors;
 import pl.voytech.exporter.core.model.Table;
 import pl.voytech.exporter.core.model.TypedRowData;
-import pl.voytech.exporter.core.model.extension.functional.FilterAndSortTableExtension;
-import pl.voytech.exporter.core.model.extension.style.CellFontExtension;
-import pl.voytech.exporter.core.model.extension.style.ColumnWidthExtension;
-import pl.voytech.exporter.core.model.extension.style.RowHeightExtension;
+import pl.voytech.exporter.core.model.attributes.functional.FilterAndSortTableAttribute;
+import pl.voytech.exporter.core.model.attributes.style.CellFontAttribute;
+import pl.voytech.exporter.core.model.attributes.style.ColumnWidthAttribute;
+import pl.voytech.exporter.core.model.attributes.style.RowHeightAttribute;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -18,24 +18,24 @@ public class DslTest {
     public void createTableDefinitionTest() {
         final Table<Employee> employeeTable =
                 Table.<Employee>builder()
-                    .extension(new CellFontExtension())
-                    .extension(new FilterAndSortTableExtension(new IntRange(0,3), new IntRange(1, 999)))
+                    .attribute(new CellFontAttribute())
+                    .attribute(new FilterAndSortTableAttribute(new IntRange(0,3), new IntRange(1, 999)))
                     .columns()
                         .column("rowNumbering")
                             .columnType(CellType.NUMERIC)
-                            .extension(new ColumnWidthExtension())
+                            .attribute(new ColumnWidthAttribute())
                         .column(Employee::getId)
                             .columnType(CellType.NUMERIC)
-                            .extension(new ColumnWidthExtension())
+                            .attribute(new ColumnWidthAttribute())
                         .column(Employee::getFirstName)
                             .columnType(CellType.STRING)
-                            .extension(new ColumnWidthExtension())
+                            .attribute(new ColumnWidthAttribute())
                         .column(Employee::getLastName)
                             .columnType(CellType.STRING)
-                            .extension(new ColumnWidthExtension())
+                            .attribute(new ColumnWidthAttribute())
                     .rows()
                         .row(0)
-                            .extension(new RowHeightExtension(100))
+                            .attribute(new RowHeightAttribute(100))
                             .cells()
                                 .cell(0)
                                     .value("Nr")
@@ -52,11 +52,11 @@ public class DslTest {
                 .build();
 
         assertThat(employeeTable).isNotNull();
-        assertThat(employeeTable.getTableExtensions()).isNotNull();
-        assertThat(employeeTable.getCellExtensions()).isNotNull();
+        assertThat(employeeTable.getTableAttributes()).isNotNull();
+        assertThat(employeeTable.getCellAttributes()).isNotNull();
         assertThat(employeeTable.getRows()).isNotNull();
-        assertThat(employeeTable.getCellExtensions().size()).isEqualTo(1);
-        assertThat(employeeTable.getTableExtensions().size()).isEqualTo(1);
+        assertThat(employeeTable.getCellAttributes().size()).isEqualTo(1);
+        assertThat(employeeTable.getTableAttributes().size()).isEqualTo(1);
         assertThat(employeeTable.getColumns().size()).isEqualTo(4);
         assertThat(employeeTable.getRows().size()).isEqualTo(2);
     }

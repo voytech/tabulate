@@ -8,8 +8,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.*
-import pl.voytech.exporter.core.template.operations.ExtensionCacheTableOperations
-import pl.voytech.exporter.core.template.operations.ExtensionsHandlingTableOperations
+import pl.voytech.exporter.core.template.operations.AttributeCacheTableOperations
+import pl.voytech.exporter.core.template.operations.AttributesHandlingTableOperations
 import pl.voytech.exporter.core.template.operations.chain.TableOperationChain
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertCell
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertRow
@@ -49,11 +49,11 @@ internal class XlsxLifecycleOperation(private val templateFile: InputStream?) :
 }
 
 internal class XlsxTableOperations<T> :
-    ExtensionsHandlingTableOperations<T, SXSSFWorkbook>(
-        tableExtensionsOperations,
-        rowExtensionsOperations<T>(),
-        columnExtensionsOperations<T>(),
-        cellExtensionsOperations<T>()
+    AttributesHandlingTableOperations<T, SXSSFWorkbook>(
+        tableAttributesOperations,
+        rowAttributesOperations<T>(),
+        columnAttributesOperations<T>(),
+        cellAttributesOperations<T>()
     ) {
 
     override fun initializeTable(state: DelegateAPI<SXSSFWorkbook>, table: Table<T>): DelegateAPI<SXSSFWorkbook> {
@@ -139,6 +139,6 @@ fun <T> xlsxExport(templateFile: InputStream? = null): ExportOperations<T, SXSSF
     ExportOperations(
         lifecycleOperations = XlsxLifecycleOperation(templateFile),
         tableOperations = TableOperationChain(
-            ExtensionCacheTableOperations(), XlsxTableOperations()
+            AttributeCacheTableOperations(), XlsxTableOperations()
         )
     )

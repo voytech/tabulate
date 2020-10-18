@@ -1,8 +1,8 @@
 package pl.voytech.exporter.core.model
 
-import pl.voytech.exporter.core.model.extension.Extension
+import pl.voytech.exporter.core.model.attributes.Attribute
 
 data class Description internal constructor(
     val title: String,
-    val extensions: Set<Extension>?
+    val attributes: Set<Attribute>?
 )
