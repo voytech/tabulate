@@ -12,13 +12,26 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.fail
 
-class AssertCellValue<E>(private val expectedValue: Any, private val expectedType: CellType? = null) : CellTest<E> {
+class AssertCellValue<E>(
+    private val expectedValue: Any,
+    private val expectedType: CellType? = null,
+    private val expectedColspan: Int? = null,
+    private val expectedRowspan: Int? = null
+) : CellTest<E> {
     override fun performCellTest(api: DelegateAPI<E>, coordinates: Coordinates, def: CellDefinition?) {
         assertNotNull(def?.cellValue, "Expected cell value to be present")
         assertEquals(expectedValue, def?.cellValue?.value, "Expected cell value to be $expectedValue")
         expectedType?.let {
             assertNotNull(def?.cellValue?.type, "Expected cell type to be present")
             assertEquals(expectedType, def?.cellValue?.type, "Expected cell type to be $it")
+        }
+        expectedColspan?.let {
+            assertNotNull(def?.cellValue?.colSpan, "Expected cell collSpan to be present")
+            assertEquals(expectedColspan, def?.cellValue?.colSpan, "Expected cell colSpan to be $it")
+        }
+        expectedRowspan?.let {
+            assertNotNull(def?.cellValue?.rowSpan, "Expected cell rowSpan to be present")
+            assertEquals(expectedRowspan, def?.cellValue?.rowSpan, "Expected cell rowSpan to be $it")
         }
     }
 }
