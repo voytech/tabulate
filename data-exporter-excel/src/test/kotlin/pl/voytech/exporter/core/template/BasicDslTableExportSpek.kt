@@ -208,71 +208,6 @@ object BasicDslTableExportSpek : Spek({
             }
         }
     }
-    Feature("Tabular data consisting only from custom cells - no dynamic data set included") {
-        Scenario("Defining simple table with static cells (different column spans and row spans) and reusable styles.") {
-            val file = File("test1.xlsx")
-            val styles = arrayOf(
-                alignment { horizontal = HorizontalAlignment.CENTER },
-                background { color = Colors.WHITE },
-                borders {
-                    leftBorderColor = Colors.BLACK
-                    rightBorderColor = Colors.BLACK
-                    topBorderColor = Colors.BLACK
-                    bottomBorderColor = Colors.BLACK
-                    leftBorderStyle = BorderStyle.SOLID
-                    rightBorderStyle = BorderStyle.SOLID
-                    topBorderStyle = BorderStyle.SOLID
-                    bottomBorderStyle = BorderStyle.SOLID
-                },
-                font {
-                    weight = WeightStyle.BOLD
-                    strikeout = false
-                    underline = false
-                    italic = false
-                    fontColor = Colors.BLACK
-                }
-            )
-            FileOutputStream(file).use {
-                table<Any> {
-                    columns { count = 3 }
-                    rows {
-                        row {
-                            cells {
-                                cell {
-                                    rowSpan = 2
-                                    value = "row span"
-                                    extensions(*styles)
-                                }
-                                cell {
-                                    colSpan = 2
-                                    value = "This is very long title spanning entire column space."
-                                    extensions(*styles)
-                                }
-                            }
-                        }
-                        row {
-                            cells {
-                                cell {
-                                    colSpan = 2
-                                    value = "This is very long title spanning entire column space. Line 2"
-                                    extensions(*styles)
-                                }
-                            }
-                        }
-                    }
-                }.exportWith(xlsxExport(), it)
-            }
-            Then("file should exists and be valid xlsx readable by POI API") {
-                PoiTableAssert<Product>(
-                    tableName = "Products table",
-                    file = File("test1.xlsx"),
-                    cellTests = mapOf()
-                ).perform().also {
-                    it.cleanup()
-                }
-            }
-        }
-    }
 
     Feature("Excel file interpolation with dynamic tabular data") {
         Scenario("loading from template file and filling it up.") {
@@ -387,6 +322,80 @@ object BasicDslTableExportSpek : Spek({
                 PoiTableAssert<Product>(
                     tableName = "Products table",
                     file = File("test3.xlsx"),
+                    cellTests = mapOf()
+                ).perform().also {
+                    it.cleanup()
+                }
+            }
+        }
+    }
+
+    Feature("Tabular data consisting only from custom cells - no dynamic data set included") {
+        Scenario("Defining simple table with static cells (different column spans and row spans) and reusable styles.") {
+            val file = File("test1.xlsx")
+            val styles = arrayOf(
+                alignment { horizontal = HorizontalAlignment.CENTER },
+                background { color = Colors.WHITE },
+                borders {
+                    leftBorderColor = Colors.BLACK
+                    rightBorderColor = Colors.BLACK
+                    topBorderColor = Colors.BLACK
+                    bottomBorderColor = Colors.BLACK
+                    leftBorderStyle = BorderStyle.SOLID
+                    rightBorderStyle = BorderStyle.SOLID
+                    topBorderStyle = BorderStyle.SOLID
+                    bottomBorderStyle = BorderStyle.SOLID
+                },
+                font {
+                    weight = WeightStyle.BOLD
+                    strikeout = false
+                    underline = false
+                    italic = false
+                    fontColor = Colors.BLACK
+                }
+            )
+            FileOutputStream(file).use {
+                table<Any> {
+                    columns { count = 4 }
+                    rows {
+                        row {
+                            cells {
+                                cell {
+                                    rowSpan = 2
+                                    value = "row span"
+                                    extensions(*styles)
+                                }
+                                cell {
+                                    colSpan = 2
+                                    value = "This is very long title spanning entire column space."
+                                    extensions(*styles)
+                                }
+                                cell {
+                                    value = "Last column."
+                                    extensions(*styles)
+                                }
+                            }
+                        }
+                        row {
+                            cells {
+                                cell {
+                                    colSpan = 2
+                                    value = "This is very long title spanning entire column space. Row 2"
+                                    extensions(*styles)
+                                }
+                                cell {
+                                    value = "Last column. Row 2"
+                                    extensions(*styles)
+                                }
+                            }
+                        }
+                    }
+                }.exportWith(xlsxExport(), it)
+            }
+            Then("file should exists and be valid xlsx readable by POI API") {
+                PoiTableAssert<Product>(
+                    tableName = "Products table",
+                    file = File("test1.xlsx"),
                     cellTests = mapOf()
                 ).perform().also {
                     it.cleanup()

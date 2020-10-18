@@ -180,15 +180,16 @@ class RowsBuilder<T> private constructor(private val columns: List<Column<T>>) :
     }
 
     private fun interceptRowSpans() {
-        val customRows = sortedNullsLast().filter { it.createAt != null }
-        if (customRows.isNotEmpty()) {
-            customRows.last { it.createAt != null }.let { lastRow ->
-                columns.forEach { column ->
-                    val cell: Cell<T>? = lastRow.cells?.get(column.id)
-                    interceptedRowSpans[column.id] = if (cell != null) {
-                        (cell.rowSpan ?: 1) - 1
-                    } else {
-                        (interceptedRowSpans[column.id]?.let { it - 1 } ?: 0).coerceAtLeast(0)
+        sortedCustomRows().let { customRows ->
+            if (customRows.isNotEmpty()) {
+                customRows.last().let { lastRow ->
+                    columns.forEach { column ->
+                        val cell: Cell<T>? = lastRow.cells?.get(column.id)
+                        interceptedRowSpans[column.id] = if (cell != null) {
+                            (cell.rowSpan ?: 1) - 1
+                        } else {
+                            (interceptedRowSpans[column.id]?.let { it - 1 } ?: 0).coerceAtLeast(0)
+                        }
                     }
                 }
             }
@@ -197,6 +198,10 @@ class RowsBuilder<T> private constructor(private val columns: List<Column<T>>) :
 
     private inline fun sortedNullsLast(): List<Row<T>> {
         return rows.sortedWith(compareBy(nullsLast()) { it.createAt })
+    }
+
+    private inline fun sortedCustomRows(): List<Row<T>> {
+        return sortedNullsLast().filter { it.createAt != null }
     }
 
     companion object {
@@ -278,6 +283,8 @@ class CellsBuilder<T> private constructor(
     @set:JvmSynthetic
     private var cellIndex: Int = 0
 
+    private var activeColSpanOffset: Int = 0
+
     @JvmSynthetic
     fun forColumn(id: String, block: CellBuilder<T>.() -> Unit) {
         cells = cells + Pair(
@@ -298,7 +305,8 @@ class CellsBuilder<T> private constructor(
 
     @JvmSynthetic
     fun cell(block: CellBuilder<T>.() -> Unit) {
-        cell(index = resolveNextCellIndex(), block)
+        cell(index = cellIndex(), block)
+        nextCellIndex()
     }
 
     @JvmSynthetic
@@ -314,11 +322,17 @@ class CellsBuilder<T> private constructor(
         return cells
     }
 
-    private fun resolveNextCellIndex(): Int {
+    private fun cellIndex(): Int {
+        if (activeColSpanOffset > 0)
+            cellIndex += activeColSpanOffset
         while ((interceptedRowSpans[columns[cellIndex].id] ?: 0) > 0 && cellIndex < columns.size - 1) {
             cellIndex++
         }
-        return cellIndex++
+        return cellIndex
+    }
+
+    private fun nextCellIndex() {
+        activeColSpanOffset = (cells[columns[cellIndex++].id]?.let { it.colSpan?.minus(1) ?: 0 } ?: 0).coerceAtLeast(0)
     }
 
     companion object {
