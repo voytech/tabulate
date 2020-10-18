@@ -8,21 +8,21 @@ import pl.voytech.exporter.core.api.builder.dsl.export
 import pl.voytech.exporter.core.api.builder.dsl.table
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.RowSelectors
-import pl.voytech.exporter.core.model.extension.functional.FilterAndSortTableExtension
-import pl.voytech.exporter.core.model.extension.style.*
-import pl.voytech.exporter.core.model.extension.style.enums.BorderStyle
-import pl.voytech.exporter.core.model.extension.style.enums.HorizontalAlignment
-import pl.voytech.exporter.core.model.extension.style.enums.VerticalAlignment
-import pl.voytech.exporter.core.model.extension.style.enums.WeightStyle
+import pl.voytech.exporter.core.model.attributes.functional.FilterAndSortTableAttribute
+import pl.voytech.exporter.core.model.attributes.style.*
+import pl.voytech.exporter.core.model.attributes.style.enums.BorderStyle
+import pl.voytech.exporter.core.model.attributes.style.enums.HorizontalAlignment
+import pl.voytech.exporter.core.model.attributes.style.enums.VerticalAlignment
+import pl.voytech.exporter.core.model.attributes.style.enums.WeightStyle
 import pl.voytech.exporter.core.utils.PoiTableAssert
 import pl.voytech.exporter.data.Product
-import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatExtension
+import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
 import pl.voytech.exporter.impl.template.excel.dataFormat
 import pl.voytech.exporter.impl.template.excel.xlsxExport
 import pl.voytech.exporter.testutils.CellPosition
 import pl.voytech.exporter.testutils.CellRange
 import pl.voytech.exporter.testutils.cellassertions.AssertCellValue
-import pl.voytech.exporter.testutils.cellassertions.AssertContainsCellExtensions
+import pl.voytech.exporter.testutils.cellassertions.AssertContainsCellAttributes
 import pl.voytech.exporter.testutils.cellassertions.AssertMany
 import java.io.File
 import java.io.FileOutputStream
@@ -55,7 +55,7 @@ object BasicDslTableExportSpek : Spek({
                 firstColumn = 2
                 columns {
                     column("nr") {
-                        extensions(
+                        attributes(
                             width { width = 50 },
                             font {
                                 fontFamily = "Times New Roman"
@@ -69,7 +69,7 @@ object BasicDslTableExportSpek : Spek({
                         )
                     }
                     column(Product::code) {
-                        extensions(
+                        attributes(
                             width { auto = true },
                             font {
                                 fontFamily = "Times New Roman"
@@ -80,19 +80,19 @@ object BasicDslTableExportSpek : Spek({
                         )
                     }
                     column(Product::name) {
-                        extensions(width { auto = true })
+                        attributes(width { auto = true })
                     }
                     column(Product::description) {
-                        extensions(width { auto = true })
+                        attributes(width { auto = true })
                     }
                     column(Product::manufacturer) {
-                        extensions(width { auto = true })
+                        attributes(width { auto = true })
                     }
                     column(Product::price) {
-                        extensions(width { auto = true })
+                        attributes(width { auto = true })
                     }
                     column(Product::distributionDate) {
-                        extensions(
+                        attributes(
                             width { auto = true },
                             dataFormat { value = "dd.mm.YYYY" }
                         )
@@ -109,9 +109,9 @@ object BasicDslTableExportSpek : Spek({
                             forColumn(Product::price) { value = "Price" }
                             forColumn(Product::distributionDate) { value = "Distribution" }
                         }
-                        extensions(
-                            RowHeightExtension(height = 120),
-                            CellBordersExtension(
+                        attributes(
+                            RowHeightAttribute(height = 120),
+                            CellBordersAttribute(
                                 leftBorderStyle = BorderStyle.SOLID,
                                 leftBorderColor = Colors.BLACK,
                                 rightBorderStyle = BorderStyle.SOLID,
@@ -121,11 +121,11 @@ object BasicDslTableExportSpek : Spek({
                                 topBorderStyle = BorderStyle.SOLID,
                                 topBorderColor = Colors.BLACK
                             ),
-                            CellAlignmentExtension(
+                            CellAlignmentAttribute(
                                 horizontal = HorizontalAlignment.CENTER,
                                 vertical = VerticalAlignment.MIDDLE
                             ),
-                            CellFontExtension(
+                            CellFontAttribute(
                                 fontFamily = "Times New Roman",
                                 fontColor = Color(90, 100, 100),
                                 fontSize = 12,
@@ -151,8 +151,8 @@ object BasicDslTableExportSpek : Spek({
                     tableName = "Products table",
                     file = File("test0.xlsx"),
                     cellTests = mapOf(
-                        CellRange((2..2), (2..8)) to AssertContainsCellExtensions(
-                            CellBordersExtension(
+                        CellRange((2..2), (2..8)) to AssertContainsCellAttributes(
+                            CellBordersAttribute(
                                 leftBorderStyle = BorderStyle.SOLID,
                                 leftBorderColor = Colors.BLACK,
                                 rightBorderStyle = BorderStyle.SOLID,
@@ -162,11 +162,11 @@ object BasicDslTableExportSpek : Spek({
                                 topBorderStyle = BorderStyle.SOLID,
                                 topBorderColor = Colors.BLACK
                             ),
-                            CellAlignmentExtension(
+                            CellAlignmentAttribute(
                                 horizontal = HorizontalAlignment.CENTER,
                                 vertical = VerticalAlignment.MIDDLE
                             ),
-                            CellFontExtension(
+                            CellFontAttribute(
                                 fontFamily = "Times New Roman",
                                 fontColor = Color(90, 100, 100),
                                 fontSize = 12,
@@ -179,7 +179,7 @@ object BasicDslTableExportSpek : Spek({
                         ),
                         CellPosition(2, 3) to AssertMany(
                             AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
-                            AssertContainsCellExtensions(
+                            AssertContainsCellAttributes(
                                 font {
                                     fontFamily = "Times New Roman"
                                     fontColor = Color(90, 100, 100)
@@ -187,7 +187,7 @@ object BasicDslTableExportSpek : Spek({
                                     italic = true
                                     weight = WeightStyle.BOLD
                                 },
-                                CellBackgroundExtension(color = Colors.BLUE)
+                                CellBackgroundAttribute(color = Colors.BLUE)
                             )
                         ),
                         CellPosition(2, 4) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
@@ -204,7 +204,7 @@ object BasicDslTableExportSpek : Spek({
                             expectedType = CellType.STRING,
                             expectedValue = "Distribution"
                         ),
-                        CellPosition(3, 8) to AssertContainsCellExtensions(CellExcelDataFormatExtension("dd.mm.YYYY"))
+                        CellPosition(3, 8) to AssertContainsCellAttributes(CellExcelDataFormatAttribute("dd.mm.YYYY"))
                     )
                 ).perform().also {
                     it.cleanup()
@@ -239,7 +239,7 @@ object BasicDslTableExportSpek : Spek({
                             column(Product::description)
                             column(Product::manufacturer)
                             column(Product::distributionDate) {
-                                extensions(
+                                attributes(
                                     dataFormat {  value = "dd.mm.YYYY" }
                                 )
                             }
@@ -277,8 +277,8 @@ object BasicDslTableExportSpek : Spek({
                             expectedType = CellType.STRING,
                             expectedValue = "Distribution"
                         ),
-                        CellPosition(1, 5) to AssertContainsCellExtensions(
-                            CellExcelDataFormatExtension("dd.mm.YYYY")
+                        CellPosition(1, 5) to AssertContainsCellAttributes(
+                            CellExcelDataFormatAttribute("dd.mm.YYYY")
                         )
                     )
                 ).perform().also {
@@ -304,7 +304,7 @@ object BasicDslTableExportSpek : Spek({
             val file = File("test3.xlsx")
             val table = table<Product> {
                 name = "Products table"
-                extensions(FilterAndSortTableExtension(rowRange = (0..999), columnRange = (0..5)))
+                attributes(FilterAndSortTableAttribute(rowRange = (0..999), columnRange = (0..5)))
                 columns {
                     column(Product::code)
                     column(Product::name)
@@ -312,7 +312,7 @@ object BasicDslTableExportSpek : Spek({
                     column(Product::manufacturer)
                     column(Product::price)
                     column(Product::distributionDate) {
-                        extensions(
+                        attributes(
                             dataFormat {  value = "dd.mm.YYYY" }
                         )
                     }
@@ -368,16 +368,16 @@ object BasicDslTableExportSpek : Spek({
                                 cell {
                                     rowSpan = 2
                                     value = "Row span"
-                                    extensions(*styles)
+                                    attributes(*styles)
                                 }
                                 cell {
                                     colSpan = 2
                                     value = "This is very long title spanning entire column space."
-                                    extensions(*styles)
+                                    attributes(*styles)
                                 }
                                 cell {
                                     value = "Last column."
-                                    extensions(*styles)
+                                    attributes(*styles)
                                 }
                             }
                         }
@@ -386,11 +386,11 @@ object BasicDslTableExportSpek : Spek({
                                 cell {
                                     colSpan = 2
                                     value = "This is very long title spanning entire column space. Row 2"
-                                    extensions(*styles)
+                                    attributes(*styles)
                                 }
                                 cell {
                                     value = "Last column. Row 2"
-                                    extensions(*styles)
+                                    attributes(*styles)
                                 }
                             }
                         }

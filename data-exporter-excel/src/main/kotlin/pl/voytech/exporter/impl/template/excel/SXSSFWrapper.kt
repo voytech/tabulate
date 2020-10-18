@@ -8,13 +8,13 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFCell
 import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
-import pl.voytech.exporter.core.model.extension.style.Color
+import pl.voytech.exporter.core.model.attributes.style.Color
 import pl.voytech.exporter.core.template.CellOperationTableData
 import pl.voytech.exporter.core.template.Coordinates
 import pl.voytech.exporter.core.template.DelegateAPI
 import pl.voytech.exporter.core.template.OperationContext
-import pl.voytech.exporter.core.template.operations.ExtensionKeyDrivenCache.Companion.getCellCachedValue
-import pl.voytech.exporter.core.template.operations.ExtensionKeyDrivenCache.Companion.putCellCachedValue
+import pl.voytech.exporter.core.template.operations.AttributeKeyDrivenCache.Companion.getCellCachedValue
+import pl.voytech.exporter.core.template.operations.AttributeKeyDrivenCache.Companion.putCellCachedValue
 
 object SXSSFWrapper {
 
