@@ -356,13 +356,14 @@ object BasicDslTableExportSpek : Spek({
             )
             FileOutputStream(file).use {
                 table<Any> {
+                    name = "Test table"
                     columns { count = 4 }
                     rows {
                         row {
                             cells {
                                 cell {
                                     rowSpan = 2
-                                    value = "row span"
+                                    value = "Row span"
                                     extensions(*styles)
                                 }
                                 cell {
@@ -394,9 +395,15 @@ object BasicDslTableExportSpek : Spek({
             }
             Then("file should exists and be valid xlsx readable by POI API") {
                 PoiTableAssert<Product>(
-                    tableName = "Products table",
+                    tableName = "Test table",
                     file = File("test1.xlsx"),
-                    cellTests = mapOf()
+                    cellTests = mapOf(
+                        CellPosition(0, 0) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Row span", expectedRowspan = 2),
+                        CellPosition(0, 1) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "This is very long title spanning entire column space.", expectedColspan = 2),
+                        CellPosition(0, 3) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Last column."),
+                        CellPosition(1, 1) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "This is very long title spanning entire column space. Row 2", expectedColspan = 2),
+                        CellPosition(1, 3) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Last column. Row 2"),
+                    )
                 ).perform().also {
                     it.cleanup()
                 }

@@ -2,6 +2,7 @@ package pl.voytech.exporter.core.utils
 
 import org.apache.poi.openxml4j.util.ZipSecureFile
 import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
@@ -30,7 +31,6 @@ class PoiStateProvider : StateProvider<SXSSFWorkbook> {
 
 }
 
-
 class PoiTableAssert<T>(
     tableName: String,
     cellTests: Map<CellSelect, CellTest<SXSSFWorkbook>>,
@@ -47,14 +47,41 @@ class PoiTableAssert<T>(
         ),
         cellValueResolver = object : ValueResolver<SXSSFWorkbook> {
             override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellValue {
+                val address: CellRangeAddress? =
+                    workbook(api).getSheet(coordinates.tableName).mergedRegions.filter { region ->
+                        region.containsColumn(coordinates.columnIndex) && region.containsRow(coordinates.rowIndex)
+                    }.let { if (it.isNotEmpty()) it[0] else null }
+                val colSpan = address?.let { (it.lastColumn - it.firstColumn) + 1 } ?: 1
+                val rowSpan = address?.let { (it.lastRow - it.firstRow) + 1 } ?: 1
+
                 SXSSFWrapper.xssfCell(api, coordinates)
                     .let {
                         return when (it?.cellType) {
-                            PoiCellType.STRING -> CellValue(value = it.stringCellValue, type = CellType.STRING)
-                            PoiCellType.BOOLEAN -> CellValue(value = it.booleanCellValue, type = CellType.BOOLEAN)
-                            PoiCellType.FORMULA -> CellValue(value = it.cellFormula, type = CellType.NATIVE_FORMULA)
-                            PoiCellType.NUMERIC -> CellValue(value = it.numericCellValue, type = CellType.NUMERIC)
-                            else -> CellValue(value = "null", type = null)
+                            PoiCellType.STRING -> CellValue(
+                                value = it.stringCellValue,
+                                type = CellType.STRING,
+                                colSpan = colSpan,
+                                rowSpan = rowSpan
+                            )
+                            PoiCellType.BOOLEAN -> CellValue(
+                                value = it.booleanCellValue,
+                                type = CellType.BOOLEAN,
+                                colSpan = colSpan,
+                                rowSpan = rowSpan
+                            )
+                            PoiCellType.FORMULA -> CellValue(
+                                value = it.cellFormula,
+                                type = CellType.NATIVE_FORMULA,
+                                colSpan = colSpan,
+                                rowSpan = rowSpan
+                            )
+                            PoiCellType.NUMERIC -> CellValue(
+                                value = it.numericCellValue,
+                                type = CellType.NUMERIC,
+                                colSpan = colSpan,
+                                rowSpan = rowSpan
+                            )
+                            else -> CellValue(value = "null", type = null, colSpan = colSpan, rowSpan = rowSpan)
                         }
                     }
 

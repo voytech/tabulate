@@ -206,12 +206,13 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         rowSkips: MutableMap<ColumnKey<T>, Int>
     ): ComputedRowValue<T> {
         val rowDefinitions: Set<Row<T>>? = matchingRows(table, typedRow)
-        val mergedCellExtensions =
-            mergeExtensions(*(rowDefinitions?.mapNotNull { it.cellExtensions }!!.toTypedArray()))
         val mergedRowCells: Map<ColumnKey<T>, Cell<T>>? =
-            rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })
+            rowDefinitions?.mapNotNull { row -> row.cells }?.fold(mapOf(), { acc, m -> acc + m })
         val cellValues: MutableMap<ColumnKey<T>, AttributedCell> = mutableMapOf()
         var columnSkips = 0
+        val rowCellExtensions = mergeExtensions(
+            *(rowDefinitions?.mapNotNull { row -> row.cellExtensions }!!.toTypedArray())
+        )
         table.columns.forEach { column: Column<T> ->
             if (columnSkips-- <= 0 && (rowSkips[column.id] ?: 0).also { rowSkips[column.id] = it - 1 } <= 0) {
                 val customCell = mergedRowCells?.get(column.id)
@@ -228,7 +229,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                         extensions = mergeExtensions(
                             table.cellExtensions,
                             column.cellExtensions,
-                            mergedCellExtensions,
+                            rowCellExtensions,
                             customCell?.cellExtensions
                         )
                     )
