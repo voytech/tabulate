@@ -218,7 +218,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                 val customCell = mergedRowCells?.get(column.id)
                 columnSkips = (customCell?.colSpan?.minus(1)) ?: 0
                 rowSkips[column.id] = (customCell?.rowSpan?.minus(1)) ?: 0
-                val computedCell = computeCellValue(column, customCell, typedRow)?.let {
+                val attributedCell = computeCellValue(column, customCell, typedRow)?.let {
                     AttributedCell(
                         value = CellValue(
                             it,
@@ -234,8 +234,8 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                         )
                     )
                 }
-                if (computedCell != null) {
-                    cellValues[column.id] = computedCell
+                if (attributedCell != null) {
+                    cellValues[column.id] = attributedCell
                 }
             }
         }

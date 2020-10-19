@@ -69,7 +69,7 @@ internal class XlsxTableOperations<T> :
         context: OperationContext<T, CellOperationTableData<T>>
     ) {
         assertCell(state, context.coordinates!!, context).also {
-            setCellValue(it, context.value.cellValue)
+            setCellValue(it, context.value.cellValue?.value)
         }.also {
             mergeCells(state, context)
         }
@@ -79,19 +79,19 @@ internal class XlsxTableOperations<T> :
         state: DelegateAPI<SXSSFWorkbook>,
         context: OperationContext<T, CellOperationTableData<T>>
     ) {
-        context.value.cellValue?.takeIf { it.colSpan > 1 || it.rowSpan > 1 }?.also { cell ->
+        context.value.cellValue?.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.also { cell ->
             context.coordinates!!.also { coordinates ->
-                (coordinates.rowIndex until coordinates.rowIndex + cell.rowSpan).forEach { rowIndex ->
-                    (coordinates.columnIndex until coordinates.columnIndex + cell.colSpan).forEach { colIndex ->
+                (coordinates.rowIndex until coordinates.rowIndex + cell.value.rowSpan).forEach { rowIndex ->
+                    (coordinates.columnIndex until coordinates.columnIndex + cell.value.colSpan).forEach { colIndex ->
                         assertCell(state, Coordinates(coordinates.tableName, rowIndex, colIndex), context)
                     }
                 }
                 assertTableSheet(state, coordinates.tableName).addMergedRegion(
                     CellRangeAddress(
                         coordinates.rowIndex,
-                        coordinates.rowIndex + cell.rowSpan - 1,
+                        coordinates.rowIndex + cell.value.rowSpan - 1,
                         coordinates.columnIndex,
-                        coordinates.columnIndex + cell.colSpan - 1
+                        coordinates.columnIndex + cell.value.colSpan - 1
                     )
                 )
             }

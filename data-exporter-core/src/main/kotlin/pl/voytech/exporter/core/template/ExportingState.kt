@@ -73,7 +73,8 @@ class ExportingState<T, A>(
 
     internal fun rowOperationContext(): OperationContext<T, RowOperationTableData<T>> {
         rowOperationContext.coordinates = coordinates()
-        rowOperationContext.value.rowValues = rowValue?.rowCellValues?.map { Pair(it.key, it.value.value) }?.toMap()
+        rowOperationContext.value.rowValues = rowValue?.rowCellValues
+        rowOperationContext.value.rowAttributes = rowValue?.rowAttributes
         return rowOperationContext
     }
 
@@ -83,7 +84,7 @@ class ExportingState<T, A>(
     ): OperationContext<T, CellOperationTableData<T>> {
         this.columnIndex = columnIndex
         cellOperationContext.coordinates = coordinates()
-        cellOperationContext.value.cellValue = rowValue?.rowCellValues?.get(columnId)?.value
+        cellOperationContext.value.cellValue = rowValue?.rowCellValues?.get(columnId)
         return cellOperationContext
     }
 

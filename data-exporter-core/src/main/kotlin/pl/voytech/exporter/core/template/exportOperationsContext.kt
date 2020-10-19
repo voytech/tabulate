@@ -1,18 +1,22 @@
 package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.ColumnKey
+import pl.voytech.exporter.core.model.attributes.RowAttribute
 
 open class TableData<T>(private val collection: Collection<T>) {
     fun recordCount() = collection.size
 }
 
 class RowOperationTableData<T>(private val collection: Collection<T>) : TableData<T>(collection) {
-    var rowValues: Map<ColumnKey<T>,CellValue?>?  = null
+    var rowValues: Map<ColumnKey<T>,AttributedCell?>?  = null
         internal set
+    var rowAttributes: Set<RowAttribute>? = null
+        internal set
+
 }
 
 class CellOperationTableData<T>(private val collection: Collection<T>): TableData<T>(collection) {
-    var cellValue: CellValue? = null
+    var cellValue: AttributedCell? = null
         internal set
 }
 
