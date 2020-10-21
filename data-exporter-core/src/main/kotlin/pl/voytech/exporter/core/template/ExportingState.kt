@@ -22,7 +22,7 @@ class ExportingState<T, A>(
      * coordinate object is recreated, and new row associated context data is being set. Then instance is used on all
      * kind of given row scoped operations.
      */
-    private val rowOperationContext: OperationContext<T, RowOperationTableData<T>> =
+    private val rowContext: OperationContext<T, RowOperationTableData<T>> =
         OperationContext(RowOperationTableData(collection), stateAttributes)
 
     /**
@@ -30,7 +30,7 @@ class ExportingState<T, A>(
      * coordinate object is recreated, and new cell associated context data is being set. Then instance is used on all
      * kind of given cell scoped operations.
      */
-    private val cellOperationContext: OperationContext<T, CellOperationTableData<T>> =
+    private val cellContext: OperationContext<T, CellOperationTableData<T>> =
         OperationContext(CellOperationTableData(collection), stateAttributes)
 
     /**
@@ -38,69 +38,63 @@ class ExportingState<T, A>(
      * coordinate object is recreated, and new column associated context data is being set. Then instance is used on all
      * kind of given column scoped operations.
      */
-    private val columnOperationContext: OperationContext<T, ColumnOperationTableData<T>> =
+    private val columnContext: OperationContext<T, ColumnOperationTableData<T>> =
         OperationContext(ColumnOperationTableData(collection), stateAttributes)
 
-    private val rowValues: MutableList<DataExportTemplate.ComputedRowValue<T>> = mutableListOf()
+    private val rowValues: MutableList<AttributedRow<T>> = mutableListOf()
 
-    private var rowValue: DataExportTemplate.ComputedRowValue<T>? = null
+    private val coordinates: Coordinates = Coordinates(tableName)
 
-    /**
-     * rowIndex is modified for row row change. It is used for recreation of unmodifiable Coordinates object.
-     */
-    private var rowIndex: Int = 0 //objectIndex
+    init {
+        columnContext.coordinates = coordinates
+        rowContext.coordinates = coordinates
+        cellContext.coordinates = coordinates
+    }
 
-    /**
-     * columnIndex is modified for column change. It is used for recreation of unmodifiable Coordinates object.
-     */
-    private var columnIndex: Int = 0 //objectFieldIndex
-
-    internal fun addRow(rowValue: DataExportTemplate.ComputedRowValue<T>): ExportingState<T, A> {
+    internal fun addRow(rowValue: AttributedRow<T>): ExportingState<T, A> {
         rowValues.add(rowValue)
         return this
     }
 
-    internal fun forEachRowValue(block: (rowValue: DataExportTemplate.ComputedRowValue<T>) -> Unit): ExportingState<T, A> {
-        rowIndex = 0
-        rowValues.forEachIndexed { index, rowValue ->
-            rowIndex = index
-            columnIndex = 0
-            this.rowValue = rowValue
-            block.invoke(rowValue)
+    internal fun forEachRowValue(block: (context: OperationContext<T, RowOperationTableData<T>>) -> Unit): ExportingState<T, A> {
+        rowValues.forEachIndexed { rowIndex, rowValue ->
+            block.invoke(setRowContext(rowValue, rowIndex))
         }
         return this
     }
 
-    internal fun rowOperationContext(): OperationContext<T, RowOperationTableData<T>> {
-        rowOperationContext.coordinates = coordinates()
-        rowOperationContext.value.rowValues = rowValue?.rowCellValues
-        rowOperationContext.value.rowAttributes = rowValue?.rowAttributes
-        return rowOperationContext
+    private fun setRowContext(row: AttributedRow<T>, rowIndex: Int): OperationContext<T, RowOperationTableData<T>> {
+        return with(rowContext) {
+            coordinates.rowIndex = (firstRow ?: 0) + rowIndex
+            coordinates.columnIndex = 0
+            value.rowCells = row.rowCellValues
+            value.rowAttributes = row.rowAttributes
+            this
+        }
     }
 
-    internal fun cellOperationContext(
+    internal fun setCellContext(
         columnIndex: Int,
-        columnId: ColumnKey<T>
+        cell: AttributedCell
     ): OperationContext<T, CellOperationTableData<T>> {
-        this.columnIndex = columnIndex
-        cellOperationContext.coordinates = coordinates()
-        cellOperationContext.value.cellValue = rowValue?.rowCellValues?.get(columnId)
-        return cellOperationContext
+        return with(cellContext) {
+            coordinates.columnIndex = (firstColumn ?: 0) + columnIndex
+            value.cellValue = cell
+            this
+        }
     }
 
-    internal fun columnOperationContext(
+    internal fun setColumnContext(
         columnIndex: Int,
         columnId: ColumnKey<T>,
         phase: ColumnRenderPhase
     ): OperationContext<T, ColumnOperationTableData<T>> {
-        this.columnIndex = columnIndex
-        columnOperationContext.coordinates = coordinates()
-        columnOperationContext.value.currentPhase = phase
-        columnOperationContext.value.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[columnId]?.value }
-        return columnOperationContext
+        return with(columnContext) {
+            coordinates.columnIndex = (firstColumn ?: 0) + columnIndex
+            value.currentPhase = phase
+            value.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[columnId]?.value }
+            this
+        }
     }
-
-    private fun coordinates(): Coordinates =
-        Coordinates(tableName, (firstRow ?: 0) + rowIndex, (firstColumn ?: 0) + columnIndex)
 
 }
