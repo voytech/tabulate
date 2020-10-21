@@ -2,7 +2,6 @@ package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.attributes.CellAttribute
-import pl.voytech.exporter.core.model.attributes.RowAttribute
 import java.io.OutputStream
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -22,12 +21,6 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     private var selectableRowsCached = false
     private var customRows: List<Row<T>>? = null
     private var customRowsCached = false
-
-    internal data class ComputedRowValue<T>(
-        val rowAttributes: Set<RowAttribute>?,
-        val rowCellValues: Map<ColumnKey<T>, AttributedCell>,
-        val typedRow: TypedRowData<T>
-    )
 
     private fun create(): DelegateAPI<A> {
         return delegate.lifecycleOperations.createDocument()
@@ -86,7 +79,10 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                     exportingState.addRow(
                         computeRowValue(
                             table,
-                            TypedRowData(rowIndex = rowIndex.getAndIncrement(), dataset = collection),
+                            TypedRowData(
+                                rowIndex = rowIndex.getAndIncrement(),
+                                dataset = collection
+                            ),
                             rowSkips
                         )
                     )
@@ -123,7 +119,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             delegate.tableOperations.let {
                 it.renderColumn(
                     state.delegate,
-                    state.columnOperationContext(column.index ?: columnIndex, column.id, renderPhase),
+                    state.setColumnContext(column.index ?: columnIndex, column.id, renderPhase),
                     column.columnAttributes?.filter { ext ->
                         ((ColumnRenderPhase.BEFORE_FIRST_ROW == renderPhase) && ext.beforeFirstRow()) ||
                                 ((ColumnRenderPhase.AFTER_LAST_ROW == renderPhase) && ext.afterLastRow())
@@ -137,15 +133,18 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         state: ExportingState<T, A>,
         table: Table<T>
     ) {
-        state.forEachRowValue { rowValue: ComputedRowValue<T> ->
-            delegate.tableOperations.renderRow(state.delegate, state.rowOperationContext(), rowValue.rowAttributes)
+        state.forEachRowValue { context: OperationContext<T, RowOperationTableData<T>> ->
+            delegate.tableOperations.renderRow(state.delegate, context, context.value.rowAttributes)
                 .also {
                     table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                        if (rowValue.rowCellValues.containsKey(column.id)) {
+                        if (context.value.rowCells!!.containsKey(column.id)) {
                             delegate.tableOperations.renderRowCell(
                                 state.delegate,
-                                state.cellOperationContext(column.index ?: columnIndex, column.id),
-                                rowValue.rowCellValues[column.id]?.attributes
+                                state.setCellContext(
+                                    column.index ?: columnIndex,
+                                    context.value.rowCells!![column.id] ?: error("")
+                                ),
+                                context.value.rowCells!![column.id]?.attributes
                             )
                         }
                     }
@@ -204,7 +203,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         table: Table<T>,
         typedRow: TypedRowData<T>,
         rowSkips: MutableMap<ColumnKey<T>, Int>
-    ): ComputedRowValue<T> {
+    ): AttributedRow<T> {
         val rowDefinitions: Set<Row<T>>? = matchingRows(table, typedRow)
         val mergedRowCells: Map<ColumnKey<T>, Cell<T>>? =
             rowDefinitions?.mapNotNull { row -> row.cells }?.fold(mapOf(), { acc, m -> acc + m })
@@ -239,10 +238,9 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                 }
             }
         }
-        return ComputedRowValue(
+        return AttributedRow(
             rowAttributes = rowDefinitions.mapNotNull { it.rowAttributes }.fold(setOf(), { acc, r -> acc + r }),
-            rowCellValues = cellValues.toMap(),
-            typedRow = typedRow
+            rowCellValues = cellValues.toMap()
         )
     }
 
