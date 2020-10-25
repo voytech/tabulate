@@ -105,7 +105,7 @@ class CellAlignmentAttributeOperation<T> : CellAttributeOperation<T, CellAlignme
     override fun attributeType(): KClass<out CellAlignmentAttribute> = CellAlignmentAttribute::class
 
     override fun renderAttribute(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableData<T>>, attribute: CellAlignmentAttribute) {
-        cellStyle(state, context.coordinates!!, context).let {
+        cellStyle(state, context.coordinates, context).let {
             attribute.horizontal?.run {
                 it.alignment =
                     when (this) {
@@ -182,7 +182,7 @@ class ColumnWidthAttributeOperation<T> : ColumnAttributeOperation<T ,ColumnWidth
     }
 
     private fun customAutoSize(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, ColumnOperationTableData<T>>) {
-        context.value.columnValues?.maxBy { v -> v.value.toString().length }?.value.toString().let {
+        context.data.columnValues?.maxBy { v -> v.value.toString().length }?.value.toString().let {
             getStringWidth(
                 text = it,
                 cellFont = workbook(state).xssfWorkbook.getFontAt(0),

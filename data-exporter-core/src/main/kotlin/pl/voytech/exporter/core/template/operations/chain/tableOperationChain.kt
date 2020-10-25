@@ -1,9 +1,6 @@
 package pl.voytech.exporter.core.template.operations.chain
 
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.model.attributes.CellAttribute
-import pl.voytech.exporter.core.model.attributes.ColumnAttribute
-import pl.voytech.exporter.core.model.attributes.RowAttribute
 import pl.voytech.exporter.core.template.*
 
 class EmptyOperationChainException : RuntimeException("There is no export operation in the chain.")
@@ -20,35 +17,31 @@ class TableOperationChain<T, A>(
 
     override fun renderRow(
         state: DelegateAPI<A>,
-        context: OperationContext<T, RowOperationTableData<T>>,
-        attributes: Set<RowAttribute>?
+        context: OperationContext<T, RowOperationTableData<T>>
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
-        chain.forEach { it.renderRow(state, context, attributes) }
+        chain.forEach { it.renderRow(state, context) }
     }
 
     override fun renderColumn(
         state: DelegateAPI<A>,
-        context: OperationContext<T, ColumnOperationTableData<T>>,
-        attributes: Set<ColumnAttribute>?
+        context: OperationContext<T, ColumnOperationTableData<T>>
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
         chain.forEach {
             it.renderColumn(
                 state,
-                context,
-                attributes
+                context
             )
         }
     }
 
     override fun renderRowCell(
         state: DelegateAPI<A>,
-        context: OperationContext<T, CellOperationTableData<T>>,
-        attributes: Set<CellAttribute>?
+        context: OperationContext<T, CellOperationTableData<T>>
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
-        chain.forEach { it.renderRowCell(state, context, attributes) }
+        chain.forEach { it.renderRowCell(state, context) }
     }
 
 }

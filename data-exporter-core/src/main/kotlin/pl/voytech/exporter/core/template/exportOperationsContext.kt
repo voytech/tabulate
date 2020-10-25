@@ -1,6 +1,7 @@
 package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.ColumnKey
+import pl.voytech.exporter.core.model.attributes.ColumnAttribute
 import pl.voytech.exporter.core.model.attributes.RowAttribute
 
 open class TableData<T>(private val collection: Collection<T>) {
@@ -28,6 +29,8 @@ enum class ColumnRenderPhase {
 class ColumnOperationTableData<T>(collection: Collection<T>): TableData<T>(collection) {
     var columnValues: List<CellValue>? = null
         internal set
+    var columnAttributes: Set<ColumnAttribute>? = null
+        internal set
     var currentPhase: ColumnRenderPhase = ColumnRenderPhase.BEFORE_FIRST_ROW
 }
 
@@ -38,7 +41,7 @@ class TableOperationTableData<T>(private val collection: Collection<T>): TableDa
 }
 
 data class OperationContext<T,E : TableData<T>>(
-    val value: E,
+    val data: E,
     val additionalAttributes: MutableMap<String, Any>
 ) {
     lateinit var coordinates: Coordinates

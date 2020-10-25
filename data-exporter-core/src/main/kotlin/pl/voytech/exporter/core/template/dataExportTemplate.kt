@@ -119,11 +119,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             delegate.tableOperations.let {
                 it.renderColumn(
                     state.delegate,
-                    state.setColumnContext(column.index ?: columnIndex, column.id, renderPhase),
-                    column.columnAttributes?.filter { ext ->
-                        ((ColumnRenderPhase.BEFORE_FIRST_ROW == renderPhase) && ext.beforeFirstRow()) ||
-                                ((ColumnRenderPhase.AFTER_LAST_ROW == renderPhase) && ext.afterLastRow())
-                    }?.toSet()
+                    state.setColumnContext(column.index ?: columnIndex, column, renderPhase)
                 )
             }
         }
@@ -134,17 +130,16 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         table: Table<T>
     ) {
         state.forEachRowValue { context: OperationContext<T, RowOperationTableData<T>> ->
-            delegate.tableOperations.renderRow(state.delegate, context, context.value.rowAttributes)
+            delegate.tableOperations.renderRow(state.delegate, context)
                 .also {
                     table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                        if (context.value.rowCells!!.containsKey(column.id)) {
+                        if (context.data.rowCells!!.containsKey(column.id)) {
                             delegate.tableOperations.renderRowCell(
                                 state.delegate,
                                 state.setCellContext(
                                     column.index ?: columnIndex,
-                                    context.value.rowCells!![column.id] ?: error("")
-                                ),
-                                context.value.rowCells!![column.id]?.attributes
+                                    context.data.rowCells!![column.id] ?: error("")
+                                )
                             )
                         }
                     }

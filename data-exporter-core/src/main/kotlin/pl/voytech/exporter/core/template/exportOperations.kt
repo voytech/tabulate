@@ -1,9 +1,6 @@
 package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.model.attributes.CellAttribute
-import pl.voytech.exporter.core.model.attributes.ColumnAttribute
-import pl.voytech.exporter.core.model.attributes.RowAttribute
 import java.io.OutputStream
 
 interface CreateDocumentOperation<A> {
@@ -24,24 +21,21 @@ interface LifecycleOperations<A> : CreateDocumentOperation<A>, SaveDocumentOpera
 interface ColumnOperation<T, A> {
     fun renderColumn(
         state: DelegateAPI<A>,
-        context: OperationContext<T, ColumnOperationTableData<T>>,
-        attributes: Set<ColumnAttribute>?
+        context: OperationContext<T, ColumnOperationTableData<T>>
     )
 }
 
 interface RowOperation<T, A> {
     fun renderRow(
         state: DelegateAPI<A>,
-        context: OperationContext<T, RowOperationTableData<T>>,
-        attributes: Set<RowAttribute>?
+        context: OperationContext<T, RowOperationTableData<T>>
     )
 }
 
 interface RowCellOperation<T, A> {
     fun renderRowCell(
         state: DelegateAPI<A>,
-        context: OperationContext<T, CellOperationTableData<T>>,
-        attributes: Set<CellAttribute>?
+        context: OperationContext<T, CellOperationTableData<T>>
     )
 }
 
