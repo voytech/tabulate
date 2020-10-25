@@ -29,35 +29,32 @@ abstract class AttributesHandlingTableOperations<T, A>(
 
     override fun renderRow(
         state: DelegateAPI<A>,
-        context: OperationContext<T, RowOperationTableData<T>>,
-        attributes: Set<RowAttribute>?
+        context: OperationContext<T, RowOperationTableData<T>>
     ) {
-        renderRow(state, context).also {
-            attributes?.let { delegates.applyRowAttributes(state, context, it) }
+        renderRowValue(state, context).also {
+            context.data.rowAttributes.let { delegates.applyRowAttributes(state, context, it!!) }
         }
     }
 
-    abstract fun renderRow(state: DelegateAPI<A>, context: OperationContext<T, RowOperationTableData<T>>)
+    abstract fun renderRowValue(state: DelegateAPI<A>, context: OperationContext<T, RowOperationTableData<T>>)
 
     override fun renderColumn(
         state: DelegateAPI<A>,
-        context: OperationContext<T, ColumnOperationTableData<T>>,
-        attributes: Set<ColumnAttribute>?
+        context: OperationContext<T, ColumnOperationTableData<T>>
     ) {
-        attributes?.let { delegates.applyColumnAttributes(state, context, attributes) }
+        context.data.columnAttributes?.let { delegates.applyColumnAttributes(state, context, it) }
     }
 
     override fun renderRowCell(
         state: DelegateAPI<A>,
-        context: OperationContext<T, CellOperationTableData<T>>,
-        attributes: Set<CellAttribute>?
+        context: OperationContext<T, CellOperationTableData<T>>
     ) {
-        renderRowCell(state, context).also {
-            attributes?.let { delegates.applyCellAttributes(state, context, it) }
+        renderRowCellValue(state, context).also {
+            context.data.cellValue?.attributes?.let { delegates.applyCellAttributes(state, context, it) }
         }
     }
 
-    abstract fun renderRowCell(state: DelegateAPI<A>, context: OperationContext<T, CellOperationTableData<T>>)
+    abstract fun renderRowCellValue(state: DelegateAPI<A>, context: OperationContext<T, CellOperationTableData<T>>)
 
 }
 

@@ -1,6 +1,6 @@
 package pl.voytech.exporter.core.template
 
-import pl.voytech.exporter.core.model.ColumnKey
+import pl.voytech.exporter.core.model.Column
 import pl.voytech.exporter.core.model.NextId
 
 /**
@@ -67,8 +67,8 @@ class ExportingState<T, A>(
         return with(rowContext) {
             coordinates.rowIndex = (firstRow ?: 0) + rowIndex
             coordinates.columnIndex = 0
-            value.rowCells = row.rowCellValues
-            value.rowAttributes = row.rowAttributes
+            data.rowCells = row.rowCellValues
+            data.rowAttributes = row.rowAttributes
             this
         }
     }
@@ -79,20 +79,24 @@ class ExportingState<T, A>(
     ): OperationContext<T, CellOperationTableData<T>> {
         return with(cellContext) {
             coordinates.columnIndex = (firstColumn ?: 0) + columnIndex
-            value.cellValue = cell
+            data.cellValue = cell
             this
         }
     }
 
     internal fun setColumnContext(
         columnIndex: Int,
-        columnId: ColumnKey<T>,
+        column: Column<T>,
         phase: ColumnRenderPhase
     ): OperationContext<T, ColumnOperationTableData<T>> {
         return with(columnContext) {
             coordinates.columnIndex = (firstColumn ?: 0) + columnIndex
-            value.currentPhase = phase
-            value.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[columnId]?.value }
+            data.currentPhase = phase
+            data.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[column.id]?.value }
+            data.columnAttributes = column.columnAttributes?.filter { ext ->
+                ((ColumnRenderPhase.BEFORE_FIRST_ROW == phase) && ext.beforeFirstRow()) ||
+                        ((ColumnRenderPhase.AFTER_LAST_ROW == phase) && ext.afterLastRow())
+            }?.toSet()
             this
         }
     }

@@ -56,28 +56,25 @@ class AttributeCacheTableOperations<T, A>(private val cache: AttributeKeyDrivenC
 
     override fun renderRow(
         state: DelegateAPI<A>,
-        context: OperationContext<T, RowOperationTableData<T>>,
-        attributes: Set<RowAttribute>?
+        context: OperationContext<T, RowOperationTableData<T>>
     ) {
-        attributes?.let {
+        context.data.rowAttributes?.let {
             context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareRowCacheEntryScope(it)
         }
     }
 
     override fun renderColumn(
         state: DelegateAPI<A>,
-        context: OperationContext<T, ColumnOperationTableData<T>>,
-        attributes: Set<ColumnAttribute>?
+        context: OperationContext<T, ColumnOperationTableData<T>>
     ) {
-        attributes?.let { context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareColumnCacheEntryScope(it) }
+        context.data.columnAttributes?.let { context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareColumnCacheEntryScope(it) }
     }
 
     override fun renderRowCell(
         state: DelegateAPI<A>,
-        context: OperationContext<T, CellOperationTableData<T>>,
-        attributes: Set<CellAttribute>?
+        context: OperationContext<T, CellOperationTableData<T>>
     ) {
-        attributes?.let { context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareCellCacheEntryScope(it) }
+        context.data.cellValue?.attributes?.let { context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareCellCacheEntryScope(it) }
     }
 
 }
