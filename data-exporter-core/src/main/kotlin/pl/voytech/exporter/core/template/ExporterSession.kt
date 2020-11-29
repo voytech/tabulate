@@ -2,14 +2,16 @@ package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.Column
 import pl.voytech.exporter.core.model.NextId
+import pl.voytech.exporter.core.model.Table
 
 /**
  * A mutable exporting state representing entire dataset as well as operation-scoped context data and coordinates for
  * operation execution.
  * @author Wojciech Mąka
  */
-class ExportingState<T, A>(
+class ExporterSession<T, A>(
     val delegate: DelegateAPI<A>,
+    val tableModel: Table<T>,
     val tableName: String = "table-${NextId.nextId()}",
     val firstRow: Int? = 0,
     val firstColumn: Int? = 0,
@@ -51,12 +53,12 @@ class ExportingState<T, A>(
         cellContext.coordinates = coordinates
     }
 
-    internal fun addRow(rowValue: AttributedRow<T>): ExportingState<T, A> {
+    internal fun addRow(rowValue: AttributedRow<T>): ExporterSession<T, A> {
         rowValues.add(rowValue)
         return this
     }
 
-    internal fun forEachRowValue(block: (context: OperationContext<T, RowOperationTableData<T>>) -> Unit): ExportingState<T, A> {
+    internal fun forEachRowValue(block: (context: OperationContext<T, RowOperationTableData<T>>) -> Unit): ExporterSession<T, A> {
         rowValues.forEachIndexed { rowIndex, rowValue ->
             block.invoke(setRowContext(rowValue, rowIndex))
         }

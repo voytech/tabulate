@@ -27,20 +27,21 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     private fun add(state: DelegateAPI<A>, table: Table<T>, collection: Collection<T>): DelegateAPI<A> {
-        return ExportingState(
-            delegate = delegate.tableOperations.createTable(state, table),
+        return ExporterSession(
+            delegate = state,
+            tableModel = delegate.tableOperations.createTable(state, table),
             tableName = table.name ?: "table-${NextId.nextId()}",
             firstRow = table.firstRow,
             firstColumn = table.firstColumn,
             collection = collection
         ).also {
-            preFlightPass(it, table, collection)
+            preFlightPass(it, collection)
         }.also {
-            renderColumns(it, table, ColumnRenderPhase.BEFORE_FIRST_ROW)
+            renderColumns(it, ColumnRenderPhase.BEFORE_FIRST_ROW)
         }.also {
-            renderRows(it, table)
+            renderRows(it)
         }.also {
-            renderColumns(it, table, ColumnRenderPhase.AFTER_LAST_ROW)
+            renderColumns(it, ColumnRenderPhase.AFTER_LAST_ROW)
         }.also {
             customRows = null
             selectableRows = null
@@ -70,15 +71,15 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
      * resolved from synthetic (definitions from builders) values or source dataset values. After pre-flight is everything to build a context data
      * for scoped operation (for row, column, cell) when exporter is progressing over collection data.
      */
-    private fun preFlightPass(exportingState: ExportingState<T, A>, table: Table<T>, collection: Collection<T>) {
+    private fun preFlightPass(exporterSession: ExporterSession<T, A>, collection: Collection<T>) {
         val rowIndex = AtomicInteger(0)
         val rowSkips = mutableMapOf<ColumnKey<T>, Int>()
         val preFlightCustomRows = {
-            subsequentCustomRowsStartingAtRowIndex(rowIndex.get(), table.rows).let {
+            subsequentCustomRowsStartingAtRowIndex(rowIndex.get(), exporterSession.tableModel.rows).let {
                 it?.forEach { _ ->
-                    exportingState.addRow(
+                    exporterSession.addRow(
                         computeRowValue(
-                            table,
+                            exporterSession.tableModel,
                             TypedRowData(
                                 rowIndex = rowIndex.getAndIncrement(),
                                 dataset = collection
@@ -88,14 +89,14 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                     )
                 }
             }
-            exportingState
+            exporterSession
         }
         preFlightCustomRows().also {
             if (!collection.isEmpty()) {
                 collection.forEachIndexed { objectIndex: Int, record: T ->
-                    exportingState.addRow(
+                    exporterSession.addRow(
                         computeRowValue(
-                            table,
+                            it.tableModel,
                             TypedRowData(
                                 dataset = collection,
                                 rowIndex = rowIndex.getAndIncrement(),
@@ -111,11 +112,10 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     private fun renderColumns(
-        state: ExportingState<T, A>,
-        table: Table<T>,
+        state: ExporterSession<T, A>,
         renderPhase: ColumnRenderPhase
     ) {
-        table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+        state.tableModel.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
             delegate.tableOperations.let {
                 it.renderColumn(
                     state.delegate,
@@ -125,14 +125,11 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-    private fun renderRows(
-        state: ExportingState<T, A>,
-        table: Table<T>
-    ) {
+    private fun renderRows(state: ExporterSession<T, A>) {
         state.forEachRowValue { context: OperationContext<T, RowOperationTableData<T>> ->
             delegate.tableOperations.renderRow(state.delegate, context)
                 .also {
-                    table.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+                    state.tableModel.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
                         if (context.data.rowCells!!.containsKey(column.id)) {
                             delegate.tableOperations.renderRowCell(
                                 state.delegate,

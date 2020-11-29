@@ -2,11 +2,17 @@ package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.attributes.*
-import kotlin.reflect.KClass
+
 
 
 interface AttributeOperation<out T : Attribute> {
-    fun attributeType(): KClass<out T>
+    fun attributeType(): Class<out T>
+    fun priority(): Int = HIGHER
+
+    companion object {
+        const val LOWER = -1
+        const val HIGHER = 1
+    }
 }
 
 interface TableAttributeOperation<T : TableAttribute, A> : AttributeOperation<T> {

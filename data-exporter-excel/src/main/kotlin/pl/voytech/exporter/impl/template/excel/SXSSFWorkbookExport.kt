@@ -51,13 +51,13 @@ internal class XlsxLifecycleOperation(private val templateFile: InputStream?) :
 internal class XlsxTableOperations<T> :
     AttributesHandlingTableOperations<T, SXSSFWorkbook>(
         tableAttributesOperations,
-        rowAttributesOperations<T>(),
         columnAttributesOperations<T>(),
+        rowAttributesOperations<T>(),
         cellAttributesOperations<T>()
     ) {
 
-    override fun initializeTable(state: DelegateAPI<SXSSFWorkbook>, table: Table<T>): DelegateAPI<SXSSFWorkbook> {
-        return assertTableSheet(state, table.name).let { state }
+    override fun initializeTable(state: DelegateAPI<SXSSFWorkbook>, table: Table<T>): Table<T> {
+        return assertTableSheet(state, table.name).let { table }
     }
 
     override fun renderRowValue(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, RowOperationTableData<T>>) {

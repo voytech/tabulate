@@ -52,7 +52,7 @@ class AttributeKeyDrivenCache {
 class AttributeCacheTableOperations<T, A>(private val cache: AttributeKeyDrivenCache = AttributeKeyDrivenCache()) :
     TableOperations<T, A> {
 
-    override fun createTable(state: DelegateAPI<A>, table: Table<T>): DelegateAPI<A>  = state
+    override fun createTable(state: DelegateAPI<A>, table: Table<T>): Table<T>  = table
 
     override fun renderRow(
         state: DelegateAPI<A>,
