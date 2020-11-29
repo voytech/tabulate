@@ -8,7 +8,7 @@ interface CreateDocumentOperation<A> {
 }
 
 interface CreateTableOperation<T, A> {
-    fun createTable(state: DelegateAPI<A>, table: Table<T>): DelegateAPI<A>
+    fun createTable(state: DelegateAPI<A>, table: Table<T>): Table<T>
 }
 
 interface SaveDocumentOperations<A> {

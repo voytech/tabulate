@@ -9,10 +9,10 @@ class TableOperationChain<T, A>(
     private vararg val chain: TableOperations<T, A>
 ) : TableOperations<T, A> {
 
-    override fun createTable(state: DelegateAPI<A>, table: Table<T>): DelegateAPI<A> {
+    override fun createTable(state: DelegateAPI<A>, table: Table<T>): Table<T> {
         chain.ifEmpty { throw EmptyOperationChainException() }
         chain.forEach { it.createTable(state, table) }
-        return state
+        return table
     }
 
     override fun renderRow(

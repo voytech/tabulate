@@ -9,6 +9,7 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import org.apache.poi.xssf.usermodel.XSSFFont
 import pl.voytech.exporter.core.model.Table
+import pl.voytech.exporter.core.model.attributes.CellAttribute
 import pl.voytech.exporter.core.model.attributes.functional.FilterAndSortTableAttribute
 import pl.voytech.exporter.core.model.attributes.style.*
 import pl.voytech.exporter.core.model.attributes.style.enums.BorderStyle
@@ -36,7 +37,7 @@ class CellFontAttributeOperation<T> : CellAttributeOperation<T,CellFontAttribute
 
     private val cellFontCacheKey = "cellFont"
 
-    override fun attributeType(): KClass<CellFontAttribute> = CellFontAttribute::class
+    override fun attributeType(): Class<CellFontAttribute> = CellFontAttribute::class.java
 
     override fun renderAttribute(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableData<T>>, attribute: CellFontAttribute) {
         cellStyle(state, context.coordinates!!, context).let {
@@ -61,7 +62,7 @@ class CellFontAttributeOperation<T> : CellAttributeOperation<T,CellFontAttribute
 }
 
 class CellBackgroundAttributeOperation<T> : CellAttributeOperation<T,CellBackgroundAttribute, SXSSFWorkbook> {
-    override fun attributeType(): KClass<CellBackgroundAttribute> = CellBackgroundAttribute::class
+    override fun attributeType(): Class<CellBackgroundAttribute> = CellBackgroundAttribute::class.java
 
     override fun renderAttribute(
         state: DelegateAPI<SXSSFWorkbook>,
@@ -76,7 +77,7 @@ class CellBackgroundAttributeOperation<T> : CellAttributeOperation<T,CellBackgro
 }
 
 class CellBordersAttributeOperation<T> : CellAttributeOperation<T, CellBordersAttribute, SXSSFWorkbook> {
-    override fun attributeType(): KClass<CellBordersAttribute> = CellBordersAttribute::class
+    override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
     override fun renderAttribute(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableData<T>>, attribute: CellBordersAttribute) {
         val toPoiStyle = { style: BorderStyle ->
@@ -102,7 +103,7 @@ class CellBordersAttributeOperation<T> : CellAttributeOperation<T, CellBordersAt
 
 class CellAlignmentAttributeOperation<T> : CellAttributeOperation<T, CellAlignmentAttribute, SXSSFWorkbook> {
 
-    override fun attributeType(): KClass<out CellAlignmentAttribute> = CellAlignmentAttribute::class
+    override fun attributeType(): Class<out CellAlignmentAttribute> = CellAlignmentAttribute::class.java
 
     override fun renderAttribute(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableData<T>>, attribute: CellAlignmentAttribute) {
         cellStyle(state, context.coordinates, context).let {
@@ -134,7 +135,7 @@ class CellDataFormatAttributeOperation<T> : CellAttributeOperation<T, CellExcelD
 
     private val cellStyleFormatKey = "cellStyleFormatKey"
 
-    override fun attributeType(): KClass<out CellExcelDataFormatAttribute> = CellExcelDataFormatAttribute::class
+    override fun attributeType(): Class<out CellExcelDataFormatAttribute> = CellExcelDataFormatAttribute::class.java
 
     override fun renderAttribute(
         state: DelegateAPI<SXSSFWorkbook>,
@@ -154,7 +155,7 @@ class CellDataFormatAttributeOperation<T> : CellAttributeOperation<T, CellExcelD
 }
 
 class ColumnWidthAttributeOperation<T> : ColumnAttributeOperation<T ,ColumnWidthAttribute, SXSSFWorkbook> {
-    override fun attributeType(): KClass<out ColumnWidthAttribute> = ColumnWidthAttribute::class
+    override fun attributeType(): Class<out ColumnWidthAttribute> = ColumnWidthAttribute::class.java
 
     private fun getStringWidth(text: String, cellFont: XSSFFont, workbook: Workbook): Int {
         val attributedString = AttributedString(text)
@@ -206,14 +207,14 @@ class ColumnWidthAttributeOperation<T> : ColumnAttributeOperation<T ,ColumnWidth
 }
 
 class RowHeightAttributeOperation<T> : RowAttributeOperation<T, RowHeightAttribute, SXSSFWorkbook> {
-    override fun attributeType(): KClass<out RowHeightAttribute> = RowHeightAttribute::class
+    override fun attributeType(): Class<out RowHeightAttribute> = RowHeightAttribute::class.java
     override fun renderAttribute(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, RowOperationTableData<T>>, attribute: RowHeightAttribute) {
         assertRow(state, context.coordinates!!).height = PoiUtils.heightFromPixels(attribute.height)
     }
 }
 
 class FilterAndSortTableAttributeOperation : TableAttributeOperation<FilterAndSortTableAttribute, SXSSFWorkbook> {
-    override fun attributeType(): KClass<out FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class
+    override fun attributeType(): Class<out FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class.java
     override fun renderAttribute(state: DelegateAPI<SXSSFWorkbook>, table: Table<*>, attribute: FilterAndSortTableAttribute) {
         workbook(state).creationHelper.createAreaReference(
             CellReference(attribute.rowRange.first, attribute.columnRange.first),
@@ -238,7 +239,7 @@ internal fun <T> rowAttributesOperations() = listOf(
     RowHeightAttributeOperation<T>()
 )
 
-internal fun <T> cellAttributesOperations() = listOf(
+internal fun <T> cellAttributesOperations(): List<CellAttributeOperation<T, out CellAttribute, SXSSFWorkbook>> = listOf(
     CellFontAttributeOperation<T>(),
     CellBackgroundAttributeOperation<T>(),
     CellBordersAttributeOperation<T>(),
