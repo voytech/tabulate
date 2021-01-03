@@ -110,7 +110,7 @@ abstract class AttributeAwareTableOperations<T, A>(
     }
 
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
-    override fun createTable(state: DelegateAPI<A>, table: Table<T>): Table<T> {
+    override fun createTable(state: A, table: Table<T>): Table<T> {
         return initializeTable(state, sortByAttributeOperationPriority(table)).also { sortedTable ->
             sortedTable.tableAttributes?.forEach { tableAttribute ->
                 tableAttributeOperationsByClass[tableAttribute.javaClass]?.renderAttribute(
@@ -122,11 +122,11 @@ abstract class AttributeAwareTableOperations<T, A>(
         }
     }
 
-    abstract fun initializeTable(state: DelegateAPI<A>, table: Table<T>): Table<T>
+    abstract fun initializeTable(state: A, table: Table<T>): Table<T>
 
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun renderRow(
-        state: DelegateAPI<A>,
+        state: A,
         context: OperationContext<T, RowOperationTableData<T>>
     ) {
         if (!context.data.rowAttributes.isNullOrEmpty()) {
@@ -145,11 +145,11 @@ abstract class AttributeAwareTableOperations<T, A>(
         }
     }
 
-    abstract fun renderRowValue(state: DelegateAPI<A>, context: OperationContext<T, RowOperationTableData<T>>)
+    abstract fun renderRowValue(state: A, context: OperationContext<T, RowOperationTableData<T>>)
 
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun renderColumn(
-        state: DelegateAPI<A>,
+        state: A,
         context: OperationContext<T, ColumnOperationTableData<T>>
     ) {
         context.data.columnAttributes?.let { attributes ->
@@ -161,7 +161,7 @@ abstract class AttributeAwareTableOperations<T, A>(
 
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun renderRowCell(
-        state: DelegateAPI<A>,
+        state: A,
         context: OperationContext<T, CellOperationTableData<T>>
     ) {
         if (!context.data.cellValue?.attributes.isNullOrEmpty()) {
@@ -180,7 +180,7 @@ abstract class AttributeAwareTableOperations<T, A>(
         }
     }
 
-    abstract fun renderRowCellValue(state: DelegateAPI<A>, context: OperationContext<T, CellOperationTableData<T>>)
+    abstract fun renderRowCellValue(state: A, context: OperationContext<T, CellOperationTableData<T>>)
 
 }
 

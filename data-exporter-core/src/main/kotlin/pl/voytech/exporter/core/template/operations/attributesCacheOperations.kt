@@ -52,10 +52,10 @@ class AttributeKeyDrivenCache {
 class AttributeCacheTableOperations<T, A>(private val cache: AttributeKeyDrivenCache = AttributeKeyDrivenCache()) :
     TableOperations<T, A> {
 
-    override fun createTable(state: DelegateAPI<A>, table: Table<T>): Table<T>  = table
+    override fun createTable(state: A, table: Table<T>): Table<T>  = table
 
     override fun renderRow(
-        state: DelegateAPI<A>,
+        state: A,
         context: OperationContext<T, RowOperationTableData<T>>
     ) {
         context.data.rowAttributes?.let {
@@ -64,14 +64,14 @@ class AttributeCacheTableOperations<T, A>(private val cache: AttributeKeyDrivenC
     }
 
     override fun renderColumn(
-        state: DelegateAPI<A>,
+        state: A,
         context: OperationContext<T, ColumnOperationTableData<T>>
     ) {
         context.data.columnAttributes?.let { context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareColumnCacheEntryScope(it) }
     }
 
     override fun renderRowCell(
-        state: DelegateAPI<A>,
+        state: A,
         context: OperationContext<T, CellOperationTableData<T>>
     ) {
         context.data.cellValue?.attributes?.let { context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareCellCacheEntryScope(it) }

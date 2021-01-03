@@ -23,7 +23,7 @@ private fun parseColor(xssfColor: XSSFColor) =
     Color(xssfColor.rgb[0].toInt().and(0xFF), xssfColor.rgb[1].toInt().and(0xFF), xssfColor.rgb[2].toInt().and(0xFF))
 
 class PoiCellFontAttributeResolver : AttributeResolver<SXSSFWorkbook> {
-    override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellAttribute {
+    override fun resolve(api: SXSSFWorkbook, coordinates: Coordinates): CellAttribute {
         return SXSSFWrapper.xssfCell(api, coordinates).let {
             CellFontAttribute(
                 fontFamily = it?.cellStyle?.font?.fontName,
@@ -45,7 +45,7 @@ class PoiCellFontAttributeResolver : AttributeResolver<SXSSFWorkbook> {
 }
 
 class PoiCellBackgroundAttributeResolver : AttributeResolver<SXSSFWorkbook> {
-    override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellAttribute {
+    override fun resolve(api: SXSSFWorkbook, coordinates: Coordinates): CellAttribute {
         return SXSSFWrapper.xssfCell(api, coordinates).let {
             CellBackgroundAttribute(
                 color = it?.cellStyle?.fillForegroundXSSFColor?.let { color -> parseColor(color) } ?: Color(-1, -1, -1)
@@ -55,7 +55,7 @@ class PoiCellBackgroundAttributeResolver : AttributeResolver<SXSSFWorkbook> {
 }
 
 class PoiCellBordersAttributeResolver : AttributeResolver<SXSSFWorkbook> {
-    override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellAttribute {
+    override fun resolve(api: SXSSFWorkbook, coordinates: Coordinates): CellAttribute {
         val fromPoiStyle = { style: PoiBorderStyle ->
             when (style) {
                 PoiBorderStyle.DASHED -> BorderStyle.DASHED
@@ -80,7 +80,7 @@ class PoiCellBordersAttributeResolver : AttributeResolver<SXSSFWorkbook> {
 }
 
 class PoiCellDataFormatAttributeResolver : AttributeResolver<SXSSFWorkbook> {
-    override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellAttribute {
+    override fun resolve(api: SXSSFWorkbook, coordinates: Coordinates): CellAttribute {
         return SXSSFWrapper.xssfCell(api, coordinates).let {
             it?.cellStyle?.dataFormatString?.let { dataFormat ->
                 CellExcelDataFormatAttribute(
@@ -92,7 +92,7 @@ class PoiCellDataFormatAttributeResolver : AttributeResolver<SXSSFWorkbook> {
 }
 
 class PoiCellAlignmentAttributeResolver : AttributeResolver<SXSSFWorkbook> {
-    override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellAttribute {
+    override fun resolve(api: SXSSFWorkbook, coordinates: Coordinates): CellAttribute {
         return SXSSFWrapper.xssfCell(api, coordinates).let {
             CellAlignmentAttribute(
                 vertical = when (it?.cellStyle?.verticalAlignment) {
