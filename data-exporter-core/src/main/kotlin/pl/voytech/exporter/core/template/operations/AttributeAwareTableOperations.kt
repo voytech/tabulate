@@ -8,7 +8,7 @@ import pl.voytech.exporter.core.model.attributes.TableAttribute
 import pl.voytech.exporter.core.template.*
 import java.util.*
 
-abstract class AttributesHandlingTableOperations<T, A>(
+abstract class AttributeAwareTableOperations<T, A>(
     tableAttributeOperations: List<TableAttributeOperation<out TableAttribute, A>>?,
     columnAttributeOperations: List<ColumnAttributeOperation<T, out ColumnAttribute, A>>?,
     rowAttributeOperations: List<RowAttributeOperation<T, out RowAttribute, A>>?,
@@ -85,17 +85,19 @@ abstract class AttributesHandlingTableOperations<T, A>(
     }
 
     private fun cellsWithSortedAttributes(cells: Map<ColumnKey<T>, Cell<T>>?): Map<ColumnKey<T>, Cell<T>>? {
-        return cells?.map { it.key to Cell(
-            value = it.value.value,
-            eval = it.value.eval,
-            type = it.value.type,
-            colSpan = it.value.colSpan,
-            rowSpan = it.value.rowSpan,
-            cellAttributes = sortedCellAttributes(it.value.cellAttributes)
-        ) }?.toMap()
+        return cells?.map {
+            it.key to Cell(
+                value = it.value.value,
+                eval = it.value.eval,
+                type = it.value.type,
+                colSpan = it.value.colSpan,
+                rowSpan = it.value.rowSpan,
+                cellAttributes = sortedCellAttributes(it.value.cellAttributes)
+            )
+        }?.toMap()
     }
 
-    private fun sortedAttributeOperationsTable(table: Table<T>): Table<T> {
+    private fun sortByAttributeOperationPriority(table: Table<T>): Table<T> {
         return Table(
             name = table.name,
             firstRow = table.firstRow,
@@ -109,7 +111,7 @@ abstract class AttributesHandlingTableOperations<T, A>(
 
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun createTable(state: DelegateAPI<A>, table: Table<T>): Table<T> {
-        return sortedAttributeOperationsTable(table).let { sortedTable ->
+        return initializeTable(state, sortByAttributeOperationPriority(table)).also { sortedTable ->
             sortedTable.tableAttributes?.forEach { tableAttribute ->
                 tableAttributeOperationsByClass[tableAttribute.javaClass]?.renderAttribute(
                     state,
@@ -117,7 +119,6 @@ abstract class AttributesHandlingTableOperations<T, A>(
                     tableAttribute
                 )
             }
-            initializeTable(state, sortedTable)
         }
     }
 
@@ -128,9 +129,9 @@ abstract class AttributesHandlingTableOperations<T, A>(
         state: DelegateAPI<A>,
         context: OperationContext<T, RowOperationTableData<T>>
     ) {
-        context.data.rowAttributes?.let { attributes ->
+        if (!context.data.rowAttributes.isNullOrEmpty()) {
             var operationRendered = false
-            attributes.forEach { attribute ->
+            context.data.rowAttributes!!.forEach { attribute ->
                 rowAttributeOperationsByClass[attribute.javaClass]?.let { operation ->
                     if (operation.priority() >= 0 && !operationRendered) {
                         renderRowValue(state, context)
@@ -139,7 +140,9 @@ abstract class AttributesHandlingTableOperations<T, A>(
                     operation.renderAttribute(state, context, attribute)
                 }
             }
-        } ?: renderRowValue(state, context)
+        } else {
+            renderRowValue(state, context)
+        }
     }
 
     abstract fun renderRowValue(state: DelegateAPI<A>, context: OperationContext<T, RowOperationTableData<T>>)
@@ -163,7 +166,7 @@ abstract class AttributesHandlingTableOperations<T, A>(
     ) {
         if (!context.data.cellValue?.attributes.isNullOrEmpty()) {
             var operationRendered = false
-            context.data.cellValue?.attributes?.forEach { attribute ->
+            context.data.cellValue!!.attributes!!.forEach { attribute ->
                 cellAttributeOperationsByClass[attribute.javaClass]?.let { operation ->
                     if (operation.priority() >= 0 && !operationRendered) {
                         renderRowCellValue(state, context)
