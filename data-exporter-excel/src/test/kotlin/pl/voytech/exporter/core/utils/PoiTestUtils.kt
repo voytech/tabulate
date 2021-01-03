@@ -8,7 +8,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.template.CellValue
 import pl.voytech.exporter.core.template.Coordinates
-import pl.voytech.exporter.core.template.DelegateAPI
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.workbook
 import pl.voytech.exporter.testutils.*
@@ -17,16 +16,16 @@ import org.apache.poi.ss.usermodel.CellType as PoiCellType
 
 class PoiStateProvider : StateProvider<SXSSFWorkbook> {
 
-    override fun createState(file: File): DelegateAPI<SXSSFWorkbook> {
+    override fun createState(file: File): SXSSFWorkbook {
         ZipSecureFile.setMinInflateRatio(0.001)
-        return DelegateAPI(SXSSFWorkbook(WorkbookFactory.create(file) as XSSFWorkbook, 100))
+        return SXSSFWorkbook(WorkbookFactory.create(file) as XSSFWorkbook, 100)
     }
 
-    override fun getPresentTableNames(api: DelegateAPI<SXSSFWorkbook>): List<String>? =
+    override fun getPresentTableNames(api: SXSSFWorkbook): List<String>? =
         workbook(api).let { (0 until it.numberOfSheets).map { index -> workbook(api).getSheetAt(index).sheetName } }
 
 
-    override fun hasTableNamed(api: DelegateAPI<SXSSFWorkbook>, name: String): Boolean =
+    override fun hasTableNamed(api: SXSSFWorkbook, name: String): Boolean =
         workbook(api).getSheet(name) != null
 
 }
@@ -46,7 +45,7 @@ class PoiTableAssert<T>(
             PoiCellDataFormatAttributeResolver()
         ),
         cellValueResolver = object : ValueResolver<SXSSFWorkbook> {
-            override fun resolve(api: DelegateAPI<SXSSFWorkbook>, coordinates: Coordinates): CellValue {
+            override fun resolve(api: SXSSFWorkbook, coordinates: Coordinates): CellValue {
                 val address: CellRangeAddress? =
                     workbook(api).getSheet(coordinates.tableName).mergedRegions.filter { region ->
                         region.containsColumn(coordinates.columnIndex) && region.containsRow(coordinates.rowIndex)

@@ -9,14 +9,14 @@ class TableOperationChain<T, A>(
     private vararg val chain: TableOperations<T, A>
 ) : TableOperations<T, A> {
 
-    override fun createTable(state: DelegateAPI<A>, table: Table<T>): Table<T> {
+    override fun createTable(state: A, table: Table<T>): Table<T> {
         chain.ifEmpty { throw EmptyOperationChainException() }
         chain.forEach { it.createTable(state, table) }
         return table
     }
 
     override fun renderRow(
-        state: DelegateAPI<A>,
+        state: A,
         context: OperationContext<T, RowOperationTableData<T>>
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
@@ -24,7 +24,7 @@ class TableOperationChain<T, A>(
     }
 
     override fun renderColumn(
-        state: DelegateAPI<A>,
+        state: A,
         context: OperationContext<T, ColumnOperationTableData<T>>
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
@@ -37,7 +37,7 @@ class TableOperationChain<T, A>(
     }
 
     override fun renderRowCell(
-        state: DelegateAPI<A>,
+        state: A,
         context: OperationContext<T, CellOperationTableData<T>>
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }

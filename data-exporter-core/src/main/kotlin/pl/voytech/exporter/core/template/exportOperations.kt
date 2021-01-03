@@ -4,37 +4,37 @@ import pl.voytech.exporter.core.model.Table
 import java.io.OutputStream
 
 interface CreateDocumentOperation<A> {
-    fun createDocument(): DelegateAPI<A>
+    fun createDocument(): A
 }
 
 interface CreateTableOperation<T, A> {
-    fun createTable(state: DelegateAPI<A>, table: Table<T>): Table<T>
+    fun createTable(state: A, table: Table<T>): Table<T>
 }
 
 interface SaveDocumentOperations<A> {
-    fun saveDocument(state: DelegateAPI<A>): FileData<ByteArray>
-    fun saveDocument(state: DelegateAPI<A>, stream: OutputStream)
+    fun saveDocument(state: A): FileData<ByteArray>
+    fun saveDocument(state: A, stream: OutputStream)
 }
 
 interface LifecycleOperations<A> : CreateDocumentOperation<A>, SaveDocumentOperations<A>
 
 interface ColumnOperation<T, A> {
     fun renderColumn(
-        state: DelegateAPI<A>,
+        state: A,
         context: OperationContext<T, ColumnOperationTableData<T>>
     )
 }
 
 interface RowOperation<T, A> {
     fun renderRow(
-        state: DelegateAPI<A>,
+        state: A,
         context: OperationContext<T, RowOperationTableData<T>>
     )
 }
 
 interface RowCellOperation<T, A> {
     fun renderRowCell(
-        state: DelegateAPI<A>,
+        state: A,
         context: OperationContext<T, CellOperationTableData<T>>
     )
 }

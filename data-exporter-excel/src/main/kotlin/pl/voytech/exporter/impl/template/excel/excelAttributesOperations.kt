@@ -30,7 +30,6 @@ import java.awt.font.TextLayout
 import java.awt.geom.Rectangle2D
 import java.text.AttributedString
 import kotlin.math.roundToInt
-import kotlin.reflect.KClass
 
 
 class CellFontAttributeOperation<T> : CellAttributeOperation<T,CellFontAttribute, SXSSFWorkbook> {
@@ -39,8 +38,8 @@ class CellFontAttributeOperation<T> : CellAttributeOperation<T,CellFontAttribute
 
     override fun attributeType(): Class<CellFontAttribute> = CellFontAttribute::class.java
 
-    override fun renderAttribute(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableData<T>>, attribute: CellFontAttribute) {
-        cellStyle(state, context.coordinates!!, context).let {
+    override fun renderAttribute(state: SXSSFWorkbook, context: OperationContext<T, CellOperationTableData<T>>, attribute: CellFontAttribute) {
+        cellStyle(state, context.coordinates, context).let {
             if (getCellCachedValue(context, cellFontCacheKey) == null) {
                 val font: XSSFFont = workbook(state).createFont() as XSSFFont
                 attribute.fontFamily?.run { font.fontName = this }
@@ -65,11 +64,11 @@ class CellBackgroundAttributeOperation<T> : CellAttributeOperation<T,CellBackgro
     override fun attributeType(): Class<CellBackgroundAttribute> = CellBackgroundAttribute::class.java
 
     override fun renderAttribute(
-        state: DelegateAPI<SXSSFWorkbook>,
+        state: SXSSFWorkbook,
         context: OperationContext<T, CellOperationTableData<T>>,
         attribute: CellBackgroundAttribute
     ) {
-        cellStyle(state, context.coordinates!!, context).let {
+        cellStyle(state, context.coordinates, context).let {
             (it as XSSFCellStyle).setFillForegroundColor(color(attribute.color))
             it.fillPattern = FillPatternType.SOLID_FOREGROUND
         }
@@ -79,7 +78,7 @@ class CellBackgroundAttributeOperation<T> : CellAttributeOperation<T,CellBackgro
 class CellBordersAttributeOperation<T> : CellAttributeOperation<T, CellBordersAttribute, SXSSFWorkbook> {
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
-    override fun renderAttribute(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableData<T>>, attribute: CellBordersAttribute) {
+    override fun renderAttribute(state: SXSSFWorkbook, context: OperationContext<T, CellOperationTableData<T>>, attribute: CellBordersAttribute) {
         val toPoiStyle = { style: BorderStyle ->
             when (style) {
                 BorderStyle.DASHED -> org.apache.poi.ss.usermodel.BorderStyle.DASHED
@@ -88,7 +87,7 @@ class CellBordersAttributeOperation<T> : CellAttributeOperation<T, CellBordersAt
                 else -> org.apache.poi.ss.usermodel.BorderStyle.NONE
             }
         }
-        cellStyle(state, context.coordinates!!, context).let {
+        cellStyle(state, context.coordinates, context).let {
             attribute.leftBorderColor?.run { (it as XSSFCellStyle).setLeftBorderColor(color(this)) }
             attribute.rightBorderColor?.run { (it as XSSFCellStyle).setRightBorderColor(color(this)) }
             attribute.topBorderColor?.run { (it as XSSFCellStyle).setTopBorderColor(color(this)) }
@@ -105,7 +104,7 @@ class CellAlignmentAttributeOperation<T> : CellAttributeOperation<T, CellAlignme
 
     override fun attributeType(): Class<out CellAlignmentAttribute> = CellAlignmentAttribute::class.java
 
-    override fun renderAttribute(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, CellOperationTableData<T>>, attribute: CellAlignmentAttribute) {
+    override fun renderAttribute(state: SXSSFWorkbook, context: OperationContext<T, CellOperationTableData<T>>, attribute: CellAlignmentAttribute) {
         cellStyle(state, context.coordinates, context).let {
             attribute.horizontal?.run {
                 it.alignment =
@@ -138,12 +137,12 @@ class CellDataFormatAttributeOperation<T> : CellAttributeOperation<T, CellExcelD
     override fun attributeType(): Class<out CellExcelDataFormatAttribute> = CellExcelDataFormatAttribute::class.java
 
     override fun renderAttribute(
-        state: DelegateAPI<SXSSFWorkbook>,
+        state: SXSSFWorkbook,
         context: OperationContext<T, CellOperationTableData<T>>,
         attribute: CellExcelDataFormatAttribute
     ) {
         //if (getCellCachedValue(context, cellStyleFormatKey) == null) {
-            cellStyle(state, context.coordinates!!, context).let {
+            cellStyle(state, context.coordinates, context).let {
                 attribute.dataFormat.run {
                     it.dataFormat = workbook(state).createDataFormat().getFormat(this)
                     putCellCachedValue(context, cellStyleFormatKey, it.dataFormat)
@@ -182,7 +181,7 @@ class ColumnWidthAttributeOperation<T> : ColumnAttributeOperation<T ,ColumnWidth
         return (frameWidth / defaultCharWidth * 256).roundToInt()
     }
 
-    private fun customAutoSize(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, ColumnOperationTableData<T>>) {
+    private fun customAutoSize(state: SXSSFWorkbook, context: OperationContext<T, ColumnOperationTableData<T>>) {
         context.data.columnValues?.maxBy { v -> v.value.toString().length }?.value.toString().let {
             getStringWidth(
                 text = it,
@@ -192,13 +191,13 @@ class ColumnWidthAttributeOperation<T> : ColumnAttributeOperation<T ,ColumnWidth
         }
     }
 
-    override fun renderAttribute(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, ColumnOperationTableData<T>>, attribute: ColumnWidthAttribute) {
-        tableSheet(state, context.coordinates!!.tableName).let {
+    override fun renderAttribute(state: SXSSFWorkbook, context: OperationContext<T, ColumnOperationTableData<T>>, attribute: ColumnWidthAttribute) {
+        tableSheet(state, context.coordinates.tableName).let {
             if (attribute.auto == true || attribute.width == -1) {
-                if (!it.isColumnTrackedForAutoSizing(context.coordinates!!.columnIndex)) {
-                    it.trackColumnForAutoSizing(context.coordinates!!.columnIndex)
+                if (!it.isColumnTrackedForAutoSizing(context.coordinates.columnIndex)) {
+                    it.trackColumnForAutoSizing(context.coordinates.columnIndex)
                 }
-                it.autoSizeColumn(context.coordinates!!.columnIndex)
+                it.autoSizeColumn(context.coordinates.columnIndex)
             } else {
                 PoiUtils.widthFromPixels(attribute.width)
             }
@@ -208,14 +207,14 @@ class ColumnWidthAttributeOperation<T> : ColumnAttributeOperation<T ,ColumnWidth
 
 class RowHeightAttributeOperation<T> : RowAttributeOperation<T, RowHeightAttribute, SXSSFWorkbook> {
     override fun attributeType(): Class<out RowHeightAttribute> = RowHeightAttribute::class.java
-    override fun renderAttribute(state: DelegateAPI<SXSSFWorkbook>, context: OperationContext<T, RowOperationTableData<T>>, attribute: RowHeightAttribute) {
-        assertRow(state, context.coordinates!!).height = PoiUtils.heightFromPixels(attribute.height)
+    override fun renderAttribute(state: SXSSFWorkbook, context: OperationContext<T, RowOperationTableData<T>>, attribute: RowHeightAttribute) {
+        assertRow(state, context.coordinates).height = PoiUtils.heightFromPixels(attribute.height)
     }
 }
 
 class FilterAndSortTableAttributeOperation : TableAttributeOperation<FilterAndSortTableAttribute, SXSSFWorkbook> {
     override fun attributeType(): Class<out FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class.java
-    override fun renderAttribute(state: DelegateAPI<SXSSFWorkbook>, table: Table<*>, attribute: FilterAndSortTableAttribute) {
+    override fun renderAttribute(state: SXSSFWorkbook, table: Table<*>, attribute: FilterAndSortTableAttribute) {
         workbook(state).creationHelper.createAreaReference(
             CellReference(attribute.rowRange.first, attribute.columnRange.first),
             CellReference(attribute.rowRange.last, attribute.columnRange.last)
@@ -240,11 +239,11 @@ internal fun <T> rowAttributesOperations() = listOf(
 )
 
 internal fun <T> cellAttributesOperations(): List<CellAttributeOperation<T, out CellAttribute, SXSSFWorkbook>> = listOf(
-    CellFontAttributeOperation<T>(),
-    CellBackgroundAttributeOperation<T>(),
-    CellBordersAttributeOperation<T>(),
-    CellAlignmentAttributeOperation<T>(),
-    CellDataFormatAttributeOperation<T>()
+    CellFontAttributeOperation(),
+    CellBackgroundAttributeOperation(),
+    CellBordersAttributeOperation(),
+    CellAlignmentAttributeOperation(),
+    CellDataFormatAttributeOperation()
 )
 
 internal fun <T> columnAttributesOperations() = listOf(

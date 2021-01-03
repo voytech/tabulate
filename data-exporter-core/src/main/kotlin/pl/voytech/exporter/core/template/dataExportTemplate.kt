@@ -22,11 +22,11 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     private var customRows: List<Row<T>>? = null
     private var customRowsCached = false
 
-    private fun create(): DelegateAPI<A> {
+    private fun create(): A {
         return delegate.lifecycleOperations.createDocument()
     }
 
-    private fun add(state: DelegateAPI<A>, table: Table<T>, collection: Collection<T>): DelegateAPI<A> {
+    private fun add(state: A, table: Table<T>, collection: Collection<T>): A {
         return ExporterSession(
             delegate = state,
             tableModel = delegate.tableOperations.createTable(state, table),
@@ -62,7 +62,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         add(create(), table, emptyList()).also { delegate.lifecycleOperations.saveDocument(it, stream) }
     }
 
-    fun export(state: DelegateAPI<A>, stream: OutputStream) {
+    fun export(state: A, stream: OutputStream) {
         delegate.lifecycleOperations.saveDocument(state, stream)
     }
 

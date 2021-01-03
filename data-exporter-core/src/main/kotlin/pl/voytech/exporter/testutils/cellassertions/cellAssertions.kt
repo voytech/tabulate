@@ -18,7 +18,7 @@ class AssertCellValue<E>(
     private val expectedColspan: Int? = null,
     private val expectedRowspan: Int? = null
 ) : CellTest<E> {
-    override fun performCellTest(api: DelegateAPI<E>, coordinates: Coordinates, def: CellDefinition?) {
+    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
         assertNotNull(def?.cellValue, "Expected cell value to be present")
         assertEquals(expectedValue, def?.cellValue?.value, "Expected cell value to be $expectedValue")
         expectedType?.let {
@@ -37,7 +37,7 @@ class AssertCellValue<E>(
 }
 
 class AssertCellValueExpr<E>(private val invoke: (CellValue) -> Unit) : CellTest<E> {
-    override fun performCellTest(api: DelegateAPI<E>, coordinates: Coordinates, def: CellDefinition?) {
+    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
         assertNotNull(def?.cellValue, "Expected cell value to be present")
         def?.cellValue?.let { invoke.invoke(it) }
     }
@@ -49,7 +49,7 @@ interface AssertCellAttribute {
 }
 
 class CellAttributesAssertions<E>(private vararg val cellAttributesTests: AssertCellAttribute) : CellTest<E> {
-    override fun performCellTest(api: DelegateAPI<E>, coordinates: Coordinates, def: CellDefinition?) {
+    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
         val cellExtensionByClass = def?.cellAttributes?.groupBy { it::class }
         cellAttributesTests.forEach {
             if (cellExtensionByClass?.containsKey(it.attributeClass()) == false) {
@@ -63,7 +63,7 @@ class CellAttributesAssertions<E>(private vararg val cellAttributesTests: Assert
 }
 
 class AssertContainsCellAttributes<E>(private vararg val targets: CellAttribute) : CellTest<E> {
-    override fun performCellTest(api: DelegateAPI<E>, coordinates: Coordinates, def: CellDefinition?) {
+    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
         val existingAttributes = def?.cellAttributes?.asIterable() ?: emptyList()
         assertEquals(
             targets.toSet(),
@@ -74,7 +74,7 @@ class AssertContainsCellAttributes<E>(private vararg val targets: CellAttribute)
 }
 
 class AssertMany<E>(private vararg val cellTests: CellTest<E>) : CellTest<E> {
-    override fun performCellTest(api: DelegateAPI<E>, coordinates: Coordinates, def: CellDefinition?) {
+    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
         cellTests.forEach { it.performCellTest(api, coordinates, def) }
     }
 }

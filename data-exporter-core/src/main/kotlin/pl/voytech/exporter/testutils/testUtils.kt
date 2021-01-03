@@ -3,7 +3,6 @@ package pl.voytech.exporter.testutils
 import pl.voytech.exporter.core.model.attributes.CellAttribute
 import pl.voytech.exporter.core.template.CellValue
 import pl.voytech.exporter.core.template.Coordinates
-import pl.voytech.exporter.core.template.DelegateAPI
 import java.io.File
 
 interface CellSelect
@@ -19,21 +18,21 @@ data class CellRange(
 ) : CellSelect
 
 interface StateProvider<E> {
-    fun createState(file: File): DelegateAPI<E>
-    fun getPresentTableNames(api: DelegateAPI<E>): List<String>?
-    fun hasTableNamed(api: DelegateAPI<E>, name: String): Boolean
+    fun createState(file: File): E
+    fun getPresentTableNames(api: E): List<String>?
+    fun hasTableNamed(api: E, name: String): Boolean
 }
 
 interface AttributeResolver<E> {
-    fun resolve(api: DelegateAPI<E>, coordinates: Coordinates): CellAttribute
+    fun resolve(api: E, coordinates: Coordinates): CellAttribute
 }
 
 interface ValueResolver<E> {
-    fun resolve(api: DelegateAPI<E>, coordinates: Coordinates): CellValue
+    fun resolve(api: E, coordinates: Coordinates): CellValue
 }
 
 interface CellTest<E> {
-    fun performCellTest(api: DelegateAPI<E>, coordinates: Coordinates, def: CellDefinition? = null)
+    fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition? = null)
 }
 
 
@@ -50,19 +49,19 @@ class TableAssert<T, E>(
     private val cellTests: Map<CellSelect, CellTest<E>>,
     private val file: File
 ) {
-    lateinit var state: DelegateAPI<E>
+    var state: E? = null
 
     private fun performTestsOnCell(coordinates: Coordinates, select: CellSelect) {
         if (cellAttributeResolvers?.isEmpty() == true && cellValueResolver == null) {
-            cellTests[select]?.performCellTest(api = state, coordinates = coordinates)
+            cellTests[select]?.performCellTest(api = state!!, coordinates = coordinates)
         } else {
             cellTests[select]?.performCellTest(
-                api = state,
+                api = state!!,
                 coordinates = coordinates,
                 def = CellDefinition(
-                    cellAttributes = cellAttributeResolvers?.map { resolver -> resolver.resolve(state, coordinates) }
+                    cellAttributes = cellAttributeResolvers?.map { resolver -> resolver.resolve(state!!, coordinates) }
                         ?.toSet(),
-                    cellValue = cellValueResolver?.resolve(state, coordinates)
+                    cellValue = cellValueResolver?.resolve(state!!, coordinates)
                 )
             )
         }
@@ -90,7 +89,7 @@ class TableAssert<T, E>(
     }
 
     fun hasTableName(name: String): Boolean {
-        return stateProvider.hasTableNamed(state, name)
+        return stateProvider.hasTableNamed(state!!, name)
     }
 
     fun cleanup() {

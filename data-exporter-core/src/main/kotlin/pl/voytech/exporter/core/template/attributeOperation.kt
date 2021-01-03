@@ -16,17 +16,17 @@ interface AttributeOperation<out T : Attribute> {
 }
 
 interface TableAttributeOperation<T : TableAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: DelegateAPI<A>, table: Table<*>, attribute: T)
+    fun renderAttribute(state: A, table: Table<*>, attribute: T)
 }
 
 interface RowAttributeOperation<E,T : RowAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: DelegateAPI<A>, context: OperationContext<E,RowOperationTableData<E>>, attribute: T)
+    fun renderAttribute(state: A, context: OperationContext<E,RowOperationTableData<E>>, attribute: T)
 }
 
 interface CellAttributeOperation<E, T : CellAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: DelegateAPI<A>, context: OperationContext<E,CellOperationTableData<E>>, attribute: T)
+    fun renderAttribute(state: A, context: OperationContext<E,CellOperationTableData<E>>, attribute: T)
 }
 
 interface ColumnAttributeOperation<E, T : ColumnAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: DelegateAPI<A>, context: OperationContext<E,ColumnOperationTableData<E>>, attribute: T)
+    fun renderAttribute(state: A, context: OperationContext<E,ColumnOperationTableData<E>>, attribute: T)
 }

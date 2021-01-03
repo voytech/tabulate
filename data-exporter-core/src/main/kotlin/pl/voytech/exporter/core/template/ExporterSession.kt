@@ -10,7 +10,7 @@ import pl.voytech.exporter.core.model.Table
  * @author Wojciech Mąka
  */
 class ExporterSession<T, A>(
-    val delegate: DelegateAPI<A>,
+    val delegate: A,
     val tableModel: Table<T>,
     val tableName: String = "table-${NextId.nextId()}",
     val firstRow: Int? = 0,
