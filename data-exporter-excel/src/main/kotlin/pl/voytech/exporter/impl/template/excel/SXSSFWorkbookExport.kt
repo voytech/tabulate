@@ -9,7 +9,7 @@ import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.*
 import pl.voytech.exporter.core.template.operations.AttributeCacheTableOperations
-import pl.voytech.exporter.core.template.operations.AttributesHandlingTableOperations
+import pl.voytech.exporter.core.template.operations.AttributeAwareTableOperations
 import pl.voytech.exporter.core.template.operations.chain.TableOperationChain
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertCell
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertRow
@@ -49,7 +49,7 @@ internal class XlsxLifecycleOperation(private val templateFile: InputStream?) :
 }
 
 internal class XlsxTableOperations<T> :
-    AttributesHandlingTableOperations<T, SXSSFWorkbook>(
+    AttributeAwareTableOperations<T, SXSSFWorkbook>(
         tableAttributesOperations,
         columnAttributesOperations<T>(),
         rowAttributesOperations<T>(),
