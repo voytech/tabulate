@@ -9,7 +9,7 @@ import org.apache.poi.xssf.usermodel.XSSFCell
 import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.attributes.style.Color
-import pl.voytech.exporter.core.template.CellOperationTableData
+import pl.voytech.exporter.core.template.AttributedCell
 import pl.voytech.exporter.core.template.Coordinates
 import pl.voytech.exporter.core.template.OperationContext
 import pl.voytech.exporter.core.template.operations.AttributeKeyDrivenCache.Companion.getCellCachedValue
@@ -38,10 +38,10 @@ object SXSSFWrapper {
             .getRow(coordinates.rowIndex)
             .getCell(coordinates.columnIndex)
 
-    fun <T> assertCell(
+    fun assertCell(
         state: SXSSFWorkbook,
         coordinates: Coordinates,
-        context: OperationContext<T, CellOperationTableData<T>>
+        context: OperationContext<AttributedCell>
     ): SXSSFCell =
         cell(state, coordinates) ?: createCell(state, coordinates, context)
 
@@ -51,10 +51,10 @@ object SXSSFWrapper {
     ): SXSSFCell =
         cell(state, coordinates) ?: createCell(state, coordinates)
 
-    fun <T> cellStyle(
+    fun cellStyle(
         state: SXSSFWorkbook,
         coordinates: Coordinates,
-        context: OperationContext<T, CellOperationTableData<T>>
+        context: OperationContext<AttributedCell>
     ): CellStyle {
         return assertCell(state, coordinates, context).cellStyle
     }
@@ -77,10 +77,10 @@ object SXSSFWrapper {
     private fun cell(state: SXSSFWorkbook, coordinates: Coordinates): SXSSFCell? =
         assertRow(state, coordinates).getCell(coordinates.columnIndex)
 
-    private fun <T> createCell(
+    private fun createCell(
         state: SXSSFWorkbook,
         coordinates: Coordinates,
-        context: OperationContext<T, CellOperationTableData<T>>
+        context: OperationContext<AttributedCell>
     ): SXSSFCell =
         assertRow(state, coordinates).let {
             it.createCell(coordinates.columnIndex).also { cell ->
