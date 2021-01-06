@@ -35,11 +35,9 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             firstColumn = table.firstColumn,
             collection = collection
         ).also {
-            preFlightPass(it, collection)
-        }.also {
             renderColumns(it, ColumnRenderPhase.BEFORE_FIRST_ROW)
         }.also {
-            renderRows(it)
+            renderRows(it, collection)
         }.also {
             renderColumns(it, ColumnRenderPhase.AFTER_LAST_ROW)
         }.also {
@@ -66,51 +64,6 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         delegate.lifecycleOperations.saveDocument(state, stream)
     }
 
-    /**
-     * Build multidimensional table structure, where each row has associated extensions as long as effective cell values
-     * resolved from synthetic (definitions from builders) values or source dataset values. After pre-flight is everything to build a context data
-     * for scoped operation (for row, column, cell) when exporter is progressing over collection data.
-     */
-    private fun preFlightPass(exporterSession: ExporterSession<T, A>, collection: Collection<T>) {
-        val rowIndex = AtomicInteger(0)
-        val rowSkips = mutableMapOf<ColumnKey<T>, Int>()
-        val preFlightCustomRows = {
-            subsequentCustomRowsStartingAtRowIndex(rowIndex.get(), exporterSession.tableModel.rows).let {
-                it?.forEach { _ ->
-                    exporterSession.addRow(
-                        computeRowValue(
-                            exporterSession.tableModel,
-                            TypedRowData(
-                                rowIndex = rowIndex.getAndIncrement(),
-                                dataset = collection
-                            ),
-                            rowSkips
-                        )
-                    )
-                }
-            }
-            exporterSession
-        }
-        preFlightCustomRows().also {
-            if (!collection.isEmpty()) {
-                collection.forEachIndexed { objectIndex: Int, record: T ->
-                    exporterSession.addRow(
-                        computeRowValue(
-                            it.tableModel,
-                            TypedRowData(
-                                dataset = collection,
-                                rowIndex = rowIndex.getAndIncrement(),
-                                objectIndex = objectIndex,
-                                record = record
-                            ),
-                            rowSkips
-                        )
-                    ).also { preFlightCustomRows() }
-                }
-            }
-        }
-    }
-
     private fun renderColumns(
         state: ExporterSession<T, A>,
         renderPhase: ColumnRenderPhase
@@ -123,22 +76,63 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-    private fun renderRows(state: ExporterSession<T, A>) {
-        state.forEachRowValue { context ->
-            delegate.tableOperations.renderRow(state.delegate, context)
-                .also {
-                    state.tableModel.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                        if (context.data?.rowCellValues?.containsKey(column.id) == true) {
-                            delegate.tableOperations.renderRowCell(
-                                state.delegate,
-                                state.setCellContext(
-                                    column.index ?: columnIndex,
-                                    context.data.let { it?.rowCellValues?.get(column.id) ?: error("") }
-                                )
-                            )
-                        }
+    private fun renderRowCells(state: ExporterSession<T, A>, context: OperationContext<AttributedRow<T>>) {
+        state.tableModel.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+            if (context.data?.rowCellValues?.containsKey(column.id) == true) {
+                delegate.tableOperations.renderRowCell(
+                    state.delegate,
+                    state.setCellContext(
+                        column.index ?: columnIndex,
+                        context.data.let { it?.rowCellValues?.get(column.id) ?: error("") }
+                    )
+                )
+            }
+        }
+    }
+
+    private fun renderRows(state: ExporterSession<T, A>, collection: Collection<T>) {
+        val rowIndex = AtomicInteger(0)
+        val rowSkips = mutableMapOf<ColumnKey<T>, Int>()
+        val customRows = {
+            subsequentCustomRowsStartingAtRowIndex(rowIndex.get(), state.tableModel.rows).let {
+                it?.forEach { _ ->
+                    val context = state.setRowContext(
+                        computeRowValue(
+                            state.tableModel,
+                            TypedRowData(rowIndex = rowIndex.get(), dataset = collection),
+                            rowSkips
+                        ),
+                        rowIndex.getAndIncrement()
+                    )
+                    delegate.tableOperations.renderRow(state.delegate, context).also {
+                        renderRowCells(state, context)
                     }
                 }
+            }
+        }
+        customRows().also {
+            if (!collection.isEmpty()) {
+                collection.forEachIndexed { objectIndex: Int, record: T ->
+                    val context = state.setRowContext(
+                        computeRowValue(
+                            state.tableModel,
+                            TypedRowData(
+                                dataset = collection,
+                                rowIndex = rowIndex.get(),
+                                objectIndex = objectIndex,
+                                record = record
+                            ),
+                            rowSkips
+                        ),
+                        rowIndex.getAndIncrement()
+                    )
+                    delegate.tableOperations.renderRow(state.delegate, context).also {
+                        renderRowCells(state, context)
+                    }.also {
+                        customRows()
+                    }
+                }
+            }
         }
     }
 
