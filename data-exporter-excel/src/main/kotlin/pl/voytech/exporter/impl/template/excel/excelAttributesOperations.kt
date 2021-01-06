@@ -181,16 +181,6 @@ class ColumnWidthAttributeOperation<T> : ColumnAttributeOperation<T ,ColumnWidth
         return (frameWidth / defaultCharWidth * 256).roundToInt()
     }
 
-    private fun customAutoSize(state: SXSSFWorkbook, context: OperationContext<ColumnOperationTableData>) {
-        context.data?.columnValues?.maxBy { v -> v.value.toString().length }?.value.toString().let {
-            getStringWidth(
-                text = it,
-                cellFont = workbook(state).xssfWorkbook.getFontAt(0),
-                workbook = workbook(state)
-            )
-        }
-    }
-
     override fun renderAttribute(state: SXSSFWorkbook, context: OperationContext<ColumnOperationTableData>, attribute: ColumnWidthAttribute) {
         tableSheet(state, context.coordinates.tableName).let {
             if (attribute.auto == true || attribute.width == -1) {

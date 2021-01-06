@@ -41,9 +41,8 @@ class ExporterSession<T, A>(
      * kind of given column scoped operations.
      */
     private val columnContext: OperationContext<ColumnOperationTableData> =
-        OperationContext<ColumnOperationTableData>(stateAttributes).also { it.data = ColumnOperationTableData()}
+        OperationContext<ColumnOperationTableData>(stateAttributes).also { it.data = ColumnOperationTableData() }
 
-    private val rowValues: MutableList<AttributedRow<T>> = mutableListOf()
 
     private val coordinates: Coordinates = Coordinates(tableName)
 
@@ -53,19 +52,7 @@ class ExporterSession<T, A>(
         cellContext.coordinates = coordinates
     }
 
-    internal fun addRow(rowValue: AttributedRow<T>): ExporterSession<T, A> {
-        rowValues.add(rowValue)
-        return this
-    }
-
-    internal fun forEachRowValue(block: (context: OperationContext<AttributedRow<T>>) -> Unit): ExporterSession<T, A> {
-        rowValues.forEachIndexed { rowIndex, rowValue ->
-            block.invoke(setRowContext(rowValue, rowIndex))
-        }
-        return this
-    }
-
-    private fun setRowContext(row: AttributedRow<T>, rowIndex: Int): OperationContext<AttributedRow<T>> {
+    internal fun setRowContext(row: AttributedRow<T>, rowIndex: Int): OperationContext<AttributedRow<T>> {
         return with(rowContext) {
             coordinates.rowIndex = (firstRow ?: 0) + rowIndex
             coordinates.columnIndex = 0
@@ -93,7 +80,6 @@ class ExporterSession<T, A>(
         return with(columnContext) {
             coordinates.columnIndex = (firstColumn ?: 0) + columnIndex
             data!!.currentPhase = phase
-            data!!.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[column.id]?.value }
             data!!.columnAttributes = column.columnAttributes?.filter { ext ->
                 ((ColumnRenderPhase.BEFORE_FIRST_ROW == phase) && ext.beforeFirstRow()) ||
                         ((ColumnRenderPhase.AFTER_LAST_ROW == phase) && ext.afterLastRow())
