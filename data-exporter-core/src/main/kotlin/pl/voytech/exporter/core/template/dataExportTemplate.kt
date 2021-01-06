@@ -116,26 +116,24 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         renderPhase: ColumnRenderPhase
     ) {
         state.tableModel.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-            delegate.tableOperations.let {
-                it.renderColumn(
-                    state.delegate,
-                    state.setColumnContext(column.index ?: columnIndex, column, renderPhase)
-                )
-            }
+            delegate.tableOperations.renderColumn(
+                state.delegate,
+                state.setColumnContext(column.index ?: columnIndex, column, renderPhase)
+            )
         }
     }
 
     private fun renderRows(state: ExporterSession<T, A>) {
-        state.forEachRowValue { context: OperationContext<T, RowOperationTableData<T>> ->
+        state.forEachRowValue { context ->
             delegate.tableOperations.renderRow(state.delegate, context)
                 .also {
                     state.tableModel.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
-                        if (context.data.rowCells!!.containsKey(column.id)) {
+                        if (context.data?.rowCellValues?.containsKey(column.id) == true) {
                             delegate.tableOperations.renderRowCell(
                                 state.delegate,
                                 state.setCellContext(
                                     column.index ?: columnIndex,
-                                    context.data.rowCells!![column.id] ?: error("")
+                                    context.data.let { it?.rowCellValues?.get(column.id) ?: error("") }
                                 )
                             )
                         }

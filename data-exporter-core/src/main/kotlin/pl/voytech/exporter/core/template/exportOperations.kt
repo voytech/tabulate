@@ -21,21 +21,21 @@ interface LifecycleOperations<A> : CreateDocumentOperation<A>, SaveDocumentOpera
 interface ColumnOperation<T, A> {
     fun renderColumn(
         state: A,
-        context: OperationContext<T, ColumnOperationTableData<T>>
+        context: OperationContext<ColumnOperationTableData>
     )
 }
 
 interface RowOperation<T, A> {
     fun renderRow(
         state: A,
-        context: OperationContext<T, RowOperationTableData<T>>
+        context: OperationContext<AttributedRow<T>>
     )
 }
 
 interface RowCellOperation<T, A> {
     fun renderRowCell(
         state: A,
-        context: OperationContext<T, CellOperationTableData<T>>
+        context: OperationContext<AttributedCell>
     )
 }
 

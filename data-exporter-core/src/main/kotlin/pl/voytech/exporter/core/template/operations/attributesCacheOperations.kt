@@ -34,7 +34,7 @@ class AttributeKeyDrivenCache {
     companion object {
         const val ATTRIBUTES_CACHE_KEY = "extensionsCacheValue"
 
-        fun <T> putCellCachedValue(context: OperationContext<T, CellOperationTableData<T>>, key: String, value: Any): Any {
+        fun putCellCachedValue(context: OperationContext<AttributedCell>, key: String, value: Any): Any {
             (context.additionalAttributes[ATTRIBUTES_CACHE_KEY] as MutableMap<String, Any>)[key] = value
             return getCellCachedValue(
                 context,
@@ -42,7 +42,7 @@ class AttributeKeyDrivenCache {
             )!!
         }
 
-        fun <T>  getCellCachedValue(context: OperationContext<T, CellOperationTableData<T>>, key: String): Any? {
+        fun getCellCachedValue(context: OperationContext<AttributedCell>, key: String): Any? {
             return ((context.additionalAttributes[ATTRIBUTES_CACHE_KEY] as MutableMap<String, Any>)[key])
         }
 
@@ -56,25 +56,25 @@ class AttributeCacheTableOperations<T, A>(private val cache: AttributeKeyDrivenC
 
     override fun renderRow(
         state: A,
-        context: OperationContext<T, RowOperationTableData<T>>
+        context: OperationContext<AttributedRow<T>>
     ) {
-        context.data.rowAttributes?.let {
+        context.data?.rowAttributes?.let {
             context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareRowCacheEntryScope(it)
         }
     }
 
     override fun renderColumn(
         state: A,
-        context: OperationContext<T, ColumnOperationTableData<T>>
+        context: OperationContext<ColumnOperationTableData>
     ) {
-        context.data.columnAttributes?.let { context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareColumnCacheEntryScope(it) }
+        context.data?.columnAttributes?.let { context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareColumnCacheEntryScope(it) }
     }
 
     override fun renderRowCell(
         state: A,
-        context: OperationContext<T, CellOperationTableData<T>>
+        context: OperationContext<AttributedCell>
     ) {
-        context.data.cellValue?.attributes?.let { context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareCellCacheEntryScope(it) }
+        context.data?.attributes?.let { context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareCellCacheEntryScope(it) }
     }
 
 }

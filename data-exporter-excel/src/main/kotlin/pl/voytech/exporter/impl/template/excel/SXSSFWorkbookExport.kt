@@ -60,16 +60,16 @@ internal class XlsxTableOperations<T> :
         return assertTableSheet(state, table.name).let { table }
     }
 
-    override fun renderRowValue(state: SXSSFWorkbook, context: OperationContext<T, RowOperationTableData<T>>) {
+    override fun renderRowValue(state: SXSSFWorkbook, context: OperationContext<AttributedRow<T>>) {
         assertRow(state, context.coordinates)
     }
 
     override fun renderRowCellValue(
         state: SXSSFWorkbook,
-        context: OperationContext<T, CellOperationTableData<T>>
+        context: OperationContext<AttributedCell>
     ) {
         assertCell(state, context.coordinates, context).also {
-            setCellValue(it, context.data.cellValue?.value)
+            setCellValue(it, context.data?.value)
         }.also {
             mergeCells(state, context)
         }
@@ -77,9 +77,9 @@ internal class XlsxTableOperations<T> :
 
     private fun mergeCells(
         state: SXSSFWorkbook,
-        context: OperationContext<T, CellOperationTableData<T>>
+        context: OperationContext<AttributedCell>
     ) {
-        context.data.cellValue?.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.also { cell ->
+        context.data?.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.also { cell ->
             context.coordinates.also { coordinates ->
                 (coordinates.rowIndex until coordinates.rowIndex + cell.value.rowSpan).forEach { rowIndex ->
                     (coordinates.columnIndex until coordinates.columnIndex + cell.value.colSpan).forEach { colIndex ->

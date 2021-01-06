@@ -24,24 +24,24 @@ class ExporterSession<T, A>(
      * coordinate object is recreated, and new row associated context data is being set. Then instance is used on all
      * kind of given row scoped operations.
      */
-    private val rowContext: OperationContext<T, RowOperationTableData<T>> =
-        OperationContext(RowOperationTableData(collection), stateAttributes)
+    private val rowContext: OperationContext<AttributedRow<T>> =
+        OperationContext(stateAttributes)
 
     /**
      * Instance of mutable context for cell-scope operations. After changing coordinate denoting advancing the cell,
      * coordinate object is recreated, and new cell associated context data is being set. Then instance is used on all
      * kind of given cell scoped operations.
      */
-    private val cellContext: OperationContext<T, CellOperationTableData<T>> =
-        OperationContext(CellOperationTableData(collection), stateAttributes)
+    private val cellContext: OperationContext<AttributedCell> =
+        OperationContext(stateAttributes)
 
     /**
      * Instance of mutable context for column-scope operations. After changing coordinate denoting advancing the column,
      * coordinate object is recreated, and new column associated context data is being set. Then instance is used on all
      * kind of given column scoped operations.
      */
-    private val columnContext: OperationContext<T, ColumnOperationTableData<T>> =
-        OperationContext(ColumnOperationTableData(collection), stateAttributes)
+    private val columnContext: OperationContext<ColumnOperationTableData> =
+        OperationContext<ColumnOperationTableData>(stateAttributes).also { it.data = ColumnOperationTableData()}
 
     private val rowValues: MutableList<AttributedRow<T>> = mutableListOf()
 
@@ -58,19 +58,18 @@ class ExporterSession<T, A>(
         return this
     }
 
-    internal fun forEachRowValue(block: (context: OperationContext<T, RowOperationTableData<T>>) -> Unit): ExporterSession<T, A> {
+    internal fun forEachRowValue(block: (context: OperationContext<AttributedRow<T>>) -> Unit): ExporterSession<T, A> {
         rowValues.forEachIndexed { rowIndex, rowValue ->
             block.invoke(setRowContext(rowValue, rowIndex))
         }
         return this
     }
 
-    private fun setRowContext(row: AttributedRow<T>, rowIndex: Int): OperationContext<T, RowOperationTableData<T>> {
+    private fun setRowContext(row: AttributedRow<T>, rowIndex: Int): OperationContext<AttributedRow<T>> {
         return with(rowContext) {
             coordinates.rowIndex = (firstRow ?: 0) + rowIndex
             coordinates.columnIndex = 0
-            data.rowCells = row.rowCellValues
-            data.rowAttributes = row.rowAttributes
+            data = row
             this
         }
     }
@@ -78,10 +77,10 @@ class ExporterSession<T, A>(
     internal fun setCellContext(
         columnIndex: Int,
         cell: AttributedCell
-    ): OperationContext<T, CellOperationTableData<T>> {
+    ): OperationContext<AttributedCell> {
         return with(cellContext) {
             coordinates.columnIndex = (firstColumn ?: 0) + columnIndex
-            data.cellValue = cell
+            data = cell
             this
         }
     }
@@ -90,12 +89,12 @@ class ExporterSession<T, A>(
         columnIndex: Int,
         column: Column<T>,
         phase: ColumnRenderPhase
-    ): OperationContext<T, ColumnOperationTableData<T>> {
+    ): OperationContext<ColumnOperationTableData> {
         return with(columnContext) {
             coordinates.columnIndex = (firstColumn ?: 0) + columnIndex
-            data.currentPhase = phase
-            data.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[column.id]?.value }
-            data.columnAttributes = column.columnAttributes?.filter { ext ->
+            data!!.currentPhase = phase
+            data!!.columnValues = rowValues.mapNotNull { v -> v.rowCellValues[column.id]?.value }
+            data!!.columnAttributes = column.columnAttributes?.filter { ext ->
                 ((ColumnRenderPhase.BEFORE_FIRST_ROW == phase) && ext.beforeFirstRow()) ||
                         ((ColumnRenderPhase.AFTER_LAST_ROW == phase) && ext.afterLastRow())
             }?.toSet()
