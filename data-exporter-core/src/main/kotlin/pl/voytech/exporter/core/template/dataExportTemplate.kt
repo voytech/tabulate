@@ -37,7 +37,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         ).also {
             renderColumns(it, ColumnRenderPhase.BEFORE_FIRST_ROW)
         }.also {
-            renderRows(it, collection)
+            renderRows(it)
         }.also {
             renderColumns(it, ColumnRenderPhase.AFTER_LAST_ROW)
         }.also {
@@ -90,47 +90,29 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-    private fun renderRows(state: ExporterSession<T, A>, collection: Collection<T>) {
-        val rowIndex = AtomicInteger(0)
-        val rowSkips = mutableMapOf<ColumnKey<T>, Int>()
-        val customRows = {
-            subsequentCustomRowsStartingAtRowIndex(rowIndex.get(), state.tableModel.rows).let {
-                it?.forEach { _ ->
-                    val context = state.setRowContext(
-                        computeRowValue(
-                            state.tableModel,
-                            SourceRow(rowIndex = rowIndex.get(), dataset = collection),
-                            rowSkips
-                        ),
-                        rowIndex.getAndIncrement()
-                    )
-                    delegate.tableOperations.renderRow(state.delegate, context).also {
-                        renderRowCells(state, context)
-                    }
-                }
-            }
+    private fun renderDataRow(state: ExporterSession<T, A>, recordIndex: Int? = null, record: T? = null) {
+        val context = state.setRowContext(
+            computeRowValue(state, recordIndex, record),
+            state.currentRowIndex++
+        )
+        delegate.tableOperations.renderRow(state.delegate, context).also {
+            renderRowCells(state, context)
         }
-        customRows().also {
-            if (!collection.isEmpty()) {
-                collection.forEachIndexed { objectIndex: Int, record: T ->
-                    val context = state.setRowContext(
-                        computeRowValue(
-                            state.tableModel,
-                            SourceRow(
-                                dataset = collection,
-                                rowIndex = rowIndex.get(),
-                                objectIndex = objectIndex,
-                                record = record
-                            ),
-                            rowSkips
-                        ),
-                        rowIndex.getAndIncrement()
-                    )
-                    delegate.tableOperations.renderRow(state.delegate, context).also {
-                        renderRowCells(state, context)
-                    }.also {
-                        customRows()
-                    }
+    }
+
+    private fun renderCustomRow(state: ExporterSession<T, A>) {
+        subsequentCustomRowsStartingAtRowIndex(state.currentRowIndex, state.tableModel.rows).let {
+            it?.forEach { _ -> renderDataRow(state) }
+        }
+    }
+
+    private fun renderRows(state: ExporterSession<T, A>) {
+        renderCustomRow(state).also {
+            if (!state.collection.isEmpty()) {
+                state.collection.forEachIndexed { objectIndex: Int, record: T ->
+                    renderDataRow(state, objectIndex, record)
+                }.also {
+                    renderCustomRow(state)
                 }
             }
         }
@@ -183,11 +165,10 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             ?: matchingPredicateRows ?: emptySet()
     }
 
-    private fun computeRowValue(
-        table: Table<T>,
-        sourceRow: SourceRow<T>,
-        rowSkips: MutableMap<ColumnKey<T>, Int>
-    ): AttributedRow<T> {
+    private fun computeRowValue(state: ExporterSession<T, A>, recordIndex: Int? = null, record: T? = null): AttributedRow<T> {
+        val sourceRow = state.createSourceRow(recordIndex, record)
+        val table = state.tableModel
+        val rowSkips = state.rowSkips
         val rowDefinitions: Set<Row<T>>? = matchingRows(table, sourceRow)
         val mergedRowCells: Map<ColumnKey<T>, Cell<T>>? =
             rowDefinitions?.mapNotNull { row -> row.cells }?.fold(mapOf(), { acc, m -> acc + m })

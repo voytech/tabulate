@@ -1,8 +1,6 @@
 package pl.voytech.exporter.core.template
 
-import pl.voytech.exporter.core.model.Column
-import pl.voytech.exporter.core.model.NextId
-import pl.voytech.exporter.core.model.Table
+import pl.voytech.exporter.core.model.*
 
 /**
  * A mutable exporting state representing entire dataset as well as operation-scoped context data and coordinates for
@@ -19,6 +17,9 @@ class ExporterSession<T, A>(
 ) {
     private val stateAttributes = mutableMapOf<String, Any>()
 
+    internal val rowSkips = mutableMapOf<ColumnKey<T>, Int>()
+
+    var currentRowIndex = 0
     /**
      * Instance of mutable context for row-scope operations. After changing coordinate denoting advancing the row,
      * coordinate object is recreated, and new row associated context data is being set. Then instance is used on all
@@ -87,5 +88,8 @@ class ExporterSession<T, A>(
             this
         }
     }
+
+    internal fun createSourceRow(objectIndex: Int? = null, record: T? = null): SourceRow<T> =
+        SourceRow(dataset = collection, rowIndex = currentRowIndex, objectIndex = objectIndex, record = record)
 
 }
