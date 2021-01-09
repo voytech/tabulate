@@ -1,7 +1,7 @@
 package pl.voytech.exporter.core.api.builder.dsl
 
-import pl.voytech.exporter.core.api.builder.Builder
 import pl.voytech.exporter.core.api.builder.AttributesAwareBuilder
+import pl.voytech.exporter.core.api.builder.Builder
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.attributes.*
 

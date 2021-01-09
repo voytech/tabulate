@@ -99,7 +99,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                     val context = state.setRowContext(
                         computeRowValue(
                             state.tableModel,
-                            TypedRowData(rowIndex = rowIndex.get(), dataset = collection),
+                            SourceRow(rowIndex = rowIndex.get(), dataset = collection),
                             rowSkips
                         ),
                         rowIndex.getAndIncrement()
@@ -116,7 +116,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                     val context = state.setRowContext(
                         computeRowValue(
                             state.tableModel,
-                            TypedRowData(
+                            SourceRow(
                                 dataset = collection,
                                 rowIndex = rowIndex.get(),
                                 objectIndex = objectIndex,
@@ -162,33 +162,33 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     private inline fun computeCellValue(
         column: Column<T>,
         customCell: Cell<T>?,
-        rowData: TypedRowData<T>
+        sourceRow: SourceRow<T>
     ): Any? {
-        return (customCell?.eval?.invoke(rowData) ?: customCell?.value ?: rowData.record?.let {
+        return (customCell?.eval?.invoke(sourceRow) ?: customCell?.value ?: sourceRow.record?.let {
             column.id.ref?.invoke(it)
         })?.let {
             column.dataFormatter?.invoke(it) ?: it
         }
     }
 
-    private inline fun matchingPredicateRows(table: Table<T>, typedRow: TypedRowData<T>): Set<Row<T>>? =
-        allPredicateRows(table.rows)?.filter { it.selector!!.invoke(typedRow) }?.toSet()
+    private inline fun matchingPredicateRows(table: Table<T>, sourceRow: SourceRow<T>): Set<Row<T>>? =
+        allPredicateRows(table.rows)?.filter { it.selector!!.invoke(sourceRow) }?.toSet()
 
-    private inline fun matchingCustomRows(table: Table<T>, typedRow: TypedRowData<T>): Set<Row<T>>? =
-        allCustomRows(table.rows)?.filter { it.createAt == typedRow.rowIndex }?.toSet()
+    private inline fun matchingCustomRows(table: Table<T>, sourceRow: SourceRow<T>): Set<Row<T>>? =
+        allCustomRows(table.rows)?.filter { it.createAt == sourceRow.rowIndex }?.toSet()
 
-    private inline fun matchingRows(table: Table<T>, typedRow: TypedRowData<T>): Set<Row<T>>? {
-        val matchingPredicateRows = matchingPredicateRows(table, typedRow)
-        return matchingCustomRows(table, typedRow)?.let { matchingPredicateRows?.plus(it) ?: it }
+    private inline fun matchingRows(table: Table<T>, sourceRow: SourceRow<T>): Set<Row<T>>? {
+        val matchingPredicateRows = matchingPredicateRows(table, sourceRow)
+        return matchingCustomRows(table, sourceRow)?.let { matchingPredicateRows?.plus(it) ?: it }
             ?: matchingPredicateRows ?: emptySet()
     }
 
     private fun computeRowValue(
         table: Table<T>,
-        typedRow: TypedRowData<T>,
+        sourceRow: SourceRow<T>,
         rowSkips: MutableMap<ColumnKey<T>, Int>
     ): AttributedRow<T> {
-        val rowDefinitions: Set<Row<T>>? = matchingRows(table, typedRow)
+        val rowDefinitions: Set<Row<T>>? = matchingRows(table, sourceRow)
         val mergedRowCells: Map<ColumnKey<T>, Cell<T>>? =
             rowDefinitions?.mapNotNull { row -> row.cells }?.fold(mapOf(), { acc, m -> acc + m })
         val cellValues: MutableMap<ColumnKey<T>, AttributedCell> = mutableMapOf()
@@ -201,7 +201,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
                 val customCell = mergedRowCells?.get(column.id)
                 columnSkips = (customCell?.colSpan?.minus(1)) ?: 0
                 rowSkips[column.id] = (customCell?.rowSpan?.minus(1)) ?: 0
-                val attributedCell = computeCellValue(column, customCell, typedRow)?.let {
+                val attributedCell = computeCellValue(column, customCell, sourceRow)?.let {
                     AttributedCell(
                         value = CellValue(
                             it,

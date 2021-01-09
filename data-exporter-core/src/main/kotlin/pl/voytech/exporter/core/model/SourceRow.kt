@@ -6,7 +6,7 @@ package pl.voytech.exporter.core.model
  * Instantiated indirectly by ExportingState class instance.
  * @author Wojciech Mąka
  */
-data class TypedRowData<T> (
+data class SourceRow<T> (
     /**
      * index of a row in entire table (including synthetic rows).
      */

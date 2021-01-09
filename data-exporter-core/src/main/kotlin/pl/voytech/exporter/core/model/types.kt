@@ -1,8 +1,8 @@
 package pl.voytech.exporter.core.model
 
-typealias RowSelector<T> = (context: TypedRowData<T>) -> Boolean
+typealias RowSelector<T> = (context: SourceRow<T>) -> Boolean
 
-typealias RowCellEval<T> = (context: TypedRowData<T>) -> Any?
+typealias RowCellEval<T> = (context: SourceRow<T>) -> Any?
 
 object RowSelectors {
     @JvmStatic
