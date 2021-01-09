@@ -4,7 +4,7 @@ import org.junit.Test;
 import pl.voytech.exporter.core.model.CellType;
 import pl.voytech.exporter.core.model.RowSelectors;
 import pl.voytech.exporter.core.model.Table;
-import pl.voytech.exporter.core.model.TypedRowData;
+import pl.voytech.exporter.core.model.SourceRow;
 import pl.voytech.exporter.core.model.attributes.functional.FilterAndSortTableAttribute;
 import pl.voytech.exporter.core.model.attributes.style.CellFontAttribute;
 import pl.voytech.exporter.core.model.attributes.style.ColumnWidthAttribute;
@@ -48,7 +48,7 @@ public class DslTest {
                         .row(RowSelectors.all())
                             .cells()
                                 .forColumn("rowNumbering")
-                                    .eval(TypedRowData::getRowIndex)
+                                    .eval(SourceRow::getRowIndex)
                 .build();
 
         assertThat(employeeTable).isNotNull();
