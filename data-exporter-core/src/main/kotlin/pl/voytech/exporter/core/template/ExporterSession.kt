@@ -53,23 +53,22 @@ class ExporterSession<T, A>(
         cellContext.coordinates = coordinates
     }
 
-    internal fun setRowContext(row: AttributedRow<T>, rowIndex: Int): OperationContext<AttributedRow<T>> {
+    internal fun nextRow(row: AttributedRow<T>): OperationContext<AttributedRow<T>> {
         return with(rowContext) {
-            coordinates.rowIndex = (firstRow ?: 0) + rowIndex
+            coordinates.rowIndex = (firstRow ?: 0) + currentRowIndex++
             coordinates.columnIndex = 0
             data = row
             this
         }
     }
 
-    internal fun setCellContext(
-        columnIndex: Int,
-        cell: AttributedCell
-    ): OperationContext<AttributedCell> {
-        return with(cellContext) {
-            coordinates.columnIndex = (firstColumn ?: 0) + columnIndex
-            data = cell
-            this
+    internal fun setCellContext(columnIndex: Int, column: Column<T>): OperationContext<AttributedCell> {
+        return rowContext.data.let { attributedRow ->
+            with(cellContext) {
+                coordinates.columnIndex = (firstColumn ?: 0) + columnIndex
+                data = attributedRow?.rowCellValues?.get(column.id) ?: error("")
+                this
+            }
         }
     }
 
