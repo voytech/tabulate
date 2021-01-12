@@ -81,20 +81,14 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             if (context.data?.rowCellValues?.containsKey(column.id) == true) {
                 delegate.tableOperations.renderRowCell(
                     state.delegate,
-                    state.setCellContext(
-                        column.index ?: columnIndex,
-                        context.data.let { it?.rowCellValues?.get(column.id) ?: error("") }
-                    )
+                    state.setCellContext(column.index ?: columnIndex, column)
                 )
             }
         }
     }
 
     private fun renderDataRow(state: ExporterSession<T, A>, recordIndex: Int? = null, record: T? = null) {
-        val context = state.setRowContext(
-            computeRowValue(state, recordIndex, record),
-            state.currentRowIndex++
-        )
+        val context = state.nextRow(computeRowValue(state, recordIndex, record))
         delegate.tableOperations.renderRow(state.delegate, context).also {
             renderRowCells(state, context)
         }
