@@ -16,8 +16,8 @@ class ExporterSession<T, A>(
     val collection: Collection<T>
 ) {
     private val stateAttributes = mutableMapOf<String, Any>()
-
-    internal val rowSkips = mutableMapOf<ColumnKey<T>, Int>()
+    private val rowSkips = mutableMapOf<ColumnKey<T>, Int>()
+    private var colSkips = 0
 
     var currentRowIndex = 0
     /**
@@ -53,7 +53,7 @@ class ExporterSession<T, A>(
         cellContext.coordinates = coordinates
     }
 
-    internal fun nextRow(row: AttributedRow<T>): OperationContext<AttributedRow<T>> {
+    internal fun getRowContextAndAdvance(row: AttributedRow<T>): OperationContext<AttributedRow<T>> {
         return with(rowContext) {
             coordinates.rowIndex = (firstRow ?: 0) + currentRowIndex++
             coordinates.columnIndex = 0
@@ -62,7 +62,7 @@ class ExporterSession<T, A>(
         }
     }
 
-    internal fun setCellContext(columnIndex: Int, column: Column<T>): OperationContext<AttributedCell> {
+    internal fun getCellContext(columnIndex: Int, column: Column<T>): OperationContext<AttributedCell> {
         return rowContext.data.let { attributedRow ->
             with(cellContext) {
                 coordinates.columnIndex = (firstColumn ?: 0) + columnIndex
@@ -72,7 +72,7 @@ class ExporterSession<T, A>(
         }
     }
 
-    internal fun setColumnContext(
+    internal fun getColumnContext(
         columnIndex: Int,
         column: Column<T>,
         phase: ColumnRenderPhase
@@ -91,4 +91,12 @@ class ExporterSession<T, A>(
     internal fun createSourceRow(objectIndex: Int? = null, record: T? = null): SourceRow<T> =
         SourceRow(dataset = collection, rowIndex = currentRowIndex, objectIndex = objectIndex, record = record)
 
+    internal fun determineRowSkips(column: Column<T>, cell: Cell<T>?) {
+        colSkips = (cell?.colSpan?.minus(1)) ?: 0
+        rowSkips[column.id] = (cell?.rowSpan?.minus(1)) ?: 0
+    }
+
+    internal fun noSkip(column: Column<T>): Boolean {
+        return colSkips-- <= 0 && (rowSkips[column.id] ?: 0).also { rowSkips[column.id] = it - 1 } <= 0
+    }
 }
