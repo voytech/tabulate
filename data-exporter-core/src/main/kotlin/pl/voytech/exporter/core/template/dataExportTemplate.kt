@@ -71,7 +71,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         state.tableModel.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
             delegate.tableOperations.renderColumn(
                 state.delegate,
-                state.setColumnContext(column.index ?: columnIndex, column, renderPhase)
+                state.getColumnContext(column.index ?: columnIndex, column, renderPhase)
             )
         }
     }
@@ -81,14 +81,14 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             if (context.data?.rowCellValues?.containsKey(column.id) == true) {
                 delegate.tableOperations.renderRowCell(
                     state.delegate,
-                    state.setCellContext(column.index ?: columnIndex, column)
+                    state.getCellContext(column.index ?: columnIndex, column)
                 )
             }
         }
     }
 
     private fun renderDataRow(state: ExporterSession<T, A>, recordIndex: Int? = null, record: T? = null) {
-        val context = state.nextRow(computeRowValue(state, recordIndex, record))
+        val context = state.getRowContextAndAdvance(computeRowValue(state, recordIndex, record))
         delegate.tableOperations.renderRow(state.delegate, context).also {
             renderRowCells(state, context)
         }
@@ -162,20 +162,17 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     private fun computeRowValue(state: ExporterSession<T, A>, recordIndex: Int? = null, record: T? = null): AttributedRow<T> {
         val sourceRow = state.createSourceRow(recordIndex, record)
         val table = state.tableModel
-        val rowSkips = state.rowSkips
         val rowDefinitions: Set<Row<T>>? = matchingRows(table, sourceRow)
         val mergedRowCells: Map<ColumnKey<T>, Cell<T>>? =
             rowDefinitions?.mapNotNull { row -> row.cells }?.fold(mapOf(), { acc, m -> acc + m })
         val cellValues: MutableMap<ColumnKey<T>, AttributedCell> = mutableMapOf()
-        var columnSkips = 0
         val rowCellExtensions = mergeAttributes(
             *(rowDefinitions?.mapNotNull { row -> row.cellAttributes }!!.toTypedArray())
         )
         table.columns.forEach { column: Column<T> ->
-            if (columnSkips-- <= 0 && (rowSkips[column.id] ?: 0).also { rowSkips[column.id] = it - 1 } <= 0) {
+            if (state.noSkip(column)) {
                 val customCell = mergedRowCells?.get(column.id)
-                columnSkips = (customCell?.colSpan?.minus(1)) ?: 0
-                rowSkips[column.id] = (customCell?.rowSpan?.minus(1)) ?: 0
+                state.determineRowSkips(column, customCell)
                 val attributedCell = computeCellValue(column, customCell, sourceRow)?.let {
                     AttributedCell(
                         value = CellValue(
