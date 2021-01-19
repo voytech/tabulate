@@ -7,7 +7,7 @@ import pl.voytech.exporter.core.model.*
  * operation execution.
  * @author Wojciech Mąka
  */
-class ExporterSession<T, A>(
+class StateAndContext<T, A>(
     val delegate: A,
     val tableModel: Table<T>,
     val tableName: String = "table-${NextId.nextId()}",
@@ -91,12 +91,12 @@ class ExporterSession<T, A>(
     internal fun createSourceRow(objectIndex: Int? = null, record: T? = null): SourceRow<T> =
         SourceRow(dataset = collection, rowIndex = currentRowIndex, objectIndex = objectIndex, record = record)
 
-    internal fun determineRowSkips(column: Column<T>, cell: Cell<T>?) {
+    internal fun applySpans(column: Column<T>, cell: Cell<T>?) {
         colSkips = (cell?.colSpan?.minus(1)) ?: 0
         rowSkips[column.id] = (cell?.rowSpan?.minus(1)) ?: 0
     }
 
-    internal fun noSkip(column: Column<T>): Boolean {
+    internal fun dontSkip(column: Column<T>): Boolean {
         return colSkips-- <= 0 && (rowSkips[column.id] ?: 0).also { rowSkips[column.id] = it - 1 } <= 0
     }
 }

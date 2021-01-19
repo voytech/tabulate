@@ -27,7 +27,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     private fun add(state: A, table: Table<T>, collection: Collection<T>): A {
-        return ExporterSession(
+        return StateAndContext(
             delegate = state,
             tableModel = delegate.tableOperations.createTable(state, table),
             tableName = table.name ?: "table-${NextId.nextId()}",
@@ -65,7 +65,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     private fun renderColumns(
-        state: ExporterSession<T, A>,
+        state: StateAndContext<T, A>,
         renderPhase: ColumnRenderPhase
     ) {
         state.tableModel.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
@@ -76,7 +76,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-    private fun renderRowCells(state: ExporterSession<T, A>, context: OperationContext<AttributedRow<T>>) {
+    private fun renderRowCells(state: StateAndContext<T, A>, context: OperationContext<AttributedRow<T>>) {
         state.tableModel.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
             if (context.data?.rowCellValues?.containsKey(column.id) == true) {
                 delegate.tableOperations.renderRowCell(
@@ -87,20 +87,20 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-    private fun renderDataRow(state: ExporterSession<T, A>, recordIndex: Int? = null, record: T? = null) {
+    private fun renderDataRow(state: StateAndContext<T, A>, recordIndex: Int? = null, record: T? = null) {
         val context = state.getRowContextAndAdvance(computeRowValue(state, recordIndex, record))
         delegate.tableOperations.renderRow(state.delegate, context).also {
             renderRowCells(state, context)
         }
     }
 
-    private fun renderCustomRow(state: ExporterSession<T, A>) {
+    private fun renderCustomRow(state: StateAndContext<T, A>) {
         subsequentCustomRowsStartingAtRowIndex(state.currentRowIndex, state.tableModel.rows).let {
             it?.forEach { _ -> renderDataRow(state) }
         }
     }
 
-    private fun renderRows(state: ExporterSession<T, A>) {
+    private fun renderRows(state: StateAndContext<T, A>) {
         renderCustomRow(state).also {
             if (!state.collection.isEmpty()) {
                 state.collection.forEachIndexed { objectIndex: Int, record: T ->
@@ -159,33 +159,37 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
             ?: matchingPredicateRows ?: emptySet()
     }
 
-    private fun computeRowValue(state: ExporterSession<T, A>, recordIndex: Int? = null, record: T? = null): AttributedRow<T> {
+    private fun computeRowValue(
+        state: StateAndContext<T, A>,
+        recordIndex: Int? = null,
+        record: T? = null
+    ): AttributedRow<T> {
         val sourceRow = state.createSourceRow(recordIndex, record)
         val table = state.tableModel
         val rowDefinitions: Set<Row<T>>? = matchingRows(table, sourceRow)
-        val mergedRowCells: Map<ColumnKey<T>, Cell<T>>? =
+        val cellDefinitions: Map<ColumnKey<T>, Cell<T>>? =
             rowDefinitions?.mapNotNull { row -> row.cells }?.fold(mapOf(), { acc, m -> acc + m })
         val cellValues: MutableMap<ColumnKey<T>, AttributedCell> = mutableMapOf()
         val rowCellExtensions = mergeAttributes(
-            *(rowDefinitions?.mapNotNull { row -> row.cellAttributes }!!.toTypedArray())
+            *(rowDefinitions?.mapNotNull { it.cellAttributes }!!.toTypedArray())
         )
-        table.columns.forEach { column: Column<T> ->
-            if (state.noSkip(column)) {
-                val customCell = mergedRowCells?.get(column.id)
-                state.determineRowSkips(column, customCell)
-                val attributedCell = computeCellValue(column, customCell, sourceRow)?.let {
+        table.forEachColumn { column: Column<T> ->
+            if (state.dontSkip(column)) {
+                val cellDefinition = cellDefinitions?.get(column.id)
+                state.applySpans(column, cellDefinition)
+                val attributedCell = computeCellValue(column, cellDefinition, sourceRow)?.let {
                     AttributedCell(
                         value = CellValue(
                             it,
-                            customCell?.type ?: column.columnType,
-                            colSpan = customCell?.colSpan ?: 1,
-                            rowSpan = customCell?.rowSpan ?: 1
+                            cellDefinition?.type ?: column.columnType,
+                            colSpan = cellDefinition?.colSpan ?: 1,
+                            rowSpan = cellDefinition?.rowSpan ?: 1
                         ),
                         attributes = mergeAttributes(
                             table.cellAttributes,
                             column.cellAttributes,
                             rowCellExtensions,
-                            customCell?.cellAttributes
+                            cellDefinition?.cellAttributes
                         )
                     )
                 }
@@ -200,7 +204,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         )
     }
 
-    private fun mergeAttributes(vararg attributesByLevels: Set<CellAttribute>?): Set<CellAttribute>? {
+    private fun mergeAttributes(vararg attributesByLevels: Set<CellAttribute>?): Set<CellAttribute> {
         return attributesByLevels.filterNotNull()
             .map { set -> set.groupBy { it.javaClass }.map { Pair(it.key, it.value.first()) }.toMap() }
             .fold(

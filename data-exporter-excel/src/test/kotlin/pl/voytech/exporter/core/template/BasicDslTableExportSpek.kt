@@ -207,7 +207,7 @@ object BasicDslTableExportSpek : Spek({
                         CellPosition(3, 8) to AssertContainsCellAttributes(CellExcelDataFormatAttribute("dd.mm.YYYY"))
                     )
                 ).perform().also {
-                    // it.cleanup()
+                    it.cleanup()
                 }
             }
         }

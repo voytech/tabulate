@@ -3,6 +3,7 @@ package pl.voytech.exporter.core.model
 import pl.voytech.exporter.core.api.builder.fluent.TableBuilder
 import pl.voytech.exporter.core.model.attributes.CellAttribute
 import pl.voytech.exporter.core.model.attributes.TableAttribute
+import java.util.function.Consumer
 
 /**
  * A top-level model class. Defines how records from repositories will be handled by file rendering strategies.
@@ -35,4 +36,8 @@ data class Table<T> internal constructor(
         @JvmStatic
         fun <T> builder() = TableBuilder<T>()
     }
+
+    fun forEachColumn(consumer: Consumer<in Column<T>>) = columns.forEach(consumer)
+
+    fun forEachRow(consumer: Consumer<in Row<T>>) = rows?.forEach(consumer)
 }
