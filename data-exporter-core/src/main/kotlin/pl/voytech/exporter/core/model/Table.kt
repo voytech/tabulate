@@ -32,12 +32,31 @@ data class Table<T> internal constructor(
     val tableAttributes: Set<TableAttribute>?,
     val cellAttributes: Set<CellAttribute>?
 ) {
-    companion object {
-        @JvmStatic
-        fun <T> builder() = TableBuilder<T>()
+    private var indexedCustomRows: Map<Int, List<Row<T>>>? = null
+
+    init {
+        indexedCustomRows = rows?.filter { it.createAt != null }
+            ?.sortedBy { it.createAt }
+            ?.groupBy { it.createAt!! }
     }
 
     fun forEachColumn(consumer: Consumer<in Column<T>>) = columns.forEach(consumer)
 
     fun forEachRow(consumer: Consumer<in Row<T>>) = rows?.forEach(consumer)
+
+    fun getRowsAt(index: Int): List<Row<T>>? = indexedCustomRows?.get(index)
+
+    fun hasRowsAt(index: Int): Boolean = !getRowsAt(index).isNullOrEmpty()
+
+    fun getRowsFor(sourceRow: SourceRow<T>): Set<Row<T>> {
+        val customRows = getRowsAt(sourceRow.rowIndex)?.toSet()
+        val matchingRows = rows?.filter { it.selector != null && it.selector.invoke(sourceRow) }?.toSet()
+        return customRows?.let { matchingRows?.plus(it) ?: it }
+            ?: matchingRows ?: emptySet()
+    }
+
+    companion object {
+        @JvmStatic
+        fun <T> builder() = TableBuilder<T>()
+    }
 }
