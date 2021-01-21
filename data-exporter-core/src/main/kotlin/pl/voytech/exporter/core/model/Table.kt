@@ -42,11 +42,15 @@ data class Table<T> internal constructor(
 
     fun forEachColumn(consumer: Consumer<in Column<T>>) = columns.forEach(consumer)
 
+    fun forEachColumn(consumer: (Int, Column<T>) -> Unit) = columns.forEachIndexed(consumer)
+
     fun forEachRow(consumer: Consumer<in Row<T>>) = rows?.forEach(consumer)
 
     fun getRowsAt(index: Int): List<Row<T>>? = indexedCustomRows?.get(index)
 
     fun hasRowsAt(index: Int): Boolean = !getRowsAt(index).isNullOrEmpty()
+
+    fun getNextCustomRowIndex(index: Int): Int? = indexedCustomRows?.entries?.firstOrNull { it.key > index }?.key
 
     fun getRowsFor(sourceRow: SourceRow<T>): Set<Row<T>> {
         val customRows = getRowsAt(sourceRow.rowIndex)?.toSet()

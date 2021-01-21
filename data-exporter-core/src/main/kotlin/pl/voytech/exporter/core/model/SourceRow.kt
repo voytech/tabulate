@@ -22,5 +22,5 @@ data class SourceRow<T> (
     /**
      * collection of objects to be exported.
      */
-    val dataset: Collection<T>
+    val dataset: Collection<T>? = null
 )

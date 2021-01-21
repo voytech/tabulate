@@ -2,23 +2,25 @@ package pl.voytech.exporter.core.template.resolvers
 
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.attributes.mergeAttributes
-import pl.voytech.exporter.core.template.AttributedCell
-import pl.voytech.exporter.core.template.AttributedRow
-import pl.voytech.exporter.core.template.CellValue
-import pl.voytech.exporter.core.template.OperationContext
+import pl.voytech.exporter.core.template.*
 
-abstract class AbstractRowContextResolver<DS,T>(tableModel: Table<T>) :
-    TableDataSourceIndexedContextResolver<DS, T, AttributedRow<T>>(
-        tableModel
-    ) {
+abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, state: StateAndContext<T>) :
+    TableDataSourceIndexedContextResolver<DS, T, AttributedRow<T>>(tableModel, state) {
+
+    private inline fun computeCellValue(
+        column: Column<T>,
+        customCell: Cell<T>?,
+        sourceRow: SourceRow<T>
+    ): Any? {
+        return (customCell?.eval?.invoke(sourceRow) ?: customCell?.value ?: sourceRow.record?.let {
+            column.id.ref?.invoke(it)
+        })?.let {
+            column.dataFormatter?.invoke(it) ?: it
+        }
+    }
 
     private fun resolveAttributedRow(resolvedIndex: Int, record: IndexedValue<T>? = null): AttributedRow<T> {
-        return SourceRow(
-            dataset = if (dataSource is Collection<*>) dataSource as Collection<T> else emptyList(),
-            rowIndex = resolvedIndex,
-            objectIndex = record?.index,
-            record = record?.value
-        ).let {
+        return SourceRow(rowIndex = resolvedIndex, objectIndex = record?.index, record = record?.value).let {
             val rowDefinitions: Set<Row<T>> = tableModel.getRowsFor(it)
             val cellDefinitions: Map<ColumnKey<T>, Cell<T>> =
                 rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })
@@ -27,13 +29,13 @@ abstract class AbstractRowContextResolver<DS,T>(tableModel: Table<T>) :
                 *(rowDefinitions.mapNotNull { i -> i.cellAttributes }.toTypedArray())
             )
             tableModel.forEachColumn { column: Column<T> ->
-                if (/*state.dontSkip(column)*/ true) {
-                    val cellDefinition = cellDefinitions?.get(column.id)
-                    // state.applySpans(column, cellDefinition)
-                    val attributedCell = computeCellValue(column, cellDefinition, it)?.let {
+                if (state.dontSkip(column)) {
+                    val cellDefinition = cellDefinitions[column.id]
+                    state.applySpans(column, cellDefinition)
+                    val attributedCell = computeCellValue(column, cellDefinition, it)?.let {  value ->
                         AttributedCell(
                             value = CellValue(
-                                it,
+                                value,
                                 cellDefinition?.type ?: column.columnType,
                                 colSpan = cellDefinition?.colSpan ?: 1,
                                 rowSpan = cellDefinition?.rowSpan ?: 1
@@ -52,33 +54,36 @@ abstract class AbstractRowContextResolver<DS,T>(tableModel: Table<T>) :
                 }
             }
             AttributedRow(
-                rowAttributes = rowDefinitions.mapNotNull { attribs ->  attribs.rowAttributes }.fold(setOf(), { acc, r -> acc + r }),
+                rowAttributes = rowDefinitions.mapNotNull { attribs -> attribs.rowAttributes }
+                    .fold(setOf(), { acc, r -> acc + r }),
                 rowCellValues = cellValues.toMap()
             )
         }
     }
 
-    private inline fun computeCellValue(
-        column: Column<T>,
-        customCell: Cell<T>?,
-        sourceRow: SourceRow<T>
-    ): Any? {
-        return (customCell?.eval?.invoke(sourceRow) ?: customCell?.value ?: sourceRow.record?.let {
-            column.id.ref?.invoke(it)
-        })?.let {
-            column.dataFormatter?.invoke(it) ?: it
+    private fun resolveRowContext(
+        resolvedIndex: Int,
+        indexedRecord: IndexedValue<T>? = null
+    ): IndexedValue<OperationContext<AttributedRow<T>>> {
+        return resolveAttributedRow(resolvedIndex, indexedRecord).let {
+            val ctx = state.getRowContext(IndexedValue(resolvedIndex, it))
+            IndexedValue(resolvedIndex, ctx)
         }
     }
 
     override fun resolve(requestedIndex: Int): IndexedValue<OperationContext<AttributedRow<T>>>? {
-        if (tableModel.hasRowsAt(requestedIndex)) {
-            return resolveAttributedRow(requestedIndex).let {
-                val ctx = OperationContext<AttributedRow<T>>(mutableMapOf())
-                IndexedValue(requestedIndex, ctx)
+        return if (tableModel.hasRowsAt(requestedIndex)) {
+            resolveRowContext(requestedIndex)
+        } else {
+            getNextRecord().let {
+                if (it != null) {
+                    resolveRowContext(requestedIndex, it)
+                } else {
+                    tableModel.getNextCustomRowIndex(requestedIndex)?.let { it1 -> resolveRowContext(it1) }
+                }
             }
         }
-        return null
     }
 
-    protected abstract fun getNextDataSourceRecord(): T
+    protected abstract fun getNextRecord(): IndexedValue<T>?
 }

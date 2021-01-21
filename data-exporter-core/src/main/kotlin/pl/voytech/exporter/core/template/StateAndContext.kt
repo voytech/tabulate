@@ -7,19 +7,16 @@ import pl.voytech.exporter.core.model.*
  * operation execution.
  * @author Wojciech Mąka
  */
-class StateAndContext<T, A>(
-    val delegate: A,
+class StateAndContext<T>(
     val tableModel: Table<T>,
     val tableName: String = "table-${NextId.nextId()}",
     val firstRow: Int? = 0,
-    val firstColumn: Int? = 0,
-    val collection: Collection<T>
+    val firstColumn: Int? = 0
 ) {
     private val stateAttributes = mutableMapOf<String, Any>()
     private val rowSkips = mutableMapOf<ColumnKey<T>, Int>()
     private var colSkips = 0
 
-    var currentRowIndex = 0
     /**
      * Instance of mutable context for row-scope operations. After changing coordinate denoting advancing the row,
      * coordinate object is recreated, and new row associated context data is being set. Then instance is used on all
@@ -53,11 +50,12 @@ class StateAndContext<T, A>(
         cellContext.coordinates = coordinates
     }
 
-    internal fun getRowContextAndAdvance(row: AttributedRow<T>): OperationContext<AttributedRow<T>> {
+
+    internal fun getRowContext(attributedRow: IndexedValue<AttributedRow<T>>): OperationContext<AttributedRow<T>> {
         return with(rowContext) {
-            coordinates.rowIndex = (firstRow ?: 0) + currentRowIndex++
+            coordinates.rowIndex = (firstRow ?: 0) + attributedRow.index
             coordinates.columnIndex = 0
-            data = row
+            data = attributedRow.value
             this
         }
     }
@@ -87,9 +85,6 @@ class StateAndContext<T, A>(
             this
         }
     }
-
-    internal fun createSourceRow(objectIndex: Int? = null, record: T? = null): SourceRow<T> =
-        SourceRow(dataset = collection, rowIndex = currentRowIndex, objectIndex = objectIndex, record = record)
 
     internal fun applySpans(column: Column<T>, cell: Cell<T>?) {
         colSkips = (cell?.colSpan?.minus(1)) ?: 0
