@@ -1,9 +1,9 @@
 package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.*
-import pl.voytech.exporter.core.model.attributes.CellAttribute
+import pl.voytech.exporter.core.template.iterators.BaseTableDataIterator
+import pl.voytech.exporter.core.template.resolvers.RowContextResolver
 import java.io.OutputStream
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Core logic responsible for orchestrating rendering of tabular data format file.
@@ -17,35 +17,26 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>) {
 
-    private var selectableRows: List<Row<T>>? = null
-    private var selectableRowsCached = false
-    private var customRows: List<Row<T>>? = null
-    private var customRowsCached = false
-
     private fun create(): A {
         return delegate.lifecycleOperations.createDocument()
     }
 
-    private fun add(state: A, table: Table<T>, collection: Collection<T>): A {
-        return StateAndContext(
-            delegate = state,
-            tableModel = delegate.tableOperations.createTable(state, table),
+    private fun add(api: A, table: Table<T>, collection: Collection<T>): A {
+        StateAndContext(
+            tableModel = delegate.tableOperations.createTable(api, table),
             tableName = table.name ?: "table-${NextId.nextId()}",
             firstRow = table.firstRow,
-            firstColumn = table.firstColumn,
-            collection = collection
+            firstColumn = table.firstColumn
         ).also {
-            renderColumns(it, ColumnRenderPhase.BEFORE_FIRST_ROW)
-        }.also {
-            renderRows(it)
-        }.also {
-            renderColumns(it, ColumnRenderPhase.AFTER_LAST_ROW)
-        }.also {
-            customRows = null
-            selectableRows = null
-            customRowsCached = false
-            selectableRowsCached = false
-        }.delegate
+            renderColumns(it, api, ColumnRenderPhase.BEFORE_FIRST_ROW)
+            with(BaseTableDataIterator(RowContextResolver(table, it, collection))) {
+                while (this.hasNext()) {
+                    renderNextRow(it, api, this)
+                }
+            }
+            renderColumns(it, api, ColumnRenderPhase.AFTER_LAST_ROW)
+        }
+        return api
     }
 
     fun export(table: Table<T>, collection: Collection<T>): FileData<ByteArray> {
@@ -65,166 +56,36 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     private fun renderColumns(
-        state: StateAndContext<T, A>,
+        state: StateAndContext<T>,
+        api: A,
         renderPhase: ColumnRenderPhase
     ) {
-        state.tableModel.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+        state.tableModel.forEachColumn { columnIndex: Int, column: Column<T> ->
             delegate.tableOperations.renderColumn(
-                state.delegate,
-                state.getColumnContext(column.index ?: columnIndex, column, renderPhase)
+                api, state.getColumnContext(column.index ?: columnIndex, column, renderPhase)
             )
         }
     }
 
-    private fun renderRowCells(state: StateAndContext<T, A>, context: OperationContext<AttributedRow<T>>) {
-        state.tableModel.columns.forEachIndexed { columnIndex: Int, column: Column<T> ->
+    private fun renderRowCells(state: StateAndContext<T>, api: A, context: OperationContext<AttributedRow<T>>) {
+        state.tableModel.forEachColumn { columnIndex: Int, column: Column<T> ->
             if (context.data?.rowCellValues?.containsKey(column.id) == true) {
                 delegate.tableOperations.renderRowCell(
-                    state.delegate,
+                    api,
                     state.getCellContext(column.index ?: columnIndex, column)
                 )
             }
         }
     }
 
-    private fun renderDataRow(state: StateAndContext<T, A>, recordIndex: Int? = null, record: T? = null) {
-        val context = state.getRowContextAndAdvance(computeRowValue(state, recordIndex, record))
-        delegate.tableOperations.renderRow(state.delegate, context).also {
-            renderRowCells(state, context)
-        }
-    }
-
-    private fun renderCustomRow(state: StateAndContext<T, A>) {
-        subsequentCustomRowsStartingAtRowIndex(state.currentRowIndex, state.tableModel.rows).let {
-            it?.forEach { _ -> renderDataRow(state) }
-        }
-    }
-
-    private fun renderRows(state: StateAndContext<T, A>) {
-        renderCustomRow(state).also {
-            if (!state.collection.isEmpty()) {
-                state.collection.forEachIndexed { objectIndex: Int, record: T ->
-                    renderDataRow(state, objectIndex, record)
-                }.also {
-                    renderCustomRow(state)
+    private fun renderNextRow(state: StateAndContext<T>, api: A, iterator: BaseTableDataIterator<AttributedRow<T>>) {
+        if (iterator.hasNext()) {
+            iterator.next().let { rowContext ->
+                delegate.tableOperations.renderRow(api, rowContext).also {
+                    renderRowCells(state, api, rowContext)
                 }
             }
         }
-    }
-
-    private fun allPredicateRows(tableRows: List<Row<T>>?): List<Row<T>>? {
-        if (selectableRows == null && !selectableRowsCached) {
-            selectableRows = tableRows?.filter { it.selector != null }
-            selectableRowsCached = true
-        }
-        return selectableRows
-    }
-
-    private fun allCustomRows(tableRows: List<Row<T>>?): List<Row<T>>? {
-        if (customRows == null && !customRowsCached) {
-            customRows = tableRows?.filter { it.createAt != null }?.sortedBy { it.createAt }
-            customRowsCached = true
-        }
-        return customRows
-    }
-
-    private fun subsequentCustomRowsStartingAtRowIndex(startFrom: Int = 0, tableRows: List<Row<T>>?): List<Row<T>>? {
-        return AtomicInteger(startFrom).let {
-            allCustomRows(tableRows)?.filter { row -> row.createAt!! >= it.get() }
-                ?.takeWhile { row -> row.createAt == it.getAndIncrement() }
-        }
-    }
-
-    private inline fun computeCellValue(
-        column: Column<T>,
-        customCell: Cell<T>?,
-        sourceRow: SourceRow<T>
-    ): Any? {
-        return (customCell?.eval?.invoke(sourceRow) ?: customCell?.value ?: sourceRow.record?.let {
-            column.id.ref?.invoke(it)
-        })?.let {
-            column.dataFormatter?.invoke(it) ?: it
-        }
-    }
-
-    private inline fun matchingPredicateRows(table: Table<T>, sourceRow: SourceRow<T>): Set<Row<T>>? =
-        allPredicateRows(table.rows)?.filter { it.selector!!.invoke(sourceRow) }?.toSet()
-
-    private inline fun matchingCustomRows(table: Table<T>, sourceRow: SourceRow<T>): Set<Row<T>>? =
-        allCustomRows(table.rows)?.filter { it.createAt == sourceRow.rowIndex }?.toSet()
-
-    private inline fun matchingRows(table: Table<T>, sourceRow: SourceRow<T>): Set<Row<T>>? {
-        val matchingPredicateRows = matchingPredicateRows(table, sourceRow)
-        return matchingCustomRows(table, sourceRow)?.let { matchingPredicateRows?.plus(it) ?: it }
-            ?: matchingPredicateRows ?: emptySet()
-    }
-
-    private fun computeRowValue(
-        state: StateAndContext<T, A>,
-        recordIndex: Int? = null,
-        record: T? = null
-    ): AttributedRow<T> {
-        val sourceRow = state.createSourceRow(recordIndex, record)
-        val table = state.tableModel
-        val rowDefinitions: Set<Row<T>>? = matchingRows(table, sourceRow)
-        val cellDefinitions: Map<ColumnKey<T>, Cell<T>>? =
-            rowDefinitions?.mapNotNull { row -> row.cells }?.fold(mapOf(), { acc, m -> acc + m })
-        val cellValues: MutableMap<ColumnKey<T>, AttributedCell> = mutableMapOf()
-        val rowCellExtensions = mergeAttributes(
-            *(rowDefinitions?.mapNotNull { it.cellAttributes }!!.toTypedArray())
-        )
-        table.forEachColumn { column: Column<T> ->
-            if (state.dontSkip(column)) {
-                val cellDefinition = cellDefinitions?.get(column.id)
-                state.applySpans(column, cellDefinition)
-                val attributedCell = computeCellValue(column, cellDefinition, sourceRow)?.let {
-                    AttributedCell(
-                        value = CellValue(
-                            it,
-                            cellDefinition?.type ?: column.columnType,
-                            colSpan = cellDefinition?.colSpan ?: 1,
-                            rowSpan = cellDefinition?.rowSpan ?: 1
-                        ),
-                        attributes = mergeAttributes(
-                            table.cellAttributes,
-                            column.cellAttributes,
-                            rowCellExtensions,
-                            cellDefinition?.cellAttributes
-                        )
-                    )
-                }
-                if (attributedCell != null) {
-                    cellValues[column.id] = attributedCell
-                }
-            }
-        }
-        return AttributedRow(
-            rowAttributes = rowDefinitions.mapNotNull { it.rowAttributes }.fold(setOf(), { acc, r -> acc + r }),
-            rowCellValues = cellValues.toMap()
-        )
-    }
-
-    private fun mergeAttributes(vararg attributesByLevels: Set<CellAttribute>?): Set<CellAttribute> {
-        return attributesByLevels.filterNotNull()
-            .map { set -> set.groupBy { it.javaClass }.map { Pair(it.key, it.value.first()) }.toMap() }
-            .fold(
-                mapOf<Class<CellAttribute>, CellAttribute>(),
-                { accumulated, currentLevel -> mergeAttributes(accumulated, currentLevel) })
-            .values
-            .toSet()
-    }
-
-    private fun mergeAttributes(
-        first: Map<Class<CellAttribute>, CellAttribute>,
-        second: Map<Class<CellAttribute>, CellAttribute>
-    ): Map<Class<CellAttribute>, CellAttribute> {
-        val result = mutableMapOf<Class<CellAttribute>, CellAttribute>()
-        first.keys.toSet().intersect(second.keys.toSet()).forEach {
-            result[it] = (first[it] ?: error("")).mergeWith((second[it] ?: error("")))
-        }
-        first.keys.toSet().subtract(second.keys.toSet()).forEach { result[it] = first[it] ?: error("") }
-        second.keys.toSet().subtract(first.keys.toSet()).forEach { result[it] = second[it] ?: error("") }
-        return result.toMap()
     }
 }
 
