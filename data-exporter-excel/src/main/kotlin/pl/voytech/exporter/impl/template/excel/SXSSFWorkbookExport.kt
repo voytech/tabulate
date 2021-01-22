@@ -8,8 +8,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.*
-import pl.voytech.exporter.core.template.operations.AttributeAwareTableOperations
-import pl.voytech.exporter.core.template.operations.AttributeCacheTableOperations
+import pl.voytech.exporter.core.template.context.*
+import pl.voytech.exporter.core.template.operations.ExportOperations
+import pl.voytech.exporter.core.template.operations.LifecycleOperations
+import pl.voytech.exporter.core.template.operations.impl.AttributeAwareTableOperations
+import pl.voytech.exporter.core.template.operations.impl.AttributeCacheTableOperations
 import pl.voytech.exporter.core.template.operations.chain.TableOperationChain
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertCell
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertRow

@@ -16,9 +16,13 @@ import pl.voytech.exporter.core.model.attributes.style.enums.BorderStyle
 import pl.voytech.exporter.core.model.attributes.style.enums.HorizontalAlignment
 import pl.voytech.exporter.core.model.attributes.style.enums.VerticalAlignment
 import pl.voytech.exporter.core.model.attributes.style.enums.WeightStyle
-import pl.voytech.exporter.core.template.*
-import pl.voytech.exporter.core.template.operations.AttributeKeyDrivenCache.Companion.getCellCachedValue
-import pl.voytech.exporter.core.template.operations.AttributeKeyDrivenCache.Companion.putCellCachedValue
+import pl.voytech.exporter.core.template.context.AttributedCell
+import pl.voytech.exporter.core.template.context.AttributedRow
+import pl.voytech.exporter.core.template.context.ColumnOperationTableData
+import pl.voytech.exporter.core.template.context.OperationContext
+import pl.voytech.exporter.core.template.operations.*
+import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.getCellCachedValue
+import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.putCellCachedValue
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertRow
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.cellStyle
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.color
@@ -32,7 +36,7 @@ import java.text.AttributedString
 import kotlin.math.roundToInt
 
 
-class CellFontAttributeOperation<T> : CellAttributeOperation<T,CellFontAttribute, SXSSFWorkbook> {
+class CellFontAttributeOperation<T> : CellAttributeOperation<T, CellFontAttribute, SXSSFWorkbook> {
 
     private val cellFontCacheKey = "cellFont"
 
@@ -153,7 +157,7 @@ class CellDataFormatAttributeOperation<T> : CellAttributeOperation<T, CellExcelD
 
 }
 
-class ColumnWidthAttributeOperation<T> : ColumnAttributeOperation<T ,ColumnWidthAttribute, SXSSFWorkbook> {
+class ColumnWidthAttributeOperation<T> : ColumnAttributeOperation<T, ColumnWidthAttribute, SXSSFWorkbook> {
     override fun attributeType(): Class<out ColumnWidthAttribute> = ColumnWidthAttribute::class.java
 
     private fun getStringWidth(text: String, cellFont: XSSFFont, workbook: Workbook): Int {

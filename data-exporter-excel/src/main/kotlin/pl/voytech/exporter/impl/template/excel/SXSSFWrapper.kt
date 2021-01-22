@@ -9,11 +9,11 @@ import org.apache.poi.xssf.usermodel.XSSFCell
 import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.attributes.style.Color
-import pl.voytech.exporter.core.template.AttributedCell
-import pl.voytech.exporter.core.template.Coordinates
-import pl.voytech.exporter.core.template.OperationContext
-import pl.voytech.exporter.core.template.operations.AttributeKeyDrivenCache.Companion.getCellCachedValue
-import pl.voytech.exporter.core.template.operations.AttributeKeyDrivenCache.Companion.putCellCachedValue
+import pl.voytech.exporter.core.template.context.AttributedCell
+import pl.voytech.exporter.core.template.context.Coordinates
+import pl.voytech.exporter.core.template.context.OperationContext
+import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.getCellCachedValue
+import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.putCellCachedValue
 
 object SXSSFWrapper {
 

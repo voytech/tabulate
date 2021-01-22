@@ -1,4 +1,4 @@
-package pl.voytech.exporter.core.template
+package pl.voytech.exporter.core.template.context
 
 import pl.voytech.exporter.core.model.*
 
@@ -7,7 +7,7 @@ import pl.voytech.exporter.core.model.*
  * operation execution.
  * @author Wojciech Mąka
  */
-class StateAndContext<T>(
+class GlobalContextAndAttributes<T>(
     val tableModel: Table<T>,
     val tableName: String = "table-${NextId.nextId()}",
     val firstRow: Int? = 0,
@@ -60,25 +60,24 @@ class StateAndContext<T>(
         }
     }
 
-    internal fun getCellContext(columnIndex: Int, column: Column<T>): OperationContext<AttributedCell> {
+    internal fun getCellContext(indexedColumn: IndexedValue<Column<T>>): OperationContext<AttributedCell> {
         return rowContext.data.let { attributedRow ->
             with(cellContext) {
-                coordinates.columnIndex = (firstColumn ?: 0) + columnIndex
-                data = attributedRow?.rowCellValues?.get(column.id) ?: error("")
+                coordinates.columnIndex = (firstColumn ?: 0) + indexedColumn.index
+                data = attributedRow?.rowCellValues?.get(indexedColumn.value.id) ?: error("")
                 this
             }
         }
     }
 
     internal fun getColumnContext(
-        columnIndex: Int,
-        column: Column<T>,
+        indexedColumn: IndexedValue<Column<T>>,
         phase: ColumnRenderPhase
     ): OperationContext<ColumnOperationTableData> {
         return with(columnContext) {
-            coordinates.columnIndex = (firstColumn ?: 0) + columnIndex
+            coordinates.columnIndex = (firstColumn ?: 0) + indexedColumn.index
             data!!.currentPhase = phase
-            data!!.columnAttributes = column.columnAttributes?.filter { ext ->
+            data!!.columnAttributes = indexedColumn.value.columnAttributes?.filter { ext ->
                 ((ColumnRenderPhase.BEFORE_FIRST_ROW == phase) && ext.beforeFirstRow()) ||
                         ((ColumnRenderPhase.AFTER_LAST_ROW == phase) && ext.afterLastRow())
             }?.toSet()

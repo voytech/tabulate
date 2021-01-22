@@ -1,11 +1,15 @@
-package pl.voytech.exporter.core.template.operations
+package pl.voytech.exporter.core.template.operations.impl
 
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.attributes.CellAttribute
 import pl.voytech.exporter.core.model.attributes.ColumnAttribute
 import pl.voytech.exporter.core.model.attributes.RowAttribute
-import pl.voytech.exporter.core.template.*
-import pl.voytech.exporter.core.template.operations.AttributeKeyDrivenCache.Companion.ATTRIBUTES_CACHE_KEY
+import pl.voytech.exporter.core.template.context.AttributedCell
+import pl.voytech.exporter.core.template.context.AttributedRow
+import pl.voytech.exporter.core.template.context.ColumnOperationTableData
+import pl.voytech.exporter.core.template.context.OperationContext
+import pl.voytech.exporter.core.template.operations.TableOperations
+import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.ATTRIBUTES_CACHE_KEY
 
 @Suppress("UNCHECKED_CAST")
 class AttributeKeyDrivenCache {
@@ -63,10 +67,7 @@ class AttributeCacheTableOperations<T, A>(private val cache: AttributeKeyDrivenC
         }
     }
 
-    override fun renderColumn(
-        state: A,
-        context: OperationContext<ColumnOperationTableData>
-    ) {
+    override fun renderColumn(state: A, context: OperationContext<ColumnOperationTableData>) {
         context.data?.columnAttributes?.let { context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareColumnCacheEntryScope(it) }
     }
 

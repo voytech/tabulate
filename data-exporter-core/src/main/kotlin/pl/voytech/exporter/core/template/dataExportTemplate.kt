@@ -1,7 +1,12 @@
 package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.*
-import pl.voytech.exporter.core.template.iterators.BaseTableDataIterator
+import pl.voytech.exporter.core.template.context.AttributedRow
+import pl.voytech.exporter.core.template.context.ColumnRenderPhase
+import pl.voytech.exporter.core.template.context.GlobalContextAndAttributes
+import pl.voytech.exporter.core.template.context.OperationContext
+import pl.voytech.exporter.core.template.iterators.OperationContextIterator
+import pl.voytech.exporter.core.template.operations.ExportOperations
 import pl.voytech.exporter.core.template.resolvers.RowContextResolver
 import java.io.OutputStream
 
@@ -22,14 +27,14 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     private fun add(api: A, table: Table<T>, collection: Collection<T>): A {
-        StateAndContext(
+        GlobalContextAndAttributes(
             tableModel = delegate.tableOperations.createTable(api, table),
             tableName = table.name ?: "table-${NextId.nextId()}",
             firstRow = table.firstRow,
             firstColumn = table.firstColumn
         ).also {
             renderColumns(it, api, ColumnRenderPhase.BEFORE_FIRST_ROW)
-            with(BaseTableDataIterator(RowContextResolver(table, it, collection))) {
+            with(OperationContextIterator(RowContextResolver(table, it, collection))) {
                 while (this.hasNext()) {
                     renderNextRow(it, api, this)
                 }
@@ -56,33 +61,33 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     }
 
     private fun renderColumns(
-        state: StateAndContext<T>,
+        stateAndAttributes: GlobalContextAndAttributes<T>,
         api: A,
         renderPhase: ColumnRenderPhase
     ) {
-        state.tableModel.forEachColumn { columnIndex: Int, column: Column<T> ->
+        stateAndAttributes.tableModel.forEachColumn { columnIndex: Int, column: Column<T> ->
             delegate.tableOperations.renderColumn(
-                api, state.getColumnContext(column.index ?: columnIndex, column, renderPhase)
+                api, stateAndAttributes.getColumnContext(IndexedValue(column.index ?: columnIndex, column), renderPhase)
             )
         }
     }
 
-    private fun renderRowCells(state: StateAndContext<T>, api: A, context: OperationContext<AttributedRow<T>>) {
-        state.tableModel.forEachColumn { columnIndex: Int, column: Column<T> ->
+    private fun renderRowCells(stateAndAttributes: GlobalContextAndAttributes<T>, api: A, context: OperationContext<AttributedRow<T>>) {
+        stateAndAttributes.tableModel.forEachColumn { columnIndex: Int, column: Column<T> ->
             if (context.data?.rowCellValues?.containsKey(column.id) == true) {
                 delegate.tableOperations.renderRowCell(
                     api,
-                    state.getCellContext(column.index ?: columnIndex, column)
+                    stateAndAttributes.getCellContext(IndexedValue(column.index ?: columnIndex, column))
                 )
             }
         }
     }
 
-    private fun renderNextRow(state: StateAndContext<T>, api: A, iterator: BaseTableDataIterator<AttributedRow<T>>) {
+    private fun renderNextRow(stateAndAttributes: GlobalContextAndAttributes<T>, api: A, iterator: OperationContextIterator<AttributedRow<T>>) {
         if (iterator.hasNext()) {
             iterator.next().let { rowContext ->
                 delegate.tableOperations.renderRow(api, rowContext).also {
-                    renderRowCells(state, api, rowContext)
+                    renderRowCells(stateAndAttributes, api, rowContext)
                 }
             }
         }

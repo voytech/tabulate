@@ -2,7 +2,7 @@ package pl.voytech.exporter.core.api.builder.dsl
 
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.DataExportTemplate
-import pl.voytech.exporter.core.template.ExportOperations
+import pl.voytech.exporter.core.template.operations.ExportOperations
 import java.io.OutputStream
 
 @DslMarker

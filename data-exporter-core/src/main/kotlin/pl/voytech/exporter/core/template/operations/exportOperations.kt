@@ -1,6 +1,11 @@
-package pl.voytech.exporter.core.template
+package pl.voytech.exporter.core.template.operations
 
 import pl.voytech.exporter.core.model.Table
+import pl.voytech.exporter.core.template.context.AttributedCell
+import pl.voytech.exporter.core.template.context.AttributedRow
+import pl.voytech.exporter.core.template.FileData
+import pl.voytech.exporter.core.template.context.ColumnOperationTableData
+import pl.voytech.exporter.core.template.context.OperationContext
 import java.io.OutputStream
 
 interface CreateDocumentOperation<A> {

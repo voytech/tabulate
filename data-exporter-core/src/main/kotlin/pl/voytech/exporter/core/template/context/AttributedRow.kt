@@ -1,4 +1,4 @@
-package pl.voytech.exporter.core.template
+package pl.voytech.exporter.core.template.context
 
 import pl.voytech.exporter.core.model.ColumnKey
 import pl.voytech.exporter.core.model.attributes.RowAttribute

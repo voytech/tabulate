@@ -1,10 +1,10 @@
 package pl.voytech.exporter.core.template.resolvers
 
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.template.StateAndContext
+import pl.voytech.exporter.core.template.context.GlobalContextAndAttributes
 
-class RowContextResolver<T>(tableModel: Table<T>, state: StateAndContext<T>, collection: Collection<T>) :
-    AbstractRowContextResolver<Collection<T>, T>(tableModel, state) {
+class RowContextResolver<T>(tableModel: Table<T>, stateAndAttributes: GlobalContextAndAttributes<T>, collection: Collection<T>) :
+    AbstractRowContextResolver<Collection<T>, T>(tableModel, stateAndAttributes) {
 
     private var iterator: Iterator<T>? = null
 

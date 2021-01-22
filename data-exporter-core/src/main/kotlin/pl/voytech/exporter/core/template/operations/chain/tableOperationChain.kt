@@ -1,7 +1,11 @@
 package pl.voytech.exporter.core.template.operations.chain
 
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.template.*
+import pl.voytech.exporter.core.template.context.AttributedCell
+import pl.voytech.exporter.core.template.context.AttributedRow
+import pl.voytech.exporter.core.template.context.ColumnOperationTableData
+import pl.voytech.exporter.core.template.context.OperationContext
+import pl.voytech.exporter.core.template.operations.TableOperations
 
 class EmptyOperationChainException : RuntimeException("There is no export operation in the chain.")
 

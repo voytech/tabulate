@@ -1,6 +1,8 @@
-package pl.voytech.exporter.core.template
+package pl.voytech.exporter.core.template.context
 
 import pl.voytech.exporter.core.model.attributes.ColumnAttribute
+import pl.voytech.exporter.core.template.context.CellValue
+import pl.voytech.exporter.core.template.context.Coordinates
 
 
 enum class ColumnRenderPhase {

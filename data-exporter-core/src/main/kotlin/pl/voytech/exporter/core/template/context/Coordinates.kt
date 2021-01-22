@@ -1,4 +1,4 @@
-package pl.voytech.exporter.core.template
+package pl.voytech.exporter.core.template.context
 
 data class Coordinates(
     val tableName: String
