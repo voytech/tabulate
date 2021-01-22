@@ -1,11 +1,15 @@
-package pl.voytech.exporter.core.template.operations
+package pl.voytech.exporter.core.template.operations.impl
 
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.attributes.CellAttribute
 import pl.voytech.exporter.core.model.attributes.ColumnAttribute
 import pl.voytech.exporter.core.model.attributes.RowAttribute
 import pl.voytech.exporter.core.model.attributes.TableAttribute
-import pl.voytech.exporter.core.template.*
+import pl.voytech.exporter.core.template.context.AttributedCell
+import pl.voytech.exporter.core.template.context.AttributedRow
+import pl.voytech.exporter.core.template.context.ColumnOperationTableData
+import pl.voytech.exporter.core.template.context.OperationContext
+import pl.voytech.exporter.core.template.operations.*
 import java.util.*
 
 abstract class AttributeAwareTableOperations<T, A>(

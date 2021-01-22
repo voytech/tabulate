@@ -1,8 +1,8 @@
 package pl.voytech.exporter.testutils
 
 import pl.voytech.exporter.core.model.attributes.CellAttribute
-import pl.voytech.exporter.core.template.CellValue
-import pl.voytech.exporter.core.template.Coordinates
+import pl.voytech.exporter.core.template.context.CellValue
+import pl.voytech.exporter.core.template.context.Coordinates
 import java.io.File
 
 interface CellSelect

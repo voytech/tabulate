@@ -6,8 +6,8 @@ import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
-import pl.voytech.exporter.core.template.CellValue
-import pl.voytech.exporter.core.template.Coordinates
+import pl.voytech.exporter.core.template.context.CellValue
+import pl.voytech.exporter.core.template.context.Coordinates
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.workbook
 import pl.voytech.exporter.testutils.*

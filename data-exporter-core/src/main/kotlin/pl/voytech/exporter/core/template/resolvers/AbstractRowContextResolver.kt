@@ -2,10 +2,10 @@ package pl.voytech.exporter.core.template.resolvers
 
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.attributes.mergeAttributes
-import pl.voytech.exporter.core.template.*
+import pl.voytech.exporter.core.template.context.*
 
-abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, state: StateAndContext<T>) :
-    TableDataSourceIndexedContextResolver<DS, T, AttributedRow<T>>(tableModel, state) {
+abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, stateAndAttributes: GlobalContextAndAttributes<T>) :
+    TableDataSourceIndexedContextResolver<DS, T, AttributedRow<T>>(tableModel, stateAndAttributes) {
 
     private inline fun computeCellValue(
         column: Column<T>,
@@ -29,9 +29,9 @@ abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, state: St
                 *(rowDefinitions.mapNotNull { i -> i.cellAttributes }.toTypedArray())
             )
             tableModel.forEachColumn { column: Column<T> ->
-                if (state.dontSkip(column)) {
+                if (stateAndAttributes.dontSkip(column)) {
                     val cellDefinition = cellDefinitions[column.id]
-                    state.applySpans(column, cellDefinition)
+                    stateAndAttributes.applySpans(column, cellDefinition)
                     val attributedCell = computeCellValue(column, cellDefinition, it)?.let {  value ->
                         AttributedCell(
                             value = CellValue(
@@ -66,7 +66,7 @@ abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, state: St
         indexedRecord: IndexedValue<T>? = null
     ): IndexedValue<OperationContext<AttributedRow<T>>> {
         return resolveAttributedRow(resolvedIndex, indexedRecord).let {
-            val ctx = state.getRowContext(IndexedValue(resolvedIndex, it))
+            val ctx = stateAndAttributes.getRowContext(IndexedValue(resolvedIndex, it))
             IndexedValue(resolvedIndex, ctx)
         }
     }

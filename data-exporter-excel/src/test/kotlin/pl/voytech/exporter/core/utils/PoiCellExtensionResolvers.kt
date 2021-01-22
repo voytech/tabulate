@@ -9,7 +9,7 @@ import pl.voytech.exporter.core.model.attributes.style.enums.BorderStyle
 import pl.voytech.exporter.core.model.attributes.style.enums.HorizontalAlignment
 import pl.voytech.exporter.core.model.attributes.style.enums.VerticalAlignment
 import pl.voytech.exporter.core.model.attributes.style.enums.WeightStyle
-import pl.voytech.exporter.core.template.Coordinates
+import pl.voytech.exporter.core.template.context.Coordinates
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
 import pl.voytech.exporter.impl.template.excel.PoiUtils
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper

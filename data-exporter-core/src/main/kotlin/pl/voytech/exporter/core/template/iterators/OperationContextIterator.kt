@@ -1,10 +1,10 @@
 package pl.voytech.exporter.core.template.iterators
 
-import pl.voytech.exporter.core.template.OperationContext
+import pl.voytech.exporter.core.template.context.OperationContext
 import pl.voytech.exporter.core.template.resolvers.IndexedContextResolver
 import java.util.concurrent.atomic.AtomicInteger
 
-class BaseTableDataIterator<CTX>(
+class OperationContextIterator<CTX>(
     private val resolver: IndexedContextResolver<CTX>
 ) : AbstractIterator<OperationContext<CTX>>() {
     private val currentIndex = AtomicInteger(0)
