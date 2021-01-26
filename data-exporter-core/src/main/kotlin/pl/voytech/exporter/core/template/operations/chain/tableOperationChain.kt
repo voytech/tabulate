@@ -1,10 +1,7 @@
 package pl.voytech.exporter.core.template.operations.chain
 
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.template.context.AttributedCell
-import pl.voytech.exporter.core.template.context.AttributedRow
-import pl.voytech.exporter.core.template.context.ColumnOperationTableData
-import pl.voytech.exporter.core.template.context.OperationContext
+import pl.voytech.exporter.core.template.context.*
 import pl.voytech.exporter.core.template.operations.TableOperations
 
 class EmptyOperationChainException : RuntimeException("There is no export operation in the chain.")
@@ -21,7 +18,7 @@ class TableOperationChain<T, A>(
 
     override fun renderRow(
         state: A,
-        context: OperationContext<AttributedRow<T>>
+        context: RowOperationContext<T>
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
         chain.forEach { it.renderRow(state, context) }
@@ -29,7 +26,7 @@ class TableOperationChain<T, A>(
 
     override fun renderColumn(
         state: A,
-        context: OperationContext<ColumnOperationTableData>
+        context: ColumnOperationContext
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
         chain.forEach {
@@ -42,7 +39,7 @@ class TableOperationChain<T, A>(
 
     override fun renderRowCell(
         state: A,
-        context: OperationContext<AttributedCell>
+        context: CellOperationContext
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
         chain.forEach { it.renderRowCell(state, context) }

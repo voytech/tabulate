@@ -22,48 +22,37 @@ class GlobalContextAndAttributes<T>(
      * coordinate object is recreated, and new row associated context data is being set. Then instance is used on all
      * kind of given row scoped operations.
      */
-    private val rowContext: OperationContext<AttributedRow<T>> =
-        OperationContext(stateAttributes)
+    private val rowContext: RowOperationContext<T> = RowOperationContext(tableName, stateAttributes)
 
     /**
      * Instance of mutable context for cell-scope operations. After changing coordinate denoting advancing the cell,
      * coordinate object is recreated, and new cell associated context data is being set. Then instance is used on all
      * kind of given cell scoped operations.
      */
-    private val cellContext: OperationContext<AttributedCell> =
-        OperationContext(stateAttributes)
+    private val cellContext: CellOperationContext = CellOperationContext(tableName, stateAttributes)
 
     /**
      * Instance of mutable context for column-scope operations. After changing coordinate denoting advancing the column,
      * coordinate object is recreated, and new column associated context data is being set. Then instance is used on all
      * kind of given column scoped operations.
      */
-    private val columnContext: OperationContext<ColumnOperationTableData> =
-        OperationContext<ColumnOperationTableData>(stateAttributes).also { it.data = ColumnOperationTableData() }
+    private val columnContext: ColumnOperationContext =
+        ColumnOperationContext(tableName, stateAttributes).also { it.data = ColumnOperationTableData() }
 
 
-    private val coordinates: Coordinates = Coordinates(tableName)
-
-    init {
-        columnContext.coordinates = coordinates
-        rowContext.coordinates = coordinates
-        cellContext.coordinates = coordinates
-    }
-
-
-    internal fun getRowContext(attributedRow: IndexedValue<AttributedRow<T>>): OperationContext<AttributedRow<T>> {
+    internal fun getRowContext(attributedRow: IndexedValue<AttributedRow<T>>): RowOperationContext<T> {
         return with(rowContext) {
-            coordinates.rowIndex = (firstRow ?: 0) + attributedRow.index
-            coordinates.columnIndex = 0
+            rowIndex = (firstRow ?: 0) + attributedRow.index
             data = attributedRow.value
             this
         }
     }
 
-    internal fun getCellContext(indexedColumn: IndexedValue<Column<T>>): OperationContext<AttributedCell> {
+    internal fun getCellContext(indexedColumn: IndexedValue<Column<T>>): CellOperationContext {
         return rowContext.data.let { attributedRow ->
             with(cellContext) {
-                coordinates.columnIndex = (firstColumn ?: 0) + indexedColumn.index
+                columnIndex = (firstColumn ?: 0) + indexedColumn.index
+                rowIndex = rowContext.rowIndex
                 data = attributedRow?.rowCellValues?.get(indexedColumn.value.id) ?: error("")
                 this
             }
@@ -73,9 +62,9 @@ class GlobalContextAndAttributes<T>(
     internal fun getColumnContext(
         indexedColumn: IndexedValue<Column<T>>,
         phase: ColumnRenderPhase
-    ): OperationContext<ColumnOperationTableData> {
+    ): ColumnOperationContext {
         return with(columnContext) {
-            coordinates.columnIndex = (firstColumn ?: 0) + indexedColumn.index
+            columnIndex = (firstColumn ?: 0) + indexedColumn.index
             data!!.currentPhase = phase
             data!!.columnAttributes = indexedColumn.value.columnAttributes?.filter { ext ->
                 ((ColumnRenderPhase.BEFORE_FIRST_ROW == phase) && ext.beforeFirstRow()) ||

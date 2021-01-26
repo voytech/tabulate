@@ -5,10 +5,7 @@ import pl.voytech.exporter.core.model.attributes.CellAttribute
 import pl.voytech.exporter.core.model.attributes.ColumnAttribute
 import pl.voytech.exporter.core.model.attributes.RowAttribute
 import pl.voytech.exporter.core.model.attributes.TableAttribute
-import pl.voytech.exporter.core.template.context.AttributedCell
-import pl.voytech.exporter.core.template.context.AttributedRow
-import pl.voytech.exporter.core.template.context.ColumnOperationTableData
-import pl.voytech.exporter.core.template.context.OperationContext
+import pl.voytech.exporter.core.template.context.*
 import pl.voytech.exporter.core.template.operations.*
 import java.util.*
 
@@ -131,7 +128,7 @@ abstract class AttributeAwareTableOperations<T, A>(
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun renderRow(
         state: A,
-        context: OperationContext<AttributedRow<T>>
+        context: RowOperationContext<T>
     ) {
         if (!context.data?.rowAttributes.isNullOrEmpty()) {
             var operationRendered = false
@@ -149,12 +146,12 @@ abstract class AttributeAwareTableOperations<T, A>(
         }
     }
 
-    abstract fun renderRowValue(state: A, context: OperationContext<AttributedRow<T>>)
+    abstract fun renderRowValue(state: A, context: RowOperationContext<T>)
 
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun renderColumn(
         state: A,
-        context: OperationContext<ColumnOperationTableData>
+        context: ColumnOperationContext
     ) {
         context.data?.columnAttributes?.let { attributes ->
             attributes.forEach { attribute ->
@@ -166,7 +163,7 @@ abstract class AttributeAwareTableOperations<T, A>(
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun renderRowCell(
         state: A,
-        context: OperationContext<AttributedCell>
+        context: CellOperationContext
     ) {
         if (!context.data?.attributes.isNullOrEmpty()) {
             var operationRendered = false
@@ -184,7 +181,7 @@ abstract class AttributeAwareTableOperations<T, A>(
         }
     }
 
-    abstract fun renderRowCellValue(state: A, context: OperationContext<AttributedCell>)
+    abstract fun renderRowCellValue(state: A, context: CellOperationContext)
 
 }
 

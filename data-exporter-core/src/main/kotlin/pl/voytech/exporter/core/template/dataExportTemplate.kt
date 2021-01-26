@@ -1,10 +1,7 @@
 package pl.voytech.exporter.core.template
 
 import pl.voytech.exporter.core.model.*
-import pl.voytech.exporter.core.template.context.AttributedRow
-import pl.voytech.exporter.core.template.context.ColumnRenderPhase
-import pl.voytech.exporter.core.template.context.GlobalContextAndAttributes
-import pl.voytech.exporter.core.template.context.OperationContext
+import pl.voytech.exporter.core.template.context.*
 import pl.voytech.exporter.core.template.iterators.OperationContextIterator
 import pl.voytech.exporter.core.template.operations.ExportOperations
 import pl.voytech.exporter.core.template.resolvers.RowContextResolver
@@ -72,7 +69,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-    private fun renderRowCells(stateAndAttributes: GlobalContextAndAttributes<T>, api: A, context: OperationContext<AttributedRow<T>>) {
+    private fun renderRowCells(stateAndAttributes: GlobalContextAndAttributes<T>, api: A, context: RowOperationContext<T>) {
         stateAndAttributes.tableModel.forEachColumn { columnIndex: Int, column: Column<T> ->
             if (context.data?.rowCellValues?.containsKey(column.id) == true) {
                 delegate.tableOperations.renderRowCell(
@@ -83,7 +80,7 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         }
     }
 
-    private fun renderNextRow(stateAndAttributes: GlobalContextAndAttributes<T>, api: A, iterator: OperationContextIterator<AttributedRow<T>>) {
+    private fun renderNextRow(stateAndAttributes: GlobalContextAndAttributes<T>, api: A, iterator: OperationContextIterator<T, RowOperationContext<T>>) {
         if (iterator.hasNext()) {
             iterator.next().let { rowContext ->
                 delegate.tableOperations.renderRow(api, rowContext).also {

@@ -1,8 +1,6 @@
 package pl.voytech.exporter.core.template.context
 
 import pl.voytech.exporter.core.model.attributes.ColumnAttribute
-import pl.voytech.exporter.core.template.context.CellValue
-import pl.voytech.exporter.core.template.context.Coordinates
 
 
 enum class ColumnRenderPhase {
@@ -11,18 +9,42 @@ enum class ColumnRenderPhase {
 }
 
 class ColumnOperationTableData {
-    var columnValues: List<CellValue>? = null
-        internal set
     var columnAttributes: Set<ColumnAttribute>? = null
         internal set
     var currentPhase: ColumnRenderPhase = ColumnRenderPhase.BEFORE_FIRST_ROW
 }
 
-data class OperationContext<E>(
-    val additionalAttributes: MutableMap<String, Any>
-) {
-    lateinit var coordinates: Coordinates
-        internal set
+open class OperationContext<E>(val additionalAttributes: MutableMap<String, Any>) {
     var data: E? = null
         internal set
 }
+
+open class BaseOperationContext<E>(open val tableId: String, additionalAttributes: MutableMap<String, Any>) : OperationContext<E>(
+    additionalAttributes
+) {
+    var rowIndex: Int = 0
+        internal set
+}
+
+class RowOperationContext<T>(override val tableId: String, additionalAttributes: MutableMap<String, Any>) :
+    BaseOperationContext<AttributedRow<T>>(tableId, additionalAttributes)
+
+class CellOperationContext(override val tableId: String, additionalAttributes: MutableMap<String, Any>) :
+    BaseOperationContext<AttributedCell>(tableId, additionalAttributes) {
+    var columnIndex: Int = 0
+        internal set
+}
+
+class ColumnOperationContext(val tableId: String, additionalAttributes: MutableMap<String, Any>) :
+    OperationContext<ColumnOperationTableData>(
+        additionalAttributes
+    ) {
+    var columnIndex: Int = 0
+        internal set
+}
+
+
+
+
+
+
