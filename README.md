@@ -2,6 +2,7 @@
 # Data Exporter
 
 [![CodeFactor](https://www.codefactor.io/repository/github/voytech/kotlin-data-export/badge/master?s=44ac65ac3503bca6a7cd3cb3b869fa080a6db3d2)](https://www.codefactor.io/repository/github/voytech/kotlin-data-export/overview/master)
+![Java CI with Gradle](https://github.com/voytech/kotlin-data-export/workflows/Java%20CI%20with%20Gradle/badge.svg)
 
 A simple and tiny library written in Kotlin/JVM meant to simplify dumping plain object collections to various tabular data file formats.
 
