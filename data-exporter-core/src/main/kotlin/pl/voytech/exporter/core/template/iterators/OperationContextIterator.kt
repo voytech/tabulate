@@ -4,11 +4,11 @@ import pl.voytech.exporter.core.template.context.OperationContext
 import pl.voytech.exporter.core.template.resolvers.IndexedContextResolver
 import java.util.concurrent.atomic.AtomicInteger
 
-class OperationContextIterator<CTX>(
-    private val resolver: IndexedContextResolver<CTX>
-) : AbstractIterator<OperationContext<CTX>>() {
+class OperationContextIterator<T, CTX : OperationContext<*>>(
+    private val resolver: IndexedContextResolver<T, CTX>
+) : AbstractIterator<CTX>() {
     private val currentIndex = AtomicInteger(0)
-    private var currentContext: OperationContext<CTX>? = null
+    private var currentContext: CTX? = null
 
     override fun computeNext() {
         resolver.resolve(currentIndex.getAndIncrement()).also {
@@ -26,5 +26,5 @@ class OperationContextIterator<CTX>(
 
     fun getCurrentIndex(): Int = currentIndex.get()
 
-    fun getCurrentContext(): OperationContext<CTX>? = currentContext
+    fun getCurrentContext(): CTX? = currentContext
 }

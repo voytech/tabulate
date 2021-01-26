@@ -4,10 +4,7 @@ import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.attributes.CellAttribute
 import pl.voytech.exporter.core.model.attributes.ColumnAttribute
 import pl.voytech.exporter.core.model.attributes.RowAttribute
-import pl.voytech.exporter.core.template.context.AttributedCell
-import pl.voytech.exporter.core.template.context.AttributedRow
-import pl.voytech.exporter.core.template.context.ColumnOperationTableData
-import pl.voytech.exporter.core.template.context.OperationContext
+import pl.voytech.exporter.core.template.context.*
 import pl.voytech.exporter.core.template.operations.TableOperations
 import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.ATTRIBUTES_CACHE_KEY
 
@@ -38,7 +35,7 @@ class AttributeKeyDrivenCache {
     companion object {
         const val ATTRIBUTES_CACHE_KEY = "extensionsCacheValue"
 
-        fun putCellCachedValue(context: OperationContext<AttributedCell>, key: String, value: Any): Any {
+        fun putCellCachedValue(context: CellOperationContext, key: String, value: Any): Any {
             (context.additionalAttributes[ATTRIBUTES_CACHE_KEY] as MutableMap<String, Any>)[key] = value
             return getCellCachedValue(
                 context,
@@ -46,7 +43,7 @@ class AttributeKeyDrivenCache {
             )!!
         }
 
-        fun getCellCachedValue(context: OperationContext<AttributedCell>, key: String): Any? {
+        fun getCellCachedValue(context: CellOperationContext, key: String): Any? {
             return ((context.additionalAttributes[ATTRIBUTES_CACHE_KEY] as MutableMap<String, Any>)[key])
         }
 
@@ -60,20 +57,20 @@ class AttributeCacheTableOperations<T, A>(private val cache: AttributeKeyDrivenC
 
     override fun renderRow(
         state: A,
-        context: OperationContext<AttributedRow<T>>
+        context: RowOperationContext<T>
     ) {
         context.data?.rowAttributes?.let {
             context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareRowCacheEntryScope(it)
         }
     }
 
-    override fun renderColumn(state: A, context: OperationContext<ColumnOperationTableData>) {
+    override fun renderColumn(state: A, context: ColumnOperationContext) {
         context.data?.columnAttributes?.let { context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareColumnCacheEntryScope(it) }
     }
 
     override fun renderRowCell(
         state: A,
-        context: OperationContext<AttributedCell>
+        context: CellOperationContext
     ) {
         context.data?.attributes?.let { context.additionalAttributes[ATTRIBUTES_CACHE_KEY] = cache.prepareCellCacheEntryScope(it) }
     }

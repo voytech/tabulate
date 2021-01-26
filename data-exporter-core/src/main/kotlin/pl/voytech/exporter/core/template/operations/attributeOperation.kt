@@ -2,10 +2,7 @@ package pl.voytech.exporter.core.template.operations
 
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.attributes.*
-import pl.voytech.exporter.core.template.context.AttributedCell
-import pl.voytech.exporter.core.template.context.AttributedRow
-import pl.voytech.exporter.core.template.context.ColumnOperationTableData
-import pl.voytech.exporter.core.template.context.OperationContext
+import pl.voytech.exporter.core.template.context.*
 
 interface AttributeOperation<out T : Attribute> {
     fun attributeType(): Class<out T>
@@ -22,13 +19,13 @@ interface TableAttributeOperation<T : TableAttribute, A> : AttributeOperation<T>
 }
 
 interface RowAttributeOperation<E,T : RowAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: A, context: OperationContext<AttributedRow<E>>, attribute: T)
+    fun renderAttribute(state: A, context: RowOperationContext<E>, attribute: T)
 }
 
 interface CellAttributeOperation<E, T : CellAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: A, context: OperationContext<AttributedCell>, attribute: T)
+    fun renderAttribute(state: A, context: CellOperationContext, attribute: T)
 }
 
 interface ColumnAttributeOperation<E, T : ColumnAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: A, context: OperationContext<ColumnOperationTableData>, attribute: T)
+    fun renderAttribute(state: A, context: ColumnOperationContext, attribute: T)
 }

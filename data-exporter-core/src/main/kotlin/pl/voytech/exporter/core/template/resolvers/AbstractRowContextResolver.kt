@@ -5,7 +5,7 @@ import pl.voytech.exporter.core.model.attributes.mergeAttributes
 import pl.voytech.exporter.core.template.context.*
 
 abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, stateAndAttributes: GlobalContextAndAttributes<T>) :
-    TableDataSourceIndexedContextResolver<DS, T, AttributedRow<T>>(tableModel, stateAndAttributes) {
+    TableDataSourceContextResolver<DS, T>(tableModel, stateAndAttributes) {
 
     private inline fun computeCellValue(
         column: Column<T>,
@@ -64,14 +64,14 @@ abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, stateAndA
     private fun resolveRowContext(
         resolvedIndex: Int,
         indexedRecord: IndexedValue<T>? = null
-    ): IndexedValue<OperationContext<AttributedRow<T>>> {
+    ): IndexedValue<RowOperationContext<T>> {
         return resolveAttributedRow(resolvedIndex, indexedRecord).let {
             val ctx = stateAndAttributes.getRowContext(IndexedValue(resolvedIndex, it))
             IndexedValue(resolvedIndex, ctx)
         }
     }
 
-    override fun resolve(requestedIndex: Int): IndexedValue<OperationContext<AttributedRow<T>>>? {
+    override fun resolve(requestedIndex: Int): IndexedValue<RowOperationContext<T>>? {
         return if (tableModel.hasRowsAt(requestedIndex)) {
             resolveRowContext(requestedIndex)
         } else {

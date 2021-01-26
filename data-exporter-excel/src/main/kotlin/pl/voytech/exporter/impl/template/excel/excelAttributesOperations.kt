@@ -16,10 +16,7 @@ import pl.voytech.exporter.core.model.attributes.style.enums.BorderStyle
 import pl.voytech.exporter.core.model.attributes.style.enums.HorizontalAlignment
 import pl.voytech.exporter.core.model.attributes.style.enums.VerticalAlignment
 import pl.voytech.exporter.core.model.attributes.style.enums.WeightStyle
-import pl.voytech.exporter.core.template.context.AttributedCell
-import pl.voytech.exporter.core.template.context.AttributedRow
-import pl.voytech.exporter.core.template.context.ColumnOperationTableData
-import pl.voytech.exporter.core.template.context.OperationContext
+import pl.voytech.exporter.core.template.context.*
 import pl.voytech.exporter.core.template.operations.*
 import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.getCellCachedValue
 import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.putCellCachedValue
@@ -35,15 +32,14 @@ import java.awt.geom.Rectangle2D
 import java.text.AttributedString
 import kotlin.math.roundToInt
 
-
 class CellFontAttributeOperation<T> : CellAttributeOperation<T, CellFontAttribute, SXSSFWorkbook> {
 
     private val cellFontCacheKey = "cellFont"
 
     override fun attributeType(): Class<CellFontAttribute> = CellFontAttribute::class.java
 
-    override fun renderAttribute(state: SXSSFWorkbook, context: OperationContext<AttributedCell>, attribute: CellFontAttribute) {
-        cellStyle(state, context.coordinates, context).let {
+    override fun renderAttribute(state: SXSSFWorkbook, context: CellOperationContext, attribute: CellFontAttribute) {
+        cellStyle(state, context).let {
             if (getCellCachedValue(context, cellFontCacheKey) == null) {
                 val font: XSSFFont = workbook(state).createFont() as XSSFFont
                 attribute.fontFamily?.run { font.fontName = this }
@@ -69,10 +65,10 @@ class CellBackgroundAttributeOperation<T> : CellAttributeOperation<T,CellBackgro
 
     override fun renderAttribute(
         state: SXSSFWorkbook,
-        context: OperationContext<AttributedCell>,
+        context: CellOperationContext,
         attribute: CellBackgroundAttribute
     ) {
-        cellStyle(state, context.coordinates, context).let {
+        cellStyle(state, context).let {
             (it as XSSFCellStyle).setFillForegroundColor(color(attribute.color))
             it.fillPattern = FillPatternType.SOLID_FOREGROUND
         }
@@ -82,7 +78,7 @@ class CellBackgroundAttributeOperation<T> : CellAttributeOperation<T,CellBackgro
 class CellBordersAttributeOperation<T> : CellAttributeOperation<T, CellBordersAttribute, SXSSFWorkbook> {
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
-    override fun renderAttribute(state: SXSSFWorkbook, context: OperationContext<AttributedCell>, attribute: CellBordersAttribute) {
+    override fun renderAttribute(state: SXSSFWorkbook, context: CellOperationContext, attribute: CellBordersAttribute) {
         val toPoiStyle = { style: BorderStyle ->
             when (style) {
                 BorderStyle.DASHED -> org.apache.poi.ss.usermodel.BorderStyle.DASHED
@@ -91,7 +87,7 @@ class CellBordersAttributeOperation<T> : CellAttributeOperation<T, CellBordersAt
                 else -> org.apache.poi.ss.usermodel.BorderStyle.NONE
             }
         }
-        cellStyle(state, context.coordinates, context).let {
+        cellStyle(state, context).let {
             attribute.leftBorderColor?.run { (it as XSSFCellStyle).setLeftBorderColor(color(this)) }
             attribute.rightBorderColor?.run { (it as XSSFCellStyle).setRightBorderColor(color(this)) }
             attribute.topBorderColor?.run { (it as XSSFCellStyle).setTopBorderColor(color(this)) }
@@ -108,8 +104,8 @@ class CellAlignmentAttributeOperation<T> : CellAttributeOperation<T, CellAlignme
 
     override fun attributeType(): Class<out CellAlignmentAttribute> = CellAlignmentAttribute::class.java
 
-    override fun renderAttribute(state: SXSSFWorkbook, context: OperationContext<AttributedCell>, attribute: CellAlignmentAttribute) {
-        cellStyle(state, context.coordinates, context).let {
+    override fun renderAttribute(state: SXSSFWorkbook, context: CellOperationContext, attribute: CellAlignmentAttribute) {
+        cellStyle(state, context).let {
             attribute.horizontal?.run {
                 it.alignment =
                     when (this) {
@@ -142,11 +138,11 @@ class CellDataFormatAttributeOperation<T> : CellAttributeOperation<T, CellExcelD
 
     override fun renderAttribute(
         state: SXSSFWorkbook,
-        context: OperationContext<AttributedCell>,
+        context: CellOperationContext,
         attribute: CellExcelDataFormatAttribute
     ) {
         //if (getCellCachedValue(context, cellStyleFormatKey) == null) {
-            cellStyle(state, context.coordinates, context).let {
+            cellStyle(state, context).let {
                 attribute.dataFormat.run {
                     it.dataFormat = workbook(state).createDataFormat().getFormat(this)
                     putCellCachedValue(context, cellStyleFormatKey, it.dataFormat)
@@ -185,13 +181,13 @@ class ColumnWidthAttributeOperation<T> : ColumnAttributeOperation<T, ColumnWidth
         return (frameWidth / defaultCharWidth * 256).roundToInt()
     }
 
-    override fun renderAttribute(state: SXSSFWorkbook, context: OperationContext<ColumnOperationTableData>, attribute: ColumnWidthAttribute) {
-        tableSheet(state, context.coordinates.tableName).let {
+    override fun renderAttribute(state: SXSSFWorkbook, context: ColumnOperationContext, attribute: ColumnWidthAttribute) {
+        tableSheet(state, context.tableId).let {
             if (attribute.auto == true || attribute.width == -1) {
-                if (!it.isColumnTrackedForAutoSizing(context.coordinates.columnIndex)) {
-                    it.trackColumnForAutoSizing(context.coordinates.columnIndex)
+                if (!it.isColumnTrackedForAutoSizing(context.columnIndex)) {
+                    it.trackColumnForAutoSizing(context.columnIndex)
                 }
-                it.autoSizeColumn(context.coordinates.columnIndex)
+                it.autoSizeColumn(context.columnIndex)
             } else {
                 PoiUtils.widthFromPixels(attribute.width)
             }
@@ -201,8 +197,8 @@ class ColumnWidthAttributeOperation<T> : ColumnAttributeOperation<T, ColumnWidth
 
 class RowHeightAttributeOperation<T> : RowAttributeOperation<T, RowHeightAttribute, SXSSFWorkbook> {
     override fun attributeType(): Class<out RowHeightAttribute> = RowHeightAttribute::class.java
-    override fun renderAttribute(state: SXSSFWorkbook, context: OperationContext<AttributedRow<T>>, attribute: RowHeightAttribute) {
-        assertRow(state, context.coordinates).height = PoiUtils.heightFromPixels(attribute.height)
+    override fun renderAttribute(state: SXSSFWorkbook, context: RowOperationContext<T>, attribute: RowHeightAttribute) {
+        assertRow(state, context.tableId, context.rowIndex).height = PoiUtils.heightFromPixels(attribute.height)
     }
 }
 

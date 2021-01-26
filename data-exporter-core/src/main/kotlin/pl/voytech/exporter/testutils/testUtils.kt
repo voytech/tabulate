@@ -88,10 +88,6 @@ class TableAssert<T, E>(
         return this
     }
 
-    fun hasTableName(name: String): Boolean {
-        return stateProvider.hasTableNamed(state!!, name)
-    }
-
     fun cleanup() {
         file.delete()
     }

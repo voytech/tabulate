@@ -11,9 +11,9 @@ import pl.voytech.exporter.core.template.*
 import pl.voytech.exporter.core.template.context.*
 import pl.voytech.exporter.core.template.operations.ExportOperations
 import pl.voytech.exporter.core.template.operations.LifecycleOperations
+import pl.voytech.exporter.core.template.operations.chain.TableOperationChain
 import pl.voytech.exporter.core.template.operations.impl.AttributeAwareTableOperations
 import pl.voytech.exporter.core.template.operations.impl.AttributeCacheTableOperations
-import pl.voytech.exporter.core.template.operations.chain.TableOperationChain
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertCell
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertRow
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertTableSheet
@@ -63,15 +63,15 @@ internal class XlsxTableOperations<T> :
         return assertTableSheet(state, table.name).let { table }
     }
 
-    override fun renderRowValue(state: SXSSFWorkbook, context: OperationContext<AttributedRow<T>>) {
-        assertRow(state, context.coordinates)
+    override fun renderRowValue(state: SXSSFWorkbook, context: RowOperationContext<T>) {
+        assertRow(state, context.tableId, context.rowIndex)
     }
 
     override fun renderRowCellValue(
         state: SXSSFWorkbook,
-        context: OperationContext<AttributedCell>
+        context: CellOperationContext
     ) {
-        assertCell(state, context.coordinates, context).also {
+        assertCell(state, context).also {
             setCellValue(it, context.data?.value)
         }.also {
             mergeCells(state, context)
@@ -80,24 +80,22 @@ internal class XlsxTableOperations<T> :
 
     private fun mergeCells(
         state: SXSSFWorkbook,
-        context: OperationContext<AttributedCell>
+        context: CellOperationContext
     ) {
         context.data?.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.also { cell ->
-            context.coordinates.also { coordinates ->
-                (coordinates.rowIndex until coordinates.rowIndex + cell.value.rowSpan).forEach { rowIndex ->
-                    (coordinates.columnIndex until coordinates.columnIndex + cell.value.colSpan).forEach { colIndex ->
-                        assertCell(state, Coordinates(coordinates.tableName, rowIndex, colIndex), context)
-                    }
+            (context.rowIndex until context.rowIndex + cell.value.rowSpan).forEach { rowIndex ->
+                (context.columnIndex until context.columnIndex + cell.value.colSpan).forEach { colIndex ->
+                    assertCell(state, context, rowIndex, colIndex)
                 }
-                assertTableSheet(state, coordinates.tableName).addMergedRegion(
-                    CellRangeAddress(
-                        coordinates.rowIndex,
-                        coordinates.rowIndex + cell.value.rowSpan - 1,
-                        coordinates.columnIndex,
-                        coordinates.columnIndex + cell.value.colSpan - 1
-                    )
-                )
             }
+            assertTableSheet(state, context.tableId!!).addMergedRegion(
+                CellRangeAddress(
+                    context.rowIndex,
+                    context.rowIndex + cell.value.rowSpan - 1,
+                    context.columnIndex,
+                    context.columnIndex + cell.value.colSpan - 1
+                )
+            )
         }
     }
 
