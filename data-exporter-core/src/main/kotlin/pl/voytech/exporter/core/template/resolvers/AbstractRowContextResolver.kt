@@ -28,12 +28,14 @@ abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, stateAndA
             val rowCellExtensions = mergeAttributes(
                 *(rowDefinitions.mapNotNull { i -> i.cellAttributes }.toTypedArray())
             )
-            tableModel.forEachColumn { column: Column<T> ->
+            tableModel.forEachColumn { index: Int, column: Column<T> ->
                 if (stateAndAttributes.dontSkip(column)) {
                     val cellDefinition = cellDefinitions[column.id]
                     stateAndAttributes.applySpans(column, cellDefinition)
                     val attributedCell = computeCellValue(column, cellDefinition, it)?.let {  value ->
-                        AttributedCell(
+                        stateAndAttributes.createCellContext(
+                            relativeRowIndex = resolvedIndex,
+                            relativeColumnIndex = column.index ?: index,
                             value = CellValue(
                                 value,
                                 cellDefinition?.type ?: column.columnType,
@@ -53,10 +55,11 @@ abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, stateAndA
                     }
                 }
             }
-            AttributedRow(
+            stateAndAttributes.createRowContext(
+                relativeRowIndex = resolvedIndex,
                 rowAttributes = rowDefinitions.mapNotNull { attribs -> attribs.rowAttributes }
                     .fold(setOf(), { acc, r -> acc + r }),
-                rowCellValues = cellValues.toMap()
+                cells = cellValues.toMap()
             )
         }
     }
@@ -64,14 +67,11 @@ abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, stateAndA
     private fun resolveRowContext(
         resolvedIndex: Int,
         indexedRecord: IndexedValue<T>? = null
-    ): IndexedValue<RowOperationContext<T>> {
-        return resolveAttributedRow(resolvedIndex, indexedRecord).let {
-            val ctx = stateAndAttributes.getRowContext(IndexedValue(resolvedIndex, it))
-            IndexedValue(resolvedIndex, ctx)
-        }
+    ): IndexedValue<AttributedRow<T>> {
+        return IndexedValue(resolvedIndex, resolveAttributedRow(resolvedIndex, indexedRecord))
     }
 
-    override fun resolve(requestedIndex: Int): IndexedValue<RowOperationContext<T>>? {
+    override fun resolve(requestedIndex: Int): IndexedValue<AttributedRow<T>>? {
         return if (tableModel.hasRowsAt(requestedIndex)) {
             resolveRowContext(requestedIndex)
         } else {

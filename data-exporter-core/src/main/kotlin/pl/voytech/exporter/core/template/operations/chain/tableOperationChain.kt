@@ -18,7 +18,7 @@ class TableOperationChain<T, A>(
 
     override fun renderRow(
         state: A,
-        context: RowOperationContext<T>
+        context: AttributedRow<T>
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
         chain.forEach { it.renderRow(state, context) }
@@ -26,7 +26,7 @@ class TableOperationChain<T, A>(
 
     override fun renderColumn(
         state: A,
-        context: ColumnOperationContext
+        context: AttributedColumn
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
         chain.forEach {
@@ -39,7 +39,7 @@ class TableOperationChain<T, A>(
 
     override fun renderRowCell(
         state: A,
-        context: CellOperationContext
+        context: AttributedCell
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
         chain.forEach { it.renderRowCell(state, context) }

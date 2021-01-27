@@ -41,10 +41,6 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
         return api
     }
 
-    fun export(table: Table<T>, collection: Collection<T>): FileData<ByteArray> {
-        return add(create(), table, collection).let { delegate.lifecycleOperations.saveDocument(it) }
-    }
-
     fun export(table: Table<T>, collection: Collection<T>, stream: OutputStream) {
         add(create(), table, collection).also { delegate.lifecycleOperations.saveDocument(it, stream) }
     }
@@ -64,23 +60,20 @@ open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>
     ) {
         stateAndAttributes.tableModel.forEachColumn { columnIndex: Int, column: Column<T> ->
             delegate.tableOperations.renderColumn(
-                api, stateAndAttributes.getColumnContext(IndexedValue(column.index ?: columnIndex, column), renderPhase)
+                api, stateAndAttributes.createColumnContext(IndexedValue(column.index ?: columnIndex, column), renderPhase)
             )
         }
     }
 
-    private fun renderRowCells(stateAndAttributes: GlobalContextAndAttributes<T>, api: A, context: RowOperationContext<T>) {
-        stateAndAttributes.tableModel.forEachColumn { columnIndex: Int, column: Column<T> ->
-            if (context.data?.rowCellValues?.containsKey(column.id) == true) {
-                delegate.tableOperations.renderRowCell(
-                    api,
-                    stateAndAttributes.getCellContext(IndexedValue(column.index ?: columnIndex, column))
-                )
+    private fun renderRowCells(stateAndAttributes: GlobalContextAndAttributes<T>, api: A, context: AttributedRow<T>) {
+        stateAndAttributes.tableModel.forEachColumn { column: Column<T> ->
+            if (context.rowCellValues.containsKey(column.id)) {
+                delegate.tableOperations.renderRowCell(api, context.rowCellValues[column.id]!!)
             }
         }
     }
 
-    private fun renderNextRow(stateAndAttributes: GlobalContextAndAttributes<T>, api: A, iterator: OperationContextIterator<T, RowOperationContext<T>>) {
+    private fun renderNextRow(stateAndAttributes: GlobalContextAndAttributes<T>, api: A, iterator: OperationContextIterator<T, AttributedRow<T>>) {
         if (iterator.hasNext()) {
             iterator.next().let { rowContext ->
                 delegate.tableOperations.renderRow(api, rowContext).also {

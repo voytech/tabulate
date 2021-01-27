@@ -9,7 +9,7 @@ import org.apache.poi.xssf.usermodel.XSSFCell
 import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.attributes.style.Color
-import pl.voytech.exporter.core.template.context.CellOperationContext
+import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.Coordinates
 import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.getCellCachedValue
 import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.putCellCachedValue
@@ -39,18 +39,18 @@ object SXSSFWrapper {
 
     fun assertCell(
         state: SXSSFWorkbook,
-        context: CellOperationContext,
+        context: AttributedCell,
         rowIndex: Int,
         columnIndex: Int
     ): SXSSFCell =
-        cell(state, context.tableId, rowIndex, columnIndex) ?: createCell(state, context, rowIndex, columnIndex)
+        cell(state, context.getTableId(), rowIndex, columnIndex) ?: createCell(state, context, rowIndex, columnIndex)
 
-    fun assertCell(state: SXSSFWorkbook, context: CellOperationContext): SXSSFCell =
-        cell(state, context.tableId, context.rowIndex, context.columnIndex) ?: createCell(state, context)
+    fun assertCell(state: SXSSFWorkbook, context: AttributedCell): SXSSFCell =
+        cell(state, context.getTableId(), context.rowIndex, context.columnIndex) ?: createCell(state, context)
 
     fun cellStyle(
         state: SXSSFWorkbook,
-        context: CellOperationContext
+        context: AttributedCell
     ): CellStyle {
         return assertCell(state, context).cellStyle
     }
@@ -63,11 +63,11 @@ object SXSSFWrapper {
 
     private fun createCell(
         state: SXSSFWorkbook,
-        context: CellOperationContext,
+        context: AttributedCell,
         alterRowIndex: Int? = null,
         alterColumnIndex: Int? = null
     ): SXSSFCell =
-        assertRow(state, context.tableId, alterRowIndex ?: context.rowIndex).let {
+        assertRow(state, context.getTableId(), alterRowIndex ?: context.rowIndex).let {
             it.createCell(alterColumnIndex ?: context.columnIndex).also { cell ->
                 val cellStyle = getCellCachedValue(context, CELL_STYLE_CACHE_KEY) ?: putCellCachedValue(
                     context,
