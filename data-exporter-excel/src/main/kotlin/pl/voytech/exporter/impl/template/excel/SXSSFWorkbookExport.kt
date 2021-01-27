@@ -34,15 +34,6 @@ internal class XlsxLifecycleOperation(private val templateFile: InputStream?) :
             ?: SXSSFWorkbook()
     }
 
-    override fun saveDocument(state: SXSSFWorkbook): FileData<ByteArray> {
-        val outputStream = ByteArrayOutputStream()
-        workbook(state).run {
-            write(outputStream)
-            close()
-        }
-        return FileData(content = outputStream.toByteArray())
-    }
-
     override fun saveDocument(state: SXSSFWorkbook, stream: OutputStream) {
         workbook(state).run {
             write(stream)
@@ -63,16 +54,16 @@ internal class XlsxTableOperations<T> :
         return assertTableSheet(state, table.name).let { table }
     }
 
-    override fun renderRowValue(state: SXSSFWorkbook, context: RowOperationContext<T>) {
-        assertRow(state, context.tableId, context.rowIndex)
+    override fun renderRowValue(state: SXSSFWorkbook, context: AttributedRow<T>) {
+        assertRow(state, context.getTableId(), context.rowIndex)
     }
 
     override fun renderRowCellValue(
         state: SXSSFWorkbook,
-        context: CellOperationContext
+        context: AttributedCell
     ) {
         assertCell(state, context).also {
-            setCellValue(it, context.data?.value)
+            setCellValue(it, context.value)
         }.also {
             mergeCells(state, context)
         }
@@ -80,15 +71,15 @@ internal class XlsxTableOperations<T> :
 
     private fun mergeCells(
         state: SXSSFWorkbook,
-        context: CellOperationContext
+        context: AttributedCell
     ) {
-        context.data?.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.also { cell ->
+        context.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.also { cell ->
             (context.rowIndex until context.rowIndex + cell.value.rowSpan).forEach { rowIndex ->
                 (context.columnIndex until context.columnIndex + cell.value.colSpan).forEach { colIndex ->
                     assertCell(state, context, rowIndex, colIndex)
                 }
             }
-            assertTableSheet(state, context.tableId!!).addMergedRegion(
+            assertTableSheet(state, context.getTableId()).addMergedRegion(
                 CellRangeAddress(
                     context.rowIndex,
                     context.rowIndex + cell.value.rowSpan - 1,

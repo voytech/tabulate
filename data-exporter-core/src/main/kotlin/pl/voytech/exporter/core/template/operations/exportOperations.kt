@@ -1,7 +1,6 @@
 package pl.voytech.exporter.core.template.operations
 
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.template.FileData
 import pl.voytech.exporter.core.template.context.*
 import java.io.OutputStream
 
@@ -14,7 +13,6 @@ interface CreateTableOperation<T, A> {
 }
 
 interface SaveDocumentOperations<A> {
-    fun saveDocument(state: A): FileData<ByteArray>
     fun saveDocument(state: A, stream: OutputStream)
 }
 
@@ -23,21 +21,21 @@ interface LifecycleOperations<A> : CreateDocumentOperation<A>, SaveDocumentOpera
 interface ColumnOperation<T, A> {
     fun renderColumn(
         state: A,
-        context: ColumnOperationContext
+        context: AttributedColumn
     )
 }
 
 interface RowOperation<T, A> {
     fun renderRow(
         state: A,
-        context: RowOperationContext<T>
+        context: AttributedRow<T>
     )
 }
 
 interface RowCellOperation<T, A> {
     fun renderRowCell(
         state: A,
-        context: CellOperationContext
+        context: AttributedCell
     )
 }
 

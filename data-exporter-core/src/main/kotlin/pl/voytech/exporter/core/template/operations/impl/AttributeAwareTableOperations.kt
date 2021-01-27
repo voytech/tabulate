@@ -128,11 +128,11 @@ abstract class AttributeAwareTableOperations<T, A>(
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun renderRow(
         state: A,
-        context: RowOperationContext<T>
+        context: AttributedRow<T>
     ) {
-        if (!context.data?.rowAttributes.isNullOrEmpty()) {
+        if (!context.rowAttributes.isNullOrEmpty()) {
             var operationRendered = false
-            context.data?.rowAttributes!!.forEach { attribute ->
+            context.rowAttributes.forEach { attribute ->
                 rowAttributeOperationsByClass[attribute.javaClass]?.let { operation ->
                     if (operation.priority() >= 0 && !operationRendered) {
                         renderRowValue(state, context)
@@ -146,14 +146,14 @@ abstract class AttributeAwareTableOperations<T, A>(
         }
     }
 
-    abstract fun renderRowValue(state: A, context: RowOperationContext<T>)
+    abstract fun renderRowValue(state: A, context: AttributedRow<T>)
 
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun renderColumn(
         state: A,
-        context: ColumnOperationContext
+        context: AttributedColumn
     ) {
-        context.data?.columnAttributes?.let { attributes ->
+        context.columnAttributes?.let { attributes ->
             attributes.forEach { attribute ->
                 columnAttributeOperationsByClass[attribute.javaClass]?.renderAttribute(state, context, attribute)
             }
@@ -163,11 +163,11 @@ abstract class AttributeAwareTableOperations<T, A>(
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun renderRowCell(
         state: A,
-        context: CellOperationContext
+        context: AttributedCell
     ) {
-        if (!context.data?.attributes.isNullOrEmpty()) {
+        if (!context.attributes.isNullOrEmpty()) {
             var operationRendered = false
-            context.data?.attributes!!.forEach { attribute ->
+            context.attributes.forEach { attribute ->
                 cellAttributeOperationsByClass[attribute.javaClass]?.let { operation ->
                     if (operation.priority() >= 0 && !operationRendered) {
                         renderRowCellValue(state, context)
@@ -181,7 +181,7 @@ abstract class AttributeAwareTableOperations<T, A>(
         }
     }
 
-    abstract fun renderRowCellValue(state: A, context: CellOperationContext)
+    abstract fun renderRowCellValue(state: A, context: AttributedCell)
 
 }
 

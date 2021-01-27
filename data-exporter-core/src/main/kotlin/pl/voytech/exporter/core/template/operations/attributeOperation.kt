@@ -19,13 +19,13 @@ interface TableAttributeOperation<T : TableAttribute, A> : AttributeOperation<T>
 }
 
 interface RowAttributeOperation<E,T : RowAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: A, context: RowOperationContext<E>, attribute: T)
+    fun renderAttribute(state: A, context: AttributedRow<E>, attribute: T)
 }
 
 interface CellAttributeOperation<E, T : CellAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: A, context: CellOperationContext, attribute: T)
+    fun renderAttribute(state: A, context: AttributedCell, attribute: T)
 }
 
 interface ColumnAttributeOperation<E, T : ColumnAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: A, context: ColumnOperationContext, attribute: T)
+    fun renderAttribute(state: A, context: AttributedColumn, attribute: T)
 }

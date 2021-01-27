@@ -38,7 +38,7 @@ class CellFontAttributeOperation<T> : CellAttributeOperation<T, CellFontAttribut
 
     override fun attributeType(): Class<CellFontAttribute> = CellFontAttribute::class.java
 
-    override fun renderAttribute(state: SXSSFWorkbook, context: CellOperationContext, attribute: CellFontAttribute) {
+    override fun renderAttribute(state: SXSSFWorkbook, context: AttributedCell, attribute: CellFontAttribute) {
         cellStyle(state, context).let {
             if (getCellCachedValue(context, cellFontCacheKey) == null) {
                 val font: XSSFFont = workbook(state).createFont() as XSSFFont
@@ -65,7 +65,7 @@ class CellBackgroundAttributeOperation<T> : CellAttributeOperation<T,CellBackgro
 
     override fun renderAttribute(
         state: SXSSFWorkbook,
-        context: CellOperationContext,
+        context: AttributedCell,
         attribute: CellBackgroundAttribute
     ) {
         cellStyle(state, context).let {
@@ -78,7 +78,7 @@ class CellBackgroundAttributeOperation<T> : CellAttributeOperation<T,CellBackgro
 class CellBordersAttributeOperation<T> : CellAttributeOperation<T, CellBordersAttribute, SXSSFWorkbook> {
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
-    override fun renderAttribute(state: SXSSFWorkbook, context: CellOperationContext, attribute: CellBordersAttribute) {
+    override fun renderAttribute(state: SXSSFWorkbook, context: AttributedCell, attribute: CellBordersAttribute) {
         val toPoiStyle = { style: BorderStyle ->
             when (style) {
                 BorderStyle.DASHED -> org.apache.poi.ss.usermodel.BorderStyle.DASHED
@@ -104,7 +104,7 @@ class CellAlignmentAttributeOperation<T> : CellAttributeOperation<T, CellAlignme
 
     override fun attributeType(): Class<out CellAlignmentAttribute> = CellAlignmentAttribute::class.java
 
-    override fun renderAttribute(state: SXSSFWorkbook, context: CellOperationContext, attribute: CellAlignmentAttribute) {
+    override fun renderAttribute(state: SXSSFWorkbook, context: AttributedCell, attribute: CellAlignmentAttribute) {
         cellStyle(state, context).let {
             attribute.horizontal?.run {
                 it.alignment =
@@ -138,7 +138,7 @@ class CellDataFormatAttributeOperation<T> : CellAttributeOperation<T, CellExcelD
 
     override fun renderAttribute(
         state: SXSSFWorkbook,
-        context: CellOperationContext,
+        context: AttributedCell,
         attribute: CellExcelDataFormatAttribute
     ) {
         //if (getCellCachedValue(context, cellStyleFormatKey) == null) {
@@ -181,8 +181,8 @@ class ColumnWidthAttributeOperation<T> : ColumnAttributeOperation<T, ColumnWidth
         return (frameWidth / defaultCharWidth * 256).roundToInt()
     }
 
-    override fun renderAttribute(state: SXSSFWorkbook, context: ColumnOperationContext, attribute: ColumnWidthAttribute) {
-        tableSheet(state, context.tableId).let {
+    override fun renderAttribute(state: SXSSFWorkbook, context: AttributedColumn, attribute: ColumnWidthAttribute) {
+        tableSheet(state, context.getTableId()).let {
             if (attribute.auto == true || attribute.width == -1) {
                 if (!it.isColumnTrackedForAutoSizing(context.columnIndex)) {
                     it.trackColumnForAutoSizing(context.columnIndex)
@@ -197,8 +197,8 @@ class ColumnWidthAttributeOperation<T> : ColumnAttributeOperation<T, ColumnWidth
 
 class RowHeightAttributeOperation<T> : RowAttributeOperation<T, RowHeightAttribute, SXSSFWorkbook> {
     override fun attributeType(): Class<out RowHeightAttribute> = RowHeightAttribute::class.java
-    override fun renderAttribute(state: SXSSFWorkbook, context: RowOperationContext<T>, attribute: RowHeightAttribute) {
-        assertRow(state, context.tableId, context.rowIndex).height = PoiUtils.heightFromPixels(attribute.height)
+    override fun renderAttribute(state: SXSSFWorkbook, context: AttributedRow<T>, attribute: RowHeightAttribute) {
+        assertRow(state, context.getTableId(), context.rowIndex).height = PoiUtils.heightFromPixels(attribute.height)
     }
 }
 
