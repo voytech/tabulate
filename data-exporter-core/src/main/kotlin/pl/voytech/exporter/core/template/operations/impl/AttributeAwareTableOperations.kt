@@ -9,34 +9,35 @@ import pl.voytech.exporter.core.template.context.*
 import pl.voytech.exporter.core.template.operations.*
 import java.util.*
 
-abstract class AttributeAwareTableOperations<T, A>(
-    tableAttributeOperations: List<TableAttributeOperation<out TableAttribute, A>>?,
-    columnAttributeOperations: List<ColumnAttributeOperation<T, out ColumnAttribute, A>>?,
-    rowAttributeOperations: List<RowAttributeOperation<T, out RowAttribute, A>>?,
-    cellAttributeOperations: List<CellAttributeOperation<T, out CellAttribute, A>>?
-) : TableOperations<T, A> {
+class AttributeAwareTableOperations<T>(
+    tableAttributeOperations: Set<TableAttributeOperation<out TableAttribute>>?,
+    columnAttributeOperations: Set<ColumnAttributeOperation<T, out ColumnAttribute>>?,
+    rowAttributeOperations: Set<RowAttributeOperation<T, out RowAttribute>>?,
+    cellAttributeOperations: Set<CellAttributeOperation<T, out CellAttribute>>?,
+    private val baseTableOperations: TableOperations<T>
+) : TableOperations<T> {
 
-    private val tableAttributeOperationsByClass: Map<Class<out TableAttribute>, TableAttributeOperation<TableAttribute, A>> =
+    private val tableAttributeOperationsByClass: Map<Class<out TableAttribute>, TableAttributeOperation<TableAttribute>> =
         tableAttributeOperations?.groupBy { it.attributeType() }
-            ?.map { it.key to it.value.first() as TableAttributeOperation<TableAttribute, A> }
+            ?.map { it.key to it.value.first() as TableAttributeOperation<TableAttribute> }
             ?.sortedBy { it.second.priority() }
             ?.toMap() ?: emptyMap()
 
-    private val columnAttributeOperationsByClass: Map<Class<out ColumnAttribute>, ColumnAttributeOperation<T, ColumnAttribute, A>> =
+    private val columnAttributeOperationsByClass: Map<Class<out ColumnAttribute>, ColumnAttributeOperation<T, ColumnAttribute>> =
         columnAttributeOperations?.groupBy { it.attributeType() }
-            ?.map { it.key to it.value.first() as ColumnAttributeOperation<T, ColumnAttribute, A> }
+            ?.map { it.key to it.value.first() as ColumnAttributeOperation<T, ColumnAttribute> }
             ?.sortedBy { it.second.priority() }
             ?.toMap() ?: emptyMap()
 
-    private val rowAttributeOperationsByClass: Map<Class<out RowAttribute>, RowAttributeOperation<T, RowAttribute, A>> =
+    private val rowAttributeOperationsByClass: Map<Class<out RowAttribute>, RowAttributeOperation<T, RowAttribute>> =
         rowAttributeOperations?.groupBy { it.attributeType() }
-            ?.map { it.key to it.value.first() as RowAttributeOperation<T, RowAttribute, A> }
+            ?.map { it.key to it.value.first() as RowAttributeOperation<T, RowAttribute> }
             ?.sortedBy { it.second.priority() }
             ?.toMap() ?: emptyMap()
 
-    private val cellAttributeOperationsByClass: Map<Class<out CellAttribute>, CellAttributeOperation<T, CellAttribute, A>> =
+    private val cellAttributeOperationsByClass: Map<Class<out CellAttribute>, CellAttributeOperation<T, CellAttribute>> =
         cellAttributeOperations?.groupBy { it.attributeType() }
-            ?.map { it.key to it.value.first() as CellAttributeOperation<T, CellAttribute, A> }
+            ?.map { it.key to it.value.first() as CellAttributeOperation<T, CellAttribute> }
             ?.sortedBy { it.second.priority() }
             ?.toMap() ?: emptyMap()
 
@@ -111,77 +112,58 @@ abstract class AttributeAwareTableOperations<T, A>(
     }
 
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
-    override fun createTable(state: A, table: Table<T>): Table<T> {
-        return initializeTable(state, sortByAttributeOperationPriority(table)).also { sortedTable ->
+    override fun createTable(table: Table<T>): Table<T> {
+        return baseTableOperations.createTable(sortByAttributeOperationPriority(table)).also { sortedTable ->
             sortedTable.tableAttributes?.forEach { tableAttribute ->
-                tableAttributeOperationsByClass[tableAttribute.javaClass]?.renderAttribute(
-                    state,
-                    table,
-                    tableAttribute
-                )
+                tableAttributeOperationsByClass[tableAttribute.javaClass]?.renderAttribute(table, tableAttribute)
             }
         }
     }
 
-    abstract fun initializeTable(state: A, table: Table<T>): Table<T>
-
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
-    override fun renderRow(
-        state: A,
-        context: AttributedRow<T>
-    ) {
+    override fun renderRow(context: AttributedRow<T>) {
         if (!context.rowAttributes.isNullOrEmpty()) {
             var operationRendered = false
             context.rowAttributes.forEach { attribute ->
                 rowAttributeOperationsByClass[attribute.javaClass]?.let { operation ->
                     if (operation.priority() >= 0 && !operationRendered) {
-                        renderRowValue(state, context)
+                        baseTableOperations.renderRow(context)
                         operationRendered = true
                     }
-                    operation.renderAttribute(state, context, attribute)
+                    operation.renderAttribute(context, attribute)
                 }
             }
         } else {
-            renderRowValue(state, context)
+            baseTableOperations.renderRow(context)
         }
     }
 
-    abstract fun renderRowValue(state: A, context: AttributedRow<T>)
-
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
-    override fun renderColumn(
-        state: A,
-        context: AttributedColumn
-    ) {
+    override fun renderColumn(context: AttributedColumn) {
         context.columnAttributes?.let { attributes ->
             attributes.forEach { attribute ->
-                columnAttributeOperationsByClass[attribute.javaClass]?.renderAttribute(state, context, attribute)
+                columnAttributeOperationsByClass[attribute.javaClass]?.renderAttribute(context, attribute)
             }
         }
     }
 
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
-    override fun renderRowCell(
-        state: A,
-        context: AttributedCell
-    ) {
+    override fun renderRowCell(context: AttributedCell) {
         if (!context.attributes.isNullOrEmpty()) {
             var operationRendered = false
             context.attributes.forEach { attribute ->
                 cellAttributeOperationsByClass[attribute.javaClass]?.let { operation ->
                     if (operation.priority() >= 0 && !operationRendered) {
-                        renderRowCellValue(state, context)
+                        baseTableOperations.renderRowCell(context)
                         operationRendered = true
                     }
-                    operation.renderAttribute(state, context, attribute)
+                    operation.renderAttribute(context, attribute)
                 }
             }
         } else {
-            renderRowCellValue(state, context)
+            baseTableOperations.renderRowCell(context)
         }
     }
-
-    abstract fun renderRowCellValue(state: A, context: AttributedCell)
 
 }
 

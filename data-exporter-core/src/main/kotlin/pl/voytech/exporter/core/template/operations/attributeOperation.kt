@@ -14,18 +14,26 @@ interface AttributeOperation<out T : Attribute> {
     }
 }
 
-interface TableAttributeOperation<T : TableAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: A, table: Table<*>, attribute: T)
+interface TableAttributeOperation<T : TableAttribute> : AttributeOperation<T> {
+    fun renderAttribute(table: Table<*>, attribute: T)
 }
 
-interface RowAttributeOperation<E,T : RowAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: A, context: AttributedRow<E>, attribute: T)
+interface RowAttributeOperation<E,T : RowAttribute> : AttributeOperation<T> {
+    fun renderAttribute(context: AttributedRow<E>, attribute: T)
 }
 
-interface CellAttributeOperation<E, T : CellAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: A, context: AttributedCell, attribute: T)
+interface CellAttributeOperation<E, T : CellAttribute> : AttributeOperation<T> {
+    fun renderAttribute(context: AttributedCell, attribute: T)
 }
 
-interface ColumnAttributeOperation<E, T : ColumnAttribute, A> : AttributeOperation<T> {
-    fun renderAttribute(state: A, context: AttributedColumn, attribute: T)
+interface ColumnAttributeOperation<E, T : ColumnAttribute> : AttributeOperation<T> {
+    fun renderAttribute(context: AttributedColumn, attribute: T)
 }
+
+abstract class AdaptingTableAttributeOperation<A, T: TableAttribute>(open val adaptee: A): TableAttributeOperation<T>
+
+abstract class AdaptingRowAttributeOperation<A, E, T: RowAttribute>(open val adaptee: A): RowAttributeOperation<E, T>
+
+abstract class AdaptingCellAttributeOperation<A, E,  T: CellAttribute>(open val adaptee: A): CellAttributeOperation<E, T>
+
+abstract class AdaptingColumnAttributeOperation<A, E, T: ColumnAttribute>(open val adaptee: A): ColumnAttributeOperation<E, T>

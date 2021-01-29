@@ -6,43 +6,33 @@ import pl.voytech.exporter.core.template.operations.TableOperations
 
 class EmptyOperationChainException : RuntimeException("There is no export operation in the chain.")
 
-class TableOperationChain<T, A>(
-    private vararg val chain: TableOperations<T, A>
-) : TableOperations<T, A> {
+class TableOperationChain<T>(
+    private vararg val chain: TableOperations<T>
+) : TableOperations<T> {
 
-    override fun createTable(state: A, table: Table<T>): Table<T> {
+    override fun createTable(table: Table<T>): Table<T> {
         chain.ifEmpty { throw EmptyOperationChainException() }
-        chain.forEach { it.createTable(state, table) }
+        chain.forEach { it.createTable(table) }
         return table
     }
 
     override fun renderRow(
-        state: A,
         context: AttributedRow<T>
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
-        chain.forEach { it.renderRow(state, context) }
+        chain.forEach { it.renderRow(context) }
     }
 
     override fun renderColumn(
-        state: A,
         context: AttributedColumn
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
-        chain.forEach {
-            it.renderColumn(
-                state,
-                context
-            )
-        }
+        chain.forEach { it.renderColumn(context) }
     }
 
-    override fun renderRowCell(
-        state: A,
-        context: AttributedCell
-    ) {
+    override fun renderRowCell(context: AttributedCell) {
         chain.ifEmpty { throw EmptyOperationChainException() }
-        chain.forEach { it.renderRowCell(state, context) }
+        chain.forEach { it.renderRowCell(context) }
     }
 
 }

@@ -9,16 +9,16 @@ import java.io.OutputStream
 annotation class OperationMarker
 
 @JvmSynthetic
-fun <T, A> Collection<T>.export(stream: OutputStream, block: ExportBuilder<T, A>.() -> Unit) {
-    ExportBuilder<T, A>(this).apply(block).execute(stream)
+fun <T> Collection<T>.export(stream: OutputStream, block: ExportBuilder<T>.() -> Unit) {
+    ExportBuilder(this).apply(block).execute(stream)
 }
 
 @OperationMarker
-class ExportBuilder<T, A>(private val collection: Collection<T>) {
+class ExportBuilder<T>(private val collection: Collection<T>) {
     @JvmSynthetic
     lateinit var table: Table<T>
     @JvmSynthetic
-    lateinit var operations: ExportOperations<T, A>
+    lateinit var operations: ExportOperations<T>
 
     @JvmSynthetic
     fun table(block: TableBuilder<T>.() -> Unit) {
