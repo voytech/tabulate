@@ -17,77 +17,77 @@ import java.io.OutputStream
  * interface implementations.
  * @author Wojciech Mąka
  */
-open class DataExportTemplate<T, A>(private val delegate: ExportOperations<T, A>) {
+open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
 
-    private fun create(): A {
-        return delegate.lifecycleOperations.createDocument()
+    private fun initialize() {
+        delegate.lifecycleOperations.initialize()
     }
 
-    private fun add(api: A, table: Table<T>, collection: Collection<T>): A {
+    private fun add(table: Table<T>, collection: Collection<T>) {
         GlobalContextAndAttributes(
-            tableModel = delegate.tableOperations.createTable(api, table),
+            tableModel = delegate.tableOperations.createTable(table),
             tableName = table.name ?: "table-${NextId.nextId()}",
             firstRow = table.firstRow,
             firstColumn = table.firstColumn
         ).also {
-            renderColumns(it, api, ColumnRenderPhase.BEFORE_FIRST_ROW)
+            renderColumns(it, ColumnRenderPhase.BEFORE_FIRST_ROW)
             with(OperationContextIterator(RowContextResolver(table, it, collection))) {
                 while (this.hasNext()) {
-                    renderNextRow(it, api, this)
+                    renderNextRow(it, this)
                 }
             }
-            renderColumns(it, api, ColumnRenderPhase.AFTER_LAST_ROW)
+            renderColumns(it, ColumnRenderPhase.AFTER_LAST_ROW)
         }
-        return api
     }
 
     fun export(table: Table<T>, collection: Collection<T>, stream: OutputStream) {
-        add(create(), table, collection).also { delegate.lifecycleOperations.saveDocument(it, stream) }
+        initialize()
+        add(table, collection).also { delegate.lifecycleOperations.finish(stream) }
     }
 
     fun export(table: Table<T>, stream: OutputStream) {
-        add(create(), table, emptyList()).also { delegate.lifecycleOperations.saveDocument(it, stream) }
+        initialize()
+        add(table, emptyList()).also { delegate.lifecycleOperations.finish(stream) }
     }
 
-    fun export(state: A, stream: OutputStream) {
-        delegate.lifecycleOperations.saveDocument(state, stream)
+    fun export(stream: OutputStream) {
+        delegate.lifecycleOperations.finish(stream)
     }
 
-    private fun renderColumns(
-        stateAndAttributes: GlobalContextAndAttributes<T>,
-        api: A,
-        renderPhase: ColumnRenderPhase
-    ) {
+    private fun renderColumns(stateAndAttributes: GlobalContextAndAttributes<T>, renderPhase: ColumnRenderPhase) {
         stateAndAttributes.tableModel.forEachColumn { columnIndex: Int, column: Column<T> ->
             delegate.tableOperations.renderColumn(
-                api, stateAndAttributes.createColumnContext(IndexedValue(column.index ?: columnIndex, column), renderPhase)
+                stateAndAttributes.createColumnContext(IndexedValue(column.index ?: columnIndex, column), renderPhase)
             )
         }
     }
 
-    private fun renderRowCells(stateAndAttributes: GlobalContextAndAttributes<T>, api: A, context: AttributedRow<T>) {
+    private fun renderRowCells(stateAndAttributes: GlobalContextAndAttributes<T>, context: AttributedRow<T>) {
         stateAndAttributes.tableModel.forEachColumn { column: Column<T> ->
             if (context.rowCellValues.containsKey(column.id)) {
-                delegate.tableOperations.renderRowCell(api, context.rowCellValues[column.id]!!)
+                delegate.tableOperations.renderRowCell(context.rowCellValues[column.id]!!)
             }
         }
     }
 
-    private fun renderNextRow(stateAndAttributes: GlobalContextAndAttributes<T>, api: A, iterator: OperationContextIterator<T, AttributedRow<T>>) {
+    private fun renderNextRow(
+        stateAndAttributes: GlobalContextAndAttributes<T>,
+        iterator: OperationContextIterator<T, AttributedRow<T>>
+    ) {
         if (iterator.hasNext()) {
             iterator.next().let { rowContext ->
-                delegate.tableOperations.renderRow(api, rowContext).also {
-                    renderRowCells(stateAndAttributes, api, rowContext)
+                delegate.tableOperations.renderRow(rowContext).also {
+                    renderRowCells(stateAndAttributes, rowContext)
                 }
             }
         }
     }
 }
 
-fun <T, A> Collection<T>.exportTable(table: Table<T>, delegate: ExportOperations<T, A>, stream: OutputStream) {
+fun <T> Collection<T>.exportTable(table: Table<T>, delegate: ExportOperations<T>, stream: OutputStream) {
     DataExportTemplate(delegate).export(table, this, stream)
 }
 
-fun <T, A> Table<T>.exportWith(delegate: ExportOperations<T, A>, stream: OutputStream) {
+fun <T> Table<T>.exportWith(delegate: ExportOperations<T>, stream: OutputStream) {
     DataExportTemplate(delegate).export(this, stream)
 }

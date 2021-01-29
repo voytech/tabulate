@@ -50,30 +50,24 @@ class AttributeKeyDrivenCache {
     }
 }
 
-class AttributeCacheTableOperations<T, A>(private val cache: AttributeKeyDrivenCache = AttributeKeyDrivenCache()) :
-    TableOperations<T, A> {
+class AttributeCacheTableOperations<T>(private val cache: AttributeKeyDrivenCache = AttributeKeyDrivenCache()) :
+    TableOperations<T> {
 
-    override fun createTable(state: A, table: Table<T>): Table<T>  = table
+    override fun createTable(table: Table<T>): Table<T>  = table
 
-    override fun renderRow(
-        state: A,
-        context: AttributedRow<T>
-    ) {
+    override fun renderRow(context: AttributedRow<T>) {
         context.rowAttributes?.let {
             context.additionalAttributes?.set(ATTRIBUTES_CACHE_KEY, cache.prepareRowCacheEntryScope(it))
         }
     }
 
-    override fun renderColumn(state: A, context: AttributedColumn) {
+    override fun renderColumn(context: AttributedColumn) {
         context.columnAttributes?.let { context.additionalAttributes?.set(ATTRIBUTES_CACHE_KEY,
             cache.prepareColumnCacheEntryScope(it)
         ) }
     }
 
-    override fun renderRowCell(
-        state: A,
-        context: AttributedCell
-    ) {
+    override fun renderRowCell(context: AttributedCell) {
         context.attributes?.let { context.additionalAttributes?.set(ATTRIBUTES_CACHE_KEY,
             cache.prepareCellCacheEntryScope(it)
         ) }

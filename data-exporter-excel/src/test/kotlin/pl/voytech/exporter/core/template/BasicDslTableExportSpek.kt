@@ -1,7 +1,6 @@
 package pl.voytech.exporter.core.template
 
 import org.apache.poi.openxml4j.util.ZipSecureFile
-import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
 import pl.voytech.exporter.core.api.builder.dsl.export
@@ -228,7 +227,7 @@ object BasicDslTableExportSpek : Spek({
             val file = File("test2.xlsx")
             ZipSecureFile.setMinInflateRatio(0.001)
             FileOutputStream(file).use {
-                productList.export<Product, SXSSFWorkbook>(it) {
+                productList.export<Product>(it) {
                     table {
                         name = "Products table"
                         firstRow = 1
