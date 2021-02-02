@@ -30,127 +30,132 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
+fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOperationConfiguringFactory<T> {
+    return object: ExportOperationConfiguringFactory<T>() {
 
-class ApachePoiExportOperationsFactory<T>(override val adaptee: SXSSFWorkbook): AdaptingExportOperationsFactory<T, SXSSFWorkbook>(adaptee) {
-
-    override fun createLifecycleOperations(): AdaptingLifecycleOperations<SXSSFWorkbook> = object : AdaptingLifecycleOperations<SXSSFWorkbook>(adaptee) {
-        override fun initialize() {
-            println("nothing")
+        private var adaptee: SXSSFWorkbook = if (templateFile != null) {
+            SXSSFWorkbook(WorkbookFactory.create(templateFile) as XSSFWorkbook?, 100)
+        } else {
+            SXSSFWorkbook()
         }
 
-        override fun finish(stream: OutputStream) {
-            workbook(adaptee).run {
-                write(stream)
-                close()
-            }
-        }
-    }
-
-    override fun createTableOperations(): AdaptingTableOperations<T, SXSSFWorkbook> = object: AdaptingTableOperations<T, SXSSFWorkbook>(adaptee) {
-        override fun createTable(table: Table<T>): Table<T> {
-            return assertTableSheet(adaptee, table.name).let { table }
-        }
-
-        override fun renderColumn(context: AttributedColumn) {
-            println("nothing")
-        }
-
-        override fun renderRow(context: AttributedRow<T>) {
-            assertRow(adaptee, context.getTableId(), context.rowIndex)
-        }
-
-        override fun renderRowCell(context: AttributedCell) {
-            assertCell(adaptee, context).also {
-                setCellValue(it, context.value)
-            }.also {
-                mergeCells(adaptee, context)
-            }
-        }
-
-        private fun toDateValue(value: Any): Date {
-            return when (value) {
-                is LocalDate -> Date.from(value.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant())
-                is LocalDateTime -> Date.from(value.atZone(ZoneId.systemDefault()).toInstant())
-                is Date -> value
-                is String -> Date.from(Instant.parse(value))
-                else -> throw IllegalStateException("Could not parse Date.")
-            }
-        }
-
-        private fun setCellValue(cell: SXSSFCell, value: CellValue?) {
-            value?.let { v ->
-                v.type?.let {
-                    when (it) {
-                        CellType.STRING -> cell.setCellValue(v.value as String)
-                        CellType.BOOLEAN -> cell.setCellValue(v.value as Boolean)
-                        CellType.DATE -> cell.setCellValue(toDateValue(v.value))
-                        CellType.NUMERIC -> cell.setCellValue((v.value as Number).toDouble())
-                        CellType.NATIVE_FORMULA -> cell.cellFormula = v.value.toString()
-                        CellType.FORMULA -> cell.cellFormula = v.value.toString()
-                        CellType.ERROR -> throw IllegalStateException("CellType.ERROR not supported.")
+        override fun getExportOperationsFactory(): ExportOperationsFactory<T> =
+            object : ExportOperationsFactory<T> {
+                override fun createLifecycleOperations(): LifecycleOperations = object : AdaptingLifecycleOperations<SXSSFWorkbook>(adaptee) {
+                    override fun initialize() {
+                        println("nothing")
                     }
-                } ?: v.run {
-                    when (this.value) {
-                        is String -> cell.setCellValue(this.value as String)
-                        is Boolean -> cell.setCellValue(this.value as Boolean)
-                        is LocalDate -> cell.setCellValue(toDateValue(this.value))
-                        is LocalDateTime -> cell.setCellValue(toDateValue(this.value))
-                        is Date -> cell.setCellValue(this.value as Date)
-                        is Number -> cell.setCellValue((this.value as Number).toDouble())
+
+                    override fun finish(stream: OutputStream) {
+                        workbook(adaptee).run {
+                            write(stream)
+                            close()
+                        }
+                    }
+                }
+
+                override fun createTableOperations(): TableOperations<T> = object: AdaptingTableOperations<T, SXSSFWorkbook>(adaptee) {
+                    override fun createTable(table: Table<T>): Table<T> {
+                        return assertTableSheet(adaptee, table.name).let { table }
+                    }
+
+                    override fun renderColumn(context: AttributedColumn) {
+                        println("nothing")
+                    }
+
+                    override fun renderRow(context: AttributedRow<T>) {
+                        assertRow(adaptee, context.getTableId(), context.rowIndex)
+                    }
+
+                    override fun renderRowCell(context: AttributedCell) {
+                        assertCell(adaptee, context).also {
+                            setCellValue(it, context.value)
+                        }.also {
+                            mergeCells(adaptee, context)
+                        }
+                    }
+
+                    private fun toDateValue(value: Any): Date {
+                        return when (value) {
+                            is LocalDate -> Date.from(value.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant())
+                            is LocalDateTime -> Date.from(value.atZone(ZoneId.systemDefault()).toInstant())
+                            is Date -> value
+                            is String -> Date.from(Instant.parse(value))
+                            else -> throw IllegalStateException("Could not parse Date.")
+                        }
+                    }
+
+                    private fun setCellValue(cell: SXSSFCell, value: CellValue?) {
+                        value?.let { v ->
+                            v.type?.let {
+                                when (it) {
+                                    CellType.STRING -> cell.setCellValue(v.value as String)
+                                    CellType.BOOLEAN -> cell.setCellValue(v.value as Boolean)
+                                    CellType.DATE -> cell.setCellValue(toDateValue(v.value))
+                                    CellType.NUMERIC -> cell.setCellValue((v.value as Number).toDouble())
+                                    CellType.NATIVE_FORMULA -> cell.cellFormula = v.value.toString()
+                                    CellType.FORMULA -> cell.cellFormula = v.value.toString()
+                                    CellType.ERROR -> throw IllegalStateException("CellType.ERROR not supported.")
+                                }
+                            } ?: v.run {
+                                when (this.value) {
+                                    is String -> cell.setCellValue(this.value as String)
+                                    is Boolean -> cell.setCellValue(this.value as Boolean)
+                                    is LocalDate -> cell.setCellValue(toDateValue(this.value))
+                                    is LocalDateTime -> cell.setCellValue(toDateValue(this.value))
+                                    is Date -> cell.setCellValue(this.value as Date)
+                                    is Number -> cell.setCellValue((this.value as Number).toDouble())
+                                }
+                            }
+                        }
+                    }
+
+                    private fun mergeCells(
+                        state: SXSSFWorkbook,
+                        context: AttributedCell
+                    ) {
+                        context.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.also { cell ->
+                            (context.rowIndex until context.rowIndex + cell.value.rowSpan).forEach { rowIndex ->
+                                (context.columnIndex until context.columnIndex + cell.value.colSpan).forEach { colIndex ->
+                                    assertCell(state, context, rowIndex, colIndex)
+                                }
+                            }
+                            assertTableSheet(state, context.getTableId()).addMergedRegion(
+                                CellRangeAddress(
+                                    context.rowIndex,
+                                    context.rowIndex + cell.value.rowSpan - 1,
+                                    context.columnIndex,
+                                    context.columnIndex + cell.value.colSpan - 1
+                                )
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        private fun mergeCells(
-            state: SXSSFWorkbook,
-            context: AttributedCell
-        ) {
-            context.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.also { cell ->
-                (context.rowIndex until context.rowIndex + cell.value.rowSpan).forEach { rowIndex ->
-                    (context.columnIndex until context.columnIndex + cell.value.colSpan).forEach { colIndex ->
-                        assertCell(state, context, rowIndex, colIndex)
-                    }
-                }
-                assertTableSheet(state, context.getTableId()).addMergedRegion(
-                    CellRangeAddress(
-                        context.rowIndex,
-                        context.rowIndex + cell.value.rowSpan - 1,
-                        context.columnIndex,
-                        context.columnIndex + cell.value.colSpan - 1
-                    )
-                )
+        override fun getAttributeOperationsFactory(): AttributeOperationsFactory<T>? =
+            object: AttributeOperationsFactory<T> {
+                override fun createTableAttributeOperations(): Set<AdaptingTableAttributeOperation<SXSSFWorkbook, out TableAttribute>> =
+                    tableAttributesOperations(adaptee)
+
+
+                override fun createRowAttributeOperations(): Set<AdaptingRowAttributeOperation<SXSSFWorkbook, T, out RowAttribute>> =
+                    rowAttributesOperations(adaptee)
+
+
+                override fun createColumnAttributeOperations(): Set<AdaptingColumnAttributeOperation<SXSSFWorkbook, T, out ColumnAttribute>> =
+                    columnAttributesOperations(adaptee)
+
+
+                override fun createCellAttributeOperations(): Set<AdaptingCellAttributeOperation<SXSSFWorkbook, T, out CellAttribute>> =
+                    cellAttributesOperations(adaptee)
+
             }
-        }
     }
-
-    override fun createTableAttributeOperations(): Set<AdaptingTableAttributeOperation<SXSSFWorkbook, out TableAttribute>> =
-        tableAttributesOperations(adaptee)
-
-
-    override fun createRowAttributeOperations(): Set<AdaptingRowAttributeOperation<SXSSFWorkbook, T, out RowAttribute>> =
-        rowAttributesOperations(adaptee)
-
-
-    override fun createColumnAttributeOperations(): Set<AdaptingColumnAttributeOperation<SXSSFWorkbook, T, out ColumnAttribute>> =
-        columnAttributesOperations(adaptee)
-
-
-    override fun createCellAttributeOperations(): Set<AdaptingCellAttributeOperation<SXSSFWorkbook, T, out CellAttribute>> =
-        cellAttributesOperations(adaptee)
-
 }
 
-fun <T> xlsxExport(templateFile: InputStream? = null): ExportOperations<T> =
-    AttributeAwareExportOperationsFactory(
-        ApachePoiExportOperationsFactory<T>(
-             if (templateFile != null) {
-                 SXSSFWorkbook(WorkbookFactory.create(templateFile) as XSSFWorkbook?, 100)
-             } else {
-                 SXSSFWorkbook()
-             }
-        )
-    ).let {
+fun <T> poiExcelExport(templateFile: InputStream? = null): ExportOperations<T> =
+    apachePoiExcelExportFactory<T>(templateFile).let {
         ExportOperations(
             lifecycleOperations = it.createLifecycleOperations(),
             tableOperations = TableOperationChain(
