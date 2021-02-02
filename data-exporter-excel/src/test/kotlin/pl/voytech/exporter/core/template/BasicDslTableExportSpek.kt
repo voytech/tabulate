@@ -17,7 +17,7 @@ import pl.voytech.exporter.core.utils.PoiTableAssert
 import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
 import pl.voytech.exporter.impl.template.excel.dataFormat
-import pl.voytech.exporter.impl.template.excel.xlsxExport
+import pl.voytech.exporter.impl.template.excel.poiExcelExport
 import pl.voytech.exporter.testutils.CellPosition
 import pl.voytech.exporter.testutils.CellRange
 import pl.voytech.exporter.testutils.cellassertions.AssertCellValue
@@ -142,7 +142,7 @@ object BasicDslTableExportSpek : Spek({
                 }
             }
             val elapsedTime = FileOutputStream(file).use { outputStream ->
-                measureTimeMillis { productList.exportTable(table, xlsxExport(), outputStream) }
+                measureTimeMillis { productList.exportTable(table, poiExcelExport(), outputStream) }
             }
             Then("file should exists and be valid xlsx readable by POI API") {
                 println("Elapsed time: $elapsedTime")
@@ -252,7 +252,7 @@ object BasicDslTableExportSpek : Spek({
                             }
                         }
                     }
-                    operations = xlsxExport(ClassLoader.getSystemResourceAsStream("template.xlsx"))
+                    operations = poiExcelExport(ClassLoader.getSystemResourceAsStream("template.xlsx"))
                 }
             }
             Then("file should be written successfully") {
@@ -318,7 +318,7 @@ object BasicDslTableExportSpek : Spek({
                 }
             }
             FileOutputStream(file).use {
-                productList.exportTable(table, xlsxExport(), it)
+                productList.exportTable(table, poiExcelExport(), it)
             }
             Then("file should be written successfully") {
                 assertNotNull(file)
@@ -394,7 +394,7 @@ object BasicDslTableExportSpek : Spek({
                             }
                         }
                     }
-                }.exportWith(xlsxExport(), it)
+                }.exportWith(poiExcelExport(), it)
             }
             Then("file should exists and be valid xlsx readable by POI API") {
                 PoiTableAssert<Product>(

@@ -60,33 +60,28 @@ abstract class AdaptingLifecycleOperations<A>(val adaptee: A) : LifecycleOperati
 
 abstract class AdaptingTableOperations<T, A>(val adaptee: A) : TableOperations<T>
 
-abstract class AdaptingAttributeOperationsFactory<T, A>(open val adaptee: A) : AttributeOperationsFactory<T> {
-    abstract override fun createTableAttributeOperations(): Set<AdaptingTableAttributeOperation<A, out TableAttribute>>?
-    abstract override fun createRowAttributeOperations(): Set<AdaptingRowAttributeOperation<A, T, out RowAttribute>>?
-    abstract override fun createColumnAttributeOperations(): Set<AdaptingColumnAttributeOperation<A, T, out ColumnAttribute>>?
-    abstract override fun createCellAttributeOperations(): Set<AdaptingCellAttributeOperation<A, T, out CellAttribute>>?
-}
+abstract class ExportOperationConfiguringFactory<T>: ExportOperationsFactory<T> {
 
-abstract class AdaptingExportOperationsFactory<T, A>(override val adaptee: A) : ExportOperationsFactory<T>, AdaptingAttributeOperationsFactory<T, A>(adaptee) {
-    abstract override fun createLifecycleOperations(): AdaptingLifecycleOperations<A>
-    abstract override fun createTableOperations(): AdaptingTableOperations<T, A>
-}
+    abstract fun getExportOperationsFactory() : ExportOperationsFactory<T>
 
-class AttributeAwareExportOperationsFactory<T, A>(
-    private val exportOperationsFactory: AdaptingExportOperationsFactory<T, A>,
-): ExportOperationsFactory<T> {
+    abstract fun getAttributeOperationsFactory() : AttributeOperationsFactory<T>?
 
-    override fun createLifecycleOperations(): AdaptingLifecycleOperations<A> {
-        return exportOperationsFactory.createLifecycleOperations()
+    override fun createLifecycleOperations(): LifecycleOperations {
+        return getExportOperationsFactory().createLifecycleOperations()
     }
 
     override fun createTableOperations(): TableOperations<T> {
-        return AttributeAwareTableOperations(
-            exportOperationsFactory.createTableAttributeOperations(),
-            exportOperationsFactory.createColumnAttributeOperations(),
-            exportOperationsFactory.createRowAttributeOperations(),
-            exportOperationsFactory.createCellAttributeOperations(),
-            exportOperationsFactory.createTableOperations()
-        )
+        val attributeOperationsFactory = getAttributeOperationsFactory()
+        return if (attributeOperationsFactory != null) {
+            AttributeAwareTableOperations(
+                attributeOperationsFactory.createTableAttributeOperations(),
+                attributeOperationsFactory.createColumnAttributeOperations(),
+                attributeOperationsFactory.createRowAttributeOperations(),
+                attributeOperationsFactory.createCellAttributeOperations(),
+                getExportOperationsFactory().createTableOperations()
+            )
+        } else {
+            return getExportOperationsFactory().createTableOperations()
+        }
     }
 }
