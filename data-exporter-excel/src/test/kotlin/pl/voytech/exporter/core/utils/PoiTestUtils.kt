@@ -8,8 +8,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.template.context.CellValue
 import pl.voytech.exporter.core.template.context.Coordinates
-import pl.voytech.exporter.impl.template.excel.SXSSFWrapper
-import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.workbook
+import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade
+import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade.workbook
 import pl.voytech.exporter.testutils.*
 import java.io.File
 import org.apache.poi.ss.usermodel.CellType as PoiCellType
@@ -53,7 +53,7 @@ class PoiTableAssert<T>(
                 val colSpan = address?.let { (it.lastColumn - it.firstColumn) + 1 } ?: 1
                 val rowSpan = address?.let { (it.lastRow - it.firstRow) + 1 } ?: 1
 
-                SXSSFWrapper.xssfCell(api, coordinates)
+                ApachePoiExcelFacade.xssfCell(api, coordinates)
                     .let {
                         return when (it?.cellType) {
                             PoiCellType.STRING -> CellValue(

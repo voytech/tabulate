@@ -1,4 +1,4 @@
-package pl.voytech.exporter.impl.template.excel
+package pl.voytech.exporter.impl.template.excel.wrapper
 
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.xssf.streaming.SXSSFCell
@@ -14,7 +14,7 @@ import pl.voytech.exporter.core.template.context.Coordinates
 import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.getCellCachedValue
 import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.putCellCachedValue
 
-object SXSSFWrapper {
+object ApachePoiExcelFacade {
 
     private const val CELL_STYLE_CACHE_KEY = "cellStyle"
 

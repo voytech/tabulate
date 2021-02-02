@@ -1,8 +1,8 @@
-package pl.voytech.exporter.impl.template.excel
+package pl.voytech.exporter.impl.template.excel.wrapper
 
 import kotlin.math.floor
 
-object PoiUtils {
+object ApachePoiUtils {
     private const val EXCEL_COLUMN_WIDTH_FACTOR: Short = 256
     private const val EXCEL_ROW_HEIGHT_FACTOR: Short = 20
     private const val UNIT_OFFSET_LENGTH = 7
