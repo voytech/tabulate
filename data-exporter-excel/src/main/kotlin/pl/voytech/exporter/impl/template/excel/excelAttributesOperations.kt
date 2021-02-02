@@ -19,11 +19,12 @@ import pl.voytech.exporter.core.template.context.*
 import pl.voytech.exporter.core.template.operations.*
 import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.getCellCachedValue
 import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.putCellCachedValue
-import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertRow
-import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.cellStyle
-import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.color
-import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.tableSheet
-import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.workbook
+import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade.assertRow
+import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade.cellStyle
+import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade.color
+import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade.tableSheet
+import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade.workbook
+import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiUtils
 import java.awt.font.FontRenderContext
 import java.awt.font.TextAttribute
 import java.awt.font.TextLayout
@@ -186,7 +187,7 @@ class ColumnWidthAttributeRenderOperation<T>(override val adaptee: SXSSFWorkbook
                 }
                 it.autoSizeColumn(context.columnIndex)
             } else {
-                PoiUtils.widthFromPixels(attribute.width)
+                ApachePoiUtils.widthFromPixels(attribute.width)
             }
         }
     }
@@ -195,7 +196,7 @@ class ColumnWidthAttributeRenderOperation<T>(override val adaptee: SXSSFWorkbook
 class RowHeightAttributeRenderOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingRowAttributeRenderOperation<SXSSFWorkbook,T, RowHeightAttribute>(adaptee) {
     override fun attributeType(): Class<out RowHeightAttribute> = RowHeightAttribute::class.java
     override fun renderAttribute(context: AttributedRow<T>, attribute: RowHeightAttribute) {
-        assertRow(adaptee, context.getTableId(), context.rowIndex).height = PoiUtils.heightFromPixels(attribute.height)
+        assertRow(adaptee, context.getTableId(), context.rowIndex).height = ApachePoiUtils.heightFromPixels(attribute.height)
     }
 }
 
