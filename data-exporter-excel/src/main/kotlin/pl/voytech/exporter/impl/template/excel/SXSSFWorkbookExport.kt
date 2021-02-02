@@ -16,8 +16,8 @@ import pl.voytech.exporter.core.template.context.AttributedColumn
 import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.context.CellValue
 import pl.voytech.exporter.core.template.operations.*
-import pl.voytech.exporter.core.template.operations.chain.TableRenderRenderRenderOperationChain
 import pl.voytech.exporter.core.template.operations.impl.AttributeCacheTableRenderOperations
+import pl.voytech.exporter.core.template.operations.impl.TableRenderOperationsChain
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertCell
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertRow
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertTableSheet
@@ -158,7 +158,7 @@ fun <T> poiExcelExport(templateFile: InputStream? = null): ExportOperations<T> =
     apachePoiExcelExportFactory<T>(templateFile).let {
         ExportOperations(
             lifecycleOperations = it.createLifecycleOperations(),
-            tableRenderOperations = TableRenderRenderRenderOperationChain(
+            tableRenderOperations = TableRenderOperationsChain(
                 AttributeCacheTableRenderOperations(),
                 it.createTableRenderOperations()
             )
