@@ -107,7 +107,6 @@ class PoiCellAlignmentAttributeResolver : AttributeResolver<SXSSFWorkbook> {
                     PoiHorizontalAlignment.JUSTIFY -> HorizontalAlignment.JUSTIFY
                     else -> null
                 }
-
             )
         }
     }

@@ -1,14 +1,10 @@
 package pl.voytech.exporter.core.template.operations
 
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.model.attributes.CellAttribute
-import pl.voytech.exporter.core.model.attributes.ColumnAttribute
-import pl.voytech.exporter.core.model.attributes.RowAttribute
-import pl.voytech.exporter.core.model.attributes.TableAttribute
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.AttributedColumn
 import pl.voytech.exporter.core.template.context.AttributedRow
-import pl.voytech.exporter.core.template.operations.impl.AttributeAwareTableOperations
+import pl.voytech.exporter.core.template.operations.impl.AttributeAwareTableRenderOperations
 import java.io.OutputStream
 
 interface InitOperation {
@@ -25,63 +21,56 @@ interface FinishOperation {
 
 interface LifecycleOperations : InitOperation, FinishOperation
 
-interface ColumnOperation<T> {
+interface ColumnRenderOperation<T> {
     fun renderColumn(context: AttributedColumn)
 }
 
-interface RowOperation<T> {
+interface RowRenderOperation<T> {
     fun renderRow(context: AttributedRow<T>)
 }
 
-interface RowCellOperation<T> {
+interface CellRenderOperation<T> {
     fun renderRowCell(context: AttributedCell)
 }
 
-interface TableOperations<T> : CreateTableOperation<T>, ColumnOperation<T>, RowOperation<T>, RowCellOperation<T>
+interface TableRenderOperations<T> : CreateTableOperation<T>, ColumnRenderOperation<T>, RowRenderOperation<T>, CellRenderOperation<T>
 
 class ExportOperations<T>(
     val lifecycleOperations: LifecycleOperations,
-    val tableOperations: TableOperations<T>
+    val tableRenderOperations: TableRenderOperations<T>
 )
-
-interface AttributeOperationsFactory<T> {
-    fun createTableAttributeOperations(): Set<TableAttributeOperation<out TableAttribute>>?
-    fun createRowAttributeOperations(): Set<RowAttributeOperation<T, out RowAttribute>>?
-    fun createColumnAttributeOperations(): Set<ColumnAttributeOperation<T, out ColumnAttribute>>?
-    fun createCellAttributeOperations(): Set<CellAttributeOperation<T, out CellAttribute>>?
-}
 
 interface ExportOperationsFactory<T> {
     fun createLifecycleOperations(): LifecycleOperations
-    fun createTableOperations(): TableOperations<T>
+    fun createTableRenderOperations(): TableRenderOperations<T>
 }
 
 abstract class AdaptingLifecycleOperations<A>(val adaptee: A) : LifecycleOperations
 
-abstract class AdaptingTableOperations<T, A>(val adaptee: A) : TableOperations<T>
+abstract class AdaptingTableRenderOperations<T, A>(val adaptee: A) : TableRenderOperations<T>
 
 abstract class ExportOperationConfiguringFactory<T>: ExportOperationsFactory<T> {
 
     abstract fun getExportOperationsFactory() : ExportOperationsFactory<T>
 
-    abstract fun getAttributeOperationsFactory() : AttributeOperationsFactory<T>?
+    abstract fun getAttributeOperationsFactory() : AttributeRenderOperationsFactory<T>?
 
     override fun createLifecycleOperations(): LifecycleOperations {
         return getExportOperationsFactory().createLifecycleOperations()
     }
 
-    override fun createTableOperations(): TableOperations<T> {
+    override fun createTableRenderOperations(): TableRenderOperations<T> {
         val attributeOperationsFactory = getAttributeOperationsFactory()
         return if (attributeOperationsFactory != null) {
-            AttributeAwareTableOperations(
-                attributeOperationsFactory.createTableAttributeOperations(),
-                attributeOperationsFactory.createColumnAttributeOperations(),
-                attributeOperationsFactory.createRowAttributeOperations(),
-                attributeOperationsFactory.createCellAttributeOperations(),
-                getExportOperationsFactory().createTableOperations()
+            AttributeAwareTableRenderOperations(
+                attributeOperationsFactory.createTableAttributeRenderOperations(),
+                attributeOperationsFactory.createColumnAttributeRenderOperations(),
+                attributeOperationsFactory.createRowAttributeRenderOperations(),
+                attributeOperationsFactory.createCellAttributeRenderOperations(),
+                getExportOperationsFactory().createTableRenderOperations()
             )
         } else {
-            return getExportOperationsFactory().createTableOperations()
+            return getExportOperationsFactory().createTableRenderOperations()
         }
     }
 }

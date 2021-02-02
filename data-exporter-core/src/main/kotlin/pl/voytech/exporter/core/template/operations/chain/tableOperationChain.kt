@@ -2,13 +2,13 @@ package pl.voytech.exporter.core.template.operations.chain
 
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.context.*
-import pl.voytech.exporter.core.template.operations.TableOperations
+import pl.voytech.exporter.core.template.operations.TableRenderOperations
 
 class EmptyOperationChainException : RuntimeException("There is no export operation in the chain.")
 
-class TableOperationChain<T>(
-    private vararg val chain: TableOperations<T>
-) : TableOperations<T> {
+class TableRenderRenderRenderOperationChain<T>(
+    private vararg val chain: TableRenderOperations<T>
+) : TableRenderOperations<T> {
 
     override fun createTable(table: Table<T>): Table<T> {
         chain.ifEmpty { throw EmptyOperationChainException() }

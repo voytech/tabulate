@@ -9,7 +9,6 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import org.apache.poi.xssf.usermodel.XSSFFont
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.model.attributes.CellAttribute
 import pl.voytech.exporter.core.model.attributes.functional.FilterAndSortTableAttribute
 import pl.voytech.exporter.core.model.attributes.style.*
 import pl.voytech.exporter.core.model.attributes.style.enums.BorderStyle
@@ -32,7 +31,7 @@ import java.awt.geom.Rectangle2D
 import java.text.AttributedString
 import kotlin.math.roundToInt
 
-class CellFontAttributeOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingCellAttributeOperation<SXSSFWorkbook,T, CellFontAttribute>(adaptee) {
+class CellFontAttributeRenderOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingCellAttributeRenderOperation<SXSSFWorkbook,T, CellFontAttribute>(adaptee) {
 
     private val cellFontCacheKey = "cellFont"
 
@@ -60,7 +59,7 @@ class CellFontAttributeOperation<T>(override val adaptee: SXSSFWorkbook) : Adapt
     }
 }
 
-class CellBackgroundAttributeOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingCellAttributeOperation<SXSSFWorkbook,T,CellBackgroundAttribute>(adaptee) {
+class CellBackgroundAttributeRenderOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingCellAttributeRenderOperation<SXSSFWorkbook,T,CellBackgroundAttribute>(adaptee) {
     override fun attributeType(): Class<CellBackgroundAttribute> = CellBackgroundAttribute::class.java
 
     override fun renderAttribute(
@@ -74,7 +73,7 @@ class CellBackgroundAttributeOperation<T>(override val adaptee: SXSSFWorkbook) :
     }
 }
 
-class CellBordersAttributeOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingCellAttributeOperation<SXSSFWorkbook,T, CellBordersAttribute>(adaptee) {
+class CellBordersAttributeRenderOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingCellAttributeRenderOperation<SXSSFWorkbook,T, CellBordersAttribute>(adaptee) {
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
     override fun renderAttribute(context: AttributedCell, attribute: CellBordersAttribute) {
@@ -99,7 +98,7 @@ class CellBordersAttributeOperation<T>(override val adaptee: SXSSFWorkbook) : Ad
     }
 }
 
-class CellAlignmentAttributeOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingCellAttributeOperation<SXSSFWorkbook,T, CellAlignmentAttribute>(adaptee) {
+class CellAlignmentAttributeRenderOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingCellAttributeRenderOperation<SXSSFWorkbook,T, CellAlignmentAttribute>(adaptee) {
 
     override fun attributeType(): Class<out CellAlignmentAttribute> = CellAlignmentAttribute::class.java
 
@@ -129,7 +128,7 @@ class CellAlignmentAttributeOperation<T>(override val adaptee: SXSSFWorkbook) : 
 
 }
 
-class CellDataFormatAttributeOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingCellAttributeOperation<SXSSFWorkbook, T, CellExcelDataFormatAttribute>(adaptee){
+class CellDataFormatAttributeRenderOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingCellAttributeRenderOperation<SXSSFWorkbook, T, CellExcelDataFormatAttribute>(adaptee){
 
     private val cellStyleFormatKey = "cellStyleFormatKey"
 
@@ -151,7 +150,7 @@ class CellDataFormatAttributeOperation<T>(override val adaptee: SXSSFWorkbook) :
 
 }
 
-class ColumnWidthAttributeOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingColumnAttributeOperation<SXSSFWorkbook, T, ColumnWidthAttribute>(adaptee) {
+class ColumnWidthAttributeRenderOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingColumnAttributeRenderOperation<SXSSFWorkbook, T, ColumnWidthAttribute>(adaptee) {
     override fun attributeType(): Class<out ColumnWidthAttribute> = ColumnWidthAttribute::class.java
 
     private fun getStringWidth(text: String, cellFont: XSSFFont, workbook: Workbook): Int {
@@ -193,14 +192,14 @@ class ColumnWidthAttributeOperation<T>(override val adaptee: SXSSFWorkbook) : Ad
     }
 }
 
-class RowHeightAttributeOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingRowAttributeOperation<SXSSFWorkbook,T, RowHeightAttribute>(adaptee) {
+class RowHeightAttributeRenderOperation<T>(override val adaptee: SXSSFWorkbook) : AdaptingRowAttributeRenderOperation<SXSSFWorkbook,T, RowHeightAttribute>(adaptee) {
     override fun attributeType(): Class<out RowHeightAttribute> = RowHeightAttribute::class.java
     override fun renderAttribute(context: AttributedRow<T>, attribute: RowHeightAttribute) {
         assertRow(adaptee, context.getTableId(), context.rowIndex).height = PoiUtils.heightFromPixels(attribute.height)
     }
 }
 
-class FilterAndSortTableAttributeOperation(override val adaptee: SXSSFWorkbook) : AdaptingTableAttributeOperation<SXSSFWorkbook, FilterAndSortTableAttribute>(adaptee) {
+class FilterAndSortTableAttributeRenderOperation(override val adaptee: SXSSFWorkbook) : AdaptingTableAttributeRenderOperation<SXSSFWorkbook, FilterAndSortTableAttribute>(adaptee) {
     override fun attributeType(): Class<out FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class.java
     override fun renderAttribute(table: Table<*>, attribute: FilterAndSortTableAttribute) {
         workbook(adaptee).creationHelper.createAreaReference(
@@ -219,21 +218,21 @@ class FilterAndSortTableAttributeOperation(override val adaptee: SXSSFWorkbook) 
 }
 
 internal fun tableAttributesOperations(adaptee: SXSSFWorkbook) = setOf(
-    FilterAndSortTableAttributeOperation(adaptee)
+    FilterAndSortTableAttributeRenderOperation(adaptee)
 )
 
 internal fun <T> rowAttributesOperations(adaptee: SXSSFWorkbook) = setOf(
-    RowHeightAttributeOperation<T>(adaptee)
+    RowHeightAttributeRenderOperation<T>(adaptee)
 )
 
 internal fun <T> cellAttributesOperations(adaptee: SXSSFWorkbook) = setOf(
-    CellFontAttributeOperation<T>(adaptee),
-    CellBackgroundAttributeOperation<T>(adaptee),
-    CellBordersAttributeOperation<T>(adaptee),
-    CellAlignmentAttributeOperation<T>(adaptee),
-    CellDataFormatAttributeOperation<T>(adaptee)
+    CellFontAttributeRenderOperation<T>(adaptee),
+    CellBackgroundAttributeRenderOperation<T>(adaptee),
+    CellBordersAttributeRenderOperation<T>(adaptee),
+    CellAlignmentAttributeRenderOperation<T>(adaptee),
+    CellDataFormatAttributeRenderOperation<T>(adaptee)
 )
 
 internal fun <T> columnAttributesOperations(adaptee: SXSSFWorkbook) = setOf(
-    ColumnWidthAttributeOperation<T>(adaptee)
+    ColumnWidthAttributeRenderOperation<T>(adaptee)
 )

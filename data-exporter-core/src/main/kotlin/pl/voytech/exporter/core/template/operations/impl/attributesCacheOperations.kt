@@ -5,7 +5,7 @@ import pl.voytech.exporter.core.model.attributes.CellAttribute
 import pl.voytech.exporter.core.model.attributes.ColumnAttribute
 import pl.voytech.exporter.core.model.attributes.RowAttribute
 import pl.voytech.exporter.core.template.context.*
-import pl.voytech.exporter.core.template.operations.TableOperations
+import pl.voytech.exporter.core.template.operations.TableRenderOperations
 import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.ATTRIBUTES_CACHE_KEY
 
 @Suppress("UNCHECKED_CAST")
@@ -50,8 +50,8 @@ class AttributeKeyDrivenCache {
     }
 }
 
-class AttributeCacheTableOperations<T>(private val cache: AttributeKeyDrivenCache = AttributeKeyDrivenCache()) :
-    TableOperations<T> {
+class AttributeCacheTableRenderOperations<T>(private val cache: AttributeKeyDrivenCache = AttributeKeyDrivenCache()) :
+    TableRenderOperations<T> {
 
     override fun createTable(table: Table<T>): Table<T>  = table
 
