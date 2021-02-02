@@ -1,4 +1,4 @@
-package pl.voytech.exporter.core.template.operations.chain
+package pl.voytech.exporter.core.template.operations.impl
 
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.context.*
@@ -6,7 +6,7 @@ import pl.voytech.exporter.core.template.operations.TableRenderOperations
 
 class EmptyOperationChainException : RuntimeException("There is no export operation in the chain.")
 
-class TableRenderRenderRenderOperationChain<T>(
+class TableRenderOperationsChain<T>(
     private vararg val chain: TableRenderOperations<T>
 ) : TableRenderOperations<T> {
 
