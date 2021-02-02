@@ -9,56 +9,56 @@ import pl.voytech.exporter.core.template.context.*
 import pl.voytech.exporter.core.template.operations.*
 import java.util.*
 
-class AttributeAwareTableOperations<T>(
-    tableAttributeOperations: Set<TableAttributeOperation<out TableAttribute>>?,
-    columnAttributeOperations: Set<ColumnAttributeOperation<T, out ColumnAttribute>>?,
-    rowAttributeOperations: Set<RowAttributeOperation<T, out RowAttribute>>?,
-    cellAttributeOperations: Set<CellAttributeOperation<T, out CellAttribute>>?,
-    private val baseTableOperations: TableOperations<T>
-) : TableOperations<T> {
+class AttributeAwareTableRenderOperations<T>(
+    tableAttributeRenderOperations: Set<TableAttributeRenderOperation<out TableAttribute>>?,
+    columnAttributeRenderOperations: Set<ColumnAttributeRenderOperation<T, out ColumnAttribute>>?,
+    rowAttributeRenderOperations: Set<RowAttributeRenderOperation<T, out RowAttribute>>?,
+    cellAttributeRenderOperations: Set<CellAttributeRenderOperation<T, out CellAttribute>>?,
+    private val baseTableRenderOperations: TableRenderOperations<T>
+) : TableRenderOperations<T> {
 
-    private val tableAttributeOperationsByClass: Map<Class<out TableAttribute>, TableAttributeOperation<TableAttribute>> =
-        tableAttributeOperations?.groupBy { it.attributeType() }
-            ?.map { it.key to it.value.first() as TableAttributeOperation<TableAttribute> }
+    private val tableAttributeRenderOperationsByClass: Map<Class<out TableAttribute>, TableAttributeRenderOperation<TableAttribute>> =
+        tableAttributeRenderOperations?.groupBy { it.attributeType() }
+            ?.map { it.key to it.value.first() as TableAttributeRenderOperation<TableAttribute> }
             ?.sortedBy { it.second.priority() }
             ?.toMap() ?: emptyMap()
 
-    private val columnAttributeOperationsByClass: Map<Class<out ColumnAttribute>, ColumnAttributeOperation<T, ColumnAttribute>> =
-        columnAttributeOperations?.groupBy { it.attributeType() }
-            ?.map { it.key to it.value.first() as ColumnAttributeOperation<T, ColumnAttribute> }
+    private val columnAttributeRenderOperationsByClass: Map<Class<out ColumnAttribute>, ColumnAttributeRenderOperation<T, ColumnAttribute>> =
+        columnAttributeRenderOperations?.groupBy { it.attributeType() }
+            ?.map { it.key to it.value.first() as ColumnAttributeRenderOperation<T, ColumnAttribute> }
             ?.sortedBy { it.second.priority() }
             ?.toMap() ?: emptyMap()
 
-    private val rowAttributeOperationsByClass: Map<Class<out RowAttribute>, RowAttributeOperation<T, RowAttribute>> =
-        rowAttributeOperations?.groupBy { it.attributeType() }
-            ?.map { it.key to it.value.first() as RowAttributeOperation<T, RowAttribute> }
+    private val rowAttributeRenderOperationsByClass: Map<Class<out RowAttribute>, RowAttributeRenderOperation<T, RowAttribute>> =
+        rowAttributeRenderOperations?.groupBy { it.attributeType() }
+            ?.map { it.key to it.value.first() as RowAttributeRenderOperation<T, RowAttribute> }
             ?.sortedBy { it.second.priority() }
             ?.toMap() ?: emptyMap()
 
-    private val cellAttributeOperationsByClass: Map<Class<out CellAttribute>, CellAttributeOperation<T, CellAttribute>> =
-        cellAttributeOperations?.groupBy { it.attributeType() }
-            ?.map { it.key to it.value.first() as CellAttributeOperation<T, CellAttribute> }
+    private val cellAttributeRenderOperationsByClass: Map<Class<out CellAttribute>, CellAttributeRenderOperation<T, CellAttribute>> =
+        cellAttributeRenderOperations?.groupBy { it.attributeType() }
+            ?.map { it.key to it.value.first() as CellAttributeRenderOperation<T, CellAttribute> }
             ?.sortedBy { it.second.priority() }
             ?.toMap() ?: emptyMap()
 
     private fun sortedTableAttributes(tableAttributes: Set<TableAttribute>?): SortedSet<TableAttribute>? {
         return tableAttributes?.toSortedSet(compareBy {
-            tableAttributeOperationsByClass[it.javaClass]?.priority() ?: 0
+            tableAttributeRenderOperationsByClass[it.javaClass]?.priority() ?: 0
         })
     }
 
     private fun sortedColumnAttributes(columnAttributes: Set<ColumnAttribute>?): SortedSet<ColumnAttribute>? {
         return columnAttributes?.toSortedSet(compareBy {
-            columnAttributeOperationsByClass[it.javaClass]?.priority() ?: 0
+            columnAttributeRenderOperationsByClass[it.javaClass]?.priority() ?: 0
         })
     }
 
     private fun sortedCellAttributes(cellAttributes: Set<CellAttribute>?): SortedSet<CellAttribute>? {
-        return cellAttributes?.toSortedSet(compareBy { cellAttributeOperationsByClass[it.javaClass]?.priority() ?: 0 })
+        return cellAttributes?.toSortedSet(compareBy { cellAttributeRenderOperationsByClass[it.javaClass]?.priority() ?: 0 })
     }
 
     private fun sortedRowAttributes(rowAttributes: Set<RowAttribute>?): SortedSet<RowAttribute>? {
-        return rowAttributes?.toSortedSet(compareBy { rowAttributeOperationsByClass[it.javaClass]?.priority() ?: 0 })
+        return rowAttributes?.toSortedSet(compareBy { rowAttributeRenderOperationsByClass[it.javaClass]?.priority() ?: 0 })
     }
 
     private fun columnsWithSortedAttributes(columns: List<Column<T>>): List<Column<T>> {
@@ -113,9 +113,9 @@ class AttributeAwareTableOperations<T>(
 
     @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun createTable(table: Table<T>): Table<T> {
-        return baseTableOperations.createTable(sortByAttributeOperationPriority(table)).also { sortedTable ->
+        return baseTableRenderOperations.createTable(sortByAttributeOperationPriority(table)).also { sortedTable ->
             sortedTable.tableAttributes?.forEach { tableAttribute ->
-                tableAttributeOperationsByClass[tableAttribute.javaClass]?.renderAttribute(table, tableAttribute)
+                tableAttributeRenderOperationsByClass[tableAttribute.javaClass]?.renderAttribute(table, tableAttribute)
             }
         }
     }
@@ -125,16 +125,16 @@ class AttributeAwareTableOperations<T>(
         if (!context.rowAttributes.isNullOrEmpty()) {
             var operationRendered = false
             context.rowAttributes.forEach { attribute ->
-                rowAttributeOperationsByClass[attribute.javaClass]?.let { operation ->
+                rowAttributeRenderOperationsByClass[attribute.javaClass]?.let { operation ->
                     if (operation.priority() >= 0 && !operationRendered) {
-                        baseTableOperations.renderRow(context)
+                        baseTableRenderOperations.renderRow(context)
                         operationRendered = true
                     }
                     operation.renderAttribute(context, attribute)
                 }
             }
         } else {
-            baseTableOperations.renderRow(context)
+            baseTableRenderOperations.renderRow(context)
         }
     }
 
@@ -142,7 +142,7 @@ class AttributeAwareTableOperations<T>(
     override fun renderColumn(context: AttributedColumn) {
         context.columnAttributes?.let { attributes ->
             attributes.forEach { attribute ->
-                columnAttributeOperationsByClass[attribute.javaClass]?.renderAttribute(context, attribute)
+                columnAttributeRenderOperationsByClass[attribute.javaClass]?.renderAttribute(context, attribute)
             }
         }
     }
@@ -152,16 +152,16 @@ class AttributeAwareTableOperations<T>(
         if (!context.attributes.isNullOrEmpty()) {
             var operationRendered = false
             context.attributes.forEach { attribute ->
-                cellAttributeOperationsByClass[attribute.javaClass]?.let { operation ->
+                cellAttributeRenderOperationsByClass[attribute.javaClass]?.let { operation ->
                     if (operation.priority() >= 0 && !operationRendered) {
-                        baseTableOperations.renderRowCell(context)
+                        baseTableRenderOperations.renderRowCell(context)
                         operationRendered = true
                     }
                     operation.renderAttribute(context, attribute)
                 }
             }
         } else {
-            baseTableOperations.renderRowCell(context)
+            baseTableRenderOperations.renderRowCell(context)
         }
     }
 

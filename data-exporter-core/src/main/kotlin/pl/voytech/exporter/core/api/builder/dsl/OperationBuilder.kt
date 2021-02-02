@@ -1,7 +1,7 @@
 package pl.voytech.exporter.core.api.builder.dsl
 
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.template.DataExportTemplate
+import pl.voytech.exporter.core.template.TableExportTemplate
 import pl.voytech.exporter.core.template.operations.ExportOperations
 import java.io.OutputStream
 
@@ -27,7 +27,7 @@ class ExportBuilder<T>(private val collection: Collection<T>) {
 
     @JvmSynthetic
     fun execute(stream: OutputStream) {
-        DataExportTemplate(operations).export(table, collection, stream)
+        TableExportTemplate(operations).export(table, collection, stream)
     }
 
 }

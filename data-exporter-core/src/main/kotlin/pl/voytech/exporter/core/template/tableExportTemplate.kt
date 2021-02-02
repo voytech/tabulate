@@ -8,16 +8,11 @@ import pl.voytech.exporter.core.template.resolvers.RowContextResolver
 import java.io.OutputStream
 
 /**
- * Core logic responsible for orchestrating rendering of tabular data format file.
- * Takes delegate object with bunch of specialised interfaces. Each interface defines contract for
- * single atomic step of data export.
- * Classes implementing interfaces must agree (via generics) on delegate state or low level API class in order to make
- * low level 3rd party API instance object (like POI workbooks) shared amongst all 'render step' interfaces.
- * When delegate state types matches at compile time, DataExportTemplate will pass initialized API object/ state amongst those
- * interface implementations.
+ * Core instrumentation logic enters from this place. This class constitutes all entry points and public API for tabular
+ * data exporting.
  * @author Wojciech Mąka
  */
-open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
+open class TableExportTemplate<T>(private val delegate: ExportOperations<T>) {
 
     private fun initialize() {
         delegate.lifecycleOperations.initialize()
@@ -25,7 +20,7 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
 
     private fun add(table: Table<T>, collection: Collection<T>) {
         GlobalContextAndAttributes(
-            tableModel = delegate.tableOperations.createTable(table),
+            tableModel = delegate.tableRenderOperations.createTable(table),
             tableName = table.name ?: "table-${NextId.nextId()}",
             firstRow = table.firstRow,
             firstColumn = table.firstColumn
@@ -56,7 +51,7 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
 
     private fun renderColumns(stateAndAttributes: GlobalContextAndAttributes<T>, renderPhase: ColumnRenderPhase) {
         stateAndAttributes.tableModel.forEachColumn { columnIndex: Int, column: Column<T> ->
-            delegate.tableOperations.renderColumn(
+            delegate.tableRenderOperations.renderColumn(
                 stateAndAttributes.createColumnContext(IndexedValue(column.index ?: columnIndex, column), renderPhase)
             )
         }
@@ -65,7 +60,7 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
     private fun renderRowCells(stateAndAttributes: GlobalContextAndAttributes<T>, context: AttributedRow<T>) {
         stateAndAttributes.tableModel.forEachColumn { column: Column<T> ->
             if (context.rowCellValues.containsKey(column.id)) {
-                delegate.tableOperations.renderRowCell(context.rowCellValues[column.id]!!)
+                delegate.tableRenderOperations.renderRowCell(context.rowCellValues[column.id]!!)
             }
         }
     }
@@ -76,7 +71,7 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
     ) {
         if (iterator.hasNext()) {
             iterator.next().let { rowContext ->
-                delegate.tableOperations.renderRow(rowContext).also {
+                delegate.tableRenderOperations.renderRow(rowContext).also {
                     renderRowCells(stateAndAttributes, rowContext)
                 }
             }
@@ -85,9 +80,9 @@ open class DataExportTemplate<T>(private val delegate: ExportOperations<T>) {
 }
 
 fun <T> Collection<T>.exportTable(table: Table<T>, delegate: ExportOperations<T>, stream: OutputStream) {
-    DataExportTemplate(delegate).export(table, this, stream)
+    TableExportTemplate(delegate).export(table, this, stream)
 }
 
 fun <T> Table<T>.exportWith(delegate: ExportOperations<T>, stream: OutputStream) {
-    DataExportTemplate(delegate).export(this, stream)
+    TableExportTemplate(delegate).export(this, stream)
 }

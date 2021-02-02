@@ -16,8 +16,8 @@ import pl.voytech.exporter.core.template.context.AttributedColumn
 import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.context.CellValue
 import pl.voytech.exporter.core.template.operations.*
-import pl.voytech.exporter.core.template.operations.chain.TableOperationChain
-import pl.voytech.exporter.core.template.operations.impl.AttributeCacheTableOperations
+import pl.voytech.exporter.core.template.operations.chain.TableRenderRenderRenderOperationChain
+import pl.voytech.exporter.core.template.operations.impl.AttributeCacheTableRenderOperations
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertCell
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertRow
 import pl.voytech.exporter.impl.template.excel.SXSSFWrapper.assertTableSheet
@@ -54,7 +54,7 @@ fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOp
                     }
                 }
 
-                override fun createTableOperations(): TableOperations<T> = object: AdaptingTableOperations<T, SXSSFWorkbook>(adaptee) {
+                override fun createTableRenderOperations(): TableRenderOperations<T> = object: AdaptingTableRenderOperations<T, SXSSFWorkbook>(adaptee) {
                     override fun createTable(table: Table<T>): Table<T> {
                         return assertTableSheet(adaptee, table.name).let { table }
                     }
@@ -133,21 +133,21 @@ fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOp
                 }
             }
 
-        override fun getAttributeOperationsFactory(): AttributeOperationsFactory<T>? =
-            object: AttributeOperationsFactory<T> {
-                override fun createTableAttributeOperations(): Set<AdaptingTableAttributeOperation<SXSSFWorkbook, out TableAttribute>> =
+        override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<T>? =
+            object: AttributeRenderOperationsFactory<T> {
+                override fun createTableAttributeRenderOperations(): Set<AdaptingTableAttributeRenderOperation<SXSSFWorkbook, out TableAttribute>> =
                     tableAttributesOperations(adaptee)
 
 
-                override fun createRowAttributeOperations(): Set<AdaptingRowAttributeOperation<SXSSFWorkbook, T, out RowAttribute>> =
+                override fun createRowAttributeRenderOperations(): Set<AdaptingRowAttributeRenderOperation<SXSSFWorkbook, T, out RowAttribute>> =
                     rowAttributesOperations(adaptee)
 
 
-                override fun createColumnAttributeOperations(): Set<AdaptingColumnAttributeOperation<SXSSFWorkbook, T, out ColumnAttribute>> =
+                override fun createColumnAttributeRenderOperations(): Set<AdaptingColumnAttributeRenderOperation<SXSSFWorkbook, T, out ColumnAttribute>> =
                     columnAttributesOperations(adaptee)
 
 
-                override fun createCellAttributeOperations(): Set<AdaptingCellAttributeOperation<SXSSFWorkbook, T, out CellAttribute>> =
+                override fun createCellAttributeRenderOperations(): Set<AdaptingCellAttributeRenderOperation<SXSSFWorkbook, T, out CellAttribute>> =
                     cellAttributesOperations(adaptee)
 
             }
@@ -158,9 +158,9 @@ fun <T> poiExcelExport(templateFile: InputStream? = null): ExportOperations<T> =
     apachePoiExcelExportFactory<T>(templateFile).let {
         ExportOperations(
             lifecycleOperations = it.createLifecycleOperations(),
-            tableOperations = TableOperationChain(
-                AttributeCacheTableOperations(),
-                it.createTableOperations()
+            tableRenderOperations = TableRenderRenderRenderOperationChain(
+                AttributeCacheTableRenderOperations(),
+                it.createTableRenderOperations()
             )
         )
     }
