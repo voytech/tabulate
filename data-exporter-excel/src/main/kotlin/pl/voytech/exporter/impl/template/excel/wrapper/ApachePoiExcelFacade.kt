@@ -1,6 +1,7 @@
 package pl.voytech.exporter.impl.template.excel.wrapper
 
 import org.apache.poi.ss.usermodel.CellStyle
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.streaming.SXSSFCell
 import org.apache.poi.xssf.streaming.SXSSFRow
 import org.apache.poi.xssf.streaming.SXSSFSheet
@@ -11,77 +12,72 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.attributes.style.Color
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.Coordinates
-import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.getCellCachedValue
-import pl.voytech.exporter.core.template.operations.impl.AttributeKeyDrivenCache.Companion.putCellCachedValue
+import pl.voytech.exporter.core.template.operations.impl.putCachedValueIfAbsent
+import java.io.InputStream
 
-object ApachePoiExcelFacade {
+class ApachePoiExcelFacade(templateFile: InputStream? = null) {
 
-    private const val CELL_STYLE_CACHE_KEY = "cellStyle"
+    private val CELL_STYLE_CACHE_KEY: String = "cellStyle"
 
-    fun workbook(state: SXSSFWorkbook): SXSSFWorkbook = state
+    private val adaptee: SXSSFWorkbook = if (templateFile != null) {
+        SXSSFWorkbook(WorkbookFactory.create(templateFile) as XSSFWorkbook?, 100)
+    } else {
+        SXSSFWorkbook()
+    }
 
-    private fun nonStreamingWorkbook(state: SXSSFWorkbook): XSSFWorkbook = state.xssfWorkbook
+    fun workbook(): SXSSFWorkbook = adaptee
 
-    fun tableSheet(state: SXSSFWorkbook, tableName: String): SXSSFSheet =
-        workbook(state).getSheet(tableName)
+    fun tableSheet(tableName: String): SXSSFSheet =
+        workbook().getSheet(tableName)
 
-    fun assertTableSheet(state: SXSSFWorkbook, tableName: String?): SXSSFSheet =
-        workbook(state).getSheet(tableName) ?: workbook(state).createSheet(tableName)
+    fun assertTableSheet(tableName: String?): SXSSFSheet =
+        workbook().getSheet(tableName) ?: workbook().createSheet(tableName)
 
-    fun assertRow(state: SXSSFWorkbook, tableId: String, rowIndex: Int): SXSSFRow =
-        row(state, tableId, rowIndex) ?: createRow(state, tableId, rowIndex)
+    fun assertRow(tableId: String, rowIndex: Int): SXSSFRow =
+        row(tableId, rowIndex) ?: createRow(tableId, rowIndex)
 
-    fun xssfCell(state: SXSSFWorkbook, coordinates: Coordinates): XSSFCell? =
-        nonStreamingWorkbook(state)
+    fun xssfCell(coordinates: Coordinates): XSSFCell? =
+        adaptee.xssfWorkbook
             .getSheet(coordinates.tableName)
             .getRow(coordinates.rowIndex)
             .getCell(coordinates.columnIndex)
 
     fun assertCell(
-        state: SXSSFWorkbook,
         context: AttributedCell,
         rowIndex: Int,
         columnIndex: Int
     ): SXSSFCell =
-        cell(state, context.getTableId(), rowIndex, columnIndex) ?: createCell(state, context, rowIndex, columnIndex)
+        cell(context.getTableId(), rowIndex, columnIndex) ?: createCell(context, rowIndex, columnIndex)
 
-    fun assertCell(state: SXSSFWorkbook, context: AttributedCell): SXSSFCell =
-        cell(state, context.getTableId(), context.rowIndex, context.columnIndex) ?: createCell(state, context)
+    fun assertCell(context: AttributedCell): SXSSFCell =
+        cell(context.getTableId(), context.rowIndex, context.columnIndex) ?: createCell(context)
 
-    fun cellStyle(
-        state: SXSSFWorkbook,
-        context: AttributedCell
-    ): CellStyle {
-        return assertCell(state, context).cellStyle
-    }
+    fun cellStyle(context: AttributedCell): CellStyle = assertCell(context).cellStyle
 
-    fun color(color: Color): XSSFColor =
-        XSSFColor(byteArrayOf(color.r.toByte(), color.g.toByte(), color.b.toByte()), null)
-
-    private fun cell(state: SXSSFWorkbook, tableId: String, rowIndex: Int, columnIndex: Int): SXSSFCell? =
-        assertRow(state, tableId, rowIndex).getCell(columnIndex)
+    private fun cell(tableId: String, rowIndex: Int, columnIndex: Int): SXSSFCell? =
+        assertRow(tableId, rowIndex).getCell(columnIndex)
 
     private fun createCell(
-        state: SXSSFWorkbook,
         context: AttributedCell,
         alterRowIndex: Int? = null,
         alterColumnIndex: Int? = null
     ): SXSSFCell =
-        assertRow(state, context.getTableId(), alterRowIndex ?: context.rowIndex).let {
+        assertRow(context.getTableId(), alterRowIndex ?: context.rowIndex).let {
             it.createCell(alterColumnIndex ?: context.columnIndex).also { cell ->
-                val cellStyle = getCellCachedValue(context, CELL_STYLE_CACHE_KEY) ?: putCellCachedValue(
-                    context,
-                    CELL_STYLE_CACHE_KEY,
-                    workbook(state).createCellStyle()
-                )
-                cell.cellStyle = cellStyle as CellStyle
+                cell.cellStyle =
+                    context.putCachedValueIfAbsent(CELL_STYLE_CACHE_KEY, workbook().createCellStyle()) as CellStyle
             }
         }
 
-    private fun createRow(state: SXSSFWorkbook, tableId: String, rowIndex: Int): SXSSFRow =
-        tableSheet(state, tableId).createRow(rowIndex)
+    private fun createRow(tableId: String, rowIndex: Int): SXSSFRow =
+        tableSheet(tableId).createRow(rowIndex)
 
-    private fun row(state: SXSSFWorkbook, tableId: String, rowIndex: Int): SXSSFRow? =
-        tableSheet(state, tableId).getRow(rowIndex)
+    private fun row(tableId: String, rowIndex: Int): SXSSFRow? =
+        tableSheet(tableId).getRow(rowIndex)
+
+    companion object {
+        fun color(color: Color): XSSFColor =
+            XSSFColor(byteArrayOf(color.r.toByte(), color.g.toByte(), color.b.toByte()), null)
+    }
 
 }
