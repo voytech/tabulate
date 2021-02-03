@@ -206,7 +206,7 @@ object BasicDslTableExportSpek : Spek({
                         CellPosition(3, 8) to AssertContainsCellAttributes(CellExcelDataFormatAttribute("dd.mm.YYYY"))
                     )
                 ).perform().also {
-                    it.cleanup()
+                   it.cleanup()
                 }
             }
         }
@@ -327,7 +327,7 @@ object BasicDslTableExportSpek : Spek({
                     file = File("test3.xlsx"),
                     cellTests = mapOf()
                 ).perform().also {
-                    it.cleanup()
+                  it.cleanup()
                 }
             }
         }
@@ -408,7 +408,7 @@ object BasicDslTableExportSpek : Spek({
                         CellPosition(1, 3) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Last column. Row 2"),
                     )
                 ).perform().also {
-                    it.cleanup()
+                   it.cleanup()
                 }
             }
         }

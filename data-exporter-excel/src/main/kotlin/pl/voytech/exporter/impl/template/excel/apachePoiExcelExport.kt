@@ -1,10 +1,7 @@
 package pl.voytech.exporter.impl.template.excel
 
-import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.xssf.streaming.SXSSFCell
-import org.apache.poi.xssf.streaming.SXSSFWorkbook
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.attributes.CellAttribute
@@ -16,12 +13,7 @@ import pl.voytech.exporter.core.template.context.AttributedColumn
 import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.context.CellValue
 import pl.voytech.exporter.core.template.operations.*
-import pl.voytech.exporter.core.template.operations.impl.AttributeCacheTableRenderOperations
-import pl.voytech.exporter.core.template.operations.impl.TableRenderOperationsChain
-import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade.assertCell
-import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade.assertRow
-import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade.assertTableSheet
-import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade.workbook
+import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade
 import java.io.InputStream
 import java.io.OutputStream
 import java.time.Instant
@@ -33,22 +25,18 @@ import java.util.*
 fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOperationConfiguringFactory<T> {
     return object : ExportOperationConfiguringFactory<T>() {
 
-        private var adaptee: SXSSFWorkbook = if (templateFile != null) {
-            SXSSFWorkbook(WorkbookFactory.create(templateFile) as XSSFWorkbook?, 100)
-        } else {
-            SXSSFWorkbook()
-        }
+        private val adaptee = ApachePoiExcelFacade(templateFile)
 
         override fun getExportOperationsFactory(): ExportOperationsFactory<T> =
             object : ExportOperationsFactory<T> {
                 override fun createLifecycleOperations(): LifecycleOperations =
-                    object : AdaptingLifecycleOperations<SXSSFWorkbook>(adaptee) {
+                    object : AdaptingLifecycleOperations<ApachePoiExcelFacade>(adaptee) {
                         override fun initialize() {
                             println("nothing")
                         }
 
                         override fun finish(stream: OutputStream) {
-                            workbook(adaptee).run {
+                            adaptee.workbook().run {
                                 write(stream)
                                 close()
                             }
@@ -56,9 +44,9 @@ fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOp
                     }
 
                 override fun createTableRenderOperations(): TableRenderOperations<T> =
-                    object : AdaptingTableRenderOperations<T, SXSSFWorkbook>(adaptee) {
+                    object : AdaptingTableRenderOperations<T, ApachePoiExcelFacade>(adaptee) {
                         override fun createTable(table: Table<T>): Table<T> {
-                            return assertTableSheet(adaptee, table.name).let { table }
+                            return adaptee.assertTableSheet(table.name).let { table }
                         }
 
                         override fun renderColumn(context: AttributedColumn) {
@@ -66,14 +54,14 @@ fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOp
                         }
 
                         override fun renderRow(context: AttributedRow<T>) {
-                            assertRow(adaptee, context.getTableId(), context.rowIndex)
+                            adaptee.assertRow(context.getTableId(), context.rowIndex)
                         }
 
                         override fun renderRowCell(context: AttributedCell) {
-                            assertCell(adaptee, context).also {
+                            adaptee.assertCell(context).also {
                                 setCellValue(it, context.value)
                             }.also {
-                                mergeCells(adaptee, context)
+                                mergeCells(context)
                             }
                         }
 
@@ -115,16 +103,15 @@ fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOp
                         }
 
                         private fun mergeCells(
-                            state: SXSSFWorkbook,
                             context: AttributedCell
                         ) {
                             context.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.also { cell ->
                                 (context.rowIndex until context.rowIndex + cell.value.rowSpan).forEach { rowIndex ->
                                     (context.columnIndex until context.columnIndex + cell.value.colSpan).forEach { colIndex ->
-                                        assertCell(state, context, rowIndex, colIndex)
+                                        adaptee.assertCell(context, rowIndex, colIndex)
                                     }
                                 }
-                                assertTableSheet(state, context.getTableId()).addMergedRegion(
+                                adaptee.assertTableSheet(context.getTableId()).addMergedRegion(
                                     CellRangeAddress(
                                         context.rowIndex,
                                         context.rowIndex + cell.value.rowSpan - 1,
@@ -139,19 +126,19 @@ fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOp
 
         override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<T>? =
             object : AttributeRenderOperationsFactory<T> {
-                override fun createTableAttributeRenderOperations(): Set<AdaptingTableAttributeRenderOperation<SXSSFWorkbook, out TableAttribute>> =
+                override fun createTableAttributeRenderOperations(): Set<AdaptingTableAttributeRenderOperation<ApachePoiExcelFacade, out TableAttribute>> =
                     tableAttributesOperations(adaptee)
 
 
-                override fun createRowAttributeRenderOperations(): Set<AdaptingRowAttributeRenderOperation<SXSSFWorkbook, T, out RowAttribute>> =
+                override fun createRowAttributeRenderOperations(): Set<AdaptingRowAttributeRenderOperation<ApachePoiExcelFacade, T, out RowAttribute>> =
                     rowAttributesOperations(adaptee)
 
 
-                override fun createColumnAttributeRenderOperations(): Set<AdaptingColumnAttributeRenderOperation<SXSSFWorkbook, T, out ColumnAttribute>> =
+                override fun createColumnAttributeRenderOperations(): Set<AdaptingColumnAttributeRenderOperation<ApachePoiExcelFacade, T, out ColumnAttribute>> =
                     columnAttributesOperations(adaptee)
 
 
-                override fun createCellAttributeRenderOperations(): Set<AdaptingCellAttributeRenderOperation<SXSSFWorkbook, T, out CellAttribute>> =
+                override fun createCellAttributeRenderOperations(): Set<AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, out CellAttribute>> =
                     cellAttributesOperations(adaptee)
 
             }
@@ -162,9 +149,6 @@ fun <T> poiExcelExport(templateFile: InputStream? = null): ExportOperations<T> =
     apachePoiExcelExportFactory<T>(templateFile).let {
         ExportOperations(
             lifecycleOperations = it.createLifecycleOperations(),
-            tableRenderOperations = TableRenderOperationsChain(
-                AttributeCacheTableRenderOperations(),
-                it.createTableRenderOperations()
-            )
+            tableRenderOperations =  it.createTableRenderOperations()
         )
     }
