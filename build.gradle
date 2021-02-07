@@ -19,11 +19,6 @@ allprojects {
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
     }
-    test {
-        useJUnitPlatform {
-            includeEngines 'spek2'
-        }
-    }
 }
 
 subprojects {
@@ -32,11 +27,15 @@ subprojects {
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
         implementation "com.google.guava:guava:$guava_version"
         testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
-        testImplementation "org.spekframework.spek2:spek-dsl-jvm:$spek_version"
-        testImplementation "junit:junit:4.13"
+        testImplementation(platform("org.junit:junit-bom:$junit_version"))
+        testImplementation "org.junit.jupiter:junit-jupiter"
         testImplementation "com.google.truth:truth:1.0.1"
-        testRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:$spek_version"
-        // spek requires kotlin-reflect, can be omitted if already in the classpath
         testRuntimeOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    }
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
     }
 }
