@@ -1,6 +1,6 @@
 package pl.voytech.exporter.core.model
 
-import pl.voytech.exporter.core.model.attributes.CellAttribute
+import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 
 data class Cell<T> internal constructor(
     val value: Any?,

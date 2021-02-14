@@ -1,6 +1,6 @@
 package pl.voytech.exporter.core.model
 
-import pl.voytech.exporter.core.model.attributes.CellAttribute
+import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.model.attributes.RowAttribute
 
 data class Row<T> internal constructor(

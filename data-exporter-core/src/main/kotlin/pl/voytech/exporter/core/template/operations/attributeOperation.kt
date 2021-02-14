@@ -2,6 +2,7 @@ package pl.voytech.exporter.core.template.operations
 
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.attributes.*
+import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.template.context.*
 
 interface AttributeOperation<out T : Attribute> {

@@ -12,16 +12,13 @@ abstract class AttributesAware {
     private var attributes: Map<Class<out Attribute>, Set<Attribute>> = emptyMap()
 
     @JvmSynthetic
-    open fun attributes(vararg attribute: Attribute) {
-        attribute.forEach {
-            supportedAttributeClasses().find { clazz -> clazz.isAssignableFrom(it.javaClass) }
-                ?.let { baseClass ->
-                    attributes = attributes + Pair(
-                        baseClass,
-                        attributes[baseClass]?.let { extensionSet -> extensionSet + it } ?: setOf(it)
-                    )
-                }
-        }
+    open fun attributes(vararg attributes: Attribute) {
+        applyAttributes(attributes.asList())
+    }
+
+    @JvmSynthetic
+    open fun attributes(attributes: Collection<Attribute>) {
+        applyAttributes(attributes)
     }
 
     @JvmSynthetic
@@ -35,13 +32,25 @@ abstract class AttributesAware {
 
     @JvmSynthetic
     internal abstract fun supportedAttributeClasses(): Set<Class<out Attribute>>
+
+    private fun applyAttributes(attributes: Collection<Attribute>) {
+        attributes.forEach {
+            supportedAttributeClasses().find { clazz -> clazz.isAssignableFrom(it.javaClass) }
+                ?.let { baseClass ->
+                    this.attributes = this.attributes + Pair(
+                        baseClass,
+                        this.attributes[baseClass]?.let { extensionSet -> extensionSet + it } ?: setOf(it)
+                    )
+                }
+        }
+    }
 }
 
 abstract class AttributesAwareBuilder<T> : AttributesAware(), Builder<T>
 
 interface AttributeBuilder<T : Attribute> : Builder<T>
 
-interface CellAttributeBuilder : AttributeBuilder<CellAttribute>
+interface CellAttributeBuilder<T : CellAttribute<T>> : AttributeBuilder<T>
 
 interface RowAttributeBuilder : AttributeBuilder<RowAttribute>
 

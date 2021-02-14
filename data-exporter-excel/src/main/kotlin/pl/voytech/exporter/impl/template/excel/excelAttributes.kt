@@ -5,14 +5,14 @@ import pl.voytech.exporter.core.model.attributes.CellAttribute
 
 data class CellExcelDataFormatAttribute(
     val dataFormat: String
-) : CellAttribute() {
-    class Builder : CellAttributeBuilder {
+) : CellAttribute<CellExcelDataFormatAttribute>() {
+    class Builder : CellAttributeBuilder<CellExcelDataFormatAttribute> {
         var value: String = "general"
-        override fun build(): CellAttribute = CellExcelDataFormatAttribute(value)
+        override fun build(): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute(value)
     }
-    override fun mergeWith(other: CellAttribute): CellAttribute  = CellExcelDataFormatAttribute(
-        dataFormat = if (other is CellExcelDataFormatAttribute) other.dataFormat else this.dataFormat
+    override fun mergeWith(other: CellExcelDataFormatAttribute): CellExcelDataFormatAttribute  = CellExcelDataFormatAttribute(
+        dataFormat = other.dataFormat
     )
 }
 
-fun dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit): CellAttribute = CellExcelDataFormatAttribute.Builder().apply(block).build()
+fun dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute.Builder().apply(block).build()
