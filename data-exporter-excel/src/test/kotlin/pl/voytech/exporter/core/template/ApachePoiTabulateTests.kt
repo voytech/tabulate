@@ -2,6 +2,7 @@ package pl.voytech.exporter.core.template
 
  import org.apache.poi.openxml4j.util.ZipSecureFile
  import org.junit.jupiter.api.Assertions.assertNotNull
+ import org.junit.jupiter.api.DisplayName
  import org.junit.jupiter.api.Test
  import pl.voytech.exporter.core.api.builder.dsl.export
  import pl.voytech.exporter.core.api.builder.dsl.table
@@ -30,12 +31,12 @@ package pl.voytech.exporter.core.template
  import kotlin.random.Random
  import kotlin.system.measureTimeMillis
 
-
+@DisplayName("Testing export to excel")
 class ApachePoiTabulateTests {
 
     @Test
     fun `should export product data set to excel file`() {
-        val productList = createDataSet()
+        val productList = createDataSet(1000)
         val file = File("test0.xlsx")
         val table = table<Product> {
             name = "Products table"
@@ -141,27 +142,27 @@ class ApachePoiTabulateTests {
             file = File("test0.xlsx"),
             cellTests = mapOf(
                 CellRange((2..2), (2..8)) to AssertContainsCellAttributes(
-                    CellBordersAttribute(
-                        leftBorderStyle = BorderStyle.SOLID,
-                        leftBorderColor = Colors.BLACK,
-                        rightBorderStyle = BorderStyle.SOLID,
-                        rightBorderColor = Colors.BLACK,
-                        bottomBorderStyle = BorderStyle.SOLID,
-                        bottomBorderColor = Colors.BLACK,
-                        topBorderStyle = BorderStyle.SOLID,
+                    borders {
+                        leftBorderStyle = BorderStyle.SOLID
+                        leftBorderColor = Colors.BLACK
+                        rightBorderStyle = BorderStyle.SOLID
+                        rightBorderColor = Colors.BLACK
+                        bottomBorderStyle = BorderStyle.SOLID
+                        bottomBorderColor = Colors.BLACK
+                        topBorderStyle = BorderStyle.SOLID
                         topBorderColor = Colors.BLACK
-                    ),
-                    CellAlignmentAttribute(
-                        horizontal = HorizontalAlignment.CENTER,
+                    },
+                    alignment {
+                        horizontal = HorizontalAlignment.CENTER
                         vertical = VerticalAlignment.MIDDLE
-                    ),
-                    CellFontAttribute(
-                        fontFamily = "Times New Roman",
-                        fontColor = Color(90, 100, 100),
-                        fontSize = 12,
-                        italic = true,
+                    },
+                    font {
+                        fontFamily = "Times New Roman"
+                        fontColor = Color(90, 100, 100)
+                        fontSize = 12
+                        italic = true
                         weight = WeightStyle.BOLD
-                    )
+                    }
                 ),
                 CellPosition(2, 2) to AssertMany(
                     AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
@@ -176,7 +177,7 @@ class ApachePoiTabulateTests {
                             italic = true
                             weight = WeightStyle.BOLD
                         },
-                        CellBackgroundAttribute(color = Colors.BLUE)
+                        background { color = Colors.BLUE }
                     )
                 ),
                 CellPosition(2, 4) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
@@ -196,7 +197,7 @@ class ApachePoiTabulateTests {
                 CellPosition(3, 8) to AssertContainsCellAttributes(CellExcelDataFormatAttribute("dd.mm.YYYY"))
             )
         ).perform().also {
-            it.cleanup()
+           it.cleanup()
         }
     }
 
@@ -204,9 +205,9 @@ class ApachePoiTabulateTests {
     fun `should interpolate dataset on excel template file`() {
         val file = File("test2.xlsx")
         ZipSecureFile.setMinInflateRatio(0.001)
-        val productList = createDataSet()
+        val productList = createDataSet(1000)
         FileOutputStream(file).use {
-            productList.export<Product>(it) {
+            productList.export(it) {
                 table {
                     name = "Products table"
                     firstRow = 1
@@ -266,7 +267,7 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export to excel file with excel table feature`() {
-        val productList = createDataSet()
+        val productList = createDataSet(1000)
         val file = File("test3.xlsx")
         val table = table<Product> {
             name = "Products table"
@@ -300,7 +301,7 @@ class ApachePoiTabulateTests {
     @Test
     fun `should export table with custom rows and cell and row spans`() {
         val file = File("test1.xlsx")
-        val styles = arrayOf(
+        val cellStyle = listOf(
             alignment { horizontal = HorizontalAlignment.CENTER },
             background { color = Colors.WHITE },
             borders {
@@ -325,22 +326,20 @@ class ApachePoiTabulateTests {
             table<Any> {
                 name = "Test table"
                 columns { count = 4 }
+                attributes(cellStyle)
                 rows {
                     row {
                         cells {
                             cell {
                                 rowSpan = 2
                                 value = "Row span"
-                                attributes(*styles)
                             }
                             cell {
                                 colSpan = 2
                                 value = "This is very long title spanning entire column space."
-                                attributes(*styles)
                             }
                             cell {
                                 value = "Last column."
-                                attributes(*styles)
                             }
                         }
                     }
@@ -349,11 +348,9 @@ class ApachePoiTabulateTests {
                             cell {
                                 colSpan = 2
                                 value = "This is very long title spanning entire column space. Row 2"
-                                attributes(*styles)
                             }
                             cell {
                                 value = "Last column. Row 2"
-                                attributes(*styles)
                             }
                         }
                     }
@@ -375,9 +372,9 @@ class ApachePoiTabulateTests {
         }
     }
 
-    private fun createDataSet(): List<Product> {
-        val random = Random(1000)
-        return (0..1000).map {
+    private fun createDataSet(count : Int? = 1): List<Product> {
+        val random = Random(count!!)
+        return (0..count).map {
             Product(
                 if (it % 2 == 0) "prod_nr_${it}${it % 2}" else "prod_nr_$it",
                 "Name $it",

@@ -1,6 +1,6 @@
 package pl.voytech.exporter.core.template.operations.impl
 
-import pl.voytech.exporter.core.model.attributes.CellAttribute
+import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.model.attributes.ColumnAttribute
 import pl.voytech.exporter.core.model.attributes.RowAttribute
 import pl.voytech.exporter.core.template.context.AttributedCell

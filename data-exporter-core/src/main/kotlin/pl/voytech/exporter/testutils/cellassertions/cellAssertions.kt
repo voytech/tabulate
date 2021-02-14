@@ -1,7 +1,7 @@
 package pl.voytech.exporter.testutils.cellassertions
 
 import pl.voytech.exporter.core.model.CellType
-import pl.voytech.exporter.core.model.attributes.CellAttribute
+import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.template.context.CellValue
 import pl.voytech.exporter.core.template.context.Coordinates
 import pl.voytech.exporter.testutils.CellDefinition

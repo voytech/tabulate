@@ -2,8 +2,8 @@ package pl.voytech.exporter.core.model.attributes
 
 open class Attribute
 
-abstract class CellAttribute : Attribute() {
-    abstract fun mergeWith(other: CellAttribute): CellAttribute
+abstract class CellAttribute<T : CellAttribute<T>> : Attribute() {
+    abstract fun mergeWith(other: T): T
 }
 
 open class ColumnAttribute : Attribute() {
@@ -15,21 +15,21 @@ open class RowAttribute : Attribute()
 
 open class TableAttribute : Attribute()
 
-fun mergeAttributes(vararg attributesByLevels: Set<CellAttribute>?): Set<CellAttribute> {
+fun mergeAttributes(vararg attributesByLevels: Set<CellAttribute<*>>?): Set<CellAttribute<*>> {
     return attributesByLevels.filterNotNull()
         .map { set -> set.groupBy { it.javaClass }.map { Pair(it.key, it.value.first()) }.toMap() }
         .fold(
-            mapOf<Class<CellAttribute>, CellAttribute>(),
+            mapOf<Class<CellAttribute<*>>, CellAttribute<*>>(),
             { accumulated, currentLevel -> mergeAttributes(accumulated, currentLevel) })
         .values
         .toSet()
 }
 
-private fun mergeAttributes(
-    first: Map<Class<CellAttribute>, CellAttribute>,
-    second: Map<Class<CellAttribute>, CellAttribute>
-): Map<Class<CellAttribute>, CellAttribute> {
-    val result = mutableMapOf<Class<CellAttribute>, CellAttribute>()
+private fun <T : CellAttribute<T>> mergeAttributes(
+    first: Map<Class<T>, T>,
+    second: Map<Class<T>, T>
+): Map<Class<T>, T> {
+    val result = mutableMapOf<Class<T>, T>()
     first.keys.toSet().intersect(second.keys.toSet()).forEach {
         result[it] = (first[it] ?: error("")).mergeWith((second[it] ?: error("")))
     }

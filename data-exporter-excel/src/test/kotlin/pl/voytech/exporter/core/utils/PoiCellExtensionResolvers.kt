@@ -2,7 +2,7 @@ package pl.voytech.exporter.core.utils
 
 import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.xssf.usermodel.XSSFColor
-import pl.voytech.exporter.core.model.attributes.CellAttribute
+import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.model.attributes.style.*
 import pl.voytech.exporter.core.model.attributes.style.enums.BorderStyle
 import pl.voytech.exporter.core.model.attributes.style.enums.HorizontalAlignment
