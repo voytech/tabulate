@@ -55,7 +55,7 @@ class AttributeAwareTableRenderOperations<T>(
     }
 
     private fun sortedCellAttributes(cellAttributes: Set<CellAttribute>?): Set<CellAttribute>? {
-        return cellAttributes?.toSortedSet(compareBy { cellAttributeRenderOperationsByClass[it.javaClass]?.priority() ?: 0 })
+        return cellAttributes?.sortedBy { cellAttributeRenderOperationsByClass[it.javaClass]?.priority() ?: 0 }?.toSet()
     }
 
     private fun sortedRowAttributes(rowAttributes: Set<RowAttribute>?): Set<RowAttribute>? {

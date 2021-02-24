@@ -59,20 +59,20 @@ class ColumnsBuilderApi<T> internal constructor(private val builder: ColumnsBuil
     var count: Int? by this.builder::count
 
     @JvmSynthetic
-    fun column(id: String) = builder.addColumnBuilder(id)
+    fun column(id: String) = builder.addColumnBuilder(id) {}
 
     @JvmSynthetic
-    fun column(id: String, block: ColumnBuilderApi<T>.() -> Unit) = builder.addColumnBuilder(id).also {
+    fun column(id: String, block: ColumnBuilderApi<T>.() -> Unit) = builder.addColumnBuilder(id) {
         ColumnBuilderApi.new(it).apply(block)
     }
 
     @JvmSynthetic
-    fun column(ref: ((record: T) -> Any?), block: ColumnBuilderApi<T>.() -> Unit) = builder.addColumnBuilder(ref).also {
+    fun column(ref: ((record: T) -> Any?), block: ColumnBuilderApi<T>.() -> Unit) = builder.addColumnBuilder(ref) {
         ColumnBuilderApi.new(it).apply(block)
     }
 
     @JvmSynthetic
-    fun column(ref: ((record: T) -> Any?)) = builder.addColumnBuilder(ref)
+    fun column(ref: ((record: T) -> Any?)) = builder.addColumnBuilder(ref) {}
 
     companion object {
         @JvmSynthetic
