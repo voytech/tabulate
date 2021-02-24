@@ -5,7 +5,6 @@ import pl.voytech.exporter.core.api.builder.Builder
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.attributes.*
 
-
 interface TopLevelBuilder<T> : Builder<Table<T>>
 
 interface MidLevelBuilder<T, E : TopLevelBuilder<T>> : TopLevelBuilder<T> {
@@ -16,7 +15,6 @@ interface MidLevelBuilder<T, E : TopLevelBuilder<T>> : TopLevelBuilder<T> {
     override fun build(): Table<T> = out().build()
 
 }
-
 
 class TableBuilder<T> : AttributesAware(), TopLevelBuilder<T> {
     @set:JvmSynthetic
@@ -74,7 +72,7 @@ class TableBuilder<T> : AttributesAware(), TopLevelBuilder<T> {
         rows = (rows ?: emptyList()) + row
     }
 
-    internal override fun supportedAttributeClasses(): Set<Class<out Attribute>> =
+    override fun supportedAttributeClasses(): Set<Class<out Attribute>> =
         setOf(TableAttribute::class.java, CellAttribute::class.java)
 
 }
