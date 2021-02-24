@@ -5,7 +5,6 @@ import pl.voytech.exporter.core.model.attributes.*
 
 interface Builder<T> {
     fun build(): T
-    fun afterDslApplied() { }
 }
 
 typealias DslBlock<T> = (T) -> Unit
@@ -97,30 +96,41 @@ class ColumnsBuilder<T> internal constructor() : Builder<List<Column<T>>> {
             return columnBuilders.size
         }
         set(value) {
-            columnBuilders.clear()
-            (1..value!!).forEach { addColumnBuilder("column-$it") }
+            resize(value)
         }
 
     @JvmSynthetic
-    fun addColumnBuilder(id: String): ColumnBuilder<T> =
+    fun addColumnBuilder(id: String, block: DslBlock<ColumnBuilder<T>>) =
         ColumnBuilder.new<T>().let {
             columnBuilders.add(it.apply { it.id = ColumnKey(id = id) })
-            return it
+            block.invoke(it)
         }
 
     @JvmSynthetic
-    fun addColumnBuilder(ref: ((record: T) -> Any?)):  ColumnBuilder<T> =
+    fun addColumnBuilder(ref: ((record: T) -> Any?), block: DslBlock<ColumnBuilder<T>>) =
         ColumnBuilder.new<T>().let {
             columnBuilders.add(it.apply { it.id = ColumnKey(ref = ref) })
-            return it
+            block.invoke(it)
         }
 
+    @JvmSynthetic
+    private fun addColumnBuilder(id: String) =
+        ColumnBuilder.new<T>().let {
+            columnBuilders.add(it.apply { it.id = ColumnKey(id = id) })
+        }
+
+    private fun resize(newSize: Int?) {
+        if (newSize?:0 < columnBuilders.size) {
+            columnBuilders.take(newSize?:0).also {
+                columnBuilders.retainAll(it)
+            }
+        } else if (newSize?:0 > columnBuilders.size) {
+            (columnBuilders.size + 1 .. (newSize?:0)).forEach { addColumnBuilder("column-$it") }
+        }
+    }
 
     @JvmSynthetic
     override fun build(): List<Column<T>> {
-        if (columnBuilders.isEmpty() && count != null) {
-            (1..count!!).forEach { addColumnBuilder("column-$it") }
-        }
         return columnBuilders.map { it.build() }
     }
 
@@ -178,7 +188,7 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
             it.createAt = rowIndex
             block.invoke(it)
             rowIndex = it.createAt?.plus(1) ?: rowIndex
-            interceptRowSpans()
+            interceptRowSpans(it)
         }
 
     @JvmSynthetic
@@ -187,7 +197,7 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
             rowBuilders.add(it)
             it.selector = selector
             block.invoke(it)
-            interceptRowSpans()
+            //interceptRowSpans()
         }
 
     @JvmSynthetic
@@ -197,7 +207,7 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
             rowBuilders.add(it)
             it.createAt = rowIndex ++
             block.invoke(it)
-            interceptRowSpans()
+            interceptRowSpans(it)
         }
 
     @JvmSynthetic
@@ -205,29 +215,19 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
         return sortedNullsLast().map { it.build() }
     }
 
-    private fun interceptRowSpans() {
-        sortedCustomRows().let { customRows ->
-            if (customRows.isNotEmpty()) {
-                customRows.last().let { lastRow ->
-                    columnsBuilder.columnBuilders.forEach { columnBuilder ->
-                        val cellBuilder: CellBuilder<T>? = lastRow.cellsBuilder.cells[columnBuilder.id]
-                        interceptedRowSpans[columnBuilder.id] = if (cellBuilder != null) {
-                            (cellBuilder.rowSpan ?: 1) - 1
-                        } else {
-                            (interceptedRowSpans[columnBuilder.id]?.let { it - 1 } ?: 0).coerceAtLeast(0)
-                        }
-                    }
-                }
+    private fun interceptRowSpans(rowBuilder: RowBuilder<T>) {
+        columnsBuilder.columnBuilders.forEach { columnBuilder ->
+            val cellBuilder: CellBuilder<T>? = rowBuilder.cellsBuilder.cells[columnBuilder.id]
+            interceptedRowSpans[columnBuilder.id] = if (cellBuilder != null) {
+                (cellBuilder.rowSpan ?: 1) - 1
+            } else {
+                (interceptedRowSpans[columnBuilder.id]?.let { it - 1 } ?: 0).coerceAtLeast(0)
             }
         }
     }
 
-    private inline fun sortedNullsLast(): List<RowBuilder<T>> {
+    private fun sortedNullsLast(): List<RowBuilder<T>> {
         return rowBuilders.sortedWith(compareBy(nullsLast()) { it.createAt })
-    }
-
-    private inline fun sortedCustomRows(): List<RowBuilder<T>> {
-        return sortedNullsLast().filter { it.createAt != null }
     }
 
     companion object {
