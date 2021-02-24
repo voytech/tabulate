@@ -45,7 +45,7 @@ class DslBuilder {
             rows {
 
             }
-        }
+        }.build()
         assertNotNull(tableMeta)
         assertEquals(tableMeta.columns.size, 4)
         assertEquals(

@@ -2,12 +2,13 @@ package pl.voytech.exporter.impl.template.excel
 
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.xssf.streaming.SXSSFCell
+import pl.voytech.exporter.core.api.builder.TableBuilder
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.model.attributes.ColumnAttribute
 import pl.voytech.exporter.core.model.attributes.RowAttribute
 import pl.voytech.exporter.core.model.attributes.TableAttribute
+import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.AttributedColumn
 import pl.voytech.exporter.core.template.context.AttributedRow
@@ -45,8 +46,10 @@ fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOp
 
                 override fun createTableRenderOperations(): TableRenderOperations<T> =
                     object : AdaptingTableRenderOperations<T, ApachePoiExcelFacade>(adaptee) {
-                        override fun createTable(table: Table<T>): Table<T> {
-                            return adaptee.assertTableSheet(table.name).let { table }
+                        override fun createTable(builder: TableBuilder<T>): Table<T> {
+                            return builder.build().also {
+                                adaptee.assertTableSheet(it.name)
+                            }
                         }
 
                         override fun renderColumn(context: AttributedColumn) {

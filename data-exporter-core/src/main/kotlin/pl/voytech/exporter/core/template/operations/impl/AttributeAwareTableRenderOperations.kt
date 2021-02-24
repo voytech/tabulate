@@ -1,14 +1,18 @@
 package pl.voytech.exporter.core.template.operations.impl
 
-import pl.voytech.exporter.core.model.*
-import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
+import pl.voytech.exporter.core.api.builder.TableBuilder
+import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.attributes.ColumnAttribute
 import pl.voytech.exporter.core.model.attributes.RowAttribute
 import pl.voytech.exporter.core.model.attributes.TableAttribute
-import pl.voytech.exporter.core.template.context.*
+import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
+import pl.voytech.exporter.core.template.context.AttributedCell
+import pl.voytech.exporter.core.template.context.AttributedColumn
+import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.operations.*
-import java.util.*
+import pl.voytech.exporter.core.model.attributes.CellAttribute as CellAttributeClass
 
+@Suppress("UNCHECKED_CAST")
 class AttributeAwareTableRenderOperations<T>(
     tableAttributeRenderOperations: Set<TableAttributeRenderOperation<out TableAttribute>>?,
     columnAttributeRenderOperations: Set<ColumnAttributeRenderOperation<T, out ColumnAttribute>>?,
@@ -20,19 +24,16 @@ class AttributeAwareTableRenderOperations<T>(
     private val tableAttributeRenderOperationsByClass: Map<Class<out TableAttribute>, TableAttributeRenderOperation<TableAttribute>> =
         tableAttributeRenderOperations?.groupBy { it.attributeType() }
             ?.map { it.key to it.value.first() as TableAttributeRenderOperation<TableAttribute> }
-            ?.sortedBy { it.second.priority() }
             ?.toMap() ?: emptyMap()
 
     private val columnAttributeRenderOperationsByClass: Map<Class<out ColumnAttribute>, ColumnAttributeRenderOperation<T, ColumnAttribute>> =
         columnAttributeRenderOperations?.groupBy { it.attributeType() }
             ?.map { it.key to it.value.first() as ColumnAttributeRenderOperation<T, ColumnAttribute> }
-            ?.sortedBy { it.second.priority() }
             ?.toMap() ?: emptyMap()
 
     private val rowAttributeRenderOperationsByClass: Map<Class<out RowAttribute>, RowAttributeRenderOperation<T, RowAttribute>> =
         rowAttributeRenderOperations?.groupBy { it.attributeType() }
             ?.map { it.key to it.value.first() as RowAttributeRenderOperation<T, RowAttribute> }
-            ?.sortedBy { it.second.priority() }
             ?.toMap() ?: emptyMap()
 
     private val cellAttributeRenderOperationsByClass: Map<Class<out CellAttribute>, CellAttributeRenderOperation<T, CellAttribute>> =
@@ -41,86 +42,51 @@ class AttributeAwareTableRenderOperations<T>(
             ?.sortedBy { it.second.priority() }
             ?.toMap() ?: emptyMap()
 
-    private fun sortedTableAttributes(tableAttributes: Set<TableAttribute>?): SortedSet<TableAttribute>? {
+    private fun sortedTableAttributes(tableAttributes: Set<TableAttribute>?): Set<TableAttribute>? {
         return tableAttributes?.toSortedSet(compareBy {
             tableAttributeRenderOperationsByClass[it.javaClass]?.priority() ?: 0
         })
     }
 
-    private fun sortedColumnAttributes(columnAttributes: Set<ColumnAttribute>?): SortedSet<ColumnAttribute>? {
+    private fun sortedColumnAttributes(columnAttributes: Set<ColumnAttribute>?): Set<ColumnAttribute>? {
         return columnAttributes?.toSortedSet(compareBy {
             columnAttributeRenderOperationsByClass[it.javaClass]?.priority() ?: 0
         })
     }
 
-    private fun sortedCellAttributes(cellAttributes: Set<CellAttribute>?): SortedSet<CellAttribute>? {
+    private fun sortedCellAttributes(cellAttributes: Set<CellAttribute>?): Set<CellAttribute>? {
         return cellAttributes?.toSortedSet(compareBy { cellAttributeRenderOperationsByClass[it.javaClass]?.priority() ?: 0 })
     }
 
-    private fun sortedRowAttributes(rowAttributes: Set<RowAttribute>?): SortedSet<RowAttribute>? {
+    private fun sortedRowAttributes(rowAttributes: Set<RowAttribute>?): Set<RowAttribute>? {
         return rowAttributes?.toSortedSet(compareBy { rowAttributeRenderOperationsByClass[it.javaClass]?.priority() ?: 0 })
     }
 
-    private fun columnsWithSortedAttributes(columns: List<Column<T>>): List<Column<T>> {
-        return columns.map {
-            Column(
-                id = it.id,
-                index = it.index,
-                columnType = it.columnType,
-                columnAttributes = sortedColumnAttributes(it.columnAttributes),
-                cellAttributes = sortedCellAttributes(it.cellAttributes),
-                dataFormatter = it.dataFormatter
-            )
+    private fun withAllAttributesSorted(builder: TableBuilder<T>): TableBuilder<T> {
+        builder.columnsBuilder.columnBuilders.forEach { columnBuilder ->
+            columnBuilder.visit(CellAttributeClass::class.java) { sortedCellAttributes(it) }
+            columnBuilder.visit(ColumnAttribute::class.java) { sortedColumnAttributes(it) }
         }
-    }
-
-    private fun rowsWithSortedAttributes(rows: List<Row<T>>?): List<Row<T>>? {
-        return rows?.map {
-            Row(
-                selector = it.selector,
-                createAt = it.createAt,
-                cellAttributes = sortedCellAttributes(it.cellAttributes),
-                rowAttributes = sortedRowAttributes(it.rowAttributes),
-                cells = cellsWithSortedAttributes(it.cells)
-            )
+        builder.rowsBuilder.rowBuilders.forEach { rowBuilder ->
+            rowBuilder.visit(CellAttributeClass::class.java) { sortedCellAttributes(it) }
+            rowBuilder.visit(RowAttribute::class.java) { sortedRowAttributes(it) }
+            rowBuilder.cellsBuilder.cells.forEach { (_, cellBuilder) ->
+                cellBuilder.visit(CellAttributeClass::class.java) { sortedCellAttributes(it) }
+            }
         }
+        builder.visit(TableAttribute::class.java) { sortedTableAttributes(it) }
+        builder.visit(CellAttributeClass::class.java) { sortedCellAttributes(it) }
+        return builder
     }
 
-    private fun cellsWithSortedAttributes(cells: Map<ColumnKey<T>, Cell<T>>?): Map<ColumnKey<T>, Cell<T>>? {
-        return cells?.map {
-            it.key to Cell(
-                value = it.value.value,
-                eval = it.value.eval,
-                type = it.value.type,
-                colSpan = it.value.colSpan,
-                rowSpan = it.value.rowSpan,
-                cellAttributes = sortedCellAttributes(it.value.cellAttributes)
-            )
-        }?.toMap()
-    }
-
-    private fun sortByAttributeOperationPriority(table: Table<T>): Table<T> {
-        return Table(
-            name = table.name,
-            firstRow = table.firstRow,
-            firstColumn = table.firstColumn,
-            columns = columnsWithSortedAttributes(table.columns),
-            rows = rowsWithSortedAttributes(table.rows),
-            tableAttributes = sortedTableAttributes(table.tableAttributes),
-            cellAttributes = sortedCellAttributes(table.cellAttributes)
-        )
-    }
-
-    @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
-    override fun createTable(table: Table<T>): Table<T> {
-        return baseTableRenderOperations.createTable(sortByAttributeOperationPriority(table)).also { sortedTable ->
+    override fun createTable(builder: TableBuilder<T>): Table<T> {
+        return baseTableRenderOperations.createTable(withAllAttributesSorted(builder)).also { sortedTable ->
             sortedTable.tableAttributes?.forEach { tableAttribute ->
-                tableAttributeRenderOperationsByClass[tableAttribute.javaClass]?.renderAttribute(table, tableAttribute)
+                tableAttributeRenderOperationsByClass[tableAttribute.javaClass]?.renderAttribute(sortedTable, tableAttribute)
             }
         }
     }
 
-    @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun renderRow(context: AttributedRow<T>) {
         if (!context.rowAttributes.isNullOrEmpty()) {
             var operationRendered = false
@@ -138,7 +104,6 @@ class AttributeAwareTableRenderOperations<T>(
         }
     }
 
-    @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun renderColumn(context: AttributedColumn) {
         context.columnAttributes?.let { attributes ->
             attributes.forEach { attribute ->
@@ -147,7 +112,6 @@ class AttributeAwareTableRenderOperations<T>(
         }
     }
 
-    @Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
     override fun renderRowCell(context: AttributedCell) {
         if (!context.attributes.isNullOrEmpty()) {
             var operationRendered = false

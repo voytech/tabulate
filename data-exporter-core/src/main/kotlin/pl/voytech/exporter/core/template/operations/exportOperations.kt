@@ -1,5 +1,6 @@
 package pl.voytech.exporter.core.template.operations
 
+import pl.voytech.exporter.core.api.builder.TableBuilder
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.AttributedColumn
@@ -11,15 +12,17 @@ interface InitOperation {
     fun initialize()
 }
 
-interface CreateTableOperation<T> {
-    fun createTable(table: Table<T>): Table<T>
-}
-
 interface FinishOperation {
     fun finish(stream: OutputStream)
 }
 
 interface LifecycleOperations : InitOperation, FinishOperation
+
+interface CreateTableOperation<T> {
+    fun createTable(builder: TableBuilder<T>): Table<T> {
+        return builder.build()
+    }
+}
 
 interface ColumnRenderOperation<T> {
     fun renderColumn(context: AttributedColumn)
