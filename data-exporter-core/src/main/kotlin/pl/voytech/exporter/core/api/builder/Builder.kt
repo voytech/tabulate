@@ -28,7 +28,7 @@ abstract class AttributesAware {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Attribute> visit(clazz : Class<T>, visitor: ((current: Set<T>?) -> Set<T>?)) {
+    fun <T : Attribute> visit(clazz: Class<T>, visitor: ((current: Set<T>?) -> Set<T>?)) {
         this.attributes[clazz] = visitor.invoke(this.attributes[clazz] as Set<T>?) ?: emptySet()
     }
 
@@ -43,7 +43,8 @@ abstract class AttributesAware {
         attributes.forEach {
             supportedAttributeClasses().find { clazz -> clazz.isAssignableFrom(it.javaClass) }
                 ?.let { baseClass ->
-                    this.attributes[baseClass] = this.attributes[baseClass]?.let { extensionSet -> extensionSet + it } ?: setOf(it)
+                    this.attributes[baseClass] =
+                        this.attributes[baseClass]?.let { extensionSet -> extensionSet + it } ?: setOf(it)
                 }
         }
     }
@@ -120,12 +121,12 @@ class ColumnsBuilder<T> internal constructor() : Builder<List<Column<T>>> {
         }
 
     private fun resize(newSize: Int?) {
-        if (newSize?:0 < columnBuilders.size) {
-            columnBuilders.take(newSize?:0).also {
+        if (newSize ?: 0 < columnBuilders.size) {
+            columnBuilders.take(newSize ?: 0).also {
                 columnBuilders.retainAll(it)
             }
-        } else if (newSize?:0 > columnBuilders.size) {
-            (columnBuilders.size + 1 .. (newSize?:0)).forEach { addColumnBuilder("column-$it") }
+        } else if (newSize ?: 0 > columnBuilders.size) {
+            (columnBuilders.size + 1..(newSize ?: 0)).forEach { addColumnBuilder("column-$it") }
         }
     }
 
@@ -188,11 +189,11 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
             it.createAt = rowIndex
             block.invoke(it)
             rowIndex = it.createAt?.plus(1) ?: rowIndex
-            interceptRowSpans(it)
+            refreshRowSpans(it)
         }
 
     @JvmSynthetic
-    fun addRowBuilder(selector: RowSelector<T>, block: DslBlock<RowBuilder<T>>)  =
+    fun addRowBuilder(selector: RowSelector<T>, block: DslBlock<RowBuilder<T>>) =
         RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
             rowBuilders.add(it)
             it.selector = selector
@@ -205,9 +206,9 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
         RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
             rowIndex = at
             rowBuilders.add(it)
-            it.createAt = rowIndex ++
+            it.createAt = rowIndex++
             block.invoke(it)
-            interceptRowSpans(it)
+            refreshRowSpans(it)
         }
 
     @JvmSynthetic
@@ -215,13 +216,14 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
         return sortedNullsLast().map { it.build() }
     }
 
-    private fun interceptRowSpans(rowBuilder: RowBuilder<T>) {
+    private fun decreaseRowSpan(key: ColumnKey<T>): Int =
+        (interceptedRowSpans[key]?.let { it - 1 } ?: 0).coerceAtLeast(0)
+
+    private fun refreshRowSpans(rowBuilder: RowBuilder<T>) {
         columnsBuilder.columnBuilders.forEach { columnBuilder ->
-            val cellBuilder: CellBuilder<T>? = rowBuilder.cellsBuilder.cells[columnBuilder.id]
-            interceptedRowSpans[columnBuilder.id] = if (cellBuilder != null) {
-                (cellBuilder.rowSpan ?: 1) - 1
-            } else {
-                (interceptedRowSpans[columnBuilder.id]?.let { it - 1 } ?: 0).coerceAtLeast(0)
+            rowBuilder.getCellBuilder(columnBuilder.id).let {
+                interceptedRowSpans[columnBuilder.id] =
+                    if (it != null) it.rowSpan ?: 1 - 1 else decreaseRowSpan(columnBuilder.id)
             }
         }
     }
@@ -269,6 +271,8 @@ class RowBuilder<T> private constructor(
             _createAt = value
             _selector = null
         }
+
+    internal fun getCellBuilder(key: ColumnKey<T>): CellBuilder<T>? = cellsBuilder.cells[key]
 
     @JvmSynthetic
     override fun build(): Row<T> = Row(
@@ -343,14 +347,17 @@ class CellsBuilder<T> private constructor(
     private fun cellIndex(): Int {
         if (activeColSpanOffset > 0)
             cellIndex += activeColSpanOffset
-        while ((interceptedRowSpans[columnsBuilder.columnBuilders[cellIndex].id] ?: 0) > 0 && cellIndex < columnsBuilder.columnBuilders.size - 1) {
+        while ((interceptedRowSpans[columnsBuilder.columnBuilders[cellIndex].id]
+                ?: 0) > 0 && cellIndex < columnsBuilder.columnBuilders.size - 1
+        ) {
             cellIndex++
         }
         return cellIndex
     }
 
     private fun nextCellIndex() {
-        activeColSpanOffset = (cells[columnsBuilder.columnBuilders[cellIndex++].id]?.let { it.colSpan?.minus(1) ?: 0 } ?: 0).coerceAtLeast(0)
+        activeColSpanOffset = (cells[columnsBuilder.columnBuilders[cellIndex++].id]?.let { it.colSpan?.minus(1) ?: 0 }
+            ?: 0).coerceAtLeast(0)
     }
 
     companion object {
