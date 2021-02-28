@@ -198,7 +198,6 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
             rowBuilders.add(it)
             it.selector = selector
             block.invoke(it)
-            //interceptRowSpans()
         }
 
     @JvmSynthetic
@@ -223,7 +222,7 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
         columnsBuilder.columnBuilders.forEach { columnBuilder ->
             rowBuilder.getCellBuilder(columnBuilder.id).let {
                 interceptedRowSpans[columnBuilder.id] =
-                    if (it != null) it.rowSpan ?: 1 - 1 else decreaseRowSpan(columnBuilder.id)
+                    if (it != null) (it.rowSpan ?: 1) - 1 else decreaseRowSpan(columnBuilder.id)
             }
         }
     }
