@@ -368,7 +368,7 @@ class ApachePoiTabulateTests {
                 CellPosition(1, 3) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Last column. Row 2"),
             )
         ).perform().also {
-            it.cleanup()
+           it.cleanup()
         }
     }
 

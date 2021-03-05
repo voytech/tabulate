@@ -286,10 +286,10 @@ class CellBuilder<T>(
     private var type: CellType? = null
 
     @set:JvmSynthetic
-    private var colSpan: Int? = 1
+    private var colSpan: Int = 1
 
     @set:JvmSynthetic
-    private var rowSpan: Int? = 1
+    private var rowSpan: Int = 1
 
     fun value(value: Any?) = apply {
         this.value = value
@@ -303,11 +303,11 @@ class CellBuilder<T>(
         this.type = type
     }
 
-    fun colSpan(colSpan: Int?) = apply {
+    fun colSpan(colSpan: Int) = apply {
         this.colSpan = colSpan
     }
 
-    fun rowSpan(rowSpan: Int?) = apply {
+    fun rowSpan(rowSpan: Int) = apply {
         this.rowSpan = rowSpan
     }
 

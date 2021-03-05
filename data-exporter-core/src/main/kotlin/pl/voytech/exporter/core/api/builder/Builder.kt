@@ -222,7 +222,7 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
         columnsBuilder.columnBuilders.forEach { columnBuilder ->
             rowBuilder.getCellBuilder(columnBuilder.id).let {
                 interceptedRowSpans[columnBuilder.id] =
-                    if (it != null) (it.rowSpan ?: 1) - 1 else decreaseRowSpan(columnBuilder.id)
+                    if (it != null) it.rowSpan - 1 else decreaseRowSpan(columnBuilder.id)
             }
         }
     }
@@ -305,8 +305,6 @@ class CellsBuilder<T> private constructor(
     @JvmSynthetic
     private var cellIndex: Int = 0
 
-    private var activeColSpanOffset: Int = 0
-
     @JvmSynthetic
     fun addCellBuilder(id: String, block: DslBlock<CellBuilder<T>>) =
         CellBuilder.new<T>().let {
@@ -320,16 +318,13 @@ class CellsBuilder<T> private constructor(
             columnsBuilder.columnBuilders[index].let { column ->
                 cells[ColumnKey(ref = column.id.ref, id = column.id.id)] = it
                 block.invoke(it)
+                cellIndex = index
+                nextCellIndex()
             }
         }
 
-
     @JvmSynthetic
-    fun addCellBuilder(block: DslBlock<CellBuilder<T>>) =
-        addCellBuilder(index = cellIndex(), block).also {
-            nextCellIndex()
-        }
-
+    fun addCellBuilder(block: DslBlock<CellBuilder<T>>) = addCellBuilder(index = currCellIndex(), block)
 
     @JvmSynthetic
     fun addCellBuilder(ref: ((record: T) -> Any?), block: DslBlock<CellBuilder<T>>) =
@@ -343,20 +338,21 @@ class CellsBuilder<T> private constructor(
         return cells.map { it.key to it.value.build() }.toMap()
     }
 
-    private fun cellIndex(): Int {
-        if (activeColSpanOffset > 0)
-            cellIndex += activeColSpanOffset
-        while ((interceptedRowSpans[columnsBuilder.columnBuilders[cellIndex].id]
-                ?: 0) > 0 && cellIndex < columnsBuilder.columnBuilders.size - 1
-        ) {
+    private fun columnIdByIndex(index: Int): ColumnKey<T> = columnsBuilder.columnBuilders[index].id
+
+    private fun columnSpanByIndex(index: Int): Int = cells[columnIdByIndex(index)]?.colSpan ?: 1
+
+    private fun rowSpanOffsetByIndex(index: Int): Int = interceptedRowSpans[columnIdByIndex(index)] ?: 0
+
+    private fun currCellIndex(): Int {
+        while (rowSpanOffsetByIndex(cellIndex) > 0 && cellIndex < columnsBuilder.columnBuilders.size - 1) {
             cellIndex++
         }
         return cellIndex
     }
 
     private fun nextCellIndex() {
-        activeColSpanOffset = (cells[columnsBuilder.columnBuilders[cellIndex++].id]?.let { it.colSpan?.minus(1) ?: 0 }
-            ?: 0).coerceAtLeast(0)
+        cellIndex += columnSpanByIndex(cellIndex)
     }
 
     companion object {
@@ -380,10 +376,10 @@ class CellBuilder<T> private constructor() : AttributesAwareBuilder<Cell<T>>() {
     var type: CellType? = null
 
     @JvmSynthetic
-    var colSpan: Int? = 1
+    var colSpan: Int = 1
 
     @JvmSynthetic
-    var rowSpan: Int? = 1
+    var rowSpan: Int = 1
 
     @JvmSynthetic
     override fun build(): Cell<T> =
@@ -396,6 +392,7 @@ class CellBuilder<T> private constructor() : AttributesAwareBuilder<Cell<T>>() {
         @JvmSynthetic
         internal fun <T> new(): CellBuilder<T> = CellBuilder()
     }
+
 }
 
 interface TableAttributeBuilder : AttributeBuilder<TableAttribute>

@@ -203,10 +203,10 @@ class CellBuilderApi<T> private constructor(private val builder: CellBuilder<T>)
     var type: CellType? by builder::type
 
     @set:JvmSynthetic
-    var colSpan: Int? by builder::colSpan
+    var colSpan: Int by builder::colSpan
 
     @set:JvmSynthetic
-    var rowSpan: Int? by builder::rowSpan
+    var rowSpan: Int by builder::rowSpan
 
     @JvmSynthetic
     fun attributes(vararg attributes: Attribute) {
