@@ -1,9 +1,10 @@
 package pl.voytech.exporter.core.model
 
 import pl.voytech.exporter.core.api.builder.fluent.TableBuilder
-import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.model.attributes.TableAttribute
+import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import java.util.function.Consumer
+import pl.voytech.exporter.core.api.builder.TableBuilder as TableBuilderBase
 
 /**
  * A top-level model class. Defines how records from repositories will be handled by file rendering strategies.
@@ -61,6 +62,6 @@ data class Table<T> internal constructor(
 
     companion object {
         @JvmStatic
-        fun <T> builder() = TableBuilder<T>()
+        fun <T> builder() = TableBuilder<T>(TableBuilderBase())
     }
 }

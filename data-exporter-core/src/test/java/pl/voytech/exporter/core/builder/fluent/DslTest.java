@@ -37,7 +37,6 @@ public class DslTest {
                     .rows()
                         .row(0)
                             .attribute(new RowHeightAttribute(100))
-                            .cells()
                                 .cell(0)
                                     .value("Nr")
                                 .forColumn(Employee::getId)
@@ -47,7 +46,6 @@ public class DslTest {
                                 .forColumn(Employee::getLastName)
                                     .value("Employee Last Name")
                         .row(RowSelectors.all())
-                            .cells()
                                 .forColumn("rowNumbering")
                                     .eval(SourceRow::getRowIndex)
                 .build();
