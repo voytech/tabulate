@@ -101,23 +101,26 @@ class ColumnsBuilder<T> internal constructor() : Builder<List<Column<T>>> {
         }
 
     @JvmSynthetic
-    fun addColumnBuilder(id: String, block: DslBlock<ColumnBuilder<T>>) =
+    fun addColumnBuilder(id: String, block: DslBlock<ColumnBuilder<T>>) : ColumnBuilder<T> =
         ColumnBuilder.new<T>().let {
             columnBuilders.add(it.apply { it.id = ColumnKey(id = id) })
             block.invoke(it)
+            it
         }
 
     @JvmSynthetic
-    fun addColumnBuilder(ref: ((record: T) -> Any?), block: DslBlock<ColumnBuilder<T>>) =
+    fun addColumnBuilder(ref: ((record: T) -> Any?), block: DslBlock<ColumnBuilder<T>>): ColumnBuilder<T> =
         ColumnBuilder.new<T>().let {
             columnBuilders.add(it.apply { it.id = ColumnKey(ref = ref) })
             block.invoke(it)
+            it
         }
 
     @JvmSynthetic
-    private fun addColumnBuilder(id: String) =
+    private fun addColumnBuilder(id: String) : ColumnBuilder<T> =
         ColumnBuilder.new<T>().let {
             columnBuilders.add(it.apply { it.id = ColumnKey(id = id) })
+            it
         }
 
     private fun resize(newSize: Int?) {
@@ -183,31 +186,34 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
     private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int> = mutableMapOf()
 
     @JvmSynthetic
-    fun addRowBuilder(block: DslBlock<RowBuilder<T>>) =
+    fun addRowBuilder(block: DslBlock<RowBuilder<T>>): RowBuilder<T> =
         RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
             rowBuilders.add(it)
             it.createAt = rowIndex
             block.invoke(it)
             rowIndex = it.createAt?.plus(1) ?: rowIndex
             refreshRowSpans(it)
+            it
         }
 
     @JvmSynthetic
-    fun addRowBuilder(selector: RowSelector<T>, block: DslBlock<RowBuilder<T>>) =
+    fun addRowBuilder(selector: RowSelector<T>, block: DslBlock<RowBuilder<T>>): RowBuilder<T> =
         RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
             rowBuilders.add(it)
             it.selector = selector
             block.invoke(it)
+            it
         }
 
     @JvmSynthetic
-    fun addRowBuilder(at: Int, block: DslBlock<RowBuilder<T>>) =
+    fun addRowBuilder(at: Int, block: DslBlock<RowBuilder<T>>): RowBuilder<T> =
         RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
             rowIndex = at
             rowBuilders.add(it)
             it.createAt = rowIndex++
             block.invoke(it)
             refreshRowSpans(it)
+            it
         }
 
     @JvmSynthetic
@@ -306,31 +312,34 @@ class CellsBuilder<T> private constructor(
     private var cellIndex: Int = 0
 
     @JvmSynthetic
-    fun addCellBuilder(id: String, block: DslBlock<CellBuilder<T>>) =
+    fun addCellBuilder(id: String, block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
         CellBuilder.new<T>().let {
             cells[ColumnKey(id = id)] = it
             block.invoke(it)
+            it
         }
 
     @JvmSynthetic
-    fun addCellBuilder(index: Int, block: DslBlock<CellBuilder<T>>) =
+    fun addCellBuilder(index: Int, block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
         CellBuilder.new<T>().let {
             columnsBuilder.columnBuilders[index].let { column ->
                 cells[ColumnKey(ref = column.id.ref, id = column.id.id)] = it
                 block.invoke(it)
                 cellIndex = index
                 nextCellIndex()
+                it
             }
         }
 
     @JvmSynthetic
-    fun addCellBuilder(block: DslBlock<CellBuilder<T>>) = addCellBuilder(index = currCellIndex(), block)
+    fun addCellBuilder(block: DslBlock<CellBuilder<T>>): CellBuilder<T> = addCellBuilder(index = currCellIndex(), block)
 
     @JvmSynthetic
-    fun addCellBuilder(ref: ((record: T) -> Any?), block: DslBlock<CellBuilder<T>>) =
+    fun addCellBuilder(ref: ((record: T) -> Any?), block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
         CellBuilder.new<T>().let {
             cells[ColumnKey(ref = ref)] = it
             block.invoke(it)
+            it
         }
 
     @JvmSynthetic
