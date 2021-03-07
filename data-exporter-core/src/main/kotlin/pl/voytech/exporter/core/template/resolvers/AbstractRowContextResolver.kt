@@ -2,7 +2,10 @@ package pl.voytech.exporter.core.template.resolvers
 
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.attributes.mergeAttributes
-import pl.voytech.exporter.core.template.context.*
+import pl.voytech.exporter.core.template.context.AttributedCell
+import pl.voytech.exporter.core.template.context.AttributedRow
+import pl.voytech.exporter.core.template.context.CellValue
+import pl.voytech.exporter.core.template.context.GlobalContextAndAttributes
 
 abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, stateAndAttributes: GlobalContextAndAttributes<T>) :
     TableDataSourceContextResolver<DS, T>(tableModel, stateAndAttributes) {
@@ -19,8 +22,8 @@ abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, stateAndA
         }
     }
 
-    private fun resolveAttributedRow(resolvedIndex: Int, record: IndexedValue<T>? = null): AttributedRow<T> {
-        return SourceRow(rowIndex = resolvedIndex, objectIndex = record?.index, record = record?.value).let {
+    private fun resolveAttributedRow(tableRowIndex: Int, record: IndexedValue<T>? = null): AttributedRow<T> {
+        return SourceRow(rowIndex = tableRowIndex, objectIndex = record?.index, record = record?.value).let {
             val rowDefinitions: Set<Row<T>> = tableModel.getRowsFor(it)
             val cellDefinitions: Map<ColumnKey<T>, Cell<T>> =
                 rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })
@@ -34,7 +37,7 @@ abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, stateAndA
                     stateAndAttributes.applySpans(column, cellDefinition)
                     val attributedCell = computeCellValue(column, cellDefinition, it)?.let {  value ->
                         stateAndAttributes.createCellContext(
-                            relativeRowIndex = resolvedIndex,
+                            relativeRowIndex = tableRowIndex,
                             relativeColumnIndex = column.index ?: index,
                             value = CellValue(
                                 value,
@@ -56,7 +59,7 @@ abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, stateAndA
                 }
             }
             stateAndAttributes.createRowContext(
-                relativeRowIndex = resolvedIndex,
+                relativeRowIndex = tableRowIndex,
                 rowAttributes = rowDefinitions.mapNotNull { attribs -> attribs.rowAttributes }
                     .fold(setOf(), { acc, r -> acc + r }),
                 cells = cellValues.toMap()
@@ -65,10 +68,10 @@ abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, stateAndA
     }
 
     private fun resolveRowContext(
-        resolvedIndex: Int,
+        tableRowIndex: Int,
         indexedRecord: IndexedValue<T>? = null
     ): IndexedValue<AttributedRow<T>> {
-        return IndexedValue(resolvedIndex, resolveAttributedRow(resolvedIndex, indexedRecord))
+        return IndexedValue(tableRowIndex, resolveAttributedRow(tableRowIndex, indexedRecord))
     }
 
     override fun resolve(requestedIndex: Int): IndexedValue<AttributedRow<T>>? {
@@ -79,7 +82,9 @@ abstract class AbstractRowContextResolver<DS, T>(tableModel: Table<T>, stateAndA
                 if (it != null) {
                     resolveRowContext(requestedIndex, it)
                 } else {
-                    tableModel.getNextCustomRowIndex(requestedIndex)?.let { it1 -> resolveRowContext(it1) }
+                    tableModel.getNextCustomRowIndex(requestedIndex)?.let { nextTableRowIndex ->
+                        resolveRowContext(nextTableRowIndex)
+                    }
                 }
             }
         }
