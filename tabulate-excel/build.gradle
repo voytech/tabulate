@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    implementation project(':data-exporter-core')
+    implementation project(':tabulate-core')
     implementation "org.apache.poi:poi:$apache_poi_version"
     implementation "org.apache.poi:poi-ooxml:$apache_poi_version"
     implementation "org.apache.commons:commons-math3:$commons_math_version"
