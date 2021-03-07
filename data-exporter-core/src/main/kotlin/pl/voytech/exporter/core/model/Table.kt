@@ -45,6 +45,8 @@ data class Table<T> internal constructor(
 
     fun forEachColumn(consumer: (Int, Column<T>) -> Unit) = columns.forEachIndexed(consumer)
 
+    fun <E> mapColumns(consumer: (Int, Column<T>) -> E) = columns.mapIndexed(consumer)
+
     fun forEachRow(consumer: Consumer<in Row<T>>) = rows?.forEach(consumer)
 
     fun getRowsAt(index: Int): List<Row<T>>? = indexedCustomRows?.get(index)
