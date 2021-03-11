@@ -4,7 +4,6 @@ import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.attributes.CellAttribute
 import pl.voytech.exporter.core.model.attributes.RowAttribute
 import pl.voytech.exporter.core.model.attributes.mergeAttributes
-import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.context.CellValue
 import pl.voytech.exporter.core.template.context.GlobalContextAndAttributes
@@ -14,18 +13,6 @@ abstract class AbstractRowContextResolver<DS, T>(
     stateAndAttributes: GlobalContextAndAttributes<T>
 ) :
     TableDataSourceContextResolver<DS, T>(tableModel, stateAndAttributes) {
-
-    private inline fun computeCellValue(
-        column: Column<T>,
-        customCell: Cell<T>?,
-        sourceRow: SourceRow<T>
-    ): Any? {
-        return (customCell?.eval?.invoke(sourceRow) ?: customCell?.value ?: sourceRow.record?.let {
-            column.id.ref?.invoke(it)
-        })?.let {
-            column.dataFormatter?.invoke(it) ?: it
-        }
-    }
 
     private fun computeCells(rowDefinitions: Set<Row<T>>): Map<ColumnKey<T>, Cell<T>> {
         return rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })
@@ -53,7 +40,7 @@ abstract class AbstractRowContextResolver<DS, T>(
                     if (stateAndAttributes.dontSkip(column)) {
                         val cellDefinition = cellDefinitions[column.id]
                         stateAndAttributes.applySpans(column, cellDefinition)
-                        computeCellValue(column, cellDefinition, sourceRow)!!.let { value ->
+                        cellDefinitions.resolveCellValue(column.id, sourceRow)!!.let { value ->
                             stateAndAttributes.createCellContext(
                                 relativeRowIndex = tableRowIndex,
                                 relativeColumnIndex = column.index ?: index,
