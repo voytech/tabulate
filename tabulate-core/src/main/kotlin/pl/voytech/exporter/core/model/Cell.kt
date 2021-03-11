@@ -13,4 +13,7 @@ data class Cell<T> internal constructor(
     fun colSpanOffset() = colSpan - 1
 
     fun rowSpanOffset() = rowSpan - 1
+
+    fun resolveValue(context: SourceRow<T>) : Any? = eval?.invoke(context) ?: value
+
 }

@@ -10,4 +10,6 @@ data class Column<T> internal constructor(
     val columnAttributes: Set<ColumnAttribute>?,
     val cellAttributes: Set<CellAttribute>?,
     val dataFormatter: ((field: Any) -> Any)? = null
-)
+) {
+    fun resolveValue(value: T?): Any? = value?.let { id.ref?.invoke(it) }
+}
