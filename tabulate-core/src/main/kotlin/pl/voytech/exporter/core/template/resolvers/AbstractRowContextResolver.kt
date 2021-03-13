@@ -5,7 +5,6 @@ import pl.voytech.exporter.core.model.attributes.CellAttribute
 import pl.voytech.exporter.core.model.attributes.RowAttribute
 import pl.voytech.exporter.core.model.attributes.mergeAttributes
 import pl.voytech.exporter.core.template.context.AttributedRow
-import pl.voytech.exporter.core.template.context.CellValue
 import pl.voytech.exporter.core.template.context.GlobalContextAndAttributes
 
 abstract class AbstractRowContextResolver<DS, T>(
@@ -37,29 +36,20 @@ abstract class AbstractRowContextResolver<DS, T>(
             val cellDefinitions = computeCells(rowDefinitions)
             val rowCellAttributes = computeRowLevelCellAttributes(rowDefinitions)
             val cellValues = tableModel.columns.mapIndexed { index: Int, column: Column<T> ->
-                    if (stateAndAttributes.dontSkip(column)) {
-                        val cellDefinition = cellDefinitions[column.id]
-                        stateAndAttributes.applySpans(column, cellDefinition)
-                        cellDefinitions.resolveCellValue(column.id, sourceRow)!!.let { value ->
-                            stateAndAttributes.createCellContext(
-                                relativeRowIndex = tableRowIndex,
-                                relativeColumnIndex = column.index ?: index,
-                                value = CellValue(
-                                    value,
-                                    cellDefinition?.type ?: column.columnType,
-                                    colSpan = cellDefinition?.colSpan ?: 1,
-                                    rowSpan = cellDefinition?.rowSpan ?: 1
-                                ),
-                                attributes = mergeAttributes(
-                                    tableModel.cellAttributes,
-                                    column.cellAttributes,
-                                    rowCellAttributes,
-                                    cellDefinition?.cellAttributes
-                                )
-                            ).let { Pair(column.id, it) }
-                        }
-                    } else null
-                }.mapNotNull { it }.toMap()
+                cellDefinitions.resolveCell(column, sourceRow)?.let { value ->
+                    stateAndAttributes.createCellContext(
+                        relativeRowIndex = tableRowIndex,
+                        relativeColumnIndex = column.index ?: index,
+                        value = value,
+                        attributes = mergeAttributes(
+                            tableModel.cellAttributes,
+                            column.cellAttributes,
+                            rowCellAttributes,
+                            cellDefinitions[column.id]?.cellAttributes
+                        )
+                    ).let { Pair(column.id, it) }
+                }
+            }.mapNotNull { it }.toMap()
             stateAndAttributes.createRowContext(
                 relativeRowIndex = tableRowIndex,
                 rowAttributes = computeRowAttributes(rowDefinitions),

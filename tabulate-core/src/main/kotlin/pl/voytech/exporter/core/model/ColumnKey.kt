@@ -7,4 +7,6 @@ data class ColumnKey<T> internal constructor(
     companion object {
         fun <T> field(fieldRef: ((record: T) -> Any?)) = ColumnKey(ref = fieldRef)
     }
+
+    fun resolveValue(value: T?): Any? = value?.let { ref?.invoke(it) }
 }
