@@ -1,10 +1,9 @@
 package pl.voytech.exporter.core.template.resolvers
 
 import pl.voytech.exporter.core.model.*
-import pl.voytech.exporter.core.model.attributes.CellAttribute
-import pl.voytech.exporter.core.model.attributes.RowAttribute
-import pl.voytech.exporter.core.model.attributes.mergeAttributes
-import pl.voytech.exporter.core.model.attributes.mergeLatterWins
+import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
+import pl.voytech.exporter.core.model.attributes.alias.RowAttribute
+import pl.voytech.exporter.core.model.attributes.overrideAttributesRightToLeft
 import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.context.GlobalContextAndAttributes
 
@@ -18,8 +17,8 @@ abstract class AbstractRowContextResolver<DS, T>(
         return rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })
     }
 
-    private fun computeRowLevelCellAttributes(rowDefinitions: Set<Row<T>>): Set<CellAttribute<*>> {
-        return mergeLatterWins(*(rowDefinitions.mapNotNull { i -> i.cellAttributes }.toTypedArray()))
+    private fun computeRowLevelCellAttributes(rowDefinitions: Set<Row<T>>): Set<CellAttribute> {
+        return overrideAttributesRightToLeft(*(rowDefinitions.mapNotNull { i -> i.cellAttributes }.toTypedArray()))
     }
 
     private fun computeRowAttributes(rowDefinitions: Set<Row<T>>): Set<RowAttribute> {
@@ -42,7 +41,7 @@ abstract class AbstractRowContextResolver<DS, T>(
                         relativeRowIndex = tableRowIndex,
                         relativeColumnIndex = column.index ?: index,
                         value = value,
-                        attributes = mergeLatterWins(
+                        attributes = overrideAttributesRightToLeft(
                             tableModel.cellAttributes,
                             column.cellAttributes,
                             rowCellAttributes,

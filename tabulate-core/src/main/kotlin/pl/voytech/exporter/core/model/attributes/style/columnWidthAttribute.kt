@@ -11,7 +11,7 @@ data class ColumnWidthAttribute(
     val auto: Boolean? = false,
     val width: Int = -1,
     val unit: LengthUnit = LengthUnit.PIXEL
-) : ColumnAttribute() {
+) : ColumnAttribute<ColumnWidthAttribute>() {
     override fun beforeFirstRow() = true
     override fun afterLastRow() = true
 
@@ -19,9 +19,11 @@ data class ColumnWidthAttribute(
         var auto: Boolean? = false
         var width: Int = -1
         var unit: LengthUnit = LengthUnit.PIXEL
-        override fun build(): ColumnAttribute = ColumnWidthAttribute(auto, width, unit)
+        override fun build(): ColumnAttribute<ColumnWidthAttribute> = ColumnWidthAttribute(auto, width, unit)
     }
+
+    override fun mergeWith(other: ColumnWidthAttribute): ColumnWidthAttribute = other.copy(auto = other.auto ?: this.auto)
 }
 
-fun width(block: ColumnWidthAttribute.Builder.() -> Unit): ColumnAttribute = ColumnWidthAttribute.Builder().apply(block).build()
+fun width(block: ColumnWidthAttribute.Builder.() -> Unit): ColumnAttribute<ColumnWidthAttribute> = ColumnWidthAttribute.Builder().apply(block).build()
 

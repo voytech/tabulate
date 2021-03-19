@@ -5,9 +5,9 @@ import org.apache.poi.xssf.streaming.SXSSFCell
 import pl.voytech.exporter.core.api.builder.TableBuilder
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.model.attributes.ColumnAttribute
-import pl.voytech.exporter.core.model.attributes.RowAttribute
-import pl.voytech.exporter.core.model.attributes.TableAttribute
+import pl.voytech.exporter.core.model.attributes.alias.ColumnAttribute
+import pl.voytech.exporter.core.model.attributes.alias.RowAttribute
+import pl.voytech.exporter.core.model.attributes.alias.TableAttribute
 import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.AttributedColumn

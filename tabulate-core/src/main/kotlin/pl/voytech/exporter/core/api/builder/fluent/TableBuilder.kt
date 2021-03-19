@@ -36,7 +36,7 @@ class TableBuilder<T>(internal val builderBase: BaseTableBuilder<T>) : TopLevelB
 
     fun rows() = RowsBuilder(this)
 
-    fun attribute(vararg attribute: Attribute) = apply {
+    fun attribute(vararg attribute: Attribute<*>) = apply {
         this.builderBase.attributes(*attribute)
     }
 
@@ -87,7 +87,7 @@ class ColumnBuilder<T>(private val builderBase: BaseColumnBuilder<T>, private va
 
     fun rows() = out().out().rows()
 
-    fun attribute(vararg attribute: Attribute) = apply {
+    fun attribute(vararg attribute: Attribute<*>) = apply {
         builderBase.attributes(*attribute)
     }
 
@@ -137,7 +137,7 @@ class RowBuilder<T>(private val builderBase: BaseRowBuilder<T>, private val pare
 
     fun row(at: Int) = parent.row(at)
 
-    fun attribute(vararg attribute: Attribute) = apply {
+    fun attribute(vararg attribute: Attribute<*>) = apply {
         builderBase.attributes(*attribute)
     }
 

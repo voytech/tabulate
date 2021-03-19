@@ -1,7 +1,7 @@
 package pl.voytech.exporter.core.model
 
 import pl.voytech.exporter.core.api.builder.fluent.TableBuilder
-import pl.voytech.exporter.core.model.attributes.TableAttribute
+import pl.voytech.exporter.core.model.attributes.alias.TableAttribute
 import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import java.util.function.Consumer
 import pl.voytech.exporter.core.api.builder.TableBuilder as TableBuilderBase

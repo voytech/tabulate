@@ -2,7 +2,7 @@ package pl.voytech.exporter.core.template.context
 
 import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
-import pl.voytech.exporter.core.model.attributes.RowAttribute
+import pl.voytech.exporter.core.model.attributes.alias.RowAttribute
 
 /**
  * A mutable exporting state representing entire dataset as well as operation-scoped context data and coordinates for

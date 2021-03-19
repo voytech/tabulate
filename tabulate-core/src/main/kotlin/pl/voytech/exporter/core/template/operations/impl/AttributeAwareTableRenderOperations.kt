@@ -2,15 +2,19 @@ package pl.voytech.exporter.core.template.operations.impl
 
 import pl.voytech.exporter.core.api.builder.TableBuilder
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.model.attributes.ColumnAttribute
-import pl.voytech.exporter.core.model.attributes.RowAttribute
-import pl.voytech.exporter.core.model.attributes.TableAttribute
+import pl.voytech.exporter.core.model.attributes.alias.ColumnAttribute
+import pl.voytech.exporter.core.model.attributes.alias.RowAttribute
+import pl.voytech.exporter.core.model.attributes.alias.TableAttribute
 import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.AttributedColumn
 import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.operations.*
 import pl.voytech.exporter.core.model.attributes.CellAttribute as CellAttributeClass
+import pl.voytech.exporter.core.model.attributes.ColumnAttribute as ColumnAttributeClass
+import pl.voytech.exporter.core.model.attributes.RowAttribute as RowAttributeClass
+import pl.voytech.exporter.core.model.attributes.TableAttribute as TableAttributeClass
+
 
 @Suppress("UNCHECKED_CAST")
 class AttributeAwareTableRenderOperations<T>(
@@ -65,16 +69,16 @@ class AttributeAwareTableRenderOperations<T>(
     private fun withAllAttributesSorted(builder: TableBuilder<T>): TableBuilder<T> {
         builder.columnsBuilder.columnBuilders.forEach { columnBuilder ->
             columnBuilder.visit(CellAttributeClass::class.java) { sortedCellAttributes(it) }
-            columnBuilder.visit(ColumnAttribute::class.java) { sortedColumnAttributes(it) }
+            columnBuilder.visit(ColumnAttributeClass::class.java) { sortedColumnAttributes(it) }
         }
         builder.rowsBuilder.rowBuilders.forEach { rowBuilder ->
             rowBuilder.visit(CellAttributeClass::class.java) { sortedCellAttributes(it) }
-            rowBuilder.visit(RowAttribute::class.java) { sortedRowAttributes(it) }
+            rowBuilder.visit(RowAttributeClass::class.java) { sortedRowAttributes(it) }
             rowBuilder.cellsBuilder.cells.forEach { (_, cellBuilder) ->
                 cellBuilder.visit(CellAttributeClass::class.java) { sortedCellAttributes(it) }
             }
         }
-        builder.visit(TableAttribute::class.java) { sortedTableAttributes(it) }
+        builder.visit(TableAttributeClass::class.java) { sortedTableAttributes(it) }
         builder.visit(CellAttributeClass::class.java) { sortedCellAttributes(it) }
         return builder
     }
