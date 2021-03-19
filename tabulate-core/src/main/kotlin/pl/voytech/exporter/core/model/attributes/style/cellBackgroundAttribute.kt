@@ -10,9 +10,7 @@ data class CellBackgroundAttribute(
         override fun build(): CellBackgroundAttribute = CellBackgroundAttribute(color)
     }
 
-    override fun mergeWith(other: CellBackgroundAttribute): CellBackgroundAttribute = CellBackgroundAttribute(
-        color = other.color
-    )
+    override fun mergeWith(other: CellBackgroundAttribute): CellBackgroundAttribute = other
 }
 
 fun background(block: CellBackgroundAttribute.Builder.() -> Unit): CellBackgroundAttribute =

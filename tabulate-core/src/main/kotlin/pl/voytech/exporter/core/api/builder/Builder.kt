@@ -10,36 +10,36 @@ interface Builder<T> {
 typealias DslBlock<T> = (T) -> Unit
 
 abstract class AttributesAware {
-    private var attributes: MutableMap<Class<out Attribute>, Set<Attribute>> = mutableMapOf()
+    private var attributes: MutableMap<Class<out Attribute<*>>, Set<Attribute<*>>> = mutableMapOf()
 
     @JvmSynthetic
-    open fun attributes(vararg attributes: Attribute) {
+    open fun attributes(vararg attributes: Attribute<*>) {
         applyAttributes(attributes.asList())
     }
 
     @JvmSynthetic
-    open fun attributes(attributes: Collection<Attribute>) {
+    open fun attributes(attributes: Collection<Attribute<*>>) {
         applyAttributes(attributes)
     }
 
     @JvmSynthetic
-    open fun attributes(vararg builders: AttributeBuilder<out Attribute>) {
+    open fun attributes(vararg builders: AttributeBuilder<out Attribute<*>>) {
         attributes(*(builders.map { it.build() }).toTypedArray())
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Attribute> visit(clazz: Class<T>, visitor: ((current: Set<T>?) -> Set<T>?)) {
+    fun <T : Attribute<*>> visit(clazz: Class<T>, visitor: ((current: Set<T>?) -> Set<T>?)) {
         this.attributes[clazz] = visitor.invoke(this.attributes[clazz] as Set<T>?) ?: emptySet()
     }
 
     @Suppress("UNCHECKED_CAST")
     @JvmSynthetic
-    internal fun <C : Attribute> getAttributesByClass(clazz: Class<C>): Set<C>? = attributes[clazz] as Set<C>?
+    internal fun <C : Attribute<*>> getAttributesByClass(clazz: Class<C>): Set<C>? = attributes[clazz] as Set<C>?
 
     @JvmSynthetic
-    internal abstract fun supportedAttributeClasses(): Set<Class<out Attribute>>
+    internal abstract fun supportedAttributeClasses(): Set<Class<out Attribute<*>>>
 
-    private fun applyAttributes(attributes: Collection<Attribute>) {
+    private fun applyAttributes(attributes: Collection<Attribute<*>>) {
         attributes.forEach {
             supportedAttributeClasses().find { clazz -> clazz.isAssignableFrom(it.javaClass) }
                 ?.let { baseClass ->
@@ -82,7 +82,7 @@ class TableBuilder<T> : AttributesAwareBuilder<Table<T>>() {
     )
 
     @JvmSynthetic
-    override fun supportedAttributeClasses(): Set<Class<out Attribute>> =
+    override fun supportedAttributeClasses(): Set<Class<out Attribute<*>>> =
         setOf(TableAttribute::class.java, CellAttribute::class.java)
 
 }
@@ -167,7 +167,7 @@ class ColumnBuilder<T> internal constructor() : AttributesAwareBuilder<Column<T>
     )
 
     @JvmSynthetic
-    override fun supportedAttributeClasses(): Set<Class<out Attribute>> =
+    override fun supportedAttributeClasses(): Set<Class<out Attribute<*>>> =
         setOf(ColumnAttribute::class.java, CellAttribute::class.java)
 
     companion object {
@@ -288,7 +288,7 @@ class RowBuilder<T> private constructor(
     )
 
     @JvmSynthetic
-    override fun supportedAttributeClasses(): Set<Class<out Attribute>> =
+    override fun supportedAttributeClasses(): Set<Class<out Attribute<*>>> =
         setOf(RowAttribute::class.java, CellAttribute::class.java)
 
     companion object {
@@ -395,7 +395,7 @@ class CellBuilder<T> private constructor() : AttributesAwareBuilder<Cell<T>>() {
         Cell(value, eval, type, colSpan, rowSpan, getAttributesByClass(CellAttribute::class.java))
 
     @JvmSynthetic
-    override fun supportedAttributeClasses(): Set<Class<out Attribute>> = setOf(CellAttribute::class.java)
+    override fun supportedAttributeClasses(): Set<Class<out Attribute<*>>> = setOf(CellAttribute::class.java)
 
     companion object {
         @JvmSynthetic
@@ -404,15 +404,15 @@ class CellBuilder<T> private constructor() : AttributesAwareBuilder<Cell<T>>() {
 
 }
 
-interface TableAttributeBuilder : AttributeBuilder<TableAttribute>
+interface TableAttributeBuilder : AttributeBuilder<TableAttribute<*>>
 
-interface AttributeBuilder<T : Attribute> : Builder<T>
+interface AttributeBuilder<T : Attribute<*>> : Builder<T>
 
 interface CellAttributeBuilder<T : CellAttribute<T>> : AttributeBuilder<T>
 
-interface RowAttributeBuilder : AttributeBuilder<RowAttribute>
+interface RowAttributeBuilder : AttributeBuilder<RowAttribute<*>>
 
-interface ColumnAttributeBuilder : AttributeBuilder<ColumnAttribute>
+interface ColumnAttributeBuilder : AttributeBuilder<ColumnAttribute<*>>
 
 
 
