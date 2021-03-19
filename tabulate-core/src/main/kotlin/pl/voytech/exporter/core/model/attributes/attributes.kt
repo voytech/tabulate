@@ -1,9 +1,16 @@
 package pl.voytech.exporter.core.model.attributes
 
+import java.util.*
+
 open class Attribute
 
 abstract class CellAttribute<T : CellAttribute<T>> : Attribute() {
+
     abstract fun mergeWith(other: T): T
+
+    //TODO Try find better solution. Overcoming type system limitations in terms of generics and all issues with cyclic self references.
+    @Suppress("UNCHECKED_CAST")
+    fun uncheckedMergeWith(other: CellAttribute<*>): T = mergeWith(other as T)
 }
 
 open class ColumnAttribute : Attribute() {
@@ -15,25 +22,32 @@ open class RowAttribute : Attribute()
 
 open class TableAttribute : Attribute()
 
-fun mergeAttributes(vararg attributesByLevels: Set<CellAttribute<*>>?): Set<CellAttribute<*>> {
-    return attributesByLevels.filterNotNull()
-        .map { set -> set.groupBy { it.javaClass }.map { Pair(it.key, it.value.first()) }.toMap() }
-        .fold(
-            mapOf<Class<CellAttribute<*>>, CellAttribute<*>>(),
-            { accumulated, currentLevel -> mergeAttributes(accumulated, currentLevel) })
-        .values
+fun <A : CellAttribute<A>> List<A>.mergeAttributes(): A {
+    return this.takeLast(this.size - 1)
+        .fold(this.first(),{ acc: A, attribute: A ->
+            acc.mergeWith(attribute)
+        })
+}
+
+private fun List<CellAttribute<*>>.mergeUncheckedAttributes(): CellAttribute<*> {
+    val requiredClass = this.first().javaClass
+    return this.takeLast(this.size - 1)
+        .fold(this.first(),{ acc: CellAttribute<*>, attribute: CellAttribute<*> ->
+            assert(requiredClass == attribute.javaClass)
+            acc.uncheckedMergeWith(attribute)
+        })
+}
+
+fun mergeLatterWins(attributeSet: LinkedHashSet<CellAttribute<*>>): Set<CellAttribute<*>> {
+    return attributeSet.groupBy { it.javaClass }
+        .map { it.value.mergeUncheckedAttributes() }
         .toSet()
 }
 
-private fun <T : CellAttribute<T>> mergeAttributes(
-    first: Map<Class<T>, T>,
-    second: Map<Class<T>, T>
-): Map<Class<T>, T> {
-    val result = mutableMapOf<Class<T>, T>()
-    first.keys.toSet().intersect(second.keys.toSet()).forEach {
-        result[it] = (first[it] ?: error("")).mergeWith((second[it] ?: error("")))
+fun mergeLatterWins(vararg attributeSets: Set<CellAttribute<*>>?): Set<CellAttribute<*>> {
+    val linkedSet = linkedSetOf<CellAttribute<*>>()
+    attributeSets.forEach {
+        it?.forEach { cellAttribute -> linkedSet.add(cellAttribute)}
     }
-    first.keys.toSet().subtract(second.keys.toSet()).forEach { result[it] = first[it] ?: error("") }
-    second.keys.toSet().subtract(first.keys.toSet()).forEach { result[it] = second[it] ?: error("") }
-    return result.toMap()
+    return mergeLatterWins(linkedSet)
 }
