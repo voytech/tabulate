@@ -4,6 +4,7 @@ import pl.voytech.exporter.core.model.*
 import pl.voytech.exporter.core.model.attributes.CellAttribute
 import pl.voytech.exporter.core.model.attributes.RowAttribute
 import pl.voytech.exporter.core.model.attributes.mergeAttributes
+import pl.voytech.exporter.core.model.attributes.mergeLatterWins
 import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.context.GlobalContextAndAttributes
 
@@ -18,7 +19,7 @@ abstract class AbstractRowContextResolver<DS, T>(
     }
 
     private fun computeRowLevelCellAttributes(rowDefinitions: Set<Row<T>>): Set<CellAttribute<*>> {
-        return mergeAttributes(*(rowDefinitions.mapNotNull { i -> i.cellAttributes }.toTypedArray()))
+        return mergeLatterWins(*(rowDefinitions.mapNotNull { i -> i.cellAttributes }.toTypedArray()))
     }
 
     private fun computeRowAttributes(rowDefinitions: Set<Row<T>>): Set<RowAttribute> {
@@ -41,7 +42,7 @@ abstract class AbstractRowContextResolver<DS, T>(
                         relativeRowIndex = tableRowIndex,
                         relativeColumnIndex = column.index ?: index,
                         value = value,
-                        attributes = mergeAttributes(
+                        attributes = mergeLatterWins(
                             tableModel.cellAttributes,
                             column.cellAttributes,
                             rowCellAttributes,
