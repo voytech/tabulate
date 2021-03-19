@@ -1,8 +1,8 @@
 package pl.voytech.exporter.core.template.operations.impl
 
 import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
-import pl.voytech.exporter.core.model.attributes.ColumnAttribute
-import pl.voytech.exporter.core.model.attributes.RowAttribute
+import pl.voytech.exporter.core.model.attributes.alias.ColumnAttribute
+import pl.voytech.exporter.core.model.attributes.alias.RowAttribute
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.ContextData
 import pl.voytech.exporter.core.template.operations.impl.AttributeKeyedCache.Companion.getCache

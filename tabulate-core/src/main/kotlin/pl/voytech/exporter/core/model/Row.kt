@@ -1,7 +1,7 @@
 package pl.voytech.exporter.core.model
 
-import pl.voytech.exporter.core.model.attributes.RowAttribute
 import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
+import pl.voytech.exporter.core.model.attributes.alias.RowAttribute
 import pl.voytech.exporter.core.template.context.CellValue
 
 data class Row<T> internal constructor(
@@ -14,7 +14,7 @@ data class Row<T> internal constructor(
 
 fun <T> Map<ColumnKey<T>, Cell<T>>?.resolveCell(column: Column<T>, maybeRow: SourceRow<T>? = null): CellValue? {
     return this?.get(column.id)?.let { cell ->
-         cell.resolveValue(maybeRow)?.let { rawValue ->
+        cell.resolveValue(maybeRow)?.let { rawValue ->
             CellValue(
                 rawValue,
                 cell.type ?: column.columnType,

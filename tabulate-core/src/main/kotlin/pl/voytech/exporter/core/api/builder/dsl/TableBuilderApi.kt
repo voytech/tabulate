@@ -36,12 +36,12 @@ class TableBuilderApi<T> private constructor(private val builder: TableBuilder<T
     fun rows(block: RowsBuilderApi<T>.() -> Unit) = RowsBuilderApi(builder.rowsBuilder).apply(block)
 
     @JvmSynthetic
-    fun attributes(vararg attributes: Attribute) {
+    fun attributes(vararg attributes: Attribute<*>) {
         builder.attributes(attributes.asList())
     }
 
     @JvmSynthetic
-    fun attributes(attributes: List<Attribute>) {
+    fun attributes(attributes: List<Attribute<*>>) {
         builder.attributes(attributes)
     }
 
@@ -95,12 +95,12 @@ class ColumnBuilderApi<T> private constructor(private val builder: ColumnBuilder
     var dataFormatter: ((field: Any) -> Any)? by builder::dataFormatter
 
     @JvmSynthetic
-    fun attributes(vararg attributes: Attribute) {
+    fun attributes(vararg attributes: Attribute<*>) {
         builder.attributes(attributes.asList())
     }
 
     @JvmSynthetic
-    fun attributes(attributes: List<Attribute>) {
+    fun attributes(attributes: List<Attribute<*>>) {
         builder.attributes(attributes)
     }
 
@@ -146,12 +146,12 @@ class RowBuilderApi<T> private constructor(private val builder: RowBuilder<T>)  
     fun cells(block: CellsBuilderApi<T>.() -> Unit) = CellsBuilderApi.new(builder.cellsBuilder).apply(block)
 
     @JvmSynthetic
-    fun attributes(vararg attributes: Attribute) {
+    fun attributes(vararg attributes: Attribute<*>) {
         builder.attributes(attributes.asList())
     }
 
     @JvmSynthetic
-    fun attributes(attributes: List<Attribute>) {
+    fun attributes(attributes: List<Attribute<*>>) {
         builder.attributes(attributes)
     }
 
@@ -209,12 +209,12 @@ class CellBuilderApi<T> private constructor(private val builder: CellBuilder<T>)
     var rowSpan: Int by builder::rowSpan
 
     @JvmSynthetic
-    fun attributes(vararg attributes: Attribute) {
+    fun attributes(vararg attributes: Attribute<*>) {
         builder.attributes(attributes.asList())
     }
 
     @JvmSynthetic
-    fun attributes(attributes: List<Attribute>) {
+    fun attributes(attributes: List<Attribute<*>>) {
         builder.attributes(attributes)
     }
 
