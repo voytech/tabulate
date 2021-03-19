@@ -14,7 +14,7 @@ data class Row<T> internal constructor(
 
 fun <T> Map<ColumnKey<T>, Cell<T>>?.resolveCell(column: Column<T>, maybeRow: SourceRow<T>? = null): CellValue? {
     return this?.get(column.id)?.let { cell ->
-        (cell.resolveValue(maybeRow) ?: column.resolveValue(maybeRow?.record) ?: cell.value)?.let { rawValue ->
+         cell.resolveValue(maybeRow)?.let { rawValue ->
             CellValue(
                 rawValue,
                 cell.type ?: column.columnType,
