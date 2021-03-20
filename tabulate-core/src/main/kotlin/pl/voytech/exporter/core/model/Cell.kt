@@ -1,6 +1,7 @@
 package pl.voytech.exporter.core.model
 
 import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
+import pl.voytech.exporter.core.template.context.CellValue
 
 data class Cell<T> internal constructor(
     val value: Any?,
@@ -14,6 +15,18 @@ data class Cell<T> internal constructor(
 
     fun rowSpanOffset() = rowSpan - 1
 
-    fun resolveValue(context: SourceRow<T>?) : Any? = context?.let { eval?.invoke(it) } ?: value
+    internal fun resolveRawValue(context: SourceRow<T>?) : Any? = context?.let { eval?.invoke(it) } ?: value
+}
 
+internal fun <T> Cell<T>?.resolveCellValue(column: Column<T>, maybeRow: SourceRow<T>? = null): CellValue? {
+    return this?.let {
+        it.resolveRawValue(maybeRow)?.let { rawValue ->
+            CellValue(
+                rawValue,
+                (it.type ?: column.columnType).orProbe(rawValue),
+                it.colSpan,
+                it.rowSpan
+            )
+        }
+    } ?: column.resolveRawValue(maybeRow?.record)?.let { CellValue(it, column.columnType.orProbe(it)) }
 }
