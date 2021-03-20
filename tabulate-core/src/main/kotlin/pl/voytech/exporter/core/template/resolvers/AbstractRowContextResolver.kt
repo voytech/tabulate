@@ -36,7 +36,7 @@ abstract class AbstractRowContextResolver<DS, T>(
             val cellDefinitions = computeCells(rowDefinitions)
             val rowCellAttributes = computeRowLevelCellAttributes(rowDefinitions)
             val cellValues = tableModel.columns.mapIndexed { index: Int, column: Column<T> ->
-                cellDefinitions.resolveCell(column, sourceRow)?.let { value ->
+                cellDefinitions.resolveCellValue(column, sourceRow)?.let { value ->
                     stateAndAttributes.createCellContext(
                         relativeRowIndex = tableRowIndex,
                         relativeColumnIndex = column.index ?: index,

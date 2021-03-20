@@ -12,15 +12,11 @@ data class Row<T> internal constructor(
     val cells: Map<ColumnKey<T>, Cell<T>>?
 )
 
-fun <T> Map<ColumnKey<T>, Cell<T>>?.resolveCell(column: Column<T>, maybeRow: SourceRow<T>? = null): CellValue? {
-    return this?.get(column.id)?.let { cell ->
-        cell.resolveValue(maybeRow)?.let { rawValue ->
-            CellValue(
-                rawValue,
-                cell.type ?: column.columnType,
-                cell.colSpan,
-                cell.rowSpan
-            )
-        }
-    } ?: column.resolveValue(maybeRow?.record)?.let { CellValue(it, column.columnType) }
+internal fun <T> Map<ColumnKey<T>, Cell<T>>?.resolveCellValue(column: Column<T>, maybeRow: SourceRow<T>? = null): CellValue? {
+    return this?.get(column.id).resolveCellValue(column, maybeRow)
+}
+
+@JvmName("resolveCell2")
+internal fun <T> Map<Column<T>, Cell<T>>?.resolveCellValue(column: Column<T>, maybeRow: SourceRow<T>? = null): CellValue? {
+    return this?.get(column).resolveCellValue(column, maybeRow)
 }

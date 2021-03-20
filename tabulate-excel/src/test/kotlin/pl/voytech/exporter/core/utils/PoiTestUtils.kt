@@ -17,7 +17,7 @@ class PoiStateProvider : StateProvider<ApachePoiExcelFacade> {
         return ApachePoiExcelFacade(file.inputStream())
     }
 
-    override fun getPresentTableNames(api: ApachePoiExcelFacade): List<String>? =
+    override fun getPresentTableNames(api: ApachePoiExcelFacade): List<String> =
         api.workbook().let { (0 until it.numberOfSheets).map { index -> api.workbook().getSheetAt(index).sheetName } }
 
 
@@ -66,7 +66,7 @@ class PoiTableAssert<T>(
                             )
                             PoiCellType.FORMULA -> CellValue(
                                 value = it.cellFormula,
-                                type = CellType.NATIVE_FORMULA,
+                                type = CellType.FUNCTION,
                                 colSpan = colSpan,
                                 rowSpan = rowSpan
                             )

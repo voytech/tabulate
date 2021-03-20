@@ -88,18 +88,10 @@ fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOp
                                         CellType.BOOLEAN -> cell.setCellValue(v.value as Boolean)
                                         CellType.DATE -> cell.setCellValue(toDateValue(v.value))
                                         CellType.NUMERIC -> cell.setCellValue((v.value as Number).toDouble())
-                                        CellType.NATIVE_FORMULA -> cell.cellFormula = v.value.toString()
-                                        CellType.FORMULA -> cell.cellFormula = v.value.toString()
-                                        CellType.ERROR -> throw IllegalStateException("CellType.ERROR not supported.")
-                                    }
-                                } ?: v.run {
-                                    when (this.value) {
-                                        is String -> cell.setCellValue(this.value as String)
-                                        is Boolean -> cell.setCellValue(this.value as Boolean)
-                                        is LocalDate -> cell.setCellValue(toDateValue(this.value))
-                                        is LocalDateTime -> cell.setCellValue(toDateValue(this.value))
-                                        is Date -> cell.setCellValue(this.value as Date)
-                                        is Number -> cell.setCellValue((this.value as Number).toDouble())
+                                        CellType.FUNCTION -> cell.cellFormula = v.value.toString()
+                                        CellType.ERROR -> error("CellType.ERROR not yet supported.")
+                                        CellType.IMAGE_URL -> error("CellType.IMAGE_URL not yet supported.")
+                                        CellType.IMAGE_DATA -> error("CellType.IMAGE_DATA not yet supported.")
                                     }
                                 }
                             }
@@ -127,7 +119,7 @@ fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOp
                     }
             }
 
-        override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<T>? =
+        override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<T> =
             object : AttributeRenderOperationsFactory<T> {
                 override fun createTableAttributeRenderOperations(): Set<AdaptingTableAttributeRenderOperation<ApachePoiExcelFacade, out TableAttribute>> =
                     tableAttributesOperations(adaptee)
