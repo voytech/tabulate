@@ -10,9 +10,7 @@ data class CellExcelDataFormatAttribute(
         var value: String = "general"
         override fun build(): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute(value)
     }
-    override fun mergeWith(other: CellExcelDataFormatAttribute): CellExcelDataFormatAttribute  = CellExcelDataFormatAttribute(
-        dataFormat = other.dataFormat
-    )
+    override fun mergeWith(other: CellExcelDataFormatAttribute): CellExcelDataFormatAttribute  = other
 }
 
 fun dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute.Builder().apply(block).build()
