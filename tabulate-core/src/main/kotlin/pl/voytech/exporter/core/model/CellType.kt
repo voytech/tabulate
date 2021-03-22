@@ -2,6 +2,7 @@ package pl.voytech.exporter.core.model
 
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.*
 
 enum class CellType {
     NUMERIC,
@@ -11,7 +12,11 @@ enum class CellType {
     IMAGE_DATA,
     IMAGE_URL,
     FUNCTION,
-    ERROR,
+    ERROR;
+
+    companion object {
+        val BASIC_TYPES: EnumSet<CellType> =  EnumSet.of(NUMERIC, STRING, BOOLEAN, DATE, FUNCTION, ERROR)
+    }
 }
 
 /**

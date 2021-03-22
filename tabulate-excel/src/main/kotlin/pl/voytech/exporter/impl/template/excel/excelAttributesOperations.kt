@@ -187,7 +187,7 @@ class ColumnWidthAttributeRenderOperation<T>(override val adaptee: ApachePoiExce
                 }
                 it.autoSizeColumn(context.columnIndex)
             } else {
-                ApachePoiUtils.widthFromPixels(attribute.width)
+                it.setColumnWidth(context.columnIndex, ApachePoiUtils.widthFromPixels(attribute.width))
             }
         }
     }
