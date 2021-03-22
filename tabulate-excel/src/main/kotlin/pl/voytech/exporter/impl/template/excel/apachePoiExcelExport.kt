@@ -61,10 +61,16 @@ fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOp
                         }
 
                         override fun renderRowCell(context: AttributedCell) {
-                            adaptee.assertCell(context).also {
-                                setCellValue(it, context.value)
-                            }.also {
-                                mergeCells(context)
+                            if (context.value.type in CellType.BASIC_TYPES) {
+                                adaptee.assertCell(context).also {
+                                    setCellValue(it, context.value)
+                                }.also {
+                                    mergeCells(context)
+                                }
+                            } else when (context.value.type) {
+                                CellType.IMAGE_URL -> adaptee.createImageCell(context, context.value.value as String)
+                                CellType.IMAGE_DATA -> adaptee.createImageCell(context, context.value.value as ByteArray)
+                                else -> error("cell type ${context.value.type} does not belong to basic cell types group")
                             }
                         }
 
@@ -89,9 +95,8 @@ fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOp
                                         CellType.DATE -> cell.setCellValue(toDateValue(v.value))
                                         CellType.NUMERIC -> cell.setCellValue((v.value as Number).toDouble())
                                         CellType.FUNCTION -> cell.cellFormula = v.value.toString()
-                                        CellType.ERROR -> error("CellType.ERROR not yet supported.")
-                                        CellType.IMAGE_URL -> error("CellType.IMAGE_URL not yet supported.")
-                                        CellType.IMAGE_DATA -> error("CellType.IMAGE_DATA not yet supported.")
+                                        CellType.ERROR -> cell.setCellErrorValue(v.value as Byte)
+                                        else -> null
                                     }
                                 }
                             }

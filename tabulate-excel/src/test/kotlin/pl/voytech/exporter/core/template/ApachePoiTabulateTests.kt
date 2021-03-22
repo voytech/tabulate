@@ -372,6 +372,43 @@ class ApachePoiTabulateTests {
         }
     }
 
+    @Test
+    fun `should export table with custom row with image`() {
+        val file = File("test_img.xlsx")
+        FileOutputStream(file).use {
+            table<Any> {
+                name = "Test table"
+                columns {
+                    column("description")
+                    column("image") {
+                        attributes(width { width = 300 })
+                    }
+                }
+                rows {
+                    row {
+                        attributes(height { height = 200 })
+                        cells {
+                            cell { value = "It is : " }
+                            cell {
+                                value = "src/test/resources/kotlin.jpeg"
+                                type = CellType.IMAGE_URL
+                            }
+                        }
+                    }
+                }
+            }.export(poiExcelExport(), it)
+        }
+        PoiTableAssert<Product>(
+            tableName = "Test table",
+            file = File("test_img.xlsx"),
+            cellTests = mapOf(
+                CellPosition(0, 0) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "It is : "),
+            )
+        ).perform().also {
+           it.cleanup()
+        }
+    }
+
     private fun createDataSet(count : Int? = 1): List<Product> {
         val random = Random(count!!)
         return (0..count).map {
