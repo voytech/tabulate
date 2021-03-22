@@ -1,7 +1,7 @@
 package pl.voytech.exporter.impl.template.excel.wrapper
 
-import org.apache.poi.ss.usermodel.CellStyle
-import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.ss.usermodel.*
+import org.apache.poi.util.IOUtils
 import org.apache.poi.xssf.streaming.SXSSFCell
 import org.apache.poi.xssf.streaming.SXSSFRow
 import org.apache.poi.xssf.streaming.SXSSFSheet
@@ -13,7 +13,9 @@ import pl.voytech.exporter.core.model.attributes.style.Color
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.Coordinates
 import pl.voytech.exporter.core.template.operations.impl.putCachedValueIfAbsent
+import java.io.FileInputStream
 import java.io.InputStream
+
 
 class ApachePoiExcelFacade(templateFile: InputStream? = null) {
 
@@ -53,6 +55,35 @@ class ApachePoiExcelFacade(templateFile: InputStream? = null) {
         cell(context.getTableId(), context.rowIndex, context.columnIndex) ?: createCell(context)
 
     fun cellStyle(context: AttributedCell): CellStyle = assertCell(context).cellStyle
+
+    fun createImageCell(context: AttributedCell, imageUrl: String) {
+        val cacheKey = "images/${imageUrl}"
+        context.additionalAttributes?.get(cacheKey)?.let {
+            createImageCell(context, it as Int)
+        } ?: FileInputStream(imageUrl).use {
+            createImageCell(context, it)
+        }
+    }
+
+    fun createImageCell(context: AttributedCell, imageDate: InputStream) {
+        createImageCell(context, IOUtils.toByteArray(imageDate))
+    }
+
+    fun createImageCell(context: AttributedCell, imageData: ByteArray) {
+        workbook().addPicture(imageData, Workbook.PICTURE_TYPE_PNG).also {
+            createImageCell(context, it)
+        }
+    }
+
+    private fun createImageCell(context: AttributedCell, imageRef: Int): Picture {
+        val drawing: Drawing<*> = assertTableSheet(context.getTableId()).createDrawingPatriarch()
+        val anchor: ClientAnchor = workbook().creationHelper.createClientAnchor()
+        anchor.setCol1(context.columnIndex)
+        anchor.row1 = context.rowIndex
+        anchor.setCol2(context.columnIndex + context.value.colSpan)
+        anchor.row2 = context.rowIndex + context.value.rowSpan
+        return drawing.createPicture(anchor, imageRef)
+    }
 
     private fun cell(tableId: String, rowIndex: Int, columnIndex: Int): SXSSFCell? =
         assertRow(tableId, rowIndex).getCell(columnIndex)
