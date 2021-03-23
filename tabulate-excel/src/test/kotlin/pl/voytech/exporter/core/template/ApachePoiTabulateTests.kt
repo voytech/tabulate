@@ -1,35 +1,36 @@
 package pl.voytech.exporter.core.template
 
- import org.apache.poi.openxml4j.util.ZipSecureFile
- import org.junit.jupiter.api.Assertions.assertNotNull
- import org.junit.jupiter.api.DisplayName
- import org.junit.jupiter.api.Test
- import pl.voytech.exporter.core.api.builder.dsl.export
- import pl.voytech.exporter.core.api.builder.dsl.table
- import pl.voytech.exporter.core.model.CellType
- import pl.voytech.exporter.core.model.RowSelectors
- import pl.voytech.exporter.core.model.attributes.functional.FilterAndSortTableAttribute
- import pl.voytech.exporter.core.model.attributes.style.*
- import pl.voytech.exporter.core.model.attributes.style.enums.BorderStyle
- import pl.voytech.exporter.core.model.attributes.style.enums.HorizontalAlignment
- import pl.voytech.exporter.core.model.attributes.style.enums.VerticalAlignment
- import pl.voytech.exporter.core.model.attributes.style.enums.WeightStyle
- import pl.voytech.exporter.core.utils.PoiTableAssert
- import pl.voytech.exporter.data.Product
- import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
- import pl.voytech.exporter.impl.template.excel.dataFormat
- import pl.voytech.exporter.impl.template.excel.poiExcelExport
- import pl.voytech.exporter.testutils.CellPosition
- import pl.voytech.exporter.testutils.CellRange
- import pl.voytech.exporter.testutils.cellassertions.AssertCellValue
- import pl.voytech.exporter.testutils.cellassertions.AssertContainsCellAttributes
- import pl.voytech.exporter.testutils.cellassertions.AssertMany
- import java.io.File
- import java.io.FileOutputStream
- import java.math.BigDecimal
- import java.time.LocalDate
- import kotlin.random.Random
- import kotlin.system.measureTimeMillis
+import org.apache.poi.openxml4j.util.ZipSecureFile
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
+import pl.voytech.exporter.core.api.builder.dsl.export
+import pl.voytech.exporter.core.api.builder.dsl.table
+import pl.voytech.exporter.core.model.CellType
+import pl.voytech.exporter.core.model.RowSelectors
+import pl.voytech.exporter.core.model.attributes.functional.FilterAndSortTableAttribute
+import pl.voytech.exporter.core.model.attributes.style.*
+import pl.voytech.exporter.core.model.attributes.style.enums.BorderStyle
+import pl.voytech.exporter.core.model.attributes.style.enums.HorizontalAlignment
+import pl.voytech.exporter.core.model.attributes.style.enums.VerticalAlignment
+import pl.voytech.exporter.core.model.attributes.style.enums.WeightStyle
+import pl.voytech.exporter.core.utils.PoiTableAssert
+import pl.voytech.exporter.data.Product
+import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
+import pl.voytech.exporter.impl.template.excel.dataFormat
+import pl.voytech.exporter.impl.template.excel.poiExcelExport
+import pl.voytech.exporter.testutils.CellPosition
+import pl.voytech.exporter.testutils.CellRange
+import pl.voytech.exporter.testutils.cellassertions.AssertCellValue
+import pl.voytech.exporter.testutils.cellassertions.AssertContainsCellAttributes
+import pl.voytech.exporter.testutils.cellassertions.AssertMany
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.math.BigDecimal
+import java.time.LocalDate
+import kotlin.random.Random
+import kotlin.system.measureTimeMillis
 
 @DisplayName("Testing export to excel")
 class ApachePoiTabulateTests {
@@ -197,7 +198,7 @@ class ApachePoiTabulateTests {
                 CellPosition(3, 8) to AssertContainsCellAttributes(CellExcelDataFormatAttribute("dd.mm.YYYY"))
             )
         ).perform().also {
-           it.cleanup()
+            it.cleanup()
         }
     }
 
@@ -280,7 +281,7 @@ class ApachePoiTabulateTests {
                 column(Product::price)
                 column(Product::distributionDate) {
                     attributes(
-                        dataFormat {  value = "dd.mm.YYYY" }
+                        dataFormat { value = "dd.mm.YYYY" }
                     )
                 }
             }
@@ -294,7 +295,7 @@ class ApachePoiTabulateTests {
             file = File("test3.xlsx"),
             cellTests = mapOf()
         ).perform().also {
-           it.cleanup()
+            it.cleanup()
         }
     }
 
@@ -361,14 +362,32 @@ class ApachePoiTabulateTests {
             tableName = "Test table",
             file = File("test1.xlsx"),
             cellTests = mapOf(
-                CellPosition(0, 0) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Row span", expectedRowspan = 2),
-                CellPosition(0, 1) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "This is very long title. 2 columns span. Row 1", expectedColspan = 2),
-                CellPosition(0, 3) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Last column. Row 1"),
-                CellPosition(1, 1) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "This is very long title. 2 columns span. Row 2", expectedColspan = 2),
-                CellPosition(1, 3) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Last column. Row 2"),
+                CellPosition(0, 0) to AssertCellValue(
+                    expectedType = CellType.STRING,
+                    expectedValue = "Row span",
+                    expectedRowspan = 2
+                ),
+                CellPosition(0, 1) to AssertCellValue(
+                    expectedType = CellType.STRING,
+                    expectedValue = "This is very long title. 2 columns span. Row 1",
+                    expectedColspan = 2
+                ),
+                CellPosition(0, 3) to AssertCellValue(
+                    expectedType = CellType.STRING,
+                    expectedValue = "Last column. Row 1"
+                ),
+                CellPosition(1, 1) to AssertCellValue(
+                    expectedType = CellType.STRING,
+                    expectedValue = "This is very long title. 2 columns span. Row 2",
+                    expectedColspan = 2
+                ),
+                CellPosition(1, 3) to AssertCellValue(
+                    expectedType = CellType.STRING,
+                    expectedValue = "Last column. Row 2"
+                ),
             )
         ).perform().also {
-           it.cleanup()
+            it.cleanup()
         }
     }
 
@@ -403,13 +422,17 @@ class ApachePoiTabulateTests {
             file = File("test_img.xlsx"),
             cellTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "It is : "),
+                CellPosition(0, 1) to AssertCellValue(
+                    expectedType = CellType.IMAGE_DATA,
+                    expectedValue = FileInputStream("src/test/resources/kotlin.jpeg").readBytes()
+                )
             )
         ).perform().also {
-           it.cleanup()
+            it.cleanup()
         }
     }
 
-    private fun createDataSet(count : Int? = 1): List<Product> {
+    private fun createDataSet(count: Int? = 1): List<Product> {
         val random = Random(count!!)
         return (0..count).map {
             Product(

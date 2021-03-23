@@ -6,6 +6,7 @@ import pl.voytech.exporter.core.template.context.CellValue
 import pl.voytech.exporter.core.template.context.Coordinates
 import pl.voytech.exporter.testutils.CellDefinition
 import pl.voytech.exporter.testutils.CellTest
+import java.util.zip.CRC32
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -19,7 +20,7 @@ class AssertCellValue<E>(
 ) : CellTest<E> {
     override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
         assertNotNull(def?.cellValue, "Expected cell value to be present")
-        assertEquals(expectedValue, def?.cellValue?.value, "Expected cell value to be $expectedValue")
+        assertValueEquals(expectedValue, def?.cellValue?.value, "Expected cell value to be $expectedValue")
         expectedType?.let {
             assertNotNull(def?.cellValue?.type, "Expected cell type to be present")
             assertEquals(expectedType, def?.cellValue?.type, "Expected cell type to be $it")
@@ -32,6 +33,23 @@ class AssertCellValue<E>(
             assertNotNull(def?.cellValue?.rowSpan, "Expected cell rowSpan to be present")
             assertEquals(expectedRowspan, def?.cellValue?.rowSpan, "Expected cell rowSpan to be $it")
         }
+    }
+
+    private fun assertValueEquals(expected: Any?, found: Any?, description: String) {
+        if (expected?.javaClass == found?.javaClass) {
+            if (expected is ByteArray && found is ByteArray) {
+                val crc = CRC32()
+                assertEquals(checkSum(crc, expected), checkSum(crc, found), description)
+            } else {
+                assertEquals(expected, found, description)
+            }
+        } else fail("Incompatible cell value types!")
+    }
+
+    private fun checkSum(crc: CRC32, bytes: ByteArray): Long {
+        crc.reset()
+        crc.update(bytes)
+        return crc.value.also { crc.reset() }
     }
 }
 
