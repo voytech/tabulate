@@ -48,38 +48,36 @@ class PoiTableAssert<T>(
                     }.let { if (it.isNotEmpty()) it[0] else null }
                 val colSpan = address?.let { (it.lastColumn - it.firstColumn) + 1 } ?: 1
                 val rowSpan = address?.let { (it.lastRow - it.firstRow) + 1 } ?: 1
-
-                api.xssfCell(coordinates)
-                    .let {
-                        return when (it?.cellType) {
-                            PoiCellType.STRING -> CellValue(
-                                value = it.stringCellValue,
-                                type = CellType.STRING,
-                                colSpan = colSpan,
-                                rowSpan = rowSpan
-                            )
-                            PoiCellType.BOOLEAN -> CellValue(
-                                value = it.booleanCellValue,
-                                type = CellType.BOOLEAN,
-                                colSpan = colSpan,
-                                rowSpan = rowSpan
-                            )
-                            PoiCellType.FORMULA -> CellValue(
-                                value = it.cellFormula,
-                                type = CellType.FUNCTION,
-                                colSpan = colSpan,
-                                rowSpan = rowSpan
-                            )
-                            PoiCellType.NUMERIC -> CellValue(
-                                value = it.numericCellValue,
-                                type = CellType.NUMERIC,
-                                colSpan = colSpan,
-                                rowSpan = rowSpan
-                            )
-                            else -> CellValue(value = "null", type = null, colSpan = colSpan, rowSpan = rowSpan)
+                return api.getImageAsCellValue(coordinates) ?: api.xssfCell(coordinates)
+                        .let {
+                            return when (it?.cellType) {
+                                PoiCellType.STRING -> CellValue(
+                                    value = it.stringCellValue,
+                                    type = CellType.STRING,
+                                    colSpan = colSpan,
+                                    rowSpan = rowSpan
+                                )
+                                PoiCellType.BOOLEAN -> CellValue(
+                                    value = it.booleanCellValue,
+                                    type = CellType.BOOLEAN,
+                                    colSpan = colSpan,
+                                    rowSpan = rowSpan
+                                )
+                                PoiCellType.FORMULA -> CellValue(
+                                    value = it.cellFormula,
+                                    type = CellType.FUNCTION,
+                                    colSpan = colSpan,
+                                    rowSpan = rowSpan
+                                )
+                                PoiCellType.NUMERIC -> CellValue(
+                                    value = it.numericCellValue,
+                                    type = CellType.NUMERIC,
+                                    colSpan = colSpan,
+                                    rowSpan = rowSpan
+                                )
+                                else -> CellValue(value = "null", type = null, colSpan = colSpan, rowSpan = rowSpan)
+                            }
                         }
-                    }
-
             }
         },
         cellTests = cellTests,
