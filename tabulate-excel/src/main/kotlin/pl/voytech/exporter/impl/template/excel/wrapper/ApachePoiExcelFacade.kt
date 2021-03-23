@@ -1,6 +1,7 @@
 package pl.voytech.exporter.impl.template.excel.wrapper
 
 import org.apache.poi.ss.usermodel.*
+import pl.voytech.exporter.core.template.context.CellValue
 import org.apache.poi.util.IOUtils
 import org.apache.poi.xssf.streaming.SXSSFCell
 import org.apache.poi.xssf.streaming.SXSSFRow
@@ -9,6 +10,7 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFCell
 import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.attributes.style.Color
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.Coordinates
@@ -72,6 +74,25 @@ class ApachePoiExcelFacade(templateFile: InputStream? = null) {
     fun createImageCell(context: AttributedCell, imageData: ByteArray) {
         workbook().addPicture(imageData, Workbook.PICTURE_TYPE_PNG).also {
             createImageCell(context, it)
+        }
+    }
+
+    fun getImageAsCellValue(context: Coordinates): CellValue? {
+        return assertTableSheet(context.tableName).createDrawingPatriarch().find {
+            if (it?.drawing?.shapes?.size == 1 && it.drawing?.shapes?.get(0) is Picture) {
+                (it.drawing.shapes[0] as Picture).let { picture ->
+                    picture.clientAnchor.col1.toInt() == context.columnIndex &&
+                            picture.clientAnchor.row1 == context.rowIndex
+                }
+            } else false
+        }?.let { it.drawing?.shapes?.get(0) as Picture  }
+         ?.let{
+            CellValue(
+                value = it.pictureData.data,
+                type = CellType.IMAGE_DATA,
+                colSpan = it.clientAnchor.col2.toInt() - it.clientAnchor.col1.toInt(),
+                rowSpan = it.clientAnchor.row2 - it.clientAnchor.row1
+            )
         }
     }
 
