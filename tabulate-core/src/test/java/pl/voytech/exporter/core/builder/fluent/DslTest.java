@@ -6,7 +6,7 @@ import pl.voytech.exporter.core.model.RowSelectors;
 import pl.voytech.exporter.core.model.Table;
 import pl.voytech.exporter.core.model.SourceRow;
 import pl.voytech.exporter.core.model.attributes.functional.FilterAndSortTableAttribute;
-import pl.voytech.exporter.core.model.attributes.style.CellFontAttribute;
+import pl.voytech.exporter.core.model.attributes.style.CellTextStylesAttribute;
 import pl.voytech.exporter.core.model.attributes.style.ColumnWidthAttribute;
 import pl.voytech.exporter.core.model.attributes.style.RowHeightAttribute;
 
@@ -19,7 +19,7 @@ public class DslTest {
     public void createTableDefinitionTest() {
         final Table<Employee> employeeTable =
                 Table.<Employee>builder()
-                    .attribute(new CellFontAttribute())
+                    .attribute(new CellTextStylesAttribute())
                     .attribute(new FilterAndSortTableAttribute(new IntRange(0,3), new IntRange(1, 999)))
                     .columns()
                         .column("rowNumbering")
