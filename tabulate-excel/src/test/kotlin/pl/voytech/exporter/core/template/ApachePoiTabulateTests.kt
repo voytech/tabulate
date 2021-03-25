@@ -47,7 +47,7 @@ class ApachePoiTabulateTests {
                 column("nr") {
                     attributes(
                         width { width = 50 },
-                        font {
+                        text {
                             fontFamily = "Times New Roman"
                             fontColor = Color(10, 100, 100)
                             fontSize = 12
@@ -61,7 +61,7 @@ class ApachePoiTabulateTests {
                 column(Product::code) {
                     attributes(
                         width { auto = true },
-                        font {
+                        text {
                             fontFamily = "Times New Roman"
                             fontColor = Colors.BLACK
                             fontSize = 12
@@ -115,7 +115,7 @@ class ApachePoiTabulateTests {
                             horizontal = HorizontalAlignment.CENTER,
                             vertical = VerticalAlignment.MIDDLE
                         ),
-                        CellFontAttribute(
+                        CellTextStylesAttribute(
                             fontFamily = "Times New Roman",
                             fontColor = Color(90, 100, 100),
                             fontSize = 12,
@@ -157,7 +157,7 @@ class ApachePoiTabulateTests {
                         horizontal = HorizontalAlignment.CENTER
                         vertical = VerticalAlignment.MIDDLE
                     },
-                    font {
+                    text {
                         fontFamily = "Times New Roman"
                         fontColor = Color(90, 100, 100)
                         fontSize = 12
@@ -171,7 +171,7 @@ class ApachePoiTabulateTests {
                 CellPosition(2, 3) to AssertMany(
                     AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
                     AssertContainsCellAttributes(
-                        font {
+                        text {
                             fontFamily = "Times New Roman"
                             fontColor = Color(90, 100, 100)
                             fontSize = 12
@@ -315,7 +315,7 @@ class ApachePoiTabulateTests {
                 topBorderStyle = BorderStyle.SOLID
                 bottomBorderStyle = BorderStyle.SOLID
             },
-            font {
+            text {
                 weight = WeightStyle.BOLD
                 strikeout = false
                 underline = false

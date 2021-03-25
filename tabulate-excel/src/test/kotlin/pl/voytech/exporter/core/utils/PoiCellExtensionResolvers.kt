@@ -23,7 +23,7 @@ private fun parseColor(xssfColor: XSSFColor) =
 class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
     override fun resolve(api: ApachePoiExcelFacade, coordinates: Coordinates): CellAttribute {
         return api.xssfCell(coordinates).let {
-            CellFontAttribute(
+            CellTextStylesAttribute(
                 fontFamily = it?.cellStyle?.font?.fontName,
                 fontSize = it?.cellStyle?.font?.fontHeight?.toInt()?.let { size -> ApachePoiUtils.pixelsFromHeight(size) },
                 fontColor = it?.cellStyle?.font?.xssfColor?.let { color -> parseColor(color) },
