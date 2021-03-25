@@ -3,17 +3,20 @@ package pl.voytech.exporter.core.model.attributes.style
 import pl.voytech.exporter.core.api.builder.CellAttributeBuilder
 import pl.voytech.exporter.core.model.attributes.style.enums.WeightStyle
 
-data class CellFontAttribute(
+data class CellTextStylesAttribute(
     val fontFamily: String? = null,
     val fontSize: Int? = 10,
     val weight: WeightStyle? = WeightStyle.NORMAL,
     val italic: Boolean? = false,
     val strikeout: Boolean? = false,
     val underline: Boolean? = false,
-    val fontColor: Color? = Color(0, 0, 0)
-) : CellStyleAttribute<CellFontAttribute>() {
+    val fontColor: Color? = Color(0, 0, 0),
+    val ident: Short? = 0,
+    val wrapText: Boolean? = false,
+    var rotation: Short? = 0
+) : CellStyleAttribute<CellTextStylesAttribute>() {
 
-    class Builder : CellAttributeBuilder<CellFontAttribute> {
+    class Builder : CellAttributeBuilder<CellTextStylesAttribute> {
         var fontFamily: String? = null
         var fontSize: Int? = 10
         var weight: WeightStyle? = WeightStyle.NORMAL
@@ -21,19 +24,25 @@ data class CellFontAttribute(
         var strikeout: Boolean? = false
         var underline: Boolean? = false
         var fontColor: Color? = Color(0, 0, 0)
-        override fun build(): CellFontAttribute =
-            CellFontAttribute(fontFamily, fontSize, weight, italic, strikeout, underline, fontColor)
+        var ident: Short = 0
+        var wrapText: Boolean = false
+        var rotation: Short? = 0
+        override fun build(): CellTextStylesAttribute =
+            CellTextStylesAttribute(fontFamily, fontSize, weight, italic, strikeout, underline, fontColor, ident, wrapText, rotation)
     }
 
-    override fun mergeWith(other: CellFontAttribute): CellFontAttribute = CellFontAttribute(
+    override fun mergeWith(other: CellTextStylesAttribute): CellTextStylesAttribute = CellTextStylesAttribute(
         fontFamily = other.fontFamily ?: this.fontFamily,
         fontSize = other.fontSize ?: this.fontSize,
         weight = other.weight ?: this.weight,
         italic = other.italic ?: this.italic,
         strikeout = other.strikeout ?: this.strikeout,
         underline = other.underline ?: this.underline,
-        fontColor = other.fontColor ?: this.fontColor
+        fontColor = other.fontColor ?: this.fontColor,
+        ident = other.ident ?: this.ident,
+        wrapText = other.wrapText ?: this.wrapText,
+        rotation = other.rotation ?: this.rotation
     )
 }
 
-fun font(block: CellFontAttribute.Builder.() -> Unit): CellFontAttribute = CellFontAttribute.Builder().apply(block).build()
+fun text(block: CellTextStylesAttribute.Builder.() -> Unit): CellTextStylesAttribute = CellTextStylesAttribute.Builder().apply(block).build()
