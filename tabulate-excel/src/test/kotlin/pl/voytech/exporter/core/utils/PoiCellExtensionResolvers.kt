@@ -4,10 +4,10 @@ import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.xssf.usermodel.XSSFColor
 import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.model.attributes.style.*
-import pl.voytech.exporter.core.model.attributes.style.enums.BorderStyle
-import pl.voytech.exporter.core.model.attributes.style.enums.HorizontalAlignment
-import pl.voytech.exporter.core.model.attributes.style.enums.VerticalAlignment
-import pl.voytech.exporter.core.model.attributes.style.enums.WeightStyle
+import pl.voytech.exporter.core.model.attributes.style.enums.BaseBorderStyle
+import pl.voytech.exporter.core.model.attributes.style.enums.BaseHorizontalAlignment
+import pl.voytech.exporter.core.model.attributes.style.enums.BaseVerticalAlignment
+import pl.voytech.exporter.core.model.attributes.style.enums.BaseWeightStyle
 import pl.voytech.exporter.core.template.context.Coordinates
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade
@@ -29,9 +29,9 @@ class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
                 fontColor = it?.cellStyle?.font?.xssfColor?.let { color -> parseColor(color) },
                 weight = it?.cellStyle?.font?.bold?.let { bold ->
                     if (bold) {
-                        WeightStyle.BOLD
+                        BaseWeightStyle.BOLD
                     } else {
-                        WeightStyle.NORMAL
+                        BaseWeightStyle.NORMAL
                     }
                 },
                 strikeout = it?.cellStyle?.font?.strikeout,
@@ -56,10 +56,10 @@ class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiExcelFacade> 
     override fun resolve(api: ApachePoiExcelFacade, coordinates: Coordinates): CellAttribute {
         val fromPoiStyle = { style: PoiBorderStyle ->
             when (style) {
-                PoiBorderStyle.DASHED -> BorderStyle.DASHED
-                PoiBorderStyle.DOTTED -> BorderStyle.DOTTED
-                PoiBorderStyle.THIN -> BorderStyle.SOLID
-                else -> BorderStyle.NONE
+                PoiBorderStyle.DASHED -> BaseBorderStyle.DASHED
+                PoiBorderStyle.DOTTED -> BaseBorderStyle.DOTTED
+                PoiBorderStyle.THIN -> BaseBorderStyle.SOLID
+                else -> BaseBorderStyle.NONE
             }
         }
         return api.xssfCell(coordinates).let {
@@ -94,16 +94,16 @@ class PoiCellAlignmentAttributeResolver : AttributeResolver<ApachePoiExcelFacade
         return api.xssfCell(coordinates).let {
             CellAlignmentAttribute(
                 vertical = when (it?.cellStyle?.verticalAlignment) {
-                    PoiVerticalAlignment.TOP -> VerticalAlignment.TOP
-                    PoiVerticalAlignment.CENTER -> VerticalAlignment.MIDDLE
-                    PoiVerticalAlignment.BOTTOM -> VerticalAlignment.BOTTOM
+                    PoiVerticalAlignment.TOP -> BaseVerticalAlignment.TOP
+                    PoiVerticalAlignment.CENTER -> BaseVerticalAlignment.MIDDLE
+                    PoiVerticalAlignment.BOTTOM -> BaseVerticalAlignment.BOTTOM
                     else -> null
                 },
                 horizontal = when (it?.cellStyle?.alignment) {
-                    PoiHorizontalAlignment.LEFT -> HorizontalAlignment.LEFT
-                    PoiHorizontalAlignment.RIGHT -> HorizontalAlignment.RIGHT
-                    PoiHorizontalAlignment.CENTER -> HorizontalAlignment.CENTER
-                    PoiHorizontalAlignment.JUSTIFY -> HorizontalAlignment.JUSTIFY
+                    PoiHorizontalAlignment.LEFT -> BaseHorizontalAlignment.LEFT
+                    PoiHorizontalAlignment.RIGHT -> BaseHorizontalAlignment.RIGHT
+                    PoiHorizontalAlignment.CENTER -> BaseHorizontalAlignment.CENTER
+                    PoiHorizontalAlignment.JUSTIFY -> BaseHorizontalAlignment.JUSTIFY
                     else -> null
                 }
             )
