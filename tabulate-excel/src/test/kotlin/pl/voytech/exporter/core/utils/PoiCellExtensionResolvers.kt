@@ -3,11 +3,11 @@ package pl.voytech.exporter.core.utils
 import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.xssf.usermodel.XSSFColor
 import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
-import pl.voytech.exporter.core.model.attributes.style.*
-import pl.voytech.exporter.core.model.attributes.style.enums.BaseBorderStyle
-import pl.voytech.exporter.core.model.attributes.style.enums.BaseHorizontalAlignment
-import pl.voytech.exporter.core.model.attributes.style.enums.BaseVerticalAlignment
-import pl.voytech.exporter.core.model.attributes.style.enums.BaseWeightStyle
+import pl.voytech.exporter.core.model.attributes.cell.*
+import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultBorderStyle
+import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultHorizontalAlignment
+import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultVerticalAlignment
+import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultWeightStyle
 import pl.voytech.exporter.core.template.context.Coordinates
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade
@@ -29,9 +29,9 @@ class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
                 fontColor = it?.cellStyle?.font?.xssfColor?.let { color -> parseColor(color) },
                 weight = it?.cellStyle?.font?.bold?.let { bold ->
                     if (bold) {
-                        BaseWeightStyle.BOLD
+                        DefaultWeightStyle.BOLD
                     } else {
-                        BaseWeightStyle.NORMAL
+                        DefaultWeightStyle.NORMAL
                     }
                 },
                 strikeout = it?.cellStyle?.font?.strikeout,
@@ -56,10 +56,10 @@ class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiExcelFacade> 
     override fun resolve(api: ApachePoiExcelFacade, coordinates: Coordinates): CellAttribute {
         val fromPoiStyle = { style: PoiBorderStyle ->
             when (style) {
-                PoiBorderStyle.DASHED -> BaseBorderStyle.DASHED
-                PoiBorderStyle.DOTTED -> BaseBorderStyle.DOTTED
-                PoiBorderStyle.THIN -> BaseBorderStyle.SOLID
-                else -> BaseBorderStyle.NONE
+                PoiBorderStyle.DASHED -> DefaultBorderStyle.DASHED
+                PoiBorderStyle.DOTTED -> DefaultBorderStyle.DOTTED
+                PoiBorderStyle.THIN -> DefaultBorderStyle.SOLID
+                else -> DefaultBorderStyle.NONE
             }
         }
         return api.xssfCell(coordinates).let {
@@ -94,16 +94,16 @@ class PoiCellAlignmentAttributeResolver : AttributeResolver<ApachePoiExcelFacade
         return api.xssfCell(coordinates).let {
             CellAlignmentAttribute(
                 vertical = when (it?.cellStyle?.verticalAlignment) {
-                    PoiVerticalAlignment.TOP -> BaseVerticalAlignment.TOP
-                    PoiVerticalAlignment.CENTER -> BaseVerticalAlignment.MIDDLE
-                    PoiVerticalAlignment.BOTTOM -> BaseVerticalAlignment.BOTTOM
+                    PoiVerticalAlignment.TOP -> DefaultVerticalAlignment.TOP
+                    PoiVerticalAlignment.CENTER -> DefaultVerticalAlignment.MIDDLE
+                    PoiVerticalAlignment.BOTTOM -> DefaultVerticalAlignment.BOTTOM
                     else -> null
                 },
                 horizontal = when (it?.cellStyle?.alignment) {
-                    PoiHorizontalAlignment.LEFT -> BaseHorizontalAlignment.LEFT
-                    PoiHorizontalAlignment.RIGHT -> BaseHorizontalAlignment.RIGHT
-                    PoiHorizontalAlignment.CENTER -> BaseHorizontalAlignment.CENTER
-                    PoiHorizontalAlignment.JUSTIFY -> BaseHorizontalAlignment.JUSTIFY
+                    PoiHorizontalAlignment.LEFT -> DefaultHorizontalAlignment.LEFT
+                    PoiHorizontalAlignment.RIGHT -> DefaultHorizontalAlignment.RIGHT
+                    PoiHorizontalAlignment.CENTER -> DefaultHorizontalAlignment.CENTER
+                    PoiHorizontalAlignment.JUSTIFY -> DefaultHorizontalAlignment.JUSTIFY
                     else -> null
                 }
             )

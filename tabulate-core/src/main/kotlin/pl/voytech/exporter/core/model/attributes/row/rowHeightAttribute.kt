@@ -1,4 +1,4 @@
-package pl.voytech.exporter.core.model.attributes.style
+package pl.voytech.exporter.core.model.attributes.row
 
 import pl.voytech.exporter.core.api.builder.RowAttributeBuilder
 import pl.voytech.exporter.core.model.attributes.RowAttribute
