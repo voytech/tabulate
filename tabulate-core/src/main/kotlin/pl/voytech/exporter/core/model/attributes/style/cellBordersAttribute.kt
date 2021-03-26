@@ -1,27 +1,28 @@
 package pl.voytech.exporter.core.model.attributes.style
 
 import pl.voytech.exporter.core.api.builder.CellAttributeBuilder
-import pl.voytech.exporter.core.model.attributes.style.enums.BorderStyle
+import pl.voytech.exporter.core.model.attributes.style.enums.BaseBorderStyle
+import pl.voytech.exporter.core.model.attributes.style.enums.contract.BorderStyle
 
 data class CellBordersAttribute(
-    val leftBorderStyle: BorderStyle? = BorderStyle.NONE,
+    val leftBorderStyle: BorderStyle? = BaseBorderStyle.NONE,
     val leftBorderColor: Color? = null,
-    val rightBorderStyle: BorderStyle? = BorderStyle.NONE,
+    val rightBorderStyle: BorderStyle? = BaseBorderStyle.NONE,
     val rightBorderColor: Color? = null,
-    val topBorderStyle: BorderStyle? = BorderStyle.NONE,
+    val topBorderStyle: BorderStyle? = BaseBorderStyle.NONE,
     val topBorderColor: Color? = null,
-    val bottomBorderStyle: BorderStyle? = BorderStyle.NONE,
+    val bottomBorderStyle: BorderStyle? = BaseBorderStyle.NONE,
     val bottomBorderColor: Color? = null
 ) : CellStyleAttribute<CellBordersAttribute>() {
 
     class Builder : CellAttributeBuilder<CellBordersAttribute> {
-        var leftBorderStyle: BorderStyle? = BorderStyle.NONE
+        var leftBorderStyle: BorderStyle? = BaseBorderStyle.NONE
         var leftBorderColor: Color? = null
-        var rightBorderStyle: BorderStyle? = BorderStyle.NONE
+        var rightBorderStyle: BorderStyle? = BaseBorderStyle.NONE
         var rightBorderColor: Color? = null
-        var topBorderStyle: BorderStyle? = BorderStyle.NONE
+        var topBorderStyle: BorderStyle? = BaseBorderStyle.NONE
         var topBorderColor: Color? = null
-        var bottomBorderStyle: BorderStyle? = BorderStyle.NONE
+        var bottomBorderStyle: BorderStyle? = BaseBorderStyle.NONE
         var bottomBorderColor: Color? = null
 
         override fun build(): CellBordersAttribute = CellBordersAttribute(

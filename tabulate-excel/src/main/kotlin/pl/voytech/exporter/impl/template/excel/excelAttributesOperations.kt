@@ -10,10 +10,8 @@ import org.apache.poi.xssf.usermodel.XSSFFont
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.model.attributes.functional.FilterAndSortTableAttribute
 import pl.voytech.exporter.core.model.attributes.style.*
-import pl.voytech.exporter.core.model.attributes.style.enums.BorderStyle
-import pl.voytech.exporter.core.model.attributes.style.enums.HorizontalAlignment
-import pl.voytech.exporter.core.model.attributes.style.enums.VerticalAlignment
-import pl.voytech.exporter.core.model.attributes.style.enums.WeightStyle
+import pl.voytech.exporter.core.model.attributes.style.enums.*
+import pl.voytech.exporter.core.model.attributes.style.enums.contract.BorderStyle
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.AttributedColumn
 import pl.voytech.exporter.core.template.context.AttributedRow
@@ -49,7 +47,7 @@ class CellTextStylesAttributeRenderOperation<T>(override val adaptee: ApachePoiE
                 attribute.italic?.run { font.italic = this }
                 attribute.strikeout?.run { font.strikeout = this }
                 attribute.underline?.run { font.setUnderline(if (this) FontUnderline.SINGLE else FontUnderline.NONE) }
-                attribute.weight?.run { font.bold = this == WeightStyle.BOLD }
+                attribute.weight?.run { font.bold = this == BaseWeightStyle.BOLD }
                 it.setFont(font)
                 it.indention = attribute.ident ?: 0
                 it.wrapText = attribute.wrapText ?: false
@@ -70,7 +68,24 @@ class CellBackgroundAttributeRenderOperation<T>(override val adaptee: ApachePoiE
     ) {
         adaptee.cellStyle(context).let {
             (it as XSSFCellStyle).setFillForegroundColor(ApachePoiExcelFacade.color(attribute.color))
-            it.fillPattern = FillPatternType.SOLID_FOREGROUND
+            when (attribute.fill) {
+                BaseCellFill.SOLID -> it.fillPattern = FillPatternType.SOLID_FOREGROUND
+                BaseCellFill.BRICKS -> it.fillPattern = FillPatternType.BRICKS
+                BaseCellFill.WIDE_DOTS -> it.fillPattern = FillPatternType.ALT_BARS
+                BaseCellFill.DIAMONDS -> it.fillPattern = FillPatternType.DIAMONDS
+                BaseCellFill.SMALL_DOTS -> it.fillPattern = FillPatternType.FINE_DOTS
+                BaseCellFill.SQUARES -> it.fillPattern = FillPatternType.SQUARES
+                BaseCellFill.LARGE_SPOTS -> it.fillPattern = FillPatternType.BIG_SPOTS
+                else -> it.fillPattern = parseFillPatternType(attribute)
+            }
+        }
+    }
+
+    private fun parseFillPatternType(background: CellBackgroundAttribute): FillPatternType {
+        return try {
+            FillPatternType.valueOf(background.fill?.getAttributeId() ?: "NO_FILL")
+        } catch (e: IllegalArgumentException) {
+            FillPatternType.NO_FILL
         }
     }
 }
@@ -81,10 +96,10 @@ class CellBordersAttributeRenderOperation<T>(override val adaptee: ApachePoiExce
 
     override fun renderAttribute(context: AttributedCell, attribute: CellBordersAttribute) {
         val toPoiStyle = { style: BorderStyle ->
-            when (style) {
-                BorderStyle.DASHED -> org.apache.poi.ss.usermodel.BorderStyle.DASHED
-                BorderStyle.DOTTED -> org.apache.poi.ss.usermodel.BorderStyle.DOTTED
-                BorderStyle.SOLID -> org.apache.poi.ss.usermodel.BorderStyle.THIN
+            when (style.getAttributeId()) {
+                BaseBorderStyle.DASHED.name -> org.apache.poi.ss.usermodel.BorderStyle.DASHED
+                BaseBorderStyle.DOTTED.name -> org.apache.poi.ss.usermodel.BorderStyle.DOTTED
+                BaseBorderStyle.SOLID.name -> org.apache.poi.ss.usermodel.BorderStyle.THIN
                 else -> org.apache.poi.ss.usermodel.BorderStyle.NONE
             }
         }
@@ -117,25 +132,24 @@ class CellAlignmentAttributeRenderOperation<T>(override val adaptee: ApachePoiEx
             attribute.horizontal?.run {
                 it.alignment =
                     when (this) {
-                        HorizontalAlignment.CENTER -> org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER
-                        HorizontalAlignment.LEFT -> org.apache.poi.ss.usermodel.HorizontalAlignment.LEFT
-                        HorizontalAlignment.RIGHT -> org.apache.poi.ss.usermodel.HorizontalAlignment.RIGHT
-                        HorizontalAlignment.JUSTIFY -> org.apache.poi.ss.usermodel.HorizontalAlignment.FILL
+                        BaseHorizontalAlignment.CENTER -> org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER
+                        BaseHorizontalAlignment.LEFT -> org.apache.poi.ss.usermodel.HorizontalAlignment.LEFT
+                        BaseHorizontalAlignment.RIGHT -> org.apache.poi.ss.usermodel.HorizontalAlignment.RIGHT
+                        BaseHorizontalAlignment.JUSTIFY -> org.apache.poi.ss.usermodel.HorizontalAlignment.FILL
                         else -> org.apache.poi.ss.usermodel.HorizontalAlignment.GENERAL
                     }
             }
             attribute.vertical?.run {
                 it.verticalAlignment =
                     when (this) {
-                        VerticalAlignment.MIDDLE -> org.apache.poi.ss.usermodel.VerticalAlignment.CENTER
-                        VerticalAlignment.BOTTOM -> org.apache.poi.ss.usermodel.VerticalAlignment.BOTTOM
-                        VerticalAlignment.TOP -> org.apache.poi.ss.usermodel.VerticalAlignment.TOP
+                        BaseVerticalAlignment.MIDDLE -> org.apache.poi.ss.usermodel.VerticalAlignment.CENTER
+                        BaseVerticalAlignment.BOTTOM -> org.apache.poi.ss.usermodel.VerticalAlignment.BOTTOM
+                        BaseVerticalAlignment.TOP -> org.apache.poi.ss.usermodel.VerticalAlignment.TOP
                         else -> org.apache.poi.ss.usermodel.VerticalAlignment.TOP
                     }
             }
         }
     }
-
 }
 
 class CellDataFormatAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
@@ -245,7 +259,7 @@ internal fun <T> cellAttributesOperations(adaptee: ApachePoiExcelFacade) = setOf
     CellBackgroundAttributeRenderOperation<T>(adaptee),
     CellBordersAttributeRenderOperation<T>(adaptee),
     CellAlignmentAttributeRenderOperation<T>(adaptee),
-    CellDataFormatAttributeRenderOperation<T>(adaptee)
+    CellDataFormatAttributeRenderOperation<T>(adaptee),
 )
 
 internal fun <T> columnAttributesOperations(adaptee: ApachePoiExcelFacade) = setOf(

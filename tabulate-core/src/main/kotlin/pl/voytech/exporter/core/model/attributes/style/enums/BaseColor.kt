@@ -1,6 +1,5 @@
 package pl.voytech.exporter.core.model.attributes.style.enums
 
-enum class WeightStyle {
-    NORMAL,
-    BOLD
+enum class BaseColor {
+    HEX, RGB
 }

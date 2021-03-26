@@ -1,8 +1,8 @@
 package pl.voytech.exporter.core.model.attributes.style
 
 import pl.voytech.exporter.core.api.builder.CellAttributeBuilder
-import pl.voytech.exporter.core.model.attributes.style.enums.HorizontalAlignment
-import pl.voytech.exporter.core.model.attributes.style.enums.VerticalAlignment
+import pl.voytech.exporter.core.model.attributes.style.enums.contract.HorizontalAlignment
+import pl.voytech.exporter.core.model.attributes.style.enums.contract.VerticalAlignment
 
 data class CellAlignmentAttribute(
     val vertical: VerticalAlignment? = null,
