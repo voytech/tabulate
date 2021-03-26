@@ -1,4 +1,4 @@
-package pl.voytech.exporter.core.model.attributes.functional
+package pl.voytech.exporter.core.model.attributes.table
 
 import pl.voytech.exporter.core.model.attributes.TableAttribute
 

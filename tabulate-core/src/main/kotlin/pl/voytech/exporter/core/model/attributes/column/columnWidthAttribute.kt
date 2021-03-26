@@ -1,4 +1,4 @@
-package pl.voytech.exporter.core.model.attributes.style
+package pl.voytech.exporter.core.model.attributes.column
 
 import pl.voytech.exporter.core.api.builder.ColumnAttributeBuilder
 import pl.voytech.exporter.core.model.attributes.ColumnAttribute
