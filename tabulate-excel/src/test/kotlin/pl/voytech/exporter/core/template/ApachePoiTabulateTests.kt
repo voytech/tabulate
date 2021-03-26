@@ -8,12 +8,15 @@ import pl.voytech.exporter.core.api.builder.dsl.export
 import pl.voytech.exporter.core.api.builder.dsl.table
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.RowSelectors
-import pl.voytech.exporter.core.model.attributes.functional.FilterAndSortTableAttribute
-import pl.voytech.exporter.core.model.attributes.style.*
-import pl.voytech.exporter.core.model.attributes.style.enums.BaseBorderStyle
-import pl.voytech.exporter.core.model.attributes.style.enums.BaseHorizontalAlignment
-import pl.voytech.exporter.core.model.attributes.style.enums.BaseVerticalAlignment
-import pl.voytech.exporter.core.model.attributes.style.enums.BaseWeightStyle
+import pl.voytech.exporter.core.model.attributes.cell.*
+import pl.voytech.exporter.core.model.attributes.table.FilterAndSortTableAttribute
+import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultBorderStyle
+import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultHorizontalAlignment
+import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultVerticalAlignment
+import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultWeightStyle
+import pl.voytech.exporter.core.model.attributes.column.width
+import pl.voytech.exporter.core.model.attributes.row.RowHeightAttribute
+import pl.voytech.exporter.core.model.attributes.row.height
 import pl.voytech.exporter.core.utils.PoiTableAssert
 import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
@@ -52,7 +55,7 @@ class ApachePoiTabulateTests {
                             fontColor = Color(10, 100, 100)
                             fontSize = 12
                             italic = true
-                            weight = BaseWeightStyle.BOLD
+                            weight = DefaultWeightStyle.BOLD
                             strikeout = true
                             underline = true
                         }
@@ -102,25 +105,25 @@ class ApachePoiTabulateTests {
                     attributes(
                         RowHeightAttribute(height = 120),
                         CellBordersAttribute(
-                            leftBorderStyle = BaseBorderStyle.SOLID,
+                            leftBorderStyle = DefaultBorderStyle.SOLID,
                             leftBorderColor = Colors.BLACK,
-                            rightBorderStyle = BaseBorderStyle.SOLID,
+                            rightBorderStyle = DefaultBorderStyle.SOLID,
                             rightBorderColor = Colors.BLACK,
-                            bottomBorderStyle = BaseBorderStyle.SOLID,
+                            bottomBorderStyle = DefaultBorderStyle.SOLID,
                             bottomBorderColor = Colors.BLACK,
-                            topBorderStyle = BaseBorderStyle.SOLID,
+                            topBorderStyle = DefaultBorderStyle.SOLID,
                             topBorderColor = Colors.BLACK
                         ),
                         CellAlignmentAttribute(
-                            horizontal = BaseHorizontalAlignment.CENTER,
-                            vertical = BaseVerticalAlignment.MIDDLE
+                            horizontal = DefaultHorizontalAlignment.CENTER,
+                            vertical = DefaultVerticalAlignment.MIDDLE
                         ),
                         CellTextStylesAttribute(
                             fontFamily = "Times New Roman",
                             fontColor = Color(90, 100, 100),
                             fontSize = 12,
                             italic = true,
-                            weight = BaseWeightStyle.BOLD
+                            weight = DefaultWeightStyle.BOLD
                         )
                     )
                 }
@@ -144,25 +147,25 @@ class ApachePoiTabulateTests {
             cellTests = mapOf(
                 CellRange((2..2), (2..8)) to AssertContainsCellAttributes(
                     borders {
-                        leftBorderStyle = BaseBorderStyle.SOLID
+                        leftBorderStyle = DefaultBorderStyle.SOLID
                         leftBorderColor = Colors.BLACK
-                        rightBorderStyle = BaseBorderStyle.SOLID
+                        rightBorderStyle = DefaultBorderStyle.SOLID
                         rightBorderColor = Colors.BLACK
-                        bottomBorderStyle = BaseBorderStyle.SOLID
+                        bottomBorderStyle = DefaultBorderStyle.SOLID
                         bottomBorderColor = Colors.BLACK
-                        topBorderStyle = BaseBorderStyle.SOLID
+                        topBorderStyle = DefaultBorderStyle.SOLID
                         topBorderColor = Colors.BLACK
                     },
                     alignment {
-                        horizontal = BaseHorizontalAlignment.CENTER
-                        vertical = BaseVerticalAlignment.MIDDLE
+                        horizontal = DefaultHorizontalAlignment.CENTER
+                        vertical = DefaultVerticalAlignment.MIDDLE
                     },
                     text {
                         fontFamily = "Times New Roman"
                         fontColor = Color(90, 100, 100)
                         fontSize = 12
                         italic = true
-                        weight = BaseWeightStyle.BOLD
+                        weight = DefaultWeightStyle.BOLD
                     }
                 ),
                 CellPosition(2, 2) to AssertMany(
@@ -176,7 +179,7 @@ class ApachePoiTabulateTests {
                             fontColor = Color(90, 100, 100)
                             fontSize = 12
                             italic = true
-                            weight = BaseWeightStyle.BOLD
+                            weight = DefaultWeightStyle.BOLD
                         },
                         background { color = Colors.BLUE }
                     )
@@ -303,20 +306,20 @@ class ApachePoiTabulateTests {
     fun `should export table with custom rows and cell and row spans`() {
         val file = File("test1.xlsx")
         val cellStyle = listOf(
-            alignment { horizontal = BaseHorizontalAlignment.CENTER },
+            alignment { horizontal = DefaultHorizontalAlignment.CENTER },
             background { color = Colors.WHITE },
             borders {
                 leftBorderColor = Colors.BLACK
                 rightBorderColor = Colors.BLACK
                 topBorderColor = Colors.BLACK
                 bottomBorderColor = Colors.BLACK
-                leftBorderStyle = BaseBorderStyle.SOLID
-                rightBorderStyle = BaseBorderStyle.SOLID
-                topBorderStyle = BaseBorderStyle.SOLID
-                bottomBorderStyle = BaseBorderStyle.SOLID
+                leftBorderStyle = DefaultBorderStyle.SOLID
+                rightBorderStyle = DefaultBorderStyle.SOLID
+                topBorderStyle = DefaultBorderStyle.SOLID
+                bottomBorderStyle = DefaultBorderStyle.SOLID
             },
             text {
-                weight = BaseWeightStyle.BOLD
+                weight = DefaultWeightStyle.BOLD
                 strikeout = false
                 underline = false
                 italic = false

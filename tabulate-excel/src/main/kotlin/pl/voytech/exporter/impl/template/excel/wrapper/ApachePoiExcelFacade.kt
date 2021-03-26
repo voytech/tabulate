@@ -11,7 +11,7 @@ import org.apache.poi.xssf.usermodel.XSSFCell
 import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
-import pl.voytech.exporter.core.model.attributes.style.Color
+import pl.voytech.exporter.core.model.attributes.cell.Color
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.Coordinates
 import pl.voytech.exporter.core.template.operations.impl.putCachedValueIfAbsent

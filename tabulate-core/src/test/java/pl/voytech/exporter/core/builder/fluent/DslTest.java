@@ -5,10 +5,10 @@ import pl.voytech.exporter.core.model.CellType;
 import pl.voytech.exporter.core.model.RowSelectors;
 import pl.voytech.exporter.core.model.Table;
 import pl.voytech.exporter.core.model.SourceRow;
-import pl.voytech.exporter.core.model.attributes.functional.FilterAndSortTableAttribute;
-import pl.voytech.exporter.core.model.attributes.style.CellTextStylesAttribute;
-import pl.voytech.exporter.core.model.attributes.style.ColumnWidthAttribute;
-import pl.voytech.exporter.core.model.attributes.style.RowHeightAttribute;
+import pl.voytech.exporter.core.model.attributes.column.ColumnWidthAttribute;
+import pl.voytech.exporter.core.model.attributes.row.RowHeightAttribute;
+import pl.voytech.exporter.core.model.attributes.table.FilterAndSortTableAttribute;
+import pl.voytech.exporter.core.model.attributes.cell.CellTextStylesAttribute;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

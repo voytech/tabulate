@@ -1,12 +1,12 @@
-package pl.voytech.exporter.core.model.attributes.style
+package pl.voytech.exporter.core.model.attributes.cell
 
 import pl.voytech.exporter.core.api.builder.CellAttributeBuilder
-import pl.voytech.exporter.core.model.attributes.style.enums.BaseWeightStyle
+import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultWeightStyle
 
 data class CellTextStylesAttribute(
     val fontFamily: String? = null,
     val fontSize: Int? = 10,
-    val weight: BaseWeightStyle? = BaseWeightStyle.NORMAL,
+    val weight: DefaultWeightStyle? = DefaultWeightStyle.NORMAL,
     val italic: Boolean? = false,
     val strikeout: Boolean? = false,
     val underline: Boolean? = false,
@@ -19,7 +19,7 @@ data class CellTextStylesAttribute(
     class Builder : CellAttributeBuilder<CellTextStylesAttribute> {
         var fontFamily: String? = null
         var fontSize: Int? = 10
-        var weight: BaseWeightStyle? = BaseWeightStyle.NORMAL
+        var weight: DefaultWeightStyle? = DefaultWeightStyle.NORMAL
         var italic: Boolean? = false
         var strikeout: Boolean? = false
         var underline: Boolean? = false
@@ -45,4 +45,5 @@ data class CellTextStylesAttribute(
     )
 }
 
-fun text(block: CellTextStylesAttribute.Builder.() -> Unit): CellTextStylesAttribute = CellTextStylesAttribute.Builder().apply(block).build()
+fun text(block: CellTextStylesAttribute.Builder.() -> Unit): CellTextStylesAttribute = CellTextStylesAttribute.Builder()
+    .apply(block).build()

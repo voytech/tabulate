@@ -1,4 +1,4 @@
-package pl.voytech.exporter.core.model.attributes.style
+package pl.voytech.exporter.core.model.attributes.cell
 
 object Colors {
     val RED = Color(r = 255, g = 0, b = 0)
