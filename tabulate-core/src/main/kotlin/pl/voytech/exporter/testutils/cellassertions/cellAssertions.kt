@@ -10,6 +10,7 @@ import java.util.zip.CRC32
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class AssertCellValue<E>(
@@ -96,13 +97,10 @@ class AssertMany<E>(private vararg val cellTests: CellTest<E>) : CellTest<E> {
     }
 }
 
-class AssertEqualAttribute(private val expectedAttribute: CellAttribute) : AssertCellAttribute {
-
-    override fun testCellAttribute(cellAttribute: CellAttribute) {
-        assertEquals(expectedAttribute, cellAttribute, "expected attribute to equal $expectedAttribute")
+class AssertEqualAttribute<E>(private val expectedAttribute: CellAttribute) : CellTest<E> {
+    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
+        assertTrue(def?.cellAttributes?.contains(expectedAttribute) ?: false,"CellAttribute $expectedAttribute not found")
     }
-
-    override fun attributeClass(): KClass<out CellAttribute> = expectedAttribute::class
 }
 
 class AssertAttributeExpression(
