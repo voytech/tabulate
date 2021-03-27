@@ -1,17 +1,16 @@
 package pl.voytech.exporter.core.utils
 
+import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.xssf.usermodel.XSSFColor
 import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.model.attributes.cell.*
-import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultBorderStyle
-import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultHorizontalAlignment
-import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultVerticalAlignment
-import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultWeightStyle
+import pl.voytech.exporter.core.model.attributes.cell.enums.*
 import pl.voytech.exporter.core.template.context.Coordinates
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiUtils
+import pl.voytech.exporter.impl.template.model.ExcelCellFills
 import pl.voytech.exporter.testutils.AttributeResolver
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 import org.apache.poi.ss.usermodel.HorizontalAlignment as PoiHorizontalAlignment
@@ -22,21 +21,20 @@ private fun parseColor(xssfColor: XSSFColor) =
 
 class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
     override fun resolve(api: ApachePoiExcelFacade, coordinates: Coordinates): CellAttribute {
-        return api.xssfCell(coordinates).let {
+        return api.xssfCell(coordinates).let { cell ->
             CellTextStylesAttribute(
-                fontFamily = it?.cellStyle?.font?.fontName,
-                fontSize = it?.cellStyle?.font?.fontHeight?.toInt()?.let { size -> ApachePoiUtils.pixelsFromHeight(size) },
-                fontColor = it?.cellStyle?.font?.xssfColor?.let { color -> parseColor(color) },
-                weight = it?.cellStyle?.font?.bold?.let { bold ->
-                    if (bold) {
-                        DefaultWeightStyle.BOLD
-                    } else {
-                        DefaultWeightStyle.NORMAL
-                    }
+                fontFamily = cell?.cellStyle?.font?.fontName,
+                fontSize = cell?.cellStyle?.font?.fontHeight?.toInt()?.let { ApachePoiUtils.pixelsFromHeight(it) },
+                fontColor = cell?.cellStyle?.font?.xssfColor?.let { parseColor(it) },
+                weight = cell?.cellStyle?.font?.bold?.let {
+                    if (it) DefaultWeightStyle.BOLD else DefaultWeightStyle.NORMAL
                 },
-                strikeout = it?.cellStyle?.font?.strikeout,
-                underline = it?.cellStyle?.font?.underline == Font.U_SINGLE,
-                italic = it?.cellStyle?.font?.italic
+                strikeout = cell?.cellStyle?.font?.strikeout,
+                underline = cell?.cellStyle?.font?.underline == Font.U_SINGLE,
+                italic = cell?.cellStyle?.font?.italic,
+                rotation = cell?.cellStyle?.rotation,
+                ident = cell?.cellStyle?.indention,
+                wrapText = cell?.cellStyle?.wrapText
             )
         }
     }
@@ -44,9 +42,32 @@ class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
 
 class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
     override fun resolve(api: ApachePoiExcelFacade, coordinates: Coordinates): CellAttribute {
-        return api.xssfCell(coordinates).let {
+        return api.xssfCell(coordinates).let { cell ->
             CellBackgroundAttribute(
-                color = it?.cellStyle?.fillForegroundXSSFColor?.let { color -> parseColor(color) } ?: Color(-1, -1, -1)
+                color = cell?.cellStyle?.fillForegroundXSSFColor?.let { color -> parseColor(color) } ?: Color(-1, -1, -1),
+                fill = cell?.cellStyle?.fillPattern.let {
+                    when (it) {
+                        FillPatternType.BIG_SPOTS -> DefaultCellFill.LARGE_SPOTS
+                        FillPatternType.SQUARES -> DefaultCellFill.SQUARES
+                        FillPatternType.FINE_DOTS -> DefaultCellFill.SMALL_DOTS
+                        FillPatternType.ALT_BARS -> DefaultCellFill.WIDE_DOTS
+                        FillPatternType.DIAMONDS -> DefaultCellFill.DIAMONDS
+                        FillPatternType.BRICKS -> DefaultCellFill.BRICKS
+                        FillPatternType.SOLID_FOREGROUND -> DefaultCellFill.SOLID
+                        FillPatternType.LEAST_DOTS -> ExcelCellFills.LEAST_DOTS
+                        FillPatternType.LESS_DOTS -> ExcelCellFills.LESS_DOTS
+                        FillPatternType.SPARSE_DOTS -> ExcelCellFills.SPARSE_DOTS
+                        FillPatternType.THICK_BACKWARD_DIAG -> ExcelCellFills.THICK_BACKWARD_DIAG
+                        FillPatternType.THICK_FORWARD_DIAG -> ExcelCellFills.THICK_FORWARD_DIAG
+                        FillPatternType.THICK_HORZ_BANDS -> ExcelCellFills.THICK_HORZ_BANDS
+                        FillPatternType.THICK_VERT_BANDS -> ExcelCellFills.THICK_VERT_BANDS
+                        FillPatternType.THIN_BACKWARD_DIAG -> ExcelCellFills.THIN_BACKWARD_DIAG
+                        FillPatternType.THIN_FORWARD_DIAG -> ExcelCellFills.THIN_FORWARD_DIAG
+                        FillPatternType.THIN_HORZ_BANDS -> ExcelCellFills.THIN_HORZ_BANDS
+                        FillPatternType.THIN_VERT_BANDS -> ExcelCellFills.THIN_VERT_BANDS
+                        else -> null
+                    }
+                }
             )
         }
     }
@@ -97,14 +118,15 @@ class PoiCellAlignmentAttributeResolver : AttributeResolver<ApachePoiExcelFacade
                     PoiVerticalAlignment.TOP -> DefaultVerticalAlignment.TOP
                     PoiVerticalAlignment.CENTER -> DefaultVerticalAlignment.MIDDLE
                     PoiVerticalAlignment.BOTTOM -> DefaultVerticalAlignment.BOTTOM
-                    else -> null
+                    else -> DefaultVerticalAlignment.BOTTOM
                 },
                 horizontal = when (it?.cellStyle?.alignment) {
                     PoiHorizontalAlignment.LEFT -> DefaultHorizontalAlignment.LEFT
                     PoiHorizontalAlignment.RIGHT -> DefaultHorizontalAlignment.RIGHT
                     PoiHorizontalAlignment.CENTER -> DefaultHorizontalAlignment.CENTER
                     PoiHorizontalAlignment.JUSTIFY -> DefaultHorizontalAlignment.JUSTIFY
-                    else -> null
+                    PoiHorizontalAlignment.FILL -> DefaultHorizontalAlignment.FILL
+                    else -> DefaultHorizontalAlignment.LEFT
                 }
             )
         }
