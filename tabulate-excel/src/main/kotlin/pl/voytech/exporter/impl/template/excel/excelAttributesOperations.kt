@@ -134,17 +134,18 @@ class CellAlignmentAttributeRenderOperation<T>(override val adaptee: ApachePoiEx
 
     override fun renderAttribute(context: AttributedCell, attribute: CellAlignmentAttribute) {
         adaptee.cellStyle(context).let {
-            attribute.horizontal?.run {
+            with(attribute.horizontal) {
                 it.alignment =
                     when (this) {
                         DefaultHorizontalAlignment.CENTER -> org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER
                         DefaultHorizontalAlignment.LEFT -> org.apache.poi.ss.usermodel.HorizontalAlignment.LEFT
                         DefaultHorizontalAlignment.RIGHT -> org.apache.poi.ss.usermodel.HorizontalAlignment.RIGHT
-                        DefaultHorizontalAlignment.JUSTIFY -> org.apache.poi.ss.usermodel.HorizontalAlignment.FILL
-                        else -> org.apache.poi.ss.usermodel.HorizontalAlignment.GENERAL
+                        DefaultHorizontalAlignment.JUSTIFY -> org.apache.poi.ss.usermodel.HorizontalAlignment.JUSTIFY
+                        DefaultHorizontalAlignment.FILL -> org.apache.poi.ss.usermodel.HorizontalAlignment.FILL
+                        else -> org.apache.poi.ss.usermodel.HorizontalAlignment.LEFT
                     }
             }
-            attribute.vertical?.run {
+            with(attribute.vertical) {
                 it.verticalAlignment =
                     when (this) {
                         DefaultVerticalAlignment.MIDDLE -> org.apache.poi.ss.usermodel.VerticalAlignment.CENTER
