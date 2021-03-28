@@ -7,7 +7,7 @@ data class CellExcelDataFormatAttribute(
     val dataFormat: String
 ) : CellAttribute<CellExcelDataFormatAttribute>() {
     class Builder : CellAttributeBuilder<CellExcelDataFormatAttribute> {
-        var value: String = "general"
+        var value: String = "General"
         override fun build(): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute(value)
     }
     override fun mergeWith(other: CellExcelDataFormatAttribute): CellExcelDataFormatAttribute  = other

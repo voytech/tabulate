@@ -59,8 +59,7 @@ class TableAssert<T, E>(
                 api = state!!,
                 coordinates = coordinates,
                 def = CellDefinition(
-                    cellAttributes = cellAttributeResolvers?.map { resolver -> resolver.resolve(state!!, coordinates) }
-                        ?.toSet(),
+                    cellAttributes = cellAttributeResolvers?.map { it.resolve(state!!, coordinates) }?.toSet(),
                     cellValue = cellValueResolver?.resolve(state!!, coordinates)
                 )
             )
