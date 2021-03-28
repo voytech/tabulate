@@ -17,7 +17,11 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment as PoiHorizontalAlignment
 import org.apache.poi.ss.usermodel.VerticalAlignment as PoiVerticalAlignment
 
 private fun parseColor(xssfColor: XSSFColor) =
-    Color(xssfColor.rgb[0].toInt().and(0xFF), xssfColor.rgb[1].toInt().and(0xFF), xssfColor.rgb[2].toInt().and(0xFF))
+    Color(
+        xssfColor.rgb[0].toInt().and(0xFF),
+        xssfColor.rgb[1].toInt().and(0xFF),
+        xssfColor.rgb[2].toInt().and(0xFF)
+    )
 
 class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
     override fun resolve(api: ApachePoiExcelFacade, coordinates: Coordinates): CellAttribute {
@@ -42,33 +46,32 @@ class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
 
 class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
     override fun resolve(api: ApachePoiExcelFacade, coordinates: Coordinates): CellAttribute {
-        return api.xssfCell(coordinates).let { cell ->
-            CellBackgroundAttribute(
-                color = cell?.cellStyle?.fillForegroundXSSFColor?.let { color -> parseColor(color) } ?: Color(-1, -1, -1),
-                fill = cell?.cellStyle?.fillPattern.let {
-                    when (it) {
-                        FillPatternType.BIG_SPOTS -> DefaultCellFill.LARGE_SPOTS
-                        FillPatternType.SQUARES -> DefaultCellFill.SQUARES
-                        FillPatternType.FINE_DOTS -> DefaultCellFill.SMALL_DOTS
-                        FillPatternType.ALT_BARS -> DefaultCellFill.WIDE_DOTS
-                        FillPatternType.DIAMONDS -> DefaultCellFill.DIAMONDS
-                        FillPatternType.BRICKS -> DefaultCellFill.BRICKS
-                        FillPatternType.SOLID_FOREGROUND -> DefaultCellFill.SOLID
-                        FillPatternType.LEAST_DOTS -> ExcelCellFills.LEAST_DOTS
-                        FillPatternType.LESS_DOTS -> ExcelCellFills.LESS_DOTS
-                        FillPatternType.SPARSE_DOTS -> ExcelCellFills.SPARSE_DOTS
-                        FillPatternType.THICK_BACKWARD_DIAG -> ExcelCellFills.THICK_BACKWARD_DIAG
-                        FillPatternType.THICK_FORWARD_DIAG -> ExcelCellFills.THICK_FORWARD_DIAG
-                        FillPatternType.THICK_HORZ_BANDS -> ExcelCellFills.THICK_HORZ_BANDS
-                        FillPatternType.THICK_VERT_BANDS -> ExcelCellFills.THICK_VERT_BANDS
-                        FillPatternType.THIN_BACKWARD_DIAG -> ExcelCellFills.THIN_BACKWARD_DIAG
-                        FillPatternType.THIN_FORWARD_DIAG -> ExcelCellFills.THIN_FORWARD_DIAG
-                        FillPatternType.THIN_HORZ_BANDS -> ExcelCellFills.THIN_HORZ_BANDS
-                        FillPatternType.THIN_VERT_BANDS -> ExcelCellFills.THIN_VERT_BANDS
-                        else -> null
+        return with(api.xssfCell(coordinates)?.cellStyle) {
+            if (this != null) {
+                CellBackgroundAttribute(
+                    color = fillForegroundXSSFColor?.let { parseColor(it) },
+                    fill = fillPattern.let {
+                        when (it) {
+                            FillPatternType.BIG_SPOTS -> DefaultCellFill.LARGE_SPOTS
+                            FillPatternType.SQUARES -> DefaultCellFill.SQUARES
+                            FillPatternType.FINE_DOTS -> DefaultCellFill.SMALL_DOTS
+                            FillPatternType.ALT_BARS -> DefaultCellFill.WIDE_DOTS
+                            FillPatternType.DIAMONDS -> DefaultCellFill.DIAMONDS
+                            FillPatternType.BRICKS -> DefaultCellFill.BRICKS
+                            FillPatternType.SOLID_FOREGROUND -> DefaultCellFill.SOLID
+                            else -> resolveCellFillPattern(it)
+                        }
                     }
-                }
-            )
+                )
+            } else CellBackgroundAttribute()
+        }
+    }
+
+    private fun resolveCellFillPattern(fillPattern: FillPatternType?): ExcelCellFills? {
+        return try {
+            if (fillPattern != null) ExcelCellFills.valueOf(fillPattern.name) else null
+        } catch (e: IllegalArgumentException) {
+            null
         }
     }
 }

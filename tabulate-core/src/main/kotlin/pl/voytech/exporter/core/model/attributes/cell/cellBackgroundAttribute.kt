@@ -1,21 +1,23 @@
 package pl.voytech.exporter.core.model.attributes.cell
 
 import pl.voytech.exporter.core.api.builder.CellAttributeBuilder
-import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultCellFill
 import pl.voytech.exporter.core.model.attributes.cell.enums.contract.CellFill
 
 data class CellBackgroundAttribute(
-    val color: Color,
-    val fill: CellFill? = DefaultCellFill.SOLID
+    val color: Color? = null,
+    val fill: CellFill? = null
 ) : CellStyleAttribute<CellBackgroundAttribute>() {
 
     class Builder: CellAttributeBuilder<CellBackgroundAttribute> {
-        lateinit var color: Color
-        var fill: CellFill? = DefaultCellFill.SOLID
+        var color: Color? = null
+        var fill: CellFill? = null
         override fun build(): CellBackgroundAttribute = CellBackgroundAttribute(color, fill)
     }
 
-    override fun mergeWith(other: CellBackgroundAttribute): CellBackgroundAttribute = other.copy(color = other.color, fill = other.fill ?: this.fill)
+    override fun mergeWith(other: CellBackgroundAttribute): CellBackgroundAttribute = CellBackgroundAttribute(
+        color = other.color ?: this.color,
+        fill = other.fill ?: this.fill
+    )
 }
 
 fun background(block: CellBackgroundAttribute.Builder.() -> Unit): CellBackgroundAttribute =

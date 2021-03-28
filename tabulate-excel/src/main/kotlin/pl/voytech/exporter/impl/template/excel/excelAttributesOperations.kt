@@ -72,7 +72,9 @@ class CellBackgroundAttributeRenderOperation<T>(override val adaptee: ApachePoiE
         attribute: CellBackgroundAttribute
     ) {
         adaptee.cellStyle(context).let {
-            (it as XSSFCellStyle).setFillForegroundColor(ApachePoiExcelFacade.color(attribute.color))
+            if (attribute.color != null) {
+                (it as XSSFCellStyle).setFillForegroundColor(ApachePoiExcelFacade.color(attribute.color!!))
+            }
             when (attribute.fill) {
                 DefaultCellFill.SOLID -> it.fillPattern = FillPatternType.SOLID_FOREGROUND
                 DefaultCellFill.BRICKS -> it.fillPattern = FillPatternType.BRICKS
@@ -81,12 +83,12 @@ class CellBackgroundAttributeRenderOperation<T>(override val adaptee: ApachePoiE
                 DefaultCellFill.SMALL_DOTS -> it.fillPattern = FillPatternType.FINE_DOTS
                 DefaultCellFill.SQUARES -> it.fillPattern = FillPatternType.SQUARES
                 DefaultCellFill.LARGE_SPOTS -> it.fillPattern = FillPatternType.BIG_SPOTS
-                else -> it.fillPattern = parseFillPatternType(attribute)
+                else -> it.fillPattern = resolveFillPatternByEnumName(attribute)
             }
         }
     }
 
-    private fun parseFillPatternType(background: CellBackgroundAttribute): FillPatternType {
+    private fun resolveFillPatternByEnumName(background: CellBackgroundAttribute): FillPatternType {
         return try {
             FillPatternType.valueOf(background.fill?.getCellFillId() ?: "NO_FILL")
         } catch (e: IllegalArgumentException) {
