@@ -10,7 +10,7 @@ data class CellTextStylesAttribute(
     val italic: Boolean? = false,
     val strikeout: Boolean? = false,
     val underline: Boolean? = false,
-    val fontColor: Color? = Color(0, 0, 0),
+    val fontColor: Color? = null,
     val ident: Short? = 0,
     val wrapText: Boolean? = false,
     var rotation: Short? = 0
@@ -23,7 +23,7 @@ data class CellTextStylesAttribute(
         var italic: Boolean? = false
         var strikeout: Boolean? = false
         var underline: Boolean? = false
-        var fontColor: Color? = Color(0, 0, 0)
+        var fontColor: Color? = null
         var ident: Short = 0
         var wrapText: Boolean = false
         var rotation: Short? = 0
