@@ -87,8 +87,7 @@ class ExcelAttributesTests {
         fun cellAttributesProvider(): Stream<CellAttribute> {
             return (
                 textStyleAttributes() +
-                horizontalAlignments() +
-                verticalAlignments() +
+                cellAlignmentStyles() +
                 cellBackgroundStyles()
             ).stream()
         }
@@ -113,26 +112,26 @@ class ExcelAttributesTests {
             ),
         )
 
-        private fun horizontalAlignments(): List<CellAttribute> = DefaultHorizontalAlignment.values().map {
-            CellAlignmentAttribute(horizontal = it)
+        private fun cellAlignmentStyles(): List<CellAttribute> {
+            return DefaultHorizontalAlignment.values().flatMap { horizontal ->
+                DefaultVerticalAlignment.values().map { vertical ->
+                    CellAlignmentAttribute(horizontal = horizontal, vertical = vertical)
+                }
+            }
         }
 
-        private fun verticalAlignments(): List<CellAttribute> = DefaultVerticalAlignment.values().map {
-            CellAlignmentAttribute(vertical = it)
+        private fun cellBackgroundStyles(): List<CellAttribute> {
+            return listOf(
+                Colors.AERO, Colors.AERO_BLUE, Colors.AMARANTH,
+                Colors.AMBER, Colors.BLACK, Colors.WHITE,
+                Colors.BLACK, Colors.RED, Colors.BLUE,
+                Colors.GREEN, Colors.YELLOW, Colors.ORANGE,
+                Colors.PINK, null
+            ).flatMap { color ->
+                DefaultCellFill.values().map { fill -> CellBackgroundAttribute(fill = fill, color = color) } +
+                ExcelCellFills.values().map { fill -> CellBackgroundAttribute(fill = fill, color = color) } +
+                CellBackgroundAttribute(color = color)
+            }
         }
-
-        private fun cellBackgroundStyles(): List<CellAttribute> = DefaultCellFill.values().map {
-            CellBackgroundAttribute(
-                fill = it,
-                color = Colors.BLUE
-            )
-        } + ExcelCellFills.values().map {
-            CellBackgroundAttribute(
-                fill = it,
-                color = Colors.GREEN
-            )
-        } + listOf(
-            CellBackgroundAttribute(color = Colors.GREEN),
-        )
     }
 }
