@@ -6,10 +6,12 @@ import org.apache.poi.xssf.usermodel.XSSFColor
 import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.model.attributes.cell.*
 import pl.voytech.exporter.core.model.attributes.cell.enums.*
+import pl.voytech.exporter.core.model.attributes.cell.enums.contract.BorderStyle
 import pl.voytech.exporter.core.template.context.Coordinates
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiUtils
+import pl.voytech.exporter.impl.template.model.ExcelBorderStyle
 import pl.voytech.exporter.impl.template.model.ExcelCellFills
 import pl.voytech.exporter.testutils.AttributeResolver
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
@@ -78,25 +80,33 @@ class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiExcelFacad
 
 class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
     override fun resolve(api: ApachePoiExcelFacade, coordinates: Coordinates): CellAttribute {
-        val fromPoiStyle = { style: PoiBorderStyle ->
-            when (style) {
-                PoiBorderStyle.DASHED -> DefaultBorderStyle.DASHED
-                PoiBorderStyle.DOTTED -> DefaultBorderStyle.DOTTED
-                PoiBorderStyle.THIN -> DefaultBorderStyle.SOLID
-                else -> DefaultBorderStyle.NONE
-            }
-        }
-        return api.xssfCell(coordinates).let {
+
+        return api.xssfCell(coordinates).let { cell ->
             CellBordersAttribute(
-                leftBorderStyle = it?.cellStyle?.borderLeft?.let { border -> fromPoiStyle(border) },
-                leftBorderColor = it?.cellStyle?.leftBorderXSSFColor?.let { color -> parseColor(color) },
-                rightBorderStyle = it?.cellStyle?.borderRight?.let { border -> fromPoiStyle(border) },
-                rightBorderColor = it?.cellStyle?.rightBorderXSSFColor?.let { color -> parseColor(color) },
-                topBorderStyle = it?.cellStyle?.borderTop?.let { border -> fromPoiStyle(border) },
-                topBorderColor = it?.cellStyle?.topBorderXSSFColor?.let { color -> parseColor(color) },
-                bottomBorderStyle = it?.cellStyle?.borderBottom?.let { border -> fromPoiStyle(border) },
-                bottomBorderColor = it?.cellStyle?.bottomBorderXSSFColor?.let { color -> parseColor(color) }
+                leftBorderStyle = cell?.cellStyle?.borderLeft?.let { resolveBorderStyle(it) },
+                leftBorderColor = cell?.cellStyle?.leftBorderXSSFColor?.let { parseColor(it) },
+                rightBorderStyle = cell?.cellStyle?.borderRight?.let { resolveBorderStyle(it) },
+                rightBorderColor = cell?.cellStyle?.rightBorderXSSFColor?.let { parseColor(it) },
+                topBorderStyle = cell?.cellStyle?.borderTop?.let { resolveBorderStyle(it) },
+                topBorderColor = cell?.cellStyle?.topBorderXSSFColor?.let { parseColor(it) },
+                bottomBorderStyle = cell?.cellStyle?.borderBottom?.let { resolveBorderStyle(it) },
+                bottomBorderColor = cell?.cellStyle?.bottomBorderXSSFColor?.let { parseColor(it) }
             )
+        }
+    }
+
+    private fun resolveBorderStyle(style: PoiBorderStyle): BorderStyle {
+        return when (style) {
+            PoiBorderStyle.DASHED -> DefaultBorderStyle.DASHED
+            PoiBorderStyle.DOTTED -> DefaultBorderStyle.DOTTED
+            PoiBorderStyle.THIN -> DefaultBorderStyle.SOLID
+            PoiBorderStyle.DOUBLE -> DefaultBorderStyle.DOUBLE
+            PoiBorderStyle.NONE -> DefaultBorderStyle.NONE
+            else -> try {
+                ExcelBorderStyle.valueOf(style.name)
+            } catch (e: IllegalArgumentException) {
+                DefaultBorderStyle.NONE
+            }
         }
     }
 }

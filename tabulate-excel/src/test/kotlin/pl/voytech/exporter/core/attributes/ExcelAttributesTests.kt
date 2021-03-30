@@ -3,15 +3,14 @@ package pl.voytech.exporter.core.attributes
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import pl.voytech.exporter.core.api.builder.dsl.table
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.model.attributes.cell.*
-import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultCellFill
-import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultHorizontalAlignment
-import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultVerticalAlignment
-import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultWeightStyle
+import pl.voytech.exporter.core.model.attributes.cell.enums.*
+import pl.voytech.exporter.core.model.attributes.cell.enums.contract.BorderStyle
 import pl.voytech.exporter.core.template.export
 import pl.voytech.exporter.core.utils.PoiTableAssert
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
@@ -47,7 +46,7 @@ class ExcelAttributesTests {
 
     @ParameterizedTest
     @MethodSource("cellAttributesProvider")
-    fun `should export with cell attribute`(attribute: CellAttribute) {
+    fun `should export with cell attribute`(attribute: CellAttribute, expectedAttribute: CellAttribute) {
         // when
         FileOutputStream(File("test1.xlsx")).use {
             table<Any> {
@@ -74,7 +73,7 @@ class ExcelAttributesTests {
                     expectedType = CellType.STRING,
                     expectedValue = "Value"
                 ),
-                CellPosition(0, 0) to AssertEqualAttribute(attribute)
+                CellPosition(0, 0) to AssertEqualAttribute(expectedAttribute)
             )
         ).perform().also {
             it.cleanup()
@@ -83,19 +82,34 @@ class ExcelAttributesTests {
 
     companion object {
 
+        private val KNOWN_COLORS = listOf(
+            Colors.AERO, Colors.AERO_BLUE, Colors.AMARANTH,
+            Colors.AMBER, Colors.BLACK, Colors.WHITE,
+            Colors.BLACK, Colors.RED, Colors.BLUE,
+            Colors.GREEN, Colors.YELLOW, Colors.ORANGE,
+            Colors.PINK
+        )
+
+        private val KNOWN_FONT_FAMILIES = listOf(
+            "Times New Roman", "Times" , "Helvetica", "Arial", "Courier", "Courier New" ,
+            "Verdana", "Georgia", "Comic Sans MS", "Trebuchet MS", "Arial Black" , "Tahoma",
+            "Bodoni", "Futura", "Frutiger", "Garamond", "Avenir", "Impact", "Palatino",
+            "Garamond", "Bookman", "Avant Garde", "Century Schoolbook", "Andale Mono", "Calibri"
+        )
+
         @JvmStatic
-        fun cellAttributesProvider(): Stream<CellAttribute> {
+        fun cellAttributesProvider(): Stream<Arguments> {
             return (
                 textStyleAttributes() +
                 cellAlignmentStyles() +
-                cellBackgroundStyles()
+                cellBackgroundStyles() +
+                cellBorderStyles()
             ).stream()
         }
 
-        private fun textStyleAttributes(): List<CellAttribute> = listOf(
-            CellTextStylesAttribute(
-                fontFamily = "Times New Roman",
-            ),
+        private fun textStyleAttributes(): List<Arguments> = (KNOWN_FONT_FAMILIES.map {
+            CellTextStylesAttribute(fontFamily = it)
+        } + listOf(
             CellTextStylesAttribute(
                 fontFamily = "Times New Roman",
                 fontSize = 12,
@@ -109,28 +123,74 @@ class ExcelAttributesTests {
                 wrapText = true,
                 rotation = 90,
                 ident = 2
-            ),
-        )
+            )
+        )).map { Arguments.of(it, it) }
 
-        private fun cellAlignmentStyles(): List<CellAttribute> {
+        private fun cellAlignmentStyles(): List<Arguments> {
             return DefaultHorizontalAlignment.values().flatMap { horizontal ->
                 DefaultVerticalAlignment.values().map { vertical ->
-                    CellAlignmentAttribute(horizontal = horizontal, vertical = vertical)
+                    Arguments.of(
+                        CellAlignmentAttribute(horizontal = horizontal, vertical = vertical),
+                        CellAlignmentAttribute(horizontal = horizontal, vertical = vertical)
+                    )
                 }
             }
         }
 
-        private fun cellBackgroundStyles(): List<CellAttribute> {
-            return listOf(
-                Colors.AERO, Colors.AERO_BLUE, Colors.AMARANTH,
-                Colors.AMBER, Colors.BLACK, Colors.WHITE,
-                Colors.BLACK, Colors.RED, Colors.BLUE,
-                Colors.GREEN, Colors.YELLOW, Colors.ORANGE,
-                Colors.PINK, null
-            ).flatMap { color ->
+        private fun cellBackgroundStyles(): List<Arguments> {
+            return (KNOWN_COLORS + null).flatMap { color ->
                 DefaultCellFill.values().map { fill -> CellBackgroundAttribute(fill = fill, color = color) } +
                 ExcelCellFills.values().map { fill -> CellBackgroundAttribute(fill = fill, color = color) } +
                 CellBackgroundAttribute(color = color)
+            }.map { Arguments.of(it,it) }
+        }
+
+        private fun cellBorderStyles(): List<Arguments> {
+            return (KNOWN_COLORS + null).flatMap { color ->
+                DefaultBorderStyle.values().map { borderStyle ->
+                    CellBordersAttribute(
+                        leftBorderStyle = borderStyle,
+                        leftBorderColor = color,
+                        rightBorderStyle = borderStyle,
+                        rightBorderColor = color,
+                        topBorderStyle = borderStyle,
+                        topBorderColor = color,
+                        bottomBorderStyle = borderStyle,
+                        bottomBorderColor = color
+                    )
+                }
+            }.map { Arguments.of(it, expectBorderStyleAttribute(it)) }
+        }
+
+        private fun expectBorderStyleAttribute(borderStyle: CellBordersAttribute): CellBordersAttribute {
+            return borderStyle.copy(
+                leftBorderStyle = expectBorderStyle(borderStyle.leftBorderStyle),
+                rightBorderStyle = expectBorderStyle(borderStyle.rightBorderStyle),
+                topBorderStyle = expectBorderStyle(borderStyle.topBorderStyle),
+                bottomBorderStyle = expectBorderStyle(borderStyle.bottomBorderStyle),
+                leftBorderColor = expectBorderColor(borderStyle.leftBorderStyle, borderStyle.leftBorderColor),
+                rightBorderColor = expectBorderColor(borderStyle.rightBorderStyle, borderStyle.rightBorderColor),
+                topBorderColor = expectBorderColor(borderStyle.topBorderStyle, borderStyle.topBorderColor),
+                bottomBorderColor = expectBorderColor(borderStyle.bottomBorderStyle, borderStyle.bottomBorderColor)
+            )
+        }
+
+        private fun expectBorderStyle(borderStyle: BorderStyle?): BorderStyle {
+            return when(borderStyle) {
+                DefaultBorderStyle.INSET -> DefaultBorderStyle.NONE
+                DefaultBorderStyle.GROOVE -> DefaultBorderStyle.NONE
+                DefaultBorderStyle.OUTSET -> DefaultBorderStyle.NONE
+                else -> borderStyle ?: DefaultBorderStyle.NONE
+            }
+        }
+
+        private fun expectBorderColor(borderStyle: BorderStyle?, borderColor: Color?): Color? {
+            return when(borderStyle) {
+                DefaultBorderStyle.INSET -> null
+                DefaultBorderStyle.GROOVE -> null
+                DefaultBorderStyle.OUTSET -> null
+                DefaultBorderStyle.NONE -> null
+                else -> borderColor
             }
         }
     }
