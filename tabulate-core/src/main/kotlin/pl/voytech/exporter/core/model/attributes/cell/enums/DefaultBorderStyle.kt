@@ -11,6 +11,5 @@ enum class DefaultBorderStyle : BorderStyle {
     INSET,
     OUTSET,
     GROOVE;
-
     override fun getBorderStyleId() = name
 }

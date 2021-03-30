@@ -34,6 +34,7 @@ import java.awt.font.TextLayout
 import java.awt.geom.Rectangle2D
 import java.text.AttributedString
 import kotlin.math.roundToInt
+import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 
 class CellTextStylesAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
     AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, CellTextStylesAttribute>(adaptee) {
@@ -102,29 +103,29 @@ class CellBordersAttributeRenderOperation<T>(override val adaptee: ApachePoiExce
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
     override fun renderAttribute(context: AttributedCell, attribute: CellBordersAttribute) {
-        val toPoiStyle = { style: BorderStyle ->
-            when (style.getBorderStyleId()) {
-                DefaultBorderStyle.DASHED.name -> org.apache.poi.ss.usermodel.BorderStyle.DASHED
-                DefaultBorderStyle.DOTTED.name -> org.apache.poi.ss.usermodel.BorderStyle.DOTTED
-                DefaultBorderStyle.SOLID.name -> org.apache.poi.ss.usermodel.BorderStyle.THIN
-                else -> org.apache.poi.ss.usermodel.BorderStyle.NONE
-            }
-        }
         adaptee.cellStyle(context).let {
             attribute.leftBorderColor?.run { (it as XSSFCellStyle).setLeftBorderColor(ApachePoiExcelFacade.color(this)) }
             attribute.rightBorderColor?.run { (it as XSSFCellStyle).setRightBorderColor(ApachePoiExcelFacade.color(this)) }
             attribute.topBorderColor?.run { (it as XSSFCellStyle).setTopBorderColor(ApachePoiExcelFacade.color(this)) }
-            attribute.bottomBorderColor?.run {
-                (it as XSSFCellStyle).setBottomBorderColor(
-                    ApachePoiExcelFacade.color(
-                        this
-                    )
-                )
+            attribute.bottomBorderColor?.run { (it as XSSFCellStyle).setBottomBorderColor(ApachePoiExcelFacade.color(this)) }
+            attribute.leftBorderStyle?.run { it.borderLeft = resolveBorderStyle(this) }
+            attribute.rightBorderStyle?.run { it.borderRight = resolveBorderStyle(this) }
+            attribute.topBorderStyle?.run { it.borderTop = resolveBorderStyle(this) }
+            attribute.bottomBorderStyle?.run { it.borderBottom = resolveBorderStyle(this) }
+        }
+    }
+
+    private fun resolveBorderStyle(style: BorderStyle): PoiBorderStyle {
+        return when (style.getBorderStyleId()) {
+            DefaultBorderStyle.DASHED.name ->PoiBorderStyle.DASHED
+            DefaultBorderStyle.DOTTED.name -> PoiBorderStyle.DOTTED
+            DefaultBorderStyle.SOLID.name -> PoiBorderStyle.THIN
+            DefaultBorderStyle.DOUBLE.name -> PoiBorderStyle.DOUBLE
+            else -> try {
+                PoiBorderStyle.valueOf(style.getBorderStyleId())
+            } catch (e: IllegalArgumentException) {
+                PoiBorderStyle.NONE
             }
-            attribute.leftBorderStyle?.run { it.borderLeft = toPoiStyle(this) }
-            attribute.rightBorderStyle?.run { it.borderRight = toPoiStyle(this) }
-            attribute.topBorderStyle?.run { it.borderTop = toPoiStyle(this) }
-            attribute.bottomBorderStyle?.run { it.borderBottom = toPoiStyle(this) }
         }
     }
 }
