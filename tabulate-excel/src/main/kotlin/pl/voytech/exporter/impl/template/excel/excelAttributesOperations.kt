@@ -215,13 +215,13 @@ class ColumnWidthAttributeRenderOperation<T>(override val adaptee: ApachePoiExce
 
     override fun renderAttribute(context: AttributedColumn, attribute: ColumnWidthAttribute) {
         adaptee.tableSheet(context.getTableId()).let {
-            if (attribute.auto == true || attribute.width == -1) {
+            if (attribute.auto == true || attribute.px == -1) {
                 if (!it.isColumnTrackedForAutoSizing(context.columnIndex)) {
                     it.trackColumnForAutoSizing(context.columnIndex)
                 }
                 it.autoSizeColumn(context.columnIndex)
             } else {
-                it.setColumnWidth(context.columnIndex, ApachePoiUtils.widthFromPixels(attribute.width))
+                it.setColumnWidth(context.columnIndex, ApachePoiUtils.widthFromPixels(attribute.px))
             }
         }
     }
@@ -232,7 +232,7 @@ class RowHeightAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelF
     override fun attributeType(): Class<out RowHeightAttribute> = RowHeightAttribute::class.java
     override fun renderAttribute(context: AttributedRow<T>, attribute: RowHeightAttribute) {
         adaptee.assertRow(context.getTableId(), context.rowIndex).height =
-            ApachePoiUtils.heightFromPixels(attribute.height)
+            ApachePoiUtils.heightFromPixels(attribute.px)
     }
 }
 

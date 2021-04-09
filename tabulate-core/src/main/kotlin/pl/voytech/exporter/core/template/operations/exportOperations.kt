@@ -9,7 +9,7 @@ import pl.voytech.exporter.core.template.operations.impl.AttributeAwareTableRend
 import java.io.OutputStream
 
 interface InitOperation {
-    fun initialize()
+    fun initialize() {}
 }
 
 interface FinishOperation {
@@ -25,18 +25,19 @@ interface CreateTableOperation<T> {
 }
 
 interface ColumnRenderOperation<T> {
-    fun renderColumn(context: AttributedColumn)
+    fun renderColumn(context: AttributedColumn) { }
 }
 
 interface RowRenderOperation<T> {
-    fun renderRow(context: AttributedRow<T>)
+    fun renderRow(context: AttributedRow<T>) { }
 }
 
 interface CellRenderOperation<T> {
     fun renderRowCell(context: AttributedCell)
 }
 
-interface TableRenderOperations<T> : CreateTableOperation<T>, ColumnRenderOperation<T>, RowRenderOperation<T>, CellRenderOperation<T>
+interface TableRenderOperations<T> : CreateTableOperation<T>, ColumnRenderOperation<T>, RowRenderOperation<T>,
+    CellRenderOperation<T>
 
 class ExportOperations<T>(
     val lifecycleOperations: LifecycleOperations,
@@ -52,11 +53,11 @@ abstract class AdaptingLifecycleOperations<A>(val adaptee: A) : LifecycleOperati
 
 abstract class AdaptingTableRenderOperations<T, A>(val adaptee: A) : TableRenderOperations<T>
 
-abstract class ExportOperationConfiguringFactory<T>: ExportOperationsFactory<T> {
+abstract class ExportOperationConfiguringFactory<T> : ExportOperationsFactory<T> {
 
-    abstract fun getExportOperationsFactory() : ExportOperationsFactory<T>
+    abstract fun getExportOperationsFactory(): ExportOperationsFactory<T>
 
-    abstract fun getAttributeOperationsFactory() : AttributeRenderOperationsFactory<T>?
+    abstract fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<T>?
 
     override fun createLifecycleOperations(): LifecycleOperations {
         return getExportOperationsFactory().createLifecycleOperations()
@@ -76,4 +77,10 @@ abstract class ExportOperationConfiguringFactory<T>: ExportOperationsFactory<T> 
             return getExportOperationsFactory().createTableRenderOperations()
         }
     }
+
+    fun createOperations(): ExportOperations<T> = ExportOperations(
+        lifecycleOperations = createLifecycleOperations(),
+        tableRenderOperations = createTableRenderOperations()
+    )
+
 }
