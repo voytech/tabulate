@@ -9,7 +9,6 @@ import pl.voytech.exporter.core.api.builder.dsl.table
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.RowSelectors
 import pl.voytech.exporter.core.model.attributes.cell.*
-import pl.voytech.exporter.core.model.attributes.table.FilterAndSortTableAttribute
 import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultBorderStyle
 import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultHorizontalAlignment
 import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultVerticalAlignment
@@ -17,11 +16,12 @@ import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultWeightStyle
 import pl.voytech.exporter.core.model.attributes.column.width
 import pl.voytech.exporter.core.model.attributes.row.RowHeightAttribute
 import pl.voytech.exporter.core.model.attributes.row.height
+import pl.voytech.exporter.core.model.attributes.table.FilterAndSortTableAttribute
 import pl.voytech.exporter.core.utils.PoiTableAssert
 import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
 import pl.voytech.exporter.impl.template.excel.dataFormat
-import pl.voytech.exporter.impl.template.excel.poiExcelExport
+import pl.voytech.exporter.impl.template.excel.xlsx
 import pl.voytech.exporter.testutils.CellPosition
 import pl.voytech.exporter.testutils.CellRange
 import pl.voytech.exporter.testutils.cellassertions.AssertCellValue
@@ -49,7 +49,7 @@ class ApachePoiTabulateTests {
             columns {
                 column("nr") {
                     attributes(
-                        width { width = 50 },
+                        width { px = 50 },
                         text {
                             fontFamily = "Times New Roman"
                             fontColor = Color(10, 100, 100)
@@ -103,7 +103,7 @@ class ApachePoiTabulateTests {
                         forColumn(Product::distributionDate) { value = "Distribution" }
                     }
                     attributes(
-                        RowHeightAttribute(height = 120),
+                        RowHeightAttribute(px = 120),
                         CellBordersAttribute(
                             leftBorderStyle = DefaultBorderStyle.SOLID,
                             leftBorderColor = Colors.BLACK,
@@ -137,7 +137,7 @@ class ApachePoiTabulateTests {
         }
 
         val elapsedTime = FileOutputStream(file).use { outputStream ->
-            measureTimeMillis { productList.exportTable(table, poiExcelExport(), outputStream) }
+            measureTimeMillis { productList.tabulate(table, xlsx(), outputStream) }
         }
         println("Elapsed time: $elapsedTime")
 
@@ -236,7 +236,7 @@ class ApachePoiTabulateTests {
                         }
                     }
                 }
-                operations = poiExcelExport(ClassLoader.getSystemResourceAsStream("template.xlsx"))
+                operations = xlsx(ClassLoader.getSystemResourceAsStream("template.xlsx"))
             }
         }
 
@@ -290,7 +290,7 @@ class ApachePoiTabulateTests {
             }
         }
         FileOutputStream(file).use {
-            productList.exportTable(table, poiExcelExport(), it)
+            productList.tabulate(table, xlsx(), it)
         }
         assertNotNull(file)
         PoiTableAssert<Product>(
@@ -359,7 +359,7 @@ class ApachePoiTabulateTests {
                         }
                     }
                 }
-            }.export(poiExcelExport(), it)
+            }.export(xlsx(), it)
         }
         PoiTableAssert<Product>(
             tableName = "Test table",
@@ -403,12 +403,12 @@ class ApachePoiTabulateTests {
                 columns {
                     column("description")
                     column("image") {
-                        attributes(width { width = 300 })
+                        attributes(width { px = 300 })
                     }
                 }
                 rows {
                     row {
-                        attributes(height { height = 200 })
+                        attributes(height { px = 200 })
                         cells {
                             cell { value = "It is : " }
                             cell {
@@ -418,7 +418,7 @@ class ApachePoiTabulateTests {
                         }
                     }
                 }
-            }.export(poiExcelExport(), it)
+            }.export(xlsx(), it)
         }
         PoiTableAssert<Product>(
             tableName = "Test table",

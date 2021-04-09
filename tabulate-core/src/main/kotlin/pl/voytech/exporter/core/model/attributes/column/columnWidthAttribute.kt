@@ -9,7 +9,7 @@ enum class LengthUnit {
 
 data class ColumnWidthAttribute(
     val auto: Boolean? = false,
-    val width: Int = -1,
+    val px: Int = -1,
     val unit: LengthUnit = LengthUnit.PIXEL
 ) : ColumnAttribute<ColumnWidthAttribute>() {
     override fun beforeFirstRow() = true
@@ -17,9 +17,9 @@ data class ColumnWidthAttribute(
 
     class Builder : ColumnAttributeBuilder {
         var auto: Boolean? = false
-        var width: Int = -1
+        var px: Int = -1
         var unit: LengthUnit = LengthUnit.PIXEL
-        override fun build(): ColumnAttribute<ColumnWidthAttribute> = ColumnWidthAttribute(auto, width, unit)
+        override fun build(): ColumnAttribute<ColumnWidthAttribute> = ColumnWidthAttribute(auto, px, unit)
     }
 
     override fun mergeWith(other: ColumnWidthAttribute): ColumnWidthAttribute = other.copy(auto = other.auto ?: this.auto)

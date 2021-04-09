@@ -85,7 +85,7 @@ open class TableExportTemplate<T>(private val delegate: ExportOperations<T>) {
     }
 }
 
-fun <T> Collection<T>.exportTable(tableBuilder: TableBuilder<T>, delegate: ExportOperations<T>, stream: OutputStream) {
+fun <T> Collection<T>.tabulate(tableBuilder: TableBuilder<T>, delegate: ExportOperations<T>, stream: OutputStream) {
     TableExportTemplate(delegate).export(tableBuilder, this, stream)
 }
 

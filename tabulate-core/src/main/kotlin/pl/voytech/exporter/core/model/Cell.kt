@@ -15,7 +15,7 @@ data class Cell<T> internal constructor(
 
     fun rowSpanOffset() = rowSpan - 1
 
-    internal fun resolveRawValue(context: SourceRow<T>?) : Any? = context?.let { eval?.invoke(it) } ?: value
+    internal fun resolveRawValue(context: SourceRow<T>? = null) : Any? = context?.let { eval?.invoke(it) } ?: value
 }
 
 internal fun <T> Cell<T>?.resolveCellValue(column: Column<T>, maybeRow: SourceRow<T>? = null): CellValue? {
