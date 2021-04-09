@@ -19,7 +19,3 @@ data class Price(
     val vatRate: BigDecimal
 )
 
-data class PriceList(
-    val code: String,
-    val pricesByProductCode: Map<String, Price> = mutableMapOf()
-)
