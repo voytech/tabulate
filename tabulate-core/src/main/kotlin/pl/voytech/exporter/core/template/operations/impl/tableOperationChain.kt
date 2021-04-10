@@ -1,7 +1,5 @@
 package pl.voytech.exporter.core.template.operations.impl
 
-import pl.voytech.exporter.core.api.builder.TableBuilder
-import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.AttributedColumn
 import pl.voytech.exporter.core.template.context.AttributedRow
@@ -12,11 +10,6 @@ class EmptyOperationChainException : RuntimeException("There is no export operat
 class TableRenderOperationsChain<T>(
     private vararg val chain: TableRenderOperations<T>
 ) : TableRenderOperations<T> {
-
-    override fun createTable(builder: TableBuilder<T>): Table<T> {
-        chain.ifEmpty { throw EmptyOperationChainException() }
-        return chain.first().createTable(builder)
-    }
 
     override fun renderRow(
         context: AttributedRow<T>

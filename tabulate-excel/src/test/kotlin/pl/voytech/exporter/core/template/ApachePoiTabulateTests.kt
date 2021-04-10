@@ -1,10 +1,8 @@
 package pl.voytech.exporter.core.template
 
 import org.apache.poi.openxml4j.util.ZipSecureFile
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import pl.voytech.exporter.core.api.builder.dsl.export
 import pl.voytech.exporter.core.api.builder.dsl.table
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.RowSelectors
@@ -17,6 +15,7 @@ import pl.voytech.exporter.core.model.attributes.column.width
 import pl.voytech.exporter.core.model.attributes.row.RowHeightAttribute
 import pl.voytech.exporter.core.model.attributes.row.height
 import pl.voytech.exporter.core.model.attributes.table.FilterAndSortTableAttribute
+import pl.voytech.exporter.core.model.attributes.table.template
 import pl.voytech.exporter.core.utils.PoiTableAssert
 import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
@@ -207,40 +206,36 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should interpolate dataset on excel template file`() {
-        val file = File("test2.xlsx")
         ZipSecureFile.setMinInflateRatio(0.001)
-        val productList = createDataSet(1000)
-        FileOutputStream(file).use {
-            productList.export(it) {
-                table {
-                    name = "Products table"
-                    firstRow = 1
-                    columns {
-                        column("nr")
-                        column(Product::code)
-                        column(Product::name)
-                        column(Product::description)
-                        column(Product::manufacturer)
-                        column(Product::distributionDate) {
-                            attributes(
-                                dataFormat { value = "dd.mm.YYYY" }
-                            )
-                        }
+        createDataSet(1000).tabulate(
+            table {
+                name = "Products table"
+                firstRow = 1
+                attributes( template { fileName = "src/test/resources/template.xlsx" } )
+                columns {
+                    column("nr")
+                    column(Product::code)
+                    column(Product::name)
+                    column(Product::description)
+                    column(Product::manufacturer)
+                    column(Product::distributionDate) {
+                        attributes(
+                            dataFormat { value = "dd.mm.YYYY" }
+                        )
                     }
-                    rows {
-                        row {
-                            selector = RowSelectors.all()
-                            cells {
-                                forColumn("nr") { eval = { row -> row.objectIndex?.plus(1) } }
-                            }
+                }
+                rows {
+                    row {
+                        selector = RowSelectors.all()
+                        cells {
+                            forColumn("nr") { eval = { row -> row.objectIndex?.plus(1) } }
                         }
                     }
                 }
-                operations = xlsx(ClassLoader.getSystemResourceAsStream("template.xlsx"))
-            }
-        }
+            },
+            File("test2.xlsx")
+        )
 
-        assertNotNull(file)
         PoiTableAssert<Product>(
             tableName = "Products table",
             file = File("test2.xlsx"),

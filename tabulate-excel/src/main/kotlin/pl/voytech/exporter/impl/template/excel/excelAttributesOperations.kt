@@ -17,6 +17,7 @@ import pl.voytech.exporter.core.model.attributes.cell.enums.contract.BorderStyle
 import pl.voytech.exporter.core.model.attributes.column.ColumnWidthAttribute
 import pl.voytech.exporter.core.model.attributes.row.RowHeightAttribute
 import pl.voytech.exporter.core.model.attributes.table.FilterAndSortTableAttribute
+import pl.voytech.exporter.core.model.attributes.table.TemplateFileAttribute
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.AttributedColumn
 import pl.voytech.exporter.core.template.context.AttributedRow
@@ -32,6 +33,7 @@ import java.awt.font.FontRenderContext
 import java.awt.font.TextAttribute
 import java.awt.font.TextLayout
 import java.awt.geom.Rectangle2D
+import java.io.FileInputStream
 import java.text.AttributedString
 import kotlin.math.roundToInt
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
@@ -107,7 +109,13 @@ class CellBordersAttributeRenderOperation<T>(override val adaptee: ApachePoiExce
             attribute.leftBorderColor?.run { (it as XSSFCellStyle).setLeftBorderColor(ApachePoiExcelFacade.color(this)) }
             attribute.rightBorderColor?.run { (it as XSSFCellStyle).setRightBorderColor(ApachePoiExcelFacade.color(this)) }
             attribute.topBorderColor?.run { (it as XSSFCellStyle).setTopBorderColor(ApachePoiExcelFacade.color(this)) }
-            attribute.bottomBorderColor?.run { (it as XSSFCellStyle).setBottomBorderColor(ApachePoiExcelFacade.color(this)) }
+            attribute.bottomBorderColor?.run {
+                (it as XSSFCellStyle).setBottomBorderColor(
+                    ApachePoiExcelFacade.color(
+                        this
+                    )
+                )
+            }
             attribute.leftBorderStyle?.run { it.borderLeft = resolveBorderStyle(this) }
             attribute.rightBorderStyle?.run { it.borderRight = resolveBorderStyle(this) }
             attribute.topBorderStyle?.run { it.borderTop = resolveBorderStyle(this) }
@@ -117,7 +125,7 @@ class CellBordersAttributeRenderOperation<T>(override val adaptee: ApachePoiExce
 
     private fun resolveBorderStyle(style: BorderStyle): PoiBorderStyle {
         return when (style.getBorderStyleId()) {
-            DefaultBorderStyle.DASHED.name ->PoiBorderStyle.DASHED
+            DefaultBorderStyle.DASHED.name -> PoiBorderStyle.DASHED
             DefaultBorderStyle.DOTTED.name -> PoiBorderStyle.DOTTED
             DefaultBorderStyle.SOLID.name -> PoiBorderStyle.THIN
             DefaultBorderStyle.DOUBLE.name -> PoiBorderStyle.DOUBLE
@@ -255,8 +263,20 @@ class FilterAndSortTableAttributeRenderOperation(override val adaptee: ApachePoi
     }
 }
 
+class TemplateFileAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
+    AdaptingTableAttributeRenderOperation<ApachePoiExcelFacade, TemplateFileAttribute>(adaptee) {
+    override fun attributeType(): Class<out TemplateFileAttribute> = TemplateFileAttribute::class.java
+    override fun priority() = -1
+    override fun renderAttribute(table: Table<*>, attribute: TemplateFileAttribute) {
+        adaptee.createWorkbook(FileInputStream(attribute.fileName)).let {
+            adaptee.assertTableSheet(table.name)
+        }
+    }
+}
+
 internal fun tableAttributesOperations(adaptee: ApachePoiExcelFacade) = setOf(
-    FilterAndSortTableAttributeRenderOperation(adaptee)
+    FilterAndSortTableAttributeRenderOperation(adaptee),
+    TemplateFileAttributeRenderOperation(adaptee)
 )
 
 internal fun <T> rowAttributesOperations(adaptee: ApachePoiExcelFacade) = setOf(

@@ -14,7 +14,6 @@ import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.context.CellValue
 import pl.voytech.exporter.core.template.operations.*
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade
-import java.io.InputStream
 import java.io.OutputStream
 import java.time.Instant
 import java.time.LocalDate
@@ -22,15 +21,23 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOperationConfiguringFactory<T> {
+fun <T> apachePoiExcelExportFactory(): ExportOperationConfiguringFactory<T> {
     return object : ExportOperationConfiguringFactory<T>() {
 
-        private val poi = ApachePoiExcelFacade(templateFile)
+        private val poi = ApachePoiExcelFacade()
 
         override fun getExportOperationsFactory(): ExportOperationsFactory<T> =
             object : ExportOperationsFactory<T> {
-                override fun createLifecycleOperations(): LifecycleOperations =
-                    object : AdaptingLifecycleOperations<ApachePoiExcelFacade>(poi) {
+                override fun createLifecycleOperations(): LifecycleOperations<T> =
+                    object : AdaptingLifecycleOperations<T, ApachePoiExcelFacade>(poi) {
+
+                        override fun createTable(builder: TableBuilder<T>): Table<T> {
+                            return builder.build().also {
+                                adaptee.createWorkbook()
+                                adaptee.assertTableSheet(it.name)
+                            }
+                        }
+
                         override fun finish(stream: OutputStream) {
                             adaptee.workbook().run {
                                 write(stream)
@@ -41,11 +48,6 @@ fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOp
 
                 override fun createTableRenderOperations(): TableRenderOperations<T> =
                     object : AdaptingTableRenderOperations<T, ApachePoiExcelFacade>(poi) {
-                        override fun createTable(builder: TableBuilder<T>): Table<T> {
-                            return builder.build().also {
-                                adaptee.assertTableSheet(it.name)
-                            }
-                        }
 
                         override fun renderRow(context: AttributedRow<T>) {
                             adaptee.assertRow(context.getTableId(), context.rowIndex)
@@ -130,5 +132,5 @@ fun <T> apachePoiExcelExportFactory(templateFile: InputStream? = null): ExportOp
     }
 }
 
-fun <T> xlsx(templateFile: InputStream? = null): ExportOperations<T> =
-    apachePoiExcelExportFactory<T>(templateFile).createOperations()
+fun <T> xlsx(): ExportOperations<T> =
+    apachePoiExcelExportFactory<T>().createOperations()

@@ -49,7 +49,7 @@ class DatabindTest {
     private fun <T> mock() : ExportOperationConfiguringFactory<T> {
         return object: ExportOperationConfiguringFactory<T>() {
             override fun getExportOperationsFactory(): ExportOperationsFactory<T> = object : ExportOperationsFactory<T> {
-                override fun createLifecycleOperations(): LifecycleOperations = object : LifecycleOperations {
+                override fun createLifecycleOperations(): LifecycleOperations<T> = object : LifecycleOperations<T> {
                     override fun finish(stream: OutputStream) {
                         println("finish!")
                     }
