@@ -272,27 +272,24 @@ class ApachePoiTabulateTests {
     @Test
     fun `should export to excel file with excel table feature`() {
         val productList = createDataSet(1000)
-        val file = File("test3.xlsx")
-        val table = table<Product> {
-            name = "Products table"
-            attributes(FilterAndSortTableAttribute(rowRange = (0..999), columnRange = (0..5)))
-            columns {
-                column(Product::code)
-                column(Product::name)
-                column(Product::description)
-                column(Product::manufacturer)
-                column(Product::price)
-                column(Product::distributionDate) {
-                    attributes(
-                        dataFormat { value = "dd.mm.YYYY" }
-                    )
+        productList.tabulate(
+            table {
+                name = "Products table"
+                attributes(FilterAndSortTableAttribute(rowRange = (0..999), columnRange = (0..5)))
+                columns {
+                    column(Product::code)
+                    column(Product::name)
+                    column(Product::description)
+                    column(Product::manufacturer)
+                    column(Product::price)
+                    column(Product::distributionDate) {
+                        attributes(
+                            dataFormat { value = "dd.mm.YYYY" }
+                        )
+                    }
                 }
-            }
-        }
-        FileOutputStream(file).use {
-            productList.tabulate(table, xlsx(), it)
-        }
-        assertNotNull(file)
+            }, File("test3.xlsx")
+        )
         PoiTableAssert<Product>(
             tableName = "Products table",
             file = File("test3.xlsx"),
