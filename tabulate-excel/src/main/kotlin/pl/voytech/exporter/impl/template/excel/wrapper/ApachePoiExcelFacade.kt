@@ -1,7 +1,6 @@
 package pl.voytech.exporter.impl.template.excel.wrapper
 
 import org.apache.poi.ss.usermodel.*
-import pl.voytech.exporter.core.template.context.CellValue
 import org.apache.poi.util.IOUtils
 import org.apache.poi.xssf.streaming.SXSSFCell
 import org.apache.poi.xssf.streaming.SXSSFRow
@@ -13,20 +12,26 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.attributes.cell.Color
 import pl.voytech.exporter.core.template.context.AttributedCell
+import pl.voytech.exporter.core.template.context.CellValue
 import pl.voytech.exporter.core.template.context.Coordinates
 import pl.voytech.exporter.core.template.operations.impl.putCachedValueIfAbsent
 import java.io.FileInputStream
 import java.io.InputStream
 
 
-class ApachePoiExcelFacade(templateFile: InputStream? = null) {
+class ApachePoiExcelFacade {
 
     private val CELL_STYLE_CACHE_KEY: String = "cellStyle"
 
-    private val adaptee: SXSSFWorkbook = if (templateFile != null) {
-        SXSSFWorkbook(WorkbookFactory.create(templateFile) as XSSFWorkbook?, 100)
-    } else {
-        SXSSFWorkbook()
+    private lateinit var adaptee: SXSSFWorkbook
+
+    fun createWorkbook(templateFile: InputStream? = null): SXSSFWorkbook {
+        adaptee = if (templateFile != null) {
+            SXSSFWorkbook(WorkbookFactory.create(templateFile) as XSSFWorkbook?, 100)
+        } else {
+            SXSSFWorkbook()
+        }
+        return adaptee
     }
 
     fun workbook(): SXSSFWorkbook = adaptee
