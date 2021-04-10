@@ -14,7 +14,9 @@ class PoiStateProvider : StateProvider<ApachePoiExcelFacade> {
 
     override fun createState(file: File): ApachePoiExcelFacade {
         ZipSecureFile.setMinInflateRatio(0.001)
-        return ApachePoiExcelFacade(file.inputStream())
+        return ApachePoiExcelFacade().also {
+            it.createWorkbook(file.inputStream())
+        }
     }
 
     override fun getPresentTableNames(api: ApachePoiExcelFacade): List<String> =

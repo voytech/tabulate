@@ -37,7 +37,7 @@ open class TableExportTemplate<T>() {
     }
 
     private fun add(tableBuilder: TableBuilder<T>, collection: Collection<T>) {
-        delegate.tableRenderOperations.createTable(tableBuilder).let { table ->
+        delegate.lifecycleOperations.createTable(tableBuilder).let { table ->
             GlobalContextAndAttributes(
                 tableModel = table,
                 tableName = table.name ?: "table-${NextId.nextId()}",
