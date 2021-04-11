@@ -268,7 +268,7 @@ class TemplateFileAttributeRenderOperation(override val adaptee: ApachePoiExcelF
     override fun attributeType(): Class<out TemplateFileAttribute> = TemplateFileAttribute::class.java
     override fun priority() = -1
     override fun renderAttribute(table: Table<*>, attribute: TemplateFileAttribute) {
-        adaptee.createWorkbook(FileInputStream(attribute.fileName)).let {
+        adaptee.createWorkbook(FileInputStream(attribute.fileName), true).let {
             adaptee.assertTableSheet(table.name)
         }
     }

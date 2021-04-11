@@ -14,14 +14,12 @@ import pl.voytech.exporter.core.model.attributes.cell.enums.contract.BorderStyle
 import pl.voytech.exporter.core.template.export
 import pl.voytech.exporter.core.utils.PoiTableAssert
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
-import pl.voytech.exporter.impl.template.excel.xlsx
 import pl.voytech.exporter.impl.template.model.ExcelCellFills
 import pl.voytech.exporter.testutils.CellPosition
 import pl.voytech.exporter.testutils.cellassertions.AssertCellValue
 import pl.voytech.exporter.testutils.cellassertions.AssertContainsCellAttributes
 import pl.voytech.exporter.testutils.cellassertions.AssertEqualAttribute
 import java.io.File
-import java.io.FileOutputStream
 import java.util.stream.Stream
 
 @DisplayName("Tests for model attributes")
@@ -48,22 +46,21 @@ class ExcelAttributesTests {
     @MethodSource("cellAttributesProvider")
     fun `should export with cell attribute`(attribute: CellAttribute, expectedAttribute: CellAttribute) {
         // when
-        FileOutputStream(File("test1.xlsx")).use {
-            table<Any> {
-                name = "test"
-                columns { count = 1 }
-                rows {
-                    row {
-                        cells {
-                            cell {
-                                value = "Value"
-                                attributes(attribute)
-                            }
+        table<Any> {
+            name = "test"
+            columns { count = 1 }
+            rows {
+                row {
+                    cells {
+                        cell {
+                            value = "Value"
+                            attributes(attribute)
                         }
                     }
                 }
-            }.export(xlsx(), it)
-        }
+            }
+        }.export(File("test1.xlsx"))
+
         // then
         PoiTableAssert<Any>(
             tableName = "test",

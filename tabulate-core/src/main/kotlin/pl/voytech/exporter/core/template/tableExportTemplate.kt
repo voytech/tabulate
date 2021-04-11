@@ -36,7 +36,7 @@ open class TableExportTemplate<T>() {
         delegate.lifecycleOperations.initialize()
     }
 
-    private fun add(tableBuilder: TableBuilder<T>, collection: Collection<T>) {
+    private fun bind(tableBuilder: TableBuilder<T>, collection: Collection<T>) {
         delegate.lifecycleOperations.createTable(tableBuilder).let { table ->
             GlobalContextAndAttributes(
                 tableModel = table,
@@ -46,7 +46,7 @@ open class TableExportTemplate<T>() {
             ).also {
                 renderColumns(it, ColumnRenderPhase.BEFORE_FIRST_ROW)
                 with(OperationContextIterator(RowContextResolver(table, it, collection))) {
-                    while (this.hasNext()) {
+                    while (hasNext()) {
                         renderNextRow(it, this)
                     }
                 }
@@ -55,19 +55,20 @@ open class TableExportTemplate<T>() {
         }
     }
 
-    private fun locate(id: String) : ExportOperationFactoryProvider? {
-        val loader: ServiceLoader<ExportOperationFactoryProvider> = ServiceLoader.load(ExportOperationFactoryProvider::class.java)
+    private fun locate(id: String): ExportOperationFactoryProvider? {
+        val loader: ServiceLoader<ExportOperationFactoryProvider> =
+            ServiceLoader.load(ExportOperationFactoryProvider::class.java)
         return loader.find { it.id() == id }
     }
 
     fun export(tableBuilder: TableBuilder<T>, collection: Collection<T>, stream: OutputStream) {
         initialize()
-        add(tableBuilder, collection).also { delegate.lifecycleOperations.finish(stream) }
+        bind(tableBuilder, collection).also { delegate.lifecycleOperations.finish(stream) }
     }
 
     fun export(tableBuilder: TableBuilder<T>, stream: OutputStream) {
         initialize()
-        add(tableBuilder, emptyList()).also { delegate.lifecycleOperations.finish(stream) }
+        bind(tableBuilder, emptyList()).also { delegate.lifecycleOperations.finish(stream) }
     }
 
     fun export(stream: OutputStream) {
@@ -104,20 +105,26 @@ open class TableExportTemplate<T>() {
     }
 }
 
-fun <T> Collection<T>.tabulate(tableBuilder: TableBuilder<T>, delegate: ExportOperations<T>, stream: OutputStream) {
-    TableExportTemplate(delegate).export(tableBuilder, this, stream)
+fun <T> Collection<T>.tabulate(tableBuilder: TableBuilder<T>, operations: ExportOperations<T>, stream: OutputStream) {
+    TableExportTemplate(operations).export(tableBuilder, this, stream)
 }
 
 fun <T> Collection<T>.tabulate(tableBuilder: TableBuilder<T>, id: String, stream: OutputStream) {
     TableExportTemplate<T>(id).export(tableBuilder, this, stream)
 }
 
-fun <T> Collection<T>.tabulate(tableBuilder: TableBuilder<T>, file : File) {
+fun <T> Collection<T>.tabulate(tableBuilder: TableBuilder<T>, file: File) {
     file.outputStream().use {
         TableExportTemplate<T>(file.extension).export(tableBuilder, this, it)
     }
 }
 
-fun <T> TableBuilder<T>.export(delegate: ExportOperations<T>, stream: OutputStream) {
-    TableExportTemplate(delegate).export(this, stream)
+fun <T> TableBuilder<T>.export(operations: ExportOperations<T>, stream: OutputStream) {
+    TableExportTemplate(operations).export(this, stream)
+}
+
+fun <T> TableBuilder<T>.export(file: File) {
+    file.outputStream().use {
+        TableExportTemplate<T>(file.extension).export(this,  it)
+    }
 }

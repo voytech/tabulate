@@ -20,7 +20,6 @@ import pl.voytech.exporter.core.utils.PoiTableAssert
 import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
 import pl.voytech.exporter.impl.template.excel.dataFormat
-import pl.voytech.exporter.impl.template.excel.xlsx
 import pl.voytech.exporter.testutils.CellPosition
 import pl.voytech.exporter.testutils.CellRange
 import pl.voytech.exporter.testutils.cellassertions.AssertCellValue
@@ -28,7 +27,6 @@ import pl.voytech.exporter.testutils.cellassertions.AssertContainsCellAttributes
 import pl.voytech.exporter.testutils.cellassertions.AssertMany
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.random.Random
@@ -40,7 +38,6 @@ class ApachePoiTabulateTests {
     @Test
     fun `should export product data set to excel file`() {
         val productList = createDataSet(1000)
-        val file = File("test0.xlsx")
         val table = table<Product> {
             name = "Products table"
             firstRow = 2
@@ -135,10 +132,11 @@ class ApachePoiTabulateTests {
             }
         }
 
-        val elapsedTime = FileOutputStream(file).use { outputStream ->
-            measureTimeMillis { productList.tabulate(table, xlsx(), outputStream) }
+        measureTimeMillis {
+            productList.tabulate(table, File("test0.xlsx"))
+        } .also {
+            println("Elapsed time: $it")
         }
-        println("Elapsed time: $elapsedTime")
 
         PoiTableAssert<Product>(
             tableName = "Products table",
@@ -211,7 +209,7 @@ class ApachePoiTabulateTests {
             table {
                 name = "Products table"
                 firstRow = 1
-                attributes( template { fileName = "src/test/resources/template.xlsx" } )
+                attributes(template { fileName = "src/test/resources/template.xlsx" })
                 columns {
                     column("nr")
                     column(Product::code)
@@ -296,7 +294,6 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export table with custom rows and cell and row spans`() {
-        val file = File("test1.xlsx")
         val cellStyle = listOf(
             alignment { horizontal = DefaultHorizontalAlignment.CENTER },
             background { color = Colors.WHITE },
@@ -318,41 +315,41 @@ class ApachePoiTabulateTests {
                 fontColor = Colors.BLACK
             }
         )
-        FileOutputStream(file).use {
-            table<Any> {
-                name = "Test table"
-                columns { count = 4 }
-                attributes(cellStyle)
-                rows {
-                    row {
-                        cells {
-                            cell {
-                                rowSpan = 2
-                                value = "Row span"
-                            }
-                            cell {
-                                colSpan = 2
-                                value = "This is very long title. 2 columns span. Row 1"
-                            }
-                            cell {
-                                value = "Last column. Row 1"
-                            }
+
+        table<Any> {
+            name = "Test table"
+            columns { count = 4 }
+            attributes(cellStyle)
+            rows {
+                row {
+                    cells {
+                        cell {
+                            rowSpan = 2
+                            value = "Row span"
                         }
-                    }
-                    row {
-                        cells {
-                            cell {
-                                colSpan = 2
-                                value = "This is very long title. 2 columns span. Row 2"
-                            }
-                            cell {
-                                value = "Last column. Row 2"
-                            }
+                        cell {
+                            colSpan = 2
+                            value = "This is very long title. 2 columns span. Row 1"
+                        }
+                        cell {
+                            value = "Last column. Row 1"
                         }
                     }
                 }
-            }.export(xlsx(), it)
-        }
+                row {
+                    cells {
+                        cell {
+                            colSpan = 2
+                            value = "This is very long title. 2 columns span. Row 2"
+                        }
+                        cell {
+                            value = "Last column. Row 2"
+                        }
+                    }
+                }
+            }
+        }.export(File("test1.xlsx"))
+
         PoiTableAssert<Product>(
             tableName = "Test table",
             file = File("test1.xlsx"),
@@ -388,30 +385,28 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export table with custom row with image`() {
-        val file = File("test_img.xlsx")
-        FileOutputStream(file).use {
-            table<Any> {
-                name = "Test table"
-                columns {
-                    column("description")
-                    column("image") {
-                        attributes(width { px = 300 })
-                    }
+          table<Any> {
+            name = "Test table"
+            columns {
+                column("description")
+                column("image") {
+                    attributes(width { px = 300 })
                 }
-                rows {
-                    row {
-                        attributes(height { px = 200 })
-                        cells {
-                            cell { value = "It is : " }
-                            cell {
-                                value = "src/test/resources/kotlin.jpeg"
-                                type = CellType.IMAGE_URL
-                            }
+            }
+            rows {
+                row {
+                    attributes(height { px = 200 })
+                    cells {
+                        cell { value = "It is : " }
+                        cell {
+                            value = "src/test/resources/kotlin.jpeg"
+                            type = CellType.IMAGE_URL
                         }
                     }
                 }
-            }.export(xlsx(), it)
-        }
+            }
+        }.export( File("test_img.xlsx"))
+
         PoiTableAssert<Product>(
             tableName = "Test table",
             file = File("test_img.xlsx"),

@@ -21,20 +21,16 @@ import java.io.InputStream
 
 class ApachePoiExcelFacade {
 
-    private val CELL_STYLE_CACHE_KEY: String = "cellStyle"
+    private var adaptee: SXSSFWorkbook? = null
 
-    private lateinit var adaptee: SXSSFWorkbook
-
-    fun createWorkbook(templateFile: InputStream? = null): SXSSFWorkbook {
-        adaptee = if (templateFile != null) {
-            SXSSFWorkbook(WorkbookFactory.create(templateFile) as XSSFWorkbook?, 100)
-        } else {
-            SXSSFWorkbook()
+    fun createWorkbook(templateFile: InputStream? = null, forceRecreate: Boolean = false): SXSSFWorkbook {
+        if (adaptee == null || forceRecreate) {
+            adaptee = createWorkbookInternal(templateFile)
         }
-        return adaptee
+        return adaptee!!
     }
 
-    fun workbook(): SXSSFWorkbook = adaptee
+    fun workbook(): SXSSFWorkbook = adaptee!!
 
     fun tableSheet(tableName: String): SXSSFSheet =
         workbook().getSheet(tableName)
@@ -46,7 +42,7 @@ class ApachePoiExcelFacade {
         row(tableId, rowIndex) ?: createRow(tableId, rowIndex)
 
     fun xssfCell(coordinates: Coordinates): XSSFCell? =
-        adaptee.xssfWorkbook
+        workbook().xssfWorkbook
             .getSheet(coordinates.tableName)
             .getRow(coordinates.rowIndex)
             .getCell(coordinates.columnIndex)
@@ -90,14 +86,22 @@ class ApachePoiExcelFacade {
                             picture.clientAnchor.row1 == context.rowIndex
                 }
             } else false
-        }?.let { it.drawing?.shapes?.get(0) as Picture  }
-         ?.let{
-            CellValue(
-                value = it.pictureData.data,
-                type = CellType.IMAGE_DATA,
-                colSpan = it.clientAnchor.col2.toInt() - it.clientAnchor.col1.toInt(),
-                rowSpan = it.clientAnchor.row2 - it.clientAnchor.row1
-            )
+        }?.let { it.drawing?.shapes?.get(0) as Picture }
+            ?.let {
+                CellValue(
+                    value = it.pictureData.data,
+                    type = CellType.IMAGE_DATA,
+                    colSpan = it.clientAnchor.col2.toInt() - it.clientAnchor.col1.toInt(),
+                    rowSpan = it.clientAnchor.row2 - it.clientAnchor.row1
+                )
+            }
+    }
+
+    private fun createWorkbookInternal(templateFile: InputStream? = null, rowAccessWindowSize: Int = 100): SXSSFWorkbook {
+        return if (templateFile != null) {
+            SXSSFWorkbook(WorkbookFactory.create(templateFile) as XSSFWorkbook?, rowAccessWindowSize)
+        } else {
+            SXSSFWorkbook()
         }
     }
 
@@ -133,6 +137,7 @@ class ApachePoiExcelFacade {
         tableSheet(tableId).getRow(rowIndex)
 
     companion object {
+        private const val CELL_STYLE_CACHE_KEY: String = "cellStyle"
         fun color(color: Color): XSSFColor =
             XSSFColor(byteArrayOf(color.r.toByte(), color.g.toByte(), color.b.toByte()), null)
     }
