@@ -21,8 +21,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-fun <T> apachePoiExcelExportFactory(): ExportOperationConfiguringFactory<T> {
-    return object : ExportOperationConfiguringFactory<T>() {
+class PoiExcelExportOperationsFactory<T>: ExportOperationConfiguringFactory<T>() {
 
         private val poi = ApachePoiExcelFacade()
 
@@ -129,8 +128,7 @@ fun <T> apachePoiExcelExportFactory(): ExportOperationConfiguringFactory<T> {
                 override fun createCellAttributeRenderOperations(): Set<AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, out CellAttribute>> =
                     cellAttributesOperations(poi)
             }
-    }
 }
 
 fun <T> xlsx(): ExportOperations<T> =
-    apachePoiExcelExportFactory<T>().createOperations()
+    PoiExcelExportOperationsFactory<T>().createOperations()

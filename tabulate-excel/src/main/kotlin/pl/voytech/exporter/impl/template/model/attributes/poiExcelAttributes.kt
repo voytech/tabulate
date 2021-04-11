@@ -1,4 +1,4 @@
-package pl.voytech.exporter.impl.template.excel
+package pl.voytech.exporter.impl.template.model.attributes
 
 import pl.voytech.exporter.core.api.builder.CellAttributeBuilder
 import pl.voytech.exporter.core.model.attributes.CellAttribute
