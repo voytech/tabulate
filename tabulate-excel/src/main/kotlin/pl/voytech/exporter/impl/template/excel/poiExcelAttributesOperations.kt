@@ -2,9 +2,7 @@ package pl.voytech.exporter.impl.template.excel
 
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.FontUnderline
-import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.util.CellReference
-import org.apache.poi.ss.util.SheetUtil
 import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import org.apache.poi.xssf.usermodel.XSSFFont
 import pl.voytech.exporter.core.model.Table
@@ -29,13 +27,8 @@ import pl.voytech.exporter.core.template.operations.impl.getCachedValue
 import pl.voytech.exporter.core.template.operations.impl.putCachedValue
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiUtils
-import java.awt.font.FontRenderContext
-import java.awt.font.TextAttribute
-import java.awt.font.TextLayout
-import java.awt.geom.Rectangle2D
+import pl.voytech.exporter.impl.template.model.attributes.CellExcelDataFormatAttribute
 import java.io.FileInputStream
-import java.text.AttributedString
-import kotlin.math.roundToInt
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 
 class CellTextStylesAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
@@ -194,36 +187,12 @@ class CellDataFormatAttributeRenderOperation<T>(override val adaptee: ApachePoiE
 
 class ColumnWidthAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
     AdaptingColumnAttributeRenderOperation<ApachePoiExcelFacade, T, ColumnWidthAttribute>(adaptee) {
+
     override fun attributeType(): Class<out ColumnWidthAttribute> = ColumnWidthAttribute::class.java
-
-    private fun getStringWidth(text: String, cellFont: XSSFFont, workbook: Workbook): Int {
-        val attributedString = AttributedString(text)
-        attributedString.addAttribute(TextAttribute.FAMILY, cellFont.fontName, 0, text.length)
-        attributedString.addAttribute(TextAttribute.SIZE, cellFont.fontHeightInPoints.toFloat())
-        if (cellFont.bold) attributedString.addAttribute(
-            TextAttribute.WEIGHT,
-            TextAttribute.WEIGHT_BOLD,
-            0,
-            text.length
-        )
-        if (cellFont.italic) attributedString.addAttribute(
-            TextAttribute.POSTURE,
-            TextAttribute.POSTURE_OBLIQUE,
-            0,
-            text.length
-        )
-
-        val fontRenderContext = FontRenderContext(null, true, true)
-        val layout = TextLayout(attributedString.iterator, fontRenderContext)
-        val bounds: Rectangle2D = layout.bounds
-        val frameWidth: Double = bounds.x + bounds.width
-        val defaultCharWidth = SheetUtil.getDefaultCharWidth(workbook)
-        return (frameWidth / defaultCharWidth * 256).roundToInt()
-    }
 
     override fun renderAttribute(context: AttributedColumn, attribute: ColumnWidthAttribute) {
         adaptee.tableSheet(context.getTableId()).let {
-            if (attribute.auto == true || attribute.px == -1) {
+            if (attribute.auto == true || attribute.px <= 0) {
                 if (!it.isColumnTrackedForAutoSizing(context.columnIndex)) {
                     it.trackColumnForAutoSizing(context.columnIndex)
                 }

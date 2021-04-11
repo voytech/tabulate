@@ -18,8 +18,8 @@ import pl.voytech.exporter.core.model.attributes.table.FilterAndSortTableAttribu
 import pl.voytech.exporter.core.model.attributes.table.template
 import pl.voytech.exporter.core.utils.PoiTableAssert
 import pl.voytech.exporter.data.Product
-import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
-import pl.voytech.exporter.impl.template.excel.dataFormat
+import pl.voytech.exporter.impl.template.model.attributes.CellExcelDataFormatAttribute
+import pl.voytech.exporter.impl.template.model.attributes.dataFormat
 import pl.voytech.exporter.testutils.CellPosition
 import pl.voytech.exporter.testutils.CellRange
 import pl.voytech.exporter.testutils.cellassertions.AssertCellValue

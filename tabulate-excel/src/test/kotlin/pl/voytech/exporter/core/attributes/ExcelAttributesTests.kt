@@ -13,8 +13,8 @@ import pl.voytech.exporter.core.model.attributes.cell.enums.*
 import pl.voytech.exporter.core.model.attributes.cell.enums.contract.BorderStyle
 import pl.voytech.exporter.core.template.export
 import pl.voytech.exporter.core.utils.PoiTableAssert
-import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
 import pl.voytech.exporter.impl.template.model.ExcelCellFills
+import pl.voytech.exporter.impl.template.model.attributes.CellExcelDataFormatAttribute
 import pl.voytech.exporter.testutils.CellPosition
 import pl.voytech.exporter.testutils.cellassertions.AssertCellValue
 import pl.voytech.exporter.testutils.cellassertions.AssertContainsCellAttributes
