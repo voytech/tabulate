@@ -8,11 +8,11 @@ import pl.voytech.exporter.core.model.attributes.cell.*
 import pl.voytech.exporter.core.model.attributes.cell.enums.*
 import pl.voytech.exporter.core.model.attributes.cell.enums.contract.BorderStyle
 import pl.voytech.exporter.core.template.context.Coordinates
-import pl.voytech.exporter.impl.template.excel.CellExcelDataFormatAttribute
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiUtils
 import pl.voytech.exporter.impl.template.model.ExcelBorderStyle
 import pl.voytech.exporter.impl.template.model.ExcelCellFills
+import pl.voytech.exporter.impl.template.model.attributes.CellExcelDataFormatAttribute
 import pl.voytech.exporter.testutils.AttributeResolver
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 import org.apache.poi.ss.usermodel.HorizontalAlignment as PoiHorizontalAlignment

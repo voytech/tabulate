@@ -1,1 +1,1 @@
-pl.voytech.exporter.impl.template.excel.ExcelTabulateProvider
+pl.voytech.exporter.impl.template.excel.PoiExcelTabulateProvider
