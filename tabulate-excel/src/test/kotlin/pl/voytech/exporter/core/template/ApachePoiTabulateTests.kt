@@ -38,102 +38,100 @@ class ApachePoiTabulateTests {
     @Test
     fun `should export product data set to excel file`() {
         val productList = createDataSet(1000)
-        val table = table<Product> {
-            name = "Products table"
-            firstRow = 2
-            firstColumn = 2
-            columns {
-                column("nr") {
-                    attributes(
-                        width { px = 50 },
-                        text {
-                            fontFamily = "Times New Roman"
-                            fontColor = Color(10, 100, 100)
-                            fontSize = 12
-                            italic = true
-                            weight = DefaultWeightStyle.BOLD
-                            strikeout = true
-                            underline = true
-                        }
-                    )
-                }
-                column(Product::code) {
-                    attributes(
-                        width { auto = true },
-                        text {
-                            fontFamily = "Times New Roman"
-                            fontColor = Colors.BLACK
-                            fontSize = 12
-                        },
-                        background { color = Colors.BLUE }
-                    )
-                }
-                column(Product::name) {
-                    attributes(width { auto = true })
-                }
-                column(Product::description) {
-                    attributes(width { auto = true })
-                }
-                column(Product::manufacturer) {
-                    attributes(width { auto = true })
-                }
-                column(Product::price) {
-                    attributes(width { auto = true })
-                }
-                column(Product::distributionDate) {
-                    attributes(
-                        width { auto = true },
-                        dataFormat { value = "dd.mm.YYYY" }
-                    )
-                }
-            }
-            rows {
-                row {
-                    cells {
-                        forColumn("nr") { value = "Nr.:" }
-                        forColumn(Product::code) { value = "Code" }
-                        forColumn(Product::name) { value = "Name" }
-                        forColumn(Product::description) { value = "Description" }
-                        forColumn(Product::manufacturer) { value = "Manufacturer" }
-                        forColumn(Product::price) { value = "Price" }
-                        forColumn(Product::distributionDate) { value = "Distribution" }
-                    }
-                    attributes(
-                        RowHeightAttribute(px = 120),
-                        CellBordersAttribute(
-                            leftBorderStyle = DefaultBorderStyle.SOLID,
-                            leftBorderColor = Colors.BLACK,
-                            rightBorderStyle = DefaultBorderStyle.SOLID,
-                            rightBorderColor = Colors.BLACK,
-                            bottomBorderStyle = DefaultBorderStyle.SOLID,
-                            bottomBorderColor = Colors.BLACK,
-                            topBorderStyle = DefaultBorderStyle.SOLID,
-                            topBorderColor = Colors.BLACK
-                        ),
-                        CellAlignmentAttribute(
-                            horizontal = DefaultHorizontalAlignment.CENTER,
-                            vertical = DefaultVerticalAlignment.MIDDLE
-                        ),
-                        CellTextStylesAttribute(
-                            fontFamily = "Times New Roman",
-                            fontColor = Color(90, 100, 100),
-                            fontSize = 12,
-                            italic = true,
-                            weight = DefaultWeightStyle.BOLD
-                        )
-                    )
-                }
-                row {
-                    selector = RowSelectors.all()
-                    cells {
-                        forColumn("nr") { eval = { row -> row.objectIndex?.plus(1) } }
-                    }
-                }
-            }
-        }
-
         measureTimeMillis {
-            productList.tabulate(table, File("test0.xlsx"))
+            productList.tabulate("test0.xlsx") {
+                name = "Products table"
+                firstRow = 2
+                firstColumn = 2
+                columns {
+                    column("nr") {
+                        attributes(
+                            width { px = 50 },
+                            text {
+                                fontFamily = "Times New Roman"
+                                fontColor = Color(10, 100, 100)
+                                fontSize = 12
+                                italic = true
+                                weight = DefaultWeightStyle.BOLD
+                                strikeout = true
+                                underline = true
+                            }
+                        )
+                    }
+                    column(Product::code) {
+                        attributes(
+                            width { auto = true },
+                            text {
+                                fontFamily = "Times New Roman"
+                                fontColor = Colors.BLACK
+                                fontSize = 12
+                            },
+                            background { color = Colors.BLUE }
+                        )
+                    }
+                    column(Product::name) {
+                        attributes(width { auto = true })
+                    }
+                    column(Product::description) {
+                        attributes(width { auto = true })
+                    }
+                    column(Product::manufacturer) {
+                        attributes(width { auto = true })
+                    }
+                    column(Product::price) {
+                        attributes(width { auto = true })
+                    }
+                    column(Product::distributionDate) {
+                        attributes(
+                            width { auto = true },
+                            dataFormat { value = "dd.mm.YYYY" }
+                        )
+                    }
+                }
+                rows {
+                    row {
+                        cells {
+                            forColumn("nr") { value = "Nr.:" }
+                            forColumn(Product::code) { value = "Code" }
+                            forColumn(Product::name) { value = "Name" }
+                            forColumn(Product::description) { value = "Description" }
+                            forColumn(Product::manufacturer) { value = "Manufacturer" }
+                            forColumn(Product::price) { value = "Price" }
+                            forColumn(Product::distributionDate) { value = "Distribution" }
+                        }
+                        attributes(
+                            RowHeightAttribute(px = 120),
+                            CellBordersAttribute(
+                                leftBorderStyle = DefaultBorderStyle.SOLID,
+                                leftBorderColor = Colors.BLACK,
+                                rightBorderStyle = DefaultBorderStyle.SOLID,
+                                rightBorderColor = Colors.BLACK,
+                                bottomBorderStyle = DefaultBorderStyle.SOLID,
+                                bottomBorderColor = Colors.BLACK,
+                                topBorderStyle = DefaultBorderStyle.SOLID,
+                                topBorderColor = Colors.BLACK
+                            ),
+                            CellAlignmentAttribute(
+                                horizontal = DefaultHorizontalAlignment.CENTER,
+                                vertical = DefaultVerticalAlignment.MIDDLE
+                            ),
+                            CellTextStylesAttribute(
+                                fontFamily = "Times New Roman",
+                                fontColor = Color(90, 100, 100),
+                                fontSize = 12,
+                                italic = true,
+                                weight = DefaultWeightStyle.BOLD
+                            )
+                        )
+                    }
+                    row {
+                        selector = RowSelectors.all()
+                        cells {
+                            forColumn("nr") { eval = { row -> row.objectIndex?.plus(1) } }
+                        }
+                    }
+                }
+            }
         } .also {
             println("Elapsed time: $it")
         }
@@ -205,34 +203,31 @@ class ApachePoiTabulateTests {
     @Test
     fun `should interpolate dataset on excel template file`() {
         ZipSecureFile.setMinInflateRatio(0.001)
-        createDataSet(1000).tabulate(
-            table {
-                name = "Products table"
-                firstRow = 1
-                attributes(template { fileName = "src/test/resources/template.xlsx" })
-                columns {
-                    column("nr")
-                    column(Product::code)
-                    column(Product::name)
-                    column(Product::description)
-                    column(Product::manufacturer)
-                    column(Product::distributionDate) {
-                        attributes(
-                            dataFormat { value = "dd.mm.YYYY" }
-                        )
+        createDataSet(1000).tabulate("test2.xlsx") {
+            name = "Products table"
+            firstRow = 1
+            attributes(template { fileName = "src/test/resources/template.xlsx" })
+            columns {
+                column("nr")
+                column(Product::code)
+                column(Product::name)
+                column(Product::description)
+                column(Product::manufacturer)
+                column(Product::distributionDate) {
+                    attributes(
+                        dataFormat { value = "dd.mm.YYYY" }
+                    )
+                }
+            }
+            rows {
+                row {
+                    selector = RowSelectors.all()
+                    cells {
+                        forColumn("nr") { eval = { row -> row.objectIndex?.plus(1) } }
                     }
                 }
-                rows {
-                    row {
-                        selector = RowSelectors.all()
-                        cells {
-                            forColumn("nr") { eval = { row -> row.objectIndex?.plus(1) } }
-                        }
-                    }
-                }
-            },
-            File("test2.xlsx")
-        )
+            }
+        }
 
         PoiTableAssert<Product>(
             tableName = "Products table",
@@ -265,24 +260,23 @@ class ApachePoiTabulateTests {
     @Test
     fun `should export to excel file with excel table feature`() {
         val productList = createDataSet(1000)
-        productList.tabulate(
-            table {
-                name = "Products table"
-                attributes(FilterAndSortTableAttribute(rowRange = (0..999), columnRange = (0..5)))
-                columns {
-                    column(Product::code)
-                    column(Product::name)
-                    column(Product::description)
-                    column(Product::manufacturer)
-                    column(Product::price)
-                    column(Product::distributionDate) {
-                        attributes(
-                            dataFormat { value = "dd.mm.YYYY" }
-                        )
-                    }
+        productList.tabulate("test3.xlsx") {
+            name = "Products table"
+            attributes(FilterAndSortTableAttribute(rowRange = (0..999), columnRange = (0..5)))
+            columns {
+                column(Product::code)
+                column(Product::name)
+                column(Product::description)
+                column(Product::manufacturer)
+                column(Product::price)
+                column(Product::distributionDate) {
+                    attributes(
+                        dataFormat { value = "dd.mm.YYYY" }
+                    )
                 }
-            }, File("test3.xlsx")
-        )
+            }
+        }
+
         PoiTableAssert<Product>(
             tableName = "Products table",
             file = File("test3.xlsx"),
