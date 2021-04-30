@@ -2,61 +2,52 @@ package pl.voytech.exporter.core.template.operations
 
 import pl.voytech.exporter.core.api.builder.TableBuilder
 import pl.voytech.exporter.core.model.Table
+import pl.voytech.exporter.core.template.ResultHandler
+import pl.voytech.exporter.core.template.Source
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.AttributedColumn
 import pl.voytech.exporter.core.template.context.AttributedRow
-import pl.voytech.exporter.core.template.operations.impl.AttributeAwareLifecycleOperations
+import pl.voytech.exporter.core.template.operations.impl.AttributeAwareTableOperations
 import pl.voytech.exporter.core.template.operations.impl.AttributeAwareTableRenderOperations
 import pl.voytech.exporter.core.template.operations.impl.AttributesOperations
-import java.io.OutputStream
 
-interface InitOperation {
-    fun initialize() {}
+
+interface LifecycleOperations<T, O> {
+    fun initialize(source : Source<T>, resultHandler: ResultHandler<T, O>)
+    fun finish()
 }
 
-interface CreateTableOperation<T> {
+interface TableOperation<T> {
     fun createTable(builder: TableBuilder<T>): Table<T> = builder.build()
 }
 
-interface FinishOperation {
-    fun finish(stream: OutputStream)
-}
-
-interface LifecycleOperations<T> : InitOperation, CreateTableOperation<T>, FinishOperation
-
-interface ColumnRenderOperation<T> {
+interface TableRenderOperations<T> {
     fun renderColumn(context: AttributedColumn) {}
-}
-
-interface RowRenderOperation<T> {
     fun renderRow(context: AttributedRow<T>) {}
-}
-
-interface CellRenderOperation<T> {
     fun renderRowCell(context: AttributedCell)
 }
 
-interface TableRenderOperations<T> : ColumnRenderOperation<T>, RowRenderOperation<T>, CellRenderOperation<T>
-
-class ExportOperations<T>(
-    val lifecycleOperations: LifecycleOperations<T>,
+class ExportOperations<T, O>(
+    val lifecycleOperations: LifecycleOperations<T, O>,
+    val tableOperation: TableOperation<T>,
     val tableRenderOperations: TableRenderOperations<T>
 )
 
-interface ExportOperationsFactory<T> {
-    fun createLifecycleOperations(): LifecycleOperations<T>
+interface ExportOperationsFactory<T, O> {
+    fun createLifecycleOperations(): LifecycleOperations<T, O>
+    fun createTableOperation(): TableOperation<T>
     fun createTableRenderOperations(): TableRenderOperations<T>
 }
 
-abstract class AdaptingLifecycleOperations<T, A>(val adaptee: A) : LifecycleOperations<T>
+abstract class AdaptingLifecycleOperations<T, O, A>(val adaptee: A) : LifecycleOperations<T , O>
 
 abstract class AdaptingTableRenderOperations<T, A>(val adaptee: A) : TableRenderOperations<T>
 
-abstract class ExportOperationConfiguringFactory<T> : ExportOperationsFactory<T> {
+abstract class ExportOperationsConfiguringFactory<T, O> : ExportOperationsFactory<T, O> {
 
     private var attributeOperations: AttributesOperations<T>? = null
 
-    abstract fun getExportOperationsFactory(): ExportOperationsFactory<T>
+    abstract fun getExportOperationsFactory(): ExportOperationsFactory<T, O>
 
     abstract fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<T>?
 
@@ -71,13 +62,17 @@ abstract class ExportOperationConfiguringFactory<T> : ExportOperationsFactory<T>
         }.also { attributeOperations = it }
     }
 
-    override fun createLifecycleOperations(): LifecycleOperations<T> {
-        val lifecycleOperations = getExportOperationsFactory().createLifecycleOperations()
+    override fun createLifecycleOperations(): LifecycleOperations<T, O> {
+       return getExportOperationsFactory().createLifecycleOperations()
+    }
+
+    override fun createTableOperation(): TableOperation<T> {
+        val tableOp = getExportOperationsFactory().createTableOperation()
         return prepareAttributeOperations().let {
             if (it != null) {
-                AttributeAwareLifecycleOperations(it, lifecycleOperations)
+                AttributeAwareTableOperations(it, tableOp)
             } else {
-                lifecycleOperations
+                tableOp
             }
         }
     }
@@ -93,8 +88,9 @@ abstract class ExportOperationConfiguringFactory<T> : ExportOperationsFactory<T>
         }
     }
 
-    fun createOperations(): ExportOperations<T> = ExportOperations(
+    fun createOperations(): ExportOperations<T, O> = ExportOperations(
         lifecycleOperations = createLifecycleOperations(),
+        tableOperation = createTableOperation(),
         tableRenderOperations = createTableRenderOperations()
     )
 

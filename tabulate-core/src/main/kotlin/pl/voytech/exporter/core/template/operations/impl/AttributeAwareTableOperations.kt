@@ -6,18 +6,17 @@ import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.model.attributes.alias.ColumnAttribute
 import pl.voytech.exporter.core.model.attributes.alias.RowAttribute
 import pl.voytech.exporter.core.model.attributes.alias.TableAttribute
-import pl.voytech.exporter.core.template.operations.LifecycleOperations
-import java.io.OutputStream
+import pl.voytech.exporter.core.template.operations.TableOperation
 import pl.voytech.exporter.core.model.attributes.CellAttribute as CellAttributeClass
 import pl.voytech.exporter.core.model.attributes.ColumnAttribute as ColumnAttributeClass
 import pl.voytech.exporter.core.model.attributes.RowAttribute as RowAttributeClass
 import pl.voytech.exporter.core.model.attributes.TableAttribute as TableAttributeClass
 
 @Suppress("UNCHECKED_CAST")
-class AttributeAwareLifecycleOperations<T>(
+class AttributeAwareTableOperations<T>(
     private val attributeOperations: AttributesOperations<T>,
-    private val baseLifecycleOperations: LifecycleOperations<T>
-) : LifecycleOperations<T> {
+    private val baseLifecycleOperations: TableOperation<T>
+) : TableOperation<T> {
 
     private fun sortedTableAttributes(tableAttributes: Set<TableAttribute>?): Set<TableAttribute>? {
         return tableAttributes?.toSortedSet(compareBy {
@@ -63,8 +62,6 @@ class AttributeAwareLifecycleOperations<T>(
             }
         }
     }
-
-    override fun finish(stream: OutputStream) = baseLifecycleOperations.finish(stream)
 
 }
 

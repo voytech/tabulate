@@ -7,11 +7,11 @@ import pl.voytech.exporter.core.model.attributes.overrideAttributesRightToLeft
 import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.context.GlobalContextAndAttributes
 
-abstract class AbstractRowContextResolver<DS, T>(
+abstract class AbstractRowContextResolver<T>(
     tableModel: Table<T>,
     stateAndAttributes: GlobalContextAndAttributes<T>
 ) :
-    TableDataSourceContextResolver<DS, T>(tableModel, stateAndAttributes) {
+    GlobalStateAwareContextResolver<T>(tableModel, stateAndAttributes) {
 
     private fun computeCells(rowDefinitions: Set<Row<T>>): Map<ColumnKey<T>, Cell<T>> {
         return rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })

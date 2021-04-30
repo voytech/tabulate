@@ -5,83 +5,97 @@ import pl.voytech.exporter.core.api.builder.dsl.TableBuilderApi
 import pl.voytech.exporter.core.api.builder.dsl.table
 import pl.voytech.exporter.core.model.Column
 import pl.voytech.exporter.core.model.NextId
-import pl.voytech.exporter.core.template.TabulateOutputStream.Companion.into
 import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.context.ColumnRenderPhase
 import pl.voytech.exporter.core.template.context.GlobalContextAndAttributes
 import pl.voytech.exporter.core.template.iterators.OperationContextIterator
 import pl.voytech.exporter.core.template.operations.ExportOperations
-import pl.voytech.exporter.core.template.resolvers.RowContextResolver
-import pl.voytech.exporter.core.template.spi.ExportOperationFactoryProvider
+import pl.voytech.exporter.core.template.resolvers.BufferingRowContextResolver
+import pl.voytech.exporter.core.template.source.CollectionSource
+import pl.voytech.exporter.core.template.source.EmptySource
+import pl.voytech.exporter.core.template.spi.ExportOperationsFactoryProvider
 import pl.voytech.exporter.core.template.spi.Identifiable
 import java.io.File
+import java.io.FileOutputStream
 import java.io.OutputStream
 import java.util.*
 
-
 /**
- * Core instrumentation logic enters from this place. This class constitutes all entry points and public API for tabular
- * data exporting.
+ * Tabulate frontend facade. Role of this class is to orchestrate and bind all things together. Its like an entry point.
  * @author Wojciech Mąka
  */
-open class TableExportTemplate<T>() {
+open class TableExportTemplate<T, O>() {
 
-    private lateinit var delegate: ExportOperations<T>
+    private lateinit var ops: ExportOperations<T, O>
 
-    constructor(output: TabulateOutputStream) : this() {
-        this.delegate = locate(output)!!.create<T>().createOperations();
+    private lateinit var resultHandler: ResultHandler<T, O>
+
+    constructor(output: TabulationFormat<T, O>) : this() {
+        this.ops = locate(output)!!.create().createOperations()
+        this.resultHandler = output.resultHandler
+
     }
 
-    constructor(delegate: ExportOperations<T>) : this() {
-        this.delegate = delegate
+    constructor(delegate: ExportOperations<T, O>, resultHandler: ResultHandler<T, O>) : this() {
+        this.ops = delegate
+        this.resultHandler = resultHandler
     }
 
-    private fun initialize() {
-        delegate.lifecycleOperations.initialize()
+    inner class Pull(
+        private val resolver: BufferingRowContextResolver<T>,
+        private val iterator: OperationContextIterator<T, AttributedRow<T>>,
+        private val context: GlobalContextAndAttributes<T>,
+    ) : Sink<T> {
+
+        override fun onStart() {
+            renderColumns(context, ColumnRenderPhase.BEFORE_FIRST_ROW)
+        }
+
+        override fun onNext(record: T) {
+            resolver.buffer(record)
+            renderNextRow(context, iterator)
+        }
+
+        override fun onComplete() {
+            while (iterator.hasNext()) {
+                renderNextRow(context, iterator)
+            }
+            renderColumns(context, ColumnRenderPhase.AFTER_LAST_ROW)
+            ops.lifecycleOperations.finish()
+        }
+
     }
 
-    private fun bind(tableBuilder: TableBuilder<T>, collection: Collection<T>) {
-        delegate.lifecycleOperations.createTable(tableBuilder).let { table ->
+    private fun bind(tableBuilder: TableBuilder<T>, source: Source<T>) {
+        ops.tableOperation.createTable(tableBuilder).let { table ->
             GlobalContextAndAttributes(
                 tableModel = table,
                 tableName = table.name ?: "table-${NextId.nextId()}",
                 firstRow = table.firstRow,
                 firstColumn = table.firstColumn
             ).also {
-                renderColumns(it, ColumnRenderPhase.BEFORE_FIRST_ROW)
-                with(OperationContextIterator(RowContextResolver(table, it, collection))) {
-                    while (hasNext()) {
-                        renderNextRow(it, this)
-                    }
-                }
-                renderColumns(it, ColumnRenderPhase.AFTER_LAST_ROW)
+                val contextResolver = BufferingRowContextResolver(table, it)
+                val contextIterator = OperationContextIterator(contextResolver)
+                source.subscribe(Pull(contextResolver, contextIterator, it))
             }
         }
     }
 
-    private fun locate(id: Identifiable): ExportOperationFactoryProvider? {
-        val loader: ServiceLoader<ExportOperationFactoryProvider> =
-            ServiceLoader.load(ExportOperationFactoryProvider::class.java)
-        return loader.find { it.test(id) }
+    @Suppress("UNCHECKED_CAST")
+    private fun locate(id: Identifiable): ExportOperationsFactoryProvider<T, O>? {
+        val loader: ServiceLoader<ExportOperationsFactoryProvider<*, *>> =
+            ServiceLoader.load(ExportOperationsFactoryProvider::class.java)
+        return loader.find { it.test(id) } as ExportOperationsFactoryProvider<T, O>?
     }
 
-    fun export(tableBuilder: TableBuilder<T>, collection: Collection<T>, stream: OutputStream) {
-        initialize()
-        bind(tableBuilder, collection).also { delegate.lifecycleOperations.finish(stream) }
-    }
-
-    fun export(tableBuilder: TableBuilder<T>, stream: OutputStream) {
-        initialize()
-        bind(tableBuilder, emptyList()).also { delegate.lifecycleOperations.finish(stream) }
-    }
-
-    fun export(stream: OutputStream) {
-        delegate.lifecycleOperations.finish(stream)
+    fun export(tableBuilder: TableBuilder<T>, source: Source<T>) {
+        ops.lifecycleOperations.initialize(source, resultHandler)
+        bind(tableBuilder, source)
     }
 
     private fun renderColumns(stateAndAttributes: GlobalContextAndAttributes<T>, renderPhase: ColumnRenderPhase) {
         stateAndAttributes.tableModel.forEachColumn { columnIndex: Int, column: Column<T> ->
-            delegate.tableRenderOperations.renderColumn(
+            ops.tableRenderOperations.renderColumn(
                 stateAndAttributes.createColumnContext(IndexedValue(column.index ?: columnIndex, column), renderPhase)
             )
         }
@@ -90,18 +104,18 @@ open class TableExportTemplate<T>() {
     private fun renderRowCells(stateAndAttributes: GlobalContextAndAttributes<T>, context: AttributedRow<T>) {
         stateAndAttributes.tableModel.forEachColumn { column: Column<T> ->
             if (context.rowCellValues.containsKey(column.id)) {
-                delegate.tableRenderOperations.renderRowCell(context.rowCellValues[column.id]!!)
+                ops.tableRenderOperations.renderRowCell(context.rowCellValues[column.id]!!)
             }
         }
     }
 
     private fun renderNextRow(
         stateAndAttributes: GlobalContextAndAttributes<T>,
-        iterator: OperationContextIterator<T, AttributedRow<T>>
+        iterator: OperationContextIterator<T, AttributedRow<T>>,
     ) {
         if (iterator.hasNext()) {
             iterator.next().let { rowContext ->
-                delegate.tableRenderOperations.renderRow(rowContext).also {
+                ops.tableRenderOperations.renderRow(rowContext).also {
                     renderRowCells(stateAndAttributes, rowContext)
                 }
             }
@@ -109,34 +123,33 @@ open class TableExportTemplate<T>() {
     }
 }
 
-fun <T> Collection<T>.tabulate(tableBuilder: TableBuilder<T>, operations: ExportOperations<T>, stream: OutputStream) {
-    TableExportTemplate(operations).export(tableBuilder, this, stream)
+fun <T, O> Source<T>.tabulate(format: TabulationFormat<T, O>, block: TableBuilderApi<T>.() -> Unit) {
+    TableExportTemplate(format).export(table(block), this)
 }
 
-fun <T> Collection<T>.tabulate(output: TabulateOutputStream, block: TableBuilderApi<T>.() -> Unit) {
-    output.use {
-        TableExportTemplate<T>(output).export(table(block), this, it)
-    }
-}
-
-fun <T> Collection<T>.tabulate(id: String, stream: OutputStream, block: TableBuilderApi<T>.() -> Unit) {
-    this.tabulate(into(id,stream), block)
-}
-
-fun <T> Collection<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) {
-    this.tabulate(into(file), block)
+fun <T, O> Collection<T>.tabulate(format: TabulationFormat<T, O>, block: TableBuilderApi<T>.() -> Unit) {
+    TableExportTemplate(format).export(table(block), CollectionSource(this))
 }
 
 fun <T> Collection<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> Unit) {
-    this.tabulate(into(fileName), block)
+    val file = File(fileName)
+    TableExportTemplate(TabulationFormat(file.extension) { _: Source<T> -> FileOutputStream(file) }).export(table(block),
+        CollectionSource(this))
 }
 
-fun <T> TableBuilder<T>.export(operations: ExportOperations<T>, stream: OutputStream) {
-    TableExportTemplate(operations).export(this, stream)
+fun <T> Collection<T>.tabulate(
+    operations: ExportOperations<T, OutputStream>,
+    stream: OutputStream,
+    block: TableBuilderApi<T>.() -> Unit,
+) {
+    TableExportTemplate(operations) { stream }.export(table(block), CollectionSource(this))
+}
+
+fun <T> TableBuilder<T>.export(operations: ExportOperations<T, OutputStream>, stream: OutputStream) {
+    TableExportTemplate(operations) { stream }.export(this, EmptySource())
 }
 
 fun <T> TableBuilder<T>.export(file: File) {
-    into(file).use {
-        TableExportTemplate<T>(it).export(this,  it)
-    }
+    TableExportTemplate(TabulationFormat(file.extension) { _: Source<T> -> FileOutputStream(file) }).export(this,
+        EmptySource())
 }
