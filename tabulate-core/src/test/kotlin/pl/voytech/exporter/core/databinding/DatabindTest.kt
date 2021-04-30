@@ -1,7 +1,8 @@
 package pl.voytech.exporter.core.databinding
 
 import org.junit.jupiter.api.Test
-import pl.voytech.exporter.core.api.builder.dsl.table
+import pl.voytech.exporter.core.template.ResultHandler
+import pl.voytech.exporter.core.template.Source
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.operations.*
 import pl.voytech.exporter.core.template.tabulate
@@ -32,33 +33,41 @@ class DatabindTest {
                 BigDecimal(1000)
             )
         ).tabulate(
-            table {
-                name = "Products table"
-                columns {
-                    column(Product::code)
-                    column(Product::name)
-                    column(Product::description)
-                    column(Product::manufacturer)
-                }
-            },
             mock<Product>().createOperations(),
             ByteArrayOutputStream()
-        )
+        ) {
+            name = "Products table"
+            columns {
+                column(Product::code)
+                column(Product::name)
+                column(Product::description)
+                column(Product::manufacturer)
+            }
+        }
     }
 
-    private fun <T> mock() : ExportOperationConfiguringFactory<T> {
-        return object: ExportOperationConfiguringFactory<T>() {
-            override fun getExportOperationsFactory(): ExportOperationsFactory<T> = object : ExportOperationsFactory<T> {
-                override fun createLifecycleOperations(): LifecycleOperations<T> = object : LifecycleOperations<T> {
-                    override fun finish(stream: OutputStream) {
-                        println("finish!")
+    private fun <T> mock() : ExportOperationsConfiguringFactory<T, OutputStream> {
+        return object: ExportOperationsConfiguringFactory<T, OutputStream>() {
+            override fun getExportOperationsFactory(): ExportOperationsFactory<T, OutputStream> = object : ExportOperationsFactory<T, OutputStream> {
+                override fun createLifecycleOperations(): LifecycleOperations<T, OutputStream> = object : LifecycleOperations<T, OutputStream> {
+                    override fun initialize(source: Source<T>, resultHandler: ResultHandler<T, OutputStream>) {
+                        println("Do nothing. Mock implementation")
                     }
+
+                    override fun finish() {
+                        println("Do nothing. Mock implementation")
+                    }
+
                 }
 
                 override fun createTableRenderOperations(): TableRenderOperations<T> = object : TableRenderOperations<T> {
                     override fun renderRowCell(context: AttributedCell) {
                         println("cell context: $context")
                     }
+                }
+
+                override fun createTableOperation(): TableOperation<T> {
+                    return object :TableOperation<T> { }
                 }
             }
 

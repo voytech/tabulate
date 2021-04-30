@@ -1,7 +1,7 @@
 package pl.voytech.exporter.core.template.iterators
 
- import pl.voytech.exporter.core.template.context.ContextData
- import pl.voytech.exporter.core.template.resolvers.IndexedContextResolver
+import pl.voytech.exporter.core.template.context.ContextData
+import pl.voytech.exporter.core.template.resolvers.IndexedContextResolver
 import java.util.concurrent.atomic.AtomicInteger
 
 class OperationContextIterator<T, CTX : ContextData<T>>(
@@ -23,8 +23,4 @@ class OperationContextIterator<T, CTX : ContextData<T>>(
             }
         }
     }
-
-    fun getCurrentIndex(): Int = currentIndex.get()
-
-    fun getCurrentContext(): CTX? = currentContext
 }
