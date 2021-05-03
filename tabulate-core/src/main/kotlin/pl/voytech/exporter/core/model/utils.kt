@@ -1,13 +1,13 @@
 package pl.voytech.exporter.core.model
 
+import java.util.concurrent.atomic.AtomicInteger
+
 object NextId {
 
-    private var nextId: ThreadLocal<Int> = ThreadLocal()
+    private var nextId: AtomicInteger = AtomicInteger(0)
 
     fun nextId(): Int {
-        val value = nextId.get() ?: 0
-        nextId.set(value + 1)
-        return nextId.get()
+        return nextId.getAndIncrement()
     }
 
     fun reset() {

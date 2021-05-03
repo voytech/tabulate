@@ -1,9 +1,9 @@
 package pl.voytech.exporter.core.template.operations
 
+import org.reactivestreams.Publisher
 import pl.voytech.exporter.core.api.builder.TableBuilder
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.ResultHandler
-import pl.voytech.exporter.core.template.Source
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.AttributedColumn
 import pl.voytech.exporter.core.template.context.AttributedRow
@@ -13,7 +13,7 @@ import pl.voytech.exporter.core.template.operations.impl.AttributesOperations
 
 
 interface LifecycleOperations<T, O> {
-    fun initialize(source : Source<T>, resultHandler: ResultHandler<T, O>)
+    fun initialize(source : Publisher<T>, resultHandler: ResultHandler<T, O>)
     fun finish()
 }
 

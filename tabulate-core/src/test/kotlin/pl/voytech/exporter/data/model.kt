@@ -19,3 +19,23 @@ data class Price(
     val vatRate: BigDecimal
 )
 
+object Products {
+    val CAMERAS = listOf(
+        Product(
+            "camera",
+            "Sony Film Beauty",
+            "An excellent camera for non-professional usage",
+            "Sony",
+            LocalDate.now(),
+            BigDecimal(200.00)
+        ),
+        Product(
+            "camera",
+            "Sony Film Sharp",
+            "An excellent camera for professional usage",
+            "Sony",
+            LocalDate.now(),
+            BigDecimal(1000)
+        )
+    )
+}

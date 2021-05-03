@@ -39,7 +39,7 @@ class CellTextStylesAttributeRenderOperation<T>(override val adaptee: ApachePoiE
     override fun attributeType(): Class<CellTextStylesAttribute> = CellTextStylesAttribute::class.java
 
     override fun renderAttribute(context: AttributedCell, attribute: CellTextStylesAttribute) {
-        adaptee.cellStyle(context).let {
+        adaptee.cellStyle(context.getTableId(), context.rowIndex, context.columnIndex).let {
             if (context.getCachedValue(cellFontCacheKey) == null) {
                 val font: XSSFFont = adaptee.workbook().createFont() as XSSFFont
                 attribute.fontFamily?.run { font.fontName = this }
@@ -67,7 +67,7 @@ class CellBackgroundAttributeRenderOperation<T>(override val adaptee: ApachePoiE
         context: AttributedCell,
         attribute: CellBackgroundAttribute
     ) {
-        adaptee.cellStyle(context).let {
+        adaptee.cellStyle(context.getTableId(), context.rowIndex, context.columnIndex).let {
             if (attribute.color != null) {
                 (it as XSSFCellStyle).setFillForegroundColor(ApachePoiExcelFacade.color(attribute.color!!))
             }
@@ -98,7 +98,7 @@ class CellBordersAttributeRenderOperation<T>(override val adaptee: ApachePoiExce
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
     override fun renderAttribute(context: AttributedCell, attribute: CellBordersAttribute) {
-        adaptee.cellStyle(context).let {
+        adaptee.cellStyle(context.getTableId(), context.rowIndex, context.columnIndex).let {
             attribute.leftBorderColor?.run { (it as XSSFCellStyle).setLeftBorderColor(ApachePoiExcelFacade.color(this)) }
             attribute.rightBorderColor?.run { (it as XSSFCellStyle).setRightBorderColor(ApachePoiExcelFacade.color(this)) }
             attribute.topBorderColor?.run { (it as XSSFCellStyle).setTopBorderColor(ApachePoiExcelFacade.color(this)) }
@@ -137,7 +137,7 @@ class CellAlignmentAttributeRenderOperation<T>(override val adaptee: ApachePoiEx
     override fun attributeType(): Class<out CellAlignmentAttribute> = CellAlignmentAttribute::class.java
 
     override fun renderAttribute(context: AttributedCell, attribute: CellAlignmentAttribute) {
-        adaptee.cellStyle(context).let {
+        adaptee.cellStyle(context.getTableId(), context.rowIndex, context.columnIndex).let {
             with(attribute.horizontal) {
                 it.alignment =
                     when (this) {
@@ -174,7 +174,7 @@ class CellDataFormatAttributeRenderOperation<T>(override val adaptee: ApachePoiE
         attribute: CellExcelDataFormatAttribute
     ) {
         //if (getCellCachedValue(context, cellStyleFormatKey) == null) {
-        adaptee.cellStyle(context).let {
+        adaptee.cellStyle(context.getTableId(), context.rowIndex, context.columnIndex).let {
             attribute.dataFormat.run {
                 it.dataFormat = adaptee.workbook().createDataFormat().getFormat(this)
                 context.putCachedValue(cellStyleFormatKey, it.dataFormat)
