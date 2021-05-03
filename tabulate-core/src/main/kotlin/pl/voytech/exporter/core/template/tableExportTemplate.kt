@@ -1,5 +1,8 @@
 package pl.voytech.exporter.core.template
 
+import org.reactivestreams.Publisher
+import org.reactivestreams.Subscriber
+import org.reactivestreams.Subscription
 import pl.voytech.exporter.core.api.builder.TableBuilder
 import pl.voytech.exporter.core.api.builder.dsl.TableBuilderApi
 import pl.voytech.exporter.core.api.builder.dsl.table
@@ -31,7 +34,7 @@ open class TableExportTemplate<T, O>() {
     private lateinit var resultHandler: ResultHandler<T, O>
 
     constructor(output: TabulationFormat<T, O>) : this() {
-        this.ops = locate(output)!!.create().createOperations()
+        this.ops = resolveExportOperationsFactory(output)!!.create().createOperations()
         this.resultHandler = output.resultHandler
 
     }
@@ -41,54 +44,65 @@ open class TableExportTemplate<T, O>() {
         this.resultHandler = resultHandler
     }
 
-    inner class Pull(
+    @Suppress("ReactiveStreamsSubscriberImplementation")
+    inner class UnboundSubscriber(
         private val resolver: BufferingRowContextResolver<T>,
         private val iterator: OperationContextIterator<T, AttributedRow<T>>,
         private val context: GlobalContextAndAttributes<T>,
-    ) : Sink<T> {
+    ) : Subscriber<T> {
 
-        override fun onStart() {
+        override fun onSubscribe(subscription: Subscription) {
             renderColumns(context, ColumnRenderPhase.BEFORE_FIRST_ROW)
+            subscription.request(UNBOUND)
         }
 
         override fun onNext(record: T) {
             resolver.buffer(record)
-            renderNextRow(context, iterator)
+            renderNextRow()
+        }
+
+        override fun onError(t: Throwable?) {
+            TODO("Not yet implemented - renderOnError ?")
         }
 
         override fun onComplete() {
             while (iterator.hasNext()) {
-                renderNextRow(context, iterator)
+                renderNextRow()
             }
             renderColumns(context, ColumnRenderPhase.AFTER_LAST_ROW)
             ops.lifecycleOperations.finish()
         }
 
+        private fun renderNextRow() {
+            if (iterator.hasNext()) {
+                renderNextRow(context, iterator.next())
+            }
+        }
     }
 
-    private fun bind(tableBuilder: TableBuilder<T>, source: Source<T>) {
+    private fun bind(tableBuilder: TableBuilder<T>, source: Publisher<T>) {
         ops.tableOperation.createTable(tableBuilder).let { table ->
             GlobalContextAndAttributes(
                 tableModel = table,
-                tableName = table.name ?: "table-${NextId.nextId()}",
+                tableName = table.name ?: "table${NextId.nextId()}",
                 firstRow = table.firstRow,
                 firstColumn = table.firstColumn
             ).also {
                 val contextResolver = BufferingRowContextResolver(table, it)
                 val contextIterator = OperationContextIterator(contextResolver)
-                source.subscribe(Pull(contextResolver, contextIterator, it))
+                source.subscribe(UnboundSubscriber(contextResolver, contextIterator, it))
             }
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun locate(id: Identifiable): ExportOperationsFactoryProvider<T, O>? {
+    private fun resolveExportOperationsFactory(id: Identifiable): ExportOperationsFactoryProvider<T, O>? {
         val loader: ServiceLoader<ExportOperationsFactoryProvider<*, *>> =
             ServiceLoader.load(ExportOperationsFactoryProvider::class.java)
         return loader.find { it.test(id) } as ExportOperationsFactoryProvider<T, O>?
     }
 
-    fun export(tableBuilder: TableBuilder<T>, source: Source<T>) {
+    fun export(tableBuilder: TableBuilder<T>, source: Publisher<T>) {
         ops.lifecycleOperations.initialize(source, resultHandler)
         bind(tableBuilder, source)
     }
@@ -111,19 +125,19 @@ open class TableExportTemplate<T, O>() {
 
     private fun renderNextRow(
         stateAndAttributes: GlobalContextAndAttributes<T>,
-        iterator: OperationContextIterator<T, AttributedRow<T>>,
+        rowContext: AttributedRow<T>
     ) {
-        if (iterator.hasNext()) {
-            iterator.next().let { rowContext ->
-                ops.tableRenderOperations.renderRow(rowContext).also {
-                    renderRowCells(stateAndAttributes, rowContext)
-                }
-            }
+        ops.tableRenderOperations.renderRow(rowContext).also {
+            renderRowCells(stateAndAttributes, rowContext)
         }
+    }
+
+    companion object {
+        private const val UNBOUND = Long.MAX_VALUE
     }
 }
 
-fun <T, O> Source<T>.tabulate(format: TabulationFormat<T, O>, block: TableBuilderApi<T>.() -> Unit) {
+fun <T, O> Publisher<T>.tabulate(format: TabulationFormat<T, O>, block: TableBuilderApi<T>.() -> Unit) {
     TableExportTemplate(format).export(table(block), this)
 }
 
@@ -133,16 +147,24 @@ fun <T, O> Collection<T>.tabulate(format: TabulationFormat<T, O>, block: TableBu
 
 fun <T> Collection<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> Unit) {
     val file = File(fileName)
-    TableExportTemplate(TabulationFormat(file.extension) { _: Source<T> -> FileOutputStream(file) }).export(table(block),
+    TableExportTemplate(TabulationFormat(file.extension) { _: Publisher<T> -> FileOutputStream(file) }).export(table(block),
         CollectionSource(this))
 }
 
-fun <T> Collection<T>.tabulate(
-    operations: ExportOperations<T, OutputStream>,
-    stream: OutputStream,
+fun <T, O> Publisher<T>.tabulate(
+    operations: ExportOperations<T, O>,
+    resultHandler: ResultHandler<T, O>,
     block: TableBuilderApi<T>.() -> Unit,
 ) {
-    TableExportTemplate(operations) { stream }.export(table(block), CollectionSource(this))
+    TableExportTemplate(operations, resultHandler).export(table(block), this)
+}
+
+fun <T, O> Collection<T>.tabulate(
+    operations: ExportOperations<T, O>,
+    resultHandler: ResultHandler<T, O>,
+    block: TableBuilderApi<T>.() -> Unit,
+) {
+    TableExportTemplate(operations, resultHandler).export(table(block), CollectionSource(this))
 }
 
 fun <T> TableBuilder<T>.export(operations: ExportOperations<T, OutputStream>, stream: OutputStream) {
@@ -150,6 +172,6 @@ fun <T> TableBuilder<T>.export(operations: ExportOperations<T, OutputStream>, st
 }
 
 fun <T> TableBuilder<T>.export(file: File) {
-    TableExportTemplate(TabulationFormat(file.extension) { _: Source<T> -> FileOutputStream(file) }).export(this,
+    TableExportTemplate(TabulationFormat(file.extension) { _: Publisher<T> -> FileOutputStream(file) }).export(this,
         EmptySource())
 }
