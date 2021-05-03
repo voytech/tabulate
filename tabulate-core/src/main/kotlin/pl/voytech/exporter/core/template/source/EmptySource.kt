@@ -1,11 +1,9 @@
 package pl.voytech.exporter.core.template.source
 
-import pl.voytech.exporter.core.template.Sink
-import pl.voytech.exporter.core.template.Source
+import org.reactivestreams.Subscriber
 
-class EmptySource<T>() : Source<T> {
-    override fun subscribe(sink: Sink<T>) {
-        sink.onStart()
-        sink.onComplete()
-    }
+class EmptySource<T> : Source<T>() {
+
+    override fun handleData(subscriber: Subscriber<in T>) { }
+
 }

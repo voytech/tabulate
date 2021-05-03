@@ -26,11 +26,13 @@ subprojects {
     dependencies {
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
         implementation "com.google.guava:guava:$guava_version"
+        api "org.reactivestreams:reactive-streams:$reactive_streams_version"
         testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
         testImplementation(platform("org.junit:junit-bom:$junit_version"))
         testImplementation "org.junit.jupiter:junit-jupiter"
         testImplementation "com.google.truth:truth:1.0.1"
         testRuntimeOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+
     }
     test {
         useJUnitPlatform()

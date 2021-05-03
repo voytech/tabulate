@@ -1,6 +1,7 @@
 package pl.voytech.exporter.impl.template.excel.wrapper
 
 import org.apache.poi.ss.usermodel.*
+import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.util.IOUtils
 import org.apache.poi.xssf.streaming.SXSSFCell
 import org.apache.poi.xssf.streaming.SXSSFRow
@@ -11,10 +12,8 @@ import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import pl.voytech.exporter.core.model.CellType
 import pl.voytech.exporter.core.model.attributes.cell.Color
-import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.CellValue
 import pl.voytech.exporter.core.template.context.Coordinates
-import pl.voytech.exporter.core.template.operations.impl.putCachedValueIfAbsent
 import java.io.FileInputStream
 import java.io.InputStream
 
@@ -48,33 +47,54 @@ class ApachePoiExcelFacade {
             .getCell(coordinates.columnIndex)
 
     fun assertCell(
-        context: AttributedCell,
+        sheetName: String,
         rowIndex: Int,
-        columnIndex: Int
+        columnIndex: Int,
+        onCreate: ((cell: SXSSFCell) -> Unit)? = null,
     ): SXSSFCell =
-        cell(context.getTableId(), rowIndex, columnIndex) ?: createCell(context, rowIndex, columnIndex)
+        cell(sheetName, rowIndex, columnIndex) ?: createCell(sheetName, rowIndex, columnIndex, onCreate)
 
-    fun assertCell(context: AttributedCell): SXSSFCell =
-        cell(context.getTableId(), context.rowIndex, context.columnIndex) ?: createCell(context)
+    fun cellStyle(
+        sheetName: String,
+        rowIndex: Int,
+        columnIndex: Int,
+        onCreate: ((cell: SXSSFCell) -> Unit)? = null,
+    ): CellStyle = assertCell(sheetName, rowIndex, columnIndex, onCreate).cellStyle
 
-    fun cellStyle(context: AttributedCell): CellStyle = assertCell(context).cellStyle
-
-    fun createImageCell(context: AttributedCell, imageUrl: String) {
-        val cacheKey = "images/${imageUrl}"
-        context.additionalAttributes?.get(cacheKey)?.let {
-            createImageCell(context, it as Int)
-        } ?: FileInputStream(imageUrl).use {
-            createImageCell(context, it)
+    fun createImageCell(
+        sheetName: String,
+        rowIndex: Int,
+        columnIndex: Int,
+        rowSpan: Int,
+        colSpan: Int,
+        imageUrl: String,
+    ) {
+        FileInputStream(imageUrl).use {
+            createImageCell(sheetName, rowIndex, columnIndex, rowSpan, colSpan, it)
         }
     }
 
-    fun createImageCell(context: AttributedCell, imageDate: InputStream) {
-        createImageCell(context, IOUtils.toByteArray(imageDate))
+    fun createImageCell(
+        sheetName: String,
+        rowIndex: Int,
+        columnIndex: Int,
+        rowSpan: Int,
+        colSpan: Int,
+        imageDate: InputStream,
+    ) {
+        createImageCell(sheetName, rowIndex, columnIndex, rowSpan, colSpan, IOUtils.toByteArray(imageDate))
     }
 
-    fun createImageCell(context: AttributedCell, imageData: ByteArray) {
+    fun createImageCell(
+        sheetName: String,
+        rowIndex: Int,
+        columnIndex: Int,
+        rowSpan: Int,
+        colSpan: Int,
+        imageData: ByteArray,
+    ) {
         workbook().addPicture(imageData, Workbook.PICTURE_TYPE_PNG).also {
-            createImageCell(context, it)
+            createImageCell(sheetName, rowIndex, columnIndex, rowSpan, colSpan, it)
         }
     }
 
@@ -97,7 +117,32 @@ class ApachePoiExcelFacade {
             }
     }
 
-    private fun createWorkbookInternal(templateFile: InputStream? = null, rowAccessWindowSize: Int = 100): SXSSFWorkbook {
+    fun mergeCells(
+        sheetName: String,
+        rowIndex: Int,
+        columnIndex: Int,
+        rowSpan: Int,
+        colSpan: Int,
+        onMerge: ((index: Int) -> Unit)?,
+    ) {
+        (rowIndex until rowIndex + rowSpan).forEach { rIndex ->
+            (columnIndex until columnIndex + colSpan).forEach { cIndex ->
+                assertCell(sheetName, rIndex, cIndex)
+            }
+        }
+        assertTableSheet(sheetName).addMergedRegion(
+            CellRangeAddress(rowIndex, rowIndex + rowSpan - 1, columnIndex, columnIndex + colSpan - 1)
+        ).let {
+            if (onMerge != null) {
+                onMerge(it)
+            }
+        }
+    }
+
+    private fun createWorkbookInternal(
+        templateFile: InputStream? = null,
+        rowAccessWindowSize: Int = 100,
+    ): SXSSFWorkbook {
         return if (templateFile != null) {
             SXSSFWorkbook(WorkbookFactory.create(templateFile) as XSSFWorkbook?, rowAccessWindowSize)
         } else {
@@ -105,30 +150,37 @@ class ApachePoiExcelFacade {
         }
     }
 
-    private fun createImageCell(context: AttributedCell, imageRef: Int): Picture {
-        val drawing: Drawing<*> = assertTableSheet(context.getTableId()).createDrawingPatriarch()
+    private fun createCell(
+        sheetName: String,
+        alterRowIndex: Int,
+        alterColumnIndex: Int,
+        onCreate: ((cell: SXSSFCell) -> Unit)? = null,
+    ): SXSSFCell =
+        assertRow(sheetName, alterRowIndex).let {
+            it.createCell(alterColumnIndex).also { cell ->
+                if (onCreate != null) {
+                    onCreate(cell)
+                }
+            }
+        }
+
+    private fun createImageCell(
+        sheetName: String,
+        rowIndex: Int,
+        columnIndex: Int,
+        rowSpan: Int,
+        colSpan: Int,
+        imageRef: Int,
+    ): Picture {
+        val drawing: Drawing<*> = assertTableSheet(sheetName).createDrawingPatriarch()
         val anchor: ClientAnchor = workbook().creationHelper.createClientAnchor()
-        anchor.setCol1(context.columnIndex)
-        anchor.row1 = context.rowIndex
-        anchor.setCol2(context.columnIndex + context.value.colSpan)
-        anchor.row2 = context.rowIndex + context.value.rowSpan
+        anchor.setCol1(columnIndex)
+        anchor.row1 = rowIndex
+        anchor.setCol2(columnIndex + colSpan)
+        anchor.row2 = rowIndex + rowSpan
         return drawing.createPicture(anchor, imageRef)
     }
 
-    private fun cell(tableId: String, rowIndex: Int, columnIndex: Int): SXSSFCell? =
-        assertRow(tableId, rowIndex).getCell(columnIndex)
-
-    private fun createCell(
-        context: AttributedCell,
-        alterRowIndex: Int? = null,
-        alterColumnIndex: Int? = null
-    ): SXSSFCell =
-        assertRow(context.getTableId(), alterRowIndex ?: context.rowIndex).let {
-            it.createCell(alterColumnIndex ?: context.columnIndex).also { cell ->
-                cell.cellStyle =
-                    context.putCachedValueIfAbsent(CELL_STYLE_CACHE_KEY, workbook().createCellStyle()) as CellStyle
-            }
-        }
 
     private fun createRow(tableId: String, rowIndex: Int): SXSSFRow =
         tableSheet(tableId).createRow(rowIndex)
@@ -136,8 +188,10 @@ class ApachePoiExcelFacade {
     private fun row(tableId: String, rowIndex: Int): SXSSFRow? =
         tableSheet(tableId).getRow(rowIndex)
 
+    private fun cell(tableId: String, rowIndex: Int, columnIndex: Int): SXSSFCell? =
+        assertRow(tableId, rowIndex).getCell(columnIndex)
+
     companion object {
-        private const val CELL_STYLE_CACHE_KEY: String = "cellStyle"
         fun color(color: Color): XSSFColor =
             XSSFColor(byteArrayOf(color.r.toByte(), color.g.toByte(), color.b.toByte()), null)
     }
