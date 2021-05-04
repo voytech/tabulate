@@ -14,12 +14,12 @@ import pl.voytech.exporter.core.model.attributes.cell.enums.DefaultWeightStyle
 import pl.voytech.exporter.core.model.attributes.column.width
 import pl.voytech.exporter.core.model.attributes.row.RowHeightAttribute
 import pl.voytech.exporter.core.model.attributes.row.height
-import pl.voytech.exporter.core.model.attributes.table.FilterAndSortTableAttribute
 import pl.voytech.exporter.core.model.attributes.table.template
 import pl.voytech.exporter.core.utils.PoiTableAssert
 import pl.voytech.exporter.data.Product
 import pl.voytech.exporter.impl.template.model.attributes.CellExcelDataFormatAttribute
 import pl.voytech.exporter.impl.template.model.attributes.dataFormat
+import pl.voytech.exporter.impl.template.model.attributes.filterAndSort
 import pl.voytech.exporter.testutils.CellPosition
 import pl.voytech.exporter.testutils.CellRange
 import pl.voytech.exporter.testutils.cellassertions.AssertCellValue
@@ -262,7 +262,7 @@ class ApachePoiTabulateTests {
         val productList = createDataSet(1000)
         productList.tabulate("test3.xlsx") {
             name = "Products table"
-            attributes(FilterAndSortTableAttribute(rowRange = (0..999), columnRange = (0..5)))
+            attributes(filterAndSort {})
             columns {
                 column(Product::code)
                 column(Product::name)

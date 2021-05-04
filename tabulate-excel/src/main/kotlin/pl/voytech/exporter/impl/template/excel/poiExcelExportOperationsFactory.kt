@@ -46,7 +46,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
             override fun createTableOperation(): TableOperation<T> = object : TableOperation<T> {
                 override fun createTable(builder: TableBuilder<T>): Table<T> {
                     return builder.build().also {
-                        poi.assertTableSheet(it.name)
+                        poi.assertSheet(it.name!!)
                     }
                 }
             }
@@ -61,10 +61,8 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
                     override fun renderRowCell(context: AttributedCell) {
                         if (context.value.type in CellType.BASIC_TYPES) {
                             adaptee.assertCell(context.getTableId(), context.rowIndex, context.columnIndex) {
-                                withCachedStyle(it, context)
-                            }.also {
                                 setCellValue(it, context.value)
-                            }.also { cell ->
+                            }.also { _ ->
                                 context.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.let {
                                     adaptee.mergeCells(
                                         context.getTableId(),
@@ -72,9 +70,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
                                         context.columnIndex,
                                         context.value.rowSpan,
                                         context.value.colSpan
-                                    ) {
-                                        withCachedStyle(cell, context)
-                                    }
+                                    )
                                 }
                             }
                         } else when (context.value.type) {
@@ -113,13 +109,6 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
                             }
                         }
                     }
-
-                    private fun withCachedStyle(cell: SXSSFCell, context: AttributedCell) {
-                        cell.cellStyle = context.putCachedValueIfAbsent(
-                            CELL_STYLE_CACHE_KEY,
-                            adaptee.workbook().createCellStyle()
-                        ) as CellStyle
-                    }
                 }
         }
 
@@ -140,5 +129,12 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
     companion object {
         private const val CELL_STYLE_CACHE_KEY: String = "cellStyle"
+
+        fun withCachedStyle(poi: ApachePoiExcelFacade, context: AttributedCell): CellStyle {
+            return context.putCachedValueIfAbsent(
+                CELL_STYLE_CACHE_KEY,
+                poi.workbook().createCellStyle()
+            ) as CellStyle
+        }
     }
 }
