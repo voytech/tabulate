@@ -1,14 +1,14 @@
 package pl.voytech.exporter.core.builder.fluent;
-import kotlin.ranges.IntRange;
+
 import org.junit.jupiter.api.Test;
 import pl.voytech.exporter.core.model.CellType;
 import pl.voytech.exporter.core.model.RowSelectors;
-import pl.voytech.exporter.core.model.Table;
 import pl.voytech.exporter.core.model.SourceRow;
+import pl.voytech.exporter.core.model.Table;
+import pl.voytech.exporter.core.model.attributes.cell.CellTextStylesAttribute;
 import pl.voytech.exporter.core.model.attributes.column.ColumnWidthAttribute;
 import pl.voytech.exporter.core.model.attributes.row.RowHeightAttribute;
-import pl.voytech.exporter.core.model.attributes.table.FilterAndSortTableAttribute;
-import pl.voytech.exporter.core.model.attributes.cell.CellTextStylesAttribute;
+import pl.voytech.exporter.core.model.attributes.table.TemplateFileAttribute;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -20,7 +20,7 @@ public class DslTest {
         final Table<Employee> employeeTable =
                 Table.<Employee>builder()
                     .attribute(new CellTextStylesAttribute())
-                    .attribute(new FilterAndSortTableAttribute(new IntRange(0,3), new IntRange(1, 999)))
+                    .attribute(new TemplateFileAttribute("file.xlsx"))
                     .columns()
                         .column("rowNumbering")
                             .columnType(CellType.NUMERIC)

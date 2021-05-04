@@ -77,6 +77,11 @@ class ExcelAttributesTests {
         }
     }
 
+    @Test
+    fun `should correctly cache cell styles from attributes`() {
+        // TODO write this test.
+    }
+
     companion object {
 
         private val KNOWN_COLORS = listOf(

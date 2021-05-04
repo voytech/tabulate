@@ -14,7 +14,6 @@ import pl.voytech.exporter.core.model.attributes.cell.enums.*
 import pl.voytech.exporter.core.model.attributes.cell.enums.contract.BorderStyle
 import pl.voytech.exporter.core.model.attributes.column.ColumnWidthAttribute
 import pl.voytech.exporter.core.model.attributes.row.RowHeightAttribute
-import pl.voytech.exporter.core.model.attributes.table.FilterAndSortTableAttribute
 import pl.voytech.exporter.core.model.attributes.table.TemplateFileAttribute
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.AttributedColumn
@@ -23,38 +22,39 @@ import pl.voytech.exporter.core.template.operations.AdaptingCellAttributeRenderO
 import pl.voytech.exporter.core.template.operations.AdaptingColumnAttributeRenderOperation
 import pl.voytech.exporter.core.template.operations.AdaptingRowAttributeRenderOperation
 import pl.voytech.exporter.core.template.operations.AdaptingTableAttributeRenderOperation
-import pl.voytech.exporter.core.template.operations.impl.getCachedValue
 import pl.voytech.exporter.core.template.operations.impl.putCachedValue
+import pl.voytech.exporter.impl.template.excel.PoiExcelExportOperationsFactory.Companion.withCachedStyle
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiUtils
 import pl.voytech.exporter.impl.template.model.attributes.CellExcelDataFormatAttribute
+import pl.voytech.exporter.impl.template.model.attributes.FilterAndSortTableAttribute
 import java.io.FileInputStream
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 
 class CellTextStylesAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
     AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, CellTextStylesAttribute>(adaptee) {
 
-    private val cellFontCacheKey = "cellFont"
-
     override fun attributeType(): Class<CellTextStylesAttribute> = CellTextStylesAttribute::class.java
 
     override fun renderAttribute(context: AttributedCell, attribute: CellTextStylesAttribute) {
-        adaptee.cellStyle(context.getTableId(), context.rowIndex, context.columnIndex).let {
-            if (context.getCachedValue(cellFontCacheKey) == null) {
-                val font: XSSFFont = adaptee.workbook().createFont() as XSSFFont
-                attribute.fontFamily?.run { font.fontName = this }
-                attribute.fontColor?.run { font.setColor(ApachePoiExcelFacade.color(this)) }
-                attribute.fontSize?.run { font.fontHeightInPoints = toShort() }
-                attribute.italic?.run { font.italic = this }
-                attribute.strikeout?.run { font.strikeout = this }
-                attribute.underline?.run { font.setUnderline(if (this) FontUnderline.SINGLE else FontUnderline.NONE) }
-                attribute.weight?.run { font.bold = this == DefaultWeightStyle.BOLD }
-                it.setFont(font)
-                it.indention = attribute.ident ?: 0
-                it.wrapText = attribute.wrapText ?: false
-                it.rotation = attribute.rotation ?: 0
-                context.putCachedValue(cellFontCacheKey, font)
-            }
+        adaptee.assertCellStyle(
+            sheetName = context.getTableId(),
+            rowIndex = context.rowIndex,
+            columnIndex = context.columnIndex,
+            provideCellStyle = { withCachedStyle(adaptee, context) }
+        ).let {
+            val font: XSSFFont = adaptee.workbook().createFont() as XSSFFont
+            attribute.fontFamily?.run { font.fontName = this }
+            attribute.fontColor?.run { font.setColor(ApachePoiExcelFacade.color(this)) }
+            attribute.fontSize?.run { font.fontHeightInPoints = toShort() }
+            attribute.italic?.run { font.italic = this }
+            attribute.strikeout?.run { font.strikeout = this }
+            attribute.underline?.run { font.setUnderline(if (this) FontUnderline.SINGLE else FontUnderline.NONE) }
+            attribute.weight?.run { font.bold = this == DefaultWeightStyle.BOLD }
+            it.setFont(font)
+            it.indention = attribute.ident ?: 0
+            it.wrapText = attribute.wrapText ?: false
+            it.rotation = attribute.rotation ?: 0
         }
     }
 }
@@ -65,9 +65,14 @@ class CellBackgroundAttributeRenderOperation<T>(override val adaptee: ApachePoiE
 
     override fun renderAttribute(
         context: AttributedCell,
-        attribute: CellBackgroundAttribute
+        attribute: CellBackgroundAttribute,
     ) {
-        adaptee.cellStyle(context.getTableId(), context.rowIndex, context.columnIndex).let {
+        adaptee.assertCellStyle(
+            sheetName = context.getTableId(),
+            rowIndex = context.rowIndex,
+            columnIndex = context.columnIndex,
+            provideCellStyle = { withCachedStyle(adaptee, context) }
+        ).let {
             if (attribute.color != null) {
                 (it as XSSFCellStyle).setFillForegroundColor(ApachePoiExcelFacade.color(attribute.color!!))
             }
@@ -98,7 +103,12 @@ class CellBordersAttributeRenderOperation<T>(override val adaptee: ApachePoiExce
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
     override fun renderAttribute(context: AttributedCell, attribute: CellBordersAttribute) {
-        adaptee.cellStyle(context.getTableId(), context.rowIndex, context.columnIndex).let {
+        adaptee.assertCellStyle(
+            sheetName = context.getTableId(),
+            rowIndex = context.rowIndex,
+            columnIndex = context.columnIndex,
+            provideCellStyle = { withCachedStyle(adaptee, context) }
+        ).let {
             attribute.leftBorderColor?.run { (it as XSSFCellStyle).setLeftBorderColor(ApachePoiExcelFacade.color(this)) }
             attribute.rightBorderColor?.run { (it as XSSFCellStyle).setRightBorderColor(ApachePoiExcelFacade.color(this)) }
             attribute.topBorderColor?.run { (it as XSSFCellStyle).setTopBorderColor(ApachePoiExcelFacade.color(this)) }
@@ -137,7 +147,12 @@ class CellAlignmentAttributeRenderOperation<T>(override val adaptee: ApachePoiEx
     override fun attributeType(): Class<out CellAlignmentAttribute> = CellAlignmentAttribute::class.java
 
     override fun renderAttribute(context: AttributedCell, attribute: CellAlignmentAttribute) {
-        adaptee.cellStyle(context.getTableId(), context.rowIndex, context.columnIndex).let {
+        adaptee.assertCellStyle(
+            sheetName = context.getTableId(),
+            rowIndex = context.rowIndex,
+            columnIndex = context.columnIndex,
+            provideCellStyle = { withCachedStyle(adaptee, context) }
+        ).let {
             with(attribute.horizontal) {
                 it.alignment =
                     when (this) {
@@ -171,10 +186,10 @@ class CellDataFormatAttributeRenderOperation<T>(override val adaptee: ApachePoiE
 
     override fun renderAttribute(
         context: AttributedCell,
-        attribute: CellExcelDataFormatAttribute
+        attribute: CellExcelDataFormatAttribute,
     ) {
         //if (getCellCachedValue(context, cellStyleFormatKey) == null) {
-        adaptee.cellStyle(context.getTableId(), context.rowIndex, context.columnIndex).let {
+        adaptee.assertCellStyle(context.getTableId(), context.rowIndex, context.columnIndex).let {
             attribute.dataFormat.run {
                 it.dataFormat = adaptee.workbook().createDataFormat().getFormat(this)
                 context.putCachedValue(cellStyleFormatKey, it.dataFormat)
@@ -191,7 +206,7 @@ class ColumnWidthAttributeRenderOperation<T>(override val adaptee: ApachePoiExce
     override fun attributeType(): Class<out ColumnWidthAttribute> = ColumnWidthAttribute::class.java
 
     override fun renderAttribute(context: AttributedColumn, attribute: ColumnWidthAttribute) {
-        adaptee.tableSheet(context.getTableId()).let {
+        adaptee.assertSheet(context.getTableId()).let {
             if (attribute.auto == true || attribute.px <= 0) {
                 if (!it.isColumnTrackedForAutoSizing(context.columnIndex)) {
                     it.trackColumnForAutoSizing(context.columnIndex)
@@ -238,7 +253,7 @@ class TemplateFileAttributeRenderOperation(override val adaptee: ApachePoiExcelF
     override fun priority() = -1
     override fun renderAttribute(table: Table<*>, attribute: TemplateFileAttribute) {
         adaptee.createWorkbook(FileInputStream(attribute.fileName), true).let {
-            adaptee.assertTableSheet(table.name)
+            adaptee.assertSheet(table.name!!)
         }
     }
 }

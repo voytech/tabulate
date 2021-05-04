@@ -29,22 +29,20 @@ class ApachePoiExcelFacade {
         return adaptee!!
     }
 
-    fun workbook(): SXSSFWorkbook = adaptee!!
-
-    fun tableSheet(tableName: String): SXSSFSheet =
-        workbook().getSheet(tableName)
-
-    fun assertTableSheet(tableName: String?): SXSSFSheet =
-        workbook().getSheet(tableName) ?: workbook().createSheet(tableName)
-
-    fun assertRow(tableId: String, rowIndex: Int): SXSSFRow =
-        row(tableId, rowIndex) ?: createRow(tableId, rowIndex)
+    fun xssfWorkbook(): XSSFWorkbook = workbook().xssfWorkbook
 
     fun xssfCell(coordinates: Coordinates): XSSFCell? =
-        workbook().xssfWorkbook
+        xssfWorkbook()
             .getSheet(coordinates.tableName)
             .getRow(coordinates.rowIndex)
             .getCell(coordinates.columnIndex)
+
+    fun workbook(): SXSSFWorkbook = adaptee!!
+
+    fun assertSheet(sheetName: String): SXSSFSheet = getSheet(sheetName) ?: workbook().createSheet(sheetName)
+
+    fun assertRow(tableId: String, rowIndex: Int): SXSSFRow =
+        row(tableId, rowIndex) ?: createRow(tableId, rowIndex)
 
     fun assertCell(
         sheetName: String,
@@ -54,12 +52,20 @@ class ApachePoiExcelFacade {
     ): SXSSFCell =
         cell(sheetName, rowIndex, columnIndex) ?: createCell(sheetName, rowIndex, columnIndex, onCreate)
 
-    fun cellStyle(
+    fun assertCellStyle(
         sheetName: String,
         rowIndex: Int,
         columnIndex: Int,
         onCreate: ((cell: SXSSFCell) -> Unit)? = null,
-    ): CellStyle = assertCell(sheetName, rowIndex, columnIndex, onCreate).cellStyle
+        provideCellStyle: (() -> CellStyle)? = null
+    ): CellStyle {
+        assertCell(sheetName, rowIndex, columnIndex, onCreate).let {
+            if (provideCellStyle != null) {
+               it.cellStyle = provideCellStyle()
+            }
+            return it.cellStyle
+        }
+    }
 
     fun createImageCell(
         sheetName: String,
@@ -99,7 +105,7 @@ class ApachePoiExcelFacade {
     }
 
     fun getImageAsCellValue(context: Coordinates): CellValue? {
-        return assertTableSheet(context.tableName).createDrawingPatriarch().find {
+        return assertSheet(context.tableName).createDrawingPatriarch().find {
             if (it?.drawing?.shapes?.size == 1 && it.drawing?.shapes?.get(0) is Picture) {
                 (it.drawing.shapes[0] as Picture).let { picture ->
                     picture.clientAnchor.col1.toInt() == context.columnIndex &&
@@ -123,14 +129,14 @@ class ApachePoiExcelFacade {
         columnIndex: Int,
         rowSpan: Int,
         colSpan: Int,
-        onMerge: ((index: Int) -> Unit)?,
+        onMerge: ((index: Int) -> Unit)? = null,
     ) {
         (rowIndex until rowIndex + rowSpan).forEach { rIndex ->
             (columnIndex until columnIndex + colSpan).forEach { cIndex ->
                 assertCell(sheetName, rIndex, cIndex)
             }
         }
-        assertTableSheet(sheetName).addMergedRegion(
+        assertSheet(sheetName).addMergedRegion(
             CellRangeAddress(rowIndex, rowIndex + rowSpan - 1, columnIndex, columnIndex + colSpan - 1)
         ).let {
             if (onMerge != null) {
@@ -138,6 +144,8 @@ class ApachePoiExcelFacade {
             }
         }
     }
+
+    private fun getSheet(sheetName: String): SXSSFSheet? = workbook().getSheet(sheetName)
 
     private fun createWorkbookInternal(
         templateFile: InputStream? = null,
@@ -172,7 +180,7 @@ class ApachePoiExcelFacade {
         colSpan: Int,
         imageRef: Int,
     ): Picture {
-        val drawing: Drawing<*> = assertTableSheet(sheetName).createDrawingPatriarch()
+        val drawing: Drawing<*> = assertSheet(sheetName).createDrawingPatriarch()
         val anchor: ClientAnchor = workbook().creationHelper.createClientAnchor()
         anchor.setCol1(columnIndex)
         anchor.row1 = rowIndex
@@ -183,10 +191,10 @@ class ApachePoiExcelFacade {
 
 
     private fun createRow(tableId: String, rowIndex: Int): SXSSFRow =
-        tableSheet(tableId).createRow(rowIndex)
+        assertSheet(tableId).createRow(rowIndex)
 
     private fun row(tableId: String, rowIndex: Int): SXSSFRow? =
-        tableSheet(tableId).getRow(rowIndex)
+        assertSheet(tableId).getRow(rowIndex)
 
     private fun cell(tableId: String, rowIndex: Int, columnIndex: Int): SXSSFCell? =
         assertRow(tableId, rowIndex).getCell(columnIndex)
