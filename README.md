@@ -1,8 +1,8 @@
 
 # Tabulate - Data into tabular files using convenient DSL (in Kotlin)
 
-[![CodeFactor](https://www.codefactor.io/repository/github/voytech/kotlin-data-export/badge/master?s=44ac65ac3503bca6a7cd3cb3b869fa080a6db3d2)](https://www.codefactor.io/repository/github/voytech/kotlin-data-export/overview/master)
-![Java CI with Gradle](https://github.com/voytech/kotlin-data-export/workflows/Java%20CI%20with%20Gradle/badge.svg)
+[![CodeFactor](https://www.codefactor.io/repository/github/voytech/tabulate/badge?s=356351985a7dd58359040b23f6d896d28af928af)](https://www.codefactor.io/repository/github/voytech/tabulate)
+[![Java CI with Gradle](https://github.com/voytech/tabulate/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/voytech/tabulate/actions/workflows/gradle.yml)
 
 An utility written in Kotlin/JVM for simplifying data export to tabular file formats.
 
