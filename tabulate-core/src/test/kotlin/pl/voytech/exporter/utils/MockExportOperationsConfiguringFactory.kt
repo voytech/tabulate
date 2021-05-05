@@ -6,8 +6,12 @@ import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.ResultHandler
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.operations.*
+import pl.voytech.exporter.core.template.spi.Identifiable
 
 class MockExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFactory<T, Unit>() {
+
+    override fun test(t: Identifiable): Boolean = t.getFormat() == "mock"
+
     override fun getExportOperationsFactory(): ExportOperationsFactory<T, Unit> =
         object : ExportOperationsFactory<T, Unit> {
             override fun createLifecycleOperations(): LifecycleOperations<T, Unit> =
@@ -38,4 +42,5 @@ class MockExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFac
         }
 
     override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<T>? = null
+
 }
