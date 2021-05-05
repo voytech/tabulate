@@ -22,8 +22,7 @@ import pl.voytech.exporter.core.template.operations.AdaptingCellAttributeRenderO
 import pl.voytech.exporter.core.template.operations.AdaptingColumnAttributeRenderOperation
 import pl.voytech.exporter.core.template.operations.AdaptingRowAttributeRenderOperation
 import pl.voytech.exporter.core.template.operations.AdaptingTableAttributeRenderOperation
-import pl.voytech.exporter.core.template.operations.impl.putCachedValue
-import pl.voytech.exporter.impl.template.excel.PoiExcelExportOperationsFactory.Companion.withCachedStyle
+import pl.voytech.exporter.impl.template.excel.PoiExcelExportOperationsFactory.Companion.getCachedStyle
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiUtils
 import pl.voytech.exporter.impl.template.model.attributes.CellExcelDataFormatAttribute
@@ -41,7 +40,7 @@ class CellTextStylesAttributeRenderOperation<T>(override val adaptee: ApachePoiE
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
-            provideCellStyle = { withCachedStyle(adaptee, context) }
+            provideCellStyle = { getCachedStyle(adaptee, context) }
         ).let {
             val font: XSSFFont = adaptee.workbook().createFont() as XSSFFont
             attribute.fontFamily?.run { font.fontName = this }
@@ -71,7 +70,7 @@ class CellBackgroundAttributeRenderOperation<T>(override val adaptee: ApachePoiE
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
-            provideCellStyle = { withCachedStyle(adaptee, context) }
+            provideCellStyle = { getCachedStyle(adaptee, context) }
         ).let {
             if (attribute.color != null) {
                 (it as XSSFCellStyle).setFillForegroundColor(ApachePoiExcelFacade.color(attribute.color!!))
@@ -107,7 +106,7 @@ class CellBordersAttributeRenderOperation<T>(override val adaptee: ApachePoiExce
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
-            provideCellStyle = { withCachedStyle(adaptee, context) }
+            provideCellStyle = { getCachedStyle(adaptee, context) }
         ).let {
             attribute.leftBorderColor?.run { (it as XSSFCellStyle).setLeftBorderColor(ApachePoiExcelFacade.color(this)) }
             attribute.rightBorderColor?.run { (it as XSSFCellStyle).setRightBorderColor(ApachePoiExcelFacade.color(this)) }
@@ -151,7 +150,7 @@ class CellAlignmentAttributeRenderOperation<T>(override val adaptee: ApachePoiEx
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
-            provideCellStyle = { withCachedStyle(adaptee, context) }
+            provideCellStyle = { getCachedStyle(adaptee, context) }
         ).let {
             with(attribute.horizontal) {
                 it.alignment =
@@ -180,24 +179,21 @@ class CellAlignmentAttributeRenderOperation<T>(override val adaptee: ApachePoiEx
 class CellDataFormatAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
     AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, CellExcelDataFormatAttribute>(adaptee) {
 
-    private val cellStyleFormatKey = "cellStyleFormatKey"
-
     override fun attributeType(): Class<out CellExcelDataFormatAttribute> = CellExcelDataFormatAttribute::class.java
 
     override fun renderAttribute(
         context: AttributedCell,
         attribute: CellExcelDataFormatAttribute,
     ) {
-        //if (getCellCachedValue(context, cellStyleFormatKey) == null) {
-        adaptee.assertCellStyle(context.getTableId(), context.rowIndex, context.columnIndex).let {
-            attribute.dataFormat.run {
-                it.dataFormat = adaptee.workbook().createDataFormat().getFormat(this)
-                context.putCachedValue(cellStyleFormatKey, it.dataFormat)
-            }
+        adaptee.assertCellStyle(
+            sheetName = context.getTableId(),
+            rowIndex = context.rowIndex,
+            columnIndex = context.columnIndex,
+            provideCellStyle = { getCachedStyle(adaptee, context) }
+        ).let {
+            it.dataFormat = adaptee.workbook().createDataFormat().getFormat(attribute.dataFormat)
         }
-        //}
     }
-
 }
 
 class ColumnWidthAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :

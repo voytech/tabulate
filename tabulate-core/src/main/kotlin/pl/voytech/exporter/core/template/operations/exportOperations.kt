@@ -10,6 +10,8 @@ import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.operations.impl.AttributeAwareTableOperations
 import pl.voytech.exporter.core.template.operations.impl.AttributeAwareTableRenderOperations
 import pl.voytech.exporter.core.template.operations.impl.AttributesOperations
+import pl.voytech.exporter.core.template.spi.Identifiable
+import java.util.function.Predicate
 
 
 interface LifecycleOperations<T, O> {
@@ -43,23 +45,25 @@ abstract class AdaptingLifecycleOperations<T, O, A>(val adaptee: A) : LifecycleO
 
 abstract class AdaptingTableRenderOperations<T, A>(val adaptee: A) : TableRenderOperations<T>
 
-abstract class ExportOperationsConfiguringFactory<T, O> : ExportOperationsFactory<T, O> {
+abstract class ExportOperationsConfiguringFactory<T, O> : ExportOperationsFactory<T, O>, Predicate<Identifiable> {
 
-    private var attributeOperations: AttributesOperations<T>? = null
+    private val attributeOperations: AttributesOperations<T> = AttributesOperations()
 
     abstract fun getExportOperationsFactory(): ExportOperationsFactory<T, O>
 
     abstract fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<T>?
 
-    private fun prepareAttributeOperations(): AttributesOperations<T>? {
-        return attributeOperations ?: getAttributeOperationsFactory()?.let {
-            AttributesOperations(
-                it.createTableAttributeRenderOperations(),
-                it.createColumnAttributeRenderOperations(),
-                it.createRowAttributeRenderOperations(),
-                it.createCellAttributeRenderOperations()
-            )
-        }.also { attributeOperations = it }
+    private fun prepareAttributeOperations() {
+        getAttributeOperationsFactory()?.let {
+            it.createCellAttributeRenderOperations()?.forEach { op -> attributeOperations.register(op) }
+            it.createTableAttributeRenderOperations()?.forEach { op -> attributeOperations.register(op) }
+            it.createRowAttributeRenderOperations()?.forEach { op -> attributeOperations.register(op) }
+            it.createColumnAttributeRenderOperations()?.forEach { op -> attributeOperations.register(op) }
+        }
+    }
+
+    open fun useAttributes(): Boolean {
+        return true
     }
 
     override fun createLifecycleOperations(): LifecycleOperations<T, O> {
@@ -68,23 +72,21 @@ abstract class ExportOperationsConfiguringFactory<T, O> : ExportOperationsFactor
 
     override fun createTableOperation(): TableOperation<T> {
         val tableOp = getExportOperationsFactory().createTableOperation()
-        return prepareAttributeOperations().let {
-            if (it != null) {
-                AttributeAwareTableOperations(it, tableOp)
-            } else {
-                tableOp
-            }
+        return if (useAttributes()) {
+            prepareAttributeOperations()
+            AttributeAwareTableOperations(attributeOperations, tableOp)
+        } else {
+            tableOp
         }
     }
 
     override fun createTableRenderOperations(): TableRenderOperations<T> {
         val tableOperations = getExportOperationsFactory().createTableRenderOperations()
-        return prepareAttributeOperations().let {
-            if (it != null) {
-                AttributeAwareTableRenderOperations(it, tableOperations)
-            } else {
-                tableOperations
-            }
+        return if (useAttributes()) {
+            prepareAttributeOperations()
+            AttributeAwareTableRenderOperations(attributeOperations, tableOperations)
+        } else {
+            tableOperations
         }
     }
 
