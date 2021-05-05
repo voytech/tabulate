@@ -13,10 +13,10 @@ import pl.voytech.exporter.core.template.context.ColumnRenderPhase
 import pl.voytech.exporter.core.template.context.GlobalContextAndAttributes
 import pl.voytech.exporter.core.template.iterators.OperationContextIterator
 import pl.voytech.exporter.core.template.operations.ExportOperations
+import pl.voytech.exporter.core.template.operations.ExportOperationsConfiguringFactory
 import pl.voytech.exporter.core.template.resolvers.BufferingRowContextResolver
 import pl.voytech.exporter.core.template.source.CollectionSource
 import pl.voytech.exporter.core.template.source.EmptySource
-import pl.voytech.exporter.core.template.spi.ExportOperationsFactoryProvider
 import pl.voytech.exporter.core.template.spi.Identifiable
 import java.io.File
 import java.io.FileOutputStream
@@ -34,7 +34,7 @@ open class TableExportTemplate<T, O>() {
     private lateinit var resultHandler: ResultHandler<T, O>
 
     constructor(output: TabulationFormat<T, O>) : this() {
-        this.ops = resolveExportOperationsFactory(output)!!.create().createOperations()
+        this.ops = resolveExportOperationsFactory(output)!!.createOperations()
         this.resultHandler = output.resultHandler
 
     }
@@ -96,10 +96,10 @@ open class TableExportTemplate<T, O>() {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun resolveExportOperationsFactory(id: Identifiable): ExportOperationsFactoryProvider<T, O>? {
-        val loader: ServiceLoader<ExportOperationsFactoryProvider<*, *>> =
-            ServiceLoader.load(ExportOperationsFactoryProvider::class.java)
-        return loader.find { it.test(id) } as ExportOperationsFactoryProvider<T, O>?
+    private fun resolveExportOperationsFactory(id: Identifiable): ExportOperationsConfiguringFactory<T, O>? {
+        val loader: ServiceLoader<ExportOperationsConfiguringFactory<*, *>> =
+            ServiceLoader.load(ExportOperationsConfiguringFactory::class.java)
+        return loader.find { it.test(id) } as ExportOperationsConfiguringFactory<T, O>?
     }
 
     fun export(tableBuilder: TableBuilder<T>, source: Publisher<T>) {

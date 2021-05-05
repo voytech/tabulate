@@ -16,6 +16,7 @@ import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.context.CellValue
 import pl.voytech.exporter.core.template.operations.*
 import pl.voytech.exporter.core.template.operations.impl.putCachedValueIfAbsent
+import pl.voytech.exporter.core.template.spi.Identifiable
 import pl.voytech.exporter.impl.template.excel.Utils.toDate
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade
 import java.io.OutputStream
@@ -24,6 +25,8 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
     private val poi = ApachePoiExcelFacade()
     private lateinit var stream: OutputStream
+
+    override fun test(t: Identifiable) = ID == t.getFormat()
 
     override fun getExportOperationsFactory(): ExportOperationsFactory<T, OutputStream> =
         object : ExportOperationsFactory<T, OutputStream> {
@@ -128,9 +131,10 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
         }
 
     companion object {
+        const val ID = "xlsx"
         private const val CELL_STYLE_CACHE_KEY: String = "cellStyle"
 
-        fun withCachedStyle(poi: ApachePoiExcelFacade, context: AttributedCell): CellStyle {
+        fun getCachedStyle(poi: ApachePoiExcelFacade, context: AttributedCell): CellStyle {
             return context.putCachedValueIfAbsent(
                 CELL_STYLE_CACHE_KEY,
                 poi.workbook().createCellStyle()
