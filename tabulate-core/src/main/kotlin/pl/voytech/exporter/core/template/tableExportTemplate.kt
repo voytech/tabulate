@@ -17,6 +17,7 @@ import pl.voytech.exporter.core.template.operations.ExportOperationsConfiguringF
 import pl.voytech.exporter.core.template.resolvers.BufferingRowContextResolver
 import pl.voytech.exporter.core.template.source.CollectionSource
 import pl.voytech.exporter.core.template.source.EmptySource
+import pl.voytech.exporter.core.template.spi.ExportOperationsProvider
 import pl.voytech.exporter.core.template.spi.Identifiable
 import java.io.File
 import java.io.FileOutputStream
@@ -96,10 +97,10 @@ open class TableExportTemplate<T, O>() {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun resolveExportOperationsFactory(id: Identifiable): ExportOperationsConfiguringFactory<T, O>? {
-        val loader: ServiceLoader<ExportOperationsConfiguringFactory<*, *>> =
-            ServiceLoader.load(ExportOperationsConfiguringFactory::class.java)
-        return loader.find { it.test(id) } as ExportOperationsConfiguringFactory<T, O>?
+    private fun resolveExportOperationsFactory(id: Identifiable): ExportOperationsProvider<T, O>? {
+        val loader: ServiceLoader<ExportOperationsProvider<*, *>> =
+            ServiceLoader.load(ExportOperationsProvider::class.java)
+        return loader.find { it.test(id) } as ExportOperationsProvider<T, O>?
     }
 
     fun export(tableBuilder: TableBuilder<T>, source: Publisher<T>) {

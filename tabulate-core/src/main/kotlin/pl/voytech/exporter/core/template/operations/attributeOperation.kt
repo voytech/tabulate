@@ -1,13 +1,14 @@
 package pl.voytech.exporter.core.template.operations
 
 import pl.voytech.exporter.core.model.Table
-import pl.voytech.exporter.core.model.attributes.*
+import pl.voytech.exporter.core.model.attributes.Attribute
 import pl.voytech.exporter.core.model.attributes.alias.CellAttribute
 import pl.voytech.exporter.core.model.attributes.alias.ColumnAttribute
-import pl.voytech.exporter.core.model.attributes.alias.TableAttribute
 import pl.voytech.exporter.core.model.attributes.alias.RowAttribute
-
-import pl.voytech.exporter.core.template.context.*
+import pl.voytech.exporter.core.model.attributes.alias.TableAttribute
+import pl.voytech.exporter.core.template.context.AttributedCell
+import pl.voytech.exporter.core.template.context.AttributedColumn
+import pl.voytech.exporter.core.template.context.AttributedRow
 
 interface AttributeOperation<out T : Attribute<*>> {
     fun attributeType(): Class<out T>
@@ -36,10 +37,10 @@ interface ColumnAttributeRenderOperation<E, T : ColumnAttribute> : AttributeOper
 }
 
 interface AttributeRenderOperationsFactory<T> {
-    fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<out TableAttribute>>?
-    fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<T, out RowAttribute>>?
-    fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<T, out ColumnAttribute>>?
-    fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<T, out CellAttribute>>?
+    fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<out TableAttribute>>? = null
+    fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<T, out RowAttribute>>? = null
+    fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<T, out ColumnAttribute>>? = null
+    fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<T, out CellAttribute>>? = null
 }
 
 abstract class AdaptingTableAttributeRenderOperation<A, T: TableAttribute>(open val adaptee: A): TableAttributeRenderOperation<T>

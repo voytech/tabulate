@@ -48,4 +48,9 @@ class AttributesOperations<T> {
         tableAttributeRenderOperationsByClass[operation.attributeType()] = operation
     }
 
+    fun isEmpty(): Boolean =
+        cellAttributeRenderOperationsByClass.isEmpty()
+            .and(rowAttributeRenderOperationsByClass.isEmpty())
+            .and(columnAttributeRenderOperationsByClass.isEmpty())
+            .and(tableAttributeRenderOperationsByClass.isEmpty())
 }
