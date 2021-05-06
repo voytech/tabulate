@@ -107,15 +107,16 @@ abstract class ExportOperationsConfiguringFactory<T, O> : ExportOperationsProvid
     private fun registerClientDefinedAttributesOperations(attributeOperations: AttributesOperations<T>): AttributesOperations<T> {
         val loader: ServiceLoader<AttributeRenderOperationsProvider<*>> =
             ServiceLoader.load(AttributeRenderOperationsProvider::class.java)
-        (loader.filter { it.test(this) }
-            .map { it as AttributeRenderOperationsProvider<T>? }).forEach {
+        loader.filter { it.test(this) }
+            .map { it as AttributeRenderOperationsProvider<T>? }
+            .forEach {
                 registerAttributesOperations(attributeOperations, it)
             }
         return attributeOperations
     }
 
     private fun registerAttributesOperations(): AttributesOperations<T> {
-        return if(attributeOperations.isEmpty()) {
+        return if (attributeOperations.isEmpty()) {
             registerAttributesOperations(attributeOperations, getAttributeOperationsFactory())
             registerClientDefinedAttributesOperations(attributeOperations)
         } else {
