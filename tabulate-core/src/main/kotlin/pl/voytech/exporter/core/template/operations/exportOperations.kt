@@ -10,12 +10,14 @@ import pl.voytech.exporter.core.template.context.AttributedRow
 import pl.voytech.exporter.core.template.operations.impl.AttributeAwareTableOperations
 import pl.voytech.exporter.core.template.operations.impl.AttributeAwareTableRenderOperations
 import pl.voytech.exporter.core.template.operations.impl.AttributesOperations
+import pl.voytech.exporter.core.template.spi.AttributeRenderOperationsProvider
+import pl.voytech.exporter.core.template.spi.ExportOperationsProvider
 import pl.voytech.exporter.core.template.spi.Identifiable
-import java.util.function.Predicate
+import java.util.*
 
 
 interface LifecycleOperations<T, O> {
-    fun initialize(source : Publisher<T>, resultHandler: ResultHandler<T, O>)
+    fun initialize(source: Publisher<T>, resultHandler: ResultHandler<T, O>)
     fun finish()
 }
 
@@ -32,7 +34,7 @@ interface TableRenderOperations<T> {
 class ExportOperations<T, O>(
     val lifecycleOperations: LifecycleOperations<T, O>,
     val tableOperation: TableOperation<T>,
-    val tableRenderOperations: TableRenderOperations<T>
+    val tableRenderOperations: TableRenderOperations<T>,
 )
 
 interface ExportOperationsFactory<T, O> {
@@ -41,59 +43,84 @@ interface ExportOperationsFactory<T, O> {
     fun createTableRenderOperations(): TableRenderOperations<T>
 }
 
-abstract class AdaptingLifecycleOperations<T, O, A>(val adaptee: A) : LifecycleOperations<T , O>
+abstract class AdaptingLifecycleOperations<T, O, A>(val adaptee: A) : LifecycleOperations<T, O>
 
 abstract class AdaptingTableRenderOperations<T, A>(val adaptee: A) : TableRenderOperations<T>
 
-abstract class ExportOperationsConfiguringFactory<T, O> : ExportOperationsFactory<T, O>, Predicate<Identifiable> {
+abstract class ExportOperationsConfiguringFactory<T, O> : ExportOperationsProvider<T, O> {
 
     private val attributeOperations: AttributesOperations<T> = AttributesOperations()
 
-    abstract fun getExportOperationsFactory(): ExportOperationsFactory<T, O>
+    final override fun test(ident: Identifiable): Boolean = getFormat() == ident.getFormat()
 
-    abstract fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<T>?
-
-    private fun prepareAttributeOperations() {
-        getAttributeOperationsFactory()?.let {
-            it.createCellAttributeRenderOperations()?.forEach { op -> attributeOperations.register(op) }
-            it.createTableAttributeRenderOperations()?.forEach { op -> attributeOperations.register(op) }
-            it.createRowAttributeRenderOperations()?.forEach { op -> attributeOperations.register(op) }
-            it.createColumnAttributeRenderOperations()?.forEach { op -> attributeOperations.register(op) }
-        }
+    final override fun createLifecycleOperations(): LifecycleOperations<T, O> {
+        return getExportOperationsFactory().createLifecycleOperations()
     }
 
-    open fun useAttributes(): Boolean {
-        return true
-    }
-
-    override fun createLifecycleOperations(): LifecycleOperations<T, O> {
-       return getExportOperationsFactory().createLifecycleOperations()
-    }
-
-    override fun createTableOperation(): TableOperation<T> {
+    final override fun createTableOperation(): TableOperation<T> {
         val tableOp = getExportOperationsFactory().createTableOperation()
-        return if (useAttributes()) {
-            prepareAttributeOperations()
-            AttributeAwareTableOperations(attributeOperations, tableOp)
-        } else {
-            tableOp
+        return registerAttributesOperations().let {
+            if (!attributeOperations.isEmpty()) {
+                AttributeAwareTableOperations(attributeOperations, tableOp)
+            } else {
+                tableOp
+            }
         }
     }
 
-    override fun createTableRenderOperations(): TableRenderOperations<T> {
-        val tableOperations = getExportOperationsFactory().createTableRenderOperations()
-        return if (useAttributes()) {
-            prepareAttributeOperations()
-            AttributeAwareTableRenderOperations(attributeOperations, tableOperations)
-        } else {
-            tableOperations
+    final override fun createTableRenderOperations(): TableRenderOperations<T> {
+        val tableOps = getExportOperationsFactory().createTableRenderOperations()
+        return registerAttributesOperations().let {
+            if (!attributeOperations.isEmpty()) {
+                AttributeAwareTableRenderOperations(attributeOperations, tableOps)
+            } else {
+                tableOps
+            }
         }
     }
 
-    fun createOperations(): ExportOperations<T, O> = ExportOperations(
+    override fun createOperations(): ExportOperations<T, O> = ExportOperations(
         lifecycleOperations = createLifecycleOperations(),
         tableOperation = createTableOperation(),
         tableRenderOperations = createTableRenderOperations()
     )
+
+    abstract fun getExportOperationsFactory(): ExportOperationsFactory<T, O>
+
+    open fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<T>? = null
+
+    private fun registerAttributesOperations(
+        attributeOperations: AttributesOperations<T>,
+        factory: AttributeRenderOperationsFactory<T>?,
+    ): AttributesOperations<T> {
+        return attributeOperations.apply {
+            factory?.let {
+                it.createCellAttributeRenderOperations()?.forEach { op -> this.register(op) }
+                it.createTableAttributeRenderOperations()?.forEach { op -> this.register(op) }
+                it.createRowAttributeRenderOperations()?.forEach { op -> this.register(op) }
+                it.createColumnAttributeRenderOperations()?.forEach { op -> this.register(op) }
+            }
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun registerClientDefinedAttributesOperations(attributeOperations: AttributesOperations<T>): AttributesOperations<T> {
+        val loader: ServiceLoader<AttributeRenderOperationsProvider<*>> =
+            ServiceLoader.load(AttributeRenderOperationsProvider::class.java)
+        (loader.filter { it.test(this) }
+            .map { it as AttributeRenderOperationsProvider<T>? }).forEach {
+                registerAttributesOperations(attributeOperations, it)
+            }
+        return attributeOperations
+    }
+
+    private fun registerAttributesOperations(): AttributesOperations<T> {
+        return if(attributeOperations.isEmpty()) {
+            registerAttributesOperations(attributeOperations, getAttributeOperationsFactory())
+            registerClientDefinedAttributesOperations(attributeOperations)
+        } else {
+            attributeOperations
+        }
+    }
 
 }
