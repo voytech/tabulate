@@ -1,5 +1,6 @@
 package pl.voytech.exporter.core.attributes
 
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -71,6 +72,41 @@ class ExcelAttributesTests {
                     expectedValue = "Value"
                 ),
                 CellPosition(0, 0) to AssertEqualAttribute(expectedAttribute)
+            )
+        ).perform().also {
+            it.cleanup()
+        }
+    }
+
+    @Test
+    @Disabled("Needs resolver for attribute.")
+    fun `should install client defined attribute`() {
+        // when
+        table<Any> {
+            name = "test"
+            columns { count = 1 }
+            rows {
+                row {
+                    cells {
+                        cell {
+                            value = "Value"
+                            attributes(SimpleTestCellAttribute(valueSuffix = "AdditionalAttribute"))
+                        }
+                    }
+                }
+            }
+        }.export(File("test1.xlsx"))
+
+        // then
+        PoiTableAssert<Any>(
+            tableName = "test",
+            file = File("test1.xlsx"),
+            cellTests = mapOf(
+                CellPosition(0, 0) to AssertCellValue(
+                    expectedType = CellType.STRING,
+                    expectedValue = "Value"
+                ),
+                CellPosition(0, 0) to AssertEqualAttribute(SimpleTestCellAttribute(valueSuffix = "AdditionalAttribute"))
             )
         ).perform().also {
             it.cleanup()
