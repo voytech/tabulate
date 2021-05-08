@@ -36,11 +36,11 @@ interface ColumnAttributeRenderOperation<E, T : ColumnAttribute> : AttributeOper
     fun renderAttribute(context: AttributedColumn, attribute: T)
 }
 
-interface AttributeRenderOperationsFactory<T> {
-    fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<out TableAttribute>>? = null
-    fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<T, out RowAttribute>>? = null
-    fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<T, out ColumnAttribute>>? = null
-    fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<T, out CellAttribute>>? = null
+interface AttributeRenderOperationsFactory<CTX,T> {
+    fun createTableAttributeRenderOperations(creationContext: CTX): Set<TableAttributeRenderOperation<out TableAttribute>>? = null
+    fun createRowAttributeRenderOperations(creationContext: CTX): Set<RowAttributeRenderOperation<T, out RowAttribute>>? = null
+    fun createColumnAttributeRenderOperations(creationContext: CTX): Set<ColumnAttributeRenderOperation<T, out ColumnAttribute>>? = null
+    fun createCellAttributeRenderOperations(creationContext: CTX): Set<CellAttributeRenderOperation<T, out CellAttribute>>? = null
 }
 
 abstract class AdaptingTableAttributeRenderOperation<A, T: TableAttribute>(open val adaptee: A): TableAttributeRenderOperation<T>
