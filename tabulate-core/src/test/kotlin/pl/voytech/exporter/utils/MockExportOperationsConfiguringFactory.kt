@@ -7,13 +7,15 @@ import pl.voytech.exporter.core.template.ResultHandler
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.operations.*
 
-class MockExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFactory<T, Unit>() {
+class MockExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFactory<Unit, T, Unit>() {
 
     override fun getFormat() = "mock"
 
-    override fun getExportOperationsFactory(): ExportOperationsFactory<T, Unit> =
-        object : ExportOperationsFactory<T, Unit> {
-            override fun createLifecycleOperations(): LifecycleOperations<T, Unit> =
+    override fun getFactoryContext() { }
+
+    override fun getExportOperationsFactory(): ExportOperationsFactory<Unit,T, Unit> =
+        object : ExportOperationsFactory<Unit,T, Unit> {
+            override fun createLifecycleOperations(creationContext: Unit): LifecycleOperations<T, Unit> =
                 object : LifecycleOperations<T, Unit> {
                     override fun initialize(source: Publisher<T>, resultHandler: ResultHandler<T, Unit>) {
                         println("Do nothing. Mock implementation")
@@ -24,14 +26,14 @@ class MockExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFac
                     }
                 }
 
-            override fun createTableRenderOperations(): TableRenderOperations<T> =
+            override fun createTableRenderOperations(creationContext: Unit): TableRenderOperations<T> =
                 object : TableRenderOperations<T> {
                     override fun renderRowCell(context: AttributedCell) {
                         println("cell context: $context")
                     }
                 }
 
-            override fun createTableOperation(): TableOperation<T> = object : TableOperation<T> {
+            override fun createTableOperation(creationContext: Unit): TableOperation<T> = object : TableOperation<T> {
                 override fun createTable(builder: TableBuilder<T>): Table<T> {
                     println("create table")
                     return super.createTable(builder)
