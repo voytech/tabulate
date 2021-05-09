@@ -3,7 +3,7 @@ package pl.voytech.exporter.core.model.attributes
 import java.util.*
 
 abstract class Attribute<T: Attribute<T>> {
-    abstract fun mergeWith(other: T): T
+    open fun mergeWith(other: T): T = other
 
     //TODO Try find better solution. Overcoming type system limitations in terms of generics and all issues with cyclic self references.
     @Suppress("UNCHECKED_CAST")

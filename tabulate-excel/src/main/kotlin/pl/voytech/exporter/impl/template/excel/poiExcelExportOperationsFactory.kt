@@ -22,16 +22,15 @@ import java.io.OutputStream
 
 class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<ApachePoiExcelFacade,T, OutputStream>() {
 
-    private val poi = ApachePoiExcelFacade()
     private lateinit var stream: OutputStream
 
     override fun getFormat(): String = "xlsx"
 
-    override fun getFactoryContext(): ApachePoiExcelFacade = poi
+    override fun provideFactoryContext(): ApachePoiExcelFacade = ApachePoiExcelFacade()
 
-    override fun getExportOperationsFactory(): ExportOperationsFactory<ApachePoiExcelFacade, T, OutputStream> =
-        object : ExportOperationsFactory<ApachePoiExcelFacade, T, OutputStream> {
-            override fun createLifecycleOperations(creationContext: ApachePoiExcelFacade): LifecycleOperations<T, OutputStream> =
+    override fun getExportOperationsFactory(creationContext: ApachePoiExcelFacade): ExportOperationsFactory<T, OutputStream> =
+        object : ExportOperationsFactory<T, OutputStream> {
+            override fun createLifecycleOperations(): LifecycleOperations<T, OutputStream> =
                 object : AdaptingLifecycleOperations<T, OutputStream, ApachePoiExcelFacade>(creationContext) {
 
                     override fun initialize(source: Publisher<T>, resultHandler: ResultHandler<T, OutputStream>) {
@@ -47,16 +46,16 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
                     }
                 }
 
-            override fun createTableOperation(creationContext: ApachePoiExcelFacade): TableOperation<T> = object : TableOperation<T> {
+            override fun createTableOperation(): TableOperation<T> = object : TableOperation<T> {
                 override fun createTable(builder: TableBuilder<T>): Table<T> {
                     return builder.build().also {
-                        poi.assertSheet(it.name!!)
+                        creationContext.assertSheet(it.name!!)
                     }
                 }
             }
 
-            override fun createTableRenderOperations(creationContext: ApachePoiExcelFacade): TableRenderOperations<T> =
-                object : AdaptingTableRenderOperations<T, ApachePoiExcelFacade>(poi) {
+            override fun createTableRenderOperations(): TableRenderOperations<T> =
+                object : AdaptingTableRenderOperations<T, ApachePoiExcelFacade>(creationContext) {
 
                     override fun renderRow(context: AttributedRow<T>) {
                         adaptee.assertRow(context.getTableId(), context.rowIndex)
@@ -116,18 +115,18 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
                 }
         }
 
-    override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<ApachePoiExcelFacade,T> =
-        object : AttributeRenderOperationsFactory<ApachePoiExcelFacade,T> {
-            override fun createTableAttributeRenderOperations(creationContext: ApachePoiExcelFacade): Set<AdaptingTableAttributeRenderOperation<ApachePoiExcelFacade, out TableAttribute>> =
+    override fun getAttributeOperationsFactory(creationContext: ApachePoiExcelFacade): AttributeRenderOperationsFactory<T> =
+        object : AttributeRenderOperationsFactory<T> {
+            override fun createTableAttributeRenderOperations(): Set<AdaptingTableAttributeRenderOperation<ApachePoiExcelFacade, out TableAttribute>> =
                 tableAttributesOperations(creationContext)
 
-            override fun createRowAttributeRenderOperations(creationContext: ApachePoiExcelFacade): Set<AdaptingRowAttributeRenderOperation<ApachePoiExcelFacade, T, out RowAttribute>> =
+            override fun createRowAttributeRenderOperations(): Set<AdaptingRowAttributeRenderOperation<ApachePoiExcelFacade, T, out RowAttribute>> =
                 rowAttributesOperations(creationContext)
 
-            override fun createColumnAttributeRenderOperations(creationContext: ApachePoiExcelFacade): Set<AdaptingColumnAttributeRenderOperation<ApachePoiExcelFacade, T, out ColumnAttribute>> =
+            override fun createColumnAttributeRenderOperations(): Set<AdaptingColumnAttributeRenderOperation<ApachePoiExcelFacade, T, out ColumnAttribute>> =
                 columnAttributesOperations(creationContext)
 
-            override fun createCellAttributeRenderOperations(creationContext: ApachePoiExcelFacade): Set<AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, out CellAttribute>> =
+            override fun createCellAttributeRenderOperations(): Set<AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, out CellAttribute>> =
                 cellAttributesOperations(creationContext)
         }
 
