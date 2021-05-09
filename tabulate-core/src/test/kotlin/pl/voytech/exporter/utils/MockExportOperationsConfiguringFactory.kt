@@ -11,11 +11,11 @@ class MockExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFac
 
     override fun getFormat() = "mock"
 
-    override fun getFactoryContext() { }
+    override fun provideFactoryContext() { }
 
-    override fun getExportOperationsFactory(): ExportOperationsFactory<Unit,T, Unit> =
-        object : ExportOperationsFactory<Unit,T, Unit> {
-            override fun createLifecycleOperations(creationContext: Unit): LifecycleOperations<T, Unit> =
+    override fun getExportOperationsFactory(creationContext: Unit): ExportOperationsFactory<T, Unit> =
+        object : ExportOperationsFactory<T, Unit> {
+            override fun createLifecycleOperations(): LifecycleOperations<T, Unit> =
                 object : LifecycleOperations<T, Unit> {
                     override fun initialize(source: Publisher<T>, resultHandler: ResultHandler<T, Unit>) {
                         println("Do nothing. Mock implementation")
@@ -26,14 +26,14 @@ class MockExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFac
                     }
                 }
 
-            override fun createTableRenderOperations(creationContext: Unit): TableRenderOperations<T> =
+            override fun createTableRenderOperations(): TableRenderOperations<T> =
                 object : TableRenderOperations<T> {
                     override fun renderRowCell(context: AttributedCell) {
                         println("cell context: $context")
                     }
                 }
 
-            override fun createTableOperation(creationContext: Unit): TableOperation<T> = object : TableOperation<T> {
+            override fun createTableOperation(): TableOperation<T> = object : TableOperation<T> {
                 override fun createTable(builder: TableBuilder<T>): Table<T> {
                     println("create table")
                     return super.createTable(builder)
