@@ -96,10 +96,10 @@ open class TableExportTemplate<T, O>() {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun resolveExportOperationsFactory(id: Identifiable): ExportOperationsProvider<*, T, O>? {
-        val loader: ServiceLoader<ExportOperationsProvider<*, *, *>> =
+    private fun resolveExportOperationsFactory(id: Identifiable): ExportOperationsProvider<T, O>? {
+        val loader: ServiceLoader<ExportOperationsProvider<*, *>> =
             ServiceLoader.load(ExportOperationsProvider::class.java)
-        return loader.find { it.test(id) } as ExportOperationsProvider<*, T, O>?
+        return loader.find { it.test(id) } as ExportOperationsProvider<T, O>?
     }
 
     fun export(tableBuilder: TableBuilder<T>, source: Publisher<T>) {
