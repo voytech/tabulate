@@ -15,9 +15,9 @@ import pl.voytech.exporter.core.model.attributes.cell.enums.contract.BorderStyle
 import pl.voytech.exporter.core.model.attributes.column.ColumnWidthAttribute
 import pl.voytech.exporter.core.model.attributes.row.RowHeightAttribute
 import pl.voytech.exporter.core.model.attributes.table.TemplateFileAttribute
-import pl.voytech.exporter.core.template.context.AttributedCell
-import pl.voytech.exporter.core.template.context.AttributedColumn
-import pl.voytech.exporter.core.template.context.AttributedRow
+import pl.voytech.exporter.core.template.context.ColumnContext
+import pl.voytech.exporter.core.template.context.RowCellContext
+import pl.voytech.exporter.core.template.context.RowContext
 import pl.voytech.exporter.core.template.operations.AdaptingCellAttributeRenderOperation
 import pl.voytech.exporter.core.template.operations.AdaptingColumnAttributeRenderOperation
 import pl.voytech.exporter.core.template.operations.AdaptingRowAttributeRenderOperation
@@ -30,12 +30,12 @@ import pl.voytech.exporter.impl.template.model.attributes.FilterAndSortTableAttr
 import java.io.FileInputStream
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 
-class CellTextStylesAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, CellTextStylesAttribute>(adaptee) {
+class CellTextStylesAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
+    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, CellTextStylesAttribute>(adaptee) {
 
     override fun attributeType(): Class<CellTextStylesAttribute> = CellTextStylesAttribute::class.java
 
-    override fun renderAttribute(context: AttributedCell, attribute: CellTextStylesAttribute) {
+    override fun renderAttribute(context: RowCellContext, attribute: CellTextStylesAttribute) {
         adaptee.assertCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
@@ -58,12 +58,12 @@ class CellTextStylesAttributeRenderOperation<T>(override val adaptee: ApachePoiE
     }
 }
 
-class CellBackgroundAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, CellBackgroundAttribute>(adaptee) {
+class CellBackgroundAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
+    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, CellBackgroundAttribute>(adaptee) {
     override fun attributeType(): Class<CellBackgroundAttribute> = CellBackgroundAttribute::class.java
 
     override fun renderAttribute(
-        context: AttributedCell,
+        context: RowCellContext,
         attribute: CellBackgroundAttribute,
     ) {
         adaptee.assertCellStyle(
@@ -97,11 +97,11 @@ class CellBackgroundAttributeRenderOperation<T>(override val adaptee: ApachePoiE
     }
 }
 
-class CellBordersAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, CellBordersAttribute>(adaptee) {
+class CellBordersAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
+    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, CellBordersAttribute>(adaptee) {
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
-    override fun renderAttribute(context: AttributedCell, attribute: CellBordersAttribute) {
+    override fun renderAttribute(context: RowCellContext, attribute: CellBordersAttribute) {
         adaptee.assertCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
@@ -140,12 +140,12 @@ class CellBordersAttributeRenderOperation<T>(override val adaptee: ApachePoiExce
     }
 }
 
-class CellAlignmentAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, CellAlignmentAttribute>(adaptee) {
+class CellAlignmentAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
+    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, CellAlignmentAttribute>(adaptee) {
 
     override fun attributeType(): Class<out CellAlignmentAttribute> = CellAlignmentAttribute::class.java
 
-    override fun renderAttribute(context: AttributedCell, attribute: CellAlignmentAttribute) {
+    override fun renderAttribute(context: RowCellContext, attribute: CellAlignmentAttribute) {
         adaptee.assertCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
@@ -176,13 +176,13 @@ class CellAlignmentAttributeRenderOperation<T>(override val adaptee: ApachePoiEx
     }
 }
 
-class CellDataFormatAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, CellExcelDataFormatAttribute>(adaptee) {
+class CellDataFormatAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
+    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, CellExcelDataFormatAttribute>(adaptee) {
 
     override fun attributeType(): Class<out CellExcelDataFormatAttribute> = CellExcelDataFormatAttribute::class.java
 
     override fun renderAttribute(
-        context: AttributedCell,
+        context: RowCellContext,
         attribute: CellExcelDataFormatAttribute,
     ) {
         adaptee.assertCellStyle(
@@ -196,12 +196,12 @@ class CellDataFormatAttributeRenderOperation<T>(override val adaptee: ApachePoiE
     }
 }
 
-class ColumnWidthAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingColumnAttributeRenderOperation<ApachePoiExcelFacade, T, ColumnWidthAttribute>(adaptee) {
+class ColumnWidthAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
+    AdaptingColumnAttributeRenderOperation<ApachePoiExcelFacade, ColumnWidthAttribute>(adaptee) {
 
     override fun attributeType(): Class<out ColumnWidthAttribute> = ColumnWidthAttribute::class.java
 
-    override fun renderAttribute(context: AttributedColumn, attribute: ColumnWidthAttribute) {
+    override fun renderAttribute(context: ColumnContext, attribute: ColumnWidthAttribute) {
         adaptee.assertSheet(context.getTableId()).let {
             if (attribute.auto == true || attribute.px <= 0) {
                 if (!it.isColumnTrackedForAutoSizing(context.columnIndex)) {
@@ -218,7 +218,7 @@ class ColumnWidthAttributeRenderOperation<T>(override val adaptee: ApachePoiExce
 class RowHeightAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
     AdaptingRowAttributeRenderOperation<ApachePoiExcelFacade, T, RowHeightAttribute>(adaptee) {
     override fun attributeType(): Class<out RowHeightAttribute> = RowHeightAttribute::class.java
-    override fun renderAttribute(context: AttributedRow<T>, attribute: RowHeightAttribute) {
+    override fun renderAttribute(context: RowContext<T>, attribute: RowHeightAttribute) {
         adaptee.assertRow(context.getTableId(), context.rowIndex).height =
             ApachePoiUtils.heightFromPixels(attribute.px)
     }
@@ -263,14 +263,14 @@ internal fun <T> rowAttributesOperations(adaptee: ApachePoiExcelFacade) = setOf(
     RowHeightAttributeRenderOperation<T>(adaptee)
 )
 
-internal fun <T> cellAttributesOperations(adaptee: ApachePoiExcelFacade) = setOf(
-    CellTextStylesAttributeRenderOperation<T>(adaptee),
-    CellBackgroundAttributeRenderOperation<T>(adaptee),
-    CellBordersAttributeRenderOperation<T>(adaptee),
-    CellAlignmentAttributeRenderOperation<T>(adaptee),
-    CellDataFormatAttributeRenderOperation<T>(adaptee),
+internal fun cellAttributesOperations(adaptee: ApachePoiExcelFacade) = setOf(
+    CellTextStylesAttributeRenderOperation(adaptee),
+    CellBackgroundAttributeRenderOperation(adaptee),
+    CellBordersAttributeRenderOperation(adaptee),
+    CellAlignmentAttributeRenderOperation(adaptee),
+    CellDataFormatAttributeRenderOperation(adaptee),
 )
 
-internal fun <T> columnAttributesOperations(adaptee: ApachePoiExcelFacade) = setOf(
-    ColumnWidthAttributeRenderOperation<T>(adaptee)
+internal fun columnAttributesOperations(adaptee: ApachePoiExcelFacade) = setOf(
+    ColumnWidthAttributeRenderOperation(adaptee)
 )

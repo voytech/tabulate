@@ -11,10 +11,9 @@ import pl.voytech.exporter.core.model.attributes.alias.ColumnAttribute
 import pl.voytech.exporter.core.model.attributes.alias.RowAttribute
 import pl.voytech.exporter.core.model.attributes.alias.TableAttribute
 import pl.voytech.exporter.core.template.ResultHandler
-import pl.voytech.exporter.core.template.context.AttributedCell
-import pl.voytech.exporter.core.template.context.AttributedRow
-import pl.voytech.exporter.core.template.context.CellValue
+import pl.voytech.exporter.core.template.context.*
 import pl.voytech.exporter.core.template.operations.*
+import pl.voytech.exporter.core.template.operations.impl.ensureAttributesCacheEntry
 import pl.voytech.exporter.core.template.operations.impl.putCachedValueIfAbsent
 import pl.voytech.exporter.impl.template.excel.Utils.toDate
 import pl.voytech.exporter.impl.template.excel.wrapper.ApachePoiExcelFacade
@@ -28,10 +27,21 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
 
     override fun provideFactoryContext(): ApachePoiExcelFacade = ApachePoiExcelFacade()
 
+    inner class CachingTableOperationsOverlay(
+        private val overlay: TableRenderOperationsOverlay<T>,
+        private val ops: TableRenderOperationsAdapter<T> = TableRenderOperationsAdapter(overlay)
+    ) : TableRenderOperations<T> by ops {
+
+        override fun renderRowCell(context: AttributedCell) {
+            context.ensureAttributesCacheEntry()
+            overlay.renderRowCell(context.narrow())
+        }
+    }
+
     override fun getExportOperationsFactory(creationContext: ApachePoiExcelFacade): ExportOperationsFactory<T, OutputStream> =
         object : ExportOperationsFactory<T, OutputStream> {
             override fun createLifecycleOperations(): LifecycleOperations<T, OutputStream> =
-                object : AdaptingLifecycleOperations<T, OutputStream, ApachePoiExcelFacade>(creationContext) {
+                object : LifecycleOperations<T, OutputStream>{
 
                     override fun initialize(source: Publisher<T>, resultHandler: ResultHandler<T, OutputStream>) {
                         creationContext.createWorkbook()
@@ -54,20 +64,19 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
                 }
             }
 
-            override fun createTableRenderOperations(): TableRenderOperations<T> =
-                object : AdaptingTableRenderOperations<T, ApachePoiExcelFacade>(creationContext) {
+            override fun createTableRenderOperations(): TableRenderOperations<T> = CachingTableOperationsOverlay(object : TableRenderOperationsOverlay<T> {
 
-                    override fun renderRow(context: AttributedRow<T>) {
-                        adaptee.assertRow(context.getTableId(), context.rowIndex)
+                    override fun beginRow(context: RowContext<T>) {
+                        creationContext.assertRow(context.getTableId(), context.rowIndex)
                     }
 
-                    override fun renderRowCell(context: AttributedCell) {
+                    override fun renderRowCell(context: RowCellContext) {
                         if (context.value.type in CellType.BASIC_TYPES) {
-                            adaptee.assertCell(context.getTableId(), context.rowIndex, context.columnIndex) {
+                            creationContext.assertCell(context.getTableId(), context.rowIndex, context.columnIndex) {
                                 setCellValue(it, context.value)
                             }.also { _ ->
                                 context.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.let {
-                                    adaptee.mergeCells(
+                                    creationContext.mergeCells(
                                         context.getTableId(),
                                         context.rowIndex,
                                         context.columnIndex,
@@ -77,7 +86,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
                                 }
                             }
                         } else when (context.value.type) {
-                            CellType.IMAGE_URL -> adaptee.createImageCell(
+                            CellType.IMAGE_URL -> creationContext.createImageCell(
                                 context.getTableId(),
                                 context.rowIndex,
                                 context.columnIndex,
@@ -85,7 +94,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
                                 context.value.colSpan,
                                 context.value.value as String
                             )
-                            CellType.IMAGE_DATA -> adaptee.createImageCell(
+                            CellType.IMAGE_DATA -> creationContext.createImageCell(
                                 context.getTableId(),
                                 context.rowIndex,
                                 context.columnIndex,
@@ -112,7 +121,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
                             }
                         }
                     }
-                }
+                })
         }
 
     override fun getAttributeOperationsFactory(creationContext: ApachePoiExcelFacade): AttributeRenderOperationsFactory<T> =
@@ -123,10 +132,10 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
             override fun createRowAttributeRenderOperations(): Set<AdaptingRowAttributeRenderOperation<ApachePoiExcelFacade, T, out RowAttribute>> =
                 rowAttributesOperations(creationContext)
 
-            override fun createColumnAttributeRenderOperations(): Set<AdaptingColumnAttributeRenderOperation<ApachePoiExcelFacade, T, out ColumnAttribute>> =
+            override fun createColumnAttributeRenderOperations(): Set<AdaptingColumnAttributeRenderOperation<ApachePoiExcelFacade, out ColumnAttribute>> =
                 columnAttributesOperations(creationContext)
 
-            override fun createCellAttributeRenderOperations(): Set<AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, out CellAttribute>> =
+            override fun createCellAttributeRenderOperations(): Set<AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, out CellAttribute>> =
                 cellAttributesOperations(creationContext)
         }
 
@@ -134,7 +143,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
 
         private const val CELL_STYLE_CACHE_KEY: String = "cellStyle"
 
-        fun getCachedStyle(poi: ApachePoiExcelFacade, context: AttributedCell): CellStyle {
+        fun getCachedStyle(poi: ApachePoiExcelFacade, context: RowCellContext): CellStyle {
             return context.putCachedValueIfAbsent(
                 CELL_STYLE_CACHE_KEY,
                 poi.workbook().createCellStyle()

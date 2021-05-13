@@ -4,9 +4,7 @@ import org.reactivestreams.Publisher
 import pl.voytech.exporter.core.api.builder.TableBuilder
 import pl.voytech.exporter.core.model.Table
 import pl.voytech.exporter.core.template.ResultHandler
-import pl.voytech.exporter.core.template.context.AttributedCell
-import pl.voytech.exporter.core.template.context.AttributedColumn
-import pl.voytech.exporter.core.template.context.AttributedRow
+import pl.voytech.exporter.core.template.context.*
 import pl.voytech.exporter.core.template.operations.impl.AttributeAwareTableOperations
 import pl.voytech.exporter.core.template.operations.impl.AttributeAwareTableRenderOperations
 import pl.voytech.exporter.core.template.operations.impl.AttributesOperations
@@ -27,8 +25,23 @@ interface TableOperation<T> {
 
 interface TableRenderOperations<T> {
     fun renderColumn(context: AttributedColumn) {}
-    fun renderRow(context: AttributedRow<T>) {}
+    fun beginRow(context: AttributedRow<T>) {}
     fun renderRowCell(context: AttributedCell)
+    fun endRow(context: AttributedRow<T>) {}
+}
+
+interface TableRenderOperationsOverlay<T> {
+    fun renderColumn(context: ColumnContext) {}
+    fun beginRow(context: RowContext<T>) {}
+    fun renderRowCell(context: RowCellContext)
+    fun endRow(context: RowContext<T>) {}
+}
+
+class TableRenderOperationsAdapter<T>(private val overlay: TableRenderOperationsOverlay<T>): TableRenderOperations<T> {
+    override fun renderColumn(context: AttributedColumn) = overlay.renderColumn(context.narrow())
+    override fun beginRow(context: AttributedRow<T>) = overlay.beginRow(context.narrow())
+    override fun renderRowCell(context: AttributedCell) = overlay.renderRowCell(context.narrow())
+    override fun endRow(context: AttributedRow<T>) = overlay.endRow(context.narrow())
 }
 
 class ExportOperations<T, O>(
@@ -43,44 +56,17 @@ interface ExportOperationsFactory<T, O> {
     fun createTableRenderOperations(): TableRenderOperations<T>
 }
 
-abstract class AdaptingLifecycleOperations<T, O, A>(val adaptee: A) : LifecycleOperations<T, O>
+abstract class ExportOperationsConfiguringFactory<CTX, T, O> : ExportOperationsProvider<T, O> {
 
-abstract class AdaptingTableRenderOperations<T, A>(val adaptee: A) : TableRenderOperations<T>
+    private val creationContext: CTX by lazy {
+        provideFactoryContext()
+    }
 
-abstract class ExportOperationsConfiguringFactory<CTX, T, O> : ExportOperationsProvider<T, O>,
-    ExportOperationsFactory<T, O> {
-
-    private val attributeOperations: AttributesOperations<T> = AttributesOperations()
-
-    private var creationContext: CTX? = null
+    private val attributeOperations: AttributesOperations<T> by lazy {
+        registerAttributesOperations(creationContext)
+    }
 
     final override fun test(ident: Identifiable): Boolean = getFormat() == ident.getFormat()
-
-    final override fun createLifecycleOperations(): LifecycleOperations<T, O> {
-        return getExportOperationsFactory(getCreationContext()).createLifecycleOperations()
-    }
-
-    final override fun createTableOperation(): TableOperation<T> {
-        val tableOp = getExportOperationsFactory(getCreationContext()).createTableOperation()
-        return registerAttributesOperations(getCreationContext()).let {
-            if (!attributeOperations.isEmpty()) {
-                AttributeAwareTableOperations(attributeOperations, tableOp)
-            } else {
-                tableOp
-            }
-        }
-    }
-
-    final override fun createTableRenderOperations(): TableRenderOperations<T> {
-        val tableOps = getExportOperationsFactory(getCreationContext()).createTableRenderOperations()
-        return registerAttributesOperations(getCreationContext()).let {
-            if (!attributeOperations.isEmpty()) {
-                AttributeAwareTableRenderOperations(attributeOperations, tableOps)
-            } else {
-                tableOps
-            }
-        }
-    }
 
     override fun createOperations(): ExportOperations<T, O> {
         return ExportOperations(
@@ -96,7 +82,32 @@ abstract class ExportOperationsConfiguringFactory<CTX, T, O> : ExportOperationsP
 
     abstract fun provideFactoryContext(): CTX
 
-    private fun registerAttributesOperations(attributeOperations: AttributesOperations<T>, factory: AttributeRenderOperationsFactory<T>?): AttributesOperations<T> {
+    private fun createLifecycleOperations(): LifecycleOperations<T, O> {
+        return getExportOperationsFactory(creationContext).createLifecycleOperations()
+    }
+
+    private fun createTableOperation(): TableOperation<T> {
+        val tableOp = getExportOperationsFactory(creationContext).createTableOperation()
+        return if (!attributeOperations.isEmpty()) {
+            AttributeAwareTableOperations(attributeOperations, tableOp)
+        } else {
+            tableOp
+        }
+    }
+
+    private fun createTableRenderOperations(): TableRenderOperations<T> {
+        val tableOps = getExportOperationsFactory(creationContext).createTableRenderOperations()
+        return if (!attributeOperations.isEmpty()) {
+            AttributeAwareTableRenderOperations(attributeOperations, tableOps)
+        } else {
+            tableOps
+        }
+    }
+
+    private fun registerAttributesOperations(
+        attributeOperations: AttributesOperations<T>,
+        factory: AttributeRenderOperationsFactory<T>?,
+    ): AttributesOperations<T> {
         return attributeOperations.apply {
             factory?.let {
                 it.createCellAttributeRenderOperations()?.forEach { op -> this.register(op) }
@@ -108,7 +119,10 @@ abstract class ExportOperationsConfiguringFactory<CTX, T, O> : ExportOperationsP
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun registerClientDefinedAttributesOperations(creationContext: CTX, attributeOperations: AttributesOperations<T>, ): AttributesOperations<T> {
+    private fun registerClientDefinedAttributesOperations(
+        creationContext: CTX,
+        attributeOperations: AttributesOperations<T>,
+    ): AttributesOperations<T> {
         val loader: ServiceLoader<AttributeRenderOperationsProvider<*, *>> =
             ServiceLoader.load(AttributeRenderOperationsProvider::class.java)
         loader.filter { it.test(this) }
@@ -120,19 +134,10 @@ abstract class ExportOperationsConfiguringFactory<CTX, T, O> : ExportOperationsP
     }
 
     private fun registerAttributesOperations(creationContext: CTX): AttributesOperations<T> {
-        return if (attributeOperations.isEmpty()) {
-            registerAttributesOperations(attributeOperations, getAttributeOperationsFactory(creationContext))
-            registerClientDefinedAttributesOperations(creationContext, attributeOperations)
-        } else {
-            attributeOperations
+        return AttributesOperations<T>().let {
+            registerAttributesOperations(it, getAttributeOperationsFactory(creationContext))
+            registerClientDefinedAttributesOperations(creationContext, it)
         }
-    }
-
-    private fun getCreationContext(): CTX  {
-        if (creationContext == null) {
-            creationContext = provideFactoryContext()
-        }
-        return creationContext!!
     }
 
 }
