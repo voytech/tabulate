@@ -11,11 +11,11 @@ class TableRenderOperationsChain<T>(
     private vararg val chain: TableRenderOperations<T>
 ) : TableRenderOperations<T> {
 
-    override fun renderRow(
+    override fun beginRow(
         context: AttributedRow<T>
     ) {
         chain.ifEmpty { throw EmptyOperationChainException() }
-        chain.forEach { it.renderRow(context) }
+        chain.forEach { it.beginRow(context) }
     }
 
     override fun renderColumn(
