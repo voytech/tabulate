@@ -7,4 +7,6 @@ data class AttributedRow<T>(
     val rowAttributes: Set<RowAttribute>?,
     val rowCellValues: Map<ColumnKey<T>, AttributedCell>,
     val rowIndex: Int
-): ContextData<T>()
+): ContextData<T>(), RowCoordinate {
+    override fun getRow(): Int = rowIndex
+}

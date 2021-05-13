@@ -5,6 +5,7 @@ import pl.voytech.exporter.core.model.attributes.alias.ColumnAttribute
 import pl.voytech.exporter.core.model.attributes.alias.RowAttribute
 import pl.voytech.exporter.core.template.context.AttributedCell
 import pl.voytech.exporter.core.template.context.ContextData
+import pl.voytech.exporter.core.template.context.RowCellContext
 import pl.voytech.exporter.core.template.operations.impl.AttributeKeyedCache.Companion.getCache
 
 @Suppress("UNCHECKED_CAST")
@@ -48,6 +49,14 @@ fun AttributedCell.getCachedValue(key: String): Any? {
     }
 }
 
+fun AttributedCell.ensureAttributesCacheEntry() {
+    this.attributes?.let {
+        getCache(this).getCellCacheEntry(it)
+    }?.also{
+        additionalAttributes?.put("_currentCellAttributesCache", it)
+    }
+}
+
 fun AttributedCell.putCachedValue(key: String, value: Any): Any? {
     return this.attributes?.let {
         getCache(this).getCellCacheEntry(it).put(key, value)
@@ -61,4 +70,11 @@ fun AttributedCell.putCachedValueIfAbsent(key: String, value: Any): Any {
             internalCache[key]
         }
     } ?: value
+}
+
+@Suppress("UNCHECKED_CAST")
+fun RowCellContext.putCachedValueIfAbsent(key: String, value: Any): Any {
+    return (this.additionalAttributes?.get("_currentCellAttributesCache") as MutableMap<String, Any>).let {
+        it.computeIfAbsent(key){ value }
+    }
 }

@@ -1,7 +1,7 @@
 package pl.voytech.exporter.core.attributes
 
 import pl.voytech.exporter.core.model.attributes.CellAttribute
-import pl.voytech.exporter.core.template.context.AttributedCell
+import pl.voytech.exporter.core.template.context.RowCellContext
 import pl.voytech.exporter.core.template.operations.AdaptingCellAttributeRenderOperation
 import pl.voytech.exporter.core.template.operations.AttributeRenderOperationsFactory
 import pl.voytech.exporter.core.template.operations.CellAttributeRenderOperation
@@ -16,7 +16,7 @@ class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvid
 
     override fun getAttributeOperationsFactory(creationContext: ApachePoiExcelFacade): AttributeRenderOperationsFactory<T> {
         return object : AttributeRenderOperationsFactory<T> {
-            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<T, out CellAttributeAlias>> =
+            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<out CellAttributeAlias>> =
                 setOf(SimpleTestCellAttributeRenderOperation(creationContext))
         }
     }
@@ -24,12 +24,12 @@ class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvid
 
 data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<SimpleTestCellAttribute>()
 
-class SimpleTestCellAttributeRenderOperation<T>(poi: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, T, SimpleTestCellAttribute>(poi) {
+class SimpleTestCellAttributeRenderOperation(poi: ApachePoiExcelFacade) :
+    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, SimpleTestCellAttribute>(poi) {
 
     override fun attributeType(): Class<out SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
 
-    override fun renderAttribute(context: AttributedCell, attribute: SimpleTestCellAttribute) {
+    override fun renderAttribute(context: RowCellContext, attribute: SimpleTestCellAttribute) {
         with(adaptee.assertCell(
             context.getTableId(),
             context.rowIndex,

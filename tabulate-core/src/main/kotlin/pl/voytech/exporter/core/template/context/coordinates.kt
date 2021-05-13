@@ -1,5 +1,16 @@
 package pl.voytech.exporter.core.template.context
 
+interface RowCoordinate {
+    fun getRow(): Int
+}
+
+interface ColumnCoordinate {
+    fun getColumn(): Int
+}
+
+interface RowCellCoordinate : RowCoordinate, ColumnCoordinate
+
+
 data class Coordinates(
     val tableName: String
 ) {

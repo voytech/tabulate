@@ -127,9 +127,9 @@ open class TableExportTemplate<T, O>() {
         stateAndAttributes: GlobalContextAndAttributes<T>,
         rowContext: AttributedRow<T>
     ) {
-        ops.tableRenderOperations.renderRow(rowContext).also {
-            renderRowCells(stateAndAttributes, rowContext)
-        }
+        ops.tableRenderOperations.beginRow(rowContext)
+        renderRowCells(stateAndAttributes, rowContext)
+        ops.tableRenderOperations.endRow(rowContext)
     }
 
     companion object {
