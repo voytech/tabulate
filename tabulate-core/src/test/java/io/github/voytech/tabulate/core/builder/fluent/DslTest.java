@@ -1,14 +1,14 @@
 package io.github.voytech.tabulate.core.builder.fluent;
 
 import org.junit.jupiter.api.Test;
-import io.github.voytech.tabulate.core.model.CellType;
-import io.github.voytech.tabulate.core.model.RowSelectors;
-import io.github.voytech.tabulate.core.model.SourceRow;
-import io.github.voytech.tabulate.core.model.Table;
-import io.github.voytech.tabulate.core.model.attributes.cell.CellTextStylesAttribute;
-import io.github.voytech.tabulate.core.model.attributes.column.ColumnWidthAttribute;
-import io.github.voytech.tabulate.core.model.attributes.row.RowHeightAttribute;
-import io.github.voytech.tabulate.core.model.attributes.table.TemplateFileAttribute;
+import io.github.voytech.tabulate.model.CellType;
+import io.github.voytech.tabulate.model.RowSelectors;
+import io.github.voytech.tabulate.model.SourceRow;
+import io.github.voytech.tabulate.model.Table;
+import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute;
+import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute;
+import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute;
+import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
