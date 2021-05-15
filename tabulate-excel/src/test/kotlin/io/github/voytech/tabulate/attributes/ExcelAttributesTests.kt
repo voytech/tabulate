@@ -45,7 +45,7 @@ class ExcelAttributesTests {
 
     @ParameterizedTest
     @MethodSource("cellAttributesProvider")
-    fun `should export with cell attribute`(attribute: CellAttribute, expectedAttribute: CellAttribute) {
+    fun `should export with cell attribute`(attr: CellAttribute, expectedAttribute: CellAttribute) {
         // when
         table<Any> {
             name = "test"
@@ -55,7 +55,9 @@ class ExcelAttributesTests {
                     cells {
                         cell {
                             value = "Value"
-                            attributes(attribute)
+                            attributes {
+                                attribute(attr)
+                            }
                         }
                     }
                 }
@@ -90,7 +92,11 @@ class ExcelAttributesTests {
                     cells {
                         cell {
                             value = "Value"
-                            attributes(SimpleTestCellAttribute(valueSuffix = "AdditionalAttribute"))
+                            attributes {
+                                simpleTestCellAttrib {
+                                    valueSuffix = "AdditionalAttribute"
+                                }
+                            }
                         }
                     }
                 }

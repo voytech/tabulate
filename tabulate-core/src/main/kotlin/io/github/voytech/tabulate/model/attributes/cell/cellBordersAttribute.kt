@@ -1,6 +1,10 @@
 package io.github.voytech.tabulate.model.attributes.cell
 
 import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
+import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.RowLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.TableLevelAttributesBuilderApi
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultBorderStyle
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
 
@@ -49,5 +53,14 @@ data class CellBordersAttribute(
     )
 }
 
-fun borders(block: CellBordersAttribute.Builder.() -> Unit): CellBordersAttribute =
-    CellBordersAttribute.Builder().apply(block).build()
+fun <T> CellLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =
+    attribute(CellBordersAttribute.Builder().apply(block).build())
+
+fun <T> ColumnLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =
+    attribute(CellBordersAttribute.Builder().apply(block).build())
+
+fun <T> RowLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =
+    attribute(CellBordersAttribute.Builder().apply(block).build())
+
+fun <T> TableLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =
+    attribute(CellBordersAttribute.Builder().apply(block).build())

@@ -6,6 +6,9 @@ import io.github.voytech.tabulate.model.ColumnKey
 import io.github.voytech.tabulate.model.RowCellEval
 import io.github.voytech.tabulate.model.RowSelector
 import io.github.voytech.tabulate.model.attributes.Attribute
+import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
+import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
+import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 
 @DslMarker
 annotation class TabulateMarker
@@ -16,6 +19,41 @@ fun <T> table(block: TableBuilderApi<T>.() -> Unit): TableBuilder<T> {
         TableBuilderApi.new(it).apply(block)
     }
 }
+
+@TabulateMarker
+class TableLevelAttributesBuilderApi<T> internal constructor(private val builder: TableBuilder<T>) {
+
+    @JvmSynthetic
+    fun attribute(attribute: Attribute<*>) = builder.attributes(attribute)
+
+}
+
+@TabulateMarker
+class ColumnLevelAttributesBuilderApi<T> internal constructor(private val builder: ColumnBuilder<T>) {
+
+    @JvmSynthetic
+    fun attribute(attribute: ColumnAttribute) = builder.attributes(attribute)
+
+    @JvmSynthetic
+    fun attribute(attribute: CellAttribute) = builder.attributes(attribute)
+
+}
+
+@TabulateMarker
+class RowLevelAttributesBuilderApi<T> internal constructor(private val builder: RowBuilder<T>) {
+    @JvmSynthetic
+    fun attribute(attribute: RowAttribute) = builder.attributes(attribute)
+
+    @JvmSynthetic
+    fun attribute(attribute: CellAttribute) = builder.attributes(attribute)
+}
+
+@TabulateMarker
+class CellLevelAttributesBuilderApi<T> internal constructor(private val builder: CellBuilder<T>) {
+    @JvmSynthetic
+    fun attribute(attribute: CellAttribute) = builder.attributes(attribute)
+}
+
 
 @TabulateMarker
 class TableBuilderApi<T> private constructor(private val builder: TableBuilder<T>)  {
@@ -36,14 +74,7 @@ class TableBuilderApi<T> private constructor(private val builder: TableBuilder<T
     fun rows(block: RowsBuilderApi<T>.() -> Unit) = RowsBuilderApi(builder.rowsBuilder).apply(block)
 
     @JvmSynthetic
-    fun attributes(vararg attributes: Attribute<*>) {
-        builder.attributes(attributes.asList())
-    }
-
-    @JvmSynthetic
-    fun attributes(attributes: List<Attribute<*>>) {
-        builder.attributes(attributes)
-    }
+    fun attributes(block: TableLevelAttributesBuilderApi<T>.() -> Unit) = TableLevelAttributesBuilderApi(builder).apply(block)
 
     companion object {
         @JvmSynthetic
@@ -91,18 +122,8 @@ class ColumnBuilderApi<T> private constructor(private val builder: ColumnBuilder
     @set:JvmSynthetic
     var index: Int?  by builder::index
 
-    @set:JvmSynthetic
-    var dataFormatter: ((field: Any) -> Any)? by builder::dataFormatter
-
     @JvmSynthetic
-    fun attributes(vararg attributes: Attribute<*>) {
-        builder.attributes(attributes.asList())
-    }
-
-    @JvmSynthetic
-    fun attributes(attributes: List<Attribute<*>>) {
-        builder.attributes(attributes)
-    }
+    fun attributes(block: ColumnLevelAttributesBuilderApi<T>.() -> Unit) = ColumnLevelAttributesBuilderApi(builder).apply(block)
 
     companion object {
         @JvmSynthetic
@@ -146,14 +167,7 @@ class RowBuilderApi<T> private constructor(private val builder: RowBuilder<T>)  
     fun cells(block: CellsBuilderApi<T>.() -> Unit) = CellsBuilderApi.new(builder.cellsBuilder).apply(block)
 
     @JvmSynthetic
-    fun attributes(vararg attributes: Attribute<*>) {
-        builder.attributes(attributes.asList())
-    }
-
-    @JvmSynthetic
-    fun attributes(attributes: List<Attribute<*>>) {
-        builder.attributes(attributes)
-    }
+    fun attributes(block: RowLevelAttributesBuilderApi<T>.() -> Unit) = RowLevelAttributesBuilderApi(builder).apply(block)
 
     companion object {
         @JvmSynthetic
@@ -209,14 +223,7 @@ class CellBuilderApi<T> private constructor(private val builder: CellBuilder<T>)
     var rowSpan: Int by builder::rowSpan
 
     @JvmSynthetic
-    fun attributes(vararg attributes: Attribute<*>) {
-        builder.attributes(attributes.asList())
-    }
-
-    @JvmSynthetic
-    fun attributes(attributes: List<Attribute<*>>) {
-        builder.attributes(attributes)
-    }
+    fun attributes(block: CellLevelAttributesBuilderApi<T>.() -> Unit) = CellLevelAttributesBuilderApi(builder).apply(block)
 
     companion object {
         @JvmSynthetic

@@ -13,26 +13,25 @@ class CellStyleBuilderApi<T> private constructor(private val builder: ColumnBuil
     fun text(block: CellTextStylesAttribute.Builder.() -> Unit) =
         CellTextStylesAttribute.Builder()
             .apply(block).build()
-            .let { builder.attributes(it) }
-
+            .let { builder.attributes { attribute(it) } }
 
     @JvmSynthetic
     fun borders(block: CellBordersAttribute.Builder.() -> Unit) =
         CellBordersAttribute.Builder()
             .apply(block).build()
-            .let { builder.attributes(it) }
+            .let { builder.attributes { attribute(it) } }
 
     @JvmSynthetic
     fun background(block: CellBackgroundAttribute.Builder.() -> Unit) =
         CellBackgroundAttribute.Builder()
             .apply(block).build()
-            .let { builder.attributes(it) }
+            .let { builder.attributes { attribute(it) } }
 
     @JvmSynthetic
     fun alignment(block: CellAlignmentAttribute.Builder.() -> Unit) =
         CellAlignmentAttribute.Builder()
             .apply(block).build()
-            .let { builder.attributes(it) }
+            .let { builder.attributes { attribute(it) } }
 
 
     companion object {

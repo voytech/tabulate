@@ -1,6 +1,10 @@
 package io.github.voytech.tabulate.model.attributes.cell
 
 import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
+import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.RowLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.TableLevelAttributesBuilderApi
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultWeightStyle
 
 data class CellTextStylesAttribute(
@@ -45,5 +49,14 @@ data class CellTextStylesAttribute(
     )
 }
 
-fun text(block: CellTextStylesAttribute.Builder.() -> Unit): CellTextStylesAttribute = CellTextStylesAttribute.Builder()
-    .apply(block).build()
+fun <T> CellLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =
+    attribute(CellTextStylesAttribute.Builder().apply(block).build())
+
+fun <T> ColumnLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =
+    attribute(CellTextStylesAttribute.Builder().apply(block).build())
+
+fun <T> RowLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =
+    attribute(CellTextStylesAttribute.Builder().apply(block).build())
+
+fun <T> TableLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =
+    attribute(CellTextStylesAttribute.Builder().apply(block).build())
