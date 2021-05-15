@@ -4,7 +4,7 @@ plugins {
 }
 
 allprojects {
-    group 'pl.voytech'
+    group 'io.github.voytech'
     version scmVersion.version
 
     repositories {
