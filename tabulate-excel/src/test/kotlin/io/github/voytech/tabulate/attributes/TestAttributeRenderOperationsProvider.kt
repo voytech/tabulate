@@ -1,5 +1,8 @@
 package io.github.voytech.tabulate.attributes
 
+import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
+import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
+import io.github.voytech.tabulate.excel.template.wrapper.ApachePoiExcelFacade
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.template.context.RowCellContext
 import io.github.voytech.tabulate.template.operations.AdaptingCellAttributeRenderOperation
@@ -7,7 +10,6 @@ import io.github.voytech.tabulate.template.operations.AttributeRenderOperationsF
 import io.github.voytech.tabulate.template.operations.CellAttributeRenderOperation
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.template.spi.Identifiable
-import io.github.voytech.tabulate.excel.template.wrapper.ApachePoiExcelFacade
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute as CellAttributeAlias
 
 class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvider<ApachePoiExcelFacade,T> {
@@ -22,7 +24,12 @@ class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvid
     }
 }
 
-data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<SimpleTestCellAttribute>()
+data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<SimpleTestCellAttribute>() {
+
+    class Builder(var valueSuffix: String = "") : CellAttributeBuilder<SimpleTestCellAttribute> {
+        override fun build(): SimpleTestCellAttribute = SimpleTestCellAttribute(valueSuffix)
+    }
+}
 
 class SimpleTestCellAttributeRenderOperation(poi: ApachePoiExcelFacade) :
     AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, SimpleTestCellAttribute>(poi) {
@@ -38,4 +45,8 @@ class SimpleTestCellAttributeRenderOperation(poi: ApachePoiExcelFacade) :
             this.setCellValue("${this.stringCellValue}_${attribute.valueSuffix}")
         }
     }
+
 }
+
+fun <T> CellLevelAttributesBuilderApi<T>.simpleTestCellAttrib(block: SimpleTestCellAttribute.Builder.() -> Unit) =
+    attribute(SimpleTestCellAttribute.Builder().apply(block).build())

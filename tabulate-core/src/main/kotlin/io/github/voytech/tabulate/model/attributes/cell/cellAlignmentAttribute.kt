@@ -1,6 +1,10 @@
 package io.github.voytech.tabulate.model.attributes.cell
 
 import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
+import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.RowLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.TableLevelAttributesBuilderApi
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultVerticalAlignment
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.HorizontalAlignment
@@ -23,5 +27,14 @@ data class CellAlignmentAttribute(
 
 }
 
-fun alignment(block: CellAlignmentAttribute.Builder.() -> Unit): CellAlignmentAttribute =
-    CellAlignmentAttribute.Builder().apply(block).build()
+fun <T> CellLevelAttributesBuilderApi<T>.alignment(block: CellAlignmentAttribute.Builder.() -> Unit) =
+    attribute(CellAlignmentAttribute.Builder().apply(block).build())
+
+fun <T> ColumnLevelAttributesBuilderApi<T>.alignment(block: CellAlignmentAttribute.Builder.() -> Unit) =
+    attribute(CellAlignmentAttribute.Builder().apply(block).build())
+
+fun <T> RowLevelAttributesBuilderApi<T>.alignment(block: CellAlignmentAttribute.Builder.() -> Unit) =
+    attribute(CellAlignmentAttribute.Builder().apply(block).build())
+
+fun <T> TableLevelAttributesBuilderApi<T>.alignment(block: CellAlignmentAttribute.Builder.() -> Unit) =
+    attribute(CellAlignmentAttribute.Builder().apply(block).build())

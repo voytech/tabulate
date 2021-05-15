@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.model.attributes.table
 
 import io.github.voytech.tabulate.api.builder.TableAttributeBuilder
+import io.github.voytech.tabulate.api.builder.dsl.TableLevelAttributesBuilderApi
 import io.github.voytech.tabulate.model.attributes.TableAttribute
 
 data class TemplateFileAttribute(val fileName: String): TableAttribute<TemplateFileAttribute>() {
@@ -12,5 +13,9 @@ data class TemplateFileAttribute(val fileName: String): TableAttribute<TemplateF
     }
 }
 
-fun template(block: TemplateFileAttribute.Builder.() -> Unit): TableAttribute<TemplateFileAttribute> = TemplateFileAttribute.Builder().apply(block).build()
+//@JvmName("jTemplate")
+//fun <T> TableLevelAttributesBuilderApi<T>.template(block: TemplateFileAttribute.Builder.() -> Unit): TableAttribute<TemplateFileAttribute> = TemplateFileAttribute.Builder().apply(block).build()
 
+fun <T> TableLevelAttributesBuilderApi<T>.template(block: TemplateFileAttribute.Builder.() -> Unit) {
+    attribute(TemplateFileAttribute.Builder().apply(block).build())
+}
