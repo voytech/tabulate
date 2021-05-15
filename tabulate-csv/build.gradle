@@ -3,7 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
 }
 
-group 'pl.voytech'
+group 'io.github.voytech'
 version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
