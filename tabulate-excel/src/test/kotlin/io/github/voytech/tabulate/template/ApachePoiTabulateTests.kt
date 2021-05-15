@@ -13,12 +13,11 @@ import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultHorizontalA
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultVerticalAlignment
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultWeightStyle
 import io.github.voytech.tabulate.model.attributes.column.width
-import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.row.height
 import io.github.voytech.tabulate.model.attributes.table.template
-import io.github.voytech.tabulate.testsupport.PoiTableAssert
 import io.github.voytech.tabulate.testsupport.CellPosition
 import io.github.voytech.tabulate.testsupport.CellRange
+import io.github.voytech.tabulate.testsupport.PoiTableAssert
 import io.github.voytech.tabulate.testsupport.cellassertions.AssertCellValue
 import io.github.voytech.tabulate.testsupport.cellassertions.AssertContainsCellAttributes
 import io.github.voytech.tabulate.testsupport.cellassertions.AssertMany
@@ -45,8 +44,8 @@ class ApachePoiTabulateTests {
                 firstColumn = 2
                 columns {
                     column("nr") {
-                        attributes(
-                            width { px = 50 },
+                        attributes {
+                            width { px = 50 }
                             text {
                                 fontFamily = "Times New Roman"
                                 fontColor = Color(10, 100, 100)
@@ -56,36 +55,36 @@ class ApachePoiTabulateTests {
                                 strikeout = true
                                 underline = true
                             }
-                        )
+                        }
                     }
                     column(Product::code) {
-                        attributes(
-                            width { auto = true },
+                        attributes {
+                            width { auto = true }
                             text {
                                 fontFamily = "Times New Roman"
                                 fontColor = Colors.BLACK
                                 fontSize = 12
-                            },
+                            }
                             background { color = Colors.BLUE }
-                        )
+                        }
                     }
                     column(Product::name) {
-                        attributes(width { auto = true })
+                        attributes { width { auto = true } }
                     }
                     column(Product::description) {
-                        attributes(width { auto = true })
+                        attributes { width { auto = true } }
                     }
                     column(Product::manufacturer) {
-                        attributes(width { auto = true })
+                        attributes { width { auto = true } }
                     }
                     column(Product::price) {
-                        attributes(width { auto = true })
+                        attributes { width { auto = true } }
                     }
                     column(Product::distributionDate) {
-                        attributes(
-                            width { auto = true },
+                        attributes{
+                            width { auto = true }
                             dataFormat { value = "dd.mm.YYYY" }
-                        )
+                        }
                     }
                 }
                 rows {
@@ -99,30 +98,30 @@ class ApachePoiTabulateTests {
                             forColumn(Product::price) { value = "Price" }
                             forColumn(Product::distributionDate) { value = "Distribution" }
                         }
-                        attributes(
-                            RowHeightAttribute(px = 120),
-                            CellBordersAttribute(
-                                leftBorderStyle = DefaultBorderStyle.SOLID,
-                                leftBorderColor = Colors.BLACK,
-                                rightBorderStyle = DefaultBorderStyle.SOLID,
-                                rightBorderColor = Colors.BLACK,
-                                bottomBorderStyle = DefaultBorderStyle.SOLID,
-                                bottomBorderColor = Colors.BLACK,
-                                topBorderStyle = DefaultBorderStyle.SOLID,
+                        attributes {
+                            height { px = 120 }
+                            borders {
+                                leftBorderStyle = DefaultBorderStyle.SOLID
+                                leftBorderColor = Colors.BLACK
+                                rightBorderStyle = DefaultBorderStyle.SOLID
+                                rightBorderColor = Colors.BLACK
+                                bottomBorderStyle = DefaultBorderStyle.SOLID
+                                bottomBorderColor = Colors.BLACK
+                                topBorderStyle = DefaultBorderStyle.SOLID
                                 topBorderColor = Colors.BLACK
-                            ),
-                            CellAlignmentAttribute(
-                                horizontal = DefaultHorizontalAlignment.CENTER,
+                            }
+                            alignment {
+                                horizontal = DefaultHorizontalAlignment.CENTER
                                 vertical = DefaultVerticalAlignment.MIDDLE
-                            ),
-                            CellTextStylesAttribute(
-                                fontFamily = "Times New Roman",
-                                fontColor = Color(90, 100, 100),
-                                fontSize = 12,
-                                italic = true,
+                            }
+                            text {
+                                fontFamily = "Times New Roman"
+                                fontColor = Color(90, 100, 100)
+                                fontSize = 12
+                                italic = true
                                 weight = DefaultWeightStyle.BOLD
-                            )
-                        )
+                            }
+                        }
                     }
                     row {
                         selector = RowSelectors.all()
@@ -141,27 +140,27 @@ class ApachePoiTabulateTests {
             file = File("test0.xlsx"),
             cellTests = mapOf(
                 CellRange((2..2), (2..8)) to AssertContainsCellAttributes(
-                    borders {
-                        leftBorderStyle = DefaultBorderStyle.SOLID
-                        leftBorderColor = Colors.BLACK
-                        rightBorderStyle = DefaultBorderStyle.SOLID
-                        rightBorderColor = Colors.BLACK
-                        bottomBorderStyle = DefaultBorderStyle.SOLID
-                        bottomBorderColor = Colors.BLACK
-                        topBorderStyle = DefaultBorderStyle.SOLID
-                        topBorderColor = Colors.BLACK
-                    },
-                    alignment {
-                        horizontal = DefaultHorizontalAlignment.CENTER
+                    CellBordersAttribute(
+                        leftBorderStyle = DefaultBorderStyle.SOLID,
+                        leftBorderColor = Colors.BLACK,
+                        rightBorderStyle = DefaultBorderStyle.SOLID,
+                        rightBorderColor = Colors.BLACK,
+                        bottomBorderStyle = DefaultBorderStyle.SOLID,
+                        bottomBorderColor = Colors.BLACK,
+                        topBorderStyle = DefaultBorderStyle.SOLID,
+                        topBorderColor = Colors.BLACK,
+                    ),
+                    CellAlignmentAttribute(
+                        horizontal = DefaultHorizontalAlignment.CENTER,
                         vertical = DefaultVerticalAlignment.MIDDLE
-                    },
-                    text {
-                        fontFamily = "Times New Roman"
-                        fontColor = Color(90, 100, 100)
-                        fontSize = 12
-                        italic = true
-                        weight = DefaultWeightStyle.BOLD
-                    }
+                    ),
+                    CellTextStylesAttribute(
+                        fontFamily = "Times New Roman",
+                        fontColor = Color(90, 100, 100),
+                        fontSize = 12,
+                        italic = true,
+                        weight = DefaultWeightStyle.BOLD,
+                    )
                 ),
                 CellPosition(2, 2) to AssertMany(
                     AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
@@ -169,14 +168,14 @@ class ApachePoiTabulateTests {
                 CellPosition(2, 3) to AssertMany(
                     AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
                     AssertContainsCellAttributes(
-                        text {
-                            fontFamily = "Times New Roman"
-                            fontColor = Color(90, 100, 100)
-                            fontSize = 12
-                            italic = true
+                        CellTextStylesAttribute(
+                            fontFamily = "Times New Roman",
+                            fontColor = Color(90, 100, 100),
+                            fontSize = 12,
+                            italic = true,
                             weight = DefaultWeightStyle.BOLD
-                        },
-                        background { color = Colors.BLUE }
+                        ),
+                        CellBackgroundAttribute(color = Colors.BLUE)
                     )
                 ),
                 CellPosition(2, 4) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
@@ -206,7 +205,11 @@ class ApachePoiTabulateTests {
         createDataSet(1000).tabulate("test2.xlsx") {
             name = "Products table"
             firstRow = 1
-            attributes(template { fileName = "src/test/resources/template.xlsx" })
+            attributes {
+                template {
+                    fileName =  "src/test/resources/template.xlsx"
+                }
+            }
             columns {
                 column("nr")
                 column(Product::code)
@@ -214,9 +217,9 @@ class ApachePoiTabulateTests {
                 column(Product::description)
                 column(Product::manufacturer)
                 column(Product::distributionDate) {
-                    attributes(
+                    attributes {
                         dataFormat { value = "dd.mm.YYYY" }
-                    )
+                    }
                 }
             }
             rows {
@@ -262,7 +265,7 @@ class ApachePoiTabulateTests {
         val productList = createDataSet(1000)
         productList.tabulate("test3.xlsx") {
             name = "Products table"
-            attributes(filterAndSort {})
+            attributes{ filterAndSort {} }
             columns {
                 column(Product::code)
                 column(Product::name)
@@ -270,9 +273,9 @@ class ApachePoiTabulateTests {
                 column(Product::manufacturer)
                 column(Product::price)
                 column(Product::distributionDate) {
-                    attributes(
+                    attributes{
                         dataFormat { value = "dd.mm.YYYY" }
-                    )
+                    }
                 }
             }
         }
@@ -288,32 +291,9 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export table with custom rows and cell and row spans`() {
-        val cellStyle = listOf(
-            alignment { horizontal = DefaultHorizontalAlignment.CENTER },
-            background { color = Colors.WHITE },
-            borders {
-                leftBorderColor = Colors.BLACK
-                rightBorderColor = Colors.BLACK
-                topBorderColor = Colors.BLACK
-                bottomBorderColor = Colors.BLACK
-                leftBorderStyle = DefaultBorderStyle.SOLID
-                rightBorderStyle = DefaultBorderStyle.SOLID
-                topBorderStyle = DefaultBorderStyle.SOLID
-                bottomBorderStyle = DefaultBorderStyle.SOLID
-            },
-            text {
-                weight = DefaultWeightStyle.BOLD
-                strikeout = false
-                underline = false
-                italic = false
-                fontColor = Colors.BLACK
-            }
-        )
-
         table<Any> {
             name = "Test table"
             columns { count = 4 }
-            attributes(cellStyle)
             rows {
                 row {
                     cells {
@@ -384,12 +364,12 @@ class ApachePoiTabulateTests {
             columns {
                 column("description")
                 column("image") {
-                    attributes(width { px = 300 })
+                    attributes{ width { px = 300 }}
                 }
             }
             rows {
                 row {
-                    attributes(height { px = 200 })
+                    attributes{height { px = 200 }}
                     cells {
                         cell { value = "It is : " }
                         cell {

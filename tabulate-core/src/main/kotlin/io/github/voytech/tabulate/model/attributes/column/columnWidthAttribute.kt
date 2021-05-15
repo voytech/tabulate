@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.model.attributes.column
 
 import io.github.voytech.tabulate.api.builder.ColumnAttributeBuilder
+import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 
 enum class LengthUnit {
@@ -25,5 +26,6 @@ data class ColumnWidthAttribute(
     override fun mergeWith(other: ColumnWidthAttribute): ColumnWidthAttribute = other.copy(auto = other.auto ?: this.auto)
 }
 
-fun width(block: ColumnWidthAttribute.Builder.() -> Unit): ColumnAttribute<ColumnWidthAttribute> = ColumnWidthAttribute.Builder().apply(block).build()
+fun <T> ColumnLevelAttributesBuilderApi<T>.width(block: ColumnWidthAttribute.Builder.() -> Unit) =
+    attribute(ColumnWidthAttribute.Builder().apply(block).build())
 

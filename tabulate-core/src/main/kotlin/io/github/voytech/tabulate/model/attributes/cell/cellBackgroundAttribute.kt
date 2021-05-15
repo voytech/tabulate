@@ -1,6 +1,10 @@
 package io.github.voytech.tabulate.model.attributes.cell
 
 import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
+import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.RowLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.TableLevelAttributesBuilderApi
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellFill
 
 data class CellBackgroundAttribute(
@@ -20,5 +24,14 @@ data class CellBackgroundAttribute(
     )
 }
 
-fun background(block: CellBackgroundAttribute.Builder.() -> Unit): CellBackgroundAttribute =
-    CellBackgroundAttribute.Builder().apply(block).build()
+fun <T> CellLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =
+    attribute(CellBackgroundAttribute.Builder().apply(block).build())
+
+fun <T> ColumnLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =
+    attribute(CellBackgroundAttribute.Builder().apply(block).build())
+
+fun <T> RowLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =
+    attribute(CellBackgroundAttribute.Builder().apply(block).build())
+
+fun <T> TableLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =
+    attribute(CellBackgroundAttribute.Builder().apply(block).build())

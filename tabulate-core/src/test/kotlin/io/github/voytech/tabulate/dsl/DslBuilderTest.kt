@@ -7,7 +7,9 @@ import io.github.voytech.tabulate.model.ColumnKey
 import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
 import io.github.voytech.tabulate.model.attributes.cell.Colors
 import io.github.voytech.tabulate.model.attributes.cell.text
+import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.column.width
+import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.row.height
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -29,11 +31,11 @@ class DslBuilderTest {
         }.build()) {
             assertNotNull(this)
             assertEquals(columns.size, 5)
-            assertEquals("nr", columns[0].id.id,"nr 0 should have id 'nr'")
-            assertEquals(Product::code, columns[1].id.ref,"nr 1 should have id ref 'Product::code'")
-            assertEquals(Product::name, columns[2].id.ref,"nr 2 should have id ref 'Product::name'")
-            assertEquals(Product::description, columns[3].id.ref,"nr 3 should have id ref 'Product::description'")
-            assertEquals(Product::manufacturer, columns[4].id.ref,"nr 4 should have id ref 'Product::manufacturer'")
+            assertEquals("nr", columns[0].id.id, "nr 0 should have id 'nr'")
+            assertEquals(Product::code, columns[1].id.ref, "nr 1 should have id ref 'Product::code'")
+            assertEquals(Product::name, columns[2].id.ref, "nr 2 should have id ref 'Product::name'")
+            assertEquals(Product::description, columns[3].id.ref, "nr 3 should have id ref 'Product::description'")
+            assertEquals(Product::manufacturer, columns[4].id.ref, "nr 4 should have id ref 'Product::manufacturer'")
         }
     }
 
@@ -42,7 +44,7 @@ class DslBuilderTest {
         with(table<Product> {
             name = "Products table"
             columns {
-                column("nr") { attributes(width { px = 100 }) }
+                column("nr") { attributes { width { px = 100 } } }
                 column(Product::code)
                 column(Product::name)
                 column(Product::description)
@@ -50,10 +52,10 @@ class DslBuilderTest {
             }
             rows {
                 row {
-                    attributes(height { px = 20 })
+                    attributes { height { px = 20 } }
                     cells {
                         cell {
-                            attributes(text { fontFamily = "Courier" })
+                            attributes { text { fontFamily = "Courier" } }
                             value = "cell value at: 0.0"
                         }
                     }
@@ -62,13 +64,13 @@ class DslBuilderTest {
         }.build()) {
             assertNotNull(this)
             assertEquals(columns.size, 5)
-            assertEquals("nr", columns[0].id.id,"nr 0 should have id 'nr'")
-            assertEquals(Product::code, columns[1].id.ref,"nr 1 should have id ref 'Product::code'")
-            assertEquals(Product::name, columns[2].id.ref,"nr 2 should have id ref 'Product::name'")
-            assertEquals(Product::description, columns[3].id.ref,"nr 3 should have id ref 'Product::description'")
-            assertEquals(Product::manufacturer, columns[4].id.ref,"nr 4 should have id ref 'Product::manufacturer'")
+            assertEquals("nr", columns[0].id.id, "nr 0 should have id 'nr'")
+            assertEquals(Product::code, columns[1].id.ref, "nr 1 should have id ref 'Product::code'")
+            assertEquals(Product::name, columns[2].id.ref, "nr 2 should have id ref 'Product::name'")
+            assertEquals(Product::description, columns[3].id.ref, "nr 3 should have id ref 'Product::description'")
+            assertEquals(Product::manufacturer, columns[4].id.ref, "nr 4 should have id ref 'Product::manufacturer'")
             assertEquals(columns.first().columnAttributes?.size, 1)
-            assertEquals(columns.first().columnAttributes?.first(), width { px = 100 })
+            assertEquals(columns.first().columnAttributes?.first(), ColumnWidthAttribute(px = 100))
 
             val zeroRows = getRowsAt(0)
             assertEquals(zeroRows?.size, 1)
@@ -76,12 +78,12 @@ class DslBuilderTest {
             with(zeroRows?.first()!!) {
                 assertNotNull(cells)
                 assertEquals(rowAttributes?.size, 1)
-                assertEquals(rowAttributes?.first(), height { px = 20 })
+                assertEquals(rowAttributes?.first(), RowHeightAttribute(px = 20))
                 assert(cells?.containsKey(ColumnKey("nr")) ?: false)
                 with(cells?.get(ColumnKey("nr"))!!) {
                     assertEquals(resolveRawValue(), "cell value at: 0.0")
                     assertEquals(cellAttributes?.size, 1)
-                    assertEquals(cellAttributes?.first(), text { fontFamily = "Courier" })
+                    assertEquals(cellAttributes?.first(), CellTextStylesAttribute(fontFamily = "Courier"))
                 }
             }
         }
@@ -106,7 +108,7 @@ class DslBuilderTest {
             assertNotNull(this)
             assertEquals(columns.size, 1)
             columns.first().let { column ->
-                assertEquals(Product::code, column.id.ref,"nr 1 should have id ref 'Product::code'")
+                assertEquals(Product::code, column.id.ref, "nr 1 should have id ref 'Product::code'")
                 assertNotNull(column.cellAttributes)
                 assertEquals(1, column.cellAttributes!!.size)
                 (column.cellAttributes?.first() as CellTextStylesAttribute).let { attribute ->
