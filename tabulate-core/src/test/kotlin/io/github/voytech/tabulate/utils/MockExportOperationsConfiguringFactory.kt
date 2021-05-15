@@ -1,11 +1,11 @@
 package io.github.voytech.tabulate.utils
 
 import org.reactivestreams.Publisher
-import io.github.voytech.tabulate.core.api.builder.TableBuilder
-import io.github.voytech.tabulate.core.model.Table
-import io.github.voytech.tabulate.core.template.ResultHandler
-import io.github.voytech.tabulate.core.template.context.AttributedCell
-import io.github.voytech.tabulate.core.template.operations.*
+import io.github.voytech.tabulate.api.builder.TableBuilder
+import io.github.voytech.tabulate.model.Table
+import io.github.voytech.tabulate.template.ResultHandler
+import io.github.voytech.tabulate.template.context.AttributedCell
+import io.github.voytech.tabulate.template.operations.*
 
 class MockExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFactory<Unit, T, Unit>() {
 
