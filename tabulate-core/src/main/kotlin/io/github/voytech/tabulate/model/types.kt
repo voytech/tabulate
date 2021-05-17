@@ -1,26 +1,33 @@
 package io.github.voytech.tabulate.model
 
-typealias RowSelector<T> = (context: SourceRow<T>) -> Boolean
 
-typealias RowCellEval<T> = (context: SourceRow<T>) -> Any?
+
+fun interface RowCellExpression<T> {
+    fun evaluate(context: SourceRow<T>): Any?
+}
 
 object RowSelectors {
     @JvmStatic
-    fun <T> all(): RowSelector<T> = { _ -> true }
+    fun <T> allRows(): RowPredicate<T> = RowPredicate{ true }
 
     @JvmStatic
-    fun <T> createAt(rowIndex: Int): RowSelector<T> =
-        { data -> data.rowIndex == rowIndex && data.objectIndex == null && data.record == null }
+    fun <T> createAt(rowIndex: Int): RowPredicate<T> = RowPredicate { it.rowIndex == rowIndex && !it.hasRecord()}
 
     @JvmStatic
-    fun <T> atListIndex(listIndex: Int): RowSelector<T> = { data -> data.objectIndex!! == listIndex }
+    fun <T> asTableHeader(): RowPredicate<T> = createAt(0)
 
     @JvmStatic
-    fun <T> atRowIndex(rowIndex: Int): RowSelector<T> = { data -> data.rowIndex == rowIndex }
+    fun <T> atListIndex(listIndex: Int): RowPredicate<T> =
+        RowPredicate { data -> data.objectIndex?.let { it == listIndex } ?: false }
 
     @JvmStatic
-    fun <T> lowerThan(rowIndex: Int): RowSelector<T> = { data -> data.objectIndex!! < rowIndex }
+    fun <T> atRowIndex(rowIndex: Int): RowPredicate<T> = RowPredicate { data -> data.rowIndex == rowIndex }
 
     @JvmStatic
-    fun <T> higherTan(rowIndex: Int): RowSelector<T> = { data -> data.objectIndex!! > rowIndex }
+    fun <T> lowerThan(rowIndex: Int): RowPredicate<T> =
+        RowPredicate { data -> data.objectIndex?.let { it < rowIndex } ?: false }
+
+    @JvmStatic
+    fun <T> higherTan(rowIndex: Int): RowPredicate<T> =
+        RowPredicate { data -> data.objectIndex?.let { it > rowIndex } ?: false }
 }

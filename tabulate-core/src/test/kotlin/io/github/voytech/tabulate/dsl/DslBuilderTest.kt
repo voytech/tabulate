@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.dsl
 
+import io.github.voytech.tabulate.api.builder.dsl.header
 import io.github.voytech.tabulate.api.builder.dsl.style
 import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.data.Product
@@ -13,6 +14,7 @@ import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.row.height
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class DslBuilderTest {
@@ -116,6 +118,41 @@ class DslBuilderTest {
                     assertEquals(12, attribute.fontSize)
                     assertEquals("Times New Roman", attribute.fontFamily)
                 }
+            }
+        }
+    }
+
+
+    @Test
+    @Disabled("Fix inconsistent behaviour when registering rows where one is indexed and second uses predicate")
+    fun `should define table with header`() {
+        with(table<Product> {
+            name = "Products table"
+            columns {
+                column(Product::code)
+                column(Product::description)
+            }
+            rows {
+                header("Code", "Description")
+                row {
+                    cells {
+                        cell { value = "1" }
+                        cell { value = "First item" }
+                    }
+                }
+            }
+        }.build()) {
+            assertNotNull(this)
+            assertEquals(rows!!.size, 2)
+            rows!!.first().let { header ->
+                assertEquals(2,header.cells!!.size)
+                assertEquals("Code", header.cells!![ColumnKey(ref = Product::code)]!!.value)
+                assertEquals("Description", header.cells!![ColumnKey(ref = Product::description)]!!.value)
+            }
+            rows!!.last().let { firstRow ->
+                assertEquals(2,firstRow.cells!!.size)
+                assertEquals("1", firstRow.cells!![ColumnKey(ref = Product::code)]!!.value)
+                assertEquals("First item", firstRow.cells!![ColumnKey(ref = Product::description)]!!.value)
             }
         }
     }

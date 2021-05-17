@@ -18,9 +18,7 @@ data class SourceRow<T> (
     /**
      * Object from collection at objectIndex.
      */
-    val record: T? = null,
-    /**
-     * collection of objects to be exported.
-     */
-    val dataset: Collection<T>? = null
-)
+    val record: T? = null
+) {
+    fun hasRecord(): Boolean = record != null && objectIndex != null
+}

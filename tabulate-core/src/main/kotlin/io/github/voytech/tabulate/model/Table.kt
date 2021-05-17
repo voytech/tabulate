@@ -28,38 +28,48 @@ data class Table<T> internal constructor(
     val name: String? = "untitled",
     val firstRow: Int? = 0,
     val firstColumn: Int? = 0,
-    val columns: List<Column<T>> = emptyList(),
-    val rows: List<Row<T>>?,
+    val columns: List<ColumnDef<T>> = emptyList(),
+    val rows: List<RowDef<T>>?,
     val tableAttributes: Set<TableAttribute>?,
-    val cellAttributes: Set<CellAttribute>?
+    val cellAttributes: Set<CellAttribute>?,
 ) {
-    private var indexedCustomRows: Map<Int, List<Row<T>>>? = null
+    private var indexedCustomRows: Map<Int, List<RowDef<T>>>? = null
 
     init {
-        indexedCustomRows = rows?.filter { it.createAt != null }
-            ?.sortedBy { it.createAt }
-            ?.groupBy { it.createAt!! }
+        indexedCustomRows = rows?.filter { it.qualifier.createAt != null }
+            ?.sortedBy { it.qualifier.createAt }
+            ?.groupBy { it.qualifier.createAt!!  }
     }
 
-    fun forEachColumn(consumer: Consumer<in Column<T>>) = columns.forEach(consumer)
+    fun forEachColumn(consumer: Consumer<in ColumnDef<T>>) = columns.forEach(consumer)
 
-    fun forEachColumn(consumer: (Int, Column<T>) -> Unit) = columns.forEachIndexed(consumer)
+    fun forEachColumn(consumer: (Int, ColumnDef<T>) -> Unit) = columns.forEachIndexed(consumer)
 
-    fun <E> mapColumns(consumer: (Int, Column<T>) -> E) = columns.mapIndexed(consumer)
+    fun <E> mapColumns(consumer: (Int, ColumnDef<T>) -> E) = columns.mapIndexed(consumer)
 
-    fun forEachRow(consumer: Consumer<in Row<T>>) = rows?.forEach(consumer)
+    fun forEachRow(consumer: Consumer<in RowDef<T>>) = rows?.forEach(consumer)
 
-    fun getRowsAt(index: Int): List<Row<T>>? = indexedCustomRows?.get(index)
+    // TODO - hide this is publically insecure due to index only lookup.
+    fun getRowsAt(index: Int): List<RowDef<T>>? = indexedCustomRows?.get(index)
 
     fun hasRowsAt(index: Int): Boolean = !getRowsAt(index).isNullOrEmpty()
 
     fun getNextCustomRowIndex(index: Int): Int? = indexedCustomRows?.entries?.firstOrNull { it.key > index }?.key
 
-    fun getRowsFor(sourceRow: SourceRow<T>): Set<Row<T>> {
+    fun getRows(sourceRow: SourceRow<T>): Set<RowDef<T>> {
         val customRows = getRowsAt(sourceRow.rowIndex)?.toSet()
-        val matchingRows = rows?.filter { it.selector != null && it.selector.invoke(sourceRow) }?.toSet()
-        return customRows?.let { matchingRows?.plus(it) ?: it }
-            ?: matchingRows ?: emptySet()
+        val matchingRows = rows?.filter { it.isApplicable(sourceRow) }?.toSet()
+        return customRows?.let { matchingRows?.plus(it) ?: it } ?: matchingRows ?: emptySet()
+    }
+
+    fun getRowInsertions(sourceRow: SourceRow<T>): Set<RowDef<T>> {
+        val customRows = getRowsAt(sourceRow.rowIndex)?.toSet()
+        val matchingRows = rows?.filter { it.shouldInsertRow(sourceRow) }?.toSet()
+        return customRows?.let { matchingRows?.plus(it) ?: it } ?: matchingRows ?: emptySet()
+    }
+
+    fun hasCustomRows(sourceRow: SourceRow<T>): Boolean {
+        return hasRowsAt(sourceRow.rowIndex) || rows?.any { it.shouldInsertRow(sourceRow) } ?: false
     }
 
     companion object {

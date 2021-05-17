@@ -1,10 +1,8 @@
 package io.github.voytech.tabulate.api.builder.dsl
 
 import io.github.voytech.tabulate.api.builder.*
-import io.github.voytech.tabulate.model.CellType
-import io.github.voytech.tabulate.model.ColumnKey
-import io.github.voytech.tabulate.model.RowCellEval
-import io.github.voytech.tabulate.model.RowSelector
+import io.github.voytech.tabulate.model.*
+
 import io.github.voytech.tabulate.model.attributes.Attribute
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
@@ -137,12 +135,6 @@ class RowsBuilderApi<T> internal constructor(private val builder: RowsBuilder<T>
     @JvmSynthetic
     fun row(block: RowBuilderApi<T>.() -> Unit) = builder.addRowBuilder { RowBuilderApi.new(it).apply(block) }
 
-
-    @JvmSynthetic
-    fun row(selector: RowSelector<T>, block: RowBuilderApi<T>.() -> Unit) = builder.addRowBuilder(selector) {
-        RowBuilderApi.new(it).apply(block)
-    }
-
     @JvmSynthetic
     fun row(at: Int, block: RowBuilderApi<T>.() -> Unit) = builder.addRowBuilder(at) {
         RowBuilderApi.new(it).apply(block)
@@ -157,11 +149,11 @@ class RowsBuilderApi<T> internal constructor(private val builder: RowsBuilder<T>
 @TabulateMarker
 class RowBuilderApi<T> private constructor(private val builder: RowBuilder<T>)  {
 
-    @set:JvmSynthetic
-    var createAt: Int? by builder::createAt
+    @JvmSynthetic
+    fun allMatching(predicate : RowPredicate<T>) = apply { builder.qualifier = RowQualifier(applyWhen = predicate) }
 
-    @set:JvmSynthetic
-    var selector: RowSelector<T>? by builder::selector
+    @JvmSynthetic
+    fun insertWhen(predicate : RowPredicate<T>) = apply { builder.qualifier = RowQualifier(createWhen = predicate) }
 
     @JvmSynthetic
     fun cells(block: CellsBuilderApi<T>.() -> Unit) = CellsBuilderApi.new(builder.cellsBuilder).apply(block)
@@ -211,7 +203,7 @@ class CellBuilderApi<T> private constructor(private val builder: CellBuilder<T>)
     var value: Any? by builder::value
 
     @set:JvmSynthetic
-    var eval: RowCellEval<T>? by builder::eval
+    var expression: RowCellExpression<T>? by builder::expression
 
     @set:JvmSynthetic
     var type: CellType? by builder::type

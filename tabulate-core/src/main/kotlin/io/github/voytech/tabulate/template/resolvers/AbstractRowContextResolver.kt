@@ -13,15 +13,15 @@ abstract class AbstractRowContextResolver<T>(
 ) :
     GlobalStateAwareContextResolver<T>(tableModel, stateAndAttributes) {
 
-    private fun computeCells(rowDefinitions: Set<Row<T>>): Map<ColumnKey<T>, Cell<T>> {
+    private fun computeCells(rowDefinitions: Set<RowDef<T>>): Map<ColumnKey<T>, CellDef<T>> {
         return rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })
     }
 
-    private fun computeRowLevelCellAttributes(rowDefinitions: Set<Row<T>>): Set<CellAttribute> {
+    private fun computeRowLevelCellAttributes(rowDefinitions: Set<RowDef<T>>): Set<CellAttribute> {
         return overrideAttributesRightToLeft(*(rowDefinitions.mapNotNull { i -> i.cellAttributes }.toTypedArray()))
     }
 
-    private fun computeRowAttributes(rowDefinitions: Set<Row<T>>): Set<RowAttribute> {
+    private fun computeRowAttributes(rowDefinitions: Set<RowDef<T>>): Set<RowAttribute> {
         return rowDefinitions.mapNotNull { attribs -> attribs.rowAttributes }
             .fold(setOf(), { acc, r -> acc + r })
     }
@@ -32,10 +32,10 @@ abstract class AbstractRowContextResolver<T>(
             objectIndex = record?.index,
             record = record?.value
         ).let { sourceRow ->
-            val rowDefinitions = tableModel.getRowsFor(sourceRow)
+            val rowDefinitions = tableModel.getRows(sourceRow)
             val cellDefinitions = computeCells(rowDefinitions)
             val rowCellAttributes = computeRowLevelCellAttributes(rowDefinitions)
-            val cellValues = tableModel.columns.mapIndexed { index: Int, column: Column<T> ->
+            val cellValues = tableModel.columns.mapIndexed { index: Int, column: ColumnDef<T> ->
                 cellDefinitions.resolveCellValue(column, sourceRow)?.let { value ->
                     stateAndAttributes.createCellContext(
                         relativeRowIndex = tableRowIndex,
@@ -66,7 +66,7 @@ abstract class AbstractRowContextResolver<T>(
     }
 
     override fun resolve(requestedIndex: Int): IndexedValue<AttributedRow<T>>? {
-        return if (tableModel.hasRowsAt(requestedIndex)) {
+        return if (tableModel.hasCustomRows(SourceRow(requestedIndex))) {
             resolveRowContext(requestedIndex)
         } else {
             getNextRecord().let {

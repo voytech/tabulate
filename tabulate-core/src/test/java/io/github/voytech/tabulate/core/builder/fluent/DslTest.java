@@ -45,9 +45,10 @@ public class DslTest {
                                     .value("Employee First Name")
                                 .forColumn(Employee::getLastName)
                                     .value("Employee Last Name")
-                        .row(RowSelectors.all())
-                                .forColumn("rowNumbering")
-                                    .eval(SourceRow::getRowIndex)
+                        .row()
+                            .allMatching(RowSelectors.allRows())
+                            .forColumn("rowNumbering")
+                                .eval(SourceRow::getRowIndex)
                 .build();
 
         assertNotNull(employeeTable);
