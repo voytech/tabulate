@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.template
 import io.github.voytech.tabulate.api.builder.TableBuilder
 import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.table
-import io.github.voytech.tabulate.model.Column
+import io.github.voytech.tabulate.model.ColumnDef
 import io.github.voytech.tabulate.model.NextId
 import io.github.voytech.tabulate.template.context.AttributedRow
 import io.github.voytech.tabulate.template.context.ColumnRenderPhase
@@ -108,7 +108,7 @@ open class TableExportTemplate<T, O>() {
     }
 
     private fun renderColumns(stateAndAttributes: GlobalContextAndAttributes<T>, renderPhase: ColumnRenderPhase) {
-        stateAndAttributes.tableModel.forEachColumn { columnIndex: Int, column: Column<T> ->
+        stateAndAttributes.tableModel.forEachColumn { columnIndex: Int, column: ColumnDef<T> ->
             ops.tableRenderOperations.renderColumn(
                 stateAndAttributes.createColumnContext(IndexedValue(column.index ?: columnIndex, column), renderPhase)
             )
@@ -116,7 +116,7 @@ open class TableExportTemplate<T, O>() {
     }
 
     private fun renderRowCells(stateAndAttributes: GlobalContextAndAttributes<T>, context: AttributedRow<T>) {
-        stateAndAttributes.tableModel.forEachColumn { column: Column<T> ->
+        stateAndAttributes.tableModel.forEachColumn { column: ColumnDef<T> ->
             if (context.rowCellValues.containsKey(column.id)) {
                 ops.tableRenderOperations.renderRowCell(context.rowCellValues[column.id]!!)
             }

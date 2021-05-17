@@ -46,7 +46,7 @@ class GlobalContextAndAttributes<T>(
     }
 
     internal fun createColumnContext(
-        indexedColumn: IndexedValue<Column<T>>,
+        indexedColumn: IndexedValue<ColumnDef<T>>,
         phase: ColumnRenderPhase
     ): AttributedColumn {
         return AttributedColumn(
@@ -59,12 +59,12 @@ class GlobalContextAndAttributes<T>(
         ).apply { additionalAttributes = stateAttributes }
     }
 
-    internal fun applySpans(column: Column<T>, cell: Cell<T>?) {
+    internal fun applySpans(column: ColumnDef<T>, cell: CellDef<T>?) {
         colSkips = (cell?.colSpan?.minus(1)) ?: 0
         rowSkips[column.id] = (cell?.rowSpan?.minus(1)) ?: 0
     }
 
-    internal fun dontSkip(column: Column<T>): Boolean {
+    internal fun dontSkip(column: ColumnDef<T>): Boolean {
         return colSkips-- <= 0 && (rowSkips[column.id] ?: 0).also { rowSkips[column.id] = it - 1 } <= 0
     }
 }

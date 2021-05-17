@@ -6,7 +6,8 @@ import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttr
 import io.github.voytech.tabulate.excel.model.attributes.dataFormat
 import io.github.voytech.tabulate.excel.model.attributes.filterAndSort
 import io.github.voytech.tabulate.model.CellType
-import io.github.voytech.tabulate.model.RowSelectors
+import io.github.voytech.tabulate.model.RowCellExpression
+import io.github.voytech.tabulate.model.RowSelectors.allRows
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultBorderStyle
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultHorizontalAlignment
@@ -124,9 +125,9 @@ class ApachePoiTabulateTests {
                         }
                     }
                     row {
-                        selector = RowSelectors.all()
+                        allMatching(allRows())
                         cells {
-                            forColumn("nr") { eval = { row -> row.objectIndex?.plus(1) } }
+                            forColumn("nr") { expression = RowCellExpression{ row -> row.objectIndex?.plus(1) } }
                         }
                     }
                 }
@@ -224,9 +225,9 @@ class ApachePoiTabulateTests {
             }
             rows {
                 row {
-                    selector = RowSelectors.all()
+                    allMatching(allRows())
                     cells {
-                        forColumn("nr") { eval = { row -> row.objectIndex?.plus(1) } }
+                        forColumn("nr") { expression = RowCellExpression{ row -> row.objectIndex?.plus(1) } }
                     }
                 }
             }

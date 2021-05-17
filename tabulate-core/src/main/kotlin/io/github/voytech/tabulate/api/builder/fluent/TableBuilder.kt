@@ -9,7 +9,6 @@ import io.github.voytech.tabulate.api.builder.RowBuilder as BaseRowBuilder
 import io.github.voytech.tabulate.api.builder.TableBuilder as BaseTableBuilder
 
 
-
 interface TopLevelBuilder<T>
 
 interface MidLevelBuilder<T, E : TopLevelBuilder<T>> : TopLevelBuilder<T> {
@@ -59,7 +58,8 @@ class ColumnsBuilder<T>(private val parent: TableBuilder<T>) : MidLevelBuilder<T
 
 }
 
-class ColumnBuilder<T>(private val builderBase: BaseColumnBuilder<T>, private val parent: ColumnsBuilder<T>) : MidLevelBuilder<T, ColumnsBuilder<T>>, Builder<Table<T>> {
+class ColumnBuilder<T>(private val builderBase: BaseColumnBuilder<T>, private val parent: ColumnsBuilder<T>) :
+    MidLevelBuilder<T, ColumnsBuilder<T>>, Builder<Table<T>> {
 
     fun id(id: ColumnKey<T>) = apply {
         builderBase.id = id
@@ -100,11 +100,10 @@ class ColumnBuilder<T>(private val builderBase: BaseColumnBuilder<T>, private va
 
 class RowsBuilder<T>(private val parent: TableBuilder<T>) : MidLevelBuilder<T, TableBuilder<T>>, Builder<Table<T>> {
 
-    fun row() = RowBuilder(parent.builderBase.rowsBuilder.addRowBuilder {},this)
+    fun row() = RowBuilder(parent.builderBase.rowsBuilder.addRowBuilder {}, this)
 
-    fun row(selector: RowSelector<T>) = RowBuilder(parent.builderBase.rowsBuilder.addRowBuilder { it.selector = selector },this)
-
-    fun row(at: Int) = RowBuilder(parent.builderBase.rowsBuilder.addRowBuilder { it.createAt = at },this)
+    fun row(at: Int) =
+        RowBuilder(parent.builderBase.rowsBuilder.addRowBuilder { it.qualifier = RowQualifier(createAt = at) }, this)
 
     @JvmSynthetic
     override fun out(): TableBuilder<T> = parent
@@ -112,28 +111,26 @@ class RowsBuilder<T>(private val parent: TableBuilder<T>) : MidLevelBuilder<T, T
     override fun build(): Table<T> = parent.build()
 }
 
-class RowBuilder<T>(private val builderBase: BaseRowBuilder<T>, private val parent: RowsBuilder<T>) :MidLevelBuilder<T, RowsBuilder<T>>, Builder<Table<T>> {
+class RowBuilder<T>(private val builderBase: BaseRowBuilder<T>, private val parent: RowsBuilder<T>) :
+    MidLevelBuilder<T, RowsBuilder<T>>, Builder<Table<T>> {
 
-    fun selector(selector: RowSelector<T>?) = apply {
-        builderBase.selector = selector
+    fun allMatching(predicate: RowPredicate<T>) = apply {
+        builderBase.qualifier = RowQualifier(applyWhen = predicate)
     }
 
-    fun createAt(createAt: Int?) = apply {
-        builderBase.createAt = createAt
+    fun insertWhen(predicate: RowPredicate<T>) = apply {
+        builderBase.qualifier = RowQualifier(createWhen = predicate)
     }
 
-    fun cell() = CellBuilder(builderBase.cellsBuilder.addCellBuilder {  }, this)
+    fun cell() = CellBuilder(builderBase.cellsBuilder.addCellBuilder { }, this)
 
+    fun forColumn(id: String) = CellBuilder(builderBase.cellsBuilder.addCellBuilder(id) {}, this)
 
-    fun forColumn(id: String) = CellBuilder(builderBase.cellsBuilder.addCellBuilder(id){}, this)
+    fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(builderBase.cellsBuilder.addCellBuilder(ref) {}, this)
 
-    fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(builderBase.cellsBuilder.addCellBuilder(ref){}, this)
-
-    fun cell(index: Int): CellBuilder<T> = CellBuilder(builderBase.cellsBuilder.addCellBuilder(index){}, this)
+    fun cell(index: Int): CellBuilder<T> = CellBuilder(builderBase.cellsBuilder.addCellBuilder(index) {}, this)
 
     fun row() = parent.row()
-
-    fun row(selector: RowSelector<T>) = parent.row(selector)
 
     fun row(at: Int) = parent.row(at)
 
@@ -142,20 +139,21 @@ class RowBuilder<T>(private val builderBase: BaseRowBuilder<T>, private val pare
     }
 
     @JvmSynthetic
-    override fun out(): RowsBuilder<T>  = parent
+    override fun out(): RowsBuilder<T> = parent
 
     override fun build(): Table<T> = parent.build()
 
 }
 
-class CellBuilder<T>(private val builderBase: BaseCellBuilder<T>, private val parent: RowBuilder<T>) : MidLevelBuilder<T, RowBuilder<T>>, Builder<Table<T>> {
+class CellBuilder<T>(private val builderBase: BaseCellBuilder<T>, private val parent: RowBuilder<T>) :
+    MidLevelBuilder<T, RowBuilder<T>>, Builder<Table<T>> {
 
     fun value(value: Any?) = apply {
         builderBase.value = value
     }
 
-    fun eval(eval: RowCellEval<T>?) = apply {
-        builderBase.eval = eval
+    fun eval(expression: RowCellExpression<T>?) = apply {
+        builderBase.expression = expression
     }
 
     fun type(type: CellType?) = apply {
@@ -176,9 +174,7 @@ class CellBuilder<T>(private val builderBase: BaseCellBuilder<T>, private val pa
 
     fun cell(index: Int): CellBuilder<T> = parent.cell(index)
 
-    fun row() =  parent.row()
-
-    fun row(selector: RowSelector<T>) = parent.row(selector)
+    fun row() = parent.row()
 
     fun row(at: Int) = parent.row(at)
 

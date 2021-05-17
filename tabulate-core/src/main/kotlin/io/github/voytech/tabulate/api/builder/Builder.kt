@@ -87,7 +87,7 @@ class TableBuilder<T> : AttributesAwareBuilder<Table<T>>() {
 
 }
 
-class ColumnsBuilder<T> internal constructor() : Builder<List<Column<T>>> {
+class ColumnsBuilder<T> internal constructor() : Builder<List<ColumnDef<T>>> {
 
     @JvmSynthetic
     val columnBuilders: MutableList<ColumnBuilder<T>> = mutableListOf()
@@ -134,7 +134,7 @@ class ColumnsBuilder<T> internal constructor() : Builder<List<Column<T>>> {
     }
 
     @JvmSynthetic
-    override fun build(): List<Column<T>> {
+    override fun build(): List<ColumnDef<T>> {
         return columnBuilders.map { it.build() }
     }
 
@@ -144,7 +144,7 @@ class ColumnsBuilder<T> internal constructor() : Builder<List<Column<T>>> {
     }
 }
 
-class ColumnBuilder<T> internal constructor() : AttributesAwareBuilder<Column<T>>() {
+class ColumnBuilder<T> internal constructor() : AttributesAwareBuilder<ColumnDef<T>>() {
 
     @JvmSynthetic
     lateinit var id: ColumnKey<T>
@@ -159,11 +159,10 @@ class ColumnBuilder<T> internal constructor() : AttributesAwareBuilder<Column<T>
     var dataFormatter: ((field: Any) -> Any)? = null
 
     @JvmSynthetic
-    override fun build(): Column<T> = Column(
+    override fun build(): ColumnDef<T> = ColumnDef(
         id, index, columnType,
         getAttributesByClass(ColumnAttribute::class.java),
-        getAttributesByClass(CellAttribute::class.java),
-        dataFormatter
+        getAttributesByClass(CellAttribute::class.java)
     )
 
     @JvmSynthetic
@@ -176,7 +175,7 @@ class ColumnBuilder<T> internal constructor() : AttributesAwareBuilder<Column<T>
     }
 }
 
-class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBuilder<T>) : Builder<List<Row<T>>> {
+class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBuilder<T>) : Builder<List<RowDef<T>>> {
 
     @JvmSynthetic
     val rowBuilders: MutableList<RowBuilder<T>> = mutableListOf()
@@ -189,18 +188,18 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
     fun addRowBuilder(block: DslBlock<RowBuilder<T>>): RowBuilder<T> =
         RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
             rowBuilders.add(it)
-            it.createAt = rowIndex
+            it.qualifier = RowQualifier(createAt = rowIndex)
             block.invoke(it)
-            rowIndex = it.createAt?.plus(1) ?: rowIndex
+            rowIndex = it.qualifier.createAt?.plus(1) ?: rowIndex
             refreshRowSpans(it)
             it
         }
 
     @JvmSynthetic
-    fun addRowBuilder(selector: RowSelector<T>, block: DslBlock<RowBuilder<T>>): RowBuilder<T> =
+    fun addRowBuilder(selector: RowPredicate<T>, block: DslBlock<RowBuilder<T>>): RowBuilder<T> =
         RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
             rowBuilders.add(it)
-            it.selector = selector
+            it.qualifier = RowQualifier(applyWhen = selector)
             block.invoke(it)
             it
         }
@@ -210,14 +209,14 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
         RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
             rowIndex = at
             rowBuilders.add(it)
-            it.createAt = rowIndex++
+            it.qualifier = RowQualifier(createAt = rowIndex++)
             block.invoke(it)
             refreshRowSpans(it)
             it
         }
 
     @JvmSynthetic
-    override fun build(): List<Row<T>> {
+    override fun build(): List<RowDef<T>> {
         return sortedNullsLast().map { it.build() }
     }
 
@@ -234,7 +233,7 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
     }
 
     private fun sortedNullsLast(): List<RowBuilder<T>> {
-        return rowBuilders.sortedWith(compareBy(nullsLast()) { it.createAt })
+        return rowBuilders.sortedWith(compareBy(nullsLast()) { it.qualifier.createAt })
     }
 
     companion object {
@@ -246,42 +245,19 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
 class RowBuilder<T> private constructor(
     columnsBuilder: ColumnsBuilder<T>,
     interceptedRowSpans: MutableMap<ColumnKey<T>, Int>
-) : AttributesAwareBuilder<Row<T>>() {
+) : AttributesAwareBuilder<RowDef<T>>() {
 
     @JvmSynthetic
     val cellsBuilder: CellsBuilder<T> = CellsBuilder.new(columnsBuilder, interceptedRowSpans)
 
     @JvmSynthetic
-    private var _createAt: Int? = null
-
-    @JvmSynthetic
-    private var _selector: RowSelector<T>? = null
-
-    @set:JvmSynthetic
-    var selector: RowSelector<T>?
-        get() {
-            return _selector
-        }
-        set(value) {
-            _selector = value
-            _createAt = null
-        }
-
-    @set:JvmSynthetic
-    var createAt: Int?
-        get() {
-            return _createAt
-        }
-        set(value) {
-            _createAt = value
-            _selector = null
-        }
+    internal lateinit var qualifier: RowQualifier<T>
 
     internal fun getCellBuilder(key: ColumnKey<T>): CellBuilder<T>? = cellsBuilder.cells[key]
 
     @JvmSynthetic
-    override fun build(): Row<T> = Row(
-        selector, createAt,
+    override fun build(): RowDef<T> = RowDef(
+        qualifier,
         getAttributesByClass(RowAttribute::class.java),
         getAttributesByClass(CellAttribute::class.java),
         cellsBuilder.build()
@@ -303,7 +279,7 @@ class RowBuilder<T> private constructor(
 class CellsBuilder<T> private constructor(
     private val columnsBuilder: ColumnsBuilder<T>,
     private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int>
-) : Builder<Map<ColumnKey<T>, Cell<T>>> {
+) : Builder<Map<ColumnKey<T>, CellDef<T>>> {
 
     @JvmSynthetic
     val cells: MutableMap<ColumnKey<T>, CellBuilder<T>> = mutableMapOf()
@@ -343,7 +319,7 @@ class CellsBuilder<T> private constructor(
         }
 
     @JvmSynthetic
-    override fun build(): Map<ColumnKey<T>, Cell<T>> {
+    override fun build(): Map<ColumnKey<T>, CellDef<T>> {
         return cells.map { it.key to it.value.build() }.toMap()
     }
 
@@ -373,13 +349,13 @@ class CellsBuilder<T> private constructor(
     }
 }
 
-class CellBuilder<T> private constructor() : AttributesAwareBuilder<Cell<T>>() {
+class CellBuilder<T> private constructor() : AttributesAwareBuilder<CellDef<T>>() {
 
     @JvmSynthetic
     var value: Any? = null
 
     @JvmSynthetic
-    var eval: RowCellEval<T>? = null
+    var expression: RowCellExpression<T>? = null
 
     @JvmSynthetic
     var type: CellType? = null
@@ -391,8 +367,8 @@ class CellBuilder<T> private constructor() : AttributesAwareBuilder<Cell<T>>() {
     var rowSpan: Int = 1
 
     @JvmSynthetic
-    override fun build(): Cell<T> =
-        Cell(value, eval, type, colSpan, rowSpan, getAttributesByClass(CellAttribute::class.java))
+    override fun build(): CellDef<T> =
+        CellDef(value, expression, type, colSpan, rowSpan, getAttributesByClass(CellAttribute::class.java))
 
     @JvmSynthetic
     override fun supportedAttributeClasses(): Set<Class<out Attribute<*>>> = setOf(CellAttribute::class.java)
