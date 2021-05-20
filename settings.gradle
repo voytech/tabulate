@@ -1,5 +1,0 @@
-rootProject.name = 'tabulate'
-include 'tabulate-core'
-include 'tabulate-excel'
-include 'tabulate-pdf'
-include 'tabulate-csv'
