@@ -4,6 +4,12 @@ val commonsMathVersion: String by project
 
 plugins {
     kotlin("jvm")
+    id("pl.allegro.tech.build.axion-release")
+}
+
+scmVersion {
+    tag.prefix = "tabulate.excel"
+    tag.versionSeparator = "-"
 }
 
 dependencies {
