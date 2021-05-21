@@ -8,55 +8,151 @@ Tabulate aids you in exporting your data collections into various tabular file f
 
 ## Why ?
 
-Data reporting / exporting can be sometimes very tedious and cumbersome task - especially when your business is strongly tied with well established forms of reporting like spreadsheets and wants to have reports on each business path. Such a requirement often encourages us to create various abstractions, helpers and other utilities to hide vendor API usage details and to make the task less repetitive, more compact and faster.
+Data reporting and exporting can be sometimes very tedious and cumbersome task - especially when your business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative 3rd party API directly will probably make code verbose, error-prone and hard to read/maintain. This is the reason why many developers choose to hide implementation details using clever abstractions. In the end there is another solution - One can delegate abstracting part to some external library which exposes declarative API.
 
-## When ...    
+Tabulate tries to mitigate those little inconveniences by offering You third option.
 
-... You need to export tabular data into following formats: 
-- excel (xlsx),
-- pdf (WIP)
+## You should consider using tabulate if:    
 
-... You want to have control over column, row, cell styles.  
+- You need to export collections of objects into: 
+    - excel (xlsx),
+    - pdf (WIP)
+    
+- You expect exported data to be formatted as table. 
 
-... You do not want to expose imperative vendor API in business logic code.
+- You need to create reports from the same data (and possibly using the same table structure) in many tabular formats (excel, pdf)
+  
+- You need to apply style attributes (font family, colors, borders ...) on columns, rows, or selected cells in format agnostic manner (e.g. same styles can be applied on both: xlsx and pdf files).  
 
-... You do not want to write your own abstractions. 
+- You don't like to mix high level business logic with more technical implementation.
 
-... You want to easily extend functionalities with your own custom attributes as You require.
- 
-## Features (v0.1.0)
+- You want to register new attributes for cells, rows, columns or table.
 
-### Tabular data export from collection data sources.
+- You want to extend (wrap) DSL type-safe API. 
 
-Suppose we are developing kind of 'sales reports' service and we have following spring JPA repository method: 
+## You should not use this library if: 
+
+- You need to export collection into non-tabular format.
+
+## Key features
+
+### Kotlin DSL API.
+
+Kotlin DSL API helps a lot with defining table structure.
+In the end it looks very concise, readable, and what is more important - type-safe.
+Writing table definition uses IDE auto-completion and suggest only current scope-valid variables and instance functions. 
 ```kotlin
-fun loadProductsByDate(date: LocalDate): List<Product> { ... }
+    loadProducts().tabulate("products.xlsx") {
+          name = "Products table"
+          attributes { 
+            template { fileName = "src/test/resources/template.xlsx" } 
+          }
+          columns {
+              column(Product::code)
+              column(Product::name)
+              column(Product::description)
+              column(Product::manufacturer)
+              column(Product::distributionDate) {
+                  attributes {
+                    dataFormat { value = "dd.mm.YYYY" }
+                  }
+              }
+          }
+    }
 ```
-or
+DSL is built from functions taking lambda receivers - this makes it possible to configure builders in scope with some language support. E.g. using iteration as below:
 ```kotlin
-fun loadProductsByDate(date: LocalDate): Flux<Product> { ... }
+    val additionalProducts = ...
+    tabule {
+          name = "Products table"   
+          attributes { 
+            template { fileName = "src/test/resources/template.xlsx" } 
+          }
+          rows { 
+              header("Code", "Name", "Description", "Manufacturer")
+              additionalProducts.forEach {
+                  row { 
+                      cells {
+                          cell { value = it.code }
+                          cell { value = it.name }
+                          cell { value = it.description }
+                          cell { value = it.manufacturer }
+                      }
+                  }
+              }
+          }  
+    }.export("products.xlsx")
 ```
-then we can make following:
+
+### sadsd
+### dasdsad
+
+## Other features (v0.1.0)
+
+
+### Fluent builders Java API.
+Old fashioned Java fluent builder API is also supported... but it looks much more verbose:
+
+```java
+Table<Employee> employeeTable =
+		Table.<Employee>builder()
+		.attribute(new TemplateFileAttribute("file.xlsx"))
+		.columns()
+		    .column(Employee::getId)
+		        .columnType(CellType.NUMERIC)
+		        .attribute(new ColumnWidthAttribute())
+		    .column(Employee::getFirstName)
+		        .columnType(CellType.STRING)
+		        .attribute(new ColumnWidthAttribute())
+		    .column(Employee::getLastName)
+		        .columnType(CellType.STRING)
+		        .attribute(new ColumnWidthAttribute())
+		.rows()
+		    .row()
+		        .attribute(new RowHeightAttribute(100))
+		.build();
+```
+
+### Column bound object property extractors.
+Column API makes it possible to pass property getter reference as a column key. 
+Using this approach creates object to column binding to be used later at run time for cell value evaluation.
 ```kotlin
 productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx") {
             name = "Products table"
-            firstRow = 1
             columns {
                 column(Product::code)
                 column(Product::name)
                 column(Product::description)
-                    ...
             }
         }
 ```
 
-### Creating custom rows and cell values.
+### First class support to reactive streams API.
 
-### Mixing exporting from collection data sources and custom cell values.
+Assume we are developing reactive web application and we have already created reactive Spring JPA repository like: 
+```kotlin
+fun Flux<Product> loadProductsByDate() { ... }
+```
+You can now call extension method:
+```kotlin
+productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx")
+```
+and You are all done. When you call tabulate - You are in fact subscribing to publisher which will push records from database reactivelly. 
 
-### Injecting custom row definitions via type bound predicates.  
+### Inserting custom rows.
 
-### Support for various attributes on all table levels: table, columns, row, cell.
+- setting custom cell style
+
+- defining row and col spans.
+
+- inserting images.
+
+### Merging rows (and derived attributes) qualified by row context predicates.  
+
+### Mixing object collection rows with predefined rows definitions.
+
+### Library of style and structural attributes for all table levels (table, column, row, cell).
+
 
 You can use attributes for various purposes - for styling, for formatting, hooking with data and so on. 
 All attributes are resolved from top to down and attributes at lower level takes precedence as they are more specific.
@@ -76,18 +172,6 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
                 },
                 background { color = Colors.BLUE }
             )
-        }
-        column(Product::name) {
-            attributes(width { auto = true })
-        }
-        column(Product::description) {
-            attributes(width { auto = true })
-        }
-        column(Product::manufacturer) {
-            attributes(width { auto = true })
-        }
-        column(Product::price) {
-            attributes(width { auto = true })
         }
         column(Product::distributionDate) {
             attributes(
@@ -110,59 +194,9 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
     }
 }
 ```
-
-### DSL Kotlin API.
-Pretty neat:
-
-```kotlin
-loadProducts(1000).tabulate("test2.xlsx") {
-            name = "Products table"
-            firstRow = 1
-            attributes(template { fileName = "src/test/resources/template.xlsx" })
-            columns {
-                column(Product::code)
-                column(Product::name)
-                column(Product::description)
-                column(Product::manufacturer)
-                column(Product::distributionDate) {
-                    attributes(
-                        dataFormat { value = "dd.mm.YYYY" }
-                    )
-                }
-            }
-        }
-```
-
-### Fluent builders Java API.
-More verbose:
-
-```java
-
-Table<Employee> employeeTable =
-		Table.<Employee>builder()
-		.attribute(new TemplateFileAttribute("file.xlsx"))
-		.columns()
-		    .column(Employee::getId)
-		        .columnType(CellType.NUMERIC)
-		        .attribute(new ColumnWidthAttribute())
-		    .column(Employee::getFirstName)
-		        .columnType(CellType.STRING)
-		        .attribute(new ColumnWidthAttribute())
-		    .column(Employee::getLastName)
-		        .columnType(CellType.STRING)
-		        .attribute(new ColumnWidthAttribute())
-		.rows()
-		    .row()
-		        .attribute(new RowHeightAttribute(100))
-		.build();
-```
-
 ### Extensible attribute model.
 
 ### Extensible and customizable exporting operations logic (Java SPI ServiceLoader).
-
-## How ?
- 
 
 ## License 
 
