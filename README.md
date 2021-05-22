@@ -34,13 +34,12 @@ Tabulate tries to mitigate those little inconveniences by offering You third opt
 
 - You need to export collection into non-tabular format.
 
-## Key features
+## Key concepts
 
-### Kotlin DSL API.
+### Take most from Kotlin DSL API.
 
-Kotlin DSL API helps a lot with defining table structure.
-In the end it looks very concise, readable, and what is more important - type-safe.
-Writing table definition uses IDE auto-completion and suggest only current scope-valid variables and instance functions. 
+Kotlin DSL API helps a lot with describing desired target table structure.
+It makes it look very concise and readable. Maintaining table definition becomes much more easier not only because of visual aspects, but what is more important due to type-safety offered by Kotlin. At coding time, your IDE will make use of it by offering completion hints - this elevates developer experience as almost zero documentation is required to start. 
 ```kotlin
     loadProducts().tabulate("products.xlsx") {
           name = "Products table"
@@ -60,7 +59,7 @@ Writing table definition uses IDE auto-completion and suggest only current scope
           }
     }
 ```
-DSL is built from functions taking lambda receivers - this makes it possible to configure builders in scope with some language support. E.g. using iteration as below:
+DSL is built from functions taking lambda receivers - this makes it possible to configure builders in scope with some language support. E.g. using loops as below:
 ```kotlin
     val additionalProducts = ...
     tabule {
