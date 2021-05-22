@@ -8,7 +8,7 @@ Tabulate aids you in exporting your data collections into various tabular file f
 
 ## Why ?
 
-Exporting data extracts can be very tedious and cumbersome - especially when your business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. This is the reason why many developers choose to hide implementation details using clever abstractions. In the end there is another solution - One can delegate abstracting part to some external library which exposes declarative API.
+Exporting data extracts can be tedious and cumbersome - especially when your business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. This is the reason why many developers choose to hide implementation details using clever abstractions. In the end there is another solution - One can delegate abstracting part to some external library which exposes declarative API.
 
 Tabulate tries to mitigate those little inconveniences by offering You third option.
 
@@ -16,19 +16,17 @@ Tabulate tries to mitigate those little inconveniences by offering You third opt
 
 - You need to export objects into: 
     - excel (xlsx),
-    - pdf (WIP)
+    - pdf (currently work in progress)
     
 - Exported data needs to be table-formatted. 
 
-- You want reuse table definition to convey exporting to possibly many tabular formats (excel, pdf)
+- You want to reuse tabular structure and apply it to many tabular formats (excel, pdf)
   
-- You need to apply style attributes (font family, colors, borders ...) on columns, rows, or selected cells in format agnostic manner (e.g. same styles can be applied on both: xlsx and pdf files).  
+- You need to preserve consistent and file format agnostic styling (e.g. same cell styles can be applied on both: xlsx and pdf files).  
 
-- You don't like to mix high level business logic with more technical implementation.
+- You need means to add new styles or other attributes.
 
-- You want to register new attributes for cells, rows, columns or table.
-
-- You want to extend (wrap) DSL type-safe API. 
+- You want to operate using extensible and type-safe API (DSL)
 
 ## You should not use this library if: 
 
