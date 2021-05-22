@@ -8,39 +8,56 @@ Tabulate aids you in exporting your data collections into various tabular file f
 
 ## Why ?
 
-Data reporting and exporting can be sometimes very tedious and cumbersome task - especially when your business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative 3rd party API directly will probably make code verbose, error-prone and hard to read/maintain. This is the reason why many developers choose to hide implementation details using clever abstractions. In the end there is another solution - One can delegate abstracting part to some external library which exposes declarative API.
+Exporting data to external file formats can be tedious and cumbersome - especially when your business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. This is the reason why many developers choose to hide implementation details using clever abstractions. In the end there is another solution - One can delegate abstracting part to some external library which exposes declarative API.
 
 Tabulate tries to mitigate those little inconveniences by offering You third option.
 
 ## You should consider using tabulate if:    
 
-- You need to export collections of objects into: 
+- You need to export objects into: 
     - excel (xlsx),
-    - pdf (WIP)
+    - pdf (currently work in progress)
     
-- You expect exported data to be formatted as table. 
+- Exported data needs to be table-formatted. 
 
-- You need to create reports from the same data (and possibly using the same table structure) in many tabular formats (excel, pdf)
+- You want to reuse table structure and apply it to many tabular file formats (excel, pdf)
   
-- You need to apply style attributes (font family, colors, borders ...) on columns, rows, or selected cells in format agnostic manner (e.g. same styles can be applied on both: xlsx and pdf files).  
+- You need to preserve consistent styling (e.g. same cell styles can be applied on both: xlsx and pdf files).  
 
-- You don't like to mix high level business logic with more technical implementation.
+- You want to add new styles or other attributes as long as they are not included in basic package.
 
-- You want to register new attributes for cells, rows, columns or table.
-
-- You want to extend (wrap) DSL type-safe API. 
+- You want to operate using extensible and type-safe API (DSL)
 
 ## You should not use this library if: 
 
 - You need to export collection into non-tabular format.
 
-## Key features
+## Key concepts
 
-### Kotlin DSL API.
+### Table model with attributes.
 
-Kotlin DSL API helps a lot with defining table structure.
-In the end it looks very concise, readable, and what is more important - type-safe.
-Writing table definition uses IDE auto-completion and suggest only current scope-valid variables and instance functions. 
+Table model makes it possible to declare how table will look like after data binding and exporting. It is composed of standard well known entities:  
+
+- column
+- row  
+- row cell 
+
+Above entities are sufficient if You only want to layout cell values within table. 
+In order to gain more control over underlying backend API You need to start using attributes.
+
+Attributes are plain objects with inner properties that extends base model. Attributes can be installed on multiple levels: _table_, _column_, _row_ and single _cell_ levels. There can be many categories of attributes. E.g. there are cell style attributes, column and row structural attributes (column width, row height), global - table attributes (e.g. input template file to read and interpolate data on it)
+
+### Template pattern and table export operations.
+
+Template is an entry point to exporting facility. It orchestrates all table export operations: 
+- it instantiates result object and 3rd party underlying APIs,
+- it requests data records one by one and delegates context rendering to table operations implementors.
+- it finalizes operations  (e.g. flushing output stream)
+
+### Table DSL API.
+
+Kotlin type-safe DSL helps a lot with describing target table structure.
+It makes it look very concise and readable. Maintaining table definition becomes much easier due to type-safety given by Kotlin DSL. At coding time, your IDE will make use of it by offering completion hints - this elevates developer experience, as almost zero documentation is required to start. 
 ```kotlin
     loadProducts().tabulate("products.xlsx") {
           name = "Products table"
@@ -60,10 +77,10 @@ Writing table definition uses IDE auto-completion and suggest only current scope
           }
     }
 ```
-DSL is built from functions taking lambda receivers - this makes it possible to configure builders in scope with some language support. E.g. using iteration as below:
+DSL functions take lambda receivers as arguments. This allows nested DSL APIs with lexical scoping restrictions + calling accessible functions which can be powerful. Look at below example - using 'forEach' in inner 'rows' API:
 ```kotlin
     val additionalProducts = ...
-    tabule {
+    tabulate {
           name = "Products table"   
           attributes { 
             template { fileName = "src/test/resources/template.xlsx" } 
@@ -84,8 +101,70 @@ DSL is built from functions taking lambda receivers - this makes it possible to 
     }.export("products.xlsx")
 ```
 
-### sadsd
-### dasdsad
+### Table DSL extension functions.
+
+Together with possibility of nesting DSLs comes another powerful feature - extending each DSL level by using extension functions on DSL API builder classes.  
+
+Take the example from previous section: 
+```kotlin
+    val additionalProducts = ...
+    tabulate {
+          rows { 
+              header("Code", "Name", "Description", "Manufacturer")
+              additionalProducts.forEach {
+                  row { 
+                      cells {
+                          cell { value = it.code }
+                          cell { value = it.name }
+                          cell { value = it.description }
+                          cell { value = it.manufacturer }
+                      }
+                  }
+              }
+          }  
+    }.export("products.xlsx")
+```
+method 'header' is implemented as follows: 
+
+```kotlin
+fun <T> RowsBuilderApi<T>.header(vararg names: String) =
+    row {
+        insertWhen { it.rowIndex == 0 && !it.hasRecord()}
+        cells {
+            names.forEach {
+                cell { value = it }
+            }
+        }
+    }
+```
+So You are free to extend BuilderApi DSL in order to create various shortcuts and templates. 
+### Column bound cell value extractors.
+
+Column API makes it possible to pass property getter reference as a column key. 
+Using this approach creates object to column binding to be used later at run time for cell value evaluation.
+```kotlin
+productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx") {
+            name = "Products table"
+            columns {
+                column(Product::code)
+                column(Product::name)
+                column(Product::description)
+            }
+        }
+```
+
+### First class support to reactive streams SPI.
+
+Assume we are developing reactive web application and we have already created reactive Spring JPA repository like: 
+```kotlin
+fun Flux<Product> loadProducts() { ... }
+```
+You can now call extension method:
+```kotlin
+productsRepository.loadProducts().tabulate("file/path/products.xlsx") { .. configure table look and feel ...}
+```
+and You are all done. When you call tabulate - You are in fact subscribing to publisher which will push records from database reactivelly. 
+
 
 ## Other features (v0.1.0)
 
@@ -113,33 +192,7 @@ Table<Employee> employeeTable =
 		.build();
 ```
 
-### Column bound object property extractors.
-Column API makes it possible to pass property getter reference as a column key. 
-Using this approach creates object to column binding to be used later at run time for cell value evaluation.
-```kotlin
-productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx") {
-            name = "Products table"
-            columns {
-                column(Product::code)
-                column(Product::name)
-                column(Product::description)
-            }
-        }
-```
-
-### First class support to reactive streams API.
-
-Assume we are developing reactive web application and we have already created reactive Spring JPA repository like: 
-```kotlin
-fun Flux<Product> loadProductsByDate() { ... }
-```
-You can now call extension method:
-```kotlin
-productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx")
-```
-and You are all done. When you call tabulate - You are in fact subscribing to publisher which will push records from database reactivelly. 
-
-### Inserting custom rows.
+### Custom rows.
 
 - setting custom cell style
 
@@ -151,7 +204,7 @@ and You are all done. When you call tabulate - You are in fact subscribing to pu
 
 ### Mixing object collection rows with predefined rows definitions.
 
-### Library of style and structural attributes for all table levels (table, column, row, cell).
+### Library of style and structural attributes.
 
 
 You can use attributes for various purposes - for styling, for formatting, hooking with data and so on. 
@@ -196,21 +249,4 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
 ```
 ### Extensible attribute model.
 
-### Extensible and customizable exporting operations logic (Java SPI ServiceLoader).
-
-## License 
-
-```
-Copyright 2020 Wojciech Mąka.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+### Extensible exporting operations (Java SPI ServiceLoader).
