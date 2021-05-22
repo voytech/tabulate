@@ -8,7 +8,7 @@ Tabulate aids you in exporting your data collections into various tabular file f
 
 ## Why ?
 
-Exporting data extracts can be tedious and cumbersome - especially when your business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. This is the reason why many developers choose to hide implementation details using clever abstractions. In the end there is another solution - One can delegate abstracting part to some external library which exposes declarative API.
+Exporting data to external file formats can be tedious and cumbersome - especially when your business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. This is the reason why many developers choose to hide implementation details using clever abstractions. In the end there is another solution - One can delegate abstracting part to some external library which exposes declarative API.
 
 Tabulate tries to mitigate those little inconveniences by offering You third option.
 
@@ -20,11 +20,11 @@ Tabulate tries to mitigate those little inconveniences by offering You third opt
     
 - Exported data needs to be table-formatted. 
 
-- You want to reuse tabular structure and apply it to many tabular formats (excel, pdf)
+- You want to reuse table structure and apply it to many tabular file formats (excel, pdf)
   
-- You need to preserve consistent and file format agnostic styling (e.g. same cell styles can be applied on both: xlsx and pdf files).  
+- You need to preserve consistent styling (e.g. same cell styles can be applied on both: xlsx and pdf files).  
 
-- You need means to add new styles or other attributes.
+- You want to add new styles or other attributes as long as they are not included in basic package.
 
 - You want to operate using extensible and type-safe API (DSL)
 
@@ -34,10 +34,25 @@ Tabulate tries to mitigate those little inconveniences by offering You third opt
 
 ## Key concepts
 
+### Table model with attributes.
+
+Table model makes it possible to declare how table will look like after data binding and exporting. It is composed of standard well known entities:  
+
+- column
+- row  
+- row cell 
+
+Above entities are sufficient if You only want to layout cell values within table. 
+In order to gain more control over underlying backend API You need to start using attributes.
+
+Attributes are plain objects with inner properties that extends base model. Attributes can be installed on multiple levels: _table_, _column_, _row_ and single _cell_ levels. There can be many categories of attributes. E.g. there are cell style attributes, column and row structural attributes (column width, row height), global - table attributes (e.g. input template file to read and interpolate data on it)
+
+### Template pattern and table export operations.
+
 ### Table DSL API.
 
-Kotlin DSL API helps a lot with describing desired target table structure.
-It makes it look very concise and readable. Maintaining table definition becomes much more easier not only because of visual aspects, but what is more important due to type-safety offered by Kotlin. At coding time, your IDE will make use of it by offering completion hints - this elevates developer experience as almost zero documentation is required to start. 
+Kotlin type-safe DSL helps a lot with describing target table structure.
+It makes it look very concise and readable. Maintaining table definition becomes much easier due to type-safety given by Kotlin DSL. At coding time, your IDE will make use of it by offering completion hints - this elevates developer experience, as almost zero documentation is required to start. 
 ```kotlin
     loadProducts().tabulate("products.xlsx") {
           name = "Products table"
@@ -57,10 +72,10 @@ It makes it look very concise and readable. Maintaining table definition becomes
           }
     }
 ```
-DSL functions take lambda receivers as arguments - this makes it possible to configure builders with some language support. E.g. using 'forEaach' as below:
+DSL functions take lambda receivers as arguments. This allows nested DSL APIs with lexical scoping restrictions + calling accessible functions which can be powerful. Look at below example - using 'forEach' in inner 'rows' API:
 ```kotlin
     val additionalProducts = ...
-    tabule {
+    tabulate {
           name = "Products table"   
           attributes { 
             template { fileName = "src/test/resources/template.xlsx" } 
@@ -83,6 +98,41 @@ DSL functions take lambda receivers as arguments - this makes it possible to con
 
 ### Table DSL extension functions.
 
+Together with possibility of nesting DSLs comes another powerful feature - extending each DSL level by using extension functions on DSL API builder classes.  
+
+Take the example from previous section: 
+```kotlin
+    val additionalProducts = ...
+    tabulate {
+          rows { 
+              header("Code", "Name", "Description", "Manufacturer")
+              additionalProducts.forEach {
+                  row { 
+                      cells {
+                          cell { value = it.code }
+                          cell { value = it.name }
+                          cell { value = it.description }
+                          cell { value = it.manufacturer }
+                      }
+                  }
+              }
+          }  
+    }.export("products.xlsx")
+```
+method 'header' is implemented as follows: 
+
+```kotlin
+fun <T> RowsBuilderApi<T>.header(vararg names: String) =
+    row {
+        insertWhen { it.rowIndex == 0 && !it.hasRecord()}
+        cells {
+            names.forEach {
+                cell { value = it }
+            }
+        }
+    }
+```
+So You are free to extend BuilderApi DSL in order to create various shortcuts and templates. 
 ### Column bound cell value extractors.
 
 Column API makes it possible to pass property getter reference as a column key. 
@@ -102,11 +152,11 @@ productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx")
 
 Assume we are developing reactive web application and we have already created reactive Spring JPA repository like: 
 ```kotlin
-fun Flux<Product> loadProductsByDate() { ... }
+fun Flux<Product> loadProducts() { ... }
 ```
 You can now call extension method:
 ```kotlin
-productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx")
+productsRepository.loadProducts().tabulate("file/path/products.xlsx") { .. configure table look and feel ...}
 ```
 and You are all done. When you call tabulate - You are in fact subscribing to publisher which will push records from database reactivelly. 
 
