@@ -49,6 +49,11 @@ Attributes are plain objects with inner properties that extends base model. Attr
 
 ### Template pattern and table export operations.
 
+Template is an entry point to exporting facility. It orchestrates all table export operations: 
+- it instantiates result object and 3rd party underlying APIs,
+- it requests data records one by one and delegates context rendering to table operations implementors.
+- it finalizes operations  (e.g. flushing output stream)
+
 ### Table DSL API.
 
 Kotlin type-safe DSL helps a lot with describing target table structure.
@@ -245,20 +250,3 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
 ### Extensible attribute model.
 
 ### Extensible exporting operations (Java SPI ServiceLoader).
-
-## License 
-
-```
-Copyright 2020 Wojciech Mąka.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
