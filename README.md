@@ -8,19 +8,19 @@ Tabulate aids you in exporting your data collections into various tabular file f
 
 ## Why ?
 
-Data reporting and exporting can be sometimes very tedious and cumbersome task - especially when your business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative 3rd party API directly will probably make code verbose, error-prone and hard to read/maintain. This is the reason why many developers choose to hide implementation details using clever abstractions. In the end there is another solution - One can delegate abstracting part to some external library which exposes declarative API.
+Exporting data extracts can be very tedious and cumbersome - especially when your business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. This is the reason why many developers choose to hide implementation details using clever abstractions. In the end there is another solution - One can delegate abstracting part to some external library which exposes declarative API.
 
 Tabulate tries to mitigate those little inconveniences by offering You third option.
 
 ## You should consider using tabulate if:    
 
-- You need to export collections of objects into: 
+- You need to export objects into: 
     - excel (xlsx),
     - pdf (WIP)
     
-- You expect exported data to be formatted as table. 
+- Exported data needs to be table-formatted. 
 
-- You need to create reports from the same data (and possibly using the same table structure) in many tabular formats (excel, pdf)
+- You want reuse table definition to convey exporting to possibly many tabular formats (excel, pdf)
   
 - You need to apply style attributes (font family, colors, borders ...) on columns, rows, or selected cells in format agnostic manner (e.g. same styles can be applied on both: xlsx and pdf files).  
 
