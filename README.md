@@ -36,7 +36,7 @@ Tabulate tries to mitigate those little inconveniences by offering You third opt
 
 ## Key concepts
 
-### Take most from Kotlin DSL API.
+### Table DSL API.
 
 Kotlin DSL API helps a lot with describing desired target table structure.
 It makes it look very concise and readable. Maintaining table definition becomes much more easier not only because of visual aspects, but what is more important due to type-safety offered by Kotlin. At coding time, your IDE will make use of it by offering completion hints - this elevates developer experience as almost zero documentation is required to start. 
@@ -59,7 +59,7 @@ It makes it look very concise and readable. Maintaining table definition becomes
           }
     }
 ```
-DSL is built from functions taking lambda receivers - this makes it possible to configure builders in scope with some language support. E.g. using loops as below:
+DSL functions take lambda receivers as arguments - this makes it possible to configure builders with some language support. E.g. using 'forEaach' as below:
 ```kotlin
     val additionalProducts = ...
     tabule {
@@ -83,8 +83,35 @@ DSL is built from functions taking lambda receivers - this makes it possible to 
     }.export("products.xlsx")
 ```
 
-### sadsd
-### dasdsad
+### Table DSL extension functions.
+
+### Column bound cell value extractors.
+
+Column API makes it possible to pass property getter reference as a column key. 
+Using this approach creates object to column binding to be used later at run time for cell value evaluation.
+```kotlin
+productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx") {
+            name = "Products table"
+            columns {
+                column(Product::code)
+                column(Product::name)
+                column(Product::description)
+            }
+        }
+```
+
+### First class support to reactive streams SPI.
+
+Assume we are developing reactive web application and we have already created reactive Spring JPA repository like: 
+```kotlin
+fun Flux<Product> loadProductsByDate() { ... }
+```
+You can now call extension method:
+```kotlin
+productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx")
+```
+and You are all done. When you call tabulate - You are in fact subscribing to publisher which will push records from database reactivelly. 
+
 
 ## Other features (v0.1.0)
 
@@ -112,33 +139,7 @@ Table<Employee> employeeTable =
 		.build();
 ```
 
-### Column bound object property extractors.
-Column API makes it possible to pass property getter reference as a column key. 
-Using this approach creates object to column binding to be used later at run time for cell value evaluation.
-```kotlin
-productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx") {
-            name = "Products table"
-            columns {
-                column(Product::code)
-                column(Product::name)
-                column(Product::description)
-            }
-        }
-```
-
-### First class support to reactive streams API.
-
-Assume we are developing reactive web application and we have already created reactive Spring JPA repository like: 
-```kotlin
-fun Flux<Product> loadProductsByDate() { ... }
-```
-You can now call extension method:
-```kotlin
-productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx")
-```
-and You are all done. When you call tabulate - You are in fact subscribing to publisher which will push records from database reactivelly. 
-
-### Inserting custom rows.
+### Custom rows.
 
 - setting custom cell style
 
@@ -150,7 +151,7 @@ and You are all done. When you call tabulate - You are in fact subscribing to pu
 
 ### Mixing object collection rows with predefined rows definitions.
 
-### Library of style and structural attributes for all table levels (table, column, row, cell).
+### Library of style and structural attributes.
 
 
 You can use attributes for various purposes - for styling, for formatting, hooking with data and so on. 
@@ -195,7 +196,7 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
 ```
 ### Extensible attribute model.
 
-### Extensible and customizable exporting operations logic (Java SPI ServiceLoader).
+### Extensible exporting operations (Java SPI ServiceLoader).
 
 ## License 
 
