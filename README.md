@@ -138,10 +138,15 @@ fun <T> RowsBuilderApi<T>.header(vararg names: String) =
     }
 ```
 So You are free to extend BuilderApi DSL in order to create various shortcuts and templates. 
+It is worth mentioning that by using extension functions on DSL builders - scope becomes restricted to extended DSL builder receiver.
+Thus - it will not be allowed to break table definition by calling methods from patent builders. 
+
+This property becomes especially attractive in contex of custom attributes:
+
 ### Column bound cell value extractors.
 
 Column API makes it possible to pass property getter reference as a column key. 
-Using this approach creates object to column binding to be used later at run time for cell value evaluation.
+This creates object to column binding that is applied later at run time for cell value evaluation.
 ```kotlin
 productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx") {
             name = "Products table"
@@ -153,7 +158,7 @@ productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx")
         }
 ```
 
-### First class support to reactive streams SPI.
+### First-class support for reactive streams SPI.
 
 Assume we are developing reactive web application and we have already created reactive Spring JPA repository like: 
 ```kotlin
