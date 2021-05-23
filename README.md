@@ -42,10 +42,83 @@ Table model describes how table will look like after data binding and exporting.
 - row  
 - row cell 
 
-Above entities are sufficient if You only want to layout cell values within table. 
+Table model entities in typical arrangement: 
+
+```kotlin
+productList.tabulate("file.xlsx") {
+    name = "Table id"
+    columns {
+        column("nr") {
+            ...
+        }
+        column(Product::code) {
+            ...
+        }
+        ...
+    }
+    rows {
+        row {  // first row when no index provided.
+            cells {
+                cell("nr") { value = "Nr.:" }
+                ...
+            }
+        }
+        row { // second row when no index provided.                       
+            cells {
+                cell(Product::code) { ... }
+            }
+        }
+    }
+}
+```
+Above will suffice if You only want to layout cell values within a table. 
 In order to gain more control over underlying backend API You need to start using attributes.
 
 Attributes are plain objects with inner properties that extends base model. Attributes can be installed on multiple levels: _table_, _column_, _row_ and single _cell_ levels. There can be many categories of attributes. E.g. there are cell style attributes, column and row structural attributes (column width, row height), global - table attributes (e.g. input template file to read and interpolate data on it)
+
+Example with attributes included
+```kotlin
+productList.tabulate("file.xlsx") {
+    name = "Table id"
+    attributes {
+      filterAndSort {}
+    }
+    columns {
+        column("nr") {
+            attributes { width { px = 40 }}
+            ...
+        }
+        column(Product::code) {
+            attributes { width { auto = true}}
+            ...
+        }
+        ...
+    }
+    rows {
+        row {  // first row when no index provided.
+            cells {
+                cell("nr") { 
+                  value = "Nr.:" 
+                  attributes {
+                    text {
+                      fontFamily = "Times New Roman"
+                      fontColor = Colors.BLACK
+                      fontSize = 12
+                    }
+                    background { color = Colors.BLUE }
+                  }  
+                }
+                ...
+            }
+        }
+        row { // second row when no index provided.                       
+            cells {
+                cell(Product::code) { ... }
+            }
+        }
+    }
+}
+```
 
 ### Template pattern and table export operations.
 
@@ -54,9 +127,9 @@ Template is an entry point to exporting facility. It orchestrates all table expo
 - it requests data records one by one and delegates context rendering to table operations implementors.
 - it finalizes operations  (e.g. flushing output stream)
 
-Template is also responsible for resolving export operations implementors. For this purpose it uses invocation argument - TabulationFormat.
-There can be many implementations of TabulationFormat. As you will se on examples below - by default there is no explicit pointing what table operation implementors to choose.
-Typically it is sufficient to pass a file name with extension like 'file.xlsx'. Template will lookup for extension and apply default excel table export operations.
+Template is also responsible for resolving export operations implementors. For this purpose it uses invocation argument - `TabulationFormat`.
+There can be many implementations of `TabulationFormat`. As you will se on examples below - by default there is no explicit pointing what table operation implementors to choose.
+Typically, it is sufficient to pass a file name with extension like 'file.xlsx'. Template will lookup for extension and apply default excel table export operations.
 
 ### Table DSL API.
 
@@ -111,20 +184,9 @@ Together with possibility of nesting DSLs comes another powerful feature - exten
 
 Take the example from previous section: 
 ```kotlin
-    val additionalProducts = ...
     tabulate {
           rows { 
               header("Code", "Name", "Description", "Manufacturer")
-              additionalProducts.forEach {
-                  row { 
-                      cells {
-                          cell { value = it.code }
-                          cell { value = it.name }
-                          cell { value = it.description }
-                          cell { value = it.manufacturer }
-                      }
-                  }
-              }
           }  
     }.export("products.xlsx")
 ```
@@ -213,7 +275,7 @@ It acts as conveyor for additional features for existing external source derived
 Things You can achieve with Row model in terms of custom rows includes:
 
 - setting custom cell styles,
-- setting row-level attributes (e.g row height)
+- setting row-level attributes (e.g. row height)
 - defining row and col spans,
 - inserting images,
 - setting cell values of different types.
@@ -221,16 +283,35 @@ Things You can achieve with Row model in terms of custom rows includes:
 
 ### Merging rows.  
 
-When multiple Row model definitions are qualified by predicate, this will result in single synthetic merged row where:
-- row level attributes will be concatenated or merged if are of same type,
-- cell values will be concatenated, or overriden by last cell occurence at given column,
-- cell level attributes will be concatenated, or merged if of same type.
+When multiple `Row` model definitions are qualified by a predicate, they form a single synthetic merged row. Following rules regarding row merge applies:
+- Row level attributes will be concatenated or merged if are of same type.
+- Cell values will be concatenated, or overriden by last cell occurence at given column.
+- Cell level attributes will be concatenated, or merged if of same type.
+- Two attributes of same type are merged by overriding clashing attribute properties from left to right where on left side stands attribute from higher level (e.g. row level), and on right site stands attribute from lower level (e.g. cell level).
 
 ### Library of attributes.
 
 You can use attributes for various purposes - for styling, for formatting, hooking with data and so on. 
-Currently with tabulate-core you will get following attributes included:
 
+Currently, with tabulate-core + tabulate-excel you will get following attributes included:
+
+#### Table attributes
+- Filter and sort attribute (Excel only),
+- Template file attribute 
+
+#### Column attributes
+- Column width attribute 
+
+#### Row attribtues 
+- Row height attribute 
+
+#### Cell attribtues 
+- Cell text style attribute,
+- Cell border attribute,
+- Cell background attribute, 
+- Cell text alignment attribute
+
+Typical usage scenario for selected attributes:
 ```kotlin
 productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx") {
     name = "Products table"
@@ -277,9 +358,37 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
 
 ## Roadmap
 
+Starting from version 0.1.0, minor version will advance relatively fast due to tiny milestones.
+This is because of one person (me) who is currently in charge, and due to my intention to not blocking versions for too long.
+
 ### v0.2.x
+ 
+- PDF table export operations implementation.
+- Definition time validation for cell spans.
 
 ### v0.3.x
+
+- Composition of multiple table models (TableBuilder.include).
+
+### v0.4.x
+
+- Multi-part output files. (chunking large files)
+
+### v0.5.x
+
+- CSS support.
+
+### v0.6.x
+
+- Explicit attribute categories (Statically typed).
+
+### v0.7.x
+
+- Codegen for user defined attributes.
+
+### v0.8.x 
+
+- Spring framework integration (Spring Data)
 
 ### TBD ...
 
