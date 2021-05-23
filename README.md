@@ -36,7 +36,7 @@ Tabulate tries to mitigate those little inconveniences by offering You third opt
 
 ### Table model with attributes.
 
-Table model makes it possible to declare how table will look like after data binding and exporting. It is composed of standard well known entities:  
+Table model describes how table will look like after data binding and exporting. It is composed of standard well known entities:  
 
 - column
 - row  
@@ -145,7 +145,7 @@ So You are free to extend BuilderApi DSL in order to create various shortcuts an
 It is worth mentioning that by using extension functions on DSL builders - scope becomes restricted to extended DSL builder receiver.
 Thus - it will not be allowed to break table definition by calling methods from patent builders. 
 
-This property becomes especially attractive in contex of custom attributes:
+This property becomes especially attractive in contex of user defined attributes:
 
 ### Column bound cell value extractors.
 
