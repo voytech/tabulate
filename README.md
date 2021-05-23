@@ -12,7 +12,7 @@ Exporting data to external file formats can be tedious and cumbersome - especial
 
 Tabulate tries to mitigate those little inconveniences by offering You third option.
 
-## You should consider using tabulate if:    
+### You should consider using tabulate if:    
 
 - You need to export objects into: 
     - excel (xlsx),
@@ -28,7 +28,7 @@ Tabulate tries to mitigate those little inconveniences by offering You third opt
 
 - You want to operate using extensible and type-safe API (DSL)
 
-## You should not use this library if: 
+### You should not use this library if: 
 
 - You need to export collection into non-tabular format.
 
