@@ -174,7 +174,7 @@ and You are all done. When you call tabulate - You are in fact subscribing to pu
 ## Other features (v0.1.0)
 
 
-### Fluent builders Java API.
+### Java interop - fluent builders Java API.
 Old fashioned Java fluent builder API is also supported... but it looks much more verbose:
 
 ```java
@@ -199,22 +199,33 @@ Table<Employee> employeeTable =
 
 ### Custom rows.
 
-- setting custom cell style
+Sometimes in addition to record from external source - You need to add user defined rows.
+Standard table typically needs a header row or summary footer row with totals.
+It is also possible to define interleaving custom rows at specified index or matching qualifier predicate.
 
-- defining row and col spans.
+Row model allows to define custom cell values as well as cell styles and attributes only.
+It acts as conveyor for additional features for existing external source derived rows, or as a factory for standalone custom rows that can be hooked at definition time.
 
-- inserting images.
+Things You can achieve with Row model includes:
 
-### Merging rows (and derived attributes) qualified by row context predicates.  
+- setting custom cell styles,
+- setting row-level attributes (e.g row height)
+- defining row and col spans,
+- inserting images,
+- setting cell values of different types.
 
-### Mixing object collection rows with predefined rows definitions.
 
-### Library of style and structural attributes.
+### Merging rows.  
 
+When multiple Row model definitions are qualified by predicate, this will result in single synthetic merged row where:
+- row level attributes will be concatenated or merged if are of same type,
+- cell values will be concatenated, or overriden by last cell occurence at given column,
+- cell level attributes will be concatenated, or merged if of same type.
+
+### Library of attributes.
 
 You can use attributes for various purposes - for styling, for formatting, hooking with data and so on. 
-All attributes are resolved from top to down and attributes at lower level takes precedence as they are more specific.
-Attributes of same type are merged in such a way that higher level attribute fields are overridden by lower level corresponding fields if they are present. 
+Currently with tabulate-core you will get following attributes included:
 
 ```kotlin
 productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx") {
