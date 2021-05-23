@@ -359,7 +359,7 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
 ## Roadmap
 
 Starting from version 0.1.0, minor version will advance relatively fast due to tiny milestones.
-This is because of one person (me) who is currently in charge, and due to my intention to not blocking versions for too long.
+This is because of one person (me) who is currently in charge, and due to my intention of "non-blocking realese cycles" for too long.
 
 ### v0.2.x
  
