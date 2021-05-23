@@ -207,7 +207,7 @@ So You are free to extend BuilderApi DSL in order to create various shortcuts an
 It is worth mentioning that by using extension functions on DSL builders - scope becomes restricted to extended DSL builder receiver.
 Thus - it will not be allowed to break table definition by calling methods from patent builders. 
 
-This property becomes especially attractive in contex of user defined attributes:
+Extension functions for DSL API builders become trully attractive in context of user defined attributes:
 
 ### Column bound cell value extractors.
 
