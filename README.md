@@ -179,7 +179,7 @@ and You are all done. When you call tabulate - You are in fact subscribing to pu
 
 
 ### Java interop - fluent builders Java API.
-Old fashioned Java fluent builder API is also supported... but it looks much more verbose:
+Old fashioned Java fluent builder API is also supported. It is needless to say it looks much less attractive:
 
 ```java
 Table<Employee> employeeTable =
@@ -203,14 +203,14 @@ Table<Employee> employeeTable =
 
 ### Custom rows.
 
-Sometimes in addition to record from external source - You need to add user defined rows.
+Sometimes, in addition to records from external source - You need to add user defined rows.
 Standard table typically needs a header row or summary footer row with totals.
 It is also possible to define interleaving custom rows at specified index or matching qualifier predicate.
 
 Row model allows to define custom cell values as well as cell styles and attributes only.
 It acts as conveyor for additional features for existing external source derived rows, or as a factory for standalone custom rows that can be hooked at definition time.
 
-Things You can achieve with Row model includes:
+Things You can achieve with Row model in terms of custom rows includes:
 
 - setting custom cell styles,
 - setting row-level attributes (e.g row height)
@@ -268,4 +268,18 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
 }
 ```
 ## Extension points.
+
+### Implementing new table export operations
+
+### Registering new attribute types for specific export operations implementation
+
+### Extending Table DSL API
+
+## Roadmap
+
+### v0.2.x
+
+### v0.3.x
+
+### TBD ...
 
