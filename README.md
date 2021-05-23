@@ -54,6 +54,10 @@ Template is an entry point to exporting facility. It orchestrates all table expo
 - it requests data records one by one and delegates context rendering to table operations implementors.
 - it finalizes operations  (e.g. flushing output stream)
 
+Template is also responsible for resolving export operations implementors. For this purpose it uses invocation argument - TabulationFormat.
+There can be many implementations of TabulationFormat. As you will se on examples below - by default there is no explicit pointing what table operation implementors to choose.
+Typically it is sufficient to pass a file name with extension like 'file.xlsx'. Template will lookup for extension and apply default excel table export operations.
+
 ### Table DSL API.
 
 Kotlin type-safe DSL helps a lot with describing target table structure.
