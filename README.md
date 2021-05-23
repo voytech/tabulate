@@ -263,6 +263,5 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
     }
 }
 ```
-### Extensible attribute model.
+## Extension points.
 
-### Extensible exporting operations (Java SPI ServiceLoader).
