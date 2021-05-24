@@ -40,11 +40,14 @@ abstract class AttributesAware {
     protected abstract fun supportedAttributeClasses(): Set<Class<out Attribute<*>>>
 
     private fun applyAttributes(attributes: Collection<Attribute<*>>) {
-        attributes.forEach {
-            supportedAttributeClasses().find { clazz -> clazz.isAssignableFrom(it.javaClass) }
+        attributes.forEach { attribute ->
+            supportedAttributeClasses().find { clazz -> clazz.isAssignableFrom(attribute.javaClass) }
                 ?.let { baseClass ->
                     this.attributes[baseClass] =
-                        this.attributes[baseClass]?.let { attributes -> attributes + it } ?: setOf(it)
+                        this.attributes[baseClass]
+                            ?.filter { it.javaClass != attribute.javaClass }
+                            ?.toSet()
+                            ?.let { it + attribute } ?: setOf(attribute)
                 }
         }
     }

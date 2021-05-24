@@ -11,8 +11,9 @@ data class RowDef<T> internal constructor(
     val cellAttributes: Set<CellAttribute>?,
     val cells: Map<ColumnKey<T>, CellDef<T>>?
 )  {
-    fun isApplicable(source: SourceRow<T>): Boolean  = qualifier.applyWhen?.test(source) ?: false
+    fun shouldApplyWhen(source: SourceRow<T>): Boolean = qualifier.applyWhen?.test(source) ?: false
     fun shouldInsertRow(source: SourceRow<T>): Boolean = qualifier.createWhen?.test(source) ?: false
+    fun isApplicable(source: SourceRow<T>): Boolean  = shouldApplyWhen(source) || shouldInsertRow(source)
 }
 
 fun interface RowPredicate<T> : Predicate<SourceRow<T>>

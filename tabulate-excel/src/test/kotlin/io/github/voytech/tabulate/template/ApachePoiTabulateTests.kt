@@ -1,5 +1,7 @@
 package io.github.voytech.tabulate.template
 
+import io.github.voytech.tabulate.api.builder.dsl.header
+import io.github.voytech.tabulate.api.builder.dsl.rowNumberingOn
 import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
@@ -60,7 +62,6 @@ class ApachePoiTabulateTests {
                     }
                     column(Product::code) {
                         attributes {
-                            width { auto = true }
                             text {
                                 fontFamily = "Times New Roman"
                                 fontColor = Colors.BLACK
@@ -69,36 +70,25 @@ class ApachePoiTabulateTests {
                             background { color = Colors.BLUE }
                         }
                     }
-                    column(Product::name) {
-                        attributes { width { auto = true } }
-                    }
-                    column(Product::description) {
-                        attributes { width { auto = true } }
-                    }
-                    column(Product::manufacturer) {
-                        attributes { width { auto = true } }
-                    }
-                    column(Product::price) {
-                        attributes { width { auto = true } }
-                    }
+                    column(Product::name)
+                    column(Product::description)
+                    column(Product::manufacturer)
+                    column(Product::price)
                     column(Product::distributionDate) {
                         attributes{
-                            width { auto = true }
                             dataFormat { value = "dd.mm.YYYY" }
                         }
                     }
                 }
                 rows {
-                    row {
-                        cells {
-                            cell("nr") { value = "Nr.:" }
-                            cell(Product::code) { value = "Code" }
-                            cell(Product::name) { value = "Name" }
-                            cell(Product::description) { value = "Description" }
-                            cell(Product::manufacturer) { value = "Manufacturer" }
-                            cell(Product::price) { value = "Price" }
-                            cell(Product::distributionDate) { value = "Distribution" }
-                        }
+                    header {
+                        cell("nr") { value = "Nr.:" }
+                        cell(Product::code) { value = "Code" }
+                        cell(Product::name) { value = "Name" }
+                        cell(Product::description) { value = "Description" }
+                        cell(Product::manufacturer) { value = "Manufacturer" }
+                        cell(Product::price) { value = "Price" }
+                        cell(Product::distributionDate) { value = "Distribution" }
                         attributes {
                             height { px = 120 }
                             borders {
@@ -124,12 +114,7 @@ class ApachePoiTabulateTests {
                             }
                         }
                     }
-                    row {
-                        allMatching(allRows())
-                        cells {
-                            cell("nr") { expression = RowCellExpression{ row -> row.objectIndex?.plus(1) } }
-                        }
-                    }
+                    rowNumberingOn("nr")
                 }
             }
         } .also {
