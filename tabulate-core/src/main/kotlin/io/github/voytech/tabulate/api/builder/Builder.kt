@@ -105,26 +105,28 @@ class ColumnsBuilder<T> internal constructor() : Builder<List<ColumnDef<T>>> {
 
     @JvmSynthetic
     fun addColumnBuilder(id: String, block: DslBlock<ColumnBuilder<T>>) : ColumnBuilder<T> =
-        ColumnBuilder.new<T>().let {
-            columnBuilders.add(it.apply { it.id = ColumnKey(id = id) })
+        ensureColumnBuilder(ColumnKey(id = id)).let {
             block.invoke(it)
             it
         }
 
     @JvmSynthetic
     fun addColumnBuilder(ref: ((record: T) -> Any?), block: DslBlock<ColumnBuilder<T>>): ColumnBuilder<T> =
-        ColumnBuilder.new<T>().let {
-            columnBuilders.add(it.apply { it.id = ColumnKey(ref = ref) })
+        ensureColumnBuilder(ColumnKey(ref = ref)).let {
             block.invoke(it)
             it
         }
 
     @JvmSynthetic
-    private fun addColumnBuilder(id: String) : ColumnBuilder<T> =
+    private fun ensureColumnBuilder(key: ColumnKey<T>) : ColumnBuilder<T> =
+        columnBuilders.find { it.id == key } ?:
         ColumnBuilder.new<T>().let {
-            columnBuilders.add(it.apply { it.id = ColumnKey(id = id) })
+            columnBuilders.add(it.apply { it.id = key })
             it
         }
+
+    @JvmSynthetic
+    private fun addColumnBuilder(id: String) : ColumnBuilder<T> = ensureColumnBuilder(ColumnKey(id = id))
 
     private fun resize(newSize: Int?) {
         if (newSize ?: 0 < columnBuilders.size) {
@@ -189,9 +191,7 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
 
     @JvmSynthetic
     fun addRowBuilder(block: DslBlock<RowBuilder<T>>): RowBuilder<T> =
-        RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
-            rowBuilders.add(it)
-            it.qualifier = RowQualifier(createAt = rowIndex)
+        ensureRowBuilder(RowQualifier(createAt = rowIndex)).let {
             block.invoke(it)
             rowIndex = it.qualifier.createAt?.plus(1) ?: rowIndex
             refreshRowSpans(it)
@@ -200,21 +200,27 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
 
     @JvmSynthetic
     fun addRowBuilder(selector: RowPredicate<T>, block: DslBlock<RowBuilder<T>>): RowBuilder<T> =
-        RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
-            rowBuilders.add(it)
-            it.qualifier = RowQualifier(applyWhen = selector)
+        ensureRowBuilder(RowQualifier(applyWhen = selector)).let {
             block.invoke(it)
             it
         }
 
     @JvmSynthetic
-    fun addRowBuilder(at: Int, block: DslBlock<RowBuilder<T>>): RowBuilder<T> =
-        RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
-            rowIndex = at
-            rowBuilders.add(it)
-            it.qualifier = RowQualifier(createAt = rowIndex++)
+    fun addRowBuilder(at: Int, block: DslBlock<RowBuilder<T>>): RowBuilder<T> {
+        rowIndex = at
+        return ensureRowBuilder(RowQualifier(createAt = rowIndex++)).let {
             block.invoke(it)
             refreshRowSpans(it)
+            it
+        }
+    }
+
+    @JvmSynthetic
+    private fun ensureRowBuilder(rowQualifier: RowQualifier<T>): RowBuilder<T> =
+        rowBuilders.find { it.qualifier == rowQualifier } ?:
+        RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
+            rowBuilders.add(it)
+            it.qualifier = rowQualifier
             it
         }
 
@@ -292,39 +298,41 @@ class CellsBuilder<T> private constructor(
 
     @JvmSynthetic
     fun addCellBuilder(id: String, block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
-        CellBuilder.new<T>().let {
-            cells[ColumnKey(id = id)] = it
-            block.invoke(it)
-            it
-        }
+        ensureCellBuilder(ColumnKey(id = id)).apply(block)
 
     @JvmSynthetic
     fun addCellBuilder(index: Int, block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
-        CellBuilder.new<T>().let {
-            columnsBuilder.columnBuilders[index].let { column ->
-                cells[ColumnKey(ref = column.id.ref, id = column.id.id)] = it
-                block.invoke(it)
+        columnsBuilder.columnBuilders[index].let { column ->
+            ensureCellBuilder(column.id).let { cell ->
+                block.invoke(cell)
                 cellIndex = index
                 nextCellIndex()
-                it
+                cell
             }
         }
 
     @JvmSynthetic
-    fun addCellBuilder(block: DslBlock<CellBuilder<T>>): CellBuilder<T> = addCellBuilder(index = currCellIndex(), block)
+    fun addCellBuilder(block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
+        addCellBuilder(index = currCellIndex(), block)
+
 
     @JvmSynthetic
     fun addCellBuilder(ref: ((record: T) -> Any?), block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
-        CellBuilder.new<T>().let {
-            cells[ColumnKey(ref = ref)] = it
-            block.invoke(it)
-            it
-        }
+        ensureCellBuilder(ColumnKey(ref = ref)).apply(block)
+
 
     @JvmSynthetic
     override fun build(): Map<ColumnKey<T>, CellDef<T>> {
         return cells.map { it.key to it.value.build() }.toMap()
     }
+
+    @JvmSynthetic
+    private fun ensureCellBuilder(key: ColumnKey<T>): CellBuilder<T> =
+        cells.entries.find { it.key == key }?.value ?:
+        CellBuilder.new<T>().let {
+            cells[key] = it
+            it
+        }
 
     private fun columnIdByIndex(index: Int): ColumnKey<T> = columnsBuilder.columnBuilders[index].id
 

@@ -2,13 +2,11 @@ package io.github.voytech.tabulate.api.builder.dsl
 
 import io.github.voytech.tabulate.api.builder.*
 import io.github.voytech.tabulate.model.*
-
 import io.github.voytech.tabulate.model.attributes.Attribute
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
-import io.github.voytech.tabulate.model.attributes.column.width
 
 @DslMarker
 annotation class TabulateMarker
@@ -24,7 +22,9 @@ fun <T> table(block: TableBuilderApi<T>.() -> Unit): TableBuilder<T> {
 class TableLevelAttributesBuilderApi<T> internal constructor(private val builder: TableBuilder<T>) {
 
     @JvmSynthetic
-    fun attribute(attribute: Attribute<*>) = builder.attributes(attribute)
+    fun attribute(attribute: Attribute<*>) {
+        builder.attributes(attribute)
+    }
 
 }
 
@@ -32,26 +32,36 @@ class TableLevelAttributesBuilderApi<T> internal constructor(private val builder
 class ColumnLevelAttributesBuilderApi<T> internal constructor(private val builder: ColumnBuilder<T>) {
 
     @JvmSynthetic
-    fun attribute(attribute: ColumnAttribute) = builder.attributes(attribute)
+    fun attribute(attribute: ColumnAttribute) {
+        builder.attributes(attribute)
+    }
 
     @JvmSynthetic
-    fun attribute(attribute: CellAttribute) = builder.attributes(attribute)
+    fun attribute(attribute: CellAttribute) {
+        builder.attributes(attribute)
+    }
 
 }
 
 @TabulateMarker
 class RowLevelAttributesBuilderApi<T> internal constructor(private val builder: RowBuilder<T>) {
     @JvmSynthetic
-    fun attribute(attribute: RowAttribute) = builder.attributes(attribute)
+    fun attribute(attribute: RowAttribute) {
+        builder.attributes(attribute)
+    }
 
     @JvmSynthetic
-    fun attribute(attribute: CellAttribute) = builder.attributes(attribute)
+    fun attribute(attribute: CellAttribute) {
+        builder.attributes(attribute)
+    }
 }
 
 @TabulateMarker
 class CellLevelAttributesBuilderApi<T> internal constructor(private val builder: CellBuilder<T>) {
     @JvmSynthetic
-    fun attribute(attribute: CellAttribute) = builder.attributes(attribute)
+    fun attribute(attribute: CellAttribute) {
+        builder.attributes(attribute)
+    }
 }
 
 
@@ -68,13 +78,19 @@ class TableBuilderApi<T> private constructor(private val builder: TableBuilder<T
     var firstColumn: Int? by this.builder::firstColumn
 
     @JvmSynthetic
-    fun columns(block: ColumnsBuilderApi<T>.() -> Unit) = ColumnsBuilderApi(builder.columnsBuilder).apply(block)
+    fun columns(block: ColumnsBuilderApi<T>.() -> Unit) {
+        ColumnsBuilderApi(builder.columnsBuilder).apply(block)
+    }
 
     @JvmSynthetic
-    fun rows(block: RowsBuilderApi<T>.() -> Unit) = RowsBuilderApi(builder.rowsBuilder).apply(block)
+    fun rows(block: RowsBuilderApi<T>.() -> Unit) {
+        RowsBuilderApi(builder.rowsBuilder).apply(block)
+    }
 
     @JvmSynthetic
-    fun attributes(block: TableLevelAttributesBuilderApi<T>.() -> Unit) = TableLevelAttributesBuilderApi(builder).apply(block)
+    fun attributes(block: TableLevelAttributesBuilderApi<T>.() -> Unit) {
+        TableLevelAttributesBuilderApi(builder).apply(block)
+    }
 
     companion object {
         @JvmSynthetic
@@ -90,23 +106,31 @@ class ColumnsBuilderApi<T> internal constructor(private val builder: ColumnsBuil
     var count: Int? by this.builder::count
 
     @JvmSynthetic
-    fun column(id: String) = builder.addColumnBuilder(id) {}
-
-    @JvmSynthetic
-    fun column(id: String, block: ColumnBuilderApi<T>.() -> Unit) = builder.addColumnBuilder(id) {
-        it.attributes(ColumnWidthAttribute(auto = true))
-        ColumnBuilderApi.new(it).apply(block)
+    fun column(id: String) {
+        builder.addColumnBuilder(id) {}
     }
 
     @JvmSynthetic
-    fun column(ref: ((record: T) -> Any?), block: ColumnBuilderApi<T>.() -> Unit) = builder.addColumnBuilder(ref) {
-        it.attributes(ColumnWidthAttribute(auto = true))
-        ColumnBuilderApi.new(it).apply(block)
+    fun column(id: String, block: ColumnBuilderApi<T>.() -> Unit) {
+        builder.addColumnBuilder(id) {
+            it.attributes(ColumnWidthAttribute(auto = true))
+            ColumnBuilderApi.new(it).apply(block)
+        }
     }
 
     @JvmSynthetic
-    fun column(ref: ((record: T) -> Any?)) = builder.addColumnBuilder(ref) {
-        it.attributes(ColumnWidthAttribute(auto = true))
+    fun column(ref: ((record: T) -> Any?), block: ColumnBuilderApi<T>.() -> Unit) {
+        builder.addColumnBuilder(ref) {
+            it.attributes(ColumnWidthAttribute(auto = true))
+            ColumnBuilderApi.new(it).apply(block)
+        }
+    }
+
+    @JvmSynthetic
+    fun column(ref: ((record: T) -> Any?)) {
+        builder.addColumnBuilder(ref) {
+            it.attributes(ColumnWidthAttribute(auto = true))
+        }
     }
 
     companion object {
@@ -127,7 +151,9 @@ class ColumnBuilderApi<T> private constructor(private val builder: ColumnBuilder
     var index: Int?  by builder::index
 
     @JvmSynthetic
-    fun attributes(block: ColumnLevelAttributesBuilderApi<T>.() -> Unit) = ColumnLevelAttributesBuilderApi(builder).apply(block)
+    fun attributes(block: ColumnLevelAttributesBuilderApi<T>.() -> Unit) {
+        ColumnLevelAttributesBuilderApi(builder).apply(block)
+    }
 
     companion object {
         @JvmSynthetic
@@ -139,11 +165,15 @@ class ColumnBuilderApi<T> private constructor(private val builder: ColumnBuilder
 class RowsBuilderApi<T> internal constructor(private val builder: RowsBuilder<T>)  {
 
     @JvmSynthetic
-    fun row(block: RowBuilderApi<T>.() -> Unit) = builder.addRowBuilder { RowBuilderApi.new(it).apply(block) }
+    fun row(block: RowBuilderApi<T>.() -> Unit) {
+        builder.addRowBuilder { RowBuilderApi.new(it).apply(block) }
+    }
 
     @JvmSynthetic
-    fun row(at: Int, block: RowBuilderApi<T>.() -> Unit) = builder.addRowBuilder(at) {
-        RowBuilderApi.new(it).apply(block)
+    fun row(at: Int, block: RowBuilderApi<T>.() -> Unit) {
+        builder.addRowBuilder(at) {
+            RowBuilderApi.new(it).apply(block)
+        }
     }
 
     companion object {
@@ -162,10 +192,14 @@ class RowBuilderApi<T> private constructor(private val builder: RowBuilder<T>)  
     fun insertWhen(predicate : RowPredicate<T>) = apply { builder.qualifier = RowQualifier(createWhen = predicate) }
 
     @JvmSynthetic
-    fun cells(block: CellsBuilderApi<T>.() -> Unit) = CellsBuilderApi.new(builder.cellsBuilder).apply(block)
+    fun cells(block: CellsBuilderApi<T>.() -> Unit) {
+        CellsBuilderApi.new(builder.cellsBuilder).apply(block)
+    }
 
     @JvmSynthetic
-    fun attributes(block: RowLevelAttributesBuilderApi<T>.() -> Unit) = RowLevelAttributesBuilderApi(builder).apply(block)
+    fun attributes(block: RowLevelAttributesBuilderApi<T>.() -> Unit) {
+        RowLevelAttributesBuilderApi(builder).apply(block)
+    }
 
     companion object {
         @JvmSynthetic
@@ -221,7 +255,9 @@ class CellBuilderApi<T> private constructor(private val builder: CellBuilder<T>)
     var rowSpan: Int by builder::rowSpan
 
     @JvmSynthetic
-    fun attributes(block: CellLevelAttributesBuilderApi<T>.() -> Unit) = CellLevelAttributesBuilderApi(builder).apply(block)
+    fun attributes(block: CellLevelAttributesBuilderApi<T>.() -> Unit) {
+        CellLevelAttributesBuilderApi(builder).apply(block)
+    }
 
     companion object {
         @JvmSynthetic
