@@ -18,10 +18,10 @@ import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.template.context.ColumnContext
 import io.github.voytech.tabulate.template.context.RowCellContext
 import io.github.voytech.tabulate.template.context.RowContext
-import io.github.voytech.tabulate.template.operations.AdaptingCellAttributeRenderOperation
-import io.github.voytech.tabulate.template.operations.AdaptingColumnAttributeRenderOperation
-import io.github.voytech.tabulate.template.operations.AdaptingRowAttributeRenderOperation
-import io.github.voytech.tabulate.template.operations.AdaptingTableAttributeRenderOperation
+import io.github.voytech.tabulate.template.operations.BaseCellAttributeRenderOperation
+import io.github.voytech.tabulate.template.operations.BaseColumnAttributeRenderOperation
+import io.github.voytech.tabulate.template.operations.BaseRowAttributeRenderOperation
+import io.github.voytech.tabulate.template.operations.BaseTableAttributeRenderOperation
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.FontUnderline
 import org.apache.poi.ss.util.CellReference
@@ -30,19 +30,19 @@ import org.apache.poi.xssf.usermodel.XSSFFont
 import java.io.FileInputStream
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 
-class CellTextStylesAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, CellTextStylesAttribute>(adaptee) {
+class CellTextStylesAttributeRenderOperation(override val renderingContext: ApachePoiExcelFacade) :
+    BaseCellAttributeRenderOperation<ApachePoiExcelFacade, CellTextStylesAttribute>(renderingContext) {
 
     override fun attributeType(): Class<CellTextStylesAttribute> = CellTextStylesAttribute::class.java
 
     override fun renderAttribute(context: RowCellContext, attribute: CellTextStylesAttribute) {
-        adaptee.assertCellStyle(
+        renderingContext.assertCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
-            provideCellStyle = { getCachedStyle(adaptee, context) }
+            provideCellStyle = { getCachedStyle(renderingContext, context) }
         ).let {
-            val font: XSSFFont = adaptee.workbook().createFont() as XSSFFont
+            val font: XSSFFont = renderingContext.workbook().createFont() as XSSFFont
             attribute.fontFamily?.run { font.fontName = this }
             attribute.fontColor?.run { font.setColor(ApachePoiExcelFacade.color(this)) }
             attribute.fontSize?.run { font.fontHeightInPoints = toShort() }
@@ -58,19 +58,19 @@ class CellTextStylesAttributeRenderOperation(override val adaptee: ApachePoiExce
     }
 }
 
-class CellBackgroundAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, CellBackgroundAttribute>(adaptee) {
+class CellBackgroundAttributeRenderOperation(override val renderingContext: ApachePoiExcelFacade) :
+    BaseCellAttributeRenderOperation<ApachePoiExcelFacade, CellBackgroundAttribute>(renderingContext) {
     override fun attributeType(): Class<CellBackgroundAttribute> = CellBackgroundAttribute::class.java
 
     override fun renderAttribute(
         context: RowCellContext,
         attribute: CellBackgroundAttribute,
     ) {
-        adaptee.assertCellStyle(
+        renderingContext.assertCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
-            provideCellStyle = { getCachedStyle(adaptee, context) }
+            provideCellStyle = { getCachedStyle(renderingContext, context) }
         ).let {
             if (attribute.color != null) {
                 (it as XSSFCellStyle).setFillForegroundColor(ApachePoiExcelFacade.color(attribute.color!!))
@@ -97,16 +97,16 @@ class CellBackgroundAttributeRenderOperation(override val adaptee: ApachePoiExce
     }
 }
 
-class CellBordersAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, CellBordersAttribute>(adaptee) {
+class CellBordersAttributeRenderOperation(override val renderingContext: ApachePoiExcelFacade) :
+    BaseCellAttributeRenderOperation<ApachePoiExcelFacade, CellBordersAttribute>(renderingContext) {
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
     override fun renderAttribute(context: RowCellContext, attribute: CellBordersAttribute) {
-        adaptee.assertCellStyle(
+        renderingContext.assertCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
-            provideCellStyle = { getCachedStyle(adaptee, context) }
+            provideCellStyle = { getCachedStyle(renderingContext, context) }
         ).let {
             attribute.leftBorderColor?.run { (it as XSSFCellStyle).setLeftBorderColor(ApachePoiExcelFacade.color(this)) }
             attribute.rightBorderColor?.run { (it as XSSFCellStyle).setRightBorderColor(ApachePoiExcelFacade.color(this)) }
@@ -140,17 +140,17 @@ class CellBordersAttributeRenderOperation(override val adaptee: ApachePoiExcelFa
     }
 }
 
-class CellAlignmentAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, CellAlignmentAttribute>(adaptee) {
+class CellAlignmentAttributeRenderOperation(override val renderingContext: ApachePoiExcelFacade) :
+    BaseCellAttributeRenderOperation<ApachePoiExcelFacade, CellAlignmentAttribute>(renderingContext) {
 
     override fun attributeType(): Class<out CellAlignmentAttribute> = CellAlignmentAttribute::class.java
 
     override fun renderAttribute(context: RowCellContext, attribute: CellAlignmentAttribute) {
-        adaptee.assertCellStyle(
+        renderingContext.assertCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
-            provideCellStyle = { getCachedStyle(adaptee, context) }
+            provideCellStyle = { getCachedStyle(renderingContext, context) }
         ).let {
             with(attribute.horizontal) {
                 it.alignment =
@@ -176,8 +176,8 @@ class CellAlignmentAttributeRenderOperation(override val adaptee: ApachePoiExcel
     }
 }
 
-class CellDataFormatAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, CellExcelDataFormatAttribute>(adaptee) {
+class CellDataFormatAttributeRenderOperation(override val renderingContext: ApachePoiExcelFacade) :
+    BaseCellAttributeRenderOperation<ApachePoiExcelFacade, CellExcelDataFormatAttribute>(renderingContext) {
 
     override fun attributeType(): Class<out CellExcelDataFormatAttribute> = CellExcelDataFormatAttribute::class.java
 
@@ -185,24 +185,24 @@ class CellDataFormatAttributeRenderOperation(override val adaptee: ApachePoiExce
         context: RowCellContext,
         attribute: CellExcelDataFormatAttribute,
     ) {
-        adaptee.assertCellStyle(
+        renderingContext.assertCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
-            provideCellStyle = { getCachedStyle(adaptee, context) }
+            provideCellStyle = { getCachedStyle(renderingContext, context) }
         ).let {
-            it.dataFormat = adaptee.workbook().createDataFormat().getFormat(attribute.dataFormat)
+            it.dataFormat = renderingContext.workbook().createDataFormat().getFormat(attribute.dataFormat)
         }
     }
 }
 
-class ColumnWidthAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingColumnAttributeRenderOperation<ApachePoiExcelFacade, ColumnWidthAttribute>(adaptee) {
+class ColumnWidthAttributeRenderOperation(override val renderingContext: ApachePoiExcelFacade) :
+    BaseColumnAttributeRenderOperation<ApachePoiExcelFacade, ColumnWidthAttribute>(renderingContext) {
 
     override fun attributeType(): Class<out ColumnWidthAttribute> = ColumnWidthAttribute::class.java
 
     override fun renderAttribute(context: ColumnContext, attribute: ColumnWidthAttribute) {
-        adaptee.assertSheet(context.getTableId()).let {
+        renderingContext.assertSheet(context.getTableId()).let {
             if (attribute.auto == true || attribute.px <= 0) {
                 if (!it.isColumnTrackedForAutoSizing(context.columnIndex)) {
                     it.trackColumnForAutoSizing(context.columnIndex)
@@ -215,23 +215,23 @@ class ColumnWidthAttributeRenderOperation(override val adaptee: ApachePoiExcelFa
     }
 }
 
-class RowHeightAttributeRenderOperation<T>(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingRowAttributeRenderOperation<ApachePoiExcelFacade, T, RowHeightAttribute>(adaptee) {
+class RowHeightAttributeRenderOperation<T>(override val renderingContext: ApachePoiExcelFacade) :
+    BaseRowAttributeRenderOperation<ApachePoiExcelFacade, T, RowHeightAttribute>(renderingContext) {
     override fun attributeType(): Class<out RowHeightAttribute> = RowHeightAttribute::class.java
     override fun renderAttribute(context: RowContext<T>, attribute: RowHeightAttribute) {
-        adaptee.assertRow(context.getTableId(), context.rowIndex).height =
+        renderingContext.assertRow(context.getTableId(), context.rowIndex).height =
             ApachePoiUtils.heightFromPixels(attribute.px)
     }
 }
 
-class FilterAndSortTableAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingTableAttributeRenderOperation<ApachePoiExcelFacade, FilterAndSortTableAttribute>(adaptee) {
+class FilterAndSortTableAttributeRenderOperation(override val renderingContext: ApachePoiExcelFacade) :
+    BaseTableAttributeRenderOperation<ApachePoiExcelFacade, FilterAndSortTableAttribute>(renderingContext) {
     override fun attributeType(): Class<out FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class.java
     override fun renderAttribute(table: Table<*>, attribute: FilterAndSortTableAttribute) {
-        adaptee.workbook().creationHelper.createAreaReference(
+        renderingContext.workbook().creationHelper.createAreaReference(
             CellReference(attribute.rowRange.first, attribute.columnRange.first),
             CellReference(attribute.rowRange.last, attribute.columnRange.last)
-        ).let { adaptee.workbook().xssfWorkbook.getSheet(table.name).createTable(it) }
+        ).let { renderingContext.workbook().xssfWorkbook.getSheet(table.name).createTable(it) }
             .let {
                 attribute.columnRange.forEach { index ->
                     it.ctTable.tableColumns.getTableColumnArray(index).id = (index + 1).toLong()
@@ -243,13 +243,13 @@ class FilterAndSortTableAttributeRenderOperation(override val adaptee: ApachePoi
     }
 }
 
-class TemplateFileAttributeRenderOperation(override val adaptee: ApachePoiExcelFacade) :
-    AdaptingTableAttributeRenderOperation<ApachePoiExcelFacade, TemplateFileAttribute>(adaptee) {
+class TemplateFileAttributeRenderOperation(override val renderingContext: ApachePoiExcelFacade) :
+    BaseTableAttributeRenderOperation<ApachePoiExcelFacade, TemplateFileAttribute>(renderingContext) {
     override fun attributeType(): Class<out TemplateFileAttribute> = TemplateFileAttribute::class.java
     override fun priority() = -1
     override fun renderAttribute(table: Table<*>, attribute: TemplateFileAttribute) {
-        adaptee.createWorkbook(FileInputStream(attribute.fileName), true).let {
-            adaptee.assertSheet(table.name!!)
+        renderingContext.createWorkbook(FileInputStream(attribute.fileName), true).let {
+            renderingContext.assertSheet(table.name!!)
         }
     }
 }

@@ -9,7 +9,7 @@ import io.github.voytech.tabulate.template.context.AttributedRow
 import io.github.voytech.tabulate.template.context.ColumnRenderPhase
 import io.github.voytech.tabulate.template.context.GlobalContextAndAttributes
 import io.github.voytech.tabulate.template.iterators.OperationContextIterator
-import io.github.voytech.tabulate.template.operations.ExportOperations
+import io.github.voytech.tabulate.template.operations.TableExportOperations
 import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
 import io.github.voytech.tabulate.template.source.CollectionSource
 import io.github.voytech.tabulate.template.source.EmptySource
@@ -29,17 +29,17 @@ import java.util.*
  */
 open class TableExportTemplate<T, O>() {
 
-    private lateinit var ops: ExportOperations<T, O>
+    private lateinit var ops: TableExportOperations<T, O>
 
     private lateinit var resultHandler: ResultHandler<T, O>
 
     constructor(output: TabulationFormat<T, O>) : this() {
-        this.ops = resolveExportOperationsFactory(output)!!.createOperations()
+        this.ops = resolveExportOperationsFactory(output)!!.create()
         this.resultHandler = output.resultHandler
 
     }
 
-    constructor(delegate: ExportOperations<T, O>, resultHandler: ResultHandler<T, O>) : this() {
+    constructor(delegate: TableExportOperations<T, O>, resultHandler: ResultHandler<T, O>) : this() {
         this.ops = delegate
         this.resultHandler = resultHandler
     }
@@ -70,7 +70,7 @@ open class TableExportTemplate<T, O>() {
                 renderNextRow()
             }
             renderColumns(context, ColumnRenderPhase.AFTER_LAST_ROW)
-            ops.lifecycleOperations.finish()
+            ops.finish()
         }
 
         private fun renderNextRow() {
@@ -81,7 +81,7 @@ open class TableExportTemplate<T, O>() {
     }
 
     private fun bind(tableBuilder: TableBuilder<T>, source: Publisher<T>) {
-        ops.tableOperation.createTable(tableBuilder).let { table ->
+        ops.createTable(tableBuilder).let { table ->
             GlobalContextAndAttributes(
                 tableModel = table,
                 tableName = table.name ?: "table${NextId.nextId()}",
@@ -103,13 +103,13 @@ open class TableExportTemplate<T, O>() {
     }
 
     fun export(tableBuilder: TableBuilder<T>, source: Publisher<T>) {
-        ops.lifecycleOperations.initialize(source, resultHandler)
+        ops.initialize(source, resultHandler)
         bind(tableBuilder, source)
     }
 
     private fun renderColumns(stateAndAttributes: GlobalContextAndAttributes<T>, renderPhase: ColumnRenderPhase) {
         stateAndAttributes.tableModel.forEachColumn { columnIndex: Int, column: ColumnDef<T> ->
-            ops.tableRenderOperations.renderColumn(
+            ops.renderColumn(
                 stateAndAttributes.createColumnContext(IndexedValue(column.index ?: columnIndex, column), renderPhase)
             )
         }
@@ -118,7 +118,7 @@ open class TableExportTemplate<T, O>() {
     private fun renderRowCells(stateAndAttributes: GlobalContextAndAttributes<T>, context: AttributedRow<T>) {
         stateAndAttributes.tableModel.forEachColumn { column: ColumnDef<T> ->
             if (context.rowCellValues.containsKey(column.id)) {
-                ops.tableRenderOperations.renderRowCell(context.rowCellValues[column.id]!!)
+                ops.renderRowCell(context.rowCellValues[column.id]!!)
             }
         }
     }
@@ -127,9 +127,9 @@ open class TableExportTemplate<T, O>() {
         stateAndAttributes: GlobalContextAndAttributes<T>,
         rowContext: AttributedRow<T>
     ) {
-        ops.tableRenderOperations.beginRow(rowContext)
+        ops.beginRow(rowContext)
         renderRowCells(stateAndAttributes, rowContext)
-        ops.tableRenderOperations.endRow(rowContext)
+        ops.endRow(rowContext)
     }
 
     companion object {
@@ -152,7 +152,7 @@ fun <T> Collection<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() ->
 }
 
 fun <T, O> Publisher<T>.tabulate(
-    operations: ExportOperations<T, O>,
+    operations: TableExportOperations<T, O>,
     resultHandler: ResultHandler<T, O>,
     block: TableBuilderApi<T>.() -> Unit,
 ) {
@@ -160,14 +160,14 @@ fun <T, O> Publisher<T>.tabulate(
 }
 
 fun <T, O> Collection<T>.tabulate(
-    operations: ExportOperations<T, O>,
+    operations: TableExportOperations<T, O>,
     resultHandler: ResultHandler<T, O>,
     block: TableBuilderApi<T>.() -> Unit,
 ) {
     TableExportTemplate(operations, resultHandler).export(table(block), CollectionSource(this))
 }
 
-fun <T> TableBuilder<T>.export(operations: ExportOperations<T, OutputStream>, stream: OutputStream) {
+fun <T> TableBuilder<T>.export(operations: TableExportOperations<T, OutputStream>, stream: OutputStream) {
     TableExportTemplate(operations) { stream }.export(this, EmptySource())
 }
 

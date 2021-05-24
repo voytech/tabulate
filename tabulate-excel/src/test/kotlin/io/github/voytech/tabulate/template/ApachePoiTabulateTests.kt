@@ -91,13 +91,13 @@ class ApachePoiTabulateTests {
                 rows {
                     row {
                         cells {
-                            forColumn("nr") { value = "Nr.:" }
-                            forColumn(Product::code) { value = "Code" }
-                            forColumn(Product::name) { value = "Name" }
-                            forColumn(Product::description) { value = "Description" }
-                            forColumn(Product::manufacturer) { value = "Manufacturer" }
-                            forColumn(Product::price) { value = "Price" }
-                            forColumn(Product::distributionDate) { value = "Distribution" }
+                            cell("nr") { value = "Nr.:" }
+                            cell(Product::code) { value = "Code" }
+                            cell(Product::name) { value = "Name" }
+                            cell(Product::description) { value = "Description" }
+                            cell(Product::manufacturer) { value = "Manufacturer" }
+                            cell(Product::price) { value = "Price" }
+                            cell(Product::distributionDate) { value = "Distribution" }
                         }
                         attributes {
                             height { px = 120 }
@@ -127,7 +127,7 @@ class ApachePoiTabulateTests {
                     row {
                         allMatching(allRows())
                         cells {
-                            forColumn("nr") { expression = RowCellExpression{ row -> row.objectIndex?.plus(1) } }
+                            cell("nr") { expression = RowCellExpression{ row -> row.objectIndex?.plus(1) } }
                         }
                     }
                 }
@@ -227,7 +227,7 @@ class ApachePoiTabulateTests {
                 row {
                     allMatching(allRows())
                     cells {
-                        forColumn("nr") { expression = RowCellExpression{ row -> row.objectIndex?.plus(1) } }
+                        cell("nr") { expression = RowCellExpression{ row -> row.objectIndex?.plus(1) } }
                     }
                 }
             }

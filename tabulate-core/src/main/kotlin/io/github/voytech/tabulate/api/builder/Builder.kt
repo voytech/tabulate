@@ -13,17 +13,17 @@ abstract class AttributesAware {
     private var attributes: MutableMap<Class<out Attribute<*>>, Set<Attribute<*>>> = mutableMapOf()
 
     @JvmSynthetic
-    open fun attributes(vararg attributes: Attribute<*>) {
+    fun attributes(vararg attributes: Attribute<*>) {
         applyAttributes(attributes.asList())
     }
 
     @JvmSynthetic
-    open fun attributes(attributes: Collection<Attribute<*>>) {
+    fun attributes(attributes: Collection<Attribute<*>>) {
         applyAttributes(attributes)
     }
 
     @JvmSynthetic
-    open fun attributes(vararg builders: AttributeBuilder<out Attribute<*>>) {
+    protected fun attributes(vararg builders: AttributeBuilder<out Attribute<*>>) {
         attributes(*(builders.map { it.build() }).toTypedArray())
     }
 
@@ -34,17 +34,17 @@ abstract class AttributesAware {
 
     @Suppress("UNCHECKED_CAST")
     @JvmSynthetic
-    internal fun <C : Attribute<*>> getAttributesByClass(clazz: Class<C>): Set<C>? = attributes[clazz] as Set<C>?
+    protected fun <C : Attribute<*>> getAttributesByClass(clazz: Class<C>): Set<C>? = attributes[clazz] as Set<C>?
 
     @JvmSynthetic
-    internal abstract fun supportedAttributeClasses(): Set<Class<out Attribute<*>>>
+    protected abstract fun supportedAttributeClasses(): Set<Class<out Attribute<*>>>
 
     private fun applyAttributes(attributes: Collection<Attribute<*>>) {
         attributes.forEach {
             supportedAttributeClasses().find { clazz -> clazz.isAssignableFrom(it.javaClass) }
                 ?.let { baseClass ->
                     this.attributes[baseClass] =
-                        this.attributes[baseClass]?.let { extensionSet -> extensionSet + it } ?: setOf(it)
+                        this.attributes[baseClass]?.let { attributes -> attributes + it } ?: setOf(it)
                 }
         }
     }

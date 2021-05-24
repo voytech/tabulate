@@ -171,7 +171,7 @@ class RowBuilderApi<T> private constructor(private val builder: RowBuilder<T>)  
 class CellsBuilderApi<T> private constructor(private val builder: CellsBuilder<T>) {
 
     @JvmSynthetic
-    fun forColumn(id: String, block: CellBuilderApi<T>.() -> Unit) = builder.addCellBuilder(id) {
+    fun cell(id: String, block: CellBuilderApi<T>.() -> Unit) = builder.addCellBuilder(id) {
         CellBuilderApi.new(it).apply(block)
     }
 
@@ -181,12 +181,12 @@ class CellsBuilderApi<T> private constructor(private val builder: CellsBuilder<T
     }
 
     @JvmSynthetic
-    fun cell(block: CellBuilderApi<T>.() -> Unit) = builder.addCellBuilder() {
+    fun cell(block: CellBuilderApi<T>.() -> Unit) = builder.addCellBuilder {
         CellBuilderApi.new(it).apply(block)
     }
 
     @JvmSynthetic
-    fun forColumn(ref: ((record: T) -> Any?), block: CellBuilderApi<T>.() -> Unit) = builder.addCellBuilder(ref) {
+    fun cell(ref: ((record: T) -> Any?), block: CellBuilderApi<T>.() -> Unit) = builder.addCellBuilder(ref) {
         CellBuilderApi.new(it).apply(block)
     }
 

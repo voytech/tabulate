@@ -5,7 +5,7 @@ import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
 import io.github.voytech.tabulate.excel.template.wrapper.ApachePoiExcelFacade
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.template.context.RowCellContext
-import io.github.voytech.tabulate.template.operations.AdaptingCellAttributeRenderOperation
+import io.github.voytech.tabulate.template.operations.BaseCellAttributeRenderOperation
 import io.github.voytech.tabulate.template.operations.AttributeRenderOperationsFactory
 import io.github.voytech.tabulate.template.operations.CellAttributeRenderOperation
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
@@ -32,12 +32,12 @@ data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<Simp
 }
 
 class SimpleTestCellAttributeRenderOperation(poi: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, SimpleTestCellAttribute>(poi) {
+    BaseCellAttributeRenderOperation<ApachePoiExcelFacade, SimpleTestCellAttribute>(poi) {
 
     override fun attributeType(): Class<out SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
 
     override fun renderAttribute(context: RowCellContext, attribute: SimpleTestCellAttribute) {
-        with(adaptee.assertCell(
+        with(renderingContext.assertCell(
             context.getTableId(),
             context.rowIndex,
             context.columnIndex
