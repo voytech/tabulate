@@ -111,7 +111,7 @@ class ColumnsBuilder<T> internal constructor() : Builder<List<ColumnDef<T>>> {
         }
 
     @JvmSynthetic
-    fun addColumnBuilder(ref: ((record: T) -> Any?), block: DslBlock<ColumnBuilder<T>>): ColumnBuilder<T> =
+    fun addColumnBuilder(ref: ColRefId<T>, block: DslBlock<ColumnBuilder<T>>): ColumnBuilder<T> =
         ensureColumnBuilder(ColumnKey(ref = ref)).let {
             block.invoke(it)
             it
@@ -317,7 +317,7 @@ class CellsBuilder<T> private constructor(
 
 
     @JvmSynthetic
-    fun addCellBuilder(ref: ((record: T) -> Any?), block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
+    fun addCellBuilder(ref: ColRefId<T>, block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
         ensureCellBuilder(ColumnKey(ref = ref)).apply(block)
 
 

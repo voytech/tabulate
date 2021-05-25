@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.api.builder.dsl
 
 import io.github.voytech.tabulate.model.RowCellExpression
+import kotlin.reflect.KProperty1
 
 class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
 
@@ -14,7 +15,7 @@ class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
     }
 
     @JvmSynthetic
-    fun cell(ref: ((record: T) -> Any?), block: CellBuilderApi<T>.() -> Unit) {
+    fun cell(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
         builder.row(HEADER_ROW_INDEX) {
             cells {
                 cell(ref, block)
@@ -41,7 +42,7 @@ fun <T> RowBuilderApi<T>.cell(id: String, block: CellBuilderApi<T>.() -> Unit) {
     }
 }
 
-fun <T> RowBuilderApi<T>.cell(ref: ((record: T) -> Any?), block: CellBuilderApi<T>.() -> Unit) {
+fun <T> RowBuilderApi<T>.cell(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
     cells {
         cell(ref, block)
     }
@@ -69,7 +70,7 @@ fun <T> RowsBuilderApi<T>.header(vararg names: String) =
 
 fun <T> RowsBuilderApi<T>.rowNumberingOn(id: String) {
     row {
-        allMatching { source -> source.rowIndex > 0 }
+        matching { source -> source.rowIndex > 0 }
         cells {
             cell(id) {
                 expression = RowCellExpression { source -> source.rowIndex + 1 }

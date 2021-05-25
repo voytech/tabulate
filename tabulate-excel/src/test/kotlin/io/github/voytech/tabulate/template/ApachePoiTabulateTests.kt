@@ -1,16 +1,13 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.api.builder.dsl.cell
-import io.github.voytech.tabulate.api.builder.dsl.header
-import io.github.voytech.tabulate.api.builder.dsl.rowNumberingOn
-import io.github.voytech.tabulate.api.builder.dsl.table
+import io.github.voytech.tabulate.api.builder.dsl.*
+import io.github.voytech.tabulate.api.qualifer.RowPredicates.allRows
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
 import io.github.voytech.tabulate.excel.model.attributes.dataFormat
 import io.github.voytech.tabulate.excel.model.attributes.filterAndSort
 import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.RowCellExpression
-import io.github.voytech.tabulate.model.RowSelectors.allRows
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultBorderStyle
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultHorizontalAlignment
@@ -211,7 +208,7 @@ class ApachePoiTabulateTests {
             }
             rows {
                 row {
-                    allMatching(allRows())
+                    matching(allRows())
                     cells {
                         cell("nr") { expression = RowCellExpression{ row -> row.objectIndex?.plus(1) } }
                     }
@@ -278,7 +275,7 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export table with custom rows and cell and row spans`() {
-        table<Any> {
+        createTable {
             name = "Test table"
             columns { count = 4 }
             rows {
@@ -367,7 +364,7 @@ class ApachePoiTabulateTests {
     private fun createDataSet(count: Int? = 1): List<Product> {
         val random = Random(count!!)
         return (0..count).map {
-            Product(
+             Product(
                 if (it % 2 == 0) "prod_nr_${it}${it % 2}" else "prod_nr_$it",
                 "Name $it",
                 "This is description $it",

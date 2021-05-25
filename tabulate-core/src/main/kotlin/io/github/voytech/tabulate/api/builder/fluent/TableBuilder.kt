@@ -7,7 +7,7 @@ import io.github.voytech.tabulate.api.builder.CellBuilder as BaseCellBuilder
 import io.github.voytech.tabulate.api.builder.ColumnBuilder as BaseColumnBuilder
 import io.github.voytech.tabulate.api.builder.RowBuilder as BaseRowBuilder
 import io.github.voytech.tabulate.api.builder.TableBuilder as BaseTableBuilder
-
+import java.util.function.Function as JFunction
 
 interface TopLevelBuilder<T>
 
@@ -48,8 +48,8 @@ class ColumnsBuilder<T>(private val parent: TableBuilder<T>) : MidLevelBuilder<T
         it.id = ColumnKey(id = id)
     }, this)
 
-    fun column(ref: ((record: T) -> Any?)) = ColumnBuilder(parent.builderBase.columnsBuilder.addColumnBuilder(ref) {
-        it.id = ColumnKey(ref = ref)
+    fun column(ref: JFunction<T, Any?>) = ColumnBuilder(parent.builderBase.columnsBuilder.addColumnBuilder(ref.id()) {
+        it.id = ColumnKey(ref = ref.id())
     }, this)
 
     override fun out(): TableBuilder<T> = parent
@@ -81,7 +81,7 @@ class ColumnBuilder<T>(private val builderBase: BaseColumnBuilder<T>, private va
         return parent.column(id)
     }
 
-    fun column(ref: ((record: T) -> Any?)): ColumnBuilder<T> {
+    fun column(ref: JFunction<T, Any?>): ColumnBuilder<T> {
         return parent.column(ref)
     }
 
@@ -124,9 +124,9 @@ class RowBuilder<T>(private val builderBase: BaseRowBuilder<T>, private val pare
 
     fun cell() = CellBuilder(builderBase.cellsBuilder.addCellBuilder { }, this)
 
-    fun forColumn(id: String) = CellBuilder(builderBase.cellsBuilder.addCellBuilder(id) {}, this)
+    fun cell(id: String) = CellBuilder(builderBase.cellsBuilder.addCellBuilder(id) {}, this)
 
-    fun forColumn(ref: ((record: T) -> Any?)) = CellBuilder(builderBase.cellsBuilder.addCellBuilder(ref) {}, this)
+    fun cell(ref: JFunction<T, Any?>) = CellBuilder(builderBase.cellsBuilder.addCellBuilder(ref.id()) {}, this)
 
     fun cell(index: Int): CellBuilder<T> = CellBuilder(builderBase.cellsBuilder.addCellBuilder(index) {}, this)
 
@@ -168,9 +168,9 @@ class CellBuilder<T>(private val builderBase: BaseCellBuilder<T>, private val pa
         builderBase.rowSpan = rowSpan
     }
 
-    fun forColumn(id: String) = parent.forColumn(id)
+    fun cell(id: String) = parent.cell(id)
 
-    fun forColumn(ref: ((record: T) -> Any?)) = parent.forColumn(ref)
+    fun cell(ref: JFunction<T, Any?>) = parent.cell(ref)
 
     fun cell(index: Int): CellBuilder<T> = parent.cell(index)
 

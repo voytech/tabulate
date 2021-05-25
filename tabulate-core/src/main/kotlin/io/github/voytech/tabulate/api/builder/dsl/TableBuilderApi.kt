@@ -7,6 +7,7 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
+import kotlin.reflect.KProperty1
 
 @DslMarker
 annotation class TabulateMarker
@@ -14,6 +15,13 @@ annotation class TabulateMarker
 @JvmSynthetic
 fun <T> table(block: TableBuilderApi<T>.() -> Unit): TableBuilder<T> {
     return TableBuilder<T>().also {
+        TableBuilderApi.new(it).apply(block)
+    }
+}
+
+@JvmSynthetic
+fun createTable(block: TableBuilderApi<Unit>.() -> Unit): TableBuilder<Unit> {
+    return TableBuilder<Unit>().also {
         TableBuilderApi.new(it).apply(block)
     }
 }
@@ -119,16 +127,16 @@ class ColumnsBuilderApi<T> internal constructor(private val builder: ColumnsBuil
     }
 
     @JvmSynthetic
-    fun column(ref: ((record: T) -> Any?), block: ColumnBuilderApi<T>.() -> Unit) {
-        builder.addColumnBuilder(ref) {
+    fun column(ref: KProperty1<T,Any?>, block: ColumnBuilderApi<T>.() -> Unit) {
+        builder.addColumnBuilder(ref.id()) {
             it.attributes(ColumnWidthAttribute(auto = true))
             ColumnBuilderApi.new(it).apply(block)
         }
     }
 
     @JvmSynthetic
-    fun column(ref: ((record: T) -> Any?)) {
-        builder.addColumnBuilder(ref) {
+    fun column(ref: KProperty1<T,Any?>) {
+        builder.addColumnBuilder(ref.id()) {
             it.attributes(ColumnWidthAttribute(auto = true))
         }
     }
@@ -186,7 +194,7 @@ class RowsBuilderApi<T> internal constructor(private val builder: RowsBuilder<T>
 class RowBuilderApi<T> private constructor(private val builder: RowBuilder<T>)  {
 
     @JvmSynthetic
-    fun allMatching(predicate : RowPredicate<T>) = apply { builder.qualifier = RowQualifier(applyWhen = predicate) }
+    fun matching(predicate : RowPredicate<T>) = apply { builder.qualifier = RowQualifier(applyWhen = predicate) }
 
     @JvmSynthetic
     fun insertWhen(predicate : RowPredicate<T>) = apply { builder.qualifier = RowQualifier(createWhen = predicate) }
@@ -226,7 +234,7 @@ class CellsBuilderApi<T> private constructor(private val builder: CellsBuilder<T
     }
 
     @JvmSynthetic
-    fun cell(ref: ((record: T) -> Any?), block: CellBuilderApi<T>.() -> Unit) = builder.addCellBuilder(ref) {
+    fun cell(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) = builder.addCellBuilder(ref.id()) {
         CellBuilderApi.new(it).apply(block)
     }
 
