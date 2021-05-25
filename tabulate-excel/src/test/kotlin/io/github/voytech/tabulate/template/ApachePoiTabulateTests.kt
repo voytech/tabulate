@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.template
 
+import io.github.voytech.tabulate.api.builder.dsl.cell
 import io.github.voytech.tabulate.api.builder.dsl.header
 import io.github.voytech.tabulate.api.builder.dsl.rowNumberingOn
 import io.github.voytech.tabulate.api.builder.dsl.table
@@ -282,30 +283,13 @@ class ApachePoiTabulateTests {
             columns { count = 4 }
             rows {
                 row {
-                    cells {
-                        cell {
-                            rowSpan = 2
-                            value = "Row span"
-                        }
-                        cell {
-                            colSpan = 2
-                            value = "This is very long title. 2 columns span. Row 1"
-                        }
-                        cell {
-                            value = "Last column. Row 1"
-                        }
-                    }
+                    cell { rowSpan = 2; value = "Row span" }
+                    cell { colSpan = 2; value = "This is very long title. 2 columns span. Row 1" }
+                    cell { value = "Last column. Row 1" }
                 }
                 row {
-                    cells {
-                        cell {
-                            colSpan = 2
-                            value = "This is very long title. 2 columns span. Row 2"
-                        }
-                        cell {
-                            value = "Last column. Row 2"
-                        }
-                    }
+                    cell { colSpan = 2; value = "This is very long title. 2 columns span. Row 2" }
+                    cell { value = "Last column. Row 2" }
                 }
             }
         }.export(File("test1.xlsx"))
@@ -356,12 +340,10 @@ class ApachePoiTabulateTests {
             rows {
                 row {
                     attributes{height { px = 200 }}
-                    cells {
-                        cell { value = "It is : " }
-                        cell {
-                            value = "src/test/resources/kotlin.jpeg"
-                            type = CellType.IMAGE_URL
-                        }
+                    cell { value = "It is : " }
+                    cell {
+                        value = "src/test/resources/kotlin.jpeg"
+                        type = CellType.IMAGE_URL
                     }
                 }
             }

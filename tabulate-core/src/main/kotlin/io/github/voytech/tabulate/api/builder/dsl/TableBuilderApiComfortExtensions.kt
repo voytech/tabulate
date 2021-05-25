@@ -35,6 +35,24 @@ class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
 
 }
 
+fun <T> RowBuilderApi<T>.cell(id: String, block: CellBuilderApi<T>.() -> Unit) {
+    cells {
+        cell(id, block)
+    }
+}
+
+fun <T> RowBuilderApi<T>.cell(ref: ((record: T) -> Any?), block: CellBuilderApi<T>.() -> Unit) {
+    cells {
+        cell(ref, block)
+    }
+}
+
+fun <T> RowBuilderApi<T>.cell(block: CellBuilderApi<T>.() -> Unit) {
+    cells {
+        cell(block)
+    }
+}
+
 fun <T> RowsBuilderApi<T>.header(block: HeaderBuilderApi<T>.() -> Unit) =
     HeaderBuilderApi(this).apply(block)
 
