@@ -47,7 +47,7 @@ class AttributeAwareTableExportOperations<T,O>(
         builder.rowsBuilder.rowBuilders.forEach { rowBuilder ->
             rowBuilder.visit(CellAttribute::class.java) { sortedCellAttributes(it) }
             rowBuilder.visit(RowAttribute::class.java) { sortedRowAttributes(it) }
-            rowBuilder.cellsBuilder.cells.forEach { (_, cellBuilder) ->
+            rowBuilder.cells.forEach { (_, cellBuilder) ->
                 cellBuilder.visit(CellAttribute::class.java) { sortedCellAttributes(it) }
             }
         }

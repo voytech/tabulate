@@ -6,7 +6,7 @@ import kotlin.reflect.KProperty1
 class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
 
     @JvmSynthetic
-    fun cell(id: String, block: CellBuilderApi<T>.() -> Unit) {
+    fun title(id: String, block: CellBuilderApi<T>.() -> Unit) {
         builder.row(HEADER_ROW_INDEX) {
             cells {
                 cell(id, block)
@@ -15,13 +15,23 @@ class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
     }
 
     @JvmSynthetic
-    fun cell(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
+    fun title(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
         builder.row(HEADER_ROW_INDEX) {
             cells {
                 cell(ref, block)
             }
         }
     }
+
+    @JvmSynthetic
+    fun titles(vararg names: String) =
+        builder.row(HEADER_ROW_INDEX) {
+            cells {
+                names.forEach {
+                    cell { value = it }
+                }
+            }
+        }
 
     @JvmSynthetic
     fun attributes(block: RowLevelAttributesBuilderApi<T>.() -> Unit) {
@@ -36,19 +46,19 @@ class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
 
 }
 
-fun <T> RowBuilderApi<T>.cell(id: String, block: CellBuilderApi<T>.() -> Unit) {
+fun <T> RowBuilderApi<T>.title(id: String, block: CellBuilderApi<T>.() -> Unit) {
     cells {
         cell(id, block)
     }
 }
 
-fun <T> RowBuilderApi<T>.cell(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
+fun <T> RowBuilderApi<T>.title(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
     cells {
         cell(ref, block)
     }
 }
 
-fun <T> RowBuilderApi<T>.cell(block: CellBuilderApi<T>.() -> Unit) {
+fun <T> RowBuilderApi<T>.title(block: CellBuilderApi<T>.() -> Unit) {
     cells {
         cell(block)
     }
@@ -73,7 +83,7 @@ fun <T> RowsBuilderApi<T>.rowNumberingOn(id: String) {
         matching { source -> source.rowIndex > 0 }
         cells {
             cell(id) {
-                expression = RowCellExpression { source -> source.rowIndex + 1 }
+                expression = RowCellExpression { source -> source.rowIndex }
             }
         }
     }

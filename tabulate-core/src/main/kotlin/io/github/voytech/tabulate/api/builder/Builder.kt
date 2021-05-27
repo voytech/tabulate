@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.api.builder
 
 import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.*
+import java.util.concurrent.atomic.AtomicInteger
 
 interface Builder<T> {
     fun build(): T
@@ -104,7 +105,7 @@ class ColumnsBuilder<T> internal constructor() : Builder<List<ColumnDef<T>>> {
         }
 
     @JvmSynthetic
-    fun addColumnBuilder(id: String, block: DslBlock<ColumnBuilder<T>>) : ColumnBuilder<T> =
+    fun addColumnBuilder(id: String, block: DslBlock<ColumnBuilder<T>>): ColumnBuilder<T> =
         ensureColumnBuilder(ColumnKey(id = id)).let {
             block.invoke(it)
             it
@@ -118,15 +119,14 @@ class ColumnsBuilder<T> internal constructor() : Builder<List<ColumnDef<T>>> {
         }
 
     @JvmSynthetic
-    private fun ensureColumnBuilder(key: ColumnKey<T>) : ColumnBuilder<T> =
-        columnBuilders.find { it.id == key } ?:
-        ColumnBuilder.new<T>().let {
+    private fun ensureColumnBuilder(key: ColumnKey<T>): ColumnBuilder<T> =
+        columnBuilders.find { it.id == key } ?: ColumnBuilder.new<T>().let {
             columnBuilders.add(it.apply { it.id = key })
             it
         }
 
     @JvmSynthetic
-    private fun addColumnBuilder(id: String) : ColumnBuilder<T> = ensureColumnBuilder(ColumnKey(id = id))
+    private fun addColumnBuilder(id: String): ColumnBuilder<T> = ensureColumnBuilder(ColumnKey(id = id))
 
     private fun resize(newSize: Int?) {
         if (newSize ?: 0 < columnBuilders.size) {
@@ -217,8 +217,7 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
 
     @JvmSynthetic
     private fun ensureRowBuilder(rowQualifier: RowQualifier<T>): RowBuilder<T> =
-        rowBuilders.find { it.qualifier == rowQualifier } ?:
-        RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
+        rowBuilders.find { it.qualifier == rowQualifier } ?: RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
             rowBuilders.add(it)
             it.qualifier = rowQualifier
             it
@@ -253,16 +252,22 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
 
 class RowBuilder<T> private constructor(
     columnsBuilder: ColumnsBuilder<T>,
-    interceptedRowSpans: MutableMap<ColumnKey<T>, Int>
+    interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
 ) : AttributesAwareBuilder<RowDef<T>>() {
 
     @JvmSynthetic
-    val cellsBuilder: CellsBuilder<T> = CellsBuilder.new(columnsBuilder, interceptedRowSpans)
+    val cells: MutableMap<ColumnKey<T>, CellBuilder<T>> = mutableMapOf()
+
+    @JvmSynthetic
+    private val cellIndex: AtomicInteger = AtomicInteger(0)
+
+    @JvmSynthetic
+    val cellsBuilder: CellsBuilder<T> = CellsBuilder.new(columnsBuilder, interceptedRowSpans, cellIndex, cells)
 
     @JvmSynthetic
     internal lateinit var qualifier: RowQualifier<T>
 
-    internal fun getCellBuilder(key: ColumnKey<T>): CellBuilder<T>? = cellsBuilder.cells[key]
+    internal fun getCellBuilder(key: ColumnKey<T>): CellBuilder<T>? = cells[key]
 
     @JvmSynthetic
     override fun build(): RowDef<T> = RowDef(
@@ -280,35 +285,31 @@ class RowBuilder<T> private constructor(
         @JvmSynthetic
         internal fun <T> new(
             columnsBuilder: ColumnsBuilder<T>,
-            interceptedRowSpans: MutableMap<ColumnKey<T>, Int>
+            interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
         ): RowBuilder<T> = RowBuilder(columnsBuilder, interceptedRowSpans)
     }
 }
 
 class CellsBuilder<T> private constructor(
     private val columnsBuilder: ColumnsBuilder<T>,
-    private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int>
+    private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
+    private var cellIndex: AtomicInteger,
+    private val cells: MutableMap<ColumnKey<T>, CellBuilder<T>>,
 ) : Builder<Map<ColumnKey<T>, CellDef<T>>> {
-
-    @JvmSynthetic
-    val cells: MutableMap<ColumnKey<T>, CellBuilder<T>> = mutableMapOf()
-
-    @JvmSynthetic
-    private var cellIndex: Int = 0
 
     @JvmSynthetic
     fun addCellBuilder(id: String, block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
         ensureCellBuilder(ColumnKey(id = id)).apply(block)
+            .also { nextCellIndex() }
 
     @JvmSynthetic
     fun addCellBuilder(index: Int, block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
         columnsBuilder.columnBuilders[index].let { column ->
-            ensureCellBuilder(column.id).let { cell ->
-                block.invoke(cell)
-                cellIndex = index
-                nextCellIndex()
-                cell
-            }
+            ensureCellBuilder(column.id).apply(block)
+                .also {
+                    cellIndex.set(index)
+                    nextCellIndex()
+                }
         }
 
     @JvmSynthetic
@@ -319,6 +320,7 @@ class CellsBuilder<T> private constructor(
     @JvmSynthetic
     fun addCellBuilder(ref: ColRefId<T>, block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
         ensureCellBuilder(ColumnKey(ref = ref)).apply(block)
+            .also { nextCellIndex() }
 
 
     @JvmSynthetic
@@ -328,8 +330,8 @@ class CellsBuilder<T> private constructor(
 
     @JvmSynthetic
     private fun ensureCellBuilder(key: ColumnKey<T>): CellBuilder<T> =
-        cells.entries.find { it.key == key }?.value ?:
-        CellBuilder.new<T>().let {
+        cells.entries.find { it.key == key }?.value ?: CellBuilder.new<T>().let {
+            cellIndex.set(cells.entries.size)
             cells[key] = it
             it
         }
@@ -341,22 +343,24 @@ class CellsBuilder<T> private constructor(
     private fun rowSpanOffsetByIndex(index: Int): Int = interceptedRowSpans[columnIdByIndex(index)] ?: 0
 
     private fun currCellIndex(): Int {
-        while (rowSpanOffsetByIndex(cellIndex) > 0 && cellIndex < columnsBuilder.columnBuilders.size - 1) {
-            cellIndex++
+        while (rowSpanOffsetByIndex(cellIndex.get()) > 0 && cellIndex.get() < columnsBuilder.columnBuilders.size - 1) {
+            cellIndex.getAndIncrement()
         }
-        return cellIndex
+        return cellIndex.get()
     }
 
     private fun nextCellIndex() {
-        cellIndex += columnSpanByIndex(cellIndex)
+        cellIndex.addAndGet(columnSpanByIndex(cellIndex.get()))
     }
 
     companion object {
         @JvmSynthetic
         internal fun <T> new(
             columnsBuilder: ColumnsBuilder<T>,
-            interceptedRowSpans: MutableMap<ColumnKey<T>, Int>
-        ): CellsBuilder<T> = CellsBuilder(columnsBuilder, interceptedRowSpans)
+            interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
+            cellIndex: AtomicInteger,
+            cells: MutableMap<ColumnKey<T>, CellBuilder<T>>,
+        ): CellsBuilder<T> = CellsBuilder(columnsBuilder, interceptedRowSpans, cellIndex, cells)
     }
 }
 

@@ -80,13 +80,8 @@ class ApachePoiTabulateTests {
                 }
                 rows {
                     header {
-                        cell("nr") { value = "Nr.:" }
-                        cell(Product::code) { value = "Code" }
-                        cell(Product::name) { value = "Name" }
-                        cell(Product::description) { value = "Description" }
-                        cell(Product::manufacturer) { value = "Manufacturer" }
-                        cell(Product::price) { value = "Price" }
-                        cell(Product::distributionDate) { value = "Distribution" }
+                        title("nr") { value = "Nr.:" }
+                        titles("Code", "Name", "Description", "Manufacturer", "Price", "Distribution")
                         attributes {
                             height { px = 120 }
                             borders {
@@ -280,13 +275,13 @@ class ApachePoiTabulateTests {
             columns { count = 4 }
             rows {
                 row {
-                    cell { rowSpan = 2; value = "Row span" }
-                    cell { colSpan = 2; value = "This is very long title. 2 columns span. Row 1" }
-                    cell { value = "Last column. Row 1" }
+                    title { rowSpan = 2; value = "Row span" }
+                    title { colSpan = 2; value = "This is very long title. 2 columns span. Row 1" }
+                    title { value = "Last column. Row 1" }
                 }
                 row {
-                    cell { colSpan = 2; value = "This is very long title. 2 columns span. Row 2" }
-                    cell { value = "Last column. Row 2" }
+                    title { colSpan = 2; value = "This is very long title. 2 columns span. Row 2" }
+                    title { value = "Last column. Row 2" }
                 }
             }
         }.export(File("test1.xlsx"))
@@ -337,8 +332,8 @@ class ApachePoiTabulateTests {
             rows {
                 row {
                     attributes{height { px = 200 }}
-                    cell { value = "It is : " }
-                    cell {
+                    title { value = "It is : " }
+                    title {
                         value = "src/test/resources/kotlin.jpeg"
                         type = CellType.IMAGE_URL
                     }
