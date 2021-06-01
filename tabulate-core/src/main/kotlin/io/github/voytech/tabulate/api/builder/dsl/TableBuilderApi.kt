@@ -7,6 +7,7 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
+import io.github.voytech.tabulate.template.context.IndexLabel
 import kotlin.reflect.KProperty1
 
 @DslMarker

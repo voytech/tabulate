@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.api.builder.dsl
 
-import io.github.voytech.tabulate.model.IndexLabel
 import io.github.voytech.tabulate.model.RowCellExpression
+import io.github.voytech.tabulate.template.context.IndexLabel
 import kotlin.reflect.KProperty1
 
 class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {

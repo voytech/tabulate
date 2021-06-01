@@ -4,10 +4,10 @@ import io.github.voytech.tabulate.api.builder.TableBuilder
 import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.model.ColumnDef
-import io.github.voytech.tabulate.model.IndexLabel
 import io.github.voytech.tabulate.model.NextId
 import io.github.voytech.tabulate.template.context.AttributedRow
 import io.github.voytech.tabulate.template.context.ColumnRenderPhase
+import io.github.voytech.tabulate.template.context.IndexLabel
 import io.github.voytech.tabulate.template.context.TableExportingState
 import io.github.voytech.tabulate.template.iterators.OperationContextIterator
 import io.github.voytech.tabulate.template.operations.TableExportOperations

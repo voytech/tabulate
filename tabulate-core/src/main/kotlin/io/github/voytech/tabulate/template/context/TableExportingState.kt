@@ -22,15 +22,13 @@ class TableExportingState<T>(
         stateAttributes["_tableId"] = tableName
     }
 
-    fun getAndIncrement() : RowIndex {
-        return indexIncrement.getRowIndex().also { indexIncrement.inc() }
-    }
+    fun incrementIndex()  = indexIncrement.inc()
 
     fun setRowIndex(index: Int) {
-        indexIncrement.rowIndex = index
+        indexIncrement.assign(index)
     }
 
-    fun getRowIndex(): Int = indexIncrement.rowIndex
+    fun getRowIndex(): RowIndex = indexIncrement.getRowIndex()
 
     fun mark(label: IndexLabel): RowIndex = indexIncrement.mark(label.name)
 

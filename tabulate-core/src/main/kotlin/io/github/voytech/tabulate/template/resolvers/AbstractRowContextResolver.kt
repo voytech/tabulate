@@ -6,6 +6,7 @@ import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
 import io.github.voytech.tabulate.template.context.AttributedRow
 import io.github.voytech.tabulate.template.context.ExportingStateReceiver
+import io.github.voytech.tabulate.template.context.RowIndex
 import io.github.voytech.tabulate.template.context.TableExportingState
 
 abstract class AbstractRowContextResolver<T>(private val tableModel: Table<T>) :

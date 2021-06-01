@@ -1,8 +1,8 @@
 package io.github.voytech.tabulate.api.qualifer
 
-import io.github.voytech.tabulate.model.IndexLabel
-import io.github.voytech.tabulate.model.RowIndex
 import io.github.voytech.tabulate.model.RowPredicate
+import io.github.voytech.tabulate.template.context.IndexLabel
+import io.github.voytech.tabulate.template.context.RowIndex
 
 object RowPredicates {
     @JvmStatic

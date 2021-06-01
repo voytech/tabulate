@@ -11,13 +11,14 @@ class OperationContextIterator<T, CTX : ContextData<T>>(
     private lateinit var exportingState: TableExportingState<T>
 
     override fun computeNext() {
-        resolver.resolve(exportingState.getAndIncrement()).also {
+        resolver.resolve(exportingState.getRowIndex()).also {
             if (it != null) {
                 val currentContext = it.value
-                if (it.index > exportingState.getRowIndex()) {
+                if (it.index > exportingState.getRowIndex().rowIndex) {
                     exportingState.setRowIndex(it.index)
                 }
                 setNext(currentContext)
+                exportingState.incrementIndex()
             } else {
                 done()
             }
@@ -29,3 +30,4 @@ class OperationContextIterator<T, CTX : ContextData<T>>(
         resolver.setState(exportingState)
     }
 }
+

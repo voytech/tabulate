@@ -1,5 +1,7 @@
 package io.github.voytech.tabulate.model
 
+import io.github.voytech.tabulate.template.context.RowIndex
+
 /**
  * Table row rendering context with row and object coordinates (row number within target table, as well as object
  * index within collection) and row-associated collection entry.

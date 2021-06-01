@@ -1,4 +1,6 @@
-package io.github.voytech.tabulate.model
+package io.github.voytech.tabulate.template.context
+
+import io.github.voytech.tabulate.model.RowIndexDef
 
 enum class IndexLabel {
     DATASET_PROCESSED,
@@ -62,14 +64,19 @@ class MutableRowIndex {
         return RowIndex(rowIndex, labels)
     }
 
-    fun hasLabel(label: String) = labels.containsKey(label)
-
-    fun getIndex(label: String? = null): Int = label?.let { labels[it]?.index } ?: rowIndex
-
     fun inc() {
         rowIndex++
         labels.forEach { labels[it.key] = it.value + 1 }
     }
 
-    fun getRowIndex(): RowIndex = RowIndex(rowIndex, labels.mapValues { IndexMarker(it.value.label,it.value.index) })
+    fun assign(value: Int) {
+        val offset = value - rowIndex
+        rowIndex = value
+        labels.forEach { labels[it.key] = it.value + offset }
+    }
+
+    private fun cloneLabels(): Map<String, IndexMarker> =
+        labels.mapValues { it.value.copy() }
+
+    fun getRowIndex(): RowIndex = RowIndex(rowIndex, cloneLabels())
 }
