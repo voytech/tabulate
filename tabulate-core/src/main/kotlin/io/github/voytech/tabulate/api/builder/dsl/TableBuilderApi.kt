@@ -179,10 +179,25 @@ class RowsBuilderApi<T> internal constructor(private val builder: RowsBuilder<T>
 
     @JvmSynthetic
     fun row(at: Int, block: RowBuilderApi<T>.() -> Unit) {
-        builder.addRowBuilder(at) {
+        builder.addRowBuilder(RowIndexDef(at)) {
             RowBuilderApi.new(it).apply(block)
         }
     }
+
+    @JvmSynthetic
+    fun row(at: Int, label: IndexLabel, block: RowBuilderApi<T>.() -> Unit) {
+        builder.addRowBuilder(RowIndexDef(at,label.name)) {
+            RowBuilderApi.new(it).apply(block)
+        }
+    }
+
+    @JvmSynthetic
+    fun row(label: IndexLabel, block: RowBuilderApi<T>.() -> Unit) {
+        builder.addRowBuilder(RowIndexDef(offsetLabel = label.name)) {
+            RowBuilderApi.new(it).apply(block)
+        }
+    }
+
 
     companion object {
         @JvmSynthetic

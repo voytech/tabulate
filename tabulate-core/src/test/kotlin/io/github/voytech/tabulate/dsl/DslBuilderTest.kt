@@ -5,6 +5,7 @@ import io.github.voytech.tabulate.api.builder.dsl.style
 import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.model.ColumnKey
+import io.github.voytech.tabulate.model.RowIndex
 import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
 import io.github.voytech.tabulate.model.attributes.cell.Colors
 import io.github.voytech.tabulate.model.attributes.cell.text
@@ -75,7 +76,7 @@ class DslBuilderTest {
             assertEquals(columns.first().columnAttributes?.size, 1)
             assertEquals(columns.first().columnAttributes?.first(), ColumnWidthAttribute(px = 100))
 
-            val zeroRows = getRowsAt(0)
+            val zeroRows = getRowsAt(RowIndex(0))
             assertEquals(zeroRows?.size, 1)
             assertEquals(rows?.size, 1)
             with(zeroRows?.first()!!) {

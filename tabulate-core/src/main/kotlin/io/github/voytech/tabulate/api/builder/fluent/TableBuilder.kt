@@ -103,7 +103,14 @@ class RowsBuilder<T>(private val parent: TableBuilder<T>) : MidLevelBuilder<T, T
     fun row() = RowBuilder(parent.builderBase.rowsBuilder.addRowBuilder {}, this)
 
     fun row(at: Int) =
-        RowBuilder(parent.builderBase.rowsBuilder.addRowBuilder { it.qualifier = RowQualifier(createAt = at) }, this)
+        RowBuilder(parent.builderBase.rowsBuilder.addRowBuilder {
+            it.qualifier = RowQualifier(createAt = RowIndexDef(at))
+        }, this)
+
+    fun row(at: Int, offset: IndexLabel) =
+        RowBuilder(parent.builderBase.rowsBuilder.addRowBuilder {
+            it.qualifier = RowQualifier(createAt = RowIndexDef(at, offset.name))
+        }, this)
 
     @JvmSynthetic
     override fun out(): TableBuilder<T> = parent

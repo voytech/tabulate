@@ -1,12 +1,13 @@
 package io.github.voytech.tabulate.api.builder.dsl
 
+import io.github.voytech.tabulate.model.IndexLabel
 import io.github.voytech.tabulate.model.RowCellExpression
 import kotlin.reflect.KProperty1
 
 class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
 
     @JvmSynthetic
-    fun title(id: String, block: CellBuilderApi<T>.() -> Unit) {
+    fun columnTitle(id: String, block: CellBuilderApi<T>.() -> Unit) {
         builder.row(HEADER_ROW_INDEX) {
             cells {
                 cell(id, block)
@@ -15,7 +16,7 @@ class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
     }
 
     @JvmSynthetic
-    fun title(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
+    fun columnTitle(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
         builder.row(HEADER_ROW_INDEX) {
             cells {
                 cell(ref, block)
@@ -24,7 +25,7 @@ class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
     }
 
     @JvmSynthetic
-    fun titles(vararg names: String) =
+    fun columnTitles(vararg names: String) =
         builder.row(HEADER_ROW_INDEX) {
             cells {
                 names.forEach {
@@ -46,19 +47,19 @@ class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
 
 }
 
-fun <T> RowBuilderApi<T>.title(id: String, block: CellBuilderApi<T>.() -> Unit) {
+fun <T> RowBuilderApi<T>.cell(id: String, block: CellBuilderApi<T>.() -> Unit) {
     cells {
         cell(id, block)
     }
 }
 
-fun <T> RowBuilderApi<T>.title(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
+fun <T> RowBuilderApi<T>.cell(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
     cells {
         cell(ref, block)
     }
 }
 
-fun <T> RowBuilderApi<T>.title(block: CellBuilderApi<T>.() -> Unit) {
+fun <T> RowBuilderApi<T>.cell(block: CellBuilderApi<T>.() -> Unit) {
     cells {
         cell(block)
     }
@@ -70,7 +71,7 @@ fun <T> RowsBuilderApi<T>.header(block: HeaderBuilderApi<T>.() -> Unit) =
 
 fun <T> RowsBuilderApi<T>.header(vararg names: String) =
     row {
-        insertWhen { it.rowIndex == 0 && !it.hasRecord()}
+        insertWhen { it.rowIndexValue() == 0 && !it.hasRecord() }
         cells {
             names.forEach {
                 cell { value = it }
@@ -80,11 +81,15 @@ fun <T> RowsBuilderApi<T>.header(vararg names: String) =
 
 fun <T> RowsBuilderApi<T>.rowNumberingOn(id: String) {
     row {
-        matching { source -> source.rowIndex > 0 }
+        matching { source -> source.rowIndexValue() > 0 && source.rowIndex.labels.isEmpty() }
         cells {
             cell(id) {
-                expression = RowCellExpression { source -> source.rowIndex }
+                expression = RowCellExpression { source -> source.rowIndexValue() }
             }
         }
     }
+}
+
+fun <T> RowsBuilderApi<T>.footer(block: RowBuilderApi<T>.() -> Unit) {
+    row(0, IndexLabel.DATASET_PROCESSED, block)
 }

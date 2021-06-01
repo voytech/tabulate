@@ -3,22 +3,22 @@ package io.github.voytech.tabulate.template.resolvers
 import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
-import io.github.voytech.tabulate.model.attributes.overrideAttributesRightToLeft
+import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
 import io.github.voytech.tabulate.template.context.AttributedRow
-import io.github.voytech.tabulate.template.context.GlobalContextAndAttributes
+import io.github.voytech.tabulate.template.context.ExportingStateReceiver
+import io.github.voytech.tabulate.template.context.TableExportingState
 
-abstract class AbstractRowContextResolver<T>(
-    tableModel: Table<T>,
-    stateAndAttributes: GlobalContextAndAttributes<T>
-) :
-    GlobalStateAwareContextResolver<T>(tableModel, stateAndAttributes) {
+abstract class AbstractRowContextResolver<T>(private val tableModel: Table<T>) :
+    IndexedContextResolver<T, AttributedRow<T>>, ExportingStateReceiver<T> {
+
+    private lateinit var tableExportingState: TableExportingState<T>
 
     private fun computeCells(rowDefinitions: Set<RowDef<T>>): Map<ColumnKey<T>, CellDef<T>> {
         return rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })
     }
 
     private fun computeRowLevelCellAttributes(rowDefinitions: Set<RowDef<T>>): Set<CellAttribute> {
-        return overrideAttributesRightToLeft(*(rowDefinitions.mapNotNull { i -> i.cellAttributes }.toTypedArray()))
+        return overrideAttributesLeftToRight(*(rowDefinitions.mapNotNull { i -> i.cellAttributes }.toTypedArray()))
     }
 
     private fun computeRowAttributes(rowDefinitions: Set<RowDef<T>>): Set<RowAttribute> {
@@ -26,7 +26,7 @@ abstract class AbstractRowContextResolver<T>(
             .fold(setOf(), { acc, r -> acc + r })
     }
 
-    private fun resolveAttributedRow(tableRowIndex: Int, record: IndexedValue<T>? = null): AttributedRow<T> {
+    private fun resolveAttributedRow(tableRowIndex: RowIndex, record: IndexedValue<T>? = null): AttributedRow<T> {
         return SourceRow(
             rowIndex = tableRowIndex,
             objectIndex = record?.index,
@@ -37,11 +37,11 @@ abstract class AbstractRowContextResolver<T>(
             val rowCellAttributes = computeRowLevelCellAttributes(rowDefinitions)
             val cellValues = tableModel.columns.mapIndexed { index: Int, column: ColumnDef<T> ->
                 cellDefinitions.resolveCellValue(column, sourceRow)?.let { value ->
-                    stateAndAttributes.createCellContext(
-                        relativeRowIndex = tableRowIndex,
+                    tableExportingState.createCellContext(
+                        relativeRowIndex = tableRowIndex.rowIndex,
                         relativeColumnIndex = column.index ?: index,
                         value = value,
-                        attributes = overrideAttributesRightToLeft(
+                        attributes = overrideAttributesLeftToRight(
                             tableModel.cellAttributes,
                             column.cellAttributes,
                             rowCellAttributes,
@@ -50,8 +50,8 @@ abstract class AbstractRowContextResolver<T>(
                     ).let { Pair(column.id, it) }
                 }
             }.mapNotNull { it }.toMap()
-            stateAndAttributes.createRowContext(
-                relativeRowIndex = tableRowIndex,
+            tableExportingState.createRowContext(
+                relativeRowIndex = tableRowIndex.rowIndex,
                 rowAttributes = computeRowAttributes(rowDefinitions),
                 cells = cellValues
             )
@@ -59,13 +59,13 @@ abstract class AbstractRowContextResolver<T>(
     }
 
     private fun resolveRowContext(
-        tableRowIndex: Int,
-        indexedRecord: IndexedValue<T>? = null
+        tableRowIndex: RowIndex,
+        indexedRecord: IndexedValue<T>? = null,
     ): IndexedValue<AttributedRow<T>> {
-        return IndexedValue(tableRowIndex, resolveAttributedRow(tableRowIndex, indexedRecord))
+        return IndexedValue(tableRowIndex.rowIndex, resolveAttributedRow(tableRowIndex, indexedRecord))
     }
 
-    override fun resolve(requestedIndex: Int): IndexedValue<AttributedRow<T>>? {
+    override fun resolve(requestedIndex: RowIndex): IndexedValue<AttributedRow<T>>? {
         return if (tableModel.hasCustomRows(SourceRow(requestedIndex))) {
             resolveRowContext(requestedIndex)
         } else {
@@ -73,12 +73,17 @@ abstract class AbstractRowContextResolver<T>(
                 if (it != null) {
                     resolveRowContext(requestedIndex, it)
                 } else {
-                    tableModel.getNextCustomRowIndex(requestedIndex)?.let { nextTableRowIndex ->
-                        resolveRowContext(nextTableRowIndex)
-                    }
+                    tableModel.getNextCustomRowIndex(requestedIndex)
+                        ?.let { nextIndexDef ->
+                            resolveRowContext(requestedIndex + nextIndexDef)
+                        }
                 }
             }
         }
+    }
+
+    override fun setState(exportingState: TableExportingState<T>) {
+        tableExportingState = exportingState
     }
 
     protected abstract fun getNextRecord(): IndexedValue<T>?

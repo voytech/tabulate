@@ -18,10 +18,19 @@ data class RowDef<T> internal constructor(
 
 fun interface RowPredicate<T> : Predicate<SourceRow<T>>
 
+data class RowIndexDef(val index: Int = 0, val offsetLabel: String? = null) : Comparable<RowIndexDef>{
+
+    operator fun plus(increment: Int): RowIndexDef = RowIndexDef(index + increment)
+
+    operator fun inc(): RowIndexDef = RowIndexDef(index + 1)
+
+    override fun compareTo(other: RowIndexDef): Int = index.compareTo(other.index)
+}
+
 data class RowQualifier<T>(
     val applyWhen: RowPredicate<T>? = null,
     val createWhen: RowPredicate<T>? = null,
-    val createAt: Int? = null
+    val createAt: RowIndexDef? = null
 )
 
 internal fun <T> Map<ColumnKey<T>, CellDef<T>>?.resolveCellValue(column: ColumnDef<T>, maybeRow: SourceRow<T>? = null): CellValue? {

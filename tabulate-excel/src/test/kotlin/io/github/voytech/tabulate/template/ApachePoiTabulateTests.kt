@@ -46,7 +46,6 @@ class ApachePoiTabulateTests {
                 columns {
                     column("nr") {
                         attributes {
-                            width { px = 50 }
                             text {
                                 fontFamily = "Times New Roman"
                                 fontColor = Color(10, 100, 100)
@@ -80,8 +79,8 @@ class ApachePoiTabulateTests {
                 }
                 rows {
                     header {
-                        title("nr") { value = "Nr.:" }
-                        titles("Code", "Name", "Description", "Manufacturer", "Price", "Distribution")
+                        columnTitle("nr") { value = "Nr.:" }
+                        columnTitles("Code", "Name", "Description", "Manufacturer", "Price", "Distribution")
                         attributes {
                             height { px = 120 }
                             borders {
@@ -108,6 +107,13 @@ class ApachePoiTabulateTests {
                         }
                     }
                     rowNumberingOn("nr")
+                    footer {
+                       cell { value = "Footer column 1" }
+                       cell { value = "Footer column 2" }
+                       cell { value = "Footer column 3" }
+                       cell { value = "Footer column 4" }
+                       attributes { text {  }}
+                    }
                 }
             }
         } .also {
@@ -275,13 +281,13 @@ class ApachePoiTabulateTests {
             columns { count = 4 }
             rows {
                 row {
-                    title { rowSpan = 2; value = "Row span" }
-                    title { colSpan = 2; value = "This is very long title. 2 columns span. Row 1" }
-                    title { value = "Last column. Row 1" }
+                    cell { rowSpan = 2; value = "Row span" }
+                    cell { colSpan = 2; value = "This is very long title. 2 columns span. Row 1" }
+                    cell { value = "Last column. Row 1" }
                 }
                 row {
-                    title { colSpan = 2; value = "This is very long title. 2 columns span. Row 2" }
-                    title { value = "Last column. Row 2" }
+                    cell { colSpan = 2; value = "This is very long title. 2 columns span. Row 2" }
+                    cell { value = "Last column. Row 2" }
                 }
             }
         }.export(File("test1.xlsx"))
@@ -332,8 +338,8 @@ class ApachePoiTabulateTests {
             rows {
                 row {
                     attributes{height { px = 200 }}
-                    title { value = "It is : " }
-                    title {
+                    cell { value = "It is : " }
+                    cell {
                         value = "src/test/resources/kotlin.jpeg"
                         type = CellType.IMAGE_URL
                     }

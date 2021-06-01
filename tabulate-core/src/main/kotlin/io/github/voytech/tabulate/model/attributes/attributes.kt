@@ -37,16 +37,16 @@ private fun List<CellAttribute<*>>.mergeUncheckedAttributes(): CellAttribute<*> 
         })
 }
 
-fun overrideAttributesRightToLeft(attributeSet: LinkedHashSet<CellAttribute<*>>): Set<CellAttribute<*>> {
+fun overrideAttributesLeftToRight(attributeSet: LinkedHashSet<CellAttribute<*>>): Set<CellAttribute<*>> {
     return attributeSet.groupBy { it.javaClass }
         .map { it.value.mergeUncheckedAttributes() }
         .toSet()
 }
 
-fun overrideAttributesRightToLeft(vararg attributeSets: Set<CellAttribute<*>>?): Set<CellAttribute<*>> {
+fun overrideAttributesLeftToRight(vararg attributeSets: Set<CellAttribute<*>>?): Set<CellAttribute<*>> {
     val linkedSet = linkedSetOf<CellAttribute<*>>()
     attributeSets.forEach {
         it?.forEach { cellAttribute -> linkedSet.add(cellAttribute)}
     }
-    return overrideAttributesRightToLeft(linkedSet)
+    return overrideAttributesLeftToRight(linkedSet)
 }

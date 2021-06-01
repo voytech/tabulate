@@ -185,7 +185,7 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
     @JvmSynthetic
     val rowBuilders: MutableList<RowBuilder<T>> = mutableListOf()
 
-    private var rowIndex: Int = 0
+    private var rowIndex: RowIndexDef = RowIndexDef(0)
 
     private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int> = mutableMapOf()
 
@@ -206,7 +206,7 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
         }
 
     @JvmSynthetic
-    fun addRowBuilder(at: Int, block: DslBlock<RowBuilder<T>>): RowBuilder<T> {
+    fun addRowBuilder(at: RowIndexDef, block: DslBlock<RowBuilder<T>>): RowBuilder<T> {
         rowIndex = at
         return ensureRowBuilder(RowQualifier(createAt = rowIndex++)).let {
             block.invoke(it)

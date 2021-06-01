@@ -4,10 +4,11 @@ import io.github.voytech.tabulate.api.builder.TableBuilder
 import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.model.ColumnDef
+import io.github.voytech.tabulate.model.IndexLabel
 import io.github.voytech.tabulate.model.NextId
 import io.github.voytech.tabulate.template.context.AttributedRow
 import io.github.voytech.tabulate.template.context.ColumnRenderPhase
-import io.github.voytech.tabulate.template.context.GlobalContextAndAttributes
+import io.github.voytech.tabulate.template.context.TableExportingState
 import io.github.voytech.tabulate.template.iterators.OperationContextIterator
 import io.github.voytech.tabulate.template.operations.TableExportOperations
 import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
@@ -46,14 +47,20 @@ open class TableExportTemplate<T, O>() {
 
     @Suppress("ReactiveStreamsSubscriberImplementation")
     inner class UnboundSubscriber(
-        private val resolver: BufferingRowContextResolver<T>,
-        private val iterator: OperationContextIterator<T, AttributedRow<T>>,
-        private val context: GlobalContextAndAttributes<T>,
+        private val state: TableExportingState<T>,
+        private val resolver: BufferingRowContextResolver<T> = BufferingRowContextResolver(state.tableModel),
+        private var iterator: OperationContextIterator<T, AttributedRow<T>> = OperationContextIterator(resolver),
     ) : Subscriber<T> {
 
+        init {
+            //TODO remove this receiver interface and pass directly via constructor on resolver and iterator.
+            iterator.setState(state)
+        }
+
         override fun onSubscribe(subscription: Subscription) {
-            renderColumns(context, ColumnRenderPhase.BEFORE_FIRST_ROW)
+            renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
             subscription.request(UNBOUND)
+
         }
 
         override fun onNext(record: T) {
@@ -66,32 +73,41 @@ open class TableExportTemplate<T, O>() {
         }
 
         override fun onComplete() {
+            renderBufferedRows()
+            renderRowsAfterDataProcessed()
+            renderColumns(state, ColumnRenderPhase.AFTER_LAST_ROW)
+            ops.finish()
+        }
+
+        private fun renderBufferedRows() {
             while (iterator.hasNext()) {
                 renderNextRow()
             }
-            renderColumns(context, ColumnRenderPhase.AFTER_LAST_ROW)
-            ops.finish()
+        }
+
+        private fun renderRowsAfterDataProcessed() {
+            state.mark(IndexLabel.DATASET_PROCESSED)
+            iterator = OperationContextIterator(resolver).also { it.setState(state) }
+            while (iterator.hasNext()) {
+                renderNextRow()
+            }
         }
 
         private fun renderNextRow() {
             if (iterator.hasNext()) {
-                renderNextRow(context, iterator.next())
+                renderNextRow(state, iterator.next())
             }
         }
     }
 
     private fun bind(tableBuilder: TableBuilder<T>, source: Publisher<T>) {
         ops.createTable(tableBuilder).let { table ->
-            GlobalContextAndAttributes(
+            TableExportingState(
                 tableModel = table,
                 tableName = table.name ?: "table${NextId.nextId()}",
                 firstRow = table.firstRow,
                 firstColumn = table.firstColumn
-            ).also {
-                val contextResolver = BufferingRowContextResolver(table, it)
-                val contextIterator = OperationContextIterator(contextResolver)
-                source.subscribe(UnboundSubscriber(contextResolver, contextIterator, it))
-            }
+            ).also { source.subscribe(UnboundSubscriber(it)) }
         }
     }
 
@@ -107,7 +123,7 @@ open class TableExportTemplate<T, O>() {
         bind(tableBuilder, source)
     }
 
-    private fun renderColumns(stateAndAttributes: GlobalContextAndAttributes<T>, renderPhase: ColumnRenderPhase) {
+    private fun renderColumns(stateAndAttributes: TableExportingState<T>, renderPhase: ColumnRenderPhase) {
         stateAndAttributes.tableModel.forEachColumn { columnIndex: Int, column: ColumnDef<T> ->
             ops.renderColumn(
                 stateAndAttributes.createColumnContext(IndexedValue(column.index ?: columnIndex, column), renderPhase)
@@ -115,8 +131,8 @@ open class TableExportTemplate<T, O>() {
         }
     }
 
-    private fun renderRowCells(stateAndAttributes: GlobalContextAndAttributes<T>, context: AttributedRow<T>) {
-        stateAndAttributes.tableModel.forEachColumn { column: ColumnDef<T> ->
+    private fun renderRowCells(tableExportingState: TableExportingState<T>, context: AttributedRow<T>) {
+        tableExportingState.tableModel.forEachColumn { column: ColumnDef<T> ->
             if (context.rowCellValues.containsKey(column.id)) {
                 ops.renderRowCell(context.rowCellValues[column.id]!!)
             }
@@ -124,11 +140,11 @@ open class TableExportTemplate<T, O>() {
     }
 
     private fun renderNextRow(
-        stateAndAttributes: GlobalContextAndAttributes<T>,
-        rowContext: AttributedRow<T>
+        tableExportingState: TableExportingState<T>,
+        rowContext: AttributedRow<T>,
     ) {
         ops.beginRow(rowContext)
-        renderRowCells(stateAndAttributes, rowContext)
+        renderRowCells(tableExportingState, rowContext)
         ops.endRow(rowContext)
     }
 
@@ -147,7 +163,8 @@ fun <T, O> Collection<T>.tabulate(format: TabulationFormat<T, O>, block: TableBu
 
 fun <T> Collection<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> Unit) {
     val file = File(fileName)
-    TableExportTemplate(TabulationFormat(file.extension) { _: Publisher<T> -> FileOutputStream(file) }).export(table(block),
+    TableExportTemplate(TabulationFormat(file.extension) { _: Publisher<T> -> FileOutputStream(file) }).export(table(
+        block),
         CollectionSource(this))
 }
 

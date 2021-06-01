@@ -10,7 +10,7 @@ data class SourceRow<T> (
     /**
      * index of a row in entire table (including synthetic rows).
      */
-    val rowIndex: Int,
+    val rowIndex: RowIndex,
     /**
      * Index of an object within dataset.
      */
@@ -21,4 +21,6 @@ data class SourceRow<T> (
     val record: T? = null
 ) {
     fun hasRecord(): Boolean = record != null && objectIndex != null
+
+    fun rowIndexValue(): Int = rowIndex.rowIndex
 }

@@ -33,12 +33,12 @@ data class Table<T> internal constructor(
     val tableAttributes: Set<TableAttribute>?,
     val cellAttributes: Set<CellAttribute>?,
 ) {
-    private var indexedCustomRows: Map<Int, List<RowDef<T>>>? = null
+    private var indexedCustomRows: Map<RowIndexDef, List<RowDef<T>>>? = null
 
     init {
         indexedCustomRows = rows?.filter { it.qualifier.createAt != null }
-            ?.sortedBy { it.qualifier.createAt }
-            ?.groupBy { it.qualifier.createAt!!  }
+            ?.sortedBy { it.qualifier.createAt!! }
+            ?.groupBy { it.qualifier.createAt!! }
     }
 
     fun forEachColumn(consumer: Consumer<in ColumnDef<T>>) = columns.forEach(consumer)
@@ -49,22 +49,27 @@ data class Table<T> internal constructor(
 
     fun forEachRow(consumer: Consumer<in RowDef<T>>) = rows?.forEach(consumer)
 
-    // TODO - hide this is publically insecure due to index only lookup.
-    fun getRowsAt(index: Int): List<RowDef<T>>? = indexedCustomRows?.get(index)
+    fun getRowsAt(index: RowIndex): List<RowDef<T>>? {
+        return if (index.labels.isEmpty()) {
+            indexedCustomRows?.get(RowIndexDef(index.rowIndex))
+        } else {
+            index.labels.mapNotNull {
+                indexedCustomRows?.get(RowIndexDef(index = it.value.index, offsetLabel = it.key))
+            }.flatten()
+        }
+    }
 
-    fun hasRowsAt(index: Int): Boolean = !getRowsAt(index).isNullOrEmpty()
+    fun hasRowsAt(index: RowIndex): Boolean = !getRowsAt(index).isNullOrEmpty()
 
-    fun getNextCustomRowIndex(index: Int): Int? = indexedCustomRows?.entries?.firstOrNull { it.key > index }?.key
+    fun getNextCustomRowIndex(index: RowIndex): RowIndexDef? {
+        return indexedCustomRows?.entries
+            ?.firstOrNull { it.key.index > index.rowIndex }
+            ?.key
+    }
 
     fun getRows(sourceRow: SourceRow<T>): Set<RowDef<T>> {
         val customRows = getRowsAt(sourceRow.rowIndex)?.toSet()
         val matchingRows = rows?.filter { it.isApplicable(sourceRow) }?.toSet()
-        return customRows?.let { matchingRows?.plus(it) ?: it } ?: matchingRows ?: emptySet()
-    }
-
-    fun getRowInsertions(sourceRow: SourceRow<T>): Set<RowDef<T>> {
-        val customRows = getRowsAt(sourceRow.rowIndex)?.toSet()
-        val matchingRows = rows?.filter { it.shouldInsertRow(sourceRow) }?.toSet()
         return customRows?.let { matchingRows?.plus(it) ?: it } ?: matchingRows ?: emptySet()
     }
 

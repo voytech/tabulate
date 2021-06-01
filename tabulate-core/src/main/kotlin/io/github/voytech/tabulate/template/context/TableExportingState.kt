@@ -5,11 +5,9 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 
 /**
- * A mutable exporting state representing entire dataset as well as operation-scoped context data and coordinates for
- * operation execution.
  * @author Wojciech Mąka
  */
-class GlobalContextAndAttributes<T>(
+class TableExportingState<T>(
     val tableModel: Table<T>,
     val tableName: String = "table-${NextId.nextId()}",
     val firstRow: Int? = 0,
@@ -18,16 +16,33 @@ class GlobalContextAndAttributes<T>(
     private val stateAttributes = mutableMapOf<String, Any>()
     private val rowSkips = mutableMapOf<ColumnKey<T>, Int>()
     private var colSkips = 0
+    private val indexIncrement = MutableRowIndex()
 
     init {
         stateAttributes["_tableId"] = tableName
     }
 
-    internal fun createRowContext(relativeRowIndex: Int, rowAttributes: Set<RowAttribute>, cells: Map<ColumnKey<T>, AttributedCell>): AttributedRow<T> {
+    fun getAndIncrement() : RowIndex {
+        return indexIncrement.getRowIndex().also { indexIncrement.inc() }
+    }
+
+    fun setRowIndex(index: Int) {
+        indexIncrement.rowIndex = index
+    }
+
+    fun getRowIndex(): Int = indexIncrement.rowIndex
+
+    fun mark(label: IndexLabel): RowIndex = indexIncrement.mark(label.name)
+
+    internal fun createRowContext(
+        relativeRowIndex: Int,
+        rowAttributes: Set<RowAttribute>,
+        cells: Map<ColumnKey<T>, AttributedCell>,
+    ): AttributedRow<T> {
         return AttributedRow(
             rowIndex = (firstRow ?: 0) + relativeRowIndex,
-            rowAttributes =  rowAttributes,
-            rowCellValues =  cells
+            rowAttributes = rowAttributes,
+            rowCellValues = cells
         ).apply { additionalAttributes = stateAttributes }
     }
 
@@ -35,7 +50,7 @@ class GlobalContextAndAttributes<T>(
         relativeRowIndex: Int,
         relativeColumnIndex: Int,
         value: CellValue,
-        attributes: Set<CellAttribute>
+        attributes: Set<CellAttribute>,
     ): AttributedCell {
         return AttributedCell(
             value = value,
@@ -47,7 +62,7 @@ class GlobalContextAndAttributes<T>(
 
     internal fun createColumnContext(
         indexedColumn: IndexedValue<ColumnDef<T>>,
-        phase: ColumnRenderPhase
+        phase: ColumnRenderPhase,
     ): AttributedColumn {
         return AttributedColumn(
             columnIndex = (firstColumn ?: 0) + indexedColumn.index,

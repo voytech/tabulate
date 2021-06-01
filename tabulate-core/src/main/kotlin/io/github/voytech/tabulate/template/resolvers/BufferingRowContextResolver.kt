@@ -1,10 +1,9 @@
 package io.github.voytech.tabulate.template.resolvers
 
 import io.github.voytech.tabulate.model.Table
-import io.github.voytech.tabulate.template.context.GlobalContextAndAttributes
 
-class BufferingRowContextResolver<T>(tableModel: Table<T>, stateAndAttributes: GlobalContextAndAttributes<T>) :
-    AbstractRowContextResolver<T>(tableModel, stateAndAttributes) {
+class BufferingRowContextResolver<T>(tableModel: Table<T>) :
+    AbstractRowContextResolver<T>(tableModel) {
 
     private var index: Int = 0
 
