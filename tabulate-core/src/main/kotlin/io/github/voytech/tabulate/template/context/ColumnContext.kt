@@ -9,3 +9,8 @@ data class ColumnContext(
 
 fun AttributedColumn.narrow(): ColumnContext =
     ColumnContext(columnIndex, currentPhase).also { it.additionalAttributes = additionalAttributes }
+
+enum class ColumnRenderPhase {
+    BEFORE_FIRST_ROW,
+    AFTER_LAST_ROW
+}

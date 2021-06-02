@@ -49,10 +49,6 @@ operator fun Map<String, IndexMarker>.inc(): Map<String, IndexMarker> = mapValue
 operator fun Map<String, IndexMarker>.plus(increment: Int): Map<String, IndexMarker> =
     mapValues { it.value + increment }
 
-operator fun IndexMarker.inc(): IndexMarker = IndexMarker(label, index + 1)
-
-operator fun IndexMarker.plus(increment: Int): IndexMarker = IndexMarker(label, index + increment)
-
 class MutableRowIndex {
     var rowIndex: Int = 0
     private val labels: MutableMap<String, IndexMarker> = mutableMapOf()

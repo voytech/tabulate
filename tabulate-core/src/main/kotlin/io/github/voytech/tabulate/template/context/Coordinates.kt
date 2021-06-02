@@ -10,7 +10,6 @@ interface ColumnCoordinate {
 
 interface RowCellCoordinate : RowCoordinate, ColumnCoordinate
 
-
 data class Coordinates(
     val tableName: String
 ) {

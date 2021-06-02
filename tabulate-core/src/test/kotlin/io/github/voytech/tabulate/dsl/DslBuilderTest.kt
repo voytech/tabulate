@@ -5,7 +5,6 @@ import io.github.voytech.tabulate.api.builder.dsl.style
 import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.model.ColumnKey
-import io.github.voytech.tabulate.model.RowIndex
 import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
 import io.github.voytech.tabulate.model.attributes.cell.Colors
 import io.github.voytech.tabulate.model.attributes.cell.text
@@ -14,6 +13,7 @@ import io.github.voytech.tabulate.model.attributes.column.width
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.row.height
 import io.github.voytech.tabulate.model.id
+import io.github.voytech.tabulate.template.context.RowIndex
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Disabled

@@ -3,9 +3,13 @@ package io.github.voytech.tabulate.model
 import io.github.voytech.tabulate.template.context.RowIndex
 
 /**
- * Table row rendering context with row and object coordinates (row number within target table, as well as object
- * index within collection) and row-associated collection entry.
- * Instantiated indirectly by ExportingState class instance.
+ * This class wraps dataset record for further row context evaluation.
+ * It adds additional information for context resolving:
+ *  - current row index increment value
+ *  - index of an dataset entry
+ *  Raw dataset record and index information is then used by row predicates in order to figure out what row definitions
+ *  should be applied and when.
+ *
  * @author Wojciech Mąka
  */
 data class SourceRow<T> (
