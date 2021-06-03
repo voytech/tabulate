@@ -5,8 +5,9 @@ val junitVersion: String by project
 
 plugins {
     java
-    id("java-library")
     kotlin("jvm")
+    id("java-library")
+    id("org.jetbrains.dokka") version "1.4.32"
     id("pl.allegro.tech.build.axion-release")
     id("maven-publish")
     id("io.github.gradle-nexus.publish-plugin") version("1.0.0")
@@ -32,6 +33,8 @@ allprojects {
 subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "maven-publish")
+    apply(plugin = "java-library")
+    apply(plugin = "org.jetbrains.dokka")
     dependencies {
         implementation(kotlin("stdlib", kotlinVersion))
         implementation("com.google.guava","guava", guavaVersion)
@@ -49,10 +52,16 @@ subprojects {
                 events("passed", "skipped", "failed")
             }
         }
+
+        register<Jar>("dokkaJavadocJar") {
+            from("$buildDir/dokka/javadoc")
+            dependsOn("dokkaJavadoc")
+            archiveClassifier.set("javadoc")
+        }
+
     }
 
     java {
-        withJavadocJar()
         withSourcesJar()
     }
 
@@ -60,6 +69,7 @@ subprojects {
         publications {
             create<MavenPublication>("mavenKotlin") {
                 from(components["java"])
+                artifact(tasks["dokkaJavadocJar"])
                 pom {
                     name.set(project.name)
                     description.set("Kotlin/JVM library to simplify exporting collections of objects into tabular file formats")
@@ -86,11 +96,6 @@ subprojects {
             }
         }
     }
-}
-
-java {
-    withJavadocJar()
-    withSourcesJar()
 }
 
 nexusPublishing {
