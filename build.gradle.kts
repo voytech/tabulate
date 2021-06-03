@@ -67,7 +67,7 @@ subprojects {
 
     publishing {
         publications {
-            create<MavenPublication>("mavenKotlin") {
+            create<MavenPublication>("tabulate") {
                 from(components["java"])
                 artifact(tasks["dokkaJavadocJar"])
                 pom {
@@ -105,7 +105,6 @@ nexusPublishing {
             password.set(System.getenv("SONATYPE_PASSWORD"))
             nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
             snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-            useStaging.set(true)
         }
     }
 }

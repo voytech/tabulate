@@ -1,8 +1,7 @@
-name: Gradle Publish Maven
+name: Gradle Publish Staging Maven
 
 on:
-  release:
-    types: [created]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -19,8 +18,8 @@ jobs:
     - name: Build with Gradle
       run: gradle build
 
-    - name: Publish to maven central
-      run: gradle publishToSonatype closeAndReleaseSonatypeStagingRepository
+    - name: Publish to staging
+      run: gradle publishToSonatype
       env:
         SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
         SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
