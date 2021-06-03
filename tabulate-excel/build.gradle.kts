@@ -13,9 +13,9 @@ scmVersion {
 }
 
 dependencies {
-    implementation(project(":tabulate-core"))
-    implementation("org.apache.poi:poi:$apachePoiVersion")
-    implementation("org.apache.poi:poi-ooxml:$apachePoiVersion")
+    api(project(":tabulate-core"))
+    api("org.apache.poi:poi:$apachePoiVersion")
+    api("org.apache.poi:poi-ooxml:$apachePoiVersion")
     implementation("org.apache.commons:commons-math3:$commonsMathVersion")
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
