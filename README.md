@@ -32,6 +32,28 @@ Tabulate tries to mitigate those little inconveniences by offering You third opt
 
 - You need to export collection into non-tabular format.
 
+## Snapshot repository coordinates
+
+Library is not yet released into maven central.
+Currently you can access its snapshot:
+
+```
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+    }
+}
+
+dependencies {
+    implementation("io.github.voytech","tabulate-excel",tabulateVersion)
+}
+
+```
+
+First 0.1.0 version will not differ much from current snapshot version, and migration to release should be simple.
+I plan to introduce some dependency layout changes. On 0.1.0 tabulate-core and tabulate-* modules will be separated via platform.
+
 ## Key concepts
 
 ### Table model with attributes.
