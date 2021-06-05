@@ -5,21 +5,21 @@ import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
 import io.github.voytech.tabulate.excel.template.wrapper.ApachePoiExcelFacade
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.template.context.RowCellContext
-import io.github.voytech.tabulate.template.operations.BaseCellAttributeRenderOperation
 import io.github.voytech.tabulate.template.operations.AttributeRenderOperationsFactory
+import io.github.voytech.tabulate.template.operations.BaseCellAttributeRenderOperation
 import io.github.voytech.tabulate.template.operations.CellAttributeRenderOperation
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.template.spi.Identifiable
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute as CellAttributeAlias
 
-class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvider<ApachePoiExcelFacade,T> {
+class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvider<T, ApachePoiExcelFacade> {
 
     override fun test(t: Identifiable): Boolean = t.getFormat() == "xlsx"
 
-    override fun getAttributeOperationsFactory(creationContext: ApachePoiExcelFacade): AttributeRenderOperationsFactory<T> {
+    override fun getAttributeOperationsFactory(renderingContext: ApachePoiExcelFacade): AttributeRenderOperationsFactory<T> {
         return object : AttributeRenderOperationsFactory<T> {
             override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<out CellAttributeAlias>> =
-                setOf(SimpleTestCellAttributeRenderOperation(creationContext))
+                setOf(SimpleTestCellAttributeRenderOperation(renderingContext))
         }
     }
 }

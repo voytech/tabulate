@@ -2,44 +2,45 @@ package io.github.voytech.tabulate.template.operations
 
 import io.github.voytech.tabulate.api.builder.TableBuilder
 import io.github.voytech.tabulate.model.Table
-import io.github.voytech.tabulate.template.ResultHandler
 import io.github.voytech.tabulate.template.context.AttributedCell
 import io.github.voytech.tabulate.template.context.AttributedColumn
 import io.github.voytech.tabulate.template.context.AttributedRow
+import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.impl.AttributeAwareTableExportOperations
 import io.github.voytech.tabulate.template.operations.impl.AttributesOperations
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import io.github.voytech.tabulate.template.spi.Identifiable
-import org.reactivestreams.Publisher
 import java.util.*
 
 
 interface TableExportOperations<T, O> {
-    fun initialize(source: Publisher<T>, resultHandler: ResultHandler<T, O>)
+    fun initialize() {}
     fun createTable(builder: TableBuilder<T>): Table<T> = builder.build()
     fun renderColumn(context: AttributedColumn) {}
     fun beginRow(context: AttributedRow<T>) {}
     fun renderRowCell(context: AttributedCell)
     fun endRow(context: AttributedRow<T>) {}
-    fun finish()
+    fun finish(result: O)
 }
 
 interface ExportOperationsFactory<T, O> {
     fun createTableExportOperation(): TableExportOperations<T, O>
 }
 
-abstract class ExportOperationsConfiguringFactory<CTX, T, O> : ExportOperationsProvider<T, O> {
+abstract class ExportOperationsConfiguringFactory<T, O, CTX: RenderingContext> : ExportOperationsProvider<T, O, CTX> {
 
-    protected val renderingContext: CTX by lazy {
+    private val cachedRenderingContext: CTX by lazy {
         createRenderingContext()
     }
 
     private val attributeOperations: AttributesOperations<T> by lazy {
-        registerAttributesOperations(renderingContext)
+        registerAttributesOperations(cachedRenderingContext)
     }
 
     final override fun test(ident: Identifiable): Boolean = getFormat() == ident.getFormat()
+
+    final override fun getRenderingContext(): CTX = cachedRenderingContext
 
     abstract fun createRenderingContext(): CTX
 
@@ -76,7 +77,7 @@ abstract class ExportOperationsConfiguringFactory<CTX, T, O> : ExportOperationsP
         val loader: ServiceLoader<AttributeRenderOperationsProvider<*, *>> =
             ServiceLoader.load(AttributeRenderOperationsProvider::class.java)
         loader.filter { it.test(this) }
-            .map { it as AttributeRenderOperationsProvider<CTX, T>? }
+            .map { it as AttributeRenderOperationsProvider<T, CTX>? }
             .forEach {
                 registerAttributesOperations(attributeOperations, it!!.getAttributeOperationsFactory(creationContext))
             }

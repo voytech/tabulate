@@ -4,6 +4,7 @@ import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.attributes.cell.Color
 import io.github.voytech.tabulate.template.context.CellValue
 import io.github.voytech.tabulate.template.context.Coordinates
+import io.github.voytech.tabulate.template.context.WritableRenderingContext
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.util.IOUtils
@@ -16,9 +17,10 @@ import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileInputStream
 import java.io.InputStream
+import java.io.OutputStream
 
 
-class ApachePoiExcelFacade {
+class ApachePoiExcelFacade : WritableRenderingContext<OutputStream> {
 
     private var adaptee: SXSSFWorkbook? = null
 
@@ -202,6 +204,10 @@ class ApachePoiExcelFacade {
     companion object {
         fun color(color: Color): XSSFColor =
             XSSFColor(byteArrayOf(color.r.toByte(), color.g.toByte(), color.b.toByte()), null)
+    }
+
+    override fun write(output: OutputStream) {
+        workbook().write(output)
     }
 
 }

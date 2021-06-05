@@ -5,78 +5,68 @@ import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.model.ColumnDef
 import io.github.voytech.tabulate.model.NextId
-import io.github.voytech.tabulate.template.context.AttributedRow
-import io.github.voytech.tabulate.template.context.ColumnRenderPhase
-import io.github.voytech.tabulate.template.context.IndexLabel
-import io.github.voytech.tabulate.template.context.TableExportingState
+import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.iterators.OperationContextIterator
 import io.github.voytech.tabulate.template.operations.TableExportOperations
 import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
-import io.github.voytech.tabulate.template.source.CollectionSource
-import io.github.voytech.tabulate.template.source.EmptySource
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import io.github.voytech.tabulate.template.spi.Identifiable
+import org.reactivestreams.Processor
 import org.reactivestreams.Publisher
-import org.reactivestreams.Subscriber
-import org.reactivestreams.Subscription
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.util.*
 
+interface TableExportTemplateApi<T, O> {
+    fun begin()
+    fun renderNextRow(record: T)
+    fun end(result: O)
+}
+
 /**
- * Tabulate frontend facade. Role of this class is to orchestrate and bind all things together. Its like an entry point.
+ * An entry point for exporting. Role of this class is to orchestrate and bind all things together.
  * @author Wojciech Mąka
  */
-open class TableExportTemplate<T, O>() {
+open class TableExportTemplate<T, O, CTX : RenderingContext>() {
 
     private lateinit var ops: TableExportOperations<T, O>
 
-    private lateinit var resultHandler: ResultHandler<T, O>
+    private lateinit var renderingContext: CTX
 
-    constructor(output: TabulationFormat<T, O>) : this() {
-        this.ops = resolveExportOperationsFactory(output)!!.create()
-        this.resultHandler = output.resultHandler
-
+    constructor(output: TabulationFormat) : this() {
+        resolveExportOperationsFactory(output).let {
+            this.ops = it.create()
+            this.renderingContext = it.getRenderingContext()
+        }
     }
 
-    constructor(delegate: TableExportOperations<T, O>, resultHandler: ResultHandler<T, O>) : this() {
+    constructor(delegate: TableExportOperations<T, O>, ctx: CTX) : this() {
         this.ops = delegate
-        this.resultHandler = resultHandler
+        this.renderingContext = ctx
     }
 
-    @Suppress("ReactiveStreamsSubscriberImplementation")
-    inner class UnboundSubscriber(
+    inner class TableExportTemplateApiImpl(
         private val state: TableExportingState<T>,
-        private val resolver: BufferingRowContextResolver<T> = BufferingRowContextResolver(state.tableModel),
+        private val resolver: BufferingRowContextResolver<T> = BufferingRowContextResolver(),
         private var iterator: OperationContextIterator<T, AttributedRow<T>> = OperationContextIterator(resolver),
-    ) : Subscriber<T> {
+    ) : TableExportTemplateApi<T, O> {
 
-        init {
-            //TODO remove this receiver interface and pass directly via constructor on resolver and iterator.
+        override fun begin() {
             iterator.setState(state)
-        }
-
-        override fun onSubscribe(subscription: Subscription) {
             renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
-            subscription.request(UNBOUND)
-
         }
 
-        override fun onNext(record: T) {
+        override fun renderNextRow(record: T) {
             resolver.buffer(record)
             renderNextRow()
         }
 
-        override fun onError(t: Throwable?) {
-            TODO("Not yet implemented - renderOnError ?")
-        }
-
-        override fun onComplete() {
+        override fun end(result: O) {
             renderBufferedRows()
             renderRowsAfterDataProcessed()
             renderColumns(state, ColumnRenderPhase.AFTER_LAST_ROW)
-            ops.finish()
+            ops.finish(result)
         }
 
         private fun renderBufferedRows() {
@@ -100,27 +90,44 @@ open class TableExportTemplate<T, O>() {
         }
     }
 
-    private fun bind(tableBuilder: TableBuilder<T>, source: Publisher<T>) {
-        ops.createTable(tableBuilder).let { table ->
+    private fun createTable(tableBuilder: TableBuilder<T>): TableExportingState<T> {
+        return ops.createTable(tableBuilder).let { table ->
             TableExportingState(
                 tableModel = table,
                 tableName = table.name ?: "table${NextId.nextId()}",
                 firstRow = table.firstRow,
                 firstColumn = table.firstColumn
-            ).also { source.subscribe(UnboundSubscriber(it)) }
+            )
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun resolveExportOperationsFactory(id: Identifiable): ExportOperationsProvider<T, O>? {
-        val loader: ServiceLoader<ExportOperationsProvider<*, *>> =
+    private fun resolveExportOperationsFactory(id: Identifiable): ExportOperationsProvider<T, O, CTX> {
+        val loader: ServiceLoader<ExportOperationsProvider<*, *, *>> =
             ServiceLoader.load(ExportOperationsProvider::class.java)
-        return loader.find { it.test(id) } as ExportOperationsProvider<T, O>?
+        return loader.find { it.test(id) } as ExportOperationsProvider<T, O, CTX>
     }
 
-    fun export(tableBuilder: TableBuilder<T>, source: Publisher<T>) {
-        ops.initialize(source, resultHandler)
-        bind(tableBuilder, source)
+    fun export(source: Publisher<T>, handler: ReactiveTabulationHandler<T, O, CTX>, tableBuilder: TableBuilder<T>) {
+        ops.initialize()
+        createTable(tableBuilder).let {
+            handler.orchestrate(
+                source,
+                TableExportTemplateApiImpl(it),
+                renderingContext
+            )
+        }
+    }
+
+    fun export(source: Iterable<T>, handler: TabulationHandler<T, O, CTX>, tableBuilder: TableBuilder<T>) {
+        ops.initialize()
+        createTable(tableBuilder).let {
+            handler.orchestrate(
+                source,
+                TableExportTemplateApiImpl(it),
+                renderingContext
+            )
+        }
     }
 
     private fun renderColumns(stateAndAttributes: TableExportingState<T>, renderPhase: ColumnRenderPhase) {
@@ -139,56 +146,71 @@ open class TableExportTemplate<T, O>() {
         }
     }
 
-    private fun renderNextRow(
-        tableExportingState: TableExportingState<T>,
-        rowContext: AttributedRow<T>,
-    ) {
+    private fun renderNextRow(tableExportingState: TableExportingState<T>, rowContext: AttributedRow<T>) {
         ops.beginRow(rowContext)
         renderRowCells(tableExportingState, rowContext)
         ops.endRow(rowContext)
     }
+}
 
-    companion object {
-        private const val UNBOUND = Long.MAX_VALUE
+fun <T, O> Publisher<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
+    if (output is Processor<*,*>) {
+        TODO("Not implemented stream composition")
+    } else {
+        TableExportTemplate<T, O, WritableRenderingContext<O>>(format).export(this, BaseSubscribingTabulationHandler(output), table(block))
     }
 }
 
-fun <T, O> Publisher<T>.tabulate(format: TabulationFormat<T, O>, block: TableBuilderApi<T>.() -> Unit) {
-    TableExportTemplate(format).export(table(block), this)
+fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
+    TableExportTemplate<T, O, WritableRenderingContext<O>>(format).export(this, BaseTabulationHandler(output), table(block))
 }
 
-fun <T, O> Collection<T>.tabulate(format: TabulationFormat<T, O>, block: TableBuilderApi<T>.() -> Unit) {
-    TableExportTemplate(format).export(table(block), CollectionSource(this))
-}
-
-fun <T> Collection<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> Unit) {
+fun <T> Iterable<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> Unit) {
     val file = File(fileName)
-    TableExportTemplate(TabulationFormat(file.extension) { _: Publisher<T> -> FileOutputStream(file) }).export(table(
-        block),
-        CollectionSource(this))
+    val ext = file.extension
+    if (ext.isNotBlank()) {
+        FileOutputStream(file).use {
+            TableExportTemplate<
+                    T,
+                    FileOutputStream,
+                    WritableRenderingContext<FileOutputStream>>(TabulationFormat(file.extension)).export(
+                this,
+                BaseTabulationHandler(it),
+                table(block)
+            )
+        }
+    } else error("Cannot resolve tabulation format")
 }
 
 fun <T, O> Publisher<T>.tabulate(
     operations: TableExportOperations<T, O>,
-    resultHandler: ResultHandler<T, O>,
+    output: O,
     block: TableBuilderApi<T>.() -> Unit,
 ) {
-    TableExportTemplate(operations, resultHandler).export(table(block), this)
+   // TableExportTemplate(operations, VoidRenderingContext()).export(this, BaseSubscribingTabulationHandler(output), table(block))
 }
 
-fun <T, O> Collection<T>.tabulate(
+fun <T, O> Iterable<T>.tabulate(
     operations: TableExportOperations<T, O>,
-    resultHandler: ResultHandler<T, O>,
+    output: O,
     block: TableBuilderApi<T>.() -> Unit,
 ) {
-    TableExportTemplate(operations, resultHandler).export(table(block), CollectionSource(this))
+    TableExportTemplate(operations,VoidRenderingContext()).export(this, NoContextBaseTabulationHandler(output), table(block))
 }
 
 fun <T> TableBuilder<T>.export(operations: TableExportOperations<T, OutputStream>, stream: OutputStream) {
-    TableExportTemplate(operations) { stream }.export(this, EmptySource())
+    TableExportTemplate(operations, VoidRenderingContext()).export(emptyList(), NoContextBaseTabulationHandler(stream), this)
 }
 
 fun <T> TableBuilder<T>.export(file: File) {
-    TableExportTemplate(TabulationFormat(file.extension) { _: Publisher<T> -> FileOutputStream(file) }).export(this,
-        EmptySource())
+    val ext = file.extension
+    if (ext.isNotBlank()) {
+        FileOutputStream(file).use {
+            TableExportTemplate<T, OutputStream, WritableRenderingContext<OutputStream>>(TabulationFormat(file.extension)).export(
+                emptyList(),
+                BaseTabulationHandler(it),
+                this
+            )
+        }
+    } else error("Cannot resolve tabulation format")
 }
