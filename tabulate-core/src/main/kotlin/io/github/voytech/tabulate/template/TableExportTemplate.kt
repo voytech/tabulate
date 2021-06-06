@@ -6,9 +6,7 @@ import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.model.ColumnDef
 import io.github.voytech.tabulate.model.NextId
 import io.github.voytech.tabulate.template.context.*
-import io.github.voytech.tabulate.template.iterators.OperationContextIterator
 import io.github.voytech.tabulate.template.operations.TableExportOperations
-import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import io.github.voytech.tabulate.template.spi.Identifiable
 import org.reactivestreams.Processor
@@ -46,47 +44,17 @@ open class TableExportTemplate<T, O, CTX : RenderingContext>() {
         this.renderingContext = ctx
     }
 
-    inner class TableExportTemplateApiImpl(
-        private val state: TableExportingState<T>,
-        private val resolver: BufferingRowContextResolver<T> = BufferingRowContextResolver(),
-        private var iterator: OperationContextIterator<T, AttributedRow<T>> = OperationContextIterator(resolver),
-    ) : TableExportTemplateApi<T, O> {
+    inner class TableExportTemplateApiImpl(private val state: TableExportingState<T>) : TableExportTemplateApi<T, O> {
 
-        override fun begin() {
-            iterator.setState(state)
-            renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
-        }
+        override fun begin() = renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
 
-        override fun renderNextRow(record: T) {
-            resolver.buffer(record)
-            renderNextRow()
-        }
+        override fun renderNextRow(record: T) = bufferRecordAndRenderRow(state, record)
 
         override fun end(result: O) {
-            renderBufferedRows()
-            renderRowsAfterDataProcessed()
+            renderRemainingBufferedRows(state)
+            renderRowsAfterDataProcessed(state)
             renderColumns(state, ColumnRenderPhase.AFTER_LAST_ROW)
             ops.finish(result)
-        }
-
-        private fun renderBufferedRows() {
-            while (iterator.hasNext()) {
-                renderNextRow()
-            }
-        }
-
-        private fun renderRowsAfterDataProcessed() {
-            state.mark(IndexLabel.DATASET_PROCESSED)
-            iterator = OperationContextIterator(resolver).also { it.setState(state) }
-            while (iterator.hasNext()) {
-                renderNextRow()
-            }
-        }
-
-        private fun renderNextRow() {
-            if (iterator.hasNext()) {
-                renderNextRow(state, iterator.next())
-            }
         }
     }
 
@@ -130,39 +98,61 @@ open class TableExportTemplate<T, O, CTX : RenderingContext>() {
         }
     }
 
-    private fun renderColumns(stateAndAttributes: TableExportingState<T>, renderPhase: ColumnRenderPhase) {
-        stateAndAttributes.tableModel.forEachColumn { columnIndex: Int, column: ColumnDef<T> ->
+    private fun bufferRecordAndRenderRow(state: TableExportingState<T>, record: T) {
+        state.bufferAndNext(record)?.let { renderRow(state, it) }
+    }
+
+    private fun renderRemainingBufferedRows(state: TableExportingState<T>) {
+        do {
+            val context = state.getNextRowContext()?.let {
+                renderRow(state, it)
+                it
+            }
+        } while (context != null)
+    }
+
+    private fun renderRowsAfterDataProcessed(state: TableExportingState<T>) {
+        state.mark(IndexLabel.DATASET_PROCESSED)
+        renderRemainingBufferedRows(state)
+    }
+
+    private fun renderColumns(state: TableExportingState<T>, renderPhase: ColumnRenderPhase) {
+        state.tableModel.forEachColumn { columnIndex: Int, column: ColumnDef<T> ->
             ops.renderColumn(
-                stateAndAttributes.createColumnContext(IndexedValue(column.index ?: columnIndex, column), renderPhase)
+                state.createColumnContext(IndexedValue(column.index ?: columnIndex, column), renderPhase)
             )
         }
     }
 
-    private fun renderRowCells(tableExportingState: TableExportingState<T>, context: AttributedRow<T>) {
-        tableExportingState.tableModel.forEachColumn { column: ColumnDef<T> ->
+    private fun renderRowCells(state: TableExportingState<T>, context: AttributedRow<T>) {
+        state.tableModel.forEachColumn { column: ColumnDef<T> ->
             if (context.rowCellValues.containsKey(column.id)) {
                 ops.renderRowCell(context.rowCellValues[column.id]!!)
             }
         }
     }
 
-    private fun renderNextRow(tableExportingState: TableExportingState<T>, rowContext: AttributedRow<T>) {
+    private fun renderRow(state: TableExportingState<T>, rowContext: AttributedRow<T>) {
         ops.beginRow(rowContext)
-        renderRowCells(tableExportingState, rowContext)
+        renderRowCells(state, rowContext)
         ops.endRow(rowContext)
     }
 }
 
 fun <T, O> Publisher<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
-    if (output is Processor<*,*>) {
+    if (output is Processor<*, *>) {
         TODO("Not implemented stream composition")
     } else {
-        TableExportTemplate<T, O, WritableRenderingContext<O>>(format).export(this, BaseSubscribingTabulationHandler(output), table(block))
+        TableExportTemplate<T, O, WritableRenderingContext<O>>(format).export(this,
+            BaseSubscribingTabulationHandler(output),
+            table(block))
     }
 }
 
 fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
-    TableExportTemplate<T, O, WritableRenderingContext<O>>(format).export(this, BaseTabulationHandler(output), table(block))
+    TableExportTemplate<T, O, WritableRenderingContext<O>>(format).export(this,
+        BaseTabulationHandler(output),
+        table(block))
 }
 
 fun <T> Iterable<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> Unit) {
@@ -187,7 +177,7 @@ fun <T, O> Publisher<T>.tabulate(
     output: O,
     block: TableBuilderApi<T>.() -> Unit,
 ) {
-   // TableExportTemplate(operations, VoidRenderingContext()).export(this, BaseSubscribingTabulationHandler(output), table(block))
+    // TableExportTemplate(operations, VoidRenderingContext()).export(this, BaseSubscribingTabulationHandler(output), table(block))
 }
 
 fun <T, O> Iterable<T>.tabulate(
@@ -195,11 +185,15 @@ fun <T, O> Iterable<T>.tabulate(
     output: O,
     block: TableBuilderApi<T>.() -> Unit,
 ) {
-    TableExportTemplate(operations,VoidRenderingContext()).export(this, NoContextBaseTabulationHandler(output), table(block))
+    TableExportTemplate(operations, VoidRenderingContext()).export(this,
+        NoContextBaseTabulationHandler(output),
+        table(block))
 }
 
 fun <T> TableBuilder<T>.export(operations: TableExportOperations<T, OutputStream>, stream: OutputStream) {
-    TableExportTemplate(operations, VoidRenderingContext()).export(emptyList(), NoContextBaseTabulationHandler(stream), this)
+    TableExportTemplate(operations, VoidRenderingContext()).export(emptyList(),
+        NoContextBaseTabulationHandler(stream),
+        this)
 }
 
 fun <T> TableBuilder<T>.export(file: File) {
