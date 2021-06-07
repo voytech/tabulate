@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.template
 
 import io.github.voytech.tabulate.template.context.VoidRenderingContext
 
-class NoContextBaseTabulationHandler<T, O>(private val output: O) : TabulationHandler<T, O, VoidRenderingContext> {
+class NoContextBaseTabulationHandler<T, O>(private val output: O) : TabulationHandler<Iterable<T>, T, O, VoidRenderingContext> {
     override fun orchestrate(
         source: Iterable<T>,
         templateApi: TableExportTemplateApi<T, O>,

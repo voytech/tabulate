@@ -1,11 +1,11 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.template.context.WritableRenderingContext
+import io.github.voytech.tabulate.template.context.FlushingRenderingContext
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 
-class BaseSubscribingTabulationHandler<T, O>(private val output: O) : ReactiveTabulationHandler<T, O, WritableRenderingContext<O>> {
+class SubscribingTabulationHandler<T, O>(private val output: O) : TabulationHandler<Publisher<T>,T, O, FlushingRenderingContext<O>> {
 
     inner class UnboundSubscriber(private val templateApi: TableExportTemplateApi<T, O>): Subscriber<T> {
 
@@ -30,7 +30,7 @@ class BaseSubscribingTabulationHandler<T, O>(private val output: O) : ReactiveTa
     override fun orchestrate(
         source: Publisher<T>,
         templateApi: TableExportTemplateApi<T, O>,
-        renderingContext: WritableRenderingContext<O>,
+        renderingContext: FlushingRenderingContext<O>,
     ): O {
         source.subscribe(UnboundSubscriber(templateApi))
         return output

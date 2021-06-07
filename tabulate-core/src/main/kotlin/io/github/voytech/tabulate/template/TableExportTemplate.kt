@@ -76,25 +76,10 @@ open class TableExportTemplate<T, O, CTX : RenderingContext>() {
         return loader.find { it.test(id) } as ExportOperationsProvider<T, O, CTX>
     }
 
-    fun export(source: Publisher<T>, handler: ReactiveTabulationHandler<T, O, CTX>, tableBuilder: TableBuilder<T>) {
+    fun <I> export(source: I, handler: TabulationHandler<I, T, O, CTX>, tableBuilder: TableBuilder<T>) {
         ops.initialize()
         createTable(tableBuilder).let {
-            handler.orchestrate(
-                source,
-                TableExportTemplateApiImpl(it),
-                renderingContext
-            )
-        }
-    }
-
-    fun export(source: Iterable<T>, handler: TabulationHandler<T, O, CTX>, tableBuilder: TableBuilder<T>) {
-        ops.initialize()
-        createTable(tableBuilder).let {
-            handler.orchestrate(
-                source,
-                TableExportTemplateApiImpl(it),
-                renderingContext
-            )
+            handler.orchestrate(source, TableExportTemplateApiImpl(it), renderingContext)
         }
     }
 
@@ -143,15 +128,15 @@ fun <T, O> Publisher<T>.tabulate(format: TabulationFormat, output: O, block: Tab
     if (output is Processor<*, *>) {
         TODO("Not implemented stream composition")
     } else {
-        TableExportTemplate<T, O, WritableRenderingContext<O>>(format).export(this,
-            BaseSubscribingTabulationHandler(output),
+        TableExportTemplate<T, O, FlushingRenderingContext<O>>(format).export(this,
+            SubscribingTabulationHandler(output),
             table(block))
     }
 }
 
 fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
-    TableExportTemplate<T, O, WritableRenderingContext<O>>(format).export(this,
-        BaseTabulationHandler(output),
+    TableExportTemplate<T, O, FlushingRenderingContext<O>>(format).export(this,
+        IteratingTabulationHandler(output),
         table(block))
 }
 
@@ -160,12 +145,9 @@ fun <T> Iterable<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> U
     val ext = file.extension
     if (ext.isNotBlank()) {
         FileOutputStream(file).use {
-            TableExportTemplate<
-                    T,
-                    FileOutputStream,
-                    WritableRenderingContext<FileOutputStream>>(TabulationFormat(file.extension)).export(
+            TableExportTemplate<T, FileOutputStream, FlushingRenderingContext<FileOutputStream>>(TabulationFormat(file.extension)).export(
                 this,
-                BaseTabulationHandler(it),
+                IteratingTabulationHandler(it),
                 table(block)
             )
         }
@@ -200,9 +182,9 @@ fun <T> TableBuilder<T>.export(file: File) {
     val ext = file.extension
     if (ext.isNotBlank()) {
         FileOutputStream(file).use {
-            TableExportTemplate<T, OutputStream, WritableRenderingContext<OutputStream>>(TabulationFormat(file.extension)).export(
+            TableExportTemplate<T, OutputStream, FlushingRenderingContext<OutputStream>>(TabulationFormat(file.extension)).export(
                 emptyList(),
-                BaseTabulationHandler(it),
+                IteratingTabulationHandler(it),
                 this
             )
         }

@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.attributes.cell.Color
 import io.github.voytech.tabulate.template.context.CellValue
 import io.github.voytech.tabulate.template.context.Coordinates
-import io.github.voytech.tabulate.template.context.WritableRenderingContext
+import io.github.voytech.tabulate.template.context.FlushingRenderingContext
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.util.IOUtils
@@ -20,7 +20,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 
-class ApachePoiExcelFacade : WritableRenderingContext<OutputStream> {
+class ApachePoiExcelFacade : FlushingRenderingContext<OutputStream> {
 
     private var adaptee: SXSSFWorkbook? = null
 
