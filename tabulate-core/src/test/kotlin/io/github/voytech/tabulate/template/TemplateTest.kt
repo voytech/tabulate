@@ -2,14 +2,13 @@ package io.github.voytech.tabulate.template
 
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
-import io.github.voytech.tabulate.utils.Mocks.mock
 import org.junit.jupiter.api.Test
 
 class TemplateTest {
 
     @Test
     fun `should tabulate collection`() {
-        Products.CAMERAS.tabulate(mock<Product>().createTableExportOperation(), Unit) {
+        Products.CAMERAS.tabulate(TabulationFormat("mock"),Unit) {
             name = "Products table"
             columns {
                 column(Product::code)

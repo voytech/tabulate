@@ -9,7 +9,7 @@ class IteratingTabulationHandler<T, O>(private val output: O) : TabulationHandle
         renderingContext: FlushingRenderingContext<O>,
     ): O {
         templateApi.begin()
-        source.forEach{ templateApi.renderNextRow(it) }
+        source.forEach{ templateApi.nextRow(it) }
         templateApi.end(output)
         return output
     }

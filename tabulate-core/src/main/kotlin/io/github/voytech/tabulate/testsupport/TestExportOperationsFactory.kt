@@ -1,11 +1,11 @@
-package io.github.voytech.tabulate.utils
+package io.github.voytech.tabulate.testsupport
 
 import io.github.voytech.tabulate.template.context.AttributedCell
-import io.github.voytech.tabulate.template.context.VoidRenderingContext
+import io.github.voytech.tabulate.template.context.FlushingRenderingContext
 import io.github.voytech.tabulate.template.operations.ExportOperationsConfiguringFactory
 import io.github.voytech.tabulate.template.operations.TableExportOperations
 
-class MockExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFactory<T, Unit, VoidRenderingContext>() {
+class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, Unit, FlushingRenderingContext<Unit>>() {
 
     override fun getFormat() = "mock"
 
@@ -21,7 +21,6 @@ class MockExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFac
 
     }
 
-    override fun createRenderingContext(): VoidRenderingContext  = VoidRenderingContext()
-
+    override fun createRenderingContext(): FlushingRenderingContext<Unit> = FlushingRenderingContext { }
 
 }

@@ -18,7 +18,7 @@ import java.util.*
 
 interface TableExportTemplateApi<T, O> {
     fun begin()
-    fun renderNextRow(record: T)
+    fun nextRow(record: T)
     fun end(result: O)
 }
 
@@ -26,29 +26,21 @@ interface TableExportTemplateApi<T, O> {
  * An entry point for exporting. Role of this class is to orchestrate and bind all things together.
  * @author Wojciech Mąka
  */
-open class TableExportTemplate<T, O, CTX : RenderingContext>() {
+class TableExportTemplate<T, O, CTX : RenderingContext>(private val format: TabulationFormat) {
 
-    private lateinit var ops: TableExportOperations<T, O>
-
-    private lateinit var renderingContext: CTX
-
-    constructor(output: TabulationFormat) : this() {
-        resolveExportOperationsFactory(output).let {
-            this.ops = it.create()
-            this.renderingContext = it.getRenderingContext()
-        }
+    private val provider: ExportOperationsProvider<T, O, CTX> by lazy {
+        resolveExportOperationsFactory(format)
     }
 
-    constructor(delegate: TableExportOperations<T, O>, ctx: CTX) : this() {
-        this.ops = delegate
-        this.renderingContext = ctx
+    private val ops: TableExportOperations<T,O> by lazy {
+        provider.create()
     }
 
     inner class TableExportTemplateApiImpl(private val state: TableExportingState<T>) : TableExportTemplateApi<T, O> {
 
         override fun begin() = renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
 
-        override fun renderNextRow(record: T) = bufferRecordAndRenderRow(state, record)
+        override fun nextRow(record: T) = bufferRecordAndRenderRow(state, record)
 
         override fun end(result: O) {
             renderRemainingBufferedRows(state)
@@ -79,7 +71,7 @@ open class TableExportTemplate<T, O, CTX : RenderingContext>() {
     fun <I> export(source: I, handler: TabulationHandler<I, T, O, CTX>, tableBuilder: TableBuilder<T>) {
         ops.initialize()
         createTable(tableBuilder).let {
-            handler.orchestrate(source, TableExportTemplateApiImpl(it), renderingContext)
+            handler.orchestrate(source, TableExportTemplateApiImpl(it), provider.getRenderingContext())
         }
     }
 
@@ -128,54 +120,19 @@ fun <T, O> Publisher<T>.tabulate(format: TabulationFormat, output: O, block: Tab
     if (output is Processor<*, *>) {
         TODO("Not implemented stream composition")
     } else {
-        TableExportTemplate<T, O, FlushingRenderingContext<O>>(format).export(this,
+        TableExportTemplate<T, O, FlushingRenderingContext<O>>(format).export(
+            this,
             SubscribingTabulationHandler(output),
             table(block))
     }
 }
 
-fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
-    TableExportTemplate<T, O, FlushingRenderingContext<O>>(format).export(this,
+fun <T, O> TableBuilder<T>.export(format: TabulationFormat, output: O) {
+    TableExportTemplate<T, O, FlushingRenderingContext<O>>(format).export(
+        emptyList(),
         IteratingTabulationHandler(output),
-        table(block))
-}
-
-fun <T> Iterable<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> Unit) {
-    val file = File(fileName)
-    val ext = file.extension
-    if (ext.isNotBlank()) {
-        FileOutputStream(file).use {
-            TableExportTemplate<T, FileOutputStream, FlushingRenderingContext<FileOutputStream>>(TabulationFormat(file.extension)).export(
-                this,
-                IteratingTabulationHandler(it),
-                table(block)
-            )
-        }
-    } else error("Cannot resolve tabulation format")
-}
-
-fun <T, O> Publisher<T>.tabulate(
-    operations: TableExportOperations<T, O>,
-    output: O,
-    block: TableBuilderApi<T>.() -> Unit,
-) {
-    // TableExportTemplate(operations, VoidRenderingContext()).export(this, BaseSubscribingTabulationHandler(output), table(block))
-}
-
-fun <T, O> Iterable<T>.tabulate(
-    operations: TableExportOperations<T, O>,
-    output: O,
-    block: TableBuilderApi<T>.() -> Unit,
-) {
-    TableExportTemplate(operations, VoidRenderingContext()).export(this,
-        NoContextBaseTabulationHandler(output),
-        table(block))
-}
-
-fun <T> TableBuilder<T>.export(operations: TableExportOperations<T, OutputStream>, stream: OutputStream) {
-    TableExportTemplate(operations, VoidRenderingContext()).export(emptyList(),
-        NoContextBaseTabulationHandler(stream),
-        this)
+        this
+    )
 }
 
 fun <T> TableBuilder<T>.export(file: File) {
@@ -190,3 +147,26 @@ fun <T> TableBuilder<T>.export(file: File) {
         }
     } else error("Cannot resolve tabulation format")
 }
+
+fun <T> TableBuilder<T>.export(fileName: String) = export(File(fileName))
+
+fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
+    TableExportTemplate<T, O, FlushingRenderingContext<O>>(format).export(this,
+        IteratingTabulationHandler(output),
+        table(block))
+}
+
+fun <T> Iterable<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) {
+    val ext = file.extension
+    if (ext.isNotBlank()) {
+        FileOutputStream(file).use {
+            TableExportTemplate<T, FileOutputStream, FlushingRenderingContext<FileOutputStream>>(TabulationFormat(file.extension)).export(
+                this,
+                IteratingTabulationHandler(it),
+                table(block)
+            )
+        }
+    } else error("Cannot resolve tabulation format")
+}
+
+fun <T> Iterable<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> Unit) = tabulate(File(fileName), block)

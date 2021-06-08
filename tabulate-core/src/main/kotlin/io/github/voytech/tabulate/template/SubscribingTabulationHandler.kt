@@ -15,7 +15,7 @@ class SubscribingTabulationHandler<T, O>(private val output: O) : TabulationHand
         }
 
         override fun onNext(record: T) {
-            templateApi.renderNextRow(record)
+            templateApi.nextRow(record)
         }
 
         override fun onError(t: Throwable?) {

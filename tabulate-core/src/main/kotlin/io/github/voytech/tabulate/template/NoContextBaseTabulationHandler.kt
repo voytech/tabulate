@@ -9,7 +9,7 @@ class NoContextBaseTabulationHandler<T, O>(private val output: O) : TabulationHa
         renderingContext: VoidRenderingContext,
     ): O {
         templateApi.begin()
-        source.forEach{ templateApi.renderNextRow(it) }
+        source.forEach{ templateApi.nextRow(it) }
         templateApi.end(output)
         return output
     }
