@@ -12,7 +12,6 @@ import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
-import io.github.voytech.tabulate.template.ResultHandler
 import io.github.voytech.tabulate.template.context.AttributedCell
 import io.github.voytech.tabulate.template.context.AttributedRow
 import io.github.voytech.tabulate.template.context.RowCellContext
@@ -21,12 +20,9 @@ import io.github.voytech.tabulate.template.operations.impl.ensureAttributesCache
 import io.github.voytech.tabulate.template.operations.impl.putCachedValueIfAbsent
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.xssf.streaming.SXSSFCell
-import org.reactivestreams.Publisher
 import java.io.OutputStream
 
-class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<ApachePoiExcelFacade, T, OutputStream>() {
-
-    private lateinit var stream: OutputStream
+class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T, OutputStream, ApachePoiExcelFacade>() {
 
     override fun getFormat(): String = "xlsx"
 
@@ -34,19 +30,18 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
 
     override fun createTableExportOperation(): TableExportOperations<T, OutputStream> = object: TableExportOperations<T, OutputStream> {
 
-        override fun initialize(source: Publisher<T>, resultHandler: ResultHandler<T, OutputStream>) {
-            renderingContext.createWorkbook()
-            stream = resultHandler.createResult(source)
+        override fun initialize() {
+            getRenderingContext().createWorkbook()
         }
 
         override fun createTable(builder: TableBuilder<T>): Table<T> {
             return builder.build().also {
-                renderingContext.assertSheet(it.name!!)
+                getRenderingContext().assertSheet(it.name!!)
             }
         }
 
         override fun beginRow(context: AttributedRow<T>) {
-            renderingContext.assertRow(context.getTableId(), context.rowIndex)
+            getRenderingContext().assertRow(context.getTableId(), context.rowIndex)
         }
 
         override fun renderRowCell(context: AttributedCell) {
@@ -78,7 +73,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
                 }
             }.also { _ ->
                 context.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.let {
-                    renderingContext.mergeCells(
+                    getRenderingContext().mergeCells(
                         context.getTableId(),
                         context.rowIndex,
                         context.columnIndex,
@@ -90,7 +85,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
         }
 
         private fun String.createImageCell(context: AttributedCell) {
-            renderingContext.createImageCell(
+            getRenderingContext().createImageCell(
                 context.getTableId(),
                 context.rowIndex,
                 context.columnIndex,
@@ -101,7 +96,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
         }
 
         private fun ByteArray.createImageCell(context: AttributedCell) {
-            renderingContext.createImageCell(
+            getRenderingContext().createImageCell(
                 context.getTableId(),
                 context.rowIndex,
                 context.columnIndex,
@@ -112,14 +107,14 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<Ap
         }
 
         private fun ensureCell(context: AttributedCell, block: (SXSSFCell.() -> Unit)) {
-            renderingContext.assertCell(context.getTableId(), context.rowIndex, context.columnIndex) {
+            getRenderingContext().assertCell(context.getTableId(), context.rowIndex, context.columnIndex) {
                 it.apply(block)
             }
         }
 
-        override fun finish() {
-            renderingContext.workbook().run {
-                write(stream)
+        override fun finish(result: OutputStream) {
+            getRenderingContext().workbook().run {
+                write(result)
                 close()
             }
         }

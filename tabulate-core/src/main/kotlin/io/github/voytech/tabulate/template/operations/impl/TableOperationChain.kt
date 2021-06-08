@@ -1,11 +1,9 @@
 package io.github.voytech.tabulate.template.operations.impl
 
-import io.github.voytech.tabulate.template.ResultHandler
 import io.github.voytech.tabulate.template.context.AttributedCell
 import io.github.voytech.tabulate.template.context.AttributedColumn
 import io.github.voytech.tabulate.template.context.AttributedRow
 import io.github.voytech.tabulate.template.operations.TableExportOperations
-import org.reactivestreams.Publisher
 
 class EmptyOperationChainException : RuntimeException("There is no export operation in the chain.")
 
@@ -32,11 +30,7 @@ class TableExportOperationsChain<T,O>(
         chain.forEach { it.renderRowCell(context) }
     }
 
-    override fun initialize(source: Publisher<T>, resultHandler: ResultHandler<T, O>) {
-        TODO("Not yet implemented")
-    }
-
-    override fun finish() {
+    override fun finish(result: O) {
         TODO("Not yet implemented")
     }
 

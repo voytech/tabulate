@@ -254,23 +254,3 @@ class TemplateFileAttributeRenderOperation(override val renderingContext: Apache
     }
 }
 
-internal fun tableAttributesOperations(adaptee: ApachePoiExcelFacade) = setOf(
-    FilterAndSortTableAttributeRenderOperation(adaptee),
-    TemplateFileAttributeRenderOperation(adaptee)
-)
-
-internal fun <T> rowAttributesOperations(adaptee: ApachePoiExcelFacade) = setOf(
-    RowHeightAttributeRenderOperation<T>(adaptee)
-)
-
-internal fun cellAttributesOperations(adaptee: ApachePoiExcelFacade) = setOf(
-    CellTextStylesAttributeRenderOperation(adaptee),
-    CellBackgroundAttributeRenderOperation(adaptee),
-    CellBordersAttributeRenderOperation(adaptee),
-    CellAlignmentAttributeRenderOperation(adaptee),
-    CellDataFormatAttributeRenderOperation(adaptee),
-)
-
-internal fun columnAttributesOperations(adaptee: ApachePoiExcelFacade) = setOf(
-    ColumnWidthAttributeRenderOperation(adaptee)
-)

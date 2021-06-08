@@ -9,10 +9,11 @@ import io.github.voytech.tabulate.template.context.ExportingStateReceiver
 import io.github.voytech.tabulate.template.context.RowIndex
 import io.github.voytech.tabulate.template.context.TableExportingState
 
-abstract class AbstractRowContextResolver<T>(private val tableModel: Table<T>) :
+abstract class AbstractRowContextResolver<T> :
     IndexedContextResolver<T, AttributedRow<T>>, ExportingStateReceiver<T> {
 
     private lateinit var tableExportingState: TableExportingState<T>
+    private lateinit var tableModel: Table<T>
 
     private fun computeCells(rowDefinitions: Set<RowDef<T>>): Map<ColumnKey<T>, CellDef<T>> {
         return rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })
@@ -85,6 +86,7 @@ abstract class AbstractRowContextResolver<T>(private val tableModel: Table<T>) :
 
     override fun setState(exportingState: TableExportingState<T>) {
         tableExportingState = exportingState
+        tableModel = exportingState.tableModel
     }
 
     protected abstract fun getNextRecord(): IndexedValue<T>?
