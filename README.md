@@ -39,14 +39,13 @@ Currently you can access its snapshot:
 
 ```
 repositories {
-    mavenCentral()
     maven {
         url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
     }
 }
 
 dependencies {
-    implementation("io.github.voytech","tabulate-excel",tabulateVersion)
+    implementation("io.github.voytech","tabulate-excel","0.1.0-SNAPSHOT")
 }
 
 ```
