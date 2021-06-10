@@ -16,14 +16,41 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 import java.util.*
 
+/**
+ * An [TableExportTemplate] API exposed for [TabulationHandler] allowing to choose between iteration based or reactive rendering.
+ *
+ * @author Wojciech Mąka
+ */
 interface TableExportTemplateApi<T> {
+    /**
+     * To be called explicitly by [TabulationHandler] implementation in order to initialize rendering.
+     */
     fun begin()
+
+    /**
+     * To be called explicitly by [TabulationHandler] implementation in order to trigger next row rendering.
+     */
     fun nextRow(record: T)
+
+    /**
+     * To be called explicitly by [TabulationHandler] implementation in order to finalize rendering.
+     * Internally finalization consists of following steps:
+     * - rendering of all remaining user defined and buffered rows.
+     * - rendering of all remaining user defined rows after size of data source plus user defined rows is known at completion. Used for footer and all closing rows.
+     */
     fun end()
 }
 
 /**
- * An entry point for exporting. Role of this class is to orchestrate and bind all things together.
+ * An entry point for exporting.
+ *
+ * Role of this class is to orchestrate data exporting with [TabulationHandler]s and bootstrap rendering.
+ * Contains different sorts of convenience extension methods:
+ * - [TableBuilder.export] for exporting fully user-defined table.
+ * - [Iterable.tabulate] for tabulating collections of elements. Here the process is called tabulate in order to emphasize
+ * on specific behaviour - its a function which turns collection into tabular form.
+ * - [Publisher.tabulate] same as above but in reactive manner.
+ *
  * @author Wojciech Mąka
  */
 class TableExportTemplate<T, O, CTX : RenderingContext>(private val format: TabulationFormat) {
@@ -68,6 +95,13 @@ class TableExportTemplate<T, O, CTX : RenderingContext>(private val format: Tabu
         return loader.find { it.test(id) } as ExportOperationsProvider<T, CTX>
     }
 
+    /**
+     * Takes any supported source type (e.g. [Iterable], [Publisher] or other), [TabulationHandler] which orchestrates process and DSL top level table builder api [TableBuilderApi] which defines table appearance.
+     *
+     * @param source any supported data source class (e.g. [Iterable], [Publisher] or other, even more complex class)
+     * @param handler [TabulationHandler] orchestrator of table rendering process. Allows to orchestrate rendering in iteration driven - or in reactive manner.
+     * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
+     */
     fun <I> export(source: I, handler: TabulationHandler<I, T, O, CTX>, tableBuilder: TableBuilder<T>) {
         ops.initialize()
         createTable(tableBuilder).let {
@@ -116,6 +150,14 @@ class TableExportTemplate<T, O, CTX : RenderingContext>(private val format: Tabu
     }
 }
 
+/**
+ * Extension function invoked on a [Publisher], which takes [TabulationFormat], output handler and DSL top level table builder api [TableBuilderApi]
+ *
+ * @param format explicit identifier of [ExportOperationsProvider] to be used in order to export table to specific file format (xlsx, pdf).
+ * @param output reference to any kind of output or sink - may be e.g. OutputStream or Flux.
+ * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.
+ * @receiver DSL top level table builder.
+ */
 fun <T, O> Publisher<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
     if (output is Processor<*, *>) {
         TODO("Not implemented stream composition")
@@ -127,6 +169,13 @@ fun <T, O> Publisher<T>.tabulate(format: TabulationFormat, output: O, block: Tab
     }
 }
 
+/**
+ * Extension function invoked on a [TableBuilder], which takes [TabulationFormat], output handler
+ *
+ * @param format explicit identifier of [ExportOperationsProvider] to be used in order to export table to specific file format (xlsx, pdf).
+ * @param output reference to any kind of output or sink - may be e.g. OutputStream or Flux.
+ * @receiver DSL top level table builder.
+ */
 fun <T, O> TableBuilder<T>.export(format: TabulationFormat, output: O) {
     TableExportTemplate<T, O, FlushingRenderingContext<O>>(format).export(
         emptyList(),
@@ -135,6 +184,12 @@ fun <T, O> TableBuilder<T>.export(format: TabulationFormat, output: O) {
     )
 }
 
+/**
+ * Extension function invoked on a [TableBuilder], which takes [file] in order to define table appearance.
+ *
+ * @param file A [File].
+ * @receiver DSL top level table builder.
+ */
 fun <T> TableBuilder<T>.export(file: File) {
     val ext = file.extension
     if (ext.isNotBlank()) {
@@ -148,14 +203,35 @@ fun <T> TableBuilder<T>.export(file: File) {
     } else error("Cannot resolve tabulation format")
 }
 
+/**
+ * Extension function invoked on a [TableBuilder], which takes [fileName] in order to define table appearance.
+ *
+ * @param fileName A path of an output file.
+ * @receiver DSL top level table builder.
+ */
 fun <T> TableBuilder<T>.export(fileName: String) = export(File(fileName))
 
+/**
+ * Extension function invoked on a collection of records, which takes [TabulationFormat], output handler and DSL table builder to define table appearance.
+ *
+ * @param format explicit identifier of [ExportOperationsProvider] to be used in order to export table to specific file format (xlsx, pdf).
+ * @param output reference to any kind of output or sink - may be e.g. OutputStream or Flux.
+ * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.
+ * @receiver collection of records to be rendered into file.
+ */
 fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
     TableExportTemplate<T, O, FlushingRenderingContext<O>>(format).export(this,
         IteratingTabulationHandler(output),
         table(block))
 }
 
+/**
+ * Extension function invoked on a collection of records, which takes [File] as argument and DSL table builder to define table appearance.
+ *
+ * @param file a file name to create.
+ * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.
+ * @receiver collection of records to be rendered into file.
+ */
 fun <T> Iterable<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) {
     val ext = file.extension
     if (ext.isNotBlank()) {
@@ -169,4 +245,11 @@ fun <T> Iterable<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) {
     } else error("Cannot resolve tabulation format")
 }
 
+/**
+ * Extension function invoked on a collection of records, which takes [fileName] as argument and DSL table builder to define table appearance.
+ *
+ * @param fileName a file name to create.
+ * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.
+ * @receiver collection of records to be rendered into file.
+ */
 fun <T> Iterable<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> Unit) = tabulate(File(fileName), block)
