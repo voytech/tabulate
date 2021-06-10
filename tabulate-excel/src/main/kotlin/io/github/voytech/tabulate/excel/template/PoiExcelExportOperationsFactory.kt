@@ -20,15 +20,14 @@ import io.github.voytech.tabulate.template.operations.impl.ensureAttributesCache
 import io.github.voytech.tabulate.template.operations.impl.putCachedValueIfAbsent
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.xssf.streaming.SXSSFCell
-import java.io.OutputStream
 
-class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T, OutputStream, ApachePoiExcelFacade>() {
+class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T, ApachePoiExcelFacade>() {
 
     override fun getFormat(): String = "xlsx"
 
     override fun createRenderingContext(): ApachePoiExcelFacade = ApachePoiExcelFacade()
 
-    override fun createTableExportOperation(): TableExportOperations<T, OutputStream> = object: TableExportOperations<T, OutputStream> {
+    override fun createTableExportOperation(): TableExportOperations<T> = object: TableExportOperations<T> {
 
         override fun initialize() {
             getRenderingContext().createWorkbook()
@@ -109,13 +108,6 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
         private fun ensureCell(context: AttributedCell, block: (SXSSFCell.() -> Unit)) {
             getRenderingContext().assertCell(context.getTableId(), context.rowIndex, context.columnIndex) {
                 it.apply(block)
-            }
-        }
-
-        override fun finish(result: OutputStream) {
-            getRenderingContext().workbook().run {
-                write(result)
-                close()
             }
         }
 

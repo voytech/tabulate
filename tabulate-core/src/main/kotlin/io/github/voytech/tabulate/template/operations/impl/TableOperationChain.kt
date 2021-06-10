@@ -7,9 +7,9 @@ import io.github.voytech.tabulate.template.operations.TableExportOperations
 
 class EmptyOperationChainException : RuntimeException("There is no export operation in the chain.")
 
-class TableExportOperationsChain<T,O>(
-    private vararg val chain: TableExportOperations<T,O>
-) : TableExportOperations<T,O> {
+class TableExportOperationsChain<T>(
+    private vararg val chain: TableExportOperations<T>
+) : TableExportOperations<T> {
 
     override fun beginRow(
         context: AttributedRow<T>
@@ -30,7 +30,7 @@ class TableExportOperationsChain<T,O>(
         chain.forEach { it.renderRowCell(context) }
     }
 
-    override fun finish(result: O) {
+    override fun finish() {
         TODO("Not yet implemented")
     }
 

@@ -16,10 +16,10 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 import java.util.*
 
-interface TableExportTemplateApi<T, O> {
+interface TableExportTemplateApi<T> {
     fun begin()
     fun nextRow(record: T)
-    fun end(result: O)
+    fun end()
 }
 
 /**
@@ -28,25 +28,25 @@ interface TableExportTemplateApi<T, O> {
  */
 class TableExportTemplate<T, O, CTX : RenderingContext>(private val format: TabulationFormat) {
 
-    private val provider: ExportOperationsProvider<T, O, CTX> by lazy {
+    private val provider: ExportOperationsProvider<T, CTX> by lazy {
         resolveExportOperationsFactory(format)
     }
 
-    private val ops: TableExportOperations<T,O> by lazy {
+    private val ops: TableExportOperations<T> by lazy {
         provider.create()
     }
 
-    inner class TableExportTemplateApiImpl(private val state: TableExportingState<T>) : TableExportTemplateApi<T, O> {
+    inner class TableExportTemplateApiImpl(private val state: TableExportingState<T>) : TableExportTemplateApi<T> {
 
         override fun begin() = renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
 
         override fun nextRow(record: T) = bufferRecordAndRenderRow(state, record)
 
-        override fun end(result: O) {
+        override fun end() {
             renderRemainingBufferedRows(state)
             renderRowsAfterDataProcessed(state)
             renderColumns(state, ColumnRenderPhase.AFTER_LAST_ROW)
-            ops.finish(result)
+            ops.finish()
         }
     }
 
@@ -62,10 +62,10 @@ class TableExportTemplate<T, O, CTX : RenderingContext>(private val format: Tabu
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun resolveExportOperationsFactory(id: Identifiable): ExportOperationsProvider<T, O, CTX> {
-        val loader: ServiceLoader<ExportOperationsProvider<*, *, *>> =
+    private fun resolveExportOperationsFactory(id: Identifiable): ExportOperationsProvider<T, CTX> {
+        val loader: ServiceLoader<ExportOperationsProvider<*, *>> =
             ServiceLoader.load(ExportOperationsProvider::class.java)
-        return loader.find { it.test(id) } as ExportOperationsProvider<T, O, CTX>
+        return loader.find { it.test(id) } as ExportOperationsProvider<T, CTX>
     }
 
     fun <I> export(source: I, handler: TabulationHandler<I, T, O, CTX>, tableBuilder: TableBuilder<T>) {

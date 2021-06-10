@@ -14,10 +14,10 @@ import io.github.voytech.tabulate.template.operations.TableExportOperations
 
 
 @Suppress("UNCHECKED_CAST")
-class AttributeAwareTableExportOperations<T,O>(
+class AttributeAwareTableExportOperations<T>(
     private val attributeOperations: AttributesOperations<T>,
-    private val baseTableExportOperations: TableExportOperations<T,O>
-) : TableExportOperations<T,O> by baseTableExportOperations {
+    private val baseTableExportOperations: TableExportOperations<T>
+) : TableExportOperations<T> by baseTableExportOperations {
 
     private fun sortedTableAttributes(tableAttributes: Set<TableAttribute<*>>?): Set<TableAttribute<*>>? {
         return tableAttributes?.toSortedSet(compareBy {

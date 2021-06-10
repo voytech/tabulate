@@ -5,12 +5,13 @@ import io.github.voytech.tabulate.template.context.FlushingRenderingContext
 class IteratingTabulationHandler<T, O>(private val output: O) : TabulationHandler<Iterable<T>, T, O, FlushingRenderingContext<O>> {
     override fun orchestrate(
         source: Iterable<T>,
-        templateApi: TableExportTemplateApi<T, O>,
+        templateApi: TableExportTemplateApi<T>,
         renderingContext: FlushingRenderingContext<O>,
     ): O {
         templateApi.begin()
         source.forEach{ templateApi.nextRow(it) }
-        templateApi.end(output)
+        templateApi.end()
+        renderingContext.write(output)
         return output
     }
 }

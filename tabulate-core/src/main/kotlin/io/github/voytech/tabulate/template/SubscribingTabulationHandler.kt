@@ -7,7 +7,10 @@ import org.reactivestreams.Subscription
 
 class SubscribingTabulationHandler<T, O>(private val output: O) : TabulationHandler<Publisher<T>,T, O, FlushingRenderingContext<O>> {
 
-    inner class UnboundSubscriber(private val templateApi: TableExportTemplateApi<T, O>): Subscriber<T> {
+    @Suppress("ReactiveStreamsSubscriberImplementation")
+    inner class UnboundSubscriber(
+        private val templateApi: TableExportTemplateApi<T>,
+        private val renderingContext: FlushingRenderingContext<O>): Subscriber<T> {
 
         override fun onSubscribe(subscription: Subscription) {
             templateApi.begin()
@@ -19,20 +22,21 @@ class SubscribingTabulationHandler<T, O>(private val output: O) : TabulationHand
         }
 
         override fun onError(t: Throwable?) {
-            TODO("Not yet implemented - renderOnError ?")
+            TODO("can continue, can fail entire export, can retry entire export as separate job")
         }
 
         override fun onComplete() {
-            templateApi.end(output)
+            templateApi.end()
+            renderingContext.write(output)
         }
     }
 
     override fun orchestrate(
         source: Publisher<T>,
-        templateApi: TableExportTemplateApi<T, O>,
+        templateApi: TableExportTemplateApi<T>,
         renderingContext: FlushingRenderingContext<O>,
     ): O {
-        source.subscribe(UnboundSubscriber(templateApi))
+        source.subscribe(UnboundSubscriber(templateApi, renderingContext))
         return output
     }
 

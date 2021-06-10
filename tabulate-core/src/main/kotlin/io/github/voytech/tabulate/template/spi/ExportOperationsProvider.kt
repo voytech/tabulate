@@ -5,7 +5,7 @@ import io.github.voytech.tabulate.template.operations.ExportOperationsFactory
 import io.github.voytech.tabulate.template.operations.TableExportOperations
 import java.util.function.Predicate
 
-interface ExportOperationsProvider<T, O, CTX: RenderingContext> : ExportOperationsFactory<T, O>, Predicate<Identifiable>, Identifiable {
-    fun create(): TableExportOperations<T, O>
+interface ExportOperationsProvider<T, CTX: RenderingContext> : ExportOperationsFactory<T>, Predicate<Identifiable>, Identifiable {
+    fun create(): TableExportOperations<T>
     fun getRenderingContext(): CTX
 }

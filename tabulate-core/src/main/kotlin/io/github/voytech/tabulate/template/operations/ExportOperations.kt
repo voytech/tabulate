@@ -14,21 +14,21 @@ import io.github.voytech.tabulate.template.spi.Identifiable
 import java.util.*
 
 
-interface TableExportOperations<T, O> {
+interface TableExportOperations<T> {
     fun initialize() {}
     fun createTable(builder: TableBuilder<T>): Table<T> = builder.build()
     fun renderColumn(context: AttributedColumn) {}
     fun beginRow(context: AttributedRow<T>) {}
     fun renderRowCell(context: AttributedCell)
     fun endRow(context: AttributedRow<T>) {}
-    fun finish(result: O)
+    fun finish() {}
 }
 
-interface ExportOperationsFactory<T, O> {
-    fun createTableExportOperation(): TableExportOperations<T, O>
+interface ExportOperationsFactory<T> {
+    fun createTableExportOperation(): TableExportOperations<T>
 }
 
-abstract class ExportOperationsConfiguringFactory<T, O, CTX: RenderingContext> : ExportOperationsProvider<T, O, CTX> {
+abstract class ExportOperationsConfiguringFactory<T,CTX: RenderingContext> : ExportOperationsProvider<T,CTX> {
 
     private val cachedRenderingContext: CTX by lazy {
         createRenderingContext()
@@ -46,7 +46,7 @@ abstract class ExportOperationsConfiguringFactory<T, O, CTX: RenderingContext> :
 
     open fun getAttributeOperationsFactory(renderingContext: CTX): AttributeRenderOperationsFactory<T>? = null
 
-    override fun create(): TableExportOperations<T, O> {
+    override fun create(): TableExportOperations<T> {
         val tableOps = createTableExportOperation()
         return if (!attributeOperations.isEmpty()) {
             AttributeAwareTableExportOperations(attributeOperations, tableOps)
