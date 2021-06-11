@@ -30,7 +30,7 @@ allprojects {
     }
 }
 
-subprojects {
+configure(listOf(project(":tabulate-core"), project(":tabulate-excel"))) {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "maven-publish")
     apply(plugin = "java-library")
