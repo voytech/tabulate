@@ -1,3 +1,7 @@
+val apachePoiVersion: String by project
+val commonsMathVersion: String by project
+val reactiveStreamsVersion: String by project
+
 plugins {
     id("java-platform")
     id("maven-publish")
@@ -11,6 +15,10 @@ dependencies {
     constraints {
         api(project(":tabulate-core"))
         api(project(":tabulate-excel"))
+        api("org.apache.poi:poi:$apachePoiVersion") // # kts bug when form is: api("org.apache.poi","poi",apachePoiVersion)
+        api("org.apache.poi:poi-ooxml:$apachePoiVersion")
+        api("org.apache.commons:commons-math3:$commonsMathVersion")
+        api("org.reactivestreams:reactive-streams:$reactiveStreamsVersion")
     }
 }
 

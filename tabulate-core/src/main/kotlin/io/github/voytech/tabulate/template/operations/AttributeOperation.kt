@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.template.operations
 
-import com.google.common.collect.Sets
 import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.model.attributes.Attribute
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
@@ -83,23 +82,25 @@ class StandardAttributeRenderOperationsFactory<A,T>(
     private val additionalColumnAttributeRenderers:  Set<ColumnAttributeRenderOperation<out ColumnAttribute>> = setOf(),
     private val additionalRowAttributeRenderers:  Set<RowAttributeRenderOperation<T, out RowAttribute>> = setOf(),
     private val additionalCellAttributeRenderers:  Set<CellAttributeRenderOperation<out CellAttribute>> = setOf()) : AttributeRenderOperationsFactory<T> {
-    override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<out TableAttribute>> = Sets.union(setOf(
+
+    override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<out TableAttribute>> = setOf(
         standardAttributeRenderers.createTemplateFileRenderer(renderingContext)
-    ), additionalTableAttributeRenderers)
+    ) union additionalTableAttributeRenderers
 
-    override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<T, out RowAttribute>> = Sets.union(setOf(
+    override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<T, out RowAttribute>> = setOf(
         standardAttributeRenderers.createRowHeightRenderer(renderingContext)
-    ), additionalRowAttributeRenderers)
+    ) union additionalRowAttributeRenderers
 
-    override fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<out ColumnAttribute>> = Sets.union(setOf(
+    override fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<out ColumnAttribute>> = setOf(
         standardAttributeRenderers.createColumnWidthRenderer(renderingContext)
-    ), additionalColumnAttributeRenderers)
+    ) union additionalColumnAttributeRenderers
 
-    override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<out CellAttribute>> = Sets.union(setOf(
+    override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<out CellAttribute>> = setOf(
         standardAttributeRenderers.createCellTextStyleRenderer(renderingContext),
         standardAttributeRenderers.createCellBordersRenderer(renderingContext),
         standardAttributeRenderers.createCellAlignmentRenderer(renderingContext),
         standardAttributeRenderers.createCellBackgroundRenderer(renderingContext)
-    ), additionalCellAttributeRenderers)
+    ) union additionalCellAttributeRenderers
+
 }
 

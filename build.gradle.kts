@@ -37,8 +37,6 @@ configure(listOf(project(":tabulate-core"), project(":tabulate-excel"))) {
     apply(plugin = "org.jetbrains.dokka")
     dependencies {
         implementation(kotlin("stdlib", kotlinVersion))
-        implementation("com.google.guava","guava", guavaVersion)
-        api("org.reactivestreams","reactive-streams", reactiveStreamsVersion)
         testImplementation("org.jetbrains.kotlin","kotlin-test", kotlinVersion)
         testImplementation(platform("org.junit:junit-bom:$junitVersion"))
         testImplementation("org.junit.jupiter","junit-jupiter")
