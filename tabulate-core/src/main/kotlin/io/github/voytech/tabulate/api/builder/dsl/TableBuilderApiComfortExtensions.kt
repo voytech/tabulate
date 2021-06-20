@@ -53,6 +53,12 @@ fun <T> RowBuilderApi<T>.cell(id: String, block: CellBuilderApi<T>.() -> Unit) {
     }
 }
 
+fun <T> RowBuilderApi<T>.cell(index: Int, block: CellBuilderApi<T>.() -> Unit) {
+    cells {
+        cell(index, block)
+    }
+}
+
 fun <T> RowBuilderApi<T>.cell(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
     cells {
         cell(ref, block)
