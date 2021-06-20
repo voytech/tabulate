@@ -123,7 +123,7 @@ class TableExportTemplate<T, O, CTX : RenderingContext>(private val format: Tabu
     }
 
     private fun renderRowsAfterDataProcessed(state: TableExportingState<T>) {
-        state.mark(IndexLabel.DATASET_PROCESSED)
+        state.mark(IndexLabel.TRAILING_ROWS)
         renderRemainingBufferedRows(state)
     }
 

@@ -97,5 +97,13 @@ fun <T> RowsBuilderApi<T>.rowNumberingOn(id: String) {
 }
 
 fun <T> RowsBuilderApi<T>.footer(block: RowBuilderApi<T>.() -> Unit) {
-    row(0, IndexLabel.DATASET_PROCESSED, block)
+    row(0, IndexLabel.TRAILING_ROWS, block)
+}
+
+fun <T> RowsBuilderApi<T>.trailingRow(block: RowBuilderApi<T>.() -> Unit) {
+    row(IndexLabel.TRAILING_ROWS, block)
+}
+
+fun <T> RowsBuilderApi<T>.trailingRow(index: Int, block: RowBuilderApi<T>.() -> Unit) {
+    row(index, IndexLabel.TRAILING_ROWS, block)
 }

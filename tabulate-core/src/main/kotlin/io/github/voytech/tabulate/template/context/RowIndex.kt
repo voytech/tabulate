@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.template.context
 import io.github.voytech.tabulate.model.RowIndexDef
 
 enum class IndexLabel {
-    DATASET_PROCESSED,
+    TRAILING_ROWS,
 }
 
 data class IndexMarker(

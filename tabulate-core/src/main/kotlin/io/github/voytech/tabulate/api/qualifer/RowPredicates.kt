@@ -20,7 +20,7 @@ object RowPredicates {
     fun <T> isHeaderPosition(): RowPredicate<T> = isCustomAt(0)
 
     @JvmStatic
-    fun <T> isFooterPosition(): RowPredicate<T> = isCustomAt(0, IndexLabel.DATASET_PROCESSED)
+    fun <T> isFooterPosition(): RowPredicate<T> = isCustomAt(0, IndexLabel.TRAILING_ROWS)
 
     @JvmStatic
     fun <T> hasEntryAt(listIndex: Int): RowPredicate<T> =
