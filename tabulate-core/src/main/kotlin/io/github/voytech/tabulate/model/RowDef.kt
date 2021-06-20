@@ -23,9 +23,9 @@ data class RowIndexDef(
     val offsetLabel: String? = null
 ) : Comparable<RowIndexDef> {
 
-    operator fun plus(increment: Int): RowIndexDef = RowIndexDef(index + increment)
+    operator fun plus(increment: Int): RowIndexDef = RowIndexDef(index + increment, offsetLabel)
 
-    operator fun inc(): RowIndexDef = RowIndexDef(index + 1)
+    operator fun inc(): RowIndexDef = RowIndexDef(index + 1, offsetLabel)
 
     override fun compareTo(other: RowIndexDef): Int = index.compareTo(other.index)
 }
