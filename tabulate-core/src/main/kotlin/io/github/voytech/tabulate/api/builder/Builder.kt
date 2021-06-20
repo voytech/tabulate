@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.api.builder
 
 import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.*
+import io.github.voytech.tabulate.template.context.IndexLabel
 import java.util.concurrent.atomic.AtomicInteger
 
 interface Builder<T> {
@@ -208,6 +209,18 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
     @JvmSynthetic
     fun addRowBuilder(at: RowIndexDef, block: DslBlock<RowBuilder<T>>): RowBuilder<T> {
         rowIndex = at
+        return ensureRowBuilder(RowQualifier(createAt = rowIndex++)).let {
+            block.invoke(it)
+            refreshRowSpans(it)
+            it
+        }
+    }
+
+    @JvmSynthetic
+    fun addRowBuilder(label: IndexLabel, block: DslBlock<RowBuilder<T>>): RowBuilder<T> {
+        if (label.name != rowIndex.offsetLabel) {
+            rowIndex = RowIndexDef(index = 0, offsetLabel = label.name)
+        }
         return ensureRowBuilder(RowQualifier(createAt = rowIndex++)).let {
             block.invoke(it)
             refreshRowSpans(it)

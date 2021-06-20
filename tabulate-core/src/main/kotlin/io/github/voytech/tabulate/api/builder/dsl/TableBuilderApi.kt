@@ -194,7 +194,7 @@ class RowsBuilderApi<T> internal constructor(private val builder: RowsBuilder<T>
 
     @JvmSynthetic
     fun row(label: IndexLabel, block: RowBuilderApi<T>.() -> Unit) {
-        builder.addRowBuilder(RowIndexDef(offsetLabel = label.name)) {
+        builder.addRowBuilder(label) {
             RowBuilderApi.new(it).apply(block)
         }
     }
