@@ -207,7 +207,11 @@ class ApachePoiExcelFacade : FlushingRenderingContext<OutputStream> {
     }
 
     override fun write(output: OutputStream) {
-        workbook().write(output)
+        with(workbook()) {
+            write(output)
+            close()
+            dispose()
+        }
     }
 
 }
