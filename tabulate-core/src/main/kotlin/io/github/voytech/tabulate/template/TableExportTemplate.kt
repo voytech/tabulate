@@ -170,6 +170,32 @@ fun <T, O> Publisher<T>.tabulate(format: TabulationFormat, output: O, block: Tab
 }
 
 /**
+ * Extension function invoked on a [Publisher], which takes [File], and DSL top level table builder api [TableBuilderApi]
+ *
+ * @param file an output file.
+ * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.
+ * @receiver DSL top level table builder.
+ */
+fun <T> Publisher<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) {
+    val ext = file.extension
+    if (ext.isNotBlank()) {
+        FileOutputStream(file).use {
+            tabulate(TabulationFormat(ext),it,block)
+        }
+    } else error("Cannot resolve tabulation format")
+}
+
+/**
+ * Extension function invoked on a [Publisher], which takes [String] file name, and DSL top level table builder api [TableBuilderApi]
+ *
+ * @param fileName an output file name.
+ * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.
+ * @receiver DSL top level table builder.
+ */
+fun <T> Publisher<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> Unit) = tabulate(File(fileName),block)
+
+
+/**
  * Extension function invoked on a [TableBuilder], which takes [TabulationFormat], output handler
  *
  * @param format explicit identifier of [ExportOperationsProvider] to be used in order to export table to specific file format (xlsx, pdf).
