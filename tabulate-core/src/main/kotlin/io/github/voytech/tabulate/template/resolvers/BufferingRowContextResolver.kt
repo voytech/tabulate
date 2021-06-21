@@ -1,16 +1,17 @@
 package io.github.voytech.tabulate.template.resolvers
 
-class BufferingRowContextResolver<T> :
-    AbstractRowContextResolver<T>() {
+import java.util.*
+
+class BufferingRowContextResolver<T> : AbstractRowContextResolver<T>() {
 
     private var index: Int = 0
 
-    private val dataSourceBuffer: MutableList<T> = mutableListOf()
+    private val dataSourceBuffer: Queue<T> = LinkedList()
 
     override fun getNextRecord(): IndexedValue<T>? {
-        return if (index < dataSourceBuffer.size) {
-            IndexedValue(index, dataSourceBuffer[index]).also { index++ }
-        } else null
+        return dataSourceBuffer.poll()?.let {
+            IndexedValue(index, it).also { index++ }
+        }
     }
 
     fun buffer(record: T) {
