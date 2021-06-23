@@ -1,6 +1,9 @@
 package io.github.voytech.tabulate.template.context
 
-import io.github.voytech.tabulate.model.*
+import io.github.voytech.tabulate.model.ColumnDef
+import io.github.voytech.tabulate.model.ColumnKey
+import io.github.voytech.tabulate.model.NextId
+import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.template.iterators.OperationContextIterator
@@ -15,9 +18,6 @@ class TableExportingState<T>(
     val firstRow: Int? = 0,
     val firstColumn: Int? = 0
 ) {
-    private val rowSkips = mutableMapOf<ColumnKey<T>, Int>()
-    private var colSkips = 0
-
     private val stateAttributes = mutableMapOf<String, Any>()
     private val indexIncrement = MutableRowIndex()
     private val rowContextResolver: BufferingRowContextResolver<T> = BufferingRowContextResolver()
@@ -96,12 +96,4 @@ class TableExportingState<T>(
         ).apply { additionalAttributes = stateAttributes }
     }
 
-    internal fun applySpans(column: ColumnDef<T>, cell: CellDef<T>?) {
-        colSkips = (cell?.colSpan?.minus(1)) ?: 0
-        rowSkips[column.id] = (cell?.rowSpan?.minus(1)) ?: 0
-    }
-
-    internal fun dontSkip(column: ColumnDef<T>): Boolean {
-        return colSkips-- <= 0 && (rowSkips[column.id] ?: 0).also { rowSkips[column.id] = it - 1 } <= 0
-    }
 }

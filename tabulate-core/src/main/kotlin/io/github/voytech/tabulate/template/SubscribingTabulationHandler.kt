@@ -5,6 +5,11 @@ import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 
+/**
+ * Reactive, subscribing (chain terminating) version of exporter.
+ *
+ * @author Wojciech Mąka
+ */
 class SubscribingTabulationHandler<T, O>(private val output: O) : TabulationHandler<Publisher<T>,T, O, FlushingRenderingContext<O>> {
 
     @Suppress("ReactiveStreamsSubscriberImplementation")
@@ -31,6 +36,13 @@ class SubscribingTabulationHandler<T, O>(private val output: O) : TabulationHand
         }
     }
 
+    /**
+     * Invoked by [TableExportTemplate] in order run table export.
+     *
+     * @param source - reactive [Publisher] source.
+     * @param templateApi - an API provided by [TableExportTemplate] for limited control over exporting process.
+     * @param renderingContext - a [FlushingRenderingContext] context performs output flushing at the end.
+     */
     override fun orchestrate(
         source: Publisher<T>,
         templateApi: TableExportTemplateApi<T>,
