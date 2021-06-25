@@ -45,7 +45,9 @@ repositories {
 }
 
 dependencies {
-    implementation("io.github.voytech","tabulate-excel","0.1.0-SNAPSHOT")
+    implementation(platform("io.github.voytech:tabulate-bom:0.1.0-SNAPSHOT"))
+    implementation("io.github.voytech","tabulate-core")   // e.g. DSL,  
+    implementation("io.github.voytech","tabulate-excel")  // streaming apache POI excel API.
 }
 
 ```
