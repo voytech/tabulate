@@ -1,11 +1,15 @@
 package io.github.voytech.tabulate.testsupport
 
 import io.github.voytech.tabulate.template.context.AttributedCell
-import io.github.voytech.tabulate.template.context.FlushingRenderingContext
+import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.ExportOperationsConfiguringFactory
 import io.github.voytech.tabulate.template.operations.TableExportOperations
+import io.github.voytech.tabulate.template.result.FlushingResultProvider
+import io.github.voytech.tabulate.template.result.ResultProvider
 
-class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, FlushingRenderingContext<Unit>>() {
+class NoContext : RenderingContext
+
+class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, NoContext>() {
 
     override fun getFormat() = "mock"
 
@@ -17,6 +21,10 @@ class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, Flus
 
     }
 
-    override fun createRenderingContext(): FlushingRenderingContext<Unit> = FlushingRenderingContext { }
+    override fun createRenderingContext(): NoContext = NoContext()
+
+    override fun getResultProviders(): List<ResultProvider<NoContext>> = listOf(
+        FlushingResultProvider { _: NoContext, _: Unit -> println("flush results") }
+    )
 
 }

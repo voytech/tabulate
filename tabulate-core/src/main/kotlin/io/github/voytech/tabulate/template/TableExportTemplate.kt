@@ -7,6 +7,9 @@ import io.github.voytech.tabulate.model.ColumnDef
 import io.github.voytech.tabulate.model.NextId
 import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.operations.TableExportOperations
+import io.github.voytech.tabulate.template.result.FlushingResultProvider
+import io.github.voytech.tabulate.template.result.PartialResultProvider
+import io.github.voytech.tabulate.template.result.ResultProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import io.github.voytech.tabulate.template.spi.Identifiable
 import org.reactivestreams.Processor
@@ -53,7 +56,7 @@ interface TableExportTemplateApi<T> {
  *
  * @author Wojciech Mąka
  */
-class TableExportTemplate<T, O, CTX : RenderingContext>(private val format: TabulationFormat) {
+class TableExportTemplate<T, O, CTX: RenderingContext>(private val format: TabulationFormat) {
 
     private val provider: ExportOperationsProvider<T, CTX> by lazy {
         resolveExportOperationsFactory(format)
@@ -61,6 +64,10 @@ class TableExportTemplate<T, O, CTX : RenderingContext>(private val format: Tabu
 
     private val ops: TableExportOperations<T> by lazy {
         provider.create()
+    }
+
+    private val resultProviders: List<ResultProvider<CTX>> by lazy {
+        provider.getResultProviders()
     }
 
     inner class TableExportTemplateApiImpl(private val state: TableExportingState<T>) : TableExportTemplateApi<T> {
@@ -95,6 +102,10 @@ class TableExportTemplate<T, O, CTX : RenderingContext>(private val format: Tabu
         return loader.find { it.test(id) } as ExportOperationsProvider<T, CTX>
     }
 
+    private inline fun <reified RES : ResultProvider<CTX>> resolveResultProvider(): RES =
+        resultProviders.filterIsInstance<RES>().first()
+
+
     /**
      * Takes any supported source type (e.g. [Iterable], [Publisher] or other), [TabulationHandler] which orchestrates process and DSL top level table builder api [TableBuilderApi] which defines table appearance.
      *
@@ -102,10 +113,39 @@ class TableExportTemplate<T, O, CTX : RenderingContext>(private val format: Tabu
      * @param handler [TabulationHandler] orchestrator of table rendering process. Allows to orchestrate rendering in iteration driven - or in reactive manner.
      * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
      */
-    fun <I> export(source: I, handler: TabulationHandler<I, T, O, CTX>, tableBuilder: TableBuilder<T>) {
+    fun <I> export(
+        source: I,
+        handler: TabulationHandler<I, T, O, CTX, FlushingResultProvider<CTX, O>>,
+        tableBuilder: TableBuilder<T>,
+    ) {
         ops.initialize()
         createTable(tableBuilder).let {
-            handler.orchestrate(source, TableExportTemplateApiImpl(it), provider.getRenderingContext())
+            handler.orchestrate(source,
+                TableExportTemplateApiImpl(it),
+                provider.getRenderingContext(),
+                resolveResultProvider())
+        }
+    }
+
+    /**
+     * Takes any supported source type (e.g. [Iterable], [Publisher] or other), [TabulationHandler] which orchestrates process and DSL top level table builder api [TableBuilderApi] which defines table appearance.
+     *
+     * @param source any supported data source class (e.g. [Iterable], [Publisher] or other, even more complex class)
+     * @param handler [TabulationHandler] orchestrator of table rendering process. Allows to orchestrate rendering in iteration driven - or in reactive manner.
+     * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
+     */
+    @JvmName("reactiveExport")
+    fun <I> export(
+        source: I,
+        handler: TabulationHandler<I, T, O, CTX, PartialResultProvider<CTX>>,
+        tableBuilder: TableBuilder<T>,
+    ) {
+        ops.initialize()
+        createTable(tableBuilder).let {
+            handler.orchestrate(source,
+                TableExportTemplateApiImpl(it),
+                provider.getRenderingContext(),
+                resolveResultProvider())
         }
     }
 
@@ -162,10 +202,11 @@ fun <T, O> Publisher<T>.tabulate(format: TabulationFormat, output: O, block: Tab
     if (output is Processor<*, *>) {
         TODO("Not implemented stream composition")
     } else {
-        TableExportTemplate<T, O, FlushingRenderingContext<O>>(format).export(
+        TableExportTemplate<T, O, RenderingContext>(format).export(
             this,
             SubscribingTabulationHandler(output),
-            table(block))
+            table(block)
+        )
     }
 }
 
@@ -180,7 +221,7 @@ fun <T> Publisher<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) 
     val ext = file.extension
     if (ext.isNotBlank()) {
         FileOutputStream(file).use {
-            tabulate(TabulationFormat(ext),it,block)
+            tabulate(TabulationFormat(ext), it, block)
         }
     } else error("Cannot resolve tabulation format")
 }
@@ -192,7 +233,7 @@ fun <T> Publisher<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) 
  * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.
  * @receiver DSL top level table builder.
  */
-fun <T> Publisher<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> Unit) = tabulate(File(fileName),block)
+fun <T> Publisher<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> Unit) = tabulate(File(fileName), block)
 
 
 /**
@@ -203,7 +244,7 @@ fun <T> Publisher<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> 
  * @receiver DSL top level table builder.
  */
 fun <T, O> TableBuilder<T>.export(format: TabulationFormat, output: O) {
-    TableExportTemplate<T, O, FlushingRenderingContext<O>>(format).export(
+    TableExportTemplate<T, O, RenderingContext>(format).export(
         emptyList(),
         IteratingTabulationHandler(output),
         this
@@ -220,7 +261,9 @@ fun <T> TableBuilder<T>.export(file: File) {
     val ext = file.extension
     if (ext.isNotBlank()) {
         FileOutputStream(file).use {
-            TableExportTemplate<T, OutputStream, FlushingRenderingContext<OutputStream>>(TabulationFormat(file.extension)).export(
+            TableExportTemplate<T, OutputStream, RenderingContext>(
+                TabulationFormat(file.extension)
+            ).export(
                 emptyList(),
                 IteratingTabulationHandler(it),
                 this
@@ -246,9 +289,11 @@ fun <T> TableBuilder<T>.export(fileName: String) = export(File(fileName))
  * @receiver collection of records to be rendered into file.
  */
 fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
-    TableExportTemplate<T, O, FlushingRenderingContext<O>>(format).export(this,
+    TableExportTemplate<T, O, RenderingContext>(format).export(
+        this,
         IteratingTabulationHandler(output),
-        table(block))
+        table(block)
+    )
 }
 
 /**
@@ -262,7 +307,7 @@ fun <T> Iterable<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) {
     val ext = file.extension
     if (ext.isNotBlank()) {
         FileOutputStream(file).use {
-            TableExportTemplate<T, FileOutputStream, FlushingRenderingContext<FileOutputStream>>(TabulationFormat(file.extension)).export(
+            TableExportTemplate<T, FileOutputStream, RenderingContext>(TabulationFormat(file.extension)).export(
                 this,
                 IteratingTabulationHandler(it),
                 table(block)

@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.template.context.FlushingRenderingContext
+import io.github.voytech.tabulate.template.context.RenderingContext
+import io.github.voytech.tabulate.template.result.FlushingResultProvider
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
@@ -10,12 +11,14 @@ import org.reactivestreams.Subscription
  *
  * @author Wojciech Mąka
  */
-class SubscribingTabulationHandler<T, O>(private val output: O) : TabulationHandler<Publisher<T>,T, O, FlushingRenderingContext<O>> {
+class SubscribingTabulationHandler<T, CTX: RenderingContext, O>(private val output: O) : TabulationHandler<Publisher<T>,T, O, CTX, FlushingResultProvider<CTX,O>> {
 
     @Suppress("ReactiveStreamsSubscriberImplementation")
     inner class UnboundSubscriber(
         private val templateApi: TableExportTemplateApi<T>,
-        private val renderingContext: FlushingRenderingContext<O>): Subscriber<T> {
+        private val renderingContext: CTX,
+        private val resultProvider: FlushingResultProvider<CTX, O>
+    ): Subscriber<T> {
 
         override fun onSubscribe(subscription: Subscription) {
             templateApi.begin()
@@ -32,7 +35,7 @@ class SubscribingTabulationHandler<T, O>(private val output: O) : TabulationHand
 
         override fun onComplete() {
             templateApi.end()
-            renderingContext.write(output)
+            resultProvider.flush(renderingContext, output)
         }
     }
 
@@ -41,14 +44,15 @@ class SubscribingTabulationHandler<T, O>(private val output: O) : TabulationHand
      *
      * @param source - reactive [Publisher] source.
      * @param templateApi - an API provided by [TableExportTemplate] for limited control over exporting process.
-     * @param renderingContext - a [FlushingRenderingContext] context performs output flushing at the end.
+     * @param renderingContext - a [FlushingResultProvider] context performs output flushing at the end.
      */
     override fun orchestrate(
         source: Publisher<T>,
         templateApi: TableExportTemplateApi<T>,
-        renderingContext: FlushingRenderingContext<O>,
+        renderingContext: CTX,
+        resultProvider: FlushingResultProvider<CTX, O>,
     ): O {
-        source.subscribe(UnboundSubscriber(templateApi, renderingContext))
+        source.subscribe(UnboundSubscriber(templateApi, renderingContext, resultProvider))
         return output
     }
 

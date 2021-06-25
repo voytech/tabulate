@@ -18,8 +18,11 @@ import io.github.voytech.tabulate.template.context.RowCellContext
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.operations.impl.ensureAttributesCacheEntry
 import io.github.voytech.tabulate.template.operations.impl.putCachedValueIfAbsent
+import io.github.voytech.tabulate.template.result.FlushingResultProvider
+import io.github.voytech.tabulate.template.result.ResultProvider
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.xssf.streaming.SXSSFCell
+import java.io.OutputStream
 
 class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T, ApachePoiExcelFacade>() {
 
@@ -139,6 +142,16 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
             additionalCellAttributeRenderers = setOf(CellDataFormatAttributeRenderOperation(renderingContext)),
             additionalTableAttributeRenderers = setOf(FilterAndSortTableAttributeRenderOperation(renderingContext))
         )
+
+    override fun getResultProviders(): List<ResultProvider<ApachePoiExcelFacade>> = listOf(
+        FlushingResultProvider<ApachePoiExcelFacade,OutputStream> { renderingContext, output ->
+            with(renderingContext.workbook()) {
+                write(output)
+                close()
+                dispose()
+            }
+        }
+    )
 
     companion object {
 

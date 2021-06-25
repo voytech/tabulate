@@ -1,29 +1,31 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.template.context.FlushingRenderingContext
+import io.github.voytech.tabulate.template.context.RenderingContext
+import io.github.voytech.tabulate.template.result.FlushingResultProvider
 
 /**
  * Imperative, [Iterable] implementations supporting version of exporter.
  *
  * @author Wojciech Mąka
  */
-class IteratingTabulationHandler<T, O>(private val output: O) : TabulationHandler<Iterable<T>, T, O, FlushingRenderingContext<O>> {
+class IteratingTabulationHandler<T,CTX: RenderingContext, O>(private val output: O) : TabulationHandler<Iterable<T>, T, O, CTX, FlushingResultProvider<CTX, O>> {
     /**
      * Invoked by [TableExportTemplate] in order run table export.
      *
      * @param source - imperative [Iterable] source.
      * @param templateApi - an API provided by [TableExportTemplate] for limited control over exporting process.
-     * @param renderingContext - a [FlushingRenderingContext] context performs output flushing at the end.
+     * @param renderingContext - a [FlushingResultProvider] context performs output flushing at the end.
      */
     override fun orchestrate(
         source: Iterable<T>,
         templateApi: TableExportTemplateApi<T>,
-        renderingContext: FlushingRenderingContext<O>,
+        renderingContext: CTX,
+        resultProvider: FlushingResultProvider<CTX,O>,
     ): O {
         templateApi.begin()
         source.forEach{ templateApi.nextRow(it) }
         templateApi.end()
-        renderingContext.write(output)
+        resultProvider.flush(renderingContext, output)
         return output
     }
 }
