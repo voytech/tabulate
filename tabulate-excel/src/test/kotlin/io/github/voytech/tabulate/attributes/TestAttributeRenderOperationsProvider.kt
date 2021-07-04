@@ -4,17 +4,29 @@ import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
 import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
 import io.github.voytech.tabulate.excel.template.wrapper.ApachePoiExcelFacade
 import io.github.voytech.tabulate.model.attributes.CellAttribute
+import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.context.RowCellContext
 import io.github.voytech.tabulate.template.operations.AttributeRenderOperationsFactory
 import io.github.voytech.tabulate.template.operations.BaseCellAttributeRenderOperation
 import io.github.voytech.tabulate.template.operations.CellAttributeRenderOperation
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
-import io.github.voytech.tabulate.template.spi.Identifiable
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute as CellAttributeAlias
 
-class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvider<T, ApachePoiExcelFacade> {
+class FakeContext: RenderingContext
 
-    override fun test(t: Identifiable): Boolean = t.getFormat() == "xlsx"
+class FakeTestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvider<T, FakeContext> {
+
+    override fun getAttributeOperationsFactory(renderingContext: FakeContext): AttributeRenderOperationsFactory<T> {
+        return object : AttributeRenderOperationsFactory<T> {
+            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<out CellAttributeAlias>> =
+                setOf(FakeSimpleTestCellAttributeRenderOperation(renderingContext))
+        }
+    }
+
+    override fun getContextClass(): Class<FakeContext> = FakeContext::class.java
+}
+
+class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvider<T, ApachePoiExcelFacade> {
 
     override fun getAttributeOperationsFactory(renderingContext: ApachePoiExcelFacade): AttributeRenderOperationsFactory<T> {
         return object : AttributeRenderOperationsFactory<T> {
@@ -22,6 +34,8 @@ class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvid
                 setOf(SimpleTestCellAttributeRenderOperation(renderingContext))
         }
     }
+
+    override fun getContextClass(): Class<ApachePoiExcelFacade> = ApachePoiExcelFacade::class.java
 }
 
 data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<SimpleTestCellAttribute>() {
@@ -45,7 +59,16 @@ class SimpleTestCellAttributeRenderOperation(poi: ApachePoiExcelFacade) :
             this.setCellValue("${this.stringCellValue}_${attribute.valueSuffix}")
         }
     }
+}
 
+class FakeSimpleTestCellAttributeRenderOperation(fakeContext: FakeContext) :
+    BaseCellAttributeRenderOperation<FakeContext, SimpleTestCellAttribute>(fakeContext) {
+
+    override fun attributeType(): Class<out SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
+
+    override fun renderAttribute(context: RowCellContext, attribute: SimpleTestCellAttribute) {
+
+    }
 }
 
 fun <T> CellLevelAttributesBuilderApi<T>.simpleTestCellAttrib(block: SimpleTestCellAttribute.Builder.() -> Unit) =

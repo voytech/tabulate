@@ -8,6 +8,7 @@ import io.github.voytech.tabulate.template.result.FlushingResultProvider
 import io.github.voytech.tabulate.template.result.ResultProvider
 
 class NoContext : RenderingContext
+class ExampleContext : RenderingContext
 
 class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, NoContext>() {
 
@@ -23,8 +24,28 @@ class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, NoCo
 
     override fun createRenderingContext(): NoContext = NoContext()
 
-    override fun getResultProviders(): List<ResultProvider<NoContext>> = listOf(
+    override fun createResultProviders(): List<ResultProvider<NoContext>> = listOf(
         FlushingResultProvider { _: NoContext, _: Unit -> println("flush results") }
+    )
+
+}
+
+class AnotherTestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, ExampleContext>() {
+
+    override fun getFormat() = "mock-2"
+
+    override fun createTableExportOperation(): TableExportOperations<T> = object: TableExportOperations<T> {
+
+        override fun renderRowCell(context: AttributedCell) {
+            println("cell context: $context")
+        }
+
+    }
+
+    override fun createRenderingContext(): ExampleContext = ExampleContext()
+
+    override fun createResultProviders(): List<ResultProvider<ExampleContext>> = listOf(
+        FlushingResultProvider { _: ExampleContext, _: Unit -> println("flush results") }
     )
 
 }

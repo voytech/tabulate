@@ -7,7 +7,7 @@ import io.github.voytech.tabulate.template.result.ResultProvider
 import java.util.function.Predicate
 
 interface ExportOperationsProvider<T, CTX: RenderingContext> : ExportOperationsFactory<T>, Predicate<Identifiable>, Identifiable {
-    fun create(): TableExportOperations<T>
+    fun createExportOperations(): TableExportOperations<T>
     fun getRenderingContext(): CTX
-    fun getResultProviders(): List<ResultProvider<CTX>>
+    fun createResultProviders(): List<ResultProvider<CTX>>
 }

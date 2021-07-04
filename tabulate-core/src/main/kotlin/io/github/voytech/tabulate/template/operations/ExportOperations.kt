@@ -46,7 +46,7 @@ abstract class ExportOperationsConfiguringFactory<T,CTX: RenderingContext> : Exp
 
     open fun getAttributeOperationsFactory(renderingContext: CTX): AttributeRenderOperationsFactory<T>? = null
 
-    override fun create(): TableExportOperations<T> {
+    override fun createExportOperations(): TableExportOperations<T> {
         val tableOps = createTableExportOperation()
         return if (!attributeOperations.isEmpty()) {
             AttributeAwareTableExportOperations(attributeOperations, tableOps)
@@ -69,6 +69,7 @@ abstract class ExportOperationsConfiguringFactory<T,CTX: RenderingContext> : Exp
         }
     }
 
+
     @Suppress("UNCHECKED_CAST")
     private fun registerClientDefinedAttributesOperations(
         creationContext: CTX,
@@ -76,10 +77,10 @@ abstract class ExportOperationsConfiguringFactory<T,CTX: RenderingContext> : Exp
     ): AttributesOperations<T> {
         val loader: ServiceLoader<AttributeRenderOperationsProvider<*, *>> =
             ServiceLoader.load(AttributeRenderOperationsProvider::class.java)
-        loader.filter { it.test(this) }
-            .map { it as AttributeRenderOperationsProvider<T, CTX>? }
+        loader.filter { it.getContextClass() == creationContext.javaClass }
+            .map { it as AttributeRenderOperationsProvider<T, CTX> }
             .forEach {
-                registerAttributesOperations(attributeOperations, it!!.getAttributeOperationsFactory(creationContext))
+                registerAttributesOperations(attributeOperations, it.getAttributeOperationsFactory(creationContext))
             }
         return attributeOperations
     }

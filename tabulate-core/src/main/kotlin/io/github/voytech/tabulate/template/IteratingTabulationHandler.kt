@@ -23,7 +23,7 @@ class IteratingTabulationHandler<T,CTX: RenderingContext, O>(private val output:
         resultProvider: FlushingResultProvider<CTX,O>,
     ): O {
         templateApi.begin()
-        source.forEach{ templateApi.nextRow(it) }
+        source.forEach { templateApi.nextRow(it) }
         templateApi.end()
         resultProvider.flush(renderingContext, output)
         return output

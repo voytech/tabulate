@@ -68,13 +68,6 @@ interface StandardAttributeRenderOperationsProvider<A, T> {
     fun createCellBackgroundRenderer(renderingContext: A): CellAttributeRenderOperation<CellBackgroundAttribute>
 }
 
-class NoAttributeRenderOperationsFactory<T> : AttributeRenderOperationsFactory<T> {
-    override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<out TableAttribute>> = setOf()
-    override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<T, out RowAttribute>> = setOf()
-    override fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<out ColumnAttribute>> = setOf()
-    override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<out CellAttribute>> = setOf()
-}
-
 class StandardAttributeRenderOperationsFactory<A,T>(
     private val renderingContext: A,
     private val standardAttributeRenderers: StandardAttributeRenderOperationsProvider<A,T>,

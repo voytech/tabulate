@@ -29,9 +29,7 @@ class SubscribingTabulationHandler<T, CTX: RenderingContext, O>(private val outp
             templateApi.nextRow(record)
         }
 
-        override fun onError(t: Throwable?) {
-            TODO("can continue, can fail entire export, can retry entire export as separate job")
-        }
+        override fun onError(t: Throwable?) { }
 
         override fun onComplete() {
             templateApi.end()

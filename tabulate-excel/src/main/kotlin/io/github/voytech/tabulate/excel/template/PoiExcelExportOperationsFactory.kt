@@ -143,7 +143,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
             additionalTableAttributeRenderers = setOf(FilterAndSortTableAttributeRenderOperation(renderingContext))
         )
 
-    override fun getResultProviders(): List<ResultProvider<ApachePoiExcelFacade>> = listOf(
+    override fun createResultProviders(): List<ResultProvider<ApachePoiExcelFacade>> = listOf(
         FlushingResultProvider<ApachePoiExcelFacade,OutputStream> { renderingContext, output ->
             with(renderingContext.workbook()) {
                 write(output)
