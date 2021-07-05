@@ -4,10 +4,7 @@ import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
-import io.github.voytech.tabulate.template.context.AttributedRow
-import io.github.voytech.tabulate.template.context.ExportingStateReceiver
-import io.github.voytech.tabulate.template.context.RowIndex
-import io.github.voytech.tabulate.template.context.TableExportingState
+import io.github.voytech.tabulate.template.context.*
 
 abstract class AbstractRowContextResolver<T> :
     IndexedContextResolver<T, AttributedRow<T>>, ExportingStateReceiver<T> {
@@ -16,7 +13,7 @@ abstract class AbstractRowContextResolver<T> :
     private lateinit var tableModel: Table<T>
 
     private fun computeCells(rowDefinitions: Set<RowDef<T>>): Map<ColumnKey<T>, CellDef<T>> {
-        return rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf(), { acc, m -> acc + m })
+        return rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf()) { acc, m -> acc + m }
     }
 
     private fun computeRowLevelCellAttributes(rowDefinitions: Set<RowDef<T>>): Set<CellAttribute> {
@@ -25,7 +22,7 @@ abstract class AbstractRowContextResolver<T> :
 
     private fun computeRowAttributes(rowDefinitions: Set<RowDef<T>>): Set<RowAttribute> {
         return rowDefinitions.mapNotNull { attribs -> attribs.rowAttributes }
-            .fold(setOf(), { acc, r -> acc + r })
+            .fold(setOf()) { acc, r -> acc + r }
     }
 
     private fun resolveAttributedRow(tableRowIndex: RowIndex, record: IndexedValue<T>? = null): AttributedRow<T> {
@@ -39,7 +36,7 @@ abstract class AbstractRowContextResolver<T> :
             val rowCellAttributes = computeRowLevelCellAttributes(rowDefinitions)
             val cellValues = tableModel.columns.mapIndexed { index: Int, column: ColumnDef<T> ->
                 cellDefinitions.resolveCellValue(column, sourceRow)?.let { value ->
-                    tableExportingState.createCellContext(
+                    tableExportingState.createAttributedCell(
                         relativeRowIndex = tableRowIndex.rowIndex,
                         relativeColumnIndex = column.index ?: index,
                         value = value,
@@ -52,7 +49,7 @@ abstract class AbstractRowContextResolver<T> :
                     ).let { Pair(column.id, it) }
                 }
             }.mapNotNull { it }.toMap()
-            tableExportingState.createRowContext(
+            tableExportingState.createAttributedRow(
                 relativeRowIndex = tableRowIndex.rowIndex,
                 rowAttributes = computeRowAttributes(rowDefinitions),
                 cells = cellValues

@@ -11,3 +11,18 @@ data class AttributedCell(
     override fun getRow(): Int = rowIndex
     override fun getColumn(): Int = columnIndex
 }
+
+
+internal fun <T> TableExportingState<T>.createAttributedCell(
+    relativeRowIndex: Int,
+    relativeColumnIndex: Int,
+    value: CellValue,
+    attributes: Set<CellAttribute>,
+): AttributedCell {
+    return AttributedCell(
+        value = value,
+        attributes = attributes,
+        rowIndex = (firstRow ?: 0) + relativeRowIndex,
+        columnIndex = (firstColumn ?: 0) + relativeColumnIndex,
+    ).apply { additionalAttributes = getCustomAttributes() }
+}

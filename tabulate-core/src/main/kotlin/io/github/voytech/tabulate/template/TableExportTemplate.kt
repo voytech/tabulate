@@ -77,7 +77,7 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
 
         override fun end() {
             renderRemainingBufferedRows(state)
-            renderRowsAfterDataProcessed(state)
+            renderTrailingCustomRows(state)
             renderColumns(state, ColumnRenderPhase.AFTER_LAST_ROW)
             ops.finish()
         }
@@ -98,7 +98,7 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
     private fun resolveExportOperationsFactory(id: Identifiable): ExportOperationsProvider<T, out RenderingContext> {
         val loader: ServiceLoader<ExportOperationsProvider<*, *>> =
             ServiceLoader.load(ExportOperationsProvider::class.java)
-        return loader.filterIsInstance<ExportOperationsProvider<T, out RenderingContext>>().find { it.test(id) } !!
+        return loader.filterIsInstance<ExportOperationsProvider<T, out RenderingContext>>().find { it.test(id) }!!
     }
 
     private inline fun <reified RES : ResultProvider<out RenderingContext>> resolveResultProvider(): RES =
@@ -119,10 +119,9 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
     ) {
         ops.initialize()
         createTable(tableBuilder).let {
-            handler.orchestrate(source,
-                TableExportTemplateApiImpl(it),
-                provider.getRenderingContext(),
-                resolveResultProvider())
+            handler.orchestrate(
+                source, TableExportTemplateApiImpl(it), provider.getRenderingContext(), resolveResultProvider()
+            )
         }
     }
 
@@ -133,6 +132,7 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
      * @param handler [TabulationHandler] orchestrator of table rendering process. Allows to orchestrate rendering in iteration driven - or in reactive manner.
      * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
      */
+
     @JvmName("reactiveExport")
     fun <I, O> export(
         source: I,
@@ -141,12 +141,12 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
     ) {
         ops.initialize()
         createTable(tableBuilder).let {
-            handler.orchestrate(source,
-                TableExportTemplateApiImpl(it),
-                provider.getRenderingContext(),
-                resolveResultProvider())
+            handler.orchestrate(
+                source, TableExportTemplateApiImpl(it), provider.getRenderingContext(), resolveResultProvider()
+            )
         }
     }
+
 
     private fun bufferRecordAndRenderRow(state: TableExportingState<T>, record: T) {
         state.bufferAndNext(record)?.let { renderRow(state, it) }
@@ -161,7 +161,7 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
         } while (context != null)
     }
 
-    private fun renderRowsAfterDataProcessed(state: TableExportingState<T>) {
+    private fun renderTrailingCustomRows(state: TableExportingState<T>) {
         state.mark(IndexLabel.TRAILING_ROWS)
         renderRemainingBufferedRows(state)
     }
@@ -169,7 +169,7 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
     private fun renderColumns(state: TableExportingState<T>, renderPhase: ColumnRenderPhase) {
         state.tableModel.forEachColumn { columnIndex: Int, column: ColumnDef<T> ->
             ops.renderColumn(
-                state.createColumnContext(IndexedValue(column.index ?: columnIndex, column), renderPhase)
+                state.createAttributedColumn(IndexedValue(column.index ?: columnIndex, column), renderPhase)
             )
         }
     }

@@ -10,4 +10,4 @@ data class RowContext<T>(
 }
 
 fun <T> AttributedRow<T>.narrow(): RowContext<T> =
-    RowContext<T>(rowCellValues, rowIndex).also { it.additionalAttributes = additionalAttributes }
+    RowContext(rowCellValues, rowIndex).also { it.additionalAttributes = additionalAttributes }
