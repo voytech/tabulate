@@ -4,13 +4,17 @@ import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
-import io.github.voytech.tabulate.template.context.*
+import io.github.voytech.tabulate.template.context.AttributedRow
+import io.github.voytech.tabulate.template.context.RowIndex
+import io.github.voytech.tabulate.template.context.createAttributedCell
+import io.github.voytech.tabulate.template.context.createAttributedRow
 
-abstract class AbstractRowContextResolver<T> :
-    IndexedContextResolver<T, AttributedRow<T>>, ExportingStateReceiver<T> {
+abstract class AbstractRowContextResolver<T>(
+    private val tableModel: Table<T>,
+    private val customAttributes: MutableMap<String, Any>
+) :
+    IndexedContextResolver<T, AttributedRow<T>> {
 
-    private lateinit var tableExportingState: TableExportingState<T>
-    private lateinit var tableModel: Table<T>
 
     private fun computeCells(rowDefinitions: Set<RowDef<T>>): Map<ColumnKey<T>, CellDef<T>> {
         return rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf()) { acc, m -> acc + m }
@@ -36,23 +40,25 @@ abstract class AbstractRowContextResolver<T> :
             val rowCellAttributes = computeRowLevelCellAttributes(rowDefinitions)
             val cellValues = tableModel.columns.mapIndexed { index: Int, column: ColumnDef<T> ->
                 cellDefinitions.resolveCellValue(column, sourceRow)?.let { value ->
-                    tableExportingState.createAttributedCell(
-                        relativeRowIndex = tableRowIndex.rowIndex,
-                        relativeColumnIndex = column.index ?: index,
+                    tableModel.createAttributedCell(
+                        rowIndex = tableRowIndex.rowIndex,
+                        columnIndex = column.index ?: index,
                         value = value,
                         attributes = overrideAttributesLeftToRight(
                             tableModel.cellAttributes,
                             column.cellAttributes,
                             rowCellAttributes,
                             cellDefinitions[column.id]?.cellAttributes
-                        )
+                        ),
+                        customAttributes
                     ).let { Pair(column.id, it) }
                 }
             }.mapNotNull { it }.toMap()
-            tableExportingState.createAttributedRow(
-                relativeRowIndex = tableRowIndex.rowIndex,
+            tableModel.createAttributedRow(
+                rowIndex = tableRowIndex.rowIndex,
                 rowAttributes = computeRowAttributes(rowDefinitions),
-                cells = cellValues
+                cells = cellValues,
+                customAttributes = customAttributes
             )
         }
     }
@@ -79,11 +85,6 @@ abstract class AbstractRowContextResolver<T> :
                 }
             }
         }
-    }
-
-    override fun setState(exportingState: TableExportingState<T>) {
-        tableExportingState = exportingState
-        tableModel = exportingState.tableModel
     }
 
     protected abstract fun getNextRecord(): IndexedValue<T>?

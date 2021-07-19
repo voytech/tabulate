@@ -69,7 +69,7 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
         provider.createResultProviders()
     }
 
-    inner class TableExportTemplateApiImpl(private val state: TableExportingState<T>) : TableExportTemplateApi<T> {
+    inner class TableExportTemplateApiImpl(private val state: TabulationState<T>) : TableExportTemplateApi<T> {
 
         override fun begin() = renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
 
@@ -83,9 +83,9 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
         }
     }
 
-    private fun createTable(tableBuilder: TableBuilder<T>): TableExportingState<T> {
+    private fun createTable(tableBuilder: TableBuilder<T>): TabulationState<T> {
         return ops.createTable(tableBuilder).let { table ->
-            TableExportingState(
+            TabulationState(
                 tableModel = table,
                 tableName = table.name ?: "table${NextId.nextId()}",
                 firstRow = table.firstRow,
@@ -147,12 +147,11 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
         }
     }
 
-
-    private fun bufferRecordAndRenderRow(state: TableExportingState<T>, record: T) {
+    private fun bufferRecordAndRenderRow(state: TabulationState<T>, record: T) {
         state.bufferAndNext(record)?.let { renderRow(state, it) }
     }
 
-    private fun renderRemainingBufferedRows(state: TableExportingState<T>) {
+    private fun renderRemainingBufferedRows(state: TabulationState<T>) {
         do {
             val context = state.getNextRowContext()?.let {
                 renderRow(state, it)
@@ -161,20 +160,24 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
         } while (context != null)
     }
 
-    private fun renderTrailingCustomRows(state: TableExportingState<T>) {
+    private fun renderTrailingCustomRows(state: TabulationState<T>) {
         state.mark(IndexLabel.TRAILING_ROWS)
         renderRemainingBufferedRows(state)
     }
 
-    private fun renderColumns(state: TableExportingState<T>, renderPhase: ColumnRenderPhase) {
+    private fun renderColumns(state: TabulationState<T>, renderPhase: ColumnRenderPhase) {
         state.tableModel.forEachColumn { columnIndex: Int, column: ColumnDef<T> ->
             ops.renderColumn(
-                state.createAttributedColumn(IndexedValue(column.index ?: columnIndex, column), renderPhase)
+                state.tableModel.createAttributedColumn(
+                    IndexedValue(column.index ?: columnIndex, column),
+                    renderPhase,
+                    state.getCustomAttributes()
+                )
             )
         }
     }
 
-    private fun renderRowCells(state: TableExportingState<T>, context: AttributedRow<T>) {
+    private fun renderRowCells(state: TabulationState<T>, context: AttributedRow<T>) {
         state.tableModel.forEachColumn { column: ColumnDef<T> ->
             if (context.rowCellValues.containsKey(column.id)) {
                 ops.renderRowCell(context.rowCellValues[column.id]!!)
@@ -182,7 +185,7 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
         }
     }
 
-    private fun renderRow(state: TableExportingState<T>, rowContext: AttributedRow<T>) {
+    private fun renderRow(state: TabulationState<T>, rowContext: AttributedRow<T>) {
         ops.beginRow(rowContext)
         renderRowCells(state, rowContext)
         ops.endRow(rowContext)

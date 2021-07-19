@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
 /**
  * @author Wojciech Mąka
  */
-class TableExportingState<T>(
+class TabulationState<T>(
     val tableModel: Table<T>,
     val tableName: String = "table-${NextId.nextId()}",
     val firstRow: Int? = 0,
@@ -16,21 +16,13 @@ class TableExportingState<T>(
 ) {
     private val stateAttributes = mutableMapOf<String, Any>()
     private val indexIncrement = MutableRowIndex()
-    private val rowContextResolver: BufferingRowContextResolver<T> = BufferingRowContextResolver()
+    private val rowContextResolver: BufferingRowContextResolver<T> = BufferingRowContextResolver(tableModel, stateAttributes)
     private lateinit var rowContextIterator: OperationContextIterator<T, AttributedRow<T>>
 
     init {
         stateAttributes["_tableId"] = tableName
         createIterator()
     }
-
-    fun incrementIndex()  = indexIncrement.inc()
-
-    fun setRowIndex(index: Int) {
-        indexIncrement.assign(index)
-    }
-
-    fun getRowIndex(): RowIndex = indexIncrement.getRowIndex()
 
     fun mark(label: IndexLabel): RowIndex {
         return indexIncrement.mark(label.name).also {
@@ -44,8 +36,7 @@ class TableExportingState<T>(
     }
 
     private fun createIterator() {
-        rowContextIterator = OperationContextIterator(rowContextResolver)
-        rowContextIterator.setState(this)
+        rowContextIterator = OperationContextIterator(rowContextResolver, indexIncrement)
     }
 
     fun getNextRowContext(): AttributedRow<T>? {

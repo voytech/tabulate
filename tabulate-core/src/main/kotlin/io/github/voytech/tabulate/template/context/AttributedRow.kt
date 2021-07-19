@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.template.context
 
 import io.github.voytech.tabulate.model.ColumnKey
+import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 
 data class AttributedRow<T>(
@@ -11,14 +12,15 @@ data class AttributedRow<T>(
     override fun getRow(): Int = rowIndex
 }
 
-internal fun <T> TableExportingState<T>.createAttributedRow(
-    relativeRowIndex: Int,
+internal fun <T> Table<T>.createAttributedRow(
+    rowIndex: Int,
     rowAttributes: Set<RowAttribute>,
     cells: Map<ColumnKey<T>, AttributedCell>,
+    customAttributes: MutableMap<String, Any>
 ): AttributedRow<T> {
     return AttributedRow(
-        rowIndex = (firstRow ?: 0) + relativeRowIndex,
+        rowIndex = (firstRow ?: 0) + rowIndex,
         rowAttributes = rowAttributes,
         rowCellValues = cells
-    ).apply { additionalAttributes = getCustomAttributes() }
+    ).apply { additionalAttributes = customAttributes }
 }

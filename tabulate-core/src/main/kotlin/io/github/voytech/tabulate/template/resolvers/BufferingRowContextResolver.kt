@@ -1,8 +1,12 @@
 package io.github.voytech.tabulate.template.resolvers
 
+import io.github.voytech.tabulate.model.Table
 import java.util.*
 
-class BufferingRowContextResolver<T> : AbstractRowContextResolver<T>() {
+class BufferingRowContextResolver<T>(
+    tableModel: Table<T>,
+    customAttributes: MutableMap<String, Any>
+) : AbstractRowContextResolver<T>(tableModel, customAttributes) {
 
     private var index: Int = 0
 

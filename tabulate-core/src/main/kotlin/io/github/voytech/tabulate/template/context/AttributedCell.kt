@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.template.context
 
+import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 
 data class AttributedCell(
@@ -12,17 +13,17 @@ data class AttributedCell(
     override fun getColumn(): Int = columnIndex
 }
 
-
-internal fun <T> TableExportingState<T>.createAttributedCell(
-    relativeRowIndex: Int,
-    relativeColumnIndex: Int,
+internal fun <T> Table<T>.createAttributedCell(
+    rowIndex: Int,
+    columnIndex: Int,
     value: CellValue,
     attributes: Set<CellAttribute>,
+    customAttributes: MutableMap<String, Any>
 ): AttributedCell {
     return AttributedCell(
         value = value,
         attributes = attributes,
-        rowIndex = (firstRow ?: 0) + relativeRowIndex,
-        columnIndex = (firstColumn ?: 0) + relativeColumnIndex,
-    ).apply { additionalAttributes = getCustomAttributes() }
+        rowIndex = (firstRow ?: 0) + rowIndex,
+        columnIndex = (firstColumn ?: 0) + columnIndex,
+    ).apply { additionalAttributes = customAttributes }
 }
