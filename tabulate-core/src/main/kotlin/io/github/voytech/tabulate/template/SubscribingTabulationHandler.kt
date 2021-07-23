@@ -15,7 +15,7 @@ class SubscribingTabulationHandler<T, CTX: RenderingContext, O>(private val outp
 
     @Suppress("ReactiveStreamsSubscriberImplementation")
     inner class UnboundSubscriber(
-        private val templateApi: TableExportTemplateApi<T>,
+        private val templateApi: TabulationTemplateApi<T>,
         private val renderingContext: CTX,
         private val resultProvider: FlushingResultProvider<CTX, O>
     ): Subscriber<T> {
@@ -38,15 +38,15 @@ class SubscribingTabulationHandler<T, CTX: RenderingContext, O>(private val outp
     }
 
     /**
-     * Invoked by [TableExportTemplate] in order run table export.
+     * Invoked by [TabulationTemplate] in order run table export.
      *
      * @param source - reactive [Publisher] source.
-     * @param templateApi - an API provided by [TableExportTemplate] for limited control over exporting process.
+     * @param templateApi - an API provided by [TabulationTemplate] for limited control over exporting process.
      * @param renderingContext - a [FlushingResultProvider] context performs output flushing at the end.
      */
     override fun orchestrate(
         source: Publisher<T>,
-        templateApi: TableExportTemplateApi<T>,
+        templateApi: TabulationTemplateApi<T>,
         renderingContext: CTX,
         resultProvider: FlushingResultProvider<CTX, O>,
     ): O {

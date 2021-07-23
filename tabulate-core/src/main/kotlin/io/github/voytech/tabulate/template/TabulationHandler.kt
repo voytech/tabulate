@@ -4,19 +4,19 @@ import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.result.ResultProvider
 
 /**
- * A [TabulationHandler] implementations orchestrates exporting by calling [TableExportTemplateApi] template API.
+ * A [TabulationHandler] implementations orchestrates exporting by calling [TabulationTemplateApi] template API.
  *
  * @author Wojciech Mąka
  */
 fun interface TabulationHandler<I, T, O, CTX: RenderingContext, R: ResultProvider<CTX>> {
 
     /**
-     * Invoked by [TableExportTemplate] in order run table export.
+     * Invoked by [TabulationTemplate] in order run table export.
      *
      * @param source - generic parameter representing source of table data.
-     * @param templateApi - an API provided by [TableExportTemplate] for limited control over exporting process.
+     * @param templateApi - an API provided by [TabulationTemplate] for limited control over exporting process.
      * @param renderingContext - generic parameter representing rendering context which holds third party API and state.
      */
-    fun orchestrate(source: I, templateApi: TableExportTemplateApi<T>, renderingContext: CTX, resultProvider: R): O
+    fun orchestrate(source: I, templateApi: TabulationTemplateApi<T>, renderingContext: CTX, resultProvider: R): O
 
 }

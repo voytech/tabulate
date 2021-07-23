@@ -19,11 +19,14 @@ import java.io.FileOutputStream
 import java.util.*
 
 /**
- * An [TableExportTemplate] API exposed for [TabulationHandler] allowing to choose between iteration based or reactive rendering.
+ * [TabulationTemplateApi] provides restricted set of methods from [TabulationTemplate] exposed for [TabulationHandler]
+ * in order to orchestrate rendering task. Currently rendering can be arranged using:
+ * - [IteratingTabulationHandler]
+ * - [SubscribingTabulationHandler]
  *
  * @author Wojciech Mąka
  */
-interface TableExportTemplateApi<T> {
+interface TabulationTemplateApi<T> {
     /**
      * To be called explicitly by [TabulationHandler] implementation in order to initialize rendering.
      */
@@ -31,6 +34,10 @@ interface TableExportTemplateApi<T> {
 
     /**
      * To be called explicitly by [TabulationHandler] implementation in order to trigger next row rendering.
+     * Notice that record used in parameter list is not exactly always the record being currently rendered. It is
+     * first buffered. Current rowContext may be created from custom row or from actually buffered record if no custom rows
+     * are present.
+     * @param record - a record from source to be buffered, and transformed into [RowContext] at some point of time.
      */
     fun nextRow(record: T)
 
@@ -38,7 +45,8 @@ interface TableExportTemplateApi<T> {
      * To be called explicitly by [TabulationHandler] implementation in order to finalize rendering.
      * Internally finalization consists of following steps:
      * - rendering of all remaining user defined and buffered rows.
-     * - rendering of all remaining user defined rows after size of data source plus user defined rows is known at completion. Used for footer and all closing rows.
+     * - rendering of all remaining user defined rows after size of data source plus user defined rows is known at completion.
+     * Used for rendering of all trailing rows.
      */
     fun end()
 }
@@ -55,7 +63,7 @@ interface TableExportTemplateApi<T> {
  *
  * @author Wojciech Mąka
  */
-class TableExportTemplate<T>(private val format: TabulationFormat) {
+class TabulationTemplate<T>(private val format: TabulationFormat) {
 
     private val provider: ExportOperationsProvider<T, out RenderingContext> by lazy {
         resolveExportOperationsFactory(format)
@@ -69,7 +77,7 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
         provider.createResultProviders()
     }
 
-    inner class TableExportTemplateApiImpl(private val state: TabulationState<T>) : TableExportTemplateApi<T> {
+    inner class TabulationTemplateApiImpl(private val state: TabulationState<T>) : TabulationTemplateApi<T> {
 
         override fun begin() = renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
 
@@ -120,7 +128,7 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
         ops.initialize()
         createTable(tableBuilder).let {
             handler.orchestrate(
-                source, TableExportTemplateApiImpl(it), provider.getRenderingContext(), resolveResultProvider()
+                source, TabulationTemplateApiImpl(it), provider.getRenderingContext(), resolveResultProvider()
             )
         }
     }
@@ -142,7 +150,7 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
         ops.initialize()
         createTable(tableBuilder).let {
             handler.orchestrate(
-                source, TableExportTemplateApiImpl(it), provider.getRenderingContext(), resolveResultProvider()
+                source, TabulationTemplateApiImpl(it), provider.getRenderingContext(), resolveResultProvider()
             )
         }
     }
@@ -153,7 +161,7 @@ class TableExportTemplate<T>(private val format: TabulationFormat) {
 
     private fun renderRemainingBufferedRows(state: TabulationState<T>) {
         do {
-            val context = state.getNextRowContext()?.let {
+            val context = state.next()?.let {
                 renderRow(state, it)
                 it
             }
@@ -204,7 +212,7 @@ fun <T, O> Publisher<T>.tabulate(format: TabulationFormat, output: O, block: Tab
     if (output is Processor<*, *>) {
         TODO("Not implemented stream composition")
     } else {
-        TableExportTemplate<T>(format).export(
+        TabulationTemplate<T>(format).export(
             this,
             SubscribingTabulationHandler(output),
             table(block)
@@ -246,7 +254,7 @@ fun <T> Publisher<T>.tabulate(fileName: String, block: TableBuilderApi<T>.() -> 
  * @receiver DSL top level table builder.
  */
 fun <T, O> TableBuilder<T>.export(format: TabulationFormat, output: O) {
-    TableExportTemplate<T>(format).export(
+    TabulationTemplate<T>(format).export(
         emptyList(),
         IteratingTabulationHandler(output),
         this
@@ -263,7 +271,7 @@ fun <T> TableBuilder<T>.export(file: File) {
     val ext = file.extension
     if (ext.isNotBlank()) {
         FileOutputStream(file).use {
-            TableExportTemplate<T>(
+            TabulationTemplate<T>(
                 TabulationFormat(file.extension)
             ).export(
                 emptyList(),
@@ -291,7 +299,7 @@ fun <T> TableBuilder<T>.export(fileName: String) = export(File(fileName))
  * @receiver collection of records to be rendered into file.
  */
 fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
-    TableExportTemplate<T>(format).export(
+    TabulationTemplate<T>(format).export(
         this,
         IteratingTabulationHandler(output),
         table(block)
@@ -309,7 +317,7 @@ fun <T> Iterable<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) {
     val ext = file.extension
     if (ext.isNotBlank()) {
         FileOutputStream(file).use {
-            TableExportTemplate<T>(TabulationFormat(file.extension)).export(
+            TabulationTemplate<T>(TabulationFormat(file.extension)).export(
                 this,
                 IteratingTabulationHandler(it),
                 table(block)
