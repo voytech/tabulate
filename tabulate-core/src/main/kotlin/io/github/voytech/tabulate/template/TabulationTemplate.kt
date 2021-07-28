@@ -6,6 +6,7 @@ import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.model.ColumnDef
 import io.github.voytech.tabulate.model.NextId
 import io.github.voytech.tabulate.template.context.*
+import io.github.voytech.tabulate.template.context.AttributedColumnFactory.createAttributedColumn
 import io.github.voytech.tabulate.template.operations.TableExportOperations
 import io.github.voytech.tabulate.template.result.FlushingResultProvider
 import io.github.voytech.tabulate.template.result.PartialResultProvider
@@ -35,8 +36,7 @@ interface TabulationTemplateApi<T> {
     /**
      * To be called explicitly by [TabulationHandler] implementation in order to trigger next row rendering.
      * Notice that record used in parameter list is not exactly always the record being currently rendered. It is
-     * first buffered. Current rowContext may be created from custom row or from actually buffered record if no custom rows
-     * are present.
+     * first buffered, eventually rendered - according to qualification rules.
      * @param record - a record from source to be buffered, and transformed into [RowContext] at some point of time.
      */
     fun nextRow(record: T)
@@ -45,7 +45,7 @@ interface TabulationTemplateApi<T> {
      * To be called explicitly by [TabulationHandler] implementation in order to finalize rendering.
      * Internally finalization consists of following steps:
      * - rendering of all remaining user defined and buffered rows.
-     * - rendering of all remaining user defined rows after size of data source plus user defined rows is known at completion.
+     * - rendering of all remaining user defined rows to be rendered after last collection element.
      * Used for rendering of all trailing rows.
      */
     fun end()
@@ -54,12 +54,12 @@ interface TabulationTemplateApi<T> {
 /**
  * An entry point for exporting.
  *
- * Role of this class is to orchestrate data exporting with [TabulationHandler]s and bootstrap rendering.
+ * Orchestrates data exporting using [TabulationHandler] and bootstraps rendering.
  * Contains different sorts of convenience extension methods:
  * - [TableBuilder.export] for exporting fully user-defined table.
- * - [Iterable.tabulate] for tabulating collections of elements. Here the process is called tabulate in order to emphasize
- * on specific behaviour - its a function which turns collection into tabular form.
- * - [Publisher.tabulate] same as above but in reactive manner.
+ * - [Iterable.tabulate] for tabulating collections of elements. Here the process is called 'tabulate' to emphasize
+ * its behaviour - its a function which turns collection into tabular form.
+ * - [Publisher.tabulate] same as above but using reactive programming model.
  *
  * @author Wojciech Mąka
  */
@@ -91,7 +91,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         }
     }
 
-    private fun createTable(tableBuilder: TableBuilder<T>): TabulationState<T> {
+    private fun prepare(tableBuilder: TableBuilder<T>): TabulationState<T> {
         return ops.createTable(tableBuilder).let { table ->
             TabulationState(
                 tableModel = table,
@@ -114,10 +114,10 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
 
     /**
-     * Takes any supported source type (e.g. [Iterable], [Publisher] or other), [TabulationHandler] which orchestrates process and DSL top level table builder api [TableBuilderApi] which defines table appearance.
+     * Performs actual export.
      *
      * @param source any supported data source class (e.g. [Iterable], [Publisher] or other, even more complex class)
-     * @param handler [TabulationHandler] orchestrator of table rendering process. Allows to orchestrate rendering in iteration driven - or in reactive manner.
+     * @param handler [TabulationHandler] orchestrator of table rendering. Allows to perform rendering in data source/output agnostic way.
      * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
      */
     fun <I, O> export(
@@ -126,7 +126,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         tableBuilder: TableBuilder<T>,
     ) {
         ops.initialize()
-        createTable(tableBuilder).let {
+        prepare(tableBuilder).let {
             handler.orchestrate(
                 source, TabulationTemplateApiImpl(it), provider.getRenderingContext(), resolveResultProvider()
             )
@@ -134,13 +134,12 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     }
 
     /**
-     * Takes any supported source type (e.g. [Iterable], [Publisher] or other), [TabulationHandler] which orchestrates process and DSL top level table builder api [TableBuilderApi] which defines table appearance.
+     * Performs actual export.
      *
      * @param source any supported data source class (e.g. [Iterable], [Publisher] or other, even more complex class)
-     * @param handler [TabulationHandler] orchestrator of table rendering process. Allows to orchestrate rendering in iteration driven - or in reactive manner.
+     * @param handler [TabulationHandler] orchestrator of table rendering. Allows to perform rendering in data source/output agnostic way.
      * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
      */
-
     @JvmName("reactiveExport")
     fun <I, O> export(
         source: I,
@@ -148,7 +147,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         tableBuilder: TableBuilder<T>,
     ) {
         ops.initialize()
-        createTable(tableBuilder).let {
+        prepare(tableBuilder).let {
             handler.orchestrate(
                 source, TabulationTemplateApiImpl(it), provider.getRenderingContext(), resolveResultProvider()
             )
@@ -176,9 +175,10 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     private fun renderColumns(state: TabulationState<T>, renderPhase: ColumnRenderPhase) {
         state.tableModel.forEachColumn { columnIndex: Int, column: ColumnDef<T> ->
             ops.renderColumn(
-                state.tableModel.createAttributedColumn(
-                    IndexedValue(column.index ?: columnIndex, column),
+                createAttributedColumn(
+                    state.tableModel.getColumnIndex(column.index ?: columnIndex),
                     renderPhase,
+                    column.columnAttributes,
                     state.getCustomAttributes()
                 )
             )

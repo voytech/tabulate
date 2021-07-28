@@ -4,10 +4,12 @@ import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
+import io.github.voytech.tabulate.template.context.AttributedCellFactory.createAttributedCell
 import io.github.voytech.tabulate.template.context.AttributedRow
+import io.github.voytech.tabulate.template.context.AttributedRowFactory.createAttributedRow
 import io.github.voytech.tabulate.template.context.RowIndex
-import io.github.voytech.tabulate.template.context.createAttributedCell
-import io.github.voytech.tabulate.template.context.createAttributedRow
+import io.github.voytech.tabulate.template.context.getColumnIndex
+import io.github.voytech.tabulate.template.context.getRowIndex
 
 abstract class AbstractRowContextResolver<T>(
     private val tableModel: Table<T>,
@@ -40,9 +42,9 @@ abstract class AbstractRowContextResolver<T>(
             val rowCellAttributes = computeRowLevelCellAttributes(rowDefinitions)
             val cellValues = tableModel.columns.mapIndexed { index: Int, column: ColumnDef<T> ->
                 cellDefinitions.resolveCellValue(column, sourceRow)?.let { value ->
-                    tableModel.createAttributedCell(
-                        rowIndex = tableRowIndex.rowIndex,
-                        columnIndex = column.index ?: index,
+                    createAttributedCell(
+                        rowIndex = tableModel.getRowIndex(tableRowIndex.rowIndex),
+                        columnIndex = tableModel.getColumnIndex(column.index ?: index),
                         value = value,
                         attributes = overrideAttributesLeftToRight(
                             tableModel.cellAttributes,
@@ -54,8 +56,8 @@ abstract class AbstractRowContextResolver<T>(
                     ).let { Pair(column.id, it) }
                 }
             }.mapNotNull { it }.toMap()
-            tableModel.createAttributedRow(
-                rowIndex = tableRowIndex.rowIndex,
+            createAttributedRow(
+                rowIndex = tableModel.getRowIndex(tableRowIndex.rowIndex),
                 rowAttributes = computeRowAttributes(rowDefinitions),
                 cells = cellValues,
                 customAttributes = customAttributes

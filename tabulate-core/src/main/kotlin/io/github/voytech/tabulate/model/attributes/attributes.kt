@@ -1,7 +1,5 @@
 package io.github.voytech.tabulate.model.attributes
 
-import java.util.*
-
 abstract class Attribute<T: Attribute<T>> {
     open fun mergeWith(other: T): T = other
 
@@ -23,18 +21,18 @@ abstract class TableAttribute<T : TableAttribute<T>>  : Attribute<T>()
 
 fun <A : Attribute<A>> List<A>.mergeAttributes(): A {
     return this.takeLast(this.size - 1)
-        .fold(this.first(),{ acc: A, attribute: A ->
+        .fold(this.first()) { acc: A, attribute: A ->
             acc.mergeWith(attribute)
-        })
+        }
 }
 
 private fun List<CellAttribute<*>>.mergeUncheckedAttributes(): CellAttribute<*> {
     val requiredClass = this.first().javaClass
     return this.takeLast(this.size - 1)
-        .fold(this.first(),{ acc: CellAttribute<*>, attribute: CellAttribute<*> ->
+        .fold(this.first()) { acc: CellAttribute<*>, attribute: CellAttribute<*> ->
             assert(requiredClass == attribute.javaClass)
             acc.uncheckedMergeWith(attribute)
-        })
+        }
 }
 
 fun overrideAttributesLeftToRight(attributeSet: LinkedHashSet<CellAttribute<*>>): Set<CellAttribute<*>> {

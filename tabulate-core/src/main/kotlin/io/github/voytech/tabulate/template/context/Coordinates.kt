@@ -1,5 +1,7 @@
 package io.github.voytech.tabulate.template.context
 
+import io.github.voytech.tabulate.model.Table
+
 interface RowCoordinate {
     fun getRow(): Int
 }
@@ -23,3 +25,7 @@ data class Coordinates(
         columnIndex = columnIdx
     }
 }
+
+fun <T> Table<T>.getRowIndex(rowIndex: Int) = (firstRow ?: 0) + rowIndex
+
+fun <T> Table<T>.getColumnIndex(columnIndex: Int) = (firstColumn ?: 0) + columnIndex
