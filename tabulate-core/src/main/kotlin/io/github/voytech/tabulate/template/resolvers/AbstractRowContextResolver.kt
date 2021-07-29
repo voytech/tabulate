@@ -11,12 +11,16 @@ import io.github.voytech.tabulate.template.context.RowIndex
 import io.github.voytech.tabulate.template.context.getColumnIndex
 import io.github.voytech.tabulate.template.context.getRowIndex
 
+/**
+ * Given requested index, [Table] model, and global custom attributes, it resolves [AttributedRow] context data with
+ * effective index (effective index may differ from requested one if there is no rows matching predicate matching requested index)
+ * @author Wojciech Mąka
+ */
 abstract class AbstractRowContextResolver<T>(
     private val tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>
 ) :
     IndexedContextResolver<T, AttributedRow<T>> {
-
 
     private fun computeCells(rowDefinitions: Set<RowDef<T>>): Map<ColumnKey<T>, CellDef<T>> {
         return rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf()) { acc, m -> acc + m }
@@ -72,6 +76,12 @@ abstract class AbstractRowContextResolver<T>(
         return IndexedValue(tableRowIndex.rowIndex, resolveAttributedRow(tableRowIndex, indexedRecord))
     }
 
+    /**
+     * Resolves indexed [AttributedRow]. Index may be equal to parameter index value, or if there are no matching predicates,
+     * it may be next matching index or eventually null when no row can be resolved.
+     * @param requestedIndex [RowIndex] - index requested by row iterator.
+     * @author Wojciech Mąka
+     */
     override fun resolve(requestedIndex: RowIndex): IndexedValue<AttributedRow<T>>? {
         return if (tableModel.hasCustomRows(SourceRow(requestedIndex))) {
             resolveRowContext(requestedIndex)
@@ -89,5 +99,10 @@ abstract class AbstractRowContextResolver<T>(
         }
     }
 
+    /**
+     * Provides next record from data source. Resolved [IndexedValue] may wrap a value or null if there is no more
+     * records left.
+     * @author Wojciech Mąka
+     */
     protected abstract fun getNextRecord(): IndexedValue<T>?
 }
