@@ -10,14 +10,18 @@ import io.github.voytech.tabulate.template.result.ResultProvider
 class NoContext : RenderingContext
 class ExampleContext : RenderingContext
 
+fun interface AttributedCellTest {
+    fun test(context: AttributedCell)
+}
+
 class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, NoContext>() {
 
-    override fun getFormat() = "mock"
+    override fun getFormat() = "test"
 
     override fun createTableExportOperation(): TableExportOperations<T> = object: TableExportOperations<T> {
 
         override fun renderRowCell(context: AttributedCell) {
-            println("cell context: $context")
+            test.test(context)
         }
 
     }
@@ -27,6 +31,10 @@ class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, NoCo
     override fun createResultProviders(): List<ResultProvider<NoContext>> = listOf(
         FlushingResultProvider { _: NoContext, _: Unit -> println("flush results") }
     )
+
+    companion object {
+        lateinit var test: AttributedCellTest
+    }
 
 }
 

@@ -46,7 +46,7 @@ data class Table<T> internal constructor(
         }
     }
 
-    fun hasRowsAt(index: RowIndex): Boolean = !getRowsAt(index).isNullOrEmpty()
+    private fun hasRowsAt(index: RowIndex): Boolean = !getRowsAt(index).isNullOrEmpty()
 
     fun getNextCustomRowIndex(index: RowIndex): RowIndexDef? {
         return indexedCustomRows?.entries

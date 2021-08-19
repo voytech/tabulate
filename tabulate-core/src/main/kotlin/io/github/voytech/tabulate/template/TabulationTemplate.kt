@@ -20,7 +20,7 @@ import java.io.FileOutputStream
 import java.util.*
 
 /**
- * [TabulationTemplateApi] provides restricted set of methods from [TabulationTemplate] exposed for [TabulationHandler]
+ * [TabulationTemplateApi] provides small set of methods from [TabulationTemplate] exposed for [TabulationHandler]
  * in order to orchestrate rendering task. Currently rendering can be arranged using:
  * - [IteratingTabulationHandler]
  * - [SubscribingTabulationHandler]
@@ -35,9 +35,9 @@ interface TabulationTemplateApi<T> {
 
     /**
      * To be called explicitly by [TabulationHandler] implementation in order to trigger next row rendering.
-     * Notice that record used in parameter list is not exactly always the record being currently rendered. It is
-     * first buffered, eventually rendered - according to qualification rules.
-     * @param record - a record from source to be buffered, and transformed into [RowContext] at some point of time.
+     * Notice that record used in parameter list is not always the record being currently rendered. It is
+     * first buffered and rendered eventually- according to qualification rules.
+     * @param record - a record from source collection to be buffered, and transformed into [RowContext] at some point of time.
      */
     fun nextRow(record: T)
 
@@ -46,7 +46,7 @@ interface TabulationTemplateApi<T> {
      * Internally finalization consists of following steps:
      * - rendering of all remaining user defined and buffered rows.
      * - rendering of all remaining user defined rows to be rendered after last collection element.
-     * Used for rendering of all trailing rows.
+     * Used for rendering of all trailing rows, after there are no records in source collection.
      */
     fun end()
 }

@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.template.context.ContextData
 import io.github.voytech.tabulate.template.context.RowIndex
 
 /**
- * Given requested index from upstream iterator, resolve [ContextData]
+ * Given requested index from upstream iterator, it resolves [ContextData]
  * @author Wojciech Mąka
  */
 interface IndexedContextResolver<T, CTX : ContextData<T>> {

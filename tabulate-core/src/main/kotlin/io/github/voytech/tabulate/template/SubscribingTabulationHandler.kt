@@ -7,7 +7,7 @@ import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 
 /**
- * Reactive, subscribing (chain terminating) version of exporter.
+ * Reactive, subscribing version of exporter.
  *
  * @author Wojciech Mąka
  */

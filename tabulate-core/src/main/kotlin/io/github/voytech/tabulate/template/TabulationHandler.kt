@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.result.ResultProvider
 
 /**
- * A [TabulationHandler] implementations orchestrates exporting by calling [TabulationTemplateApi] template API.
+ * A [TabulationHandler] implementations orchestrates exporting by calling [TabulationTemplateApi] template API methods.
  *
  * @author Wojciech Mąka
  */

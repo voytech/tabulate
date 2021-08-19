@@ -40,8 +40,6 @@ data class RowIndex(
     }
 
     operator fun inc(): RowIndex = RowIndex(rowIndex = rowIndex + 1, labels + 1)
-
-
 }
 
 operator fun Map<String, IndexMarker>.inc(): Map<String, IndexMarker> = mapValues { it.value + 1 }

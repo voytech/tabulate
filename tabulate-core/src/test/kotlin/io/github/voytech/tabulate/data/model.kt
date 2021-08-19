@@ -23,7 +23,7 @@ object Products {
     val CAMERAS = listOf(
         Product(
             "camera",
-            "Sony Film Beauty",
+            "Sony Film",
             "An excellent camera for non-professional usage",
             "Sony",
             LocalDate.now(),
