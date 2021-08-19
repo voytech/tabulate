@@ -8,6 +8,7 @@ import io.github.voytech.tabulate.testsupport.TestExportOperationsFactory
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -15,24 +16,24 @@ import java.time.LocalDate
 class TemplateTest {
 
     @Test
-    fun `should tabulate collection`() {
+    fun `should tabulate plain collection without additional features`() {
         TestExportOperationsFactory.test = AttributedCellTest { attributedCell ->
             Assertions.assertNotNull(attributedCell)
             when (attributedCell.rowIndex) {
                 0 -> {
-                   when (attributedCell.columnIndex) {
-                       0 -> assertEquals(attributedCell.value.value,"camera")
-                       1 -> assertEquals(attributedCell.value.value,"Sony Film")
-                       2 -> assertEquals(attributedCell.value.value,"An excellent camera for non-professional usage")
-                       3 -> assertEquals(attributedCell.value.value,"Sony")
-                       4 -> assertTrue(attributedCell.value.value is LocalDate)
-                       5 -> assertEquals(attributedCell.value.value,BigDecimal(200.00))
-                   }
+                    when (attributedCell.columnIndex) {
+                        0 -> assertEquals(attributedCell.value.value, "camera")
+                        1 -> assertEquals(attributedCell.value.value, "Sony Film")
+                        2 -> assertEquals(attributedCell.value.value, "An excellent camera for non-professional usage")
+                        3 -> assertEquals(attributedCell.value.value, "Sony")
+                        4 -> assertTrue(attributedCell.value.value is LocalDate)
+                        5 -> assertEquals(attributedCell.value.value, BigDecimal(200.00))
+                    }
                 }
             }
         }
 
-        Products.CAMERAS.tabulate(TabulationFormat("test"),Unit) {
+        Products.CAMERAS.tabulate(TabulationFormat("test"), Unit) {
             name = "Products table"
             columns {
                 column(Product::code)
@@ -44,8 +45,34 @@ class TemplateTest {
     }
 
     @Test
-    fun `should tabulate collection with trailing custom row`() {
-        Products.CAMERAS.tabulate(TabulationFormat("test"),Unit) {
+    fun `should tabulate collection and append trailing custom row - index mode`() {
+
+        var additionalRowOccurs = false
+        TestExportOperationsFactory.test = AttributedCellTest { attributedCell ->
+            Assertions.assertNotNull(attributedCell)
+            when (attributedCell.rowIndex) {
+                0 -> {
+                    when (attributedCell.columnIndex) {
+                        0 -> assertEquals(attributedCell.value.value, "camera")
+                        1 -> assertEquals(attributedCell.value.value, "Sony Film")
+                        2 -> assertEquals(attributedCell.value.value, "An excellent camera for non-professional usage")
+                        3 -> assertEquals(attributedCell.value.value, "Sony")
+                        4 -> assertTrue(attributedCell.value.value is LocalDate)
+                        5 -> assertEquals(attributedCell.value.value, BigDecimal(200.00))
+                    }
+                }
+                5 -> {
+                    when (attributedCell.columnIndex) {
+                        0 -> {
+                            assertEquals(attributedCell.value.value, "Custom row cell")
+                            additionalRowOccurs = true
+                        }
+                    }
+                }
+            }
+        }
+
+        Products.CAMERAS.tabulate(TabulationFormat("test"), Unit) {
             name = "Products table"
             columns {
                 column(Product::code)
@@ -55,18 +82,45 @@ class TemplateTest {
             }
             rows {
                 row(5) {
-                   cell {
-                       value  = "Custom row cell"
-                   }
+                    cell {
+                        value = "Custom row cell"
+                    }
                 }
             }
         }
+
+        assertTrue(additionalRowOccurs)
     }
 
-    /*
+    @Disabled("Can not work at the moment.")
     @Test
-    fun `should tabulate Flux`() {
-        Flux.fromIterable(Products.CAMERAS).tabulate(mock<Product>().createTableExportOperation(), Unit) {
+    fun `should tabulate collection and append trailing custom row - predicate mode`() {
+        var additionalRowOccurs = false
+        TestExportOperationsFactory.test = AttributedCellTest { attributedCell ->
+            Assertions.assertNotNull(attributedCell)
+            when (attributedCell.rowIndex) {
+                0 -> {
+                    when (attributedCell.columnIndex) {
+                        0 -> assertEquals(attributedCell.value.value, "camera")
+                        1 -> assertEquals(attributedCell.value.value, "Sony Film")
+                        2 -> assertEquals(attributedCell.value.value, "An excellent camera for non-professional usage")
+                        3 -> assertEquals(attributedCell.value.value, "Sony")
+                        4 -> assertTrue(attributedCell.value.value is LocalDate)
+                        5 -> assertEquals(attributedCell.value.value, BigDecimal(200.00))
+                    }
+                }
+                5 -> {
+                    when (attributedCell.columnIndex) {
+                        0 -> {
+                            assertEquals(attributedCell.value.value, "Custom row cell")
+                            additionalRowOccurs = true
+                        }
+                    }
+                }
+            }
+        }
+
+        Products.CAMERAS.tabulate(TabulationFormat("test"), Unit) {
             name = "Products table"
             columns {
                 column(Product::code)
@@ -74,8 +128,19 @@ class TemplateTest {
                 column(Product::description)
                 column(Product::manufacturer)
             }
+            rows {
+                row {
+                    insertWhen {
+                        it.rowIndexValue() == 5
+                    }
+                    cell {
+                        value = "Custom row cell"
+                    }
+                }
+            }
         }
+
+        assertTrue(additionalRowOccurs)
     }
-    */
 
 }
