@@ -9,5 +9,5 @@ import java.util.function.Predicate
 interface ExportOperationsProvider<T, CTX: RenderingContext> : ExportOperationsFactory<T>, Predicate<Identifiable>, Identifiable {
     fun createExportOperations(): TableExportOperations<T>
     fun getRenderingContext(): CTX
-    fun createResultProviders(): List<ResultProvider<CTX>>
+    fun createResultProviders(): List<ResultProvider<*>>
 }

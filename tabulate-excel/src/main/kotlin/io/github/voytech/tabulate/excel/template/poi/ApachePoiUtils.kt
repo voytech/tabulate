@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.excel.template.wrapper
+package io.github.voytech.tabulate.excel.template.poi
 
 import kotlin.math.floor
 

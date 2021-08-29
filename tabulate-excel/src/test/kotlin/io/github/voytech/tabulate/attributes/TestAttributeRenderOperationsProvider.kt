@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.attributes
 
 import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
 import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
-import io.github.voytech.tabulate.excel.template.wrapper.ApachePoiExcelFacade
+import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.context.RowCellContext
@@ -26,16 +26,16 @@ class FakeTestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsPr
     override fun getContextClass(): Class<FakeContext> = FakeContext::class.java
 }
 
-class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvider<T, ApachePoiExcelFacade> {
+class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvider<T, ApachePoiRenderingContext> {
 
-    override fun getAttributeOperationsFactory(renderingContext: ApachePoiExcelFacade): AttributeRenderOperationsFactory<T> {
+    override fun getAttributeOperationsFactory(renderingContext: ApachePoiRenderingContext): AttributeRenderOperationsFactory<T> {
         return object : AttributeRenderOperationsFactory<T> {
             override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<out CellAttributeAlias>> =
                 setOf(SimpleTestCellAttributeRenderOperation(renderingContext))
         }
     }
 
-    override fun getContextClass(): Class<ApachePoiExcelFacade> = ApachePoiExcelFacade::class.java
+    override fun getContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 }
 
 data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<SimpleTestCellAttribute>() {
@@ -45,8 +45,8 @@ data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<Simp
     }
 }
 
-class SimpleTestCellAttributeRenderOperation(poi: ApachePoiExcelFacade) :
-    BaseCellAttributeRenderOperation<ApachePoiExcelFacade, SimpleTestCellAttribute>(poi) {
+class SimpleTestCellAttributeRenderOperation(poi: ApachePoiRenderingContext) :
+    BaseCellAttributeRenderOperation<ApachePoiRenderingContext, SimpleTestCellAttribute>(poi) {
 
     override fun attributeType(): Class<out SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
 

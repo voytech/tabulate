@@ -8,8 +8,8 @@ import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
 import io.github.voytech.tabulate.template.context.Coordinates
-import io.github.voytech.tabulate.excel.template.wrapper.ApachePoiExcelFacade
-import io.github.voytech.tabulate.excel.template.wrapper.ApachePoiUtils
+import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
+import io.github.voytech.tabulate.excel.template.poi.ApachePoiUtils
 import io.github.voytech.tabulate.excel.model.ExcelBorderStyle
 import io.github.voytech.tabulate.excel.model.ExcelCellFills
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
@@ -24,8 +24,8 @@ private fun parseColor(xssfColor: XSSFColor) =
         xssfColor.rgb[2].toInt().and(0xFF)
     )
 
-class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
-    override fun resolve(api: ApachePoiExcelFacade, coordinates: Coordinates): CellAttribute {
+class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
+    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute {
         return api.xssfCell(coordinates).let { cell ->
             CellTextStylesAttribute(
                 fontFamily = cell?.cellStyle?.font?.fontName,
@@ -45,8 +45,8 @@ class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
     }
 }
 
-class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
-    override fun resolve(api: ApachePoiExcelFacade, coordinates: Coordinates): CellAttribute {
+class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
+    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute {
         return with(api.xssfCell(coordinates)?.cellStyle) {
             if (this != null) {
                 CellBackgroundAttribute(
@@ -77,8 +77,8 @@ class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiExcelFacad
     }
 }
 
-class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
-    override fun resolve(api: ApachePoiExcelFacade, coordinates: Coordinates): CellAttribute {
+class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
+    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute {
 
         return api.xssfCell(coordinates).let { cell ->
             CellBordersAttribute(
@@ -110,8 +110,8 @@ class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiExcelFacade> 
     }
 }
 
-class PoiCellDataFormatAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
-    override fun resolve(api: ApachePoiExcelFacade, coordinates: Coordinates): CellAttribute {
+class PoiCellDataFormatAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
+    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute {
         return api.xssfCell(coordinates).let {
             it?.cellStyle?.dataFormatString?.let { dataFormat ->
                 CellExcelDataFormatAttribute(
@@ -122,8 +122,8 @@ class PoiCellDataFormatAttributeResolver : AttributeResolver<ApachePoiExcelFacad
     }
 }
 
-class PoiCellAlignmentAttributeResolver : AttributeResolver<ApachePoiExcelFacade> {
-    override fun resolve(api: ApachePoiExcelFacade, coordinates: Coordinates): CellAttribute {
+class PoiCellAlignmentAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
+    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute {
         return api.xssfCell(coordinates).let {
             CellAlignmentAttribute(
                 vertical = when (it?.cellStyle?.verticalAlignment) {

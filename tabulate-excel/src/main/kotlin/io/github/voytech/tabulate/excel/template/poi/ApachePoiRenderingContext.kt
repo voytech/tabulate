@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.excel.template.wrapper
+package io.github.voytech.tabulate.excel.template.poi
 
 import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.attributes.cell.Color
@@ -19,7 +19,7 @@ import java.io.FileInputStream
 import java.io.InputStream
 
 
-class ApachePoiExcelFacade : RenderingContext  {
+class ApachePoiRenderingContext : RenderingContext  {
 
     private var adaptee: SXSSFWorkbook? = null
 

@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.excel.template
 
 import io.github.voytech.tabulate.api.builder.TableBuilder
 import io.github.voytech.tabulate.excel.template.Utils.toDate
-import io.github.voytech.tabulate.excel.template.wrapper.ApachePoiExcelFacade
+import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
 import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.model.attributes.cell.CellAlignmentAttribute
@@ -18,19 +18,18 @@ import io.github.voytech.tabulate.template.context.RowCellContext
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.operations.impl.ensureAttributesCacheEntry
 import io.github.voytech.tabulate.template.operations.impl.putCachedValueIfAbsent
-import io.github.voytech.tabulate.template.result.FlushingResultProvider
 import io.github.voytech.tabulate.template.result.ResultProvider
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.xssf.streaming.SXSSFCell
 import java.io.OutputStream
 
-class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T, ApachePoiExcelFacade>() {
+class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T, ApachePoiRenderingContext>() {
 
     override fun getFormat(): String = "xlsx"
 
-    override fun createRenderingContext(): ApachePoiExcelFacade = ApachePoiExcelFacade()
+    override fun createRenderingContext(): ApachePoiRenderingContext = ApachePoiRenderingContext()
 
-    override fun createTableExportOperation(): TableExportOperations<T> = object: TableExportOperations<T> {
+    override fun createTableExportOperations(): TableExportOperations<T> = object: TableExportOperations<T> {
 
         override fun initialize() {
             getRenderingContext().createWorkbook()
@@ -116,36 +115,37 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
     }
 
-    override fun getAttributeOperationsFactory(renderingContext: ApachePoiExcelFacade): AttributeRenderOperationsFactory<T> =
-        StandardAttributeRenderOperationsFactory(renderingContext, object: StandardAttributeRenderOperationsProvider<ApachePoiExcelFacade,T>{
-            override fun createTemplateFileRenderer(renderingContext: ApachePoiExcelFacade): TableAttributeRenderOperation<TemplateFileAttribute> =
+    override fun getAttributeOperationsFactory(renderingContext: ApachePoiRenderingContext): AttributeRenderOperationsFactory<T> =
+        StandardAttributeRenderOperationsFactory(renderingContext, object: StandardAttributeRenderOperationsProvider<ApachePoiRenderingContext,T>{
+            override fun createTemplateFileRenderer(renderingContext: ApachePoiRenderingContext): TableAttributeRenderOperation<TemplateFileAttribute> =
                 TemplateFileAttributeRenderOperation(renderingContext)
 
-            override fun createColumnWidthRenderer(renderingContext: ApachePoiExcelFacade): ColumnAttributeRenderOperation<ColumnWidthAttribute> =
+            override fun createColumnWidthRenderer(renderingContext: ApachePoiRenderingContext): ColumnAttributeRenderOperation<ColumnWidthAttribute> =
                 ColumnWidthAttributeRenderOperation(renderingContext)
 
-            override fun createRowHeightRenderer(renderingContext: ApachePoiExcelFacade): RowAttributeRenderOperation<T, RowHeightAttribute> =
+            override fun createRowHeightRenderer(renderingContext: ApachePoiRenderingContext): RowAttributeRenderOperation<T, RowHeightAttribute> =
                 RowHeightAttributeRenderOperation(renderingContext)
 
-            override fun createCellTextStyleRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellTextStylesAttribute> =
+            override fun createCellTextStyleRenderer(renderingContext: ApachePoiRenderingContext): CellAttributeRenderOperation<CellTextStylesAttribute> =
                 CellTextStylesAttributeRenderOperation(renderingContext)
 
-            override fun createCellBordersRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellBordersAttribute> =
+            override fun createCellBordersRenderer(renderingContext: ApachePoiRenderingContext): CellAttributeRenderOperation<CellBordersAttribute> =
                 CellBordersAttributeRenderOperation(renderingContext)
 
-            override fun createCellAlignmentRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellAlignmentAttribute> =
+            override fun createCellAlignmentRenderer(renderingContext: ApachePoiRenderingContext): CellAttributeRenderOperation<CellAlignmentAttribute> =
                 CellAlignmentAttributeRenderOperation(renderingContext)
 
-            override fun createCellBackgroundRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellBackgroundAttribute> =
+            override fun createCellBackgroundRenderer(renderingContext: ApachePoiRenderingContext): CellAttributeRenderOperation<CellBackgroundAttribute> =
                 CellBackgroundAttributeRenderOperation(renderingContext)
         },
             additionalCellAttributeRenderers = setOf(CellDataFormatAttributeRenderOperation(renderingContext)),
             additionalTableAttributeRenderers = setOf(FilterAndSortTableAttributeRenderOperation(renderingContext))
         )
 
-    override fun createResultProviders(): List<ResultProvider<ApachePoiExcelFacade>> = listOf(
-        FlushingResultProvider<ApachePoiExcelFacade,OutputStream> { renderingContext, output ->
-            with(renderingContext.workbook()) {
+
+    override fun createResultProviders(): List<ResultProvider<*>> = listOf(
+        ResultProvider<OutputStream> { output ->
+            with(getRenderingContext().workbook()) {
                 write(output)
                 close()
                 dispose()
@@ -157,7 +157,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
         private const val CELL_STYLE_CACHE_KEY: String = "cellStyle"
 
-        fun getCachedStyle(poi: ApachePoiExcelFacade, context: RowCellContext): CellStyle {
+        fun getCachedStyle(poi: ApachePoiRenderingContext, context: RowCellContext): CellStyle {
             return context.putCachedValueIfAbsent(
                 CELL_STYLE_CACHE_KEY,
                 poi.workbook().createCellStyle()

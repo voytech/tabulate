@@ -25,7 +25,7 @@ interface TableExportOperations<T> {
 }
 
 interface ExportOperationsFactory<T> {
-    fun createTableExportOperation(): TableExportOperations<T>
+    fun createTableExportOperations(): TableExportOperations<T>
 }
 
 abstract class ExportOperationsConfiguringFactory<T,CTX: RenderingContext> : ExportOperationsProvider<T,CTX> {
@@ -47,7 +47,7 @@ abstract class ExportOperationsConfiguringFactory<T,CTX: RenderingContext> : Exp
     open fun getAttributeOperationsFactory(renderingContext: CTX): AttributeRenderOperationsFactory<T>? = null
 
     override fun createExportOperations(): TableExportOperations<T> {
-        val tableOps = createTableExportOperation()
+        val tableOps = createTableExportOperations()
         return if (!attributeOperations.isEmpty()) {
             AttributeAwareTableExportOperations(attributeOperations, tableOps)
         } else {
