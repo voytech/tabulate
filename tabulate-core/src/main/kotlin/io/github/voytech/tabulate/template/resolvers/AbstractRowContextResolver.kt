@@ -13,7 +13,8 @@ import io.github.voytech.tabulate.template.context.getRowIndex
 
 /**
  * Given requested index, [Table] model, and global custom attributes, it resolves [AttributedRow] context data with
- * effective index (effective index may differ from requested one if there is no rows matching predicate matching requested index)
+ * effective index (effective index may differ from requested one if there are no rows matching predicate
+ * - in that case - row context with next matching index is returned)
  * @author Wojciech Mąka
  */
 abstract class AbstractRowContextResolver<T>(

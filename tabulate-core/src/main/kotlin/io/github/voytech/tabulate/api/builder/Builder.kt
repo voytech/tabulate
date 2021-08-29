@@ -66,17 +66,13 @@ class TableBuilder<T> : AttributesAwareBuilder<Table<T>>() {
     val rowsBuilder: RowsBuilder<T> = RowsBuilder(columnsBuilder)
 
     @JvmSynthetic
-    var name: String? = "untitled"
+    var name: String? = "untitled table"
 
     @JvmSynthetic
     var firstRow: Int? = 0
 
     @JvmSynthetic
     var firstColumn: Int? = 0
-
-    init {
-        NextId.reset()
-    }
 
     @JvmSynthetic
     override fun build(): Table<T> = Table(

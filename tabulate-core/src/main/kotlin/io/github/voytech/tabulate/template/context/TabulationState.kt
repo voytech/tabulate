@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.template.context
 
-import io.github.voytech.tabulate.model.NextId
 import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.template.iterators.OperationContextIterator
 import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
@@ -8,12 +7,12 @@ import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
 /**
  * @author Wojciech Mąka
  * [TabulationState] keeps state separated from [TabulationTemplate] so that tabulate method invoked on [TabulationTemplate]
- * always starts with clear state from the beginning. No state kept in TabulationTemplate properties.
+ * always starts with clear state from the beginning.
  * TabulationState manages following properties:
- * @property indexIncrement - a mutable composite index with dynamic markers (marker is a sub-index starting with
+ * @property indexIncrement - a mutable composite index with custom markers (marker is a sub-index starting with
  * 0 value when created)
  * @property rowContextResolver - strategy for transforming current index, table model, and current record into [RowContext]
- * which is used then by rendering operations and delegated rendering context (e.g. third party API like Apache POI)
+ * which is used then by rendering operations and delegate rendering context (e.g. third party API like Apache POI)
  * @property rowContextIterator - iterates over index and uses [RowContextResolver] in order to resolve [RowContext] for
  * current index.
  * @property stateAttributes - generic map of attributes that may be shared globally within operation implementors. It
@@ -21,7 +20,7 @@ import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
  */
 class TabulationState<T>(
     val tableModel: Table<T>,
-    val tableName: String = "table-${NextId.nextId()}",
+    val tableName: String = "untitled table",
     val firstRow: Int? = 0,
     val firstColumn: Int? = 0
 ) {

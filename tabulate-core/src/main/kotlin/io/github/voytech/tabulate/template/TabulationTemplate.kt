@@ -4,7 +4,6 @@ import io.github.voytech.tabulate.api.builder.TableBuilder
 import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.model.ColumnDef
-import io.github.voytech.tabulate.model.NextId
 import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.context.AttributedColumnFactory.createAttributedColumn
 import io.github.voytech.tabulate.template.operations.TableExportOperations
@@ -16,8 +15,11 @@ import java.io.FileOutputStream
 import java.util.*
 
 /**
- * [TabulationApi] exposes [TabulationTemplate] api in order to export data interactively.
- * Allows to export each record respectively with 'nextRow' method.
+ * [TabulationApi] exposes an API enabling interactive table export.
+ * Particulary it allows to:
+ * - export each record respectively with 'nextRow' method,
+ * - export all trailing and buffered records with 'finish' method,
+ * - flush rendered data into output.
  * @author Wojciech Mąka
  */
 interface TabulationApi<T,O> {
@@ -48,7 +50,10 @@ interface TabulationApi<T,O> {
 
 /**
  * An entry point for data exporting.
- * Contains convenience extension methods:
+ * Contains core exporting methods:
+ * - [TabulationTemplate.export] - export collection of objects.
+ * - [TabulationTemplate.create] - create and return [TabulationApi] for 'interactive' exporting.
+ * And following convenience extension methods:
  * - [TableBuilder.export] for exporting fully user defined table.
  * - [Iterable.tabulate] for tabulating collection of objects. The process is called 'tabulate' to emphasize
  * its behaviour - taking a source and making a table from it.
@@ -92,7 +97,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         return ops.createTable(tableBuilder).let { table ->
             TabulationState(
                 tableModel = table,
-                tableName = table.name ?: "table${NextId.nextId()}",
+                tableName = table.name ?: "untitled table",
                 firstRow = table.firstRow,
                 firstColumn = table.firstColumn
             )
