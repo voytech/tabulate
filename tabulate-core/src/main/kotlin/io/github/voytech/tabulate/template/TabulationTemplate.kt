@@ -16,11 +16,8 @@ import java.io.FileOutputStream
 import java.util.*
 
 /**
- * [TabulationApi] provides small set of methods from [TabulationTemplate] exposed for [TabulationHandler]
- * in order to orchestrate rendering task. Currently rendering can be arranged using:
- * - [IteratingTabulationHandler]
- * - [SubscribingTabulationHandler]
- *
+ * [TabulationApi] exposes [TabulationTemplate] api in order to export data interactively.
+ * Allows to export each record respectively with 'nextRow' method.
  * @author Wojciech Mąka
  */
 interface TabulationApi<T,O> {
@@ -44,8 +41,7 @@ interface TabulationApi<T,O> {
 
     /**
      * To be called explicitly in order to flush rendered table into output.
-     * Internally it uses compatible result provider to copy state from context into output.
-     *
+     * Internally it uses compatible result provider to copy state from rendering context into output.
      */
     fun flush(output: O)
 }
@@ -196,8 +192,8 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
  * Extension function invoked on a [TableBuilder], which takes [TabulationFormat] and output handler
  *
  * @param format identifier of [ExportOperationsProvider] to export table to specific file format (xlsx, pdf).
- * @param output reference to any kind of output - may be e.g. OutputStream.
- * @receiver DSL top level table builder.
+ * @param output output binding - may be e.g. OutputStream.
+ * @receiver top level DSL table builder.
  */
 fun <T, O> TableBuilder<T>.export(format: TabulationFormat, output: O) {
     TabulationTemplate<T>(format).export(emptyList(), output, this)
@@ -207,7 +203,7 @@ fun <T, O> TableBuilder<T>.export(format: TabulationFormat, output: O) {
  * Extension function invoked on a [TableBuilder], which takes output [file].
  *
  * @param file A [File].
- * @receiver DSL top level table builder.
+ * @receiver top level DSL table builder.
  */
 fun <T> TableBuilder<T>.export(file: File) {
     val ext = file.extension
@@ -222,7 +218,7 @@ fun <T> TableBuilder<T>.export(file: File) {
  * Extension function invoked on a [TableBuilder], which takes [fileName].
  *
  * @param fileName A path of an output file.
- * @receiver DSL top level table builder.
+ * @receiver top level DSL table builder.
  */
 fun <T> TableBuilder<T>.export(fileName: String) = export(File(fileName))
 
