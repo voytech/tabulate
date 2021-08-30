@@ -1,6 +1,4 @@
 val kotlinVersion: String by project
-val apachePoiVersion: String by project
-val commonsMathVersion: String by project
 val projectReactorVersion: String by project
 
 plugins {
@@ -9,14 +7,14 @@ plugins {
 }
 
 scmVersion {
-    tag.prefix = "tabulate.excel"
+    tag.prefix = "tabulate.reactor"
     tag.versionSeparator = "-"
 }
 
+
 dependencies {
     implementation(project(":tabulate-core"))
-    api("org.apache.poi:poi:$apachePoiVersion")
-    api("org.apache.poi:poi-ooxml:$apachePoiVersion")
-    implementation("org.apache.commons:commons-math3:$commonsMathVersion")
+    implementation("io.projectreactor","reactor-core", projectReactorVersion)
+    testImplementation("io.projectreactor","reactor-test", projectReactorVersion)
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
