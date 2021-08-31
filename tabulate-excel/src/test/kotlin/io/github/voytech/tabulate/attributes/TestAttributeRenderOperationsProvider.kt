@@ -51,7 +51,7 @@ class SimpleTestCellAttributeRenderOperation(poi: ApachePoiRenderingContext) :
     override fun attributeType(): Class<out SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
 
     override fun renderAttribute(context: RowCellContext, attribute: SimpleTestCellAttribute) {
-        with(renderingContext.assertCell(
+        with(renderingContext.provideCell(
             context.getTableId(),
             context.rowIndex,
             context.columnIndex

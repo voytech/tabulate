@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.data
+package io.github.voytech.tabulate.reactor.data
 
 import reactor.core.publisher.Flux
 import java.math.BigDecimal

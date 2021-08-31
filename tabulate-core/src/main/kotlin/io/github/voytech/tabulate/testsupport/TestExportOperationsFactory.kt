@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.testsupport
 
+import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.context.AttributedCell
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.ExportOperationsConfiguringFactory
@@ -15,7 +16,7 @@ fun interface AttributedCellTest {
 
 class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, NoContext>() {
 
-    override fun getFormat() = "test"
+    override fun supportsFormat() = format("test")
 
     override fun createTableExportOperations(): TableExportOperations<T> = object: TableExportOperations<T> {
 
@@ -27,9 +28,7 @@ class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, NoCo
 
     override fun createRenderingContext(): NoContext = NoContext()
 
-    override fun createResultProviders(): List<ResultProvider<*>> = listOf(
-        ResultProvider { _: Unit -> println("flush results") }
-    )
+    override fun createResultProviders(): List<ResultProvider<*>> = listOf(NoResultProvider())
 
     companion object {
         lateinit var test: AttributedCellTest
@@ -37,9 +36,9 @@ class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, NoCo
 
 }
 
-class AnotherTestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, ExampleContext>() {
+class CompetingTestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, ExampleContext>() {
 
-    override fun getFormat() = "mock-2"
+    override fun supportsFormat() = format("test-2")
 
     override fun createTableExportOperations(): TableExportOperations<T> = object: TableExportOperations<T> {
 
@@ -51,8 +50,6 @@ class AnotherTestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<
 
     override fun createRenderingContext(): ExampleContext = ExampleContext()
 
-    override fun createResultProviders(): List<ResultProvider<*>> = listOf(
-        ResultProvider {  _: Unit -> println("flush results") }
-    )
+    override fun createResultProviders(): List<ResultProvider<*>> = listOf(NoResultProvider())
 
 }

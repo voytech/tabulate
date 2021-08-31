@@ -36,7 +36,7 @@ class CellTextStylesAttributeRenderOperation(override val renderingContext: Apac
     override fun attributeType(): Class<CellTextStylesAttribute> = CellTextStylesAttribute::class.java
 
     override fun renderAttribute(context: RowCellContext, attribute: CellTextStylesAttribute) {
-        renderingContext.assertCellStyle(
+        renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
@@ -66,7 +66,7 @@ class CellBackgroundAttributeRenderOperation(override val renderingContext: Apac
         context: RowCellContext,
         attribute: CellBackgroundAttribute,
     ) {
-        renderingContext.assertCellStyle(
+        renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
@@ -102,7 +102,7 @@ class CellBordersAttributeRenderOperation(override val renderingContext: ApacheP
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
     override fun renderAttribute(context: RowCellContext, attribute: CellBordersAttribute) {
-        renderingContext.assertCellStyle(
+        renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
@@ -146,7 +146,7 @@ class CellAlignmentAttributeRenderOperation(override val renderingContext: Apach
     override fun attributeType(): Class<out CellAlignmentAttribute> = CellAlignmentAttribute::class.java
 
     override fun renderAttribute(context: RowCellContext, attribute: CellAlignmentAttribute) {
-        renderingContext.assertCellStyle(
+        renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
@@ -185,7 +185,7 @@ class CellDataFormatAttributeRenderOperation(override val renderingContext: Apac
         context: RowCellContext,
         attribute: CellExcelDataFormatAttribute,
     ) {
-        renderingContext.assertCellStyle(
+        renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.rowIndex,
             columnIndex = context.columnIndex,
@@ -202,7 +202,7 @@ class ColumnWidthAttributeRenderOperation(override val renderingContext: ApacheP
     override fun attributeType(): Class<out ColumnWidthAttribute> = ColumnWidthAttribute::class.java
 
     override fun renderAttribute(context: ColumnContext, attribute: ColumnWidthAttribute) {
-        renderingContext.assertSheet(context.getTableId()).let {
+        renderingContext.provideSheet(context.getTableId()).let {
             if (attribute.auto == true || attribute.px <= 0) {
                 if (!it.isColumnTrackedForAutoSizing(context.columnIndex)) {
                     it.trackColumnForAutoSizing(context.columnIndex)
@@ -219,7 +219,7 @@ class RowHeightAttributeRenderOperation<T>(override val renderingContext: Apache
     BaseRowAttributeRenderOperation<ApachePoiRenderingContext, T, RowHeightAttribute>(renderingContext) {
     override fun attributeType(): Class<out RowHeightAttribute> = RowHeightAttribute::class.java
     override fun renderAttribute(context: RowContext<T>, attribute: RowHeightAttribute) {
-        renderingContext.assertRow(context.getTableId(), context.rowIndex).height =
+        renderingContext.provideRow(context.getTableId(), context.rowIndex).height =
             ApachePoiUtils.heightFromPixels(attribute.px)
     }
 }
@@ -249,7 +249,7 @@ class TemplateFileAttributeRenderOperation(override val renderingContext: Apache
     override fun priority() = -1
     override fun renderAttribute(table: Table<*>, attribute: TemplateFileAttribute) {
         renderingContext.createWorkbook(FileInputStream(attribute.fileName), true).let {
-            renderingContext.assertSheet(table.name!!)
+            renderingContext.provideSheet(table.name!!)
         }
     }
 }

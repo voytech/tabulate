@@ -6,6 +6,7 @@ package io.github.voytech.tabulate.template.result
  * @author
  * Wojciech Mąka
  */
-fun interface ResultProvider<O> {
+interface ResultProvider<O> {
+    fun outputClass(): Class<O>
     fun flush(output: O)
 }
