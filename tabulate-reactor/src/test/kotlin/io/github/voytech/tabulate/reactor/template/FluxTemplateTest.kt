@@ -9,8 +9,10 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import reactor.core.scheduler.Schedulers
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.concurrent.Executors
 
 class FluxTemplateTest {
 
@@ -32,14 +34,21 @@ class FluxTemplateTest {
             }
         }
 
-        Products.CAMERAS.tabulate(TabulationFormat("test"), Unit) {
-            name = "Products table"
-            columns {
-                column(Product::code)
-                column(Product::name)
-                column(Product::description)
-                column(Product::manufacturer)
+        val scheduler = Schedulers.fromExecutor(Executors.newFixedThreadPool(1))
+        Products.CAMERAS
+            .log()
+            .tabulate(TabulationFormat("test"), Unit) {
+                name = "Products table"
+                columns {
+                    column(Product::code)
+                    column(Product::name)
+                    column(Product::description)
+                    column(Product::manufacturer)
+                }
+            }.publishOn(scheduler)
+            .map {
+                println("${Thread.currentThread().name} - Do something with $it")
             }
-        }.blockLast()
+            .blockLast()
     }
 }
