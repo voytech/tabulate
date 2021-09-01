@@ -7,6 +7,7 @@ import io.github.voytech.tabulate.model.ColumnDef
 import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.context.AttributedColumnFactory.createAttributedColumn
 import io.github.voytech.tabulate.template.exception.ExportOperationsFactoryResolvingException
+import io.github.voytech.tabulate.template.exception.ResultProviderResolvingException
 import io.github.voytech.tabulate.template.exception.UnknownTabulationFormatException
 import io.github.voytech.tabulate.template.operations.TableExportOperations
 import io.github.voytech.tabulate.template.result.ResultProvider
@@ -46,7 +47,7 @@ interface TabulationApi<T, O> {
      * To be called explicitly in order to flush rendered table into output.
      * Internally it uses compatible result provider to copy state from rendering context into output.
      */
-    fun flush(output: O)
+    fun flush()
 }
 
 /**
@@ -62,7 +63,7 @@ interface TabulationApi<T, O> {
  */
 class TabulationTemplate<T>(private val format: TabulationFormat) {
 
-    private val provider: ExportOperationsProvider<T, out RenderingContext> by lazy {
+    private val provider: ExportOperationsProvider<T, RenderingContext> by lazy {
         resolveExportOperationsFactory(format)
     }
 
@@ -74,7 +75,6 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         provider.createResultProviders()
     }
 
-    @Suppress("unused") // because 'output' not used at runtime but a hint for kotlin generic reification
     inner class TabulationApiImpl<O>(
         private val state: TabulationState<T>,
         private val output: O
@@ -93,7 +93,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
             ops.finish()
         }
 
-        override fun flush(output: O) {
+        override fun flush() {
             resultProvider.flush(output)
         }
 
@@ -102,10 +102,10 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
             resultProviders.filter {
                 it.outputClass().isAssignableFrom(output!!::class.java)
             }.map { it as ResultProvider<O> }
-             .first()
+             .firstOrNull() ?: throw ResultProviderResolvingException()
     }
 
-    private fun prepare(tableBuilder: TableBuilder<T>): TabulationState<T> {
+    private fun materialize(tableBuilder: TableBuilder<T>): TabulationState<T> {
         return ops.createTable(tableBuilder).let { table ->
             TabulationState(
                 tableModel = table,
@@ -113,15 +113,13 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
                 firstRow = table.firstRow,
                 firstColumn = table.firstColumn
             )
-        }.also {
-            renderColumns(it, ColumnRenderPhase.BEFORE_FIRST_ROW)
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun resolveExportOperationsFactory(format: TabulationFormat): ExportOperationsProvider<T, out RenderingContext> {
+    private fun resolveExportOperationsFactory(format: TabulationFormat): ExportOperationsProvider<T, RenderingContext> {
         return ServiceLoader.load(ExportOperationsProvider::class.java)
-            .filterIsInstance<ExportOperationsProvider<T, out RenderingContext>>().find {
+            .filterIsInstance<ExportOperationsProvider<T, RenderingContext>>().find {
                 if (format.provider.isNullOrBlank()) {
                     format.id == it.supportsFormat().id
                 } else {
@@ -145,19 +143,25 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         create(output, tableBuilder).let { api ->
             source.forEach { api.nextRow(it) }
                 .also { api.finish() }
-                .also { api.flush(output) }
+                .also { api.flush() }
         }
     }
 
     /**
      * Returns [TabulationApi] which enables 'interactive' export.
      *
+     * @param output output binding.
      * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
      * @return [TabulationApi] which enables 'interactive' export.
      */
     fun <O> create(output: O,tableBuilder: TableBuilder<T>): TabulationApi<T, O> {
         ops.initialize()
-        return TabulationApiImpl(prepare(tableBuilder), output)
+        return TabulationApiImpl(
+            materialize(tableBuilder).also {
+                renderColumns(it, ColumnRenderPhase.BEFORE_FIRST_ROW)
+            },
+            output
+        )
     }
 
     private fun bufferRecordAndRenderRow(state: TabulationState<T>, record: T) {

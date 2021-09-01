@@ -155,7 +155,6 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
                         close()
                         dispose()
                     }
-
                 }
             }
     )

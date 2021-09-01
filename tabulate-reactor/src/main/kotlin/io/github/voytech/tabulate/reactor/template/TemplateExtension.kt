@@ -27,7 +27,7 @@ fun <T, O> Flux<T>.tabulate(format: TabulationFormat, output: O, block: TableBui
             api.nextRow(it)
         }.doOnComplete {
             api.finish()
-            api.flush(output)
+            api.flush()
         }
     }
 }

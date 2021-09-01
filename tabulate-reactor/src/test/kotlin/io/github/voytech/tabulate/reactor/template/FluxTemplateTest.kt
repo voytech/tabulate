@@ -26,19 +26,20 @@ class FluxTemplateTest {
             when (attributedCell.rowIndex) {
                 0 -> {
                     when (attributedCell.columnIndex) {
-                        0 -> assertEquals(attributedCell.value.value, "camera")
-                        1 -> assertEquals(attributedCell.value.value, "Sony Film")
-                        2 -> assertEquals(attributedCell.value.value, "An excellent camera for non-professional usage")
-                        3 -> assertEquals(attributedCell.value.value, "Sony")
+                        0 -> assertEquals(attributedCell.value.value, "code1")
+                        1 -> assertEquals(attributedCell.value.value, "name1")
+                        2 -> assertEquals(attributedCell.value.value, "description1")
+                        3 -> assertEquals(attributedCell.value.value, "manufacturer1")
                         4 -> assertTrue(attributedCell.value.value is LocalDate)
-                        5 -> assertEquals(attributedCell.value.value, BigDecimal(200.00))
+                        5 -> assertEquals(attributedCell.value.value, BigDecimal(1000.00))
                     }
                 }
             }
         }
-        tabulateProducts.log().blockLast()
+        tabulateProducts.blockLast().also {
+            File("file.test").delete()
+        }
     }
-
 
     class FluxTestTemplateInvocationContextProvider : TestTemplateInvocationContextProvider {
 
@@ -46,15 +47,17 @@ class FluxTemplateTest {
 
         override fun provideTestTemplateInvocationContexts(context: ExtensionContext): Stream<TestTemplateInvocationContext> =
             Stream.of(
-                invocation(ExplicitTabulationFormat()),
-                invocation(FileProbedTabulationFormat()),
-                invocation(FileNameProbedTabulationFormat()),
+                invocation(ExplicitTabulationFormat(), "tabulate(TabulationFormat(\"test\"), Unit)"),
+                invocation(FileProbedTabulationFormat(), "tabulate(File(\"file.test\"))"),
+                invocation(FileNameProbedTabulationFormat(), "tabulate(\"file.test\")"),
             )
 
-        private fun invocation(resolver: ParameterResolver) = object : TestTemplateInvocationContext {
-            override fun getAdditionalExtensions(): MutableList<Extension> =
-                mutableListOf(resolver)
-        }
+        private fun invocation(resolver: ParameterResolver, displayName: String = "") =
+            object : TestTemplateInvocationContext {
+                override fun getDisplayName(invocationIndex: Int): String = displayName
+                override fun getAdditionalExtensions(): MutableList<Extension> =
+                    mutableListOf(resolver)
+            }
 
         class ExplicitTabulationFormat : ParameterResolver {
             override fun supportsParameter(
@@ -65,7 +68,7 @@ class FluxTemplateTest {
             override fun resolveParameter(
                 parameterContext: ParameterContext,
                 extensionContext: ExtensionContext,
-            ): Any = Products.CAMERAS.log().tabulate(TabulationFormat("test"), Unit) {
+            ): Any = Products.ITEMS.log().tabulate(TabulationFormat("test"), Unit) {
                 name = "Products table"
                 columns {
                     column(Product::code)
@@ -84,7 +87,7 @@ class FluxTemplateTest {
             override fun resolveParameter(
                 parameterContext: ParameterContext,
                 extensionContext: ExtensionContext,
-            ): Any = Products.CAMERAS.log().tabulate(File("file.test")) {
+            ): Any = Products.ITEMS.log().tabulate(File("file.test")) {
                 name = "Products table"
                 columns {
                     column(Product::code)
@@ -103,7 +106,7 @@ class FluxTemplateTest {
             override fun resolveParameter(
                 parameterContext: ParameterContext,
                 extensionContext: ExtensionContext,
-            ): Any = Products.CAMERAS.log().tabulate("file.test") {
+            ): Any = Products.ITEMS.log().tabulate("file.test") {
                 name = "Products table"
                 columns {
                     column(Product::code)
@@ -113,7 +116,6 @@ class FluxTemplateTest {
                 }
             }
         }
-
     }
 
 }

@@ -28,7 +28,9 @@ class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, NoCo
 
     override fun createRenderingContext(): NoContext = NoContext()
 
-    override fun createResultProviders(): List<ResultProvider<*>> = listOf(NoResultProvider())
+    override fun createResultProviders(): List<ResultProvider<*>> = listOf(
+        NoResultProvider(), OutputStreamTestResultProvider()
+    )
 
     companion object {
         lateinit var test: AttributedCellTest
