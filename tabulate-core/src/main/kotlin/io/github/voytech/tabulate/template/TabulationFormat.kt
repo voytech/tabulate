@@ -1,14 +1,16 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.template.spi.Identifiable
-
 /**
  * Simple class representing the format of output file.
- * @property formatId - String value representing file type. e.g. xlsx, pdf, csv, txt
+ * @property id - String value representing file type. e.g. xlsx, pdf, csv, txt
+ * @property provider - String value representing export operations implementor.
  * @author Wojciech Mąka
  */
 class TabulationFormat(
-    private val formatId: String
-    ) : Identifiable {
-    override fun getFormat(): String = formatId
+    val id: String,
+    val provider: String? = null,
+) {
+    companion object {
+        fun format(formatId: String, provider: String? = null): TabulationFormat = TabulationFormat(formatId, provider)
+    }
 }

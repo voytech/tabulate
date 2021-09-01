@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.data
+package io.github.voytech.tabulate.reactor.data
 
 import reactor.core.publisher.Flux
 import java.math.BigDecimal
@@ -21,24 +21,20 @@ data class Price(
 )
 
 object Products {
-    val CAMERAS = Flux.fromIterable(
+    val ITEMS: Flux<Product> = Flux.fromIterable(
         listOf(
-            Product(
-                "camera",
-                "Sony Film",
-                "An excellent camera for non-professional usage",
-                "Sony",
-                LocalDate.now(),
-                BigDecimal(200.00)
-            ),
-            Product(
-                "camera",
-                "Sony Film Sharp",
-                "An excellent camera for professional usage",
-                "Sony",
-                LocalDate.now(),
-                BigDecimal(1000)
-            )
+            nextItem(1),
+            nextItem(2),
         )
     )
+
+    private fun nextItem(i: Int): Product =
+        Product(
+            "code$i",
+            "name$i",
+            "description$i",
+            "manufacturer$i",
+            LocalDate.now(),
+            BigDecimal(1000)
+        )
 }

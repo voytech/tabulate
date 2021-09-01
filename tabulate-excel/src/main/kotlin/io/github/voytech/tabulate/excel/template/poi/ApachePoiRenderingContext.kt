@@ -40,12 +40,12 @@ class ApachePoiRenderingContext : RenderingContext  {
 
     fun workbook(): SXSSFWorkbook = adaptee!!
 
-    fun assertSheet(sheetName: String): SXSSFSheet = getSheet(sheetName) ?: workbook().createSheet(sheetName)
+    fun provideSheet(sheetName: String): SXSSFSheet = getSheet(sheetName) ?: workbook().createSheet(sheetName)
 
-    fun assertRow(tableId: String, rowIndex: Int): SXSSFRow =
+    fun provideRow(tableId: String, rowIndex: Int): SXSSFRow =
         row(tableId, rowIndex) ?: createRow(tableId, rowIndex)
 
-    fun assertCell(
+    fun provideCell(
         sheetName: String,
         rowIndex: Int,
         columnIndex: Int,
@@ -53,14 +53,14 @@ class ApachePoiRenderingContext : RenderingContext  {
     ): SXSSFCell =
         cell(sheetName, rowIndex, columnIndex) ?: createCell(sheetName, rowIndex, columnIndex, onCreate)
 
-    fun assertCellStyle(
+    fun provideCellStyle(
         sheetName: String,
         rowIndex: Int,
         columnIndex: Int,
         onCreate: ((cell: SXSSFCell) -> Unit)? = null,
         provideCellStyle: (() -> CellStyle)? = null
     ): CellStyle {
-        assertCell(sheetName, rowIndex, columnIndex, onCreate).let {
+        provideCell(sheetName, rowIndex, columnIndex, onCreate).let {
             if (provideCellStyle != null) {
                it.cellStyle = provideCellStyle()
             }
@@ -106,7 +106,7 @@ class ApachePoiRenderingContext : RenderingContext  {
     }
 
     fun getImageAsCellValue(context: Coordinates): CellValue? {
-        return assertSheet(context.tableName).createDrawingPatriarch().find {
+        return provideSheet(context.tableName).createDrawingPatriarch().find {
             if (it?.drawing?.shapes?.size == 1 && it.drawing?.shapes?.get(0) is Picture) {
                 (it.drawing.shapes[0] as Picture).let { picture ->
                     picture.clientAnchor.col1.toInt() == context.columnIndex &&
@@ -134,10 +134,10 @@ class ApachePoiRenderingContext : RenderingContext  {
     ) {
         (rowIndex until rowIndex + rowSpan).forEach { rIndex ->
             (columnIndex until columnIndex + colSpan).forEach { cIndex ->
-                assertCell(sheetName, rIndex, cIndex)
+                provideCell(sheetName, rIndex, cIndex)
             }
         }
-        assertSheet(sheetName).addMergedRegion(
+        provideSheet(sheetName).addMergedRegion(
             CellRangeAddress(rowIndex, rowIndex + rowSpan - 1, columnIndex, columnIndex + colSpan - 1)
         ).let {
             if (onMerge != null) {
@@ -165,7 +165,7 @@ class ApachePoiRenderingContext : RenderingContext  {
         alterColumnIndex: Int,
         onCreate: ((cell: SXSSFCell) -> Unit)? = null,
     ): SXSSFCell =
-        assertRow(sheetName, alterRowIndex).let {
+        provideRow(sheetName, alterRowIndex).let {
             it.createCell(alterColumnIndex).also { cell ->
                 if (onCreate != null) {
                     onCreate(cell)
@@ -181,7 +181,7 @@ class ApachePoiRenderingContext : RenderingContext  {
         colSpan: Int,
         imageRef: Int,
     ): Picture {
-        val drawing: Drawing<*> = assertSheet(sheetName).createDrawingPatriarch()
+        val drawing: Drawing<*> = provideSheet(sheetName).createDrawingPatriarch()
         val anchor: ClientAnchor = workbook().creationHelper.createClientAnchor()
         anchor.setCol1(columnIndex)
         anchor.row1 = rowIndex
@@ -192,13 +192,13 @@ class ApachePoiRenderingContext : RenderingContext  {
 
 
     private fun createRow(tableId: String, rowIndex: Int): SXSSFRow =
-        assertSheet(tableId).createRow(rowIndex)
+        provideSheet(tableId).createRow(rowIndex)
 
     private fun row(tableId: String, rowIndex: Int): SXSSFRow? =
-        assertSheet(tableId).getRow(rowIndex)
+        provideSheet(tableId).getRow(rowIndex)
 
     private fun cell(tableId: String, rowIndex: Int, columnIndex: Int): SXSSFCell? =
-        assertRow(tableId, rowIndex).getCell(columnIndex)
+        provideRow(tableId, rowIndex).getCell(columnIndex)
 
     companion object {
         fun color(color: Color): XSSFColor =

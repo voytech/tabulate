@@ -12,6 +12,8 @@ import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
+import io.github.voytech.tabulate.template.TabulationFormat
+import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.context.AttributedCell
 import io.github.voytech.tabulate.template.context.AttributedRow
 import io.github.voytech.tabulate.template.context.RowCellContext
@@ -25,7 +27,7 @@ import java.io.OutputStream
 
 class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T, ApachePoiRenderingContext>() {
 
-    override fun getFormat(): String = "xlsx"
+    override fun supportsFormat(): TabulationFormat = format("xlsx","poi")
 
     override fun createRenderingContext(): ApachePoiRenderingContext = ApachePoiRenderingContext()
 
@@ -37,12 +39,12 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
         override fun createTable(builder: TableBuilder<T>): Table<T> {
             return builder.build().also {
-                getRenderingContext().assertSheet(it.name!!)
+                getRenderingContext().provideSheet(it.name!!)
             }
         }
 
         override fun beginRow(context: AttributedRow<T>) {
-            getRenderingContext().assertRow(context.getTableId(), context.rowIndex)
+            getRenderingContext().provideRow(context.getTableId(), context.rowIndex)
         }
 
         override fun renderRowCell(context: AttributedCell) {
@@ -50,22 +52,22 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
             with(context.value) {
                 if (type != null) {
                     when (type) {
-                        CellType.STRING -> ensureCell(context) {
+                        CellType.STRING -> provideCell(context) {
                             setCellValue(value as? String)
                         }
-                        CellType.BOOLEAN -> ensureCell(context) {
+                        CellType.BOOLEAN -> provideCell(context) {
                             setCellValue(value as Boolean)
                         }
-                        CellType.DATE -> ensureCell(context) {
+                        CellType.DATE -> provideCell(context) {
                             setCellValue(toDate(value))
                         }
-                        CellType.NUMERIC -> ensureCell(context) {
+                        CellType.NUMERIC -> provideCell(context) {
                             setCellValue((value as Number).toDouble())
                         }
-                        CellType.FUNCTION -> ensureCell(context) {
+                        CellType.FUNCTION -> provideCell(context) {
                             cellFormula = value.toString()
                         }
-                        CellType.ERROR -> ensureCell(context) {
+                        CellType.ERROR -> provideCell(context) {
                             setCellErrorValue(value as Byte)
                         }
                         CellType.IMAGE_DATA -> (context.value.value as? ByteArray)?.createImageCell(context)
@@ -107,8 +109,8 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
             )
         }
 
-        private fun ensureCell(context: AttributedCell, block: (SXSSFCell.() -> Unit)) {
-            getRenderingContext().assertCell(context.getTableId(), context.rowIndex, context.columnIndex) {
+        private fun provideCell(context: AttributedCell, block: (SXSSFCell.() -> Unit)) {
+            getRenderingContext().provideCell(context.getTableId(), context.rowIndex, context.columnIndex) {
                 it.apply(block)
             }
         }
@@ -144,13 +146,17 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
 
     override fun createResultProviders(): List<ResultProvider<*>> = listOf(
-        ResultProvider<OutputStream> { output ->
-            with(getRenderingContext().workbook()) {
-                write(output)
-                close()
-                dispose()
+            object : ResultProvider<OutputStream> {
+                override fun outputClass() = OutputStream::class.java
+
+                override fun flush(output: OutputStream) {
+                    with(getRenderingContext().workbook()) {
+                        write(output)
+                        close()
+                        dispose()
+                    }
+                }
             }
-        }
     )
 
     companion object {

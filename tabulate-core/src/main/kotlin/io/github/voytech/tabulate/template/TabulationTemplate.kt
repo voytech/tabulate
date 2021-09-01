@@ -6,10 +6,12 @@ import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.model.ColumnDef
 import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.context.AttributedColumnFactory.createAttributedColumn
+import io.github.voytech.tabulate.template.exception.ExportOperationsFactoryResolvingException
+import io.github.voytech.tabulate.template.exception.ResultProviderResolvingException
+import io.github.voytech.tabulate.template.exception.UnknownTabulationFormatException
 import io.github.voytech.tabulate.template.operations.TableExportOperations
 import io.github.voytech.tabulate.template.result.ResultProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
-import io.github.voytech.tabulate.template.spi.Identifiable
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
@@ -22,7 +24,7 @@ import java.util.*
  * - flush rendered data into output.
  * @author Wojciech Mąka
  */
-interface TabulationApi<T,O> {
+interface TabulationApi<T, O> {
 
     /**
      * To be called explicitly in order to trigger next row rendering.
@@ -45,7 +47,7 @@ interface TabulationApi<T,O> {
      * To be called explicitly in order to flush rendered table into output.
      * Internally it uses compatible result provider to copy state from rendering context into output.
      */
-    fun flush(output: O)
+    fun flush()
 }
 
 /**
@@ -61,7 +63,7 @@ interface TabulationApi<T,O> {
  */
 class TabulationTemplate<T>(private val format: TabulationFormat) {
 
-    private val provider: ExportOperationsProvider<T, out RenderingContext> by lazy {
+    private val provider: ExportOperationsProvider<T, RenderingContext> by lazy {
         resolveExportOperationsFactory(format)
     }
 
@@ -73,9 +75,12 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         provider.createResultProviders()
     }
 
-    inner class TabulationApiImpl<O>(private val state: TabulationState<T>) : TabulationApi<T,O> {
+    inner class TabulationApiImpl<O>(
+        private val state: TabulationState<T>,
+        private val output: O
+    ) : TabulationApi<T, O> {
 
-        private val resultProvider : ResultProvider<O> by lazy {
+        private val resultProvider: ResultProvider<O> by lazy {
             resolveResultProvider()
         }
 
@@ -88,12 +93,19 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
             ops.finish()
         }
 
-        override fun flush(output: O) {
+        override fun flush() {
             resultProvider.flush(output)
         }
+
+        @Suppress("UNCHECKED_CAST")
+        private fun resolveResultProvider(): ResultProvider<O> =
+            resultProviders.filter {
+                it.outputClass().isAssignableFrom(output!!::class.java)
+            }.map { it as ResultProvider<O> }
+             .firstOrNull() ?: throw ResultProviderResolvingException()
     }
 
-    private fun prepare(tableBuilder: TableBuilder<T>): TabulationState<T> {
+    private fun materialize(tableBuilder: TableBuilder<T>): TabulationState<T> {
         return ops.createTable(tableBuilder).let { table ->
             TabulationState(
                 tableModel = table,
@@ -101,21 +113,20 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
                 firstRow = table.firstRow,
                 firstColumn = table.firstColumn
             )
-        }.also {
-            renderColumns(it, ColumnRenderPhase.BEFORE_FIRST_ROW)
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun resolveExportOperationsFactory(id: Identifiable): ExportOperationsProvider<T, out RenderingContext> {
-        val loader: ServiceLoader<ExportOperationsProvider<*, *>> =
-            ServiceLoader.load(ExportOperationsProvider::class.java)
-        return loader.filterIsInstance<ExportOperationsProvider<T, out RenderingContext>>().find { it.test(id) }!!
+    private fun resolveExportOperationsFactory(format: TabulationFormat): ExportOperationsProvider<T, RenderingContext> {
+        return ServiceLoader.load(ExportOperationsProvider::class.java)
+            .filterIsInstance<ExportOperationsProvider<T, RenderingContext>>().find {
+                if (format.provider.isNullOrBlank()) {
+                    format.id == it.supportsFormat().id
+                } else {
+                    format == it.supportsFormat()
+                }
+            } ?: throw ExportOperationsFactoryResolvingException()
     }
-
-    private inline fun <reified RES : ResultProvider<*>> resolveResultProvider(): RES =
-        resultProviders.filterIsInstance<RES>().first()
-
 
     /**
      * Performs actual export.
@@ -129,22 +140,28 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         output: O,
         tableBuilder: TableBuilder<T>,
     ) {
-        create<O>(tableBuilder).let { api ->
+        create(output, tableBuilder).let { api ->
             source.forEach { api.nextRow(it) }
                 .also { api.finish() }
-                .also { api.flush(output) }
+                .also { api.flush() }
         }
     }
 
     /**
      * Returns [TabulationApi] which enables 'interactive' export.
      *
+     * @param output output binding.
      * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
      * @return [TabulationApi] which enables 'interactive' export.
      */
-    fun <O> create(tableBuilder: TableBuilder<T>): TabulationApi<T, O> {
+    fun <O> create(output: O,tableBuilder: TableBuilder<T>): TabulationApi<T, O> {
         ops.initialize()
-        return TabulationApiImpl(prepare(tableBuilder))
+        return TabulationApiImpl(
+            materialize(tableBuilder).also {
+                renderColumns(it, ColumnRenderPhase.BEFORE_FIRST_ROW)
+            },
+            output
+        )
     }
 
     private fun bufferRecordAndRenderRow(state: TabulationState<T>, record: T) {
@@ -204,6 +221,11 @@ fun <T, O> TableBuilder<T>.export(format: TabulationFormat, output: O) {
     TabulationTemplate<T>(format).export(emptyList(), output, this)
 }
 
+fun File.tabulationFormat(provider: String? = null) =
+    if (extension.isNotBlank()) {
+        TabulationFormat(extension, provider)
+    } else throw UnknownTabulationFormatException()
+
 /**
  * Extension function invoked on a [TableBuilder], which takes output [file].
  *
@@ -211,12 +233,11 @@ fun <T, O> TableBuilder<T>.export(format: TabulationFormat, output: O) {
  * @receiver top level DSL table builder.
  */
 fun <T> TableBuilder<T>.export(file: File) {
-    val ext = file.extension
-    if (ext.isNotBlank()) {
+    file.tabulationFormat().let { format ->
         FileOutputStream(file).use {
-            TabulationTemplate<T>(TabulationFormat(file.extension)).export(emptyList(), it, this)
+            TabulationTemplate<T>(format).export(emptyList(), it, this)
         }
-    } else error("Cannot resolve tabulation format")
+    }
 }
 
 /**
@@ -247,12 +268,11 @@ fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: Tabl
  * @receiver collection of records to be rendered into file.
  */
 fun <T> Iterable<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) {
-    val ext = file.extension
-    if (ext.isNotBlank()) {
+    file.tabulationFormat().let { format ->
         FileOutputStream(file).use {
-            TabulationTemplate<T>(TabulationFormat(file.extension)).export(this, it, table(block))
+            TabulationTemplate<T>(format).export(this, it, table(block))
         }
-    } else error("Cannot resolve tabulation format")
+    }
 }
 
 /**

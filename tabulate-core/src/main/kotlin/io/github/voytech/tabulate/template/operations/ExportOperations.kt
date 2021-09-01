@@ -10,7 +10,6 @@ import io.github.voytech.tabulate.template.operations.impl.AttributeAwareTableEx
 import io.github.voytech.tabulate.template.operations.impl.AttributesOperations
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
-import io.github.voytech.tabulate.template.spi.Identifiable
 import java.util.*
 
 
@@ -28,19 +27,17 @@ interface ExportOperationsFactory<T> {
     fun createTableExportOperations(): TableExportOperations<T>
 }
 
-abstract class ExportOperationsConfiguringFactory<T,CTX: RenderingContext> : ExportOperationsProvider<T,CTX> {
+abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : ExportOperationsProvider<T, CTX> {
 
-    private val cachedRenderingContext: CTX by lazy {
+    private val context: CTX by lazy {
         createRenderingContext()
     }
 
     private val attributeOperations: AttributesOperations<T> by lazy {
-        registerAttributesOperations(cachedRenderingContext)
+        registerAttributesOperations(context)
     }
 
-    final override fun test(ident: Identifiable): Boolean = getFormat() == ident.getFormat()
-
-    final override fun getRenderingContext(): CTX = cachedRenderingContext
+    final override fun getRenderingContext(): CTX = context
 
     abstract fun createRenderingContext(): CTX
 
@@ -72,15 +69,14 @@ abstract class ExportOperationsConfiguringFactory<T,CTX: RenderingContext> : Exp
 
     @Suppress("UNCHECKED_CAST")
     private fun registerClientDefinedAttributesOperations(
-        creationContext: CTX,
+        renderingContext: CTX,
         attributeOperations: AttributesOperations<T>,
     ): AttributesOperations<T> {
-        val loader: ServiceLoader<AttributeRenderOperationsProvider<*, *>> =
-            ServiceLoader.load(AttributeRenderOperationsProvider::class.java)
-        loader.filter { it.getContextClass() == creationContext.javaClass }
+        ServiceLoader.load(AttributeRenderOperationsProvider::class.java)
+            .filter { it.getContextClass() == renderingContext.javaClass }
             .map { it as AttributeRenderOperationsProvider<T, CTX> }
             .forEach {
-                registerAttributesOperations(attributeOperations, it.getAttributeOperationsFactory(creationContext))
+                registerAttributesOperations(attributeOperations, it.getAttributeOperationsFactory(renderingContext))
             }
         return attributeOperations
     }
