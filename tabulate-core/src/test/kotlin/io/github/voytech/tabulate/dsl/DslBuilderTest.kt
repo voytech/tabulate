@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.dsl
 
+import io.github.voytech.tabulate.api.builder.dsl.cell
 import io.github.voytech.tabulate.api.builder.dsl.header
 import io.github.voytech.tabulate.api.builder.dsl.style
 import io.github.voytech.tabulate.api.builder.dsl.table
@@ -16,7 +17,6 @@ import io.github.voytech.tabulate.model.id
 import io.github.voytech.tabulate.template.context.RowIndex
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class DslBuilderTest {
@@ -126,7 +126,6 @@ class DslBuilderTest {
 
 
     @Test
-    @Disabled("Fix inconsistent behaviour when registering rows where one is indexed and second uses predicate")
     fun `should define table with header`() {
         with(table<Product> {
             name = "Products table"
@@ -137,10 +136,8 @@ class DslBuilderTest {
             rows {
                 header("Code", "Description")
                 row {
-                    cells {
-                        cell { value = "1" }
-                        cell { value = "First item" }
-                    }
+                    cell { value = "1" }
+                    cell { value = "First item" }
                 }
             }
         }.build()) {
@@ -148,13 +145,13 @@ class DslBuilderTest {
             assertEquals(rows!!.size, 2)
             rows!!.first().let { header ->
                 assertEquals(2,header.cells!!.size)
-                assertEquals("Code", header.cells!![ColumnKey(ref = Product::code)]!!.value)
-                assertEquals("Description", header.cells!![ColumnKey(ref = Product::description)]!!.value)
+                assertEquals("Code", header.cells!![ColumnKey(ref = Product::code.id())]!!.value)
+                assertEquals("Description", header.cells!![ColumnKey(ref = Product::description.id())]!!.value)
             }
             rows!!.last().let { firstRow ->
                 assertEquals(2,firstRow.cells!!.size)
-                assertEquals("1", firstRow.cells!![ColumnKey(ref = Product::code)]!!.value)
-                assertEquals("First item", firstRow.cells!![ColumnKey(ref = Product::description)]!!.value)
+                assertEquals("1", firstRow.cells!![ColumnKey(ref = Product::code.id())]!!.value)
+                assertEquals("First item", firstRow.cells!![ColumnKey(ref = Product::description.id())]!!.value)
             }
         }
     }

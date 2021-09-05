@@ -76,8 +76,7 @@ fun <T> RowsBuilderApi<T>.header(block: HeaderBuilderApi<T>.() -> Unit) =
 
 
 fun <T> RowsBuilderApi<T>.header(vararg names: String) =
-    row {
-        insertWhen { it.rowIndexValue() == 0 && !it.hasRecord() }
+    row(0) {
         cells {
             names.forEach {
                 cell { value = it }
