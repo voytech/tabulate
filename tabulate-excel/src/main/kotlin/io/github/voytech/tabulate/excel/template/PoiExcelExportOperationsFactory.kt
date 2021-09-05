@@ -36,7 +36,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
         override fun createTable(builder: TableBuilder<T>): Table<T> {
             return builder.build().also {
                 renderingContext.createWorkbook()
-                renderingContext.provideSheet(it.name!!)
+                renderingContext.provideSheet(it.name)
             }
         }
 
@@ -48,28 +48,16 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
             context.ensureAttributesCacheEntry()
             with(context.value) {
                 if (type != null) {
-                    when (type) {
-                        CellType.STRING -> provideCell(context) {
-                            setCellValue(value as? String)
+                    if (type in CellType.BASIC_TYPES) {
+                        context.renderBasicTypeCellValue()
+                    } else {
+                        when (type) {
+                            CellType.IMAGE_DATA, CellType.IMAGE_URL -> context.renderImageCell()
+                            else -> context.renderDefaultTypeCellValue()
                         }
-                        CellType.BOOLEAN -> provideCell(context) {
-                            setCellValue(value as Boolean)
-                        }
-                        CellType.DATE -> provideCell(context) {
-                            setCellValue(toDate(value))
-                        }
-                        CellType.NUMERIC -> provideCell(context) {
-                            setCellValue((value as Number).toDouble())
-                        }
-                        CellType.FUNCTION -> provideCell(context) {
-                            cellFormula = value.toString()
-                        }
-                        CellType.ERROR -> provideCell(context) {
-                            setCellErrorValue(value as Byte)
-                        }
-                        CellType.IMAGE_DATA -> (context.value.value as? ByteArray)?.createImageCell(context)
-                        CellType.IMAGE_URL -> (context.value.value as? String)?.createImageCell(context)
                     }
+                } else {
+                    context.renderDefaultTypeCellValue()
                 }
             }.also { _ ->
                 context.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.let {
@@ -84,26 +72,36 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
             }
         }
 
-        private fun String.createImageCell(context: AttributedCell) {
-            renderingContext.createImageCell(
-                context.getTableId(),
-                context.rowIndex,
-                context.columnIndex,
-                context.value.rowSpan,
-                context.value.colSpan,
-                this
-            )
+        private fun AttributedCell.renderBasicTypeCellValue() {
+            provideCell(this) {
+                when (value.type) {
+                    CellType.STRING -> setCellValue(value.value as? String)
+                    CellType.BOOLEAN -> setCellValue(value.value as Boolean)
+                    CellType.DATE -> setCellValue(toDate(value.value))
+                    CellType.NUMERIC -> setCellValue((value.value as Number).toDouble())
+                    CellType.FUNCTION -> cellFormula = value.value.toString()
+                    CellType.ERROR -> setCellErrorValue(value.value as Byte)
+                    else -> renderDefaultTypeCellValue()
+                }
+            }
         }
 
-        private fun ByteArray.createImageCell(context: AttributedCell) {
-            renderingContext.createImageCell(
-                context.getTableId(),
-                context.rowIndex,
-                context.columnIndex,
-                context.value.rowSpan,
-                context.value.colSpan,
-                this
-            )
+        private fun AttributedCell.renderDefaultTypeCellValue() {
+            provideCell(this) {
+                setCellValue(value.value as? String)
+            }
+        }
+
+        private fun AttributedCell.renderImageCell() {
+            if (value.type == CellType.IMAGE_DATA) {
+                renderingContext.createImageCell(
+                    getTableId(), rowIndex, columnIndex, value.rowSpan, value.colSpan, value.value as ByteArray
+                )
+            } else {
+                renderingContext.createImageCell(
+                    getTableId(), rowIndex, columnIndex, value.rowSpan, value.colSpan, value.value as String
+                )
+            }
         }
 
         private fun provideCell(context: AttributedCell, block: (SXSSFCell.() -> Unit)) {
@@ -115,7 +113,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
     }
 
     override fun getAttributeOperationsFactory(renderingContext: ApachePoiRenderingContext): AttributeRenderOperationsFactory<T> =
-        StandardAttributeRenderOperationsFactory(renderingContext, object: StandardAttributeRenderOperationsProvider<ApachePoiRenderingContext,T>{
+        StandardAttributeRenderOperationsFactory(renderingContext, object: StandardAttributeRenderOperationsProvider<ApachePoiRenderingContext,T> {
             override fun createTemplateFileRenderer(renderingContext: ApachePoiRenderingContext): TableAttributeRenderOperation<TemplateFileAttribute> =
                 TemplateFileAttributeRenderOperation(renderingContext)
 
@@ -140,7 +138,6 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
             additionalCellAttributeRenderers = setOf(CellDataFormatAttributeRenderOperation(renderingContext)),
             additionalTableAttributeRenderers = setOf(FilterAndSortTableAttributeRenderOperation(renderingContext))
         )
-
 
     override fun createResultProviders(renderingContext: ApachePoiRenderingContext): List<ResultProvider<*>> = listOf(
             object : ResultProvider<OutputStream> {

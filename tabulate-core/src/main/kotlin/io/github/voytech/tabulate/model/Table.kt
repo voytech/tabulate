@@ -12,7 +12,7 @@ import io.github.voytech.tabulate.api.builder.TableBuilder as TableBuilderBase
  *   @author Wojciech Mąka
  */
 data class Table<T> internal constructor(
-    val name: String? = "untitled",
+    val name: String = "untitled",
     val firstRow: Int? = 0,
     val firstColumn: Int? = 0,
     val columns: List<ColumnDef<T>> = emptyList(),

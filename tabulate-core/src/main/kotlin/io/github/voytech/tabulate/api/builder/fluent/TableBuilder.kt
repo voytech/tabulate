@@ -20,7 +20,7 @@ interface MidLevelBuilder<T, E : TopLevelBuilder<T>> : TopLevelBuilder<T> {
 
 class TableBuilder<T>(internal val builderBase: BaseTableBuilder<T>) : TopLevelBuilder<T>, Builder<Table<T>> {
 
-    fun name(name: String?) = apply {
+    fun name(name: String) = apply {
         this.builderBase.name = name
     }
 

@@ -249,7 +249,7 @@ class TemplateFileAttributeRenderOperation(override val renderingContext: Apache
     override fun priority() = -1
     override fun renderAttribute(table: Table<*>, attribute: TemplateFileAttribute) {
         renderingContext.createWorkbook(FileInputStream(attribute.fileName), true).let {
-            renderingContext.provideSheet(table.name!!)
+            renderingContext.provideSheet(table.name)
         }
     }
 }

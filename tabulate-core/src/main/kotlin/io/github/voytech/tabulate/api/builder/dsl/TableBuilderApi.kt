@@ -78,7 +78,7 @@ class CellLevelAttributesBuilderApi<T> internal constructor(private val builder:
 class TableBuilderApi<T> private constructor(private val builder: TableBuilder<T>)  {
 
     @set:JvmSynthetic
-    var name: String? by this.builder::name
+    var name: String by this.builder::name
 
     @set:JvmSynthetic
     var firstRow: Int? by this.builder::firstRow

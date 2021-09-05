@@ -66,7 +66,7 @@ class TableBuilder<T> : AttributesAwareBuilder<Table<T>>() {
     val rowsBuilder: RowsBuilder<T> = RowsBuilder(columnsBuilder)
 
     @JvmSynthetic
-    var name: String? = "untitled table"
+    var name: String = "untitled table"
 
     @JvmSynthetic
     var firstRow: Int? = 0
