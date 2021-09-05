@@ -80,6 +80,10 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         private val output: O
     ) : TabulationApi<T, O> {
 
+        init {
+            renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
+        }
+
         private val resultProvider: ResultProvider<O> by lazy {
             resolveResultProvider()
         }
@@ -90,7 +94,6 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
             renderRemainingBufferedRows(state)
             renderTrailingCustomRows(state)
             renderColumns(state, ColumnRenderPhase.AFTER_LAST_ROW)
-            ops.finish()
         }
 
         override fun flush() {
@@ -155,11 +158,8 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
      * @return [TabulationApi] which enables 'interactive' export.
      */
     fun <O> create(output: O,tableBuilder: TableBuilder<T>): TabulationApi<T, O> {
-        ops.initialize()
         return TabulationApiImpl(
-            materialize(tableBuilder).also {
-                renderColumns(it, ColumnRenderPhase.BEFORE_FIRST_ROW)
-            },
+            materialize(tableBuilder),
             output
         )
     }

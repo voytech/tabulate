@@ -33,12 +33,9 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
     override fun createTableExportOperations(): TableExportOperations<T> = object: TableExportOperations<T> {
 
-        override fun initialize() {
-            getRenderingContext().createWorkbook()
-        }
-
         override fun createTable(builder: TableBuilder<T>): Table<T> {
             return builder.build().also {
+                getRenderingContext().createWorkbook()
                 getRenderingContext().provideSheet(it.name!!)
             }
         }

@@ -30,8 +30,4 @@ class TableExportOperationsChain<T>(
         chain.forEach { it.renderRowCell(context) }
     }
 
-    override fun finish() {
-        TODO("Not yet implemented")
-    }
-
 }

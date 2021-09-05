@@ -14,13 +14,11 @@ import java.util.*
 
 
 interface TableExportOperations<T> {
-    fun initialize() {}
     fun createTable(builder: TableBuilder<T>): Table<T> = builder.build()
     fun renderColumn(context: AttributedColumn) {}
     fun beginRow(context: AttributedRow<T>) {}
     fun renderRowCell(context: AttributedCell)
     fun endRow(context: AttributedRow<T>) {}
-    fun finish() {}
 }
 
 interface ExportOperationsFactory<T> {
