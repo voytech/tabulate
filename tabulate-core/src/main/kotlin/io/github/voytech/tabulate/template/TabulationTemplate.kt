@@ -63,17 +63,11 @@ interface TabulationApi<T, O> {
  */
 class TabulationTemplate<T>(private val format: TabulationFormat) {
 
-    private val provider: ExportOperationsProvider<T, RenderingContext> by lazy {
-        resolveExportOperationsFactory(format)
-    }
+    private val provider: ExportOperationsProvider<T> by lazy { resolveExportOperationsFactory(format) }
 
-    private val ops: TableExportOperations<T> by lazy {
-        provider.createExportOperations()
-    }
+    private val ops: TableExportOperations<T> by lazy { provider.createExportOperations() }
 
-    private val resultProviders: List<ResultProvider<*>> by lazy {
-        provider.createResultProviders()
-    }
+    private val resultProviders: List<ResultProvider<*>> by lazy { provider.createResultProviders() }
 
     inner class TabulationApiImpl<O>(
         private val state: TabulationState<T>,
@@ -120,9 +114,9 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun resolveExportOperationsFactory(format: TabulationFormat): ExportOperationsProvider<T, RenderingContext> {
+    private fun resolveExportOperationsFactory(format: TabulationFormat): ExportOperationsProvider<T> {
         return ServiceLoader.load(ExportOperationsProvider::class.java)
-            .filterIsInstance<ExportOperationsProvider<T, RenderingContext>>().find {
+            .filterIsInstance<ExportOperationsProvider<T>>().find {
                 if (format.provider.isNullOrBlank()) {
                     format.id == it.supportsFormat().id
                 } else {

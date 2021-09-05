@@ -31,17 +31,17 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
     override fun createRenderingContext(): ApachePoiRenderingContext = ApachePoiRenderingContext()
 
-    override fun createTableExportOperations(): TableExportOperations<T> = object: TableExportOperations<T> {
+    override fun createExportOperations(renderingContext: ApachePoiRenderingContext): TableExportOperations<T> = object: TableExportOperations<T> {
 
         override fun createTable(builder: TableBuilder<T>): Table<T> {
             return builder.build().also {
-                getRenderingContext().createWorkbook()
-                getRenderingContext().provideSheet(it.name!!)
+                renderingContext.createWorkbook()
+                renderingContext.provideSheet(it.name!!)
             }
         }
 
         override fun beginRow(context: AttributedRow<T>) {
-            getRenderingContext().provideRow(context.getTableId(), context.rowIndex)
+            renderingContext.provideRow(context.getTableId(), context.rowIndex)
         }
 
         override fun renderRowCell(context: AttributedCell) {
@@ -73,7 +73,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
                 }
             }.also { _ ->
                 context.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.let {
-                    getRenderingContext().mergeCells(
+                    renderingContext.mergeCells(
                         context.getTableId(),
                         context.rowIndex,
                         context.columnIndex,
@@ -85,7 +85,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
         }
 
         private fun String.createImageCell(context: AttributedCell) {
-            getRenderingContext().createImageCell(
+            renderingContext.createImageCell(
                 context.getTableId(),
                 context.rowIndex,
                 context.columnIndex,
@@ -96,7 +96,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
         }
 
         private fun ByteArray.createImageCell(context: AttributedCell) {
-            getRenderingContext().createImageCell(
+            renderingContext.createImageCell(
                 context.getTableId(),
                 context.rowIndex,
                 context.columnIndex,
@@ -107,7 +107,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
         }
 
         private fun provideCell(context: AttributedCell, block: (SXSSFCell.() -> Unit)) {
-            getRenderingContext().provideCell(context.getTableId(), context.rowIndex, context.columnIndex) {
+            renderingContext.provideCell(context.getTableId(), context.rowIndex, context.columnIndex) {
                 it.apply(block)
             }
         }
@@ -142,12 +142,12 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
         )
 
 
-    override fun createResultProviders(): List<ResultProvider<*>> = listOf(
+    override fun createResultProviders(renderingContext: ApachePoiRenderingContext): List<ResultProvider<*>> = listOf(
             object : ResultProvider<OutputStream> {
                 override fun outputClass() = OutputStream::class.java
 
                 override fun flush(output: OutputStream) {
-                    with(getRenderingContext().workbook()) {
+                    with(renderingContext.workbook()) {
                         write(output)
                         close()
                         dispose()

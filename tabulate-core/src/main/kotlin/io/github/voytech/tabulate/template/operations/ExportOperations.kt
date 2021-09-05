@@ -8,6 +8,7 @@ import io.github.voytech.tabulate.template.context.AttributedRow
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.impl.AttributeAwareTableExportOperations
 import io.github.voytech.tabulate.template.operations.impl.AttributesOperations
+import io.github.voytech.tabulate.template.result.ResultProvider
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.util.*
@@ -21,11 +22,13 @@ interface TableExportOperations<T> {
     fun endRow(context: AttributedRow<T>) {}
 }
 
-interface ExportOperationsFactory<T> {
-    fun createTableExportOperations(): TableExportOperations<T>
+interface ContextBindingExportOperationsFactory<T, CTX : RenderingContext> {
+    fun createExportOperations(renderingContext: CTX): TableExportOperations<T>
+    fun createResultProviders(renderingContext: CTX): List<ResultProvider<*>>
 }
 
-abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : ExportOperationsProvider<T, CTX> {
+abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : ExportOperationsProvider<T>,
+    ContextBindingExportOperationsFactory<T, CTX> {
 
     private val context: CTX by lazy {
         createRenderingContext()
@@ -35,19 +38,21 @@ abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : E
         registerAttributesOperations(context)
     }
 
-    final override fun getRenderingContext(): CTX = context
-
     abstract fun createRenderingContext(): CTX
 
     open fun getAttributeOperationsFactory(renderingContext: CTX): AttributeRenderOperationsFactory<T>? = null
 
-    override fun createExportOperations(): TableExportOperations<T> {
-        val tableOps = createTableExportOperations()
+    final override fun createExportOperations(): TableExportOperations<T> {
+        val tableOps = createExportOperations(context)
         return if (!attributeOperations.isEmpty()) {
             AttributeAwareTableExportOperations(attributeOperations, tableOps)
         } else {
             tableOps
         }
+    }
+
+    final override fun createResultProviders(): List<ResultProvider<*>> {
+        return createResultProviders(context)
     }
 
     private fun registerAttributesOperations(
