@@ -1,10 +1,7 @@
 package io.github.voytech.tabulate.model.attributes.cell
 
 import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
-import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.RowLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.TableLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultVerticalAlignment
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.HorizontalAlignment
@@ -14,6 +11,8 @@ data class CellAlignmentAttribute(
     val vertical: VerticalAlignment? = DefaultVerticalAlignment.BOTTOM,
     val horizontal: HorizontalAlignment? = DefaultHorizontalAlignment.LEFT
 ) : CellStyleAttribute<CellAlignmentAttribute>() {
+
+    @TabulateMarker
     class Builder : CellAttributeBuilder<CellAlignmentAttribute> {
         var vertical: VerticalAlignment? = DefaultVerticalAlignment.BOTTOM
         var horizontal: HorizontalAlignment? = DefaultHorizontalAlignment.LEFT

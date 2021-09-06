@@ -1,10 +1,7 @@
 package io.github.voytech.tabulate.model.attributes.cell
 
 import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
-import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.RowLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.TableLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultBorderStyle
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
 
@@ -19,6 +16,7 @@ data class CellBordersAttribute(
     val bottomBorderColor: Color? = null
 ) : CellStyleAttribute<CellBordersAttribute>() {
 
+    @TabulateMarker
     class Builder : CellAttributeBuilder<CellBordersAttribute> {
         var leftBorderStyle: BorderStyle? = DefaultBorderStyle.NONE
         var leftBorderColor: Color? = null

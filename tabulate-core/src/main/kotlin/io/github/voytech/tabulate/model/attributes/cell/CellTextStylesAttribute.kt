@@ -1,10 +1,7 @@
 package io.github.voytech.tabulate.model.attributes.cell
 
 import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
-import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.RowLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.TableLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultWeightStyle
 
 data class CellTextStylesAttribute(
@@ -20,6 +17,7 @@ data class CellTextStylesAttribute(
     var rotation: Short? = 0
 ) : CellStyleAttribute<CellTextStylesAttribute>() {
 
+    @TabulateMarker
     class Builder : CellAttributeBuilder<CellTextStylesAttribute> {
         var fontFamily: String? = null
         var fontSize: Int? = 10

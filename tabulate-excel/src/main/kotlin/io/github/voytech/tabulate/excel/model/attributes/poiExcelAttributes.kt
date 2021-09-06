@@ -2,16 +2,15 @@ package io.github.voytech.tabulate.excel.model.attributes
 
 import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
 import io.github.voytech.tabulate.api.builder.TableAttributeBuilder
-import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.RowLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.TableLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.*
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.TableAttribute
 
 data class CellExcelDataFormatAttribute(
     val dataFormat: String
 ) : CellAttribute<CellExcelDataFormatAttribute>() {
+
+    @TabulateMarker
     class Builder : CellAttributeBuilder<CellExcelDataFormatAttribute> {
         var value: String = "General"
         override fun build(): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute(value)
@@ -39,6 +38,7 @@ data class FilterAndSortTableAttribute(
     val rowRange: IntRange
 ) : TableAttribute<FilterAndSortTableAttribute>() {
 
+    @TabulateMarker
     class Builder : TableAttributeBuilder {
         var columnRange: IntRange = (0 .. 100)
         var rowRange: IntRange = (0..65000)

@@ -17,7 +17,7 @@ import io.github.voytech.tabulate.template.context.ColumnContext
 import io.github.voytech.tabulate.template.context.RowCellContext
 import io.github.voytech.tabulate.template.context.RowContext
 
-interface AttributeOperation<out T : Attribute<*>> {
+interface AttributeOperation<T : Attribute<*>> {
     fun attributeType(): Class<out T>
     fun priority(): Int = HIGHER
 

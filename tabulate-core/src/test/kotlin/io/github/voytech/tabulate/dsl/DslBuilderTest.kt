@@ -126,6 +126,98 @@ class DslBuilderTest {
 
 
     @Test
+    fun `should define custom attributes on column level`() {
+        with(table<Product> {
+            name = "Products table"
+            columns {
+                column(Product::code) {
+                    attributes {
+                        text {
+                            fontColor = Colors.AERO
+                            fontFamily = "Times New Roman"
+                            fontSize = 12
+                        }
+                    }
+                }
+            }
+        }.build()) {
+            assertNotNull(this)
+            assertEquals(columns.size, 1)
+            columns.first().let { column ->
+                assertEquals(Product::code.id(), column.id.ref, "nr 1 should have id ref 'Product::code'")
+                assertNotNull(column.cellAttributes)
+                assertEquals(1, column.cellAttributes!!.size)
+                (column.cellAttributes?.first() as CellTextStylesAttribute).let { attribute ->
+                    assertEquals(Colors.AERO, attribute.fontColor)
+                    assertEquals(12, attribute.fontSize)
+                    assertEquals("Times New Roman", attribute.fontFamily)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `should define custom attributes on all levels`() {
+        with(table<Product> {
+            name = "Products table"
+            columns {
+                column(Product::code) {
+                    attributes {
+                        width {
+                            px = 100
+                        }
+                        text {
+                            fontColor = Colors.AERO
+                            fontFamily = "Times New Roman"
+                            fontSize = 12
+                        }
+                    }
+                }
+            }
+            rows {
+                row {
+                    attributes {
+                        height {
+                            px = 100
+                        }
+                    }
+                    cell {
+                        attributes {
+                            text {
+                                fontColor = Colors.BLACK
+                            }
+                        }
+                    }
+                }
+            }
+        }.build()) {
+            assertNotNull(this)
+            assertEquals(1, columns.size )
+            assertEquals(Product::code.id(), columns[0].id.ref, "nr 1 should have id ref 'Product::code'")
+            assertEquals(1, columns.first().columnAttributes?.size)
+            assertEquals(1, columns.first().cellAttributes?.size)
+            assertEquals(ColumnWidthAttribute(px = 100), columns.first().columnAttributes?.first())
+            assertEquals(
+                CellTextStylesAttribute(fontColor = Colors.AERO, fontFamily = "Times New Roman", fontSize = 12),
+                columns.first().cellAttributes?.first()
+            )
+            val zeroRows = getRowsAt(RowIndex(0))
+            assertEquals(zeroRows?.size, 1)
+            assertEquals(rows?.size, 1)
+            with(zeroRows?.first()!!) {
+                assertNotNull(cells)
+                assertEquals(1,rowAttributes?.size)
+                assertEquals(RowHeightAttribute(px = 100), rowAttributes?.first())
+                assertEquals(1,cells?.size)
+                with(cells?.values?.first()) {
+                    assertEquals(this?.cellAttributes?.size, 1)
+                    assertEquals(this?.cellAttributes?.first(), CellTextStylesAttribute(fontColor = Colors.BLACK))
+                }
+            }
+        }
+    }
+
+    @Test
     fun `should define table with header`() {
         with(table<Product> {
             name = "Products table"
@@ -135,6 +227,53 @@ class DslBuilderTest {
             }
             rows {
                 header("Code", "Description")
+                row {
+                    cell { value = "1" }
+                    cell { value = "First item" }
+                }
+            }
+        }.build()) {
+            assertNotNull(this)
+            assertEquals(rows!!.size, 2)
+            rows!!.first().let { header ->
+                assertEquals(2,header.cells!!.size)
+                assertEquals("Code", header.cells!![ColumnKey(ref = Product::code.id())]!!.value)
+                assertEquals("Description", header.cells!![ColumnKey(ref = Product::description.id())]!!.value)
+            }
+            rows!!.last().let { firstRow ->
+                assertEquals(2,firstRow.cells!!.size)
+                assertEquals("1", firstRow.cells!![ColumnKey(ref = Product::code.id())]!!.value)
+                assertEquals("First item", firstRow.cells!![ColumnKey(ref = Product::description.id())]!!.value)
+            }
+        }
+    }
+
+    @Test
+    fun `should define table with attributed header`() {
+        with(table<Product> {
+            name = "Products table"
+            columns {
+                column(Product::code)
+                column(Product::description)
+            }
+            rows {
+                header {
+                    columnTitle(Product::code) {
+                        value = "Code"
+                        attributes {
+                            text { fontColor = Colors.BLACK }
+                        }
+                    }
+                    columnTitle(Product::description) {
+                        value = "Description"
+                        attributes {
+                            text { fontColor = Colors.BLACK }
+                        }
+                    }
+                    attributes {
+                        height { px = 100 }
+                    }
+                }
                 row {
                     cell { value = "1" }
                     cell { value = "First item" }

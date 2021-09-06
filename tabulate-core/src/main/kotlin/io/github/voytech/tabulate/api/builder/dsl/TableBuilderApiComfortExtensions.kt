@@ -4,6 +4,7 @@ import io.github.voytech.tabulate.model.RowCellExpression
 import io.github.voytech.tabulate.template.context.IndexLabel
 import kotlin.reflect.KProperty1
 
+@TabulateMarker
 class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
 
     @JvmSynthetic

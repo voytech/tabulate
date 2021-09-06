@@ -1,10 +1,7 @@
 package io.github.voytech.tabulate.model.attributes.cell
 
 import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
-import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.RowLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.TableLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellFill
 
 data class CellBackgroundAttribute(
@@ -12,6 +9,7 @@ data class CellBackgroundAttribute(
     val fill: CellFill? = null
 ) : CellStyleAttribute<CellBackgroundAttribute>() {
 
+    @TabulateMarker
     class Builder: CellAttributeBuilder<CellBackgroundAttribute> {
         var color: Color? = null
         var fill: CellFill? = null
