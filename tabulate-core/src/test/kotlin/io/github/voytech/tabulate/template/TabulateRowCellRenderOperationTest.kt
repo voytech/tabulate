@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.fail
 
-class TabulateOperationTest {
+class TabulateRowCellRenderOperationTest {
 
     @Test
     fun `should tabulate plain collection without additional features`() {
