@@ -13,6 +13,8 @@ import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.column.width
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.row.height
+import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
+import io.github.voytech.tabulate.model.attributes.table.template
 import io.github.voytech.tabulate.model.id
 import io.github.voytech.tabulate.template.context.RowIndex
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -47,6 +49,8 @@ class DslBuilderTest {
     fun `should describe table model of columns and rows`() {
         with(table<Product> {
             name = "Products table"
+            firstRow = 1
+            firstColumn = 1
             columns {
                 column("nr") { attributes { width { px = 100 } } }
                 column(Product::code)
@@ -67,7 +71,10 @@ class DslBuilderTest {
             }
         }.build()) {
             assertNotNull(this)
-            assertEquals(columns.size, 5)
+            assertEquals("Products table",name)
+            assertEquals(1, firstColumn)
+            assertEquals(1, firstRow)
+            assertEquals( 5,columns.size)
             assertEquals("nr", columns[0].id.id, "nr 0 should have id 'nr'")
             assertEquals(Product::code.id(), columns[1].id.ref, "nr 1 should have id ref 'Product::code'")
             assertEquals(Product::name.id(), columns[2].id.ref, "nr 2 should have id ref 'Product::name'")
@@ -190,6 +197,9 @@ class DslBuilderTest {
                     }
                 }
             }
+            attributes {
+                template { fileName = "some_template_file.ext" }
+            }
         }.build()) {
             assertNotNull(this)
             assertEquals(1, columns.size )
@@ -214,6 +224,8 @@ class DslBuilderTest {
                     assertEquals(this?.cellAttributes?.first(), CellTextStylesAttribute(fontColor = Colors.BLACK))
                 }
             }
+            assertEquals(1, tableAttributes!!.size)
+            assertEquals(TemplateFileAttribute(fileName = "some_template_file.ext"),tableAttributes!!.first())
         }
     }
 
@@ -286,6 +298,12 @@ class DslBuilderTest {
                 assertEquals(2,header.cells!!.size)
                 assertEquals("Code", header.cells!![ColumnKey(ref = Product::code.id())]!!.value)
                 assertEquals("Description", header.cells!![ColumnKey(ref = Product::description.id())]!!.value)
+                assertEquals(1, header.rowAttributes!!.size)
+                assertEquals(RowHeightAttribute(px = 100), header.rowAttributes!!.first())
+                header.cells!!.let { cells ->
+                    assertEquals(CellTextStylesAttribute(fontColor = Colors.BLACK), cells[ColumnKey(ref = Product::code.id())]!!.cellAttributes!!.first())
+                    assertEquals(CellTextStylesAttribute(fontColor = Colors.BLACK), cells[ColumnKey(ref = Product::description.id())]!!.cellAttributes!!.first())
+                }
             }
             rows!!.last().let { firstRow ->
                 assertEquals(2,firstRow.cells!!.size)

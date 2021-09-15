@@ -15,9 +15,6 @@ data class TemplateFileAttribute(val fileName: String): TableAttribute<TemplateF
     }
 }
 
-//@JvmName("jTemplate")
-//fun <T> TableLevelAttributesBuilderApi<T>.template(block: TemplateFileAttribute.Builder.() -> Unit): TableAttribute<TemplateFileAttribute> = TemplateFileAttribute.Builder().apply(block).build()
-
 fun <T> TableLevelAttributesBuilderApi<T>.template(block: TemplateFileAttribute.Builder.() -> Unit) {
     attribute(TemplateFileAttribute.Builder().apply(block).build())
 }

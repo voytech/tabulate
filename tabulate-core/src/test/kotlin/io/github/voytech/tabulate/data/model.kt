@@ -9,33 +9,31 @@ data class Product(
     val description: String? = "",
     val manufacturer: String,
     val distributionDate: LocalDate,
-    val price: BigDecimal
+    val price: BigDecimal,
 )
 
 data class Price(
     val code: String,
     val netAmount: BigDecimal,
     val grossAmount: BigDecimal,
-    val vatRate: BigDecimal
+    val vatRate: BigDecimal,
 )
 
 object Products {
-    val CAMERAS = listOf(
+    val ITEMS = listOf(
+        nextItem(1),
+        nextItem(2),
+    )
+
+    fun items(num: Int) = (1..num).map { nextItem(it) }
+
+    private fun nextItem(i: Int): Product =
         Product(
-            "camera",
-            "Sony Film",
-            "An excellent camera for non-professional usage",
-            "Sony",
-            LocalDate.now(),
-            BigDecimal(200.00)
-        ),
-        Product(
-            "camera",
-            "Sony Film Sharp",
-            "An excellent camera for professional usage",
-            "Sony",
+            "code$i",
+            "name$i",
+            "description$i",
+            "manufacturer$i",
             LocalDate.now(),
             BigDecimal(1000)
         )
-    )
 }
