@@ -86,7 +86,6 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
         override fun finish() {
             renderRemainingBufferedRows(state)
-            renderTrailingCustomRows(state)
             renderColumns(state, ColumnRenderPhase.AFTER_LAST_ROW)
         }
 
@@ -169,11 +168,6 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
                 it
             }
         } while (context != null)
-    }
-
-    private fun renderTrailingCustomRows(state: TabulationState<T>) {
-        state.mark(IndexLabel.TRAILING_ROWS)
-        renderRemainingBufferedRows(state)
     }
 
     private fun renderColumns(state: TabulationState<T>, renderPhase: ColumnRenderPhase) {

@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.api.builder.fluent
 import io.github.voytech.tabulate.api.builder.Builder
 import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.Attribute
-import io.github.voytech.tabulate.template.context.IndexLabel
+import io.github.voytech.tabulate.template.context.DefaultSteps
 import io.github.voytech.tabulate.api.builder.CellBuilder as BaseCellBuilder
 import io.github.voytech.tabulate.api.builder.ColumnBuilder as BaseColumnBuilder
 import io.github.voytech.tabulate.api.builder.RowBuilder as BaseRowBuilder
@@ -108,7 +108,7 @@ class RowsBuilder<T>(private val parent: TableBuilder<T>) : MidLevelBuilder<T, T
             it.qualifier = RowQualifier(createAt = RowIndexDef(at))
         }, this)
 
-    fun row(at: Int, offset: IndexLabel) =
+    fun row(at: Int, offset: DefaultSteps) =
         RowBuilder(parent.builderBase.rowsBuilder.addRowBuilder {
             it.qualifier = RowQualifier(createAt = RowIndexDef(at, offset.name))
         }, this)

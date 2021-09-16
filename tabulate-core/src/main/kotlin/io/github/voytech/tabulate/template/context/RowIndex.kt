@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.template.context
 
 import io.github.voytech.tabulate.model.RowIndexDef
 
-enum class IndexLabel {
+enum class DefaultSteps {
     TRAILING_ROWS,
 }
 

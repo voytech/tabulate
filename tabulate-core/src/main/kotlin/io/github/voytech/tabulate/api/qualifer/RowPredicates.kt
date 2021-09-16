@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.api.qualifer
 
 import io.github.voytech.tabulate.model.RowPredicate
-import io.github.voytech.tabulate.template.context.IndexLabel
+import io.github.voytech.tabulate.template.context.DefaultSteps
 import io.github.voytech.tabulate.template.context.RowIndex
 
 object RowPredicates {
@@ -14,13 +14,13 @@ object RowPredicates {
     }
 
     @JvmStatic
-    fun <T> isCustomAt(rowIndex: Int, label: IndexLabel): RowPredicate<T> = isCustomAt(rowIndex, label.name)
+    fun <T> isCustomAt(rowIndex: Int, label: DefaultSteps): RowPredicate<T> = isCustomAt(rowIndex, label.name)
 
     @JvmStatic
     fun <T> isHeaderPosition(): RowPredicate<T> = isCustomAt(0)
 
     @JvmStatic
-    fun <T> isFooterPosition(): RowPredicate<T> = isCustomAt(0, IndexLabel.TRAILING_ROWS)
+    fun <T> isFooterPosition(): RowPredicate<T> = isCustomAt(0, DefaultSteps.TRAILING_ROWS)
 
     @JvmStatic
     fun <T> hasEntryAt(listIndex: Int): RowPredicate<T> =

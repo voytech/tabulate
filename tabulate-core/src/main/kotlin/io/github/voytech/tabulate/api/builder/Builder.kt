@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.api.builder
 
 import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.*
-import io.github.voytech.tabulate.template.context.IndexLabel
+import io.github.voytech.tabulate.template.context.DefaultSteps
 import java.util.concurrent.atomic.AtomicInteger
 
 interface Builder<T> {
@@ -213,7 +213,7 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
     }
 
     @JvmSynthetic
-    fun addRowBuilder(label: IndexLabel, block: DslBlock<RowBuilder<T>>): RowBuilder<T> {
+    fun addRowBuilder(label: DefaultSteps, block: DslBlock<RowBuilder<T>>): RowBuilder<T> {
         if (label.name != rowIndex.offsetLabel) {
             rowIndex = RowIndexDef(index = 0, offsetLabel = label.name)
         }

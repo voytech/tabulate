@@ -7,7 +7,7 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
-import io.github.voytech.tabulate.template.context.IndexLabel
+import io.github.voytech.tabulate.template.context.DefaultSteps
 import kotlin.reflect.KProperty1
 
 @DslMarker
@@ -186,14 +186,14 @@ class RowsBuilderApi<T> internal constructor(private val builder: RowsBuilder<T>
     }
 
     @JvmSynthetic
-    fun row(at: Int, label: IndexLabel, block: RowBuilderApi<T>.() -> Unit) {
+    fun row(at: Int, label: DefaultSteps, block: RowBuilderApi<T>.() -> Unit) {
         builder.addRowBuilder(RowIndexDef(at,label.name)) {
             RowBuilderApi.new(it).apply(block)
         }
     }
 
     @JvmSynthetic
-    fun row(label: IndexLabel, block: RowBuilderApi<T>.() -> Unit) {
+    fun row(label: DefaultSteps, block: RowBuilderApi<T>.() -> Unit) {
         builder.addRowBuilder(label) {
             RowBuilderApi.new(it).apply(block)
         }

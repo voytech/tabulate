@@ -2,12 +2,24 @@ package io.github.voytech.tabulate.template.iterators
 
 import io.github.voytech.tabulate.template.context.ContextData
 import io.github.voytech.tabulate.template.context.MutableRowIndex
+import io.github.voytech.tabulate.template.context.RowIndex
 import io.github.voytech.tabulate.template.resolvers.IndexedContextResolver
+
+fun interface StepProvider {
+    fun provide(): String?
+}
+
+class EnumStepProvider<T: Enum<T>>(enum: Class<T>) : StepProvider {
+    val iterator = enum.enumConstants.iterator()
+    override fun provide(): String? = if (iterator.hasNext()) iterator.next().name else null
+}
 
 class OperationContextIterator<T, CTX : ContextData<T>>(
     private val resolver: IndexedContextResolver<T, CTX>,
-    private val indexIncrement: MutableRowIndex
+    private val stepProvider: StepProvider
 ) : AbstractIterator<CTX>() {
+
+    private val indexIncrement = MutableRowIndex()
 
     override fun computeNext() {
         resolver.resolve(indexIncrement.getRowIndex()).also {
@@ -19,9 +31,20 @@ class OperationContextIterator<T, CTX : ContextData<T>>(
                 setNext(currentContext)
                 indexIncrement.inc()
             } else {
-                done()
+                stepProvider.provide().let { stepCode ->
+                    if (stepCode == null) {
+                        done()
+                    } else {
+                        mark(stepCode)
+                        computeNext()
+                    }
+                }
             }
         }
+    }
+
+    fun mark(step: String): RowIndex {
+        return indexIncrement.mark(step)
     }
 }
 
