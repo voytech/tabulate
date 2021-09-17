@@ -407,33 +407,38 @@ class CellBuilder<T> private constructor() : AttributesAwareBuilder<CellDef<T>>(
 
 }
 
-interface TableAttributeBuilder : AttributeBuilder<TableAttribute<*>>
-
-interface AttributeBuilder<T : Attribute<*>> : Builder<T>
-
-abstract class CellAttributeBuilder<T : CellAttribute<T>> : AttributeBuilder<T> {
-
+abstract class AttributeBuilder<T : Attribute<*>> : Builder<T> {
     private val propertyChanges = mutableSetOf<KProperty<*>>()
-
-    fun <T> observable(initialValue: T): ReadWriteProperty<Any?, T> =
-        object : ObservableProperty<T>(initialValue) {
-            override fun afterChange(property: KProperty<*>, oldValue: T, newValue: T) {
+    private val mappings = mutableMapOf<String, String>()
+    fun <F> observable(initialValue: F, fieldMapping: Pair<String, String>? = null): ReadWriteProperty<Any?, F> {
+        if (fieldMapping!=null) {
+            mappings[fieldMapping.first] = fieldMapping.second
+        }
+        return object : ObservableProperty<F>(initialValue) {
+            override fun afterChange(property: KProperty<*>, oldValue: F, newValue: F) {
                 propertyChanges.add(property)
             }
         }
+    }
 
     abstract fun provide(): T
 
     final override fun build(): T {
         return provide().apply {
-            nonDefaultProps = propertyChanges.map { it.name }.toSet()
+            nonDefaultProps = propertyChanges.map {
+                if (mappings.containsKey(it.name)) mappings[it.name]!! else it.name
+            }.toSet()
         }
     }
 }
 
-interface RowAttributeBuilder : AttributeBuilder<RowAttribute<*>>
+abstract class TableAttributeBuilder : AttributeBuilder<TableAttribute<*>>()
 
-interface ColumnAttributeBuilder : AttributeBuilder<ColumnAttribute<*>>
+abstract class CellAttributeBuilder<T : CellAttribute<T>> : AttributeBuilder<T>()
+
+abstract class RowAttributeBuilder : AttributeBuilder<RowAttribute<*>>()
+
+abstract class ColumnAttributeBuilder : AttributeBuilder<ColumnAttribute<*>>()
 
 
 

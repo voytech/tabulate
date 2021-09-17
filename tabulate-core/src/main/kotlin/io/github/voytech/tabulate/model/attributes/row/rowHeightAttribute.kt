@@ -7,12 +7,14 @@ import io.github.voytech.tabulate.model.attributes.RowAttribute
 
 data class RowHeightAttribute(val px: Int) : RowAttribute<RowHeightAttribute>() {
 
-    override fun mergeWith(other: RowHeightAttribute): RowHeightAttribute = other
+    override fun mergeWith(other: RowHeightAttribute): RowHeightAttribute = RowHeightAttribute(
+        px = takeIfChanged(other, RowHeightAttribute::px)
+    )
 
     @TabulateMarker
-    class Builder : RowAttributeBuilder {
-        var px: Int = -1
-        override fun build(): RowAttribute<RowHeightAttribute> = RowHeightAttribute(px)
+    class Builder : RowAttributeBuilder() {
+        var px: Int by observable(-1)
+        override fun provide(): RowAttribute<RowHeightAttribute> = RowHeightAttribute(px)
     }
 
 }

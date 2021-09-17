@@ -12,9 +12,14 @@ data class CellExcelDataFormatAttribute(
 
     @TabulateMarker
     class Builder : CellAttributeBuilder<CellExcelDataFormatAttribute>() {
-        var value: String = "General"
+        var value: String by observable("General", "value" to "dataFormat")
         override fun provide(): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute(value)
     }
+
+    override fun mergeWith(other: CellExcelDataFormatAttribute): CellExcelDataFormatAttribute =
+        CellExcelDataFormatAttribute(
+            dataFormat = takeIfChanged(other, CellExcelDataFormatAttribute::dataFormat)
+        )
 
 }
 
@@ -39,11 +44,16 @@ data class FilterAndSortTableAttribute(
 ) : TableAttribute<FilterAndSortTableAttribute>() {
 
     @TabulateMarker
-    class Builder : TableAttributeBuilder {
-        var columnRange: IntRange = (0 .. 100)
-        var rowRange: IntRange = (0..65000)
-        override fun build(): FilterAndSortTableAttribute = FilterAndSortTableAttribute(columnRange, rowRange)
+    class Builder : TableAttributeBuilder() {
+        var columnRange: IntRange by observable(0 .. 100)
+        var rowRange: IntRange by observable(0..65000)
+        override fun provide(): FilterAndSortTableAttribute = FilterAndSortTableAttribute(columnRange, rowRange)
     }
+
+    override fun mergeWith(other: FilterAndSortTableAttribute): FilterAndSortTableAttribute = FilterAndSortTableAttribute(
+        columnRange = takeIfChanged(other, FilterAndSortTableAttribute::columnRange),
+        rowRange = takeIfChanged(other, FilterAndSortTableAttribute::rowRange),
+    )
 
 }
 

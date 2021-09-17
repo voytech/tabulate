@@ -18,14 +18,18 @@ data class ColumnWidthAttribute(
     override fun afterLastRow() = true
 
     @TabulateMarker
-    class Builder : ColumnAttributeBuilder {
-        var auto: Boolean? = false
-        var px: Int = -1
-        var unit: LengthUnit = LengthUnit.PIXEL
-        override fun build(): ColumnAttribute<ColumnWidthAttribute> = ColumnWidthAttribute(auto, px, unit)
+    class Builder : ColumnAttributeBuilder() {
+        var auto: Boolean? by observable(false)
+        var px: Int by observable(-1)
+        var unit: LengthUnit by observable(LengthUnit.PIXEL)
+        override fun provide(): ColumnAttribute<ColumnWidthAttribute> = ColumnWidthAttribute(auto, px, unit)
     }
 
-    override fun mergeWith(other: ColumnWidthAttribute): ColumnWidthAttribute = other.copy(auto = other.auto ?: this.auto)
+    override fun mergeWith(other: ColumnWidthAttribute): ColumnWidthAttribute = ColumnWidthAttribute(
+        auto = takeIfChanged(other, ColumnWidthAttribute::auto),
+        px = takeIfChanged(other, ColumnWidthAttribute::px),
+        unit = takeIfChanged(other, ColumnWidthAttribute::unit),
+    )
 }
 
 fun <T> ColumnLevelAttributesBuilderApi<T>.width(block: ColumnWidthAttribute.Builder.() -> Unit) =
