@@ -5,16 +5,14 @@ import kotlin.reflect.KProperty1
 
 abstract class Attribute<T: Attribute<T>> {
     internal lateinit var nonDefaultProps: Set<String>
-    open fun mergeWith(other: T): T = other
 
-    //TODO Try find better solution. Overcoming type system limitations in terms of generics and all issues with cyclic self references.
-    @Suppress("UNCHECKED_CAST")
-    fun uncheckedMergeWith(other: Attribute<*>): T = mergeWith(other as T)
+    open fun mergeWith(other: T): T = other
 
     fun isModified(property: KProperty<*>): Boolean {
        return nonDefaultProps.contains(property.name)
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun <P> takeIfChanged(other: T, property: KProperty1<T, P>) :P =
         if (other.isModified(property)) property.invoke(other) else property.invoke(this as T)
 
@@ -38,25 +36,12 @@ fun <A : Attribute<A>> List<A>.mergeAttributes(): A {
         }
 }
 
-private fun List<CellAttribute<*>>.mergeUncheckedAttributes(): CellAttribute<*> {
-    val requiredClass = this.first().javaClass
-    return this.takeLast(this.size - 1)
-        .fold(this.first()) { acc: CellAttribute<*>, attribute: CellAttribute<*> ->
-            assert(requiredClass == attribute.javaClass)
-            acc.uncheckedMergeWith(attribute)
-        }
-}
-
-fun overrideAttributesLeftToRight(attributeSet: LinkedHashSet<CellAttribute<*>>): Set<CellAttribute<*>> {
+fun <C: Attribute<*>> overrideAttributesLeftToRight(attributeSet: List<C>): Set<C> {
     return attributeSet.groupBy { it.javaClass }
-        .map { it.value.mergeUncheckedAttributes() }
+        .map { it.value.mergeAttributes() }
         .toSet()
 }
 
-fun overrideAttributesLeftToRight(vararg attributeSets: Set<CellAttribute<*>>?): Set<CellAttribute<*>> {
-    val linkedSet = linkedSetOf<CellAttribute<*>>()
-    attributeSets.forEach {
-        it?.forEach { cellAttribute -> linkedSet.add(cellAttribute)}
-    }
-    return overrideAttributesLeftToRight(linkedSet)
+fun <C: Attribute<*>> overrideAttributesLeftToRight(vararg attributeSets: Set<C>?): Set<C> {
+    return attributeSets.filterNotNull().flatten().let { overrideAttributesLeftToRight(it) }
 }

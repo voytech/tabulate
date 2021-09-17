@@ -1,8 +1,6 @@
 package io.github.voytech.tabulate.template.resolvers
 
 import io.github.voytech.tabulate.model.*
-import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
-import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
 import io.github.voytech.tabulate.template.context.AttributedCellFactory.createAttributedCell
 import io.github.voytech.tabulate.template.context.AttributedRow
@@ -19,22 +17,9 @@ import io.github.voytech.tabulate.template.context.getRowIndex
  */
 abstract class AbstractRowContextResolver<T>(
     private val tableModel: Table<T>,
-    private val customAttributes: MutableMap<String, Any>
+    private val customAttributes: MutableMap<String, Any>,
 ) :
     IndexedContextResolver<T, AttributedRow<T>> {
-
-    private fun computeCells(rowDefinitions: Set<RowDef<T>>): Map<ColumnKey<T>, CellDef<T>> {
-        return rowDefinitions.mapNotNull { row -> row.cells }.fold(mapOf()) { acc, m -> acc + m }
-    }
-
-    private fun computeRowLevelCellAttributes(rowDefinitions: Set<RowDef<T>>): Set<CellAttribute> {
-        return overrideAttributesLeftToRight(*(rowDefinitions.mapNotNull { i -> i.cellAttributes }.toTypedArray()))
-    }
-
-    private fun computeRowAttributes(rowDefinitions: Set<RowDef<T>>): Set<RowAttribute> {
-        return rowDefinitions.mapNotNull { attribs -> attribs.rowAttributes }
-            .fold(setOf()) { acc, r -> acc + r }
-    }
 
     private fun resolveAttributedRow(tableRowIndex: RowIndex, record: IndexedValue<T>? = null): AttributedRow<T> {
         return SourceRow(
@@ -43,8 +28,8 @@ abstract class AbstractRowContextResolver<T>(
             record = record?.value
         ).let { sourceRow ->
             val rowDefinitions = tableModel.getRows(sourceRow)
-            val cellDefinitions = computeCells(rowDefinitions)
-            val rowCellAttributes = computeRowLevelCellAttributes(rowDefinitions)
+            val cellDefinitions = rowDefinitions.mergeCells()
+            val rowCellAttributes = rowDefinitions.flattenCellAttributes()
             val cellValues = tableModel.columns.mapIndexed { index: Int, column: ColumnDef<T> ->
                 cellDefinitions.resolveCellValue(column, sourceRow)?.let { value ->
                     createAttributedCell(
@@ -58,12 +43,14 @@ abstract class AbstractRowContextResolver<T>(
                             cellDefinitions[column.id]?.cellAttributes
                         ),
                         customAttributes
-                    ).let { Pair(column.id, it) }
+                    ).let { column.id to it }
                 }
             }.mapNotNull { it }.toMap()
             createAttributedRow(
                 rowIndex = tableModel.getRowIndex(tableRowIndex.rowIndex),
-                rowAttributes = computeRowAttributes(rowDefinitions),
+                rowAttributes = overrideAttributesLeftToRight(
+                    tableModel.rowAttributes, rowDefinitions.flattenRowAttributes()
+                ),
                 cells = cellValues,
                 customAttributes = customAttributes
             )

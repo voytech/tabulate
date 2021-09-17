@@ -82,12 +82,17 @@ class TableBuilder<T> : AttributesAwareBuilder<Table<T>>() {
         name, firstRow, firstColumn,
         columnsBuilder.build(), rowsBuilder.build(),
         getAttributesByClass(TableAttribute::class.java),
-        getAttributesByClass(CellAttribute::class.java)
+        getAttributesByClass(CellAttribute::class.java),
+        getAttributesByClass(ColumnAttribute::class.java),
+        getAttributesByClass(RowAttribute::class.java)
     )
 
     @JvmSynthetic
     override fun supportedAttributeClasses(): Set<Class<out Attribute<*>>> =
-        setOf(TableAttribute::class.java, CellAttribute::class.java)
+        setOf(
+            TableAttribute::class.java, CellAttribute::class.java,
+            ColumnAttribute::class.java, RowAttribute::class.java
+        )
 
 }
 
@@ -411,7 +416,7 @@ abstract class AttributeBuilder<T : Attribute<*>> : Builder<T> {
     private val propertyChanges = mutableSetOf<KProperty<*>>()
     private val mappings = mutableMapOf<String, String>()
     fun <F> observable(initialValue: F, fieldMapping: Pair<String, String>? = null): ReadWriteProperty<Any?, F> {
-        if (fieldMapping!=null) {
+        if (fieldMapping != null) {
             mappings[fieldMapping.first] = fieldMapping.second
         }
         return object : ObservableProperty<F>(initialValue) {

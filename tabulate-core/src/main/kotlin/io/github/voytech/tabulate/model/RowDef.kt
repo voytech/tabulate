@@ -16,11 +16,20 @@ data class RowDef<T> internal constructor(
     fun isApplicable(source: SourceRow<T>): Boolean = shouldApplyWhen(source) || shouldInsertRow(source)
 }
 
+fun <T> Collection<RowDef<T>>.flattenRowAttributes(): Set<RowAttribute> =
+    mapNotNull { it.rowAttributes }.fold(setOf()) { acc, r -> acc + r }
+
+fun <T> Collection<RowDef<T>>.flattenCellAttributes(): Set<CellAttribute> =
+    mapNotNull { it.cellAttributes }.fold(setOf()) { acc, r -> acc + r }
+
+fun <T> Collection<RowDef<T>>.mergeCells(): Map<ColumnKey<T>, CellDef<T>> =
+    mapNotNull { it.cells }.fold(mapOf()) { acc, m -> acc + m }
+
 fun interface RowPredicate<T> : Predicate<SourceRow<T>>
 
 data class RowIndexDef(
     val index: Int = 0,
-    val offsetLabel: String? = null
+    val offsetLabel: String? = null,
 ) : Comparable<RowIndexDef> {
 
     operator fun plus(increment: Int): RowIndexDef = RowIndexDef(index + increment, offsetLabel)

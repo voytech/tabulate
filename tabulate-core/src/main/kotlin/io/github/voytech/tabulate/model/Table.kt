@@ -2,6 +2,8 @@ package io.github.voytech.tabulate.model
 
 import io.github.voytech.tabulate.api.builder.fluent.TableBuilder
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
+import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
+import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
 import io.github.voytech.tabulate.template.context.RowIndex
 import java.util.function.Consumer
@@ -19,6 +21,8 @@ data class Table<T> internal constructor(
     val rows: List<RowDef<T>>?,
     val tableAttributes: Set<TableAttribute>?,
     val cellAttributes: Set<CellAttribute>?,
+    val columnAttributes: Set<ColumnAttribute>?,
+    val rowAttributes: Set<RowAttribute>?
 ) {
     private var indexedCustomRows: Map<RowIndexDef, List<RowDef<T>>>? = null
 

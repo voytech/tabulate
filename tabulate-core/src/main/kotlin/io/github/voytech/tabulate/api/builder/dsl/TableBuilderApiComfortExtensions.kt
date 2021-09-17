@@ -107,3 +107,4 @@ fun <T> RowsBuilderApi<T>.trailingRow(block: RowBuilderApi<T>.() -> Unit) {
 fun <T> RowsBuilderApi<T>.trailingRow(index: Int, block: RowBuilderApi<T>.() -> Unit) {
     row(index, DefaultSteps.TRAILING_ROWS, block)
 }
+

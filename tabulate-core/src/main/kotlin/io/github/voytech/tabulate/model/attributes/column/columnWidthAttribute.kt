@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.model.attributes.column
 
 import io.github.voytech.tabulate.api.builder.ColumnAttributeBuilder
 import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.TableLevelAttributesBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 
@@ -35,3 +36,5 @@ data class ColumnWidthAttribute(
 fun <T> ColumnLevelAttributesBuilderApi<T>.width(block: ColumnWidthAttribute.Builder.() -> Unit) =
     attribute(ColumnWidthAttribute.Builder().apply(block).build())
 
+fun <T> TableLevelAttributesBuilderApi<T>.colWidth(block: ColumnWidthAttribute.Builder.() -> Unit) =
+    attribute(ColumnWidthAttribute.Builder().apply(block).build())

@@ -4,6 +4,7 @@ import io.github.voytech.tabulate.api.builder.TableBuilder
 import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.model.ColumnDef
+import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
 import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.context.AttributedColumnFactory.createAttributedColumn
 import io.github.voytech.tabulate.template.exception.ExportOperationsFactoryResolvingException
@@ -176,7 +177,10 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
                 createAttributedColumn(
                     state.tableModel.getColumnIndex(column.index ?: columnIndex),
                     renderPhase,
-                    column.columnAttributes,
+                    overrideAttributesLeftToRight(
+                        state.tableModel.columnAttributes,
+                        column.columnAttributes
+                    ),
                     state.getCustomAttributes()
                 )
             )

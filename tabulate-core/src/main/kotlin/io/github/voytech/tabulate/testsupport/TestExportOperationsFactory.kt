@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.testsupport
 
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.context.AttributedCell
+import io.github.voytech.tabulate.template.context.AttributedRow
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.ExportOperationsConfiguringFactory
 import io.github.voytech.tabulate.template.operations.TableExportOperations
@@ -14,6 +15,10 @@ fun interface AttributedCellTest {
     fun test(context: AttributedCell)
 }
 
+interface AttributedRowTest {
+    fun <T> test(context: AttributedRow<T>) { }
+}
+
 class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, NoContext>() {
 
     override fun supportsFormat() = format("test")
@@ -22,7 +27,11 @@ class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, NoCo
 
     override fun createExportOperations(renderingContext: NoContext): TableExportOperations<T> = object: TableExportOperations<T> {
         override fun renderRowCell(context: AttributedCell) {
-            test.test(context)
+            cellTest?.test(context)
+        }
+
+        override fun beginRow(context: AttributedRow<T>) {
+            rowTest?.test(context)
         }
     }
 
@@ -31,7 +40,13 @@ class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, NoCo
     )
 
     companion object {
-        lateinit var test: AttributedCellTest
+        var cellTest: AttributedCellTest? = null
+        var rowTest: AttributedRowTest? = null
+
+        fun clear() {
+            cellTest = null
+            rowTest = null
+        }
     }
 
 }

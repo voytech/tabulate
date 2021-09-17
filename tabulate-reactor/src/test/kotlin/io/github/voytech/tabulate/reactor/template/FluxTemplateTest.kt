@@ -21,7 +21,7 @@ class FluxTemplateTest {
     @TestTemplate
     @ExtendWith(FluxTestTemplateInvocationContextProvider::class)
     fun `should tabulate records emitted from Flux publisher`(tabulateProducts: Flux<Product>) {
-        TestExportOperationsFactory.test = AttributedCellTest { attributedCell ->
+        TestExportOperationsFactory.cellTest = AttributedCellTest { attributedCell ->
             Assertions.assertNotNull(attributedCell)
             when (attributedCell.rowIndex) {
                 0 -> {
