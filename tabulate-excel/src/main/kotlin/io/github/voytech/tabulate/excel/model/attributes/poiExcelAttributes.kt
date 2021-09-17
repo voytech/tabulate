@@ -11,16 +11,16 @@ data class CellExcelDataFormatAttribute(
 ) : CellAttribute<CellExcelDataFormatAttribute>() {
 
     @TabulateMarker
-    class Builder : CellAttributeBuilder<CellExcelDataFormatAttribute> {
+    class Builder : CellAttributeBuilder<CellExcelDataFormatAttribute>() {
         var value: String = "General"
-        override fun build(): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute(value)
+        override fun provide(): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute(value)
     }
-    override fun mergeWith(other: CellExcelDataFormatAttribute): CellExcelDataFormatAttribute  = other
+
 }
 
 fun dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute.Builder().apply(block).build()
 
-fun <T> TableLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
+fun <T> TableLevelAttributesBuilderApi<T>.dataTestAttributeRenderOperationsProviderFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
     attribute(CellExcelDataFormatAttribute.Builder().apply(block).build())
 
 fun <T> CellLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
@@ -45,10 +45,6 @@ data class FilterAndSortTableAttribute(
         override fun build(): FilterAndSortTableAttribute = FilterAndSortTableAttribute(columnRange, rowRange)
     }
 
-    override fun mergeWith(other: FilterAndSortTableAttribute): FilterAndSortTableAttribute = FilterAndSortTableAttribute(
-        columnRange = other.columnRange,
-        rowRange = other.rowRange
-    )
 }
 
 fun <T> TableLevelAttributesBuilderApi<T>.filterAndSort(block: FilterAndSortTableAttribute.Builder.() -> Unit) =

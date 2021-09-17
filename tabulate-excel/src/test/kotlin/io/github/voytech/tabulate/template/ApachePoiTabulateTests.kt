@@ -124,7 +124,18 @@ class ApachePoiTabulateTests {
             tableName = "Products table",
             file = File("test0.xlsx"),
             cellTests = mapOf(
-                CellRange((2..2), (2..8)) to AssertContainsCellAttributes(
+                CellPosition(2, 2) to AssertContainsCellAttributes(
+                    CellTextStylesAttribute(
+                        fontFamily = "Times New Roman",
+                        fontColor = Color(90, 100, 100),
+                        fontSize = 12,
+                        italic = true,
+                        strikeout = true,
+                        underline = true,
+                        weight = DefaultWeightStyle.BOLD,
+                    )
+                ),
+                CellRange((2..2), (3..8)) to AssertContainsCellAttributes(
                     CellBordersAttribute(
                         leftBorderStyle = DefaultBorderStyle.SOLID,
                         leftBorderColor = Colors.BLACK,

@@ -14,36 +14,39 @@ data class CellTextStylesAttribute(
     val fontColor: Color? = null,
     val ident: Short? = 0,
     val wrapText: Boolean? = false,
-    var rotation: Short? = 0
+    var rotation: Short? = 0,
 ) : CellStyleAttribute<CellTextStylesAttribute>() {
 
     @TabulateMarker
-    class Builder : CellAttributeBuilder<CellTextStylesAttribute> {
-        var fontFamily: String? = null
-        var fontSize: Int? = 10
-        var weight: DefaultWeightStyle? = DefaultWeightStyle.NORMAL
-        var italic: Boolean? = false
-        var strikeout: Boolean? = false
-        var underline: Boolean? = false
-        var fontColor: Color? = null
-        var ident: Short = 0
-        var wrapText: Boolean = false
-        var rotation: Short? = 0
-        override fun build(): CellTextStylesAttribute =
-            CellTextStylesAttribute(fontFamily, fontSize, weight, italic, strikeout, underline, fontColor, ident, wrapText, rotation)
+    class Builder : CellAttributeBuilder<CellTextStylesAttribute>() {
+        var fontFamily: String? by observable(null)
+        var fontSize: Int? by observable(10)
+        var weight: DefaultWeightStyle? by observable(DefaultWeightStyle.NORMAL)
+        var italic: Boolean? by observable(false)
+        var strikeout: Boolean? by observable(false)
+        var underline: Boolean?by observable(false)
+        var fontColor: Color? by observable(null)
+        var ident: Short by observable(0)
+        var wrapText: Boolean by observable(false)
+        var rotation: Short? by observable(0)
+
+        override fun provide(): CellTextStylesAttribute =
+            CellTextStylesAttribute(
+                fontFamily, fontSize, weight, italic, strikeout, underline, fontColor, ident, wrapText, rotation
+            )
     }
 
     override fun mergeWith(other: CellTextStylesAttribute): CellTextStylesAttribute = CellTextStylesAttribute(
-        fontFamily = other.fontFamily ?: this.fontFamily,
-        fontSize = other.fontSize ?: this.fontSize,
-        weight = other.weight ?: this.weight,
-        italic = other.italic ?: this.italic,
-        strikeout = other.strikeout ?: this.strikeout,
-        underline = other.underline ?: this.underline,
-        fontColor = other.fontColor ?: this.fontColor,
-        ident = other.ident ?: this.ident,
-        wrapText = other.wrapText ?: this.wrapText,
-        rotation = other.rotation ?: this.rotation
+        fontFamily = other.takeIfChangedOrElse(other::fontFamily, ::fontFamily),
+        fontSize = other.takeIfChangedOrElse(other::fontSize, ::fontSize),
+        weight = other.takeIfChangedOrElse(other::weight, ::weight),
+        italic = other.takeIfChangedOrElse(other::italic, ::italic),
+        strikeout = other.takeIfChangedOrElse(other::strikeout, ::strikeout),
+        underline = other.takeIfChangedOrElse(other::underline, ::underline),
+        fontColor = other. takeIfChangedOrElse(other::fontColor, ::fontColor),
+        ident = other.takeIfChangedOrElse(other::ident, ::ident),
+        wrapText = other.takeIfChangedOrElse(other::wrapText, ::wrapText),
+        rotation = other.takeIfChangedOrElse(other::rotation, ::rotation),
     )
 }
 

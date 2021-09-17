@@ -13,15 +13,15 @@ data class CellAlignmentAttribute(
 ) : CellStyleAttribute<CellAlignmentAttribute>() {
 
     @TabulateMarker
-    class Builder : CellAttributeBuilder<CellAlignmentAttribute> {
-        var vertical: VerticalAlignment? = DefaultVerticalAlignment.BOTTOM
-        var horizontal: HorizontalAlignment? = DefaultHorizontalAlignment.LEFT
-        override fun build(): CellAlignmentAttribute = CellAlignmentAttribute(vertical, horizontal)
+    class Builder : CellAttributeBuilder<CellAlignmentAttribute>() {
+        var vertical: VerticalAlignment? by observable(DefaultVerticalAlignment.BOTTOM)
+        var horizontal: HorizontalAlignment? by observable(DefaultHorizontalAlignment.LEFT)
+        override fun provide(): CellAlignmentAttribute = CellAlignmentAttribute(vertical, horizontal)
     }
 
     override fun mergeWith(other: CellAlignmentAttribute): CellAlignmentAttribute = CellAlignmentAttribute(
-        vertical = other.vertical ?: this.vertical,
-        horizontal = other.horizontal ?: this.horizontal
+        vertical = other.takeIfChangedOrElse(other::vertical, ::vertical),
+        horizontal = other.takeIfChangedOrElse(other::horizontal, ::horizontal),
     )
 
 }

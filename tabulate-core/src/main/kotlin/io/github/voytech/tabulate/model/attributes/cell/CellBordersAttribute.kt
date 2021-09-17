@@ -17,17 +17,17 @@ data class CellBordersAttribute(
 ) : CellStyleAttribute<CellBordersAttribute>() {
 
     @TabulateMarker
-    class Builder : CellAttributeBuilder<CellBordersAttribute> {
-        var leftBorderStyle: BorderStyle? = DefaultBorderStyle.NONE
-        var leftBorderColor: Color? = null
-        var rightBorderStyle: BorderStyle? = DefaultBorderStyle.NONE
-        var rightBorderColor: Color? = null
+    class Builder : CellAttributeBuilder<CellBordersAttribute>() {
+        var leftBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
+        var leftBorderColor: Color? by observable(null)
+        var rightBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
+        var rightBorderColor: Color? by observable(null)
         var topBorderStyle: BorderStyle? = DefaultBorderStyle.NONE
-        var topBorderColor: Color? = null
-        var bottomBorderStyle: BorderStyle? = DefaultBorderStyle.NONE
-        var bottomBorderColor: Color? = null
+        var topBorderColor: Color? by observable(null)
+        var bottomBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
+        var bottomBorderColor: Color? by observable(null)
 
-        override fun build(): CellBordersAttribute = CellBordersAttribute(
+        override fun provide(): CellBordersAttribute = CellBordersAttribute(
             leftBorderStyle,
             leftBorderColor,
             rightBorderStyle,
@@ -40,14 +40,14 @@ data class CellBordersAttribute(
     }
 
     override fun mergeWith(other: CellBordersAttribute): CellBordersAttribute = CellBordersAttribute(
-        leftBorderStyle = other.leftBorderStyle ?: this.leftBorderStyle,
-        leftBorderColor = other.leftBorderColor ?: this.leftBorderColor,
-        rightBorderStyle = other.rightBorderStyle ?: this.rightBorderStyle,
-        rightBorderColor = other.rightBorderColor ?: this.rightBorderColor,
-        topBorderStyle = other.topBorderStyle ?: this.topBorderStyle,
-        topBorderColor = other.topBorderColor ?: this.topBorderColor,
-        bottomBorderStyle = other.bottomBorderStyle ?: this.bottomBorderStyle,
-        bottomBorderColor = other.bottomBorderColor ?: this.bottomBorderColor,
+        leftBorderStyle = other.takeIfChangedOrElse(other::leftBorderStyle, ::leftBorderStyle),
+        leftBorderColor = other.takeIfChangedOrElse(other::leftBorderColor, ::leftBorderColor),
+        rightBorderStyle = other.takeIfChangedOrElse(other::rightBorderStyle, ::rightBorderStyle),
+        rightBorderColor = other.takeIfChangedOrElse(other::rightBorderColor, ::rightBorderColor),
+        topBorderStyle = other.takeIfChangedOrElse(other::topBorderStyle, ::topBorderStyle),
+        topBorderColor = other.takeIfChangedOrElse(other::topBorderColor, ::topBorderColor),
+        bottomBorderStyle = other.takeIfChangedOrElse(other::bottomBorderStyle, ::bottomBorderStyle),
+        bottomBorderColor = other.takeIfChangedOrElse(other::bottomBorderColor, ::bottomBorderColor),
     )
 }
 

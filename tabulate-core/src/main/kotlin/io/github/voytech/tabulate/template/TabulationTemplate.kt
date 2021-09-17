@@ -105,7 +105,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         return ops.createTable(tableBuilder).let { table ->
             TabulationState(
                 tableModel = table,
-                tableName = table.name ?: "untitled table",
+                tableName = table.name,
                 firstRow = table.firstRow,
                 firstColumn = table.firstColumn
             )

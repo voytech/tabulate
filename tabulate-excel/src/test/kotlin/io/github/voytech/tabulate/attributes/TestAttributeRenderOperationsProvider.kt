@@ -40,8 +40,8 @@ class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvid
 
 data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<SimpleTestCellAttribute>() {
 
-    class Builder(var valueSuffix: String = "") : CellAttributeBuilder<SimpleTestCellAttribute> {
-        override fun build(): SimpleTestCellAttribute = SimpleTestCellAttribute(valueSuffix)
+    class Builder(var valueSuffix: String = "") : CellAttributeBuilder<SimpleTestCellAttribute>() {
+        override fun provide(): SimpleTestCellAttribute = SimpleTestCellAttribute(valueSuffix)
     }
 }
 

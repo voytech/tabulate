@@ -1,11 +1,22 @@
 package io.github.voytech.tabulate.model.attributes
 
+import kotlin.reflect.KProperty
+
 abstract class Attribute<T: Attribute<T>> {
+    internal lateinit var nonDefaultProps: Set<String>
     open fun mergeWith(other: T): T = other
 
     //TODO Try find better solution. Overcoming type system limitations in terms of generics and all issues with cyclic self references.
     @Suppress("UNCHECKED_CAST")
     fun uncheckedMergeWith(other: Attribute<*>): T = mergeWith(other as T)
+
+    fun isModified(property: KProperty<*>): Boolean {
+       return nonDefaultProps.contains(property.name)
+    }
+
+    fun <P> takeIfChangedOrElse(thisProperty: KProperty<P>, otherProperty: KProperty<P>) :P =
+        if (isModified(thisProperty)) thisProperty.call() else otherProperty.call()
+
 }
 
 abstract class CellAttribute<T : CellAttribute<T>> : Attribute<T>()

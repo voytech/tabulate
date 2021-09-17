@@ -257,7 +257,6 @@ class TabulateRowCellRenderOperationTest {
         assertTrue(occurrenceMap["2.1"] ?: false)
     }
 
-    @Disabled("Fix defaults and merging with defaults")
     @Test
     fun `should merge complex attributes from multiple levels`() {
         val occurrenceMap = mutableMapOf<String, Boolean>()
@@ -271,7 +270,7 @@ class TabulateRowCellRenderOperationTest {
                             assertEquals("Black, strikeout, bold, italic cell", attributedCell.value.value)
                             assertEquals(
                                 CellTextStylesAttribute(
-                                    fontColor = Colors.GREEN,
+                                    fontColor = Colors.BLACK,
                                     strikeout = true,
                                     weight = DefaultWeightStyle.BOLD,
                                     italic = true
@@ -290,7 +289,7 @@ class TabulateRowCellRenderOperationTest {
                             assertEquals("Black, strikeout, bold cell", attributedCell.value.value)
                             assertEquals(
                                 CellTextStylesAttribute(
-                                    fontColor = Colors.GREEN,
+                                    fontColor = Colors.BLACK,
                                     strikeout = true,
                                     weight = DefaultWeightStyle.BOLD
                                 ),
@@ -307,7 +306,7 @@ class TabulateRowCellRenderOperationTest {
                             occurrenceMap["2.0"] = true
                             assertEquals("Black, strikeout cell", attributedCell.value.value)
                             assertEquals(
-                                CellTextStylesAttribute(fontColor = Colors.GREEN, strikeout = true),
+                                CellTextStylesAttribute(fontColor = Colors.BLACK, strikeout = true),
                                 attributedCell.attributes!!.filterIsInstance(CellTextStylesAttribute::class.java).first(),
                                 "Should be Black, strikeout cell"
                             )

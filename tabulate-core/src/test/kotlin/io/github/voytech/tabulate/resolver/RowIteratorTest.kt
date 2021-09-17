@@ -84,6 +84,7 @@ class RowIteratorTest {
         val header = iterator.next()
         val value = iterator.next()
         val footer = iterator.next()
+        assertFalse(iterator.hasNext())
         assertNotNull(header)
         assertEquals(0, header.rowIndex)
         with(header) {

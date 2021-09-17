@@ -10,15 +10,15 @@ data class CellBackgroundAttribute(
 ) : CellStyleAttribute<CellBackgroundAttribute>() {
 
     @TabulateMarker
-    class Builder: CellAttributeBuilder<CellBackgroundAttribute> {
-        var color: Color? = null
-        var fill: CellFill? = null
-        override fun build(): CellBackgroundAttribute = CellBackgroundAttribute(color, fill)
+    class Builder: CellAttributeBuilder<CellBackgroundAttribute>() {
+        var color: Color? by observable(null)
+        var fill: CellFill? by observable(null)
+        override fun provide(): CellBackgroundAttribute = CellBackgroundAttribute(color, fill)
     }
 
     override fun mergeWith(other: CellBackgroundAttribute): CellBackgroundAttribute = CellBackgroundAttribute(
-        color = other.color ?: this.color,
-        fill = other.fill ?: this.fill
+        color = other.takeIfChangedOrElse(other::color, ::color),
+        fill = other.takeIfChangedOrElse(other::fill, ::fill),
     )
 }
 

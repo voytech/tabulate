@@ -4,6 +4,9 @@ import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.*
 import io.github.voytech.tabulate.template.context.DefaultSteps
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.properties.ObservableProperty
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 
 interface Builder<T> {
     fun build(): T
@@ -408,7 +411,25 @@ interface TableAttributeBuilder : AttributeBuilder<TableAttribute<*>>
 
 interface AttributeBuilder<T : Attribute<*>> : Builder<T>
 
-interface CellAttributeBuilder<T : CellAttribute<T>> : AttributeBuilder<T>
+abstract class CellAttributeBuilder<T : CellAttribute<T>> : AttributeBuilder<T> {
+
+    private val propertyChanges = mutableSetOf<KProperty<*>>()
+
+    fun <T> observable(initialValue: T): ReadWriteProperty<Any?, T> =
+        object : ObservableProperty<T>(initialValue) {
+            override fun afterChange(property: KProperty<*>, oldValue: T, newValue: T) {
+                propertyChanges.add(property)
+            }
+        }
+
+    abstract fun provide(): T
+
+    final override fun build(): T {
+        return provide().apply {
+            nonDefaultProps = propertyChanges.map { it.name }.toSet()
+        }
+    }
+}
 
 interface RowAttributeBuilder : AttributeBuilder<RowAttribute<*>>
 
