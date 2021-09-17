@@ -20,8 +20,8 @@ data class CellAlignmentAttribute(
     }
 
     override fun mergeWith(other: CellAlignmentAttribute): CellAlignmentAttribute = CellAlignmentAttribute(
-        vertical = other.takeIfChangedOrElse(other::vertical, ::vertical),
-        horizontal = other.takeIfChangedOrElse(other::horizontal, ::horizontal),
+        vertical = takeIfChanged(other, CellAlignmentAttribute::vertical),
+        horizontal = takeIfChanged(other, CellAlignmentAttribute::horizontal),
     )
 
 }

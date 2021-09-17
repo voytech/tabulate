@@ -40,14 +40,13 @@ data class CellBordersAttribute(
     }
 
     override fun mergeWith(other: CellBordersAttribute): CellBordersAttribute = CellBordersAttribute(
-        leftBorderStyle = other.takeIfChangedOrElse(other::leftBorderStyle, ::leftBorderStyle),
-        leftBorderColor = other.takeIfChangedOrElse(other::leftBorderColor, ::leftBorderColor),
-        rightBorderStyle = other.takeIfChangedOrElse(other::rightBorderStyle, ::rightBorderStyle),
-        rightBorderColor = other.takeIfChangedOrElse(other::rightBorderColor, ::rightBorderColor),
-        topBorderStyle = other.takeIfChangedOrElse(other::topBorderStyle, ::topBorderStyle),
-        topBorderColor = other.takeIfChangedOrElse(other::topBorderColor, ::topBorderColor),
-        bottomBorderStyle = other.takeIfChangedOrElse(other::bottomBorderStyle, ::bottomBorderStyle),
-        bottomBorderColor = other.takeIfChangedOrElse(other::bottomBorderColor, ::bottomBorderColor),
+        leftBorderColor = takeIfChanged(other, CellBordersAttribute::leftBorderColor),
+        rightBorderStyle = takeIfChanged(other, CellBordersAttribute::rightBorderStyle),
+        rightBorderColor = takeIfChanged(other, CellBordersAttribute::rightBorderColor),
+        topBorderStyle = takeIfChanged(other, CellBordersAttribute::topBorderStyle),
+        topBorderColor = takeIfChanged(other, CellBordersAttribute::topBorderColor),
+        bottomBorderStyle = takeIfChanged(other, CellBordersAttribute::bottomBorderStyle),
+        bottomBorderColor = takeIfChanged(other, CellBordersAttribute::bottomBorderColor),
     )
 }
 

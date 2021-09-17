@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.model.attributes
 
 import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty1
 
 abstract class Attribute<T: Attribute<T>> {
     internal lateinit var nonDefaultProps: Set<String>
@@ -14,8 +15,8 @@ abstract class Attribute<T: Attribute<T>> {
        return nonDefaultProps.contains(property.name)
     }
 
-    fun <P> takeIfChangedOrElse(thisProperty: KProperty<P>, otherProperty: KProperty<P>) :P =
-        if (isModified(thisProperty)) thisProperty.call() else otherProperty.call()
+    fun <P> takeIfChanged(other: T, property: KProperty1<T, P>) :P =
+        if (other.isModified(property)) property.invoke(other) else property.invoke(this as T)
 
 }
 

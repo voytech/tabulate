@@ -37,16 +37,16 @@ data class CellTextStylesAttribute(
     }
 
     override fun mergeWith(other: CellTextStylesAttribute): CellTextStylesAttribute = CellTextStylesAttribute(
-        fontFamily = other.takeIfChangedOrElse(other::fontFamily, ::fontFamily),
-        fontSize = other.takeIfChangedOrElse(other::fontSize, ::fontSize),
-        weight = other.takeIfChangedOrElse(other::weight, ::weight),
-        italic = other.takeIfChangedOrElse(other::italic, ::italic),
-        strikeout = other.takeIfChangedOrElse(other::strikeout, ::strikeout),
-        underline = other.takeIfChangedOrElse(other::underline, ::underline),
-        fontColor = other. takeIfChangedOrElse(other::fontColor, ::fontColor),
-        ident = other.takeIfChangedOrElse(other::ident, ::ident),
-        wrapText = other.takeIfChangedOrElse(other::wrapText, ::wrapText),
-        rotation = other.takeIfChangedOrElse(other::rotation, ::rotation),
+        fontFamily = takeIfChanged(other, CellTextStylesAttribute::fontFamily),
+        fontSize = takeIfChanged(other, CellTextStylesAttribute::fontSize),
+        weight = takeIfChanged(other, CellTextStylesAttribute::weight),
+        italic = takeIfChanged(other, CellTextStylesAttribute::italic),
+        strikeout = takeIfChanged(other, CellTextStylesAttribute::strikeout),
+        underline = takeIfChanged(other, CellTextStylesAttribute::underline),
+        fontColor = takeIfChanged(other, CellTextStylesAttribute::fontColor),
+        ident = takeIfChanged(other, CellTextStylesAttribute::ident),
+        wrapText = takeIfChanged(other, CellTextStylesAttribute::wrapText),
+        rotation = takeIfChanged(other, CellTextStylesAttribute::rotation),
     )
 }
 
