@@ -194,7 +194,6 @@ class RowsBuilderApi<T> internal constructor(private val builder: RowsBuilder<T>
         }
     }
 
-
     companion object {
         @JvmSynthetic
         internal fun <T> new(builder: RowsBuilder<T>): RowsBuilderApi<T> = RowsBuilderApi(builder)

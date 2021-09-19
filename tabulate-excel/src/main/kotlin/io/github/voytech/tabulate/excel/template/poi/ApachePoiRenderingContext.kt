@@ -87,9 +87,9 @@ class ApachePoiRenderingContext : RenderingContext  {
         columnIndex: Int,
         rowSpan: Int,
         colSpan: Int,
-        imageDate: InputStream,
+        imageData: InputStream,
     ) {
-        createImageCell(sheetName, rowIndex, columnIndex, rowSpan, colSpan, IOUtils.toByteArray(imageDate))
+        createImageCell(sheetName, rowIndex, columnIndex, rowSpan, colSpan, IOUtils.toByteArray(imageData))
     }
 
     fun createImageCell(
