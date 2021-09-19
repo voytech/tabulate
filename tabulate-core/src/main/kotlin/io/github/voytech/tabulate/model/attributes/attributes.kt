@@ -4,9 +4,9 @@ import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
 abstract class Attribute<T: Attribute<T>> {
-    internal lateinit var nonDefaultProps: Set<String>
+    internal var nonDefaultProps: Set<String> = emptySet()
 
-    open fun mergeWith(other: T): T = other
+    open fun overrideWith(other: T): T = other
 
     fun isModified(property: KProperty<*>): Boolean {
        return nonDefaultProps.contains(property.name)
@@ -32,7 +32,7 @@ abstract class TableAttribute<T : TableAttribute<T>>  : Attribute<T>()
 fun <A : Attribute<A>> List<A>.mergeAttributes(): A {
     return this.takeLast(this.size - 1)
         .fold(this.first()) { acc: A, attribute: A ->
-            acc.mergeWith(attribute)
+            acc.overrideWith(attribute)
         }
 }
 

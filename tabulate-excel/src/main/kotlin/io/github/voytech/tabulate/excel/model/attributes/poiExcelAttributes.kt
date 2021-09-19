@@ -16,7 +16,7 @@ data class CellExcelDataFormatAttribute(
         override fun provide(): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute(value)
     }
 
-    override fun mergeWith(other: CellExcelDataFormatAttribute): CellExcelDataFormatAttribute =
+    override fun overrideWith(other: CellExcelDataFormatAttribute): CellExcelDataFormatAttribute =
         CellExcelDataFormatAttribute(
             dataFormat = takeIfChanged(other, CellExcelDataFormatAttribute::dataFormat)
         )
@@ -50,7 +50,7 @@ data class FilterAndSortTableAttribute(
         override fun provide(): FilterAndSortTableAttribute = FilterAndSortTableAttribute(columnRange, rowRange)
     }
 
-    override fun mergeWith(other: FilterAndSortTableAttribute): FilterAndSortTableAttribute = FilterAndSortTableAttribute(
+    override fun overrideWith(other: FilterAndSortTableAttribute): FilterAndSortTableAttribute = FilterAndSortTableAttribute(
         columnRange = takeIfChanged(other, FilterAndSortTableAttribute::columnRange),
         rowRange = takeIfChanged(other, FilterAndSortTableAttribute::rowRange),
     )

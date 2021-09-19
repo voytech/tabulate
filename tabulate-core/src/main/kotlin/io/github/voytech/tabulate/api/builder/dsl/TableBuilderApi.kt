@@ -6,7 +6,6 @@ import io.github.voytech.tabulate.model.attributes.Attribute
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
-import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.template.context.DefaultSteps
 import kotlin.reflect.KProperty1
 
@@ -122,7 +121,6 @@ class ColumnsBuilderApi<T> internal constructor(private val builder: ColumnsBuil
     @JvmSynthetic
     fun column(id: String, block: ColumnBuilderApi<T>.() -> Unit) {
         builder.addColumnBuilder(id) {
-            it.attributes(ColumnWidthAttribute(auto = true))
             ColumnBuilderApi.new(it).apply(block)
         }
     }
@@ -130,16 +128,13 @@ class ColumnsBuilderApi<T> internal constructor(private val builder: ColumnsBuil
     @JvmSynthetic
     fun column(ref: KProperty1<T,Any?>, block: ColumnBuilderApi<T>.() -> Unit) {
         builder.addColumnBuilder(ref.id()) {
-            it.attributes(ColumnWidthAttribute(auto = true))
             ColumnBuilderApi.new(it).apply(block)
         }
     }
 
     @JvmSynthetic
     fun column(ref: KProperty1<T,Any?>) {
-        builder.addColumnBuilder(ref.id()) {
-            it.attributes(ColumnWidthAttribute(auto = true))
-        }
+        builder.addColumnBuilder(ref.id()) { }
     }
 
     companion object {

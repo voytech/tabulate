@@ -26,7 +26,7 @@ data class ColumnWidthAttribute(
         override fun provide(): ColumnAttribute<ColumnWidthAttribute> = ColumnWidthAttribute(auto, px, unit)
     }
 
-    override fun mergeWith(other: ColumnWidthAttribute): ColumnWidthAttribute = ColumnWidthAttribute(
+    override fun overrideWith(other: ColumnWidthAttribute): ColumnWidthAttribute = ColumnWidthAttribute(
         auto = takeIfChanged(other, ColumnWidthAttribute::auto),
         px = takeIfChanged(other, ColumnWidthAttribute::px),
         unit = takeIfChanged(other, ColumnWidthAttribute::unit),
@@ -36,5 +36,5 @@ data class ColumnWidthAttribute(
 fun <T> ColumnLevelAttributesBuilderApi<T>.width(block: ColumnWidthAttribute.Builder.() -> Unit) =
     attribute(ColumnWidthAttribute.Builder().apply(block).build())
 
-fun <T> TableLevelAttributesBuilderApi<T>.colWidth(block: ColumnWidthAttribute.Builder.() -> Unit) =
+fun <T> TableLevelAttributesBuilderApi<T>.columnWidth(block: ColumnWidthAttribute.Builder.() -> Unit) =
     attribute(ColumnWidthAttribute.Builder().apply(block).build())

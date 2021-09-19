@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.model.attributes.RowAttribute
 
 data class RowHeightAttribute(val px: Int) : RowAttribute<RowHeightAttribute>() {
 
-    override fun mergeWith(other: RowHeightAttribute): RowHeightAttribute = RowHeightAttribute(
+    override fun overrideWith(other: RowHeightAttribute): RowHeightAttribute = RowHeightAttribute(
         px = takeIfChanged(other, RowHeightAttribute::px)
     )
 

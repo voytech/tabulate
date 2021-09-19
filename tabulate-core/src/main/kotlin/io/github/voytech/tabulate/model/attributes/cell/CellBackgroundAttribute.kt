@@ -16,7 +16,7 @@ data class CellBackgroundAttribute(
         override fun provide(): CellBackgroundAttribute = CellBackgroundAttribute(color, fill)
     }
 
-    override fun mergeWith(other: CellBackgroundAttribute): CellBackgroundAttribute = CellBackgroundAttribute(
+    override fun overrideWith(other: CellBackgroundAttribute): CellBackgroundAttribute = CellBackgroundAttribute(
         color = takeIfChanged(other, CellBackgroundAttribute::color),
         fill = takeIfChanged(other, CellBackgroundAttribute::fill),
     )

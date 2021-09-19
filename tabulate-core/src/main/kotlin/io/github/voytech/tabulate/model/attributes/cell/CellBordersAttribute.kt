@@ -39,7 +39,7 @@ data class CellBordersAttribute(
         )
     }
 
-    override fun mergeWith(other: CellBordersAttribute): CellBordersAttribute = CellBordersAttribute(
+    override fun overrideWith(other: CellBordersAttribute): CellBordersAttribute = CellBordersAttribute(
         leftBorderColor = takeIfChanged(other, CellBordersAttribute::leftBorderColor),
         rightBorderStyle = takeIfChanged(other, CellBordersAttribute::rightBorderStyle),
         rightBorderColor = takeIfChanged(other, CellBordersAttribute::rightBorderColor),

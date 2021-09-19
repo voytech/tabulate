@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.model.attributes.TableAttribute
 
 data class TemplateFileAttribute(val fileName: String): TableAttribute<TemplateFileAttribute>() {
 
-    override fun mergeWith(other: TemplateFileAttribute): TemplateFileAttribute = TemplateFileAttribute(
+    override fun overrideWith(other: TemplateFileAttribute): TemplateFileAttribute = TemplateFileAttribute(
         fileName = takeIfChanged(other, TemplateFileAttribute::fileName)
     )
 

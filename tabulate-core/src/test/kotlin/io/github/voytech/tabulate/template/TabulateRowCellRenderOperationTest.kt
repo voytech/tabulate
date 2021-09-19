@@ -7,11 +7,15 @@ import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultWeightStyle
+import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
+import io.github.voytech.tabulate.model.attributes.column.columnWidth
+import io.github.voytech.tabulate.model.attributes.column.width
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.row.height
 import io.github.voytech.tabulate.model.attributes.row.rowHeight
 import io.github.voytech.tabulate.template.context.AttributedRow
 import io.github.voytech.tabulate.testsupport.AttributedCellTest
+import io.github.voytech.tabulate.testsupport.AttributedColumnTest
 import io.github.voytech.tabulate.testsupport.AttributedRowTest
 import io.github.voytech.tabulate.testsupport.TestExportOperationsFactory
 import org.junit.jupiter.api.Assertions
@@ -271,6 +275,18 @@ class TabulateRowCellRenderOperationTest {
     @Test
     fun `should merge complex attributes from multiple levels`() {
         val occurrenceMap = mutableMapOf<String, Boolean>()
+        TestExportOperationsFactory.columnTest = AttributedColumnTest {
+            when(it.columnIndex) {
+                0 -> {
+                    assertEquals(1,it.columnAttributes!!.size)
+                    assertEquals(ColumnWidthAttribute(px = 45),it.columnAttributes!!.first())
+                }
+                1 -> {
+                    assertEquals(1,it.columnAttributes!!.size)
+                    assertEquals(ColumnWidthAttribute(px = 100),it.columnAttributes!!.first())
+                }
+            }
+        }
         TestExportOperationsFactory.rowTest = object : AttributedRowTest {
             override fun <T> test(context: AttributedRow<T>) {
                 when (context.rowIndex) {
@@ -341,14 +357,14 @@ class TabulateRowCellRenderOperationTest {
             name = "Products table"
             attributes {
                 text { fontColor = Colors.BLACK }
-                //colWidth { px = 100 }
+                columnWidth { px = 100 }
                 rowHeight { px = 20 }
             }
             columns {
                 column(Product::code) {
                     attributes {
                         text { strikeout = true }
-                        //width { px = 45 }
+                        width { px = 45 }
                     }
                 }
                 column(Product::name)

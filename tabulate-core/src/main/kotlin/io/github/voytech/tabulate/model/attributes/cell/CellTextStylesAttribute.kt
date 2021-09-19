@@ -36,7 +36,7 @@ data class CellTextStylesAttribute(
             )
     }
 
-    override fun mergeWith(other: CellTextStylesAttribute): CellTextStylesAttribute = CellTextStylesAttribute(
+    override fun overrideWith(other: CellTextStylesAttribute): CellTextStylesAttribute = CellTextStylesAttribute(
         fontFamily = takeIfChanged(other, CellTextStylesAttribute::fontFamily),
         fontSize = takeIfChanged(other, CellTextStylesAttribute::fontSize),
         weight = takeIfChanged(other, CellTextStylesAttribute::weight),
