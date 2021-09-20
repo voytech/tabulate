@@ -215,6 +215,35 @@ class RowBuilderApi<T> private constructor(private val builder: RowBuilder<T>)  
     }
 
     @JvmSynthetic
+    fun cell(id: String, block: CellBuilderApi<T>.() -> Unit) {
+        cells {
+            cell(id, block)
+        }
+    }
+
+    @JvmSynthetic
+    fun cell(index: Int, block: CellBuilderApi<T>.() -> Unit) {
+        cells {
+            cell(index, block)
+        }
+    }
+
+    @JvmSynthetic
+    fun cell(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
+        cells {
+            cell(ref, block)
+        }
+    }
+
+    @JvmSynthetic
+    fun cell(block: CellBuilderApi<T>.() -> Unit) {
+        cells {
+            cell(block)
+        }
+    }
+
+
+    @JvmSynthetic
     fun attributes(block: RowLevelAttributesBuilderApi<T>.() -> Unit) {
         RowLevelAttributesBuilderApi(builder).apply(block)
     }

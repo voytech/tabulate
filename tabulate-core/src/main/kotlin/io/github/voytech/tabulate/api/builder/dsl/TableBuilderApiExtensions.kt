@@ -51,30 +51,6 @@ class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
 
 }
 
-fun <T> RowBuilderApi<T>.cell(id: String, block: CellBuilderApi<T>.() -> Unit) {
-    cells {
-        cell(id, block)
-    }
-}
-
-fun <T> RowBuilderApi<T>.cell(index: Int, block: CellBuilderApi<T>.() -> Unit) {
-    cells {
-        cell(index, block)
-    }
-}
-
-fun <T> RowBuilderApi<T>.cell(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
-    cells {
-        cell(ref, block)
-    }
-}
-
-fun <T> RowBuilderApi<T>.cell(block: CellBuilderApi<T>.() -> Unit) {
-    cells {
-        cell(block)
-    }
-}
-
 fun <T> RowsBuilderApi<T>.header(block: HeaderBuilderApi<T>.() -> Unit) =
     HeaderBuilderApi(this).apply(block)
 

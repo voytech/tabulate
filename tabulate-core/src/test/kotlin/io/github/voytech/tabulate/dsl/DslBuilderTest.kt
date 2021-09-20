@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.dsl
 
-import io.github.voytech.tabulate.api.builder.dsl.cell
 import io.github.voytech.tabulate.api.builder.dsl.header
 import io.github.voytech.tabulate.api.builder.dsl.style
 import io.github.voytech.tabulate.api.builder.dsl.table
