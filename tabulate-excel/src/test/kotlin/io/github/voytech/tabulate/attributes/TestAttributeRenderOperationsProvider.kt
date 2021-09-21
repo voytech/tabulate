@@ -72,4 +72,4 @@ class FakeSimpleTestCellAttributeRenderOperation(fakeContext: FakeContext) :
 }
 
 fun <T> CellLevelAttributesBuilderApi<T>.simpleTestCellAttrib(block: SimpleTestCellAttribute.Builder.() -> Unit) =
-    attribute(SimpleTestCellAttribute.Builder().apply(block).build())
+    attribute(SimpleTestCellAttribute.Builder().apply(block))

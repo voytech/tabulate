@@ -4,32 +4,31 @@ import io.github.voytech.tabulate.api.builder.Builder
 import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.Attribute
 import io.github.voytech.tabulate.template.context.DefaultSteps
-import io.github.voytech.tabulate.api.builder.CellBuilder as BaseCellBuilder
-import io.github.voytech.tabulate.api.builder.ColumnBuilder as BaseColumnBuilder
-import io.github.voytech.tabulate.api.builder.RowBuilder as BaseRowBuilder
-import io.github.voytech.tabulate.api.builder.TableBuilder as BaseTableBuilder
+import io.github.voytech.tabulate.api.builder.CellBuilder as CellBuilderState
+import io.github.voytech.tabulate.api.builder.ColumnBuilder as ColumnBuilderState
+import io.github.voytech.tabulate.api.builder.RowBuilder as RowBuilderState
+import io.github.voytech.tabulate.api.builder.TableBuilder as TableBuilderState
 import java.util.function.Function as JFunction
 
 interface TopLevelBuilder<T>
 
 interface MidLevelBuilder<T, E : TopLevelBuilder<T>> : TopLevelBuilder<T> {
     @JvmSynthetic
-    fun out(): E
-
+    fun up(): E
 }
 
-class TableBuilder<T>(internal val builderBase: BaseTableBuilder<T>) : TopLevelBuilder<T>, Builder<Table<T>> {
+class TableBuilder<T>(internal val builderState: TableBuilderState<T>) : TopLevelBuilder<T>, Builder<Table<T>> {
 
     fun name(name: String) = apply {
-        this.builderBase.name = name
+        this.builderState.name = name
     }
 
     fun firstRow(firstRow: Int?) = apply {
-        this.builderBase.firstRow = firstRow
+        this.builderState.firstRow = firstRow
     }
 
     fun firstColumn(firstColumn: Int?) = apply {
-        this.builderBase.firstColumn = firstColumn
+        this.builderState.firstColumn = firstColumn
     }
 
     fun columns() = ColumnsBuilder(this)
@@ -37,37 +36,33 @@ class TableBuilder<T>(internal val builderBase: BaseTableBuilder<T>) : TopLevelB
     fun rows() = RowsBuilder(this)
 
     fun attribute(vararg attribute: Attribute<*>) = apply {
-        this.builderBase.attributes(*attribute)
+        this.builderState.attributes(*attribute)
     }
 
-    override fun build(): Table<T> = builderBase.build()
+    override fun build(): Table<T> = builderState.build()
 }
 
 class ColumnsBuilder<T>(private val parent: TableBuilder<T>) : MidLevelBuilder<T, TableBuilder<T>>, Builder<Table<T>> {
 
-    fun column(id: String) = ColumnBuilder(parent.builderBase.columnsBuilder.addColumnBuilder(id) {
+    fun column(id: String) = ColumnBuilder(parent.builderState.columnsBuilder.addColumnBuilder(id) {
         it.id = ColumnKey(id = id)
     }, this)
 
-    fun column(ref: JFunction<T, Any?>) = ColumnBuilder(parent.builderBase.columnsBuilder.addColumnBuilder(ref.id()) {
+    fun column(ref: JFunction<T, Any?>) = ColumnBuilder(parent.builderState.columnsBuilder.addColumnBuilder(ref.id()) {
         it.id = ColumnKey(ref = ref.id())
     }, this)
 
-    override fun out(): TableBuilder<T> = parent
+    override fun up(): TableBuilder<T> = parent
 
     override fun build(): Table<T> = parent.build()
 
 }
 
-class ColumnBuilder<T>(private val builderBase: BaseColumnBuilder<T>, private val parent: ColumnsBuilder<T>) :
+class ColumnBuilder<T>(private val builderBase: ColumnBuilderState<T>, private val parent: ColumnsBuilder<T>) :
     MidLevelBuilder<T, ColumnsBuilder<T>>, Builder<Table<T>> {
 
     fun id(id: ColumnKey<T>) = apply {
         builderBase.id = id
-    }
-
-    fun dataFormatter(dataFormatter: ((field: Any) -> Any)?) = apply {
-        builderBase.dataFormatter = dataFormatter
     }
 
     fun index(index: Int?) = apply {
@@ -86,14 +81,14 @@ class ColumnBuilder<T>(private val builderBase: BaseColumnBuilder<T>, private va
         return parent.column(ref)
     }
 
-    fun rows() = out().out().rows()
+    fun rows() = up().up().rows()
 
     fun attribute(vararg attribute: Attribute<*>) = apply {
         builderBase.attributes(*attribute)
     }
 
     @JvmSynthetic
-    override fun out(): ColumnsBuilder<T> = parent
+    override fun up(): ColumnsBuilder<T> = parent
 
     override fun build(): Table<T> = parent.build()
 
@@ -101,25 +96,25 @@ class ColumnBuilder<T>(private val builderBase: BaseColumnBuilder<T>, private va
 
 class RowsBuilder<T>(private val parent: TableBuilder<T>) : MidLevelBuilder<T, TableBuilder<T>>, Builder<Table<T>> {
 
-    fun row() = RowBuilder(parent.builderBase.rowsBuilder.addRowBuilder {}, this)
+    fun row() = RowBuilder(parent.builderState.rowsBuilder.addRowBuilder {}, this)
 
     fun row(at: Int) =
-        RowBuilder(parent.builderBase.rowsBuilder.addRowBuilder {
+        RowBuilder(parent.builderState.rowsBuilder.addRowBuilder {
             it.qualifier = RowQualifier(createAt = RowIndexDef(at))
         }, this)
 
     fun row(at: Int, offset: DefaultSteps) =
-        RowBuilder(parent.builderBase.rowsBuilder.addRowBuilder {
+        RowBuilder(parent.builderState.rowsBuilder.addRowBuilder {
             it.qualifier = RowQualifier(createAt = RowIndexDef(at, offset.name))
         }, this)
 
     @JvmSynthetic
-    override fun out(): TableBuilder<T> = parent
+    override fun up(): TableBuilder<T> = parent
 
     override fun build(): Table<T> = parent.build()
 }
 
-class RowBuilder<T>(private val builderBase: BaseRowBuilder<T>, private val parent: RowsBuilder<T>) :
+class RowBuilder<T>(private val builderBase: RowBuilderState<T>, private val parent: RowsBuilder<T>) :
     MidLevelBuilder<T, RowsBuilder<T>>, Builder<Table<T>> {
 
     fun allMatching(predicate: RowPredicate<T>) = apply {
@@ -147,13 +142,13 @@ class RowBuilder<T>(private val builderBase: BaseRowBuilder<T>, private val pare
     }
 
     @JvmSynthetic
-    override fun out(): RowsBuilder<T> = parent
+    override fun up(): RowsBuilder<T> = parent
 
     override fun build(): Table<T> = parent.build()
 
 }
 
-class CellBuilder<T>(private val builderBase: BaseCellBuilder<T>, private val parent: RowBuilder<T>) :
+class CellBuilder<T>(private val builderBase: CellBuilderState<T>, private val parent: RowBuilder<T>) :
     MidLevelBuilder<T, RowBuilder<T>>, Builder<Table<T>> {
 
     fun value(value: Any?) = apply {
@@ -187,7 +182,7 @@ class CellBuilder<T>(private val builderBase: BaseCellBuilder<T>, private val pa
     fun row(at: Int) = parent.row(at)
 
     @JvmSynthetic
-    override fun out(): RowBuilder<T> = parent
+    override fun up(): RowBuilder<T> = parent
 
     override fun build(): Table<T> = parent.build()
 }

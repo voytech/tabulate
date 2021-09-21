@@ -19,11 +19,11 @@ data class ColumnWidthAttribute(
     override fun afterLastRow() = true
 
     @TabulateMarker
-    class Builder : ColumnAttributeBuilder() {
+    class Builder : ColumnAttributeBuilder<ColumnWidthAttribute>() {
         var auto: Boolean? by observable(false)
         var px: Int by observable(-1)
         var unit: LengthUnit by observable(LengthUnit.PIXEL)
-        override fun provide(): ColumnAttribute<ColumnWidthAttribute> = ColumnWidthAttribute(auto, px, unit)
+        override fun provide(): ColumnWidthAttribute = ColumnWidthAttribute(auto, px, unit)
     }
 
     override fun overrideWith(other: ColumnWidthAttribute): ColumnWidthAttribute = ColumnWidthAttribute(
@@ -34,7 +34,7 @@ data class ColumnWidthAttribute(
 }
 
 fun <T> ColumnLevelAttributesBuilderApi<T>.width(block: ColumnWidthAttribute.Builder.() -> Unit) =
-    attribute(ColumnWidthAttribute.Builder().apply(block).build())
+    attribute(ColumnWidthAttribute.Builder().apply(block))
 
 fun <T> TableLevelAttributesBuilderApi<T>.columnWidth(block: ColumnWidthAttribute.Builder.() -> Unit) =
-    attribute(ColumnWidthAttribute.Builder().apply(block).build())
+    attribute(ColumnWidthAttribute.Builder().apply(block))

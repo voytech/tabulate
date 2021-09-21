@@ -18,17 +18,13 @@ abstract class AttributesAware {
     private var attributes: MutableMap<Class<out Attribute<*>>, Set<Attribute<*>>> = mutableMapOf()
 
     @JvmSynthetic
+    //TODO INSECURE (make private) - bypasses builders which are needed for property observability and attribute overriding.
     fun attributes(vararg attributes: Attribute<*>) {
         applyAttributes(attributes.asList())
     }
 
     @JvmSynthetic
-    fun attributes(attributes: Collection<Attribute<*>>) {
-        applyAttributes(attributes)
-    }
-
-    @JvmSynthetic
-    protected fun attributes(vararg builders: AttributeBuilder<out Attribute<*>>) {
+    fun attributes(vararg builders: AttributeBuilder<out Attribute<*>>) {
         attributes(*(builders.map { it.build() }).toTypedArray())
     }
 
@@ -437,13 +433,13 @@ abstract class AttributeBuilder<T : Attribute<*>> : Builder<T> {
     }
 }
 
-abstract class TableAttributeBuilder : AttributeBuilder<TableAttribute<*>>()
+abstract class TableAttributeBuilder<T: TableAttribute<T>> : AttributeBuilder<T>()
 
 abstract class CellAttributeBuilder<T : CellAttribute<T>> : AttributeBuilder<T>()
 
-abstract class RowAttributeBuilder : AttributeBuilder<RowAttribute<*>>()
+abstract class RowAttributeBuilder<T : RowAttribute<T>> : AttributeBuilder<T>()
 
-abstract class ColumnAttributeBuilder : AttributeBuilder<ColumnAttribute<*>>()
+abstract class ColumnAttributeBuilder<T: ColumnAttribute<T>> : AttributeBuilder<T>()
 
 
 

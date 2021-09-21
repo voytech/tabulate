@@ -1,12 +1,10 @@
+@file:JvmName("TableBuilder")
 package io.github.voytech.tabulate.api.builder.dsl
 
 import io.github.voytech.tabulate.api.builder.*
 import io.github.voytech.tabulate.model.*
-import io.github.voytech.tabulate.model.attributes.Attribute
-import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
-import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
-import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.template.context.DefaultSteps
+import java.util.function.Consumer
 import kotlin.reflect.KProperty1
 
 @DslMarker
@@ -30,7 +28,7 @@ fun createTable(block: TableBuilderApi<Unit>.() -> Unit): TableBuilder<Unit> {
 class TableLevelAttributesBuilderApi<T> internal constructor(private val builder: TableBuilder<T>) {
 
     @JvmSynthetic
-    fun attribute(attribute: Attribute<*>) {
+    fun attribute(attribute: AttributeBuilder<*>) {
         builder.attributes(attribute)
     }
 
@@ -40,12 +38,12 @@ class TableLevelAttributesBuilderApi<T> internal constructor(private val builder
 class ColumnLevelAttributesBuilderApi<T> internal constructor(private val builder: ColumnBuilder<T>) {
 
     @JvmSynthetic
-    fun attribute(attribute: ColumnAttribute) {
+    fun attribute(attribute: ColumnAttributeBuilder<*>) {
         builder.attributes(attribute)
     }
 
     @JvmSynthetic
-    fun attribute(attribute: CellAttribute) {
+    fun attribute(attribute: CellAttributeBuilder<*>) {
         builder.attributes(attribute)
     }
 
@@ -54,12 +52,12 @@ class ColumnLevelAttributesBuilderApi<T> internal constructor(private val builde
 @TabulateMarker
 class RowLevelAttributesBuilderApi<T> internal constructor(private val builder: RowBuilder<T>) {
     @JvmSynthetic
-    fun attribute(attribute: RowAttribute) {
+    fun attribute(attribute: RowAttributeBuilder<*>) {
         builder.attributes(attribute)
     }
 
     @JvmSynthetic
-    fun attribute(attribute: CellAttribute) {
+    fun attribute(attribute: CellAttributeBuilder<*>) {
         builder.attributes(attribute)
     }
 }
@@ -67,7 +65,7 @@ class RowLevelAttributesBuilderApi<T> internal constructor(private val builder: 
 @TabulateMarker
 class CellLevelAttributesBuilderApi<T> internal constructor(private val builder: CellBuilder<T>) {
     @JvmSynthetic
-    fun attribute(attribute: CellAttribute) {
+    fun attribute(attribute: CellAttributeBuilder<*>) {
         builder.attributes(attribute)
     }
 }
@@ -122,6 +120,13 @@ class ColumnsBuilderApi<T> internal constructor(private val builder: ColumnsBuil
     fun column(id: String, block: ColumnBuilderApi<T>.() -> Unit) {
         builder.addColumnBuilder(id) {
             ColumnBuilderApi.new(it).apply(block)
+        }
+    }
+
+    @JvmSynthetic
+    fun column(id: String, block: Consumer<ColumnBuilderApi<T>>) {
+        builder.addColumnBuilder(id) {
+            block.accept(ColumnBuilderApi.new(it))
         }
     }
 
@@ -241,7 +246,6 @@ class RowBuilderApi<T> private constructor(private val builder: RowBuilder<T>)  
             cell(block)
         }
     }
-
 
     @JvmSynthetic
     fun attributes(block: RowLevelAttributesBuilderApi<T>.() -> Unit) {

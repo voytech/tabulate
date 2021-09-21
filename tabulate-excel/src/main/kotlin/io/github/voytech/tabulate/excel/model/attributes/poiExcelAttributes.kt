@@ -26,16 +26,16 @@ data class CellExcelDataFormatAttribute(
 fun dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute.Builder().apply(block).build()
 
 fun <T> TableLevelAttributesBuilderApi<T>.dataTestAttributeRenderOperationsProviderFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
-    attribute(CellExcelDataFormatAttribute.Builder().apply(block).build())
+    attribute(CellExcelDataFormatAttribute.Builder().apply(block))
 
 fun <T> CellLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
-    attribute(CellExcelDataFormatAttribute.Builder().apply(block).build())
+    attribute(CellExcelDataFormatAttribute.Builder().apply(block))
 
 fun <T> RowLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
-    attribute(CellExcelDataFormatAttribute.Builder().apply(block).build())
+    attribute(CellExcelDataFormatAttribute.Builder().apply(block))
 
 fun <T> ColumnLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
-    attribute(CellExcelDataFormatAttribute.Builder().apply(block).build())
+    attribute(CellExcelDataFormatAttribute.Builder().apply(block))
 
 
 data class FilterAndSortTableAttribute(
@@ -44,7 +44,7 @@ data class FilterAndSortTableAttribute(
 ) : TableAttribute<FilterAndSortTableAttribute>() {
 
     @TabulateMarker
-    class Builder : TableAttributeBuilder() {
+    class Builder : TableAttributeBuilder<FilterAndSortTableAttribute>() {
         var columnRange: IntRange by observable(0 .. 100)
         var rowRange: IntRange by observable(0..65000)
         override fun provide(): FilterAndSortTableAttribute = FilterAndSortTableAttribute(columnRange, rowRange)
@@ -58,4 +58,4 @@ data class FilterAndSortTableAttribute(
 }
 
 fun <T> TableLevelAttributesBuilderApi<T>.filterAndSort(block: FilterAndSortTableAttribute.Builder.() -> Unit) =
-    attribute(FilterAndSortTableAttribute.Builder().apply(block).build())
+    attribute(FilterAndSortTableAttribute.Builder().apply(block))

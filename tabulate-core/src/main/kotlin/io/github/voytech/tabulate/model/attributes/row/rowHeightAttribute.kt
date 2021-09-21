@@ -13,16 +13,16 @@ data class RowHeightAttribute(val px: Int) : RowAttribute<RowHeightAttribute>() 
     )
 
     @TabulateMarker
-    class Builder : RowAttributeBuilder() {
+    class Builder : RowAttributeBuilder<RowHeightAttribute>() {
         var px: Int by observable(-1)
-        override fun provide(): RowAttribute<RowHeightAttribute> = RowHeightAttribute(px)
+        override fun provide(): RowHeightAttribute = RowHeightAttribute(px)
     }
 
 }
 
 fun <T> RowLevelAttributesBuilderApi<T>.height(block: RowHeightAttribute.Builder.() -> Unit) =
-    attribute(RowHeightAttribute.Builder().apply(block).build())
+    attribute(RowHeightAttribute.Builder().apply(block))
 
 fun <T> TableLevelAttributesBuilderApi<T>.rowHeight(block: RowHeightAttribute.Builder.() -> Unit) =
-    attribute(RowHeightAttribute.Builder().apply(block).build())
+    attribute(RowHeightAttribute.Builder().apply(block))
 

@@ -1,7 +1,6 @@
 package io.github.voytech.tabulate.dsl
 
 import io.github.voytech.tabulate.api.builder.dsl.header
-import io.github.voytech.tabulate.api.builder.dsl.style
 import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.model.ColumnKey
@@ -98,38 +97,6 @@ class DslBuilderTest {
             }
         }
     }
-
-    @Test
-    fun `should define style attributes on column level`() {
-        with(table<Product> {
-            name = "Products table"
-            columns {
-                column(Product::code) {
-                    style {
-                        text {
-                            fontColor = Colors.AERO
-                            fontFamily = "Times New Roman"
-                            fontSize = 12
-                        }
-                    }
-                }
-            }
-        }.build()) {
-            assertNotNull(this)
-            assertEquals(columns.size, 1)
-            columns.first().let { column ->
-                assertEquals(Product::code.id(), column.id.ref, "nr 1 should have id ref 'Product::code'")
-                assertNotNull(column.cellAttributes)
-                assertEquals(1, column.cellAttributes!!.size)
-                (column.cellAttributes?.first() as CellTextStylesAttribute).let { attribute ->
-                    assertEquals(Colors.AERO, attribute.fontColor)
-                    assertEquals(12, attribute.fontSize)
-                    assertEquals("Times New Roman", attribute.fontFamily)
-                }
-            }
-        }
-    }
-
 
     @Test
     fun `should define custom attributes on column level`() {

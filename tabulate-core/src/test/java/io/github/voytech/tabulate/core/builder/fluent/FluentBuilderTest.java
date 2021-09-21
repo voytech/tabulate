@@ -2,7 +2,6 @@ package io.github.voytech.tabulate.core.builder.fluent;
 
 import java.util.function.Function;
 
-import org.junit.jupiter.api.Test;
 import io.github.voytech.tabulate.model.CellType;
 import io.github.voytech.tabulate.model.SourceRow;
 import io.github.voytech.tabulate.model.Table;
@@ -10,12 +9,15 @@ import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute;
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute;
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute;
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute;
+import org.junit.jupiter.api.Test;
 
 import static io.github.voytech.tabulate.api.qualifer.RowPredicates.allRows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class DslTest {
+public class FluentBuilderTest {
+
+
 
     @Test
     public void createTableDefinitionTest() {

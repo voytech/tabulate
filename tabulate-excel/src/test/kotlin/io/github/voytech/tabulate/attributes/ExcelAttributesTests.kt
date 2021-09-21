@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.attributes
 
+import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
 import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.excel.model.ExcelCellFills
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
@@ -45,7 +46,7 @@ class ExcelAttributesTests {
 
     @ParameterizedTest
     @MethodSource("cellAttributesProvider")
-    fun `should export with cell attribute`(attr: CellAttribute, expectedAttribute: CellAttribute) {
+    fun `should export with cell attribute`(attr: CellAttributeBuilder<*>, expectedAttribute: CellAttribute) {
         // when
         table<Any> {
             name = "test"
@@ -152,30 +153,36 @@ class ExcelAttributesTests {
         }
 
         private fun textStyleAttributes(): List<Arguments> = (KNOWN_FONT_FAMILIES.map {
-            CellTextStylesAttribute(fontFamily = it)
+            CellTextStylesAttribute.Builder().apply { fontFamily = it }
         } + listOf(
-            CellTextStylesAttribute(
-                fontFamily = "Times New Roman",
-                fontSize = 12,
-                italic = true,
-                strikeout = true,
-                underline = true,
+            CellTextStylesAttribute.Builder().apply {
+                fontFamily = "Times New Roman"
+                fontSize = 12
+                italic = true
+                strikeout = true
+                underline = true
                 weight = DefaultWeightStyle.BOLD
-            ),
-            CellTextStylesAttribute(
-                fontFamily = "Times New Roman",
-                wrapText = true,
-                rotation = 90,
+            },
+            CellTextStylesAttribute.Builder().apply {
+                fontFamily = "Times New Roman"
+                wrapText = true
+                rotation = 90
                 ident = 2
-            )
-        )).map { Arguments.of(it, it) }
+            }
+        )).map { Arguments.of(it, it.build()) }
 
         private fun cellAlignmentStyles(): List<Arguments> {
             return DefaultHorizontalAlignment.values().flatMap { horizontal ->
                 DefaultVerticalAlignment.values().map { vertical ->
                     Arguments.of(
-                        CellAlignmentAttribute(horizontal = horizontal, vertical = vertical),
-                        CellAlignmentAttribute(horizontal = horizontal, vertical = vertical)
+                        CellAlignmentAttribute.Builder().apply {
+                            this.horizontal = horizontal
+                            this.vertical = vertical
+                        },
+                        CellAlignmentAttribute(
+                            horizontal = horizontal,
+                            vertical = vertical
+                        )
                     )
                 }
             }
@@ -183,27 +190,33 @@ class ExcelAttributesTests {
 
         private fun cellBackgroundStyles(): List<Arguments> {
             return (KNOWN_COLORS + null).flatMap { color ->
-                DefaultCellFill.values().map { fill -> CellBackgroundAttribute(fill = fill, color = color) } +
-                ExcelCellFills.values().map { fill -> CellBackgroundAttribute(fill = fill, color = color) } +
-                CellBackgroundAttribute(color = color)
-            }.map { Arguments.of(it,it) }
+                DefaultCellFill.values().map { fill -> CellBackgroundAttribute.Builder().apply {
+                    this.fill = fill
+                    this.color = color
+                } } +
+                ExcelCellFills.values().map { fill -> CellBackgroundAttribute.Builder().apply {
+                    this.fill = fill
+                    this.color = color
+                } } +
+                CellBackgroundAttribute.Builder().apply { this.color = color }
+            }.map { Arguments.of(it,it.build()) }
         }
 
         private fun cellBorderStyles(): List<Arguments> {
             return (KNOWN_COLORS + null).flatMap { color ->
                 DefaultBorderStyle.values().map { borderStyle ->
-                    CellBordersAttribute(
-                        leftBorderStyle = borderStyle,
-                        leftBorderColor = color,
-                        rightBorderStyle = borderStyle,
-                        rightBorderColor = color,
-                        topBorderStyle = borderStyle,
-                        topBorderColor = color,
-                        bottomBorderStyle = borderStyle,
+                    CellBordersAttribute.Builder().apply {
+                        leftBorderStyle = borderStyle
+                        leftBorderColor = color
+                        rightBorderStyle = borderStyle
+                        rightBorderColor = color
+                        topBorderStyle = borderStyle
+                        topBorderColor = color
+                        bottomBorderStyle = borderStyle
                         bottomBorderColor = color
-                    )
+                    }
                 }
-            }.map { Arguments.of(it, expectBorderStyleAttribute(it)) }
+            }.map { Arguments.of(it, expectBorderStyleAttribute(it.build())) }
         }
 
         private fun expectBorderStyleAttribute(borderStyle: CellBordersAttribute): CellBordersAttribute {

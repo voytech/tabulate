@@ -13,13 +13,14 @@ data class TemplateFileAttribute(val fileName: String): TableAttribute<TemplateF
     )
 
     @TabulateMarker
-    class Builder : TableAttributeBuilder() {
+    class Builder : TableAttributeBuilder<TemplateFileAttribute>() {
         var fileName: String? by observable(null)
-        override fun provide(): TableAttribute<TemplateFileAttribute> =
+        override fun provide(): TemplateFileAttribute =
             TemplateFileAttribute(fileName ?: throw BuilderException("fileName must be provided for TemplateFileAttribute"))
     }
+
 }
 
 fun <T> TableLevelAttributesBuilderApi<T>.template(block: TemplateFileAttribute.Builder.() -> Unit) {
-    attribute(TemplateFileAttribute.Builder().apply(block).build())
+    attribute(TemplateFileAttribute.Builder().apply(block))
 }
