@@ -114,12 +114,15 @@ nexusPublishing {
 }
 
 if (System.getenv("GPG_KEY_ID") != null) {
+    println(System.getenv("GPG_KEY_ID"))
     signing {
         useInMemoryPgpKeys(
             System.getenv("GPG_KEY_ID"),
             System.getenv("GPG_PRIVATE_KEY"),
             System.getenv("GPG_PRIVATE_KEY_PASSWORD")
         )
+        println("Signing")
         sign(publishing.publications)
+        println("Signed")
     }
 }

@@ -1,4 +1,3 @@
-@file:JvmName("TableBuilder")
 package io.github.voytech.tabulate.api.builder.dsl
 
 import io.github.voytech.tabulate.api.builder.*

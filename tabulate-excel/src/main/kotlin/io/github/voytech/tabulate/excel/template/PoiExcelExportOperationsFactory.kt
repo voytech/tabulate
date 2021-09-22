@@ -147,6 +147,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
                     with(renderingContext.workbook()) {
                         write(output)
                         close()
+                        output.close()
                         dispose()
                     }
                 }
