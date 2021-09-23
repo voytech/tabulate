@@ -2,6 +2,9 @@ package io.github.voytech.tabulate.api.builder.dsl
 
 import io.github.voytech.tabulate.api.builder.*
 import io.github.voytech.tabulate.model.*
+import io.github.voytech.tabulate.model.attributes.CellAttribute
+import io.github.voytech.tabulate.model.attributes.ColumnAttribute
+import io.github.voytech.tabulate.model.attributes.RowAttribute
 import io.github.voytech.tabulate.template.context.DefaultSteps
 import java.util.function.Consumer
 import kotlin.reflect.KProperty1
@@ -28,7 +31,7 @@ class TableLevelAttributesBuilderApi<T> internal constructor(private val builder
 
     @JvmSynthetic
     fun attribute(attribute: AttributeBuilder<*>) {
-        builder.attributes(attribute)
+        builder.attribute(attribute)
     }
 
 }
@@ -37,35 +40,36 @@ class TableLevelAttributesBuilderApi<T> internal constructor(private val builder
 class ColumnLevelAttributesBuilderApi<T> internal constructor(private val builder: ColumnBuilder<T>) {
 
     @JvmSynthetic
-    fun attribute(attribute: ColumnAttributeBuilder<*>) {
-        builder.attributes(attribute)
+    fun <B: ColumnAttributeBuilder<A>,A: ColumnAttribute<A>> attribute(attributeBuilder: B) {
+        builder.attribute(attributeBuilder)
     }
 
     @JvmSynthetic
-    fun attribute(attribute: CellAttributeBuilder<*>) {
-        builder.attributes(attribute)
+    fun <B: CellAttributeBuilder<A>,A: CellAttribute<A>> attribute(attributeBuilder: B) {
+        builder.attribute(attributeBuilder)
     }
 
 }
 
 @TabulateMarker
 class RowLevelAttributesBuilderApi<T> internal constructor(private val builder: RowBuilder<T>) {
+
     @JvmSynthetic
-    fun attribute(attribute: RowAttributeBuilder<*>) {
-        builder.attributes(attribute)
+    fun <B: RowAttributeBuilder<A>,A: RowAttribute<A>> attribute(attributeBuilder: B) {
+        builder.attribute(attributeBuilder)
     }
 
     @JvmSynthetic
-    fun attribute(attribute: CellAttributeBuilder<*>) {
-        builder.attributes(attribute)
+    fun <B: CellAttributeBuilder<A>,A: CellAttribute<A>> attribute(attributeBuilder: B) {
+        builder.attribute(attributeBuilder)
     }
 }
 
 @TabulateMarker
 class CellLevelAttributesBuilderApi<T> internal constructor(private val builder: CellBuilder<T>) {
     @JvmSynthetic
-    fun attribute(attribute: CellAttributeBuilder<*>) {
-        builder.attributes(attribute)
+    fun <B: CellAttributeBuilder<A>,A: CellAttribute<A>> attribute(attributeBuilder: B) {
+        builder.attribute(attributeBuilder)
     }
 }
 

@@ -1,9 +1,14 @@
 package io.github.voytech.tabulate.api.builder.fluent
 
-import io.github.voytech.tabulate.api.builder.Builder
+import io.github.voytech.tabulate.api.builder.*
 import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.Attribute
+import io.github.voytech.tabulate.model.attributes.CellAttribute
+import io.github.voytech.tabulate.model.attributes.ColumnAttribute
+import io.github.voytech.tabulate.model.attributes.RowAttribute
 import io.github.voytech.tabulate.template.context.DefaultSteps
+import java.util.concurrent.Callable
+import java.util.function.Consumer
 import io.github.voytech.tabulate.api.builder.CellBuilder as CellBuilderState
 import io.github.voytech.tabulate.api.builder.ColumnBuilder as ColumnBuilderState
 import io.github.voytech.tabulate.api.builder.RowBuilder as RowBuilderState
@@ -35,8 +40,16 @@ class TableBuilder<T>(internal val builderState: TableBuilderState<T>) : TopLeve
 
     fun rows() = RowsBuilder(this)
 
-    fun attribute(vararg attribute: Attribute<*>) = apply {
-        this.builderState.attributes(*attribute)
+    fun <A: Attribute<A>,B: AttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
+        this.builderState.attribute(attributeProvider.call())
+    }
+
+    fun <A: Attribute<A>,B: AttributeBuilder<A>> attribute(attributeProvider: Callable<B>, attributeConfigurer: Consumer<B>) = apply {
+        this.builderState.attribute(
+            attributeProvider.call().apply {
+                attributeConfigurer.accept(this)
+            }
+        )
     }
 
     override fun build(): Table<T> = builderState.build()
@@ -58,19 +71,19 @@ class ColumnsBuilder<T>(private val parent: TableBuilder<T>) : MidLevelBuilder<T
 
 }
 
-class ColumnBuilder<T>(private val builderBase: ColumnBuilderState<T>, private val parent: ColumnsBuilder<T>) :
+class ColumnBuilder<T>(private val builderState: ColumnBuilderState<T>, private val parent: ColumnsBuilder<T>) :
     MidLevelBuilder<T, ColumnsBuilder<T>>, Builder<Table<T>> {
 
     fun id(id: ColumnKey<T>) = apply {
-        builderBase.id = id
+        builderState.id = id
     }
 
     fun index(index: Int?) = apply {
-        builderBase.index = index
+        builderState.index = index
     }
 
     fun columnType(columnType: CellType?) = apply {
-        builderBase.columnType = columnType
+        builderState.columnType = columnType
     }
 
     fun column(id: String): ColumnBuilder<T> {
@@ -83,9 +96,34 @@ class ColumnBuilder<T>(private val builderBase: ColumnBuilderState<T>, private v
 
     fun rows() = up().up().rows()
 
-    fun attribute(vararg attribute: Attribute<*>) = apply {
-        builderBase.attributes(*attribute)
+    @JvmName("columnAttribute")
+    fun <A: ColumnAttribute<A>,B: ColumnAttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
+        this.builderState.attribute(attributeProvider.call())
     }
+
+    @JvmName("columnAttribute")
+    fun <A: ColumnAttribute<A>,B: ColumnAttributeBuilder<A>> attribute(attributeProvider: Callable<B>, attributeConfigurer: Consumer<B>) = apply {
+        this.builderState.attribute(
+            attributeProvider.call().apply {
+                attributeConfigurer.accept(this)
+            }
+        )
+    }
+
+    @JvmName("cellAttribute")
+    fun <A: CellAttribute<A>,B: CellAttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
+        this.builderState.attribute(attributeProvider.call())
+    }
+
+    @JvmName("cellAttribute")
+    fun <A: CellAttribute<A>,B: CellAttributeBuilder<A>> attribute(attributeProvider: Callable<B>, attributeConfigurer: Consumer<B>) = apply {
+        this.builderState.attribute(
+            attributeProvider.call().apply {
+                attributeConfigurer.accept(this)
+            }
+        )
+    }
+
 
     @JvmSynthetic
     override fun up(): ColumnsBuilder<T> = parent
@@ -114,32 +152,58 @@ class RowsBuilder<T>(private val parent: TableBuilder<T>) : MidLevelBuilder<T, T
     override fun build(): Table<T> = parent.build()
 }
 
-class RowBuilder<T>(private val builderBase: RowBuilderState<T>, private val parent: RowsBuilder<T>) :
+class RowBuilder<T>(private val builderState: RowBuilderState<T>, private val parent: RowsBuilder<T>) :
     MidLevelBuilder<T, RowsBuilder<T>>, Builder<Table<T>> {
 
     fun allMatching(predicate: RowPredicate<T>) = apply {
-        builderBase.qualifier = RowQualifier(applyWhen = predicate)
+        builderState.qualifier = RowQualifier(applyWhen = predicate)
     }
 
     fun insertWhen(predicate: RowPredicate<T>) = apply {
-        builderBase.qualifier = RowQualifier(createWhen = predicate)
+        builderState.qualifier = RowQualifier(createWhen = predicate)
     }
 
-    fun cell() = CellBuilder(builderBase.cellsBuilder.addCellBuilder { }, this)
+    fun cell() = CellBuilder(builderState.cellsBuilder.addCellBuilder { }, this)
 
-    fun cell(id: String) = CellBuilder(builderBase.cellsBuilder.addCellBuilder(id) {}, this)
+    fun cell(id: String) = CellBuilder(builderState.cellsBuilder.addCellBuilder(id) {}, this)
 
-    fun cell(ref: JFunction<T, Any?>) = CellBuilder(builderBase.cellsBuilder.addCellBuilder(ref.id()) {}, this)
+    fun cell(ref: JFunction<T, Any?>) = CellBuilder(builderState.cellsBuilder.addCellBuilder(ref.id()) {}, this)
 
-    fun cell(index: Int): CellBuilder<T> = CellBuilder(builderBase.cellsBuilder.addCellBuilder(index) {}, this)
+    fun cell(index: Int): CellBuilder<T> = CellBuilder(builderState.cellsBuilder.addCellBuilder(index) {}, this)
 
     fun row() = parent.row()
 
     fun row(at: Int) = parent.row(at)
 
-    fun attribute(vararg attribute: Attribute<*>) = apply {
-        builderBase.attributes(*attribute)
+
+    @JvmName("rowAttribute")
+    fun <A: RowAttribute<A>,B: RowAttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
+        this.builderState.attribute(attributeProvider.call())
     }
+
+    @JvmName("rowAttribute")
+    fun <A: RowAttribute<A>,B: RowAttributeBuilder<A>> attribute(attributeProvider: Callable<B>, attributeConfigurer: Consumer<B>) = apply {
+        this.builderState.attribute(
+            attributeProvider.call().apply {
+                attributeConfigurer.accept(this)
+            }
+        )
+    }
+
+    @JvmName("cellAttribute")
+    fun <A: CellAttribute<A>,B: CellAttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
+        this.builderState.attribute(attributeProvider.call())
+    }
+
+    @JvmName("cellAttribute")
+    fun <A: CellAttribute<A>,B: CellAttributeBuilder<A>> attribute(attributeProvider: Callable<B>, attributeConfigurer: Consumer<B>) = apply {
+        this.builderState.attribute(
+            attributeProvider.call().apply {
+                attributeConfigurer.accept(this)
+            }
+        )
+    }
+
 
     @JvmSynthetic
     override fun up(): RowsBuilder<T> = parent

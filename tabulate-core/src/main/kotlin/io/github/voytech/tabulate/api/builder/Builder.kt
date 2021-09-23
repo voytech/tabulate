@@ -18,19 +18,13 @@ abstract class AttributesAware {
     private var attributes: MutableMap<Class<out Attribute<*>>, Set<Attribute<*>>> = mutableMapOf()
 
     @JvmSynthetic
-    //TODO INSECURE (make private) - bypasses builders which are needed for property observability and attribute overriding.
-    fun attributes(vararg attributes: Attribute<*>) {
-        applyAttributes(attributes.asList())
-    }
-
-    @JvmSynthetic
-    fun attributes(vararg builders: AttributeBuilder<out Attribute<*>>) {
-        attributes(*(builders.map { it.build() }).toTypedArray())
+    fun <A : Attribute<A>, B: AttributeBuilder<A>> attribute(builder: B) {
+        applyAttribute(builder.build())
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Attribute<*>> visit(clazz: Class<T>, visitor: ((current: Set<T>?) -> Set<T>?)) {
-        this.attributes[clazz] = visitor.invoke(this.attributes[clazz] as Set<T>?) ?: emptySet()
+    fun <A : Attribute<*>> visit(clazz: Class<A>, visitor: ((current: Set<A>?) -> Set<A>?)) {
+        this.attributes[clazz] = visitor.invoke(this.attributes[clazz] as Set<A>?) ?: emptySet()
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -40,17 +34,15 @@ abstract class AttributesAware {
     @JvmSynthetic
     protected abstract fun supportedAttributeClasses(): Set<Class<out Attribute<*>>>
 
-    private fun applyAttributes(attributes: Collection<Attribute<*>>) {
-        attributes.forEach { attribute ->
-            supportedAttributeClasses().find { clazz -> clazz.isAssignableFrom(attribute.javaClass) }
-                ?.let { baseClass ->
-                    this.attributes[baseClass] =
-                        this.attributes[baseClass]
-                            ?.filter { it.javaClass != attribute.javaClass }
-                            ?.toSet()
-                            ?.let { it + attribute } ?: setOf(attribute)
-                }
-        }
+    private fun applyAttribute(attribute: Attribute<*>) {
+        supportedAttributeClasses().find { clazz -> clazz.isAssignableFrom(attribute.javaClass) }
+            ?.let { baseClass ->
+                this.attributes[baseClass] =
+                    this.attributes[baseClass]
+                        ?.filter { it.javaClass != attribute.javaClass }
+                        ?.toSet()
+                        ?.let { it + attribute } ?: setOf(attribute)
+            }
     }
 }
 
@@ -160,9 +152,6 @@ class ColumnBuilder<T> internal constructor() : AttributesAwareBuilder<ColumnDef
 
     @JvmSynthetic
     var index: Int? = null
-
-    @JvmSynthetic
-    var dataFormatter: ((field: Any) -> Any)? = null
 
     @JvmSynthetic
     override fun build(): ColumnDef<T> = ColumnDef(

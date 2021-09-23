@@ -17,31 +17,33 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class FluentBuilderTest {
 
-
-
     @Test
     public void createTableDefinitionTest() {
         Function<Employee, String> ref = Employee::getId;
         final Table<Employee> employeeTable =
                 Table.<Employee>builder()
-                    .attribute(new CellTextStylesAttribute())
-                    .attribute(new TemplateFileAttribute("file.xlsx"))
+                    .attribute(CellTextStylesAttribute.Builder::new)
+                    .attribute(TemplateFileAttribute.Builder ::new,
+                            builder -> builder.setFileName("")
+                    )
                     .columns()
                         .column("rowNumbering")
                             .columnType(CellType.NUMERIC)
-                            .attribute(new ColumnWidthAttribute())
+                            .columnAttribute(ColumnWidthAttribute.Builder::new)
                         .column(Employee::getId)
                             .columnType(CellType.NUMERIC)
-                            .attribute(new ColumnWidthAttribute())
+                            .columnAttribute(ColumnWidthAttribute.Builder::new)
                         .column(Employee::getFirstName)
                             .columnType(CellType.STRING)
-                            .attribute(new ColumnWidthAttribute())
+                            .columnAttribute(ColumnWidthAttribute.Builder::new)
                         .column(Employee::getLastName)
                             .columnType(CellType.STRING)
-                            .attribute(new ColumnWidthAttribute())
+                            .columnAttribute(ColumnWidthAttribute.Builder::new)
                     .rows()
                         .row(0)
-                            .attribute(new RowHeightAttribute(100))
+                            .rowAttribute(RowHeightAttribute.Builder::new,
+                                    builder -> builder.setPx(100)
+                            )
                             .cell(0)
                                 .value("Nr")
                             .cell(Employee::getId)
