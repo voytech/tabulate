@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.template.context
 
-open class ContextData<T> {
+open class ContextData {
     var additionalAttributes: MutableMap<String, Any>? = null
         internal set
 

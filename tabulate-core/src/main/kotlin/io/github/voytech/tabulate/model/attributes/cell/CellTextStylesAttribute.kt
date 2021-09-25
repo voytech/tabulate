@@ -48,6 +48,11 @@ data class CellTextStylesAttribute(
         wrapText = takeIfChanged(other, CellTextStylesAttribute::wrapText),
         rotation = takeIfChanged(other, CellTextStylesAttribute::rotation),
     )
+
+    companion object {
+        @JvmStatic
+        fun builder() : Builder = Builder()
+    }
 }
 
 fun <T> CellLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =

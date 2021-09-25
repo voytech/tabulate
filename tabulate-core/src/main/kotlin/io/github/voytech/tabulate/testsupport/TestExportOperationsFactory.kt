@@ -1,10 +1,7 @@
 package io.github.voytech.tabulate.testsupport
 
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
-import io.github.voytech.tabulate.template.context.AttributedCell
-import io.github.voytech.tabulate.template.context.AttributedColumn
-import io.github.voytech.tabulate.template.context.AttributedRow
-import io.github.voytech.tabulate.template.context.RenderingContext
+import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.operations.ExportOperationsConfiguringFactory
 import io.github.voytech.tabulate.template.operations.TableExportOperations
 import io.github.voytech.tabulate.template.result.ResultProvider
@@ -44,6 +41,10 @@ class TestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, NoCo
             rowTest?.test(context)
         }
 
+        override fun createTable(context: AttributedTable) {
+            println("table context: $context")
+        }
+
     }
 
     override fun createResultProviders(renderingContext: NoContext): List<ResultProvider<*>> = listOf(
@@ -71,6 +72,10 @@ class CompetingTestExportOperationsFactory<T>: ExportOperationsConfiguringFactor
     override fun createExportOperations(renderingContext: ExampleContext): TableExportOperations<T> = object: TableExportOperations<T> {
         override fun renderRowCell(context: AttributedCell) {
             println("cell context: $context")
+        }
+
+        override fun createTable(context: AttributedTable) {
+            println("table context: $context")
         }
     }
 

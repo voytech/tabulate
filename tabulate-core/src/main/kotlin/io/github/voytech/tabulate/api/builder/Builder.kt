@@ -8,13 +8,14 @@ import kotlin.properties.ObservableProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-interface Builder<T> {
-    fun build(): T
+abstract class Builder<T> {
+    internal abstract fun build(): T
 }
 
 typealias DslBlock<T> = (T) -> Unit
 
-abstract class AttributesAware {
+abstract class AttributesAwareBuilder<T>: Builder<T>() {
+
     private var attributes: MutableMap<Class<out Attribute<*>>, Set<Attribute<*>>> = mutableMapOf()
 
     @JvmSynthetic
@@ -45,8 +46,6 @@ abstract class AttributesAware {
             }
     }
 }
-
-abstract class AttributesAwareBuilder<T> : AttributesAware(), Builder<T>
 
 class TableBuilder<T> : AttributesAwareBuilder<Table<T>>() {
 
@@ -84,7 +83,7 @@ class TableBuilder<T> : AttributesAwareBuilder<Table<T>>() {
 
 }
 
-class ColumnsBuilder<T> internal constructor() : Builder<List<ColumnDef<T>>> {
+class ColumnsBuilder<T> internal constructor() : Builder<List<ColumnDef<T>>>() {
 
     @JvmSynthetic
     val columnBuilders: MutableList<ColumnBuilder<T>> = mutableListOf()
@@ -170,7 +169,7 @@ class ColumnBuilder<T> internal constructor() : AttributesAwareBuilder<ColumnDef
     }
 }
 
-class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBuilder<T>) : Builder<List<RowDef<T>>> {
+class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBuilder<T>) : Builder<List<RowDef<T>>>() {
 
     @JvmSynthetic
     val rowBuilders: MutableList<RowBuilder<T>> = mutableListOf()
@@ -297,7 +296,7 @@ class CellsBuilder<T> private constructor(
     private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
     private var cellIndex: AtomicInteger,
     private val cells: MutableMap<ColumnKey<T>, CellBuilder<T>>,
-) : Builder<Map<ColumnKey<T>, CellDef<T>>> {
+) : Builder<Map<ColumnKey<T>, CellDef<T>>>() {
 
     @JvmSynthetic
     fun addCellBuilder(id: String, block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
@@ -397,7 +396,7 @@ class CellBuilder<T> private constructor() : AttributesAwareBuilder<CellDef<T>>(
 
 }
 
-abstract class AttributeBuilder<T : Attribute<*>> : Builder<T> {
+abstract class AttributeBuilder<T : Attribute<*>> : Builder<T>() {
     private val propertyChanges = mutableSetOf<KProperty<*>>()
     private val mappings = mutableMapOf<String, String>()
     fun <F> observable(initialValue: F, fieldMapping: Pair<String, String>? = null): ReadWriteProperty<Any?, F> {
@@ -411,8 +410,9 @@ abstract class AttributeBuilder<T : Attribute<*>> : Builder<T> {
         }
     }
 
-    abstract fun provide(): T
+    protected abstract fun provide(): T
 
+    @JvmSynthetic
     final override fun build(): T {
         return provide().apply {
             nonDefaultProps = propertyChanges.map {

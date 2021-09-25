@@ -24,6 +24,11 @@ data class CellAlignmentAttribute(
         horizontal = takeIfChanged(other, CellAlignmentAttribute::horizontal),
     )
 
+    companion object {
+        @JvmStatic
+        fun builder() : Builder = Builder()
+    }
+
 }
 
 fun <T> CellLevelAttributesBuilderApi<T>.alignment(block: CellAlignmentAttribute.Builder.() -> Unit) =

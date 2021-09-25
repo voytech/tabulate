@@ -7,7 +7,7 @@ data class AttributedCell(
     val attributes: Set<CellAttribute>?,
     val rowIndex: Int,
     val columnIndex: Int,
-): ContextData<Unit>(), RowCellCoordinate {
+): ContextData(), RowCellCoordinate {
     override fun getRow(): Int = rowIndex
     override fun getColumn(): Int = columnIndex
 }

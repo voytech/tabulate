@@ -18,6 +18,10 @@ data class RowHeightAttribute(val px: Int) : RowAttribute<RowHeightAttribute>() 
         override fun provide(): RowHeightAttribute = RowHeightAttribute(px)
     }
 
+    companion object {
+        @JvmStatic
+        fun builder() : Builder = Builder()
+    }
 }
 
 fun <T> RowLevelAttributesBuilderApi<T>.height(block: RowHeightAttribute.Builder.() -> Unit) =

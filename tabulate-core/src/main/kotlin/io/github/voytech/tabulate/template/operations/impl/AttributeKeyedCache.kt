@@ -36,7 +36,7 @@ class AttributeKeyedCache {
 
         private const val ATTRIBUTES_CACHE_KEY = "_attributesCache"
 
-        fun getCache(context: ContextData<*>): AttributeKeyedCache {
+        fun getCache(context: ContextData): AttributeKeyedCache {
             context.additionalAttributes!!.putIfAbsent(ATTRIBUTES_CACHE_KEY, AttributeKeyedCache())
             return context.additionalAttributes!![ATTRIBUTES_CACHE_KEY] as AttributeKeyedCache
         }

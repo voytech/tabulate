@@ -11,6 +11,7 @@ import io.github.voytech.tabulate.template.exception.ExportOperationsFactoryReso
 import io.github.voytech.tabulate.template.exception.ResultProviderResolvingException
 import io.github.voytech.tabulate.template.exception.UnknownTabulationFormatException
 import io.github.voytech.tabulate.template.operations.TableExportOperations
+import io.github.voytech.tabulate.template.operations.impl.AttributeAwareTableExportOperations
 import io.github.voytech.tabulate.template.result.ResultProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.io.File
@@ -76,6 +77,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     ) : TabulationApi<T, O> {
 
         init {
+            ops.createTable(state.tableModel.createContext(state.getCustomAttributes()))
             renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
         }
 
@@ -102,8 +104,15 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
              .firstOrNull() ?: throw ResultProviderResolvingException()
     }
 
+    private fun processBuilder(tableBuilder: TableBuilder<T>): TableBuilder<T> =
+        if (ops is AttributeAwareTableExportOperations<T>) {
+            (ops as AttributeAwareTableExportOperations<T>).process(tableBuilder)
+        } else {
+            tableBuilder
+        }
+
     private fun materialize(tableBuilder: TableBuilder<T>): TabulationState<T> {
-        return ops.createTable(tableBuilder).let { table ->
+        return processBuilder(tableBuilder).build().let { table ->
             TabulationState(
                 tableModel = table,
                 tableName = table.name,

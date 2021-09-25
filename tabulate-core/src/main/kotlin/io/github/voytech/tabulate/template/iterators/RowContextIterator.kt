@@ -14,7 +14,7 @@ class EnumStepProvider<T: Enum<T>>(enum: Class<T>) : StepProvider {
     override fun provide(): String? = if (iterator.hasNext()) iterator.next().name else null
 }
 
-class OperationContextIterator<T, CTX : ContextData<T>>(
+class RowContextIterator<T, CTX : ContextData>(
     private val resolver: IndexedContextResolver<T, CTX>,
     private val stepProvider: StepProvider
 ) : AbstractIterator<CTX>() {

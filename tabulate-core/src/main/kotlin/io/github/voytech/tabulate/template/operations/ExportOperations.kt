@@ -1,11 +1,6 @@
 package io.github.voytech.tabulate.template.operations
 
-import io.github.voytech.tabulate.api.builder.TableBuilder
-import io.github.voytech.tabulate.model.Table
-import io.github.voytech.tabulate.template.context.AttributedCell
-import io.github.voytech.tabulate.template.context.AttributedColumn
-import io.github.voytech.tabulate.template.context.AttributedRow
-import io.github.voytech.tabulate.template.context.RenderingContext
+import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.operations.impl.AttributeAwareTableExportOperations
 import io.github.voytech.tabulate.template.operations.impl.AttributesOperations
 import io.github.voytech.tabulate.template.result.ResultProvider
@@ -15,7 +10,7 @@ import java.util.*
 
 
 interface TableExportOperations<T> {
-    fun createTable(builder: TableBuilder<T>): Table<T> = builder.build()
+    fun createTable(context: AttributedTable)
     fun renderColumn(context: AttributedColumn) {}
     fun beginRow(context: AttributedRow<T>) {}
     fun renderRowCell(context: AttributedCell)

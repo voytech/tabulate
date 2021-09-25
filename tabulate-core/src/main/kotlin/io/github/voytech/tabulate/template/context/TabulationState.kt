@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.template.context
 
 import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.template.iterators.EnumStepProvider
-import io.github.voytech.tabulate.template.iterators.OperationContextIterator
+import io.github.voytech.tabulate.template.iterators.RowContextIterator
 import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
 
 /**
@@ -26,8 +26,8 @@ class TabulationState<T>(
     private val stateAttributes = mutableMapOf<String, Any>()
     private val rowContextResolver: BufferingRowContextResolver<T> =
         BufferingRowContextResolver(tableModel, stateAttributes)
-    private val rowContextIterator: OperationContextIterator<T, AttributedRow<T>> =
-        OperationContextIterator(rowContextResolver, EnumStepProvider(DefaultSteps::class.java))
+    private val rowContextIterator: RowContextIterator<T, AttributedRow<T>> =
+        RowContextIterator(rowContextResolver, EnumStepProvider(DefaultSteps::class.java))
 
     init {
         stateAttributes["_tableId"] = tableName

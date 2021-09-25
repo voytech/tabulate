@@ -48,6 +48,11 @@ data class CellBordersAttribute(
         bottomBorderStyle = takeIfChanged(other, CellBordersAttribute::bottomBorderStyle),
         bottomBorderColor = takeIfChanged(other, CellBordersAttribute::bottomBorderColor),
     )
+
+    companion object {
+        @JvmStatic
+        fun builder() : Builder = Builder()
+    }
 }
 
 fun <T> CellLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =

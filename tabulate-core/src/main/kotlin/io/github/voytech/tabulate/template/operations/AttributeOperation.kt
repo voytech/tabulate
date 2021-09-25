@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.template.operations
 
-import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.model.attributes.Attribute
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
@@ -13,6 +12,7 @@ import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
+import io.github.voytech.tabulate.template.context.AttributedTable
 import io.github.voytech.tabulate.template.context.ColumnContext
 import io.github.voytech.tabulate.template.context.RowCellContext
 import io.github.voytech.tabulate.template.context.RowContext
@@ -28,7 +28,7 @@ interface AttributeOperation<T : Attribute<*>> {
 }
 
 interface TableAttributeRenderOperation<T : TableAttribute> : AttributeOperation<T> {
-    fun renderAttribute(table: Table<*>, attribute: T)
+    fun renderAttribute(table: AttributedTable, attribute: T)
 }
 
 interface RowAttributeRenderOperation<E,T : RowAttribute> : AttributeOperation<T> {

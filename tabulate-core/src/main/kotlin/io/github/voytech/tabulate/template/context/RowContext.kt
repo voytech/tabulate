@@ -5,7 +5,7 @@ import io.github.voytech.tabulate.model.ColumnKey
 data class RowContext<T>(
     val rowCellValues: Map<ColumnKey<T>, AttributedCell>,
     val rowIndex: Int,
-) : ContextData<Unit>(), RowCoordinate {
+) : ContextData(), RowCoordinate {
     override fun getRow(): Int = rowIndex
 }
 

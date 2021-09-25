@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.ColumnKey
 import io.github.voytech.tabulate.template.context.DefaultSteps
 import io.github.voytech.tabulate.template.iterators.EnumStepProvider
-import io.github.voytech.tabulate.template.iterators.OperationContextIterator
+import io.github.voytech.tabulate.template.iterators.RowContextIterator
 import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -23,7 +23,7 @@ class RowIteratorTest {
             table<Product> {  }.build(),
             mutableMapOf()
         )
-        val iterator = OperationContextIterator(resolver, EnumStepProvider(DefaultSteps::class.java))
+        val iterator = RowContextIterator(resolver, EnumStepProvider(DefaultSteps::class.java))
         assertFalse(iterator.hasNext())
     }
 
@@ -45,7 +45,7 @@ class RowIteratorTest {
             }.build(),
             mutableMapOf()
         )
-        val iterator = OperationContextIterator(resolver, EnumStepProvider(DefaultSteps::class.java))
+        val iterator = RowContextIterator(resolver, EnumStepProvider(DefaultSteps::class.java))
         val resolvedIndexedAttributedRow = iterator.next()
         assertNotNull(resolvedIndexedAttributedRow)
         assertEquals(0, resolvedIndexedAttributedRow.rowIndex)
@@ -71,7 +71,7 @@ class RowIteratorTest {
             }.build(),
             mutableMapOf()
         )
-        val iterator = OperationContextIterator(resolver, EnumStepProvider(DefaultSteps::class.java))
+        val iterator = RowContextIterator(resolver, EnumStepProvider(DefaultSteps::class.java))
         resolver.buffer(Product(
             "code1",
             "name1",

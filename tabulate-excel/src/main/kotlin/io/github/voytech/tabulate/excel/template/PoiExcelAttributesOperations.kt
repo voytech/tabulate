@@ -5,7 +5,6 @@ import io.github.voytech.tabulate.excel.model.attributes.FilterAndSortTableAttri
 import io.github.voytech.tabulate.excel.template.PoiExcelExportOperationsFactory.Companion.getCachedStyle
 import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
 import io.github.voytech.tabulate.excel.template.poi.ApachePoiUtils
-import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.model.attributes.cell.CellAlignmentAttribute
 import io.github.voytech.tabulate.model.attributes.cell.CellBackgroundAttribute
 import io.github.voytech.tabulate.model.attributes.cell.CellBordersAttribute
@@ -15,6 +14,7 @@ import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderSty
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
+import io.github.voytech.tabulate.template.context.AttributedTable
 import io.github.voytech.tabulate.template.context.ColumnContext
 import io.github.voytech.tabulate.template.context.RowCellContext
 import io.github.voytech.tabulate.template.context.RowContext
@@ -143,7 +143,7 @@ class CellBordersAttributeRenderOperation(override val renderingContext: ApacheP
 class CellAlignmentAttributeRenderOperation(override val renderingContext: ApachePoiRenderingContext) :
     BaseCellAttributeRenderOperation<ApachePoiRenderingContext, CellAlignmentAttribute>(renderingContext) {
 
-    override fun attributeType(): Class<out CellAlignmentAttribute> = CellAlignmentAttribute::class.java
+    override fun attributeType(): Class<CellAlignmentAttribute> = CellAlignmentAttribute::class.java
 
     override fun renderAttribute(context: RowCellContext, attribute: CellAlignmentAttribute) {
         renderingContext.provideCellStyle(
@@ -179,7 +179,7 @@ class CellAlignmentAttributeRenderOperation(override val renderingContext: Apach
 class CellDataFormatAttributeRenderOperation(override val renderingContext: ApachePoiRenderingContext) :
     BaseCellAttributeRenderOperation<ApachePoiRenderingContext, CellExcelDataFormatAttribute>(renderingContext) {
 
-    override fun attributeType(): Class<out CellExcelDataFormatAttribute> = CellExcelDataFormatAttribute::class.java
+    override fun attributeType(): Class<CellExcelDataFormatAttribute> = CellExcelDataFormatAttribute::class.java
 
     override fun renderAttribute(
         context: RowCellContext,
@@ -199,7 +199,7 @@ class CellDataFormatAttributeRenderOperation(override val renderingContext: Apac
 class ColumnWidthAttributeRenderOperation(override val renderingContext: ApachePoiRenderingContext) :
     BaseColumnAttributeRenderOperation<ApachePoiRenderingContext, ColumnWidthAttribute>(renderingContext) {
 
-    override fun attributeType(): Class<out ColumnWidthAttribute> = ColumnWidthAttribute::class.java
+    override fun attributeType(): Class<ColumnWidthAttribute> = ColumnWidthAttribute::class.java
 
     override fun renderAttribute(context: ColumnContext, attribute: ColumnWidthAttribute) {
         renderingContext.provideSheet(context.getTableId()).let {
@@ -217,7 +217,7 @@ class ColumnWidthAttributeRenderOperation(override val renderingContext: ApacheP
 
 class RowHeightAttributeRenderOperation<T>(override val renderingContext: ApachePoiRenderingContext) :
     BaseRowAttributeRenderOperation<ApachePoiRenderingContext, T, RowHeightAttribute>(renderingContext) {
-    override fun attributeType(): Class<out RowHeightAttribute> = RowHeightAttribute::class.java
+    override fun attributeType(): Class<RowHeightAttribute> = RowHeightAttribute::class.java
     override fun renderAttribute(context: RowContext<T>, attribute: RowHeightAttribute) {
         renderingContext.provideRow(context.getTableId(), context.rowIndex).height =
             ApachePoiUtils.heightFromPixels(attribute.px)
@@ -226,18 +226,18 @@ class RowHeightAttributeRenderOperation<T>(override val renderingContext: Apache
 
 class FilterAndSortTableAttributeRenderOperation(override val renderingContext: ApachePoiRenderingContext) :
     BaseTableAttributeRenderOperation<ApachePoiRenderingContext, FilterAndSortTableAttribute>(renderingContext) {
-    override fun attributeType(): Class<out FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class.java
-    override fun renderAttribute(table: Table<*>, attribute: FilterAndSortTableAttribute) {
+    override fun attributeType(): Class<FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class.java
+    override fun renderAttribute(table: AttributedTable, attribute: FilterAndSortTableAttribute) {
         renderingContext.workbook().creationHelper.createAreaReference(
             CellReference(attribute.rowRange.first, attribute.columnRange.first),
             CellReference(attribute.rowRange.last, attribute.columnRange.last)
-        ).let { renderingContext.workbook().xssfWorkbook.getSheet(table.name).createTable(it) }
+        ).let { renderingContext.workbook().xssfWorkbook.getSheet(table.getTableId()).createTable(it) }
             .let {
                 attribute.columnRange.forEach { index ->
                     it.ctTable.tableColumns.getTableColumnArray(index).id = (index + 1).toLong()
                 }
-                it.name = table.name
-                it.displayName = table.name
+                it.name = table.getTableId()
+                it.displayName = table.getTableId()
                 it.ctTable.addNewAutoFilter().ref = it.area.formatAsString()
             }
     }
@@ -245,11 +245,11 @@ class FilterAndSortTableAttributeRenderOperation(override val renderingContext: 
 
 class TemplateFileAttributeRenderOperation(override val renderingContext: ApachePoiRenderingContext) :
     BaseTableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute>(renderingContext) {
-    override fun attributeType(): Class<out TemplateFileAttribute> = TemplateFileAttribute::class.java
+    override fun attributeType(): Class<TemplateFileAttribute> = TemplateFileAttribute::class.java
     override fun priority() = -1
-    override fun renderAttribute(table: Table<*>, attribute: TemplateFileAttribute) {
+    override fun renderAttribute(table: AttributedTable, attribute: TemplateFileAttribute) {
         renderingContext.createWorkbook(FileInputStream(attribute.fileName), true).let {
-            renderingContext.provideSheet(table.name)
+            renderingContext.provideSheet(table.getTableId())
         }
     }
 }

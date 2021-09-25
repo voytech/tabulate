@@ -1,15 +1,11 @@
 package io.github.voytech.tabulate.template.operations.impl
 
 import io.github.voytech.tabulate.api.builder.TableBuilder
-import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
 import io.github.voytech.tabulate.model.attributes.TableAttribute
-import io.github.voytech.tabulate.template.context.AttributedCell
-import io.github.voytech.tabulate.template.context.AttributedColumn
-import io.github.voytech.tabulate.template.context.AttributedRow
-import io.github.voytech.tabulate.template.context.narrow
+import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.operations.TableExportOperations
 
 
@@ -56,10 +52,12 @@ class AttributeAwareTableExportOperations<T>(
         return builder
     }
 
-    override fun createTable(builder: TableBuilder<T>): Table<T> {
-        return baseTableExportOperations.createTable(withAllAttributesOperationSorted(builder)).also { sortedTable ->
-            sortedTable.tableAttributes?.forEach { tableAttribute ->
-                attributeOperations.getTableAttributeOperation(tableAttribute.javaClass)?.renderAttribute(sortedTable, tableAttribute)
+    fun process(builder: TableBuilder<T>): TableBuilder<T> = withAllAttributesOperationSorted(builder)
+
+    override fun createTable(context: AttributedTable) {
+        return baseTableExportOperations.createTable(context).also {
+            context.tableAttributes?.forEach { tableAttribute ->
+                attributeOperations.getTableAttributeOperation(tableAttribute.javaClass)?.renderAttribute(context, tableAttribute)
             }
         }
     }

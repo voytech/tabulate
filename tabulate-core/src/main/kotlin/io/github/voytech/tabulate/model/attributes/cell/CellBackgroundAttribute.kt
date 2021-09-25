@@ -20,6 +20,11 @@ data class CellBackgroundAttribute(
         color = takeIfChanged(other, CellBackgroundAttribute::color),
         fill = takeIfChanged(other, CellBackgroundAttribute::fill),
     )
+
+    companion object {
+        @JvmStatic
+        fun builder() : Builder = Builder()
+    }
 }
 
 fun <T> CellLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =

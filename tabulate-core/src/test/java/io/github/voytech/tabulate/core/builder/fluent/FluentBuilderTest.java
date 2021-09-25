@@ -1,11 +1,10 @@
 package io.github.voytech.tabulate.core.builder.fluent;
 
-import java.util.function.Function;
-
 import io.github.voytech.tabulate.model.CellType;
 import io.github.voytech.tabulate.model.SourceRow;
 import io.github.voytech.tabulate.model.Table;
 import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute;
+import io.github.voytech.tabulate.model.attributes.cell.Colors;
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute;
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute;
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute;
@@ -19,33 +18,39 @@ public class FluentBuilderTest {
 
     @Test
     public void createTableDefinitionTest() {
-        Function<Employee, String> ref = Employee::getId;
         final Table<Employee> employeeTable =
                 Table.<Employee>builder()
-                    .attribute(CellTextStylesAttribute.Builder::new)
-                    .attribute(TemplateFileAttribute.Builder ::new,
-                            builder -> builder.setFileName("")
+                    .attribute(CellTextStylesAttribute::builder, builder -> {
+                        builder.setUnderline(true);
+                        builder.setItalic(true);
+                    })
+                    .attribute(TemplateFileAttribute::builder,
+                            builder -> builder.setFileName("file.table")
                     )
                     .columns()
                         .column("rowNumbering")
                             .columnType(CellType.NUMERIC)
-                            .columnAttribute(ColumnWidthAttribute.Builder::new)
+                            .columnAttribute(ColumnWidthAttribute::builder)
                         .column(Employee::getId)
                             .columnType(CellType.NUMERIC)
-                            .columnAttribute(ColumnWidthAttribute.Builder::new)
+                            .columnAttribute(ColumnWidthAttribute::builder)
                         .column(Employee::getFirstName)
                             .columnType(CellType.STRING)
-                            .columnAttribute(ColumnWidthAttribute.Builder::new)
+                            .columnAttribute(ColumnWidthAttribute::builder)
                         .column(Employee::getLastName)
                             .columnType(CellType.STRING)
-                            .columnAttribute(ColumnWidthAttribute.Builder::new)
+                            .columnAttribute(ColumnWidthAttribute::builder)
                     .rows()
                         .row(0)
-                            .rowAttribute(RowHeightAttribute.Builder::new,
+                            .rowAttribute(RowHeightAttribute::builder,
                                     builder -> builder.setPx(100)
                             )
                             .cell(0)
                                 .value("Nr")
+                                .cellAttribute(CellTextStylesAttribute::builder, builder -> {
+                                    builder.setFontColor(Colors.INSTANCE.getBLUE());
+                                    builder.setFontFamily("Times News Roman");
+                                })
                             .cell(Employee::getId)
                                 .value("Employee ID")
                             .cell(2)

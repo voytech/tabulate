@@ -19,6 +19,11 @@ data class TemplateFileAttribute(val fileName: String): TableAttribute<TemplateF
             TemplateFileAttribute(fileName ?: throw BuilderException("fileName must be provided for TemplateFileAttribute"))
     }
 
+    companion object {
+        @JvmStatic
+        fun builder() : Builder = Builder()
+    }
+
 }
 
 fun <T> TableLevelAttributesBuilderApi<T>.template(block: TemplateFileAttribute.Builder.() -> Unit) {

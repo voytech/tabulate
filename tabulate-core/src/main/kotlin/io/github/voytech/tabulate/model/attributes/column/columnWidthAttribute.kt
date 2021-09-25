@@ -31,6 +31,11 @@ data class ColumnWidthAttribute(
         px = takeIfChanged(other, ColumnWidthAttribute::px),
         unit = takeIfChanged(other, ColumnWidthAttribute::unit),
     )
+
+    companion object {
+        @JvmStatic
+        fun builder() : Builder = Builder()
+    }
 }
 
 fun <T> ColumnLevelAttributesBuilderApi<T>.width(block: ColumnWidthAttribute.Builder.() -> Unit) =

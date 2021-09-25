@@ -23,8 +23,6 @@ data class CellExcelDataFormatAttribute(
 
 }
 
-fun dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute.Builder().apply(block).build()
-
 fun <T> TableLevelAttributesBuilderApi<T>.dataTestAttributeRenderOperationsProviderFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
     attribute(CellExcelDataFormatAttribute.Builder().apply(block))
 

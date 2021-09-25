@@ -169,7 +169,17 @@ class ExcelAttributesTests {
                 rotation = 90
                 ident = 2
             }
-        )).map { Arguments.of(it, it.build()) }
+        )).map { Arguments.of(
+            it,
+            CellTextStylesAttribute(
+                fontFamily = it.fontFamily,
+                fontSize = it.fontSize,
+                italic = it.italic,
+                strikeout = it.strikeout,
+                underline = it.underline,
+                weight = it.weight
+            )
+        ) }
 
         private fun cellAlignmentStyles(): List<Arguments> {
             return DefaultHorizontalAlignment.values().flatMap { horizontal ->
@@ -199,7 +209,13 @@ class ExcelAttributesTests {
                     this.color = color
                 } } +
                 CellBackgroundAttribute.Builder().apply { this.color = color }
-            }.map { Arguments.of(it,it.build()) }
+            }.map { Arguments.of(
+                it,
+                CellBackgroundAttribute(
+                    color = it.color,
+                    fill = it.fill
+                )
+            ) }
         }
 
         private fun cellBorderStyles(): List<Arguments> {
@@ -216,11 +232,11 @@ class ExcelAttributesTests {
                         bottomBorderColor = color
                     }
                 }
-            }.map { Arguments.of(it, expectBorderStyleAttribute(it.build())) }
+            }.map { Arguments.of(it, expectBorderStyleAttribute(it)) }
         }
 
-        private fun expectBorderStyleAttribute(borderStyle: CellBordersAttribute): CellBordersAttribute {
-            return borderStyle.copy(
+        private fun expectBorderStyleAttribute(borderStyle: CellBordersAttribute.Builder): CellBordersAttribute {
+            return CellBordersAttribute(
                 leftBorderStyle = expectBorderStyle(borderStyle.leftBorderStyle),
                 rightBorderStyle = expectBorderStyle(borderStyle.rightBorderStyle),
                 topBorderStyle = expectBorderStyle(borderStyle.topBorderStyle),

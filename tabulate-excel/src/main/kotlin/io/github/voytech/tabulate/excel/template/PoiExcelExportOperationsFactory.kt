@@ -1,10 +1,8 @@
 package io.github.voytech.tabulate.excel.template
 
-import io.github.voytech.tabulate.api.builder.TableBuilder
 import io.github.voytech.tabulate.excel.template.Utils.toDate
 import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
 import io.github.voytech.tabulate.model.CellType
-import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.model.attributes.cell.CellAlignmentAttribute
 import io.github.voytech.tabulate.model.attributes.cell.CellBackgroundAttribute
 import io.github.voytech.tabulate.model.attributes.cell.CellBordersAttribute
@@ -16,6 +14,7 @@ import io.github.voytech.tabulate.template.TabulationFormat
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.context.AttributedCell
 import io.github.voytech.tabulate.template.context.AttributedRow
+import io.github.voytech.tabulate.template.context.AttributedTable
 import io.github.voytech.tabulate.template.context.RowCellContext
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.operations.impl.ensureAttributesCacheEntry
@@ -33,11 +32,9 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
     override fun createExportOperations(renderingContext: ApachePoiRenderingContext): TableExportOperations<T> = object: TableExportOperations<T> {
 
-        override fun createTable(builder: TableBuilder<T>): Table<T> {
-            return builder.build().also {
-                renderingContext.createWorkbook()
-                renderingContext.provideSheet(it.name)
-            }
+        override fun createTable(context: AttributedTable) {
+            renderingContext.createWorkbook()
+            renderingContext.provideSheet(context.getTableId())
         }
 
         override fun beginRow(context: AttributedRow<T>) {

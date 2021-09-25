@@ -4,7 +4,7 @@ data class RowCellContext(
     val value: CellValue,
     val rowIndex: Int,
     val columnIndex: Int,
-) : ContextData<Unit>(), RowCellCoordinate {
+) : ContextData(), RowCellCoordinate {
     override fun getRow(): Int = rowIndex
     override fun getColumn(): Int = columnIndex
 }
