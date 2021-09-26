@@ -16,24 +16,25 @@ class AttributeAwareTableExportOperations<T>(
     private val baseTableExportOperations: TableExportOperations<T>
 ) : TableBuilderTransformer<T>, TableExportOperations<T> by baseTableExportOperations {
 
-    private fun sortedTableAttributes(tableAttributes: Set<TableAttribute<*>>?): Set<TableAttribute<*>>? {
-        return tableAttributes?.toSortedSet(compareBy {
+    private fun sortedTableAttributes(tableAttributes: Set<TableAttribute<*>>): Set<TableAttribute<*>> {
+        return tableAttributes.toSortedSet(compareBy {
             attributeOperations.getTableAttributeOperation(it.javaClass)?.priority() ?: 0
         })
     }
 
-    private fun sortedColumnAttributes(columnAttributes: Set<ColumnAttribute<*>>?): Set<ColumnAttribute<*>>? {
-        return columnAttributes?.toSortedSet(compareBy {
+    private fun sortedColumnAttributes(columnAttributes: Set<ColumnAttribute<*>>): Set<ColumnAttribute<*>> {
+        return columnAttributes.toSortedSet(compareBy {
             attributeOperations.getColumnAttributeOperation(it.javaClass)?.priority() ?: 0
         })
     }
 
-    private fun sortedCellAttributes(cellAttributes: Set<CellAttribute<*>>?): Set<CellAttribute<*>>? {
-        return cellAttributes?.sortedBy { attributeOperations.getCellAttributeOperation(it.javaClass)?.priority() ?: 0 }?.toSet()
+    private fun sortedCellAttributes(cellAttributes: Set<CellAttribute<*>>): Set<CellAttribute<*>> {
+        return cellAttributes.sortedBy { attributeOperations.getCellAttributeOperation(it.javaClass)?.priority() ?: 0 }
+            .toSet()
     }
 
-    private fun sortedRowAttributes(rowAttributes: Set<RowAttribute<*>>?): Set<RowAttribute<*>>? {
-        return rowAttributes?.toSortedSet(compareBy { attributeOperations.getRowAttributeOperation(it.javaClass)?.priority() ?: 0 })
+    private fun sortedRowAttributes(rowAttributes: Set<RowAttribute<*>>): Set<RowAttribute<*>> {
+        return rowAttributes.toSortedSet(compareBy { attributeOperations.getRowAttributeOperation(it.javaClass)?.priority() ?: 0 })
     }
 
     private fun withAllAttributesOperationSorted(builder: TableBuilder<T>): TableBuilder<T> {

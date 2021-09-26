@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.api.builder
 
+import io.github.voytech.tabulate.api.builder.exception.BuilderException
 import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.*
 import io.github.voytech.tabulate.template.context.DefaultSteps
@@ -18,39 +19,42 @@ fun interface BuilderTransformer<T, B: Builder<T>> {
 
 fun interface TableBuilderTransformer<T>: BuilderTransformer<Table<T>, TableBuilder<T>>
 
-
 typealias DslBlock<T> = (T) -> Unit
 
 abstract class AttributesAwareBuilder<T>: Builder<T>() {
 
-    private var attributes: MutableMap<Class<out Attribute<*>>, Set<Attribute<*>>> = mutableMapOf()
+    private val attributes: MutableMap<Class<out Attribute<*>>, MutableSet<Attribute<*>>> = mutableMapOf()
 
     @JvmSynthetic
-    fun <A : Attribute<A>, B: AttributeBuilder<A>> attribute(builder: B) {
+    protected open fun <A : Attribute<A>, B: AttributeBuilder<A>> attribute(builder: B) {
         applyAttribute(builder.build())
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <A : Attribute<*>> visit(clazz: Class<A>, visitor: ((current: Set<A>?) -> Set<A>?)) {
-        this.attributes[clazz] = visitor.invoke(this.attributes[clazz] as Set<A>?) ?: emptySet()
+    fun <A : Attribute<*>> visit(clazz: Class<A>, visitor: ((current: Set<A>) -> Set<A>)) {
+        attributes[clazz]?.let {
+            visitor.invoke(it.toSet() as Set<A>).toMutableSet()
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
     @JvmSynthetic
     protected fun <C : Attribute<*>> getAttributesByClass(clazz: Class<C>): Set<C>? = attributes[clazz] as Set<C>?
 
-    @JvmSynthetic
-    protected abstract fun supportedAttributeClasses(): Set<Class<out Attribute<*>>>
-
     private fun applyAttribute(attribute: Attribute<*>) {
-        supportedAttributeClasses().find { clazz -> clazz.isAssignableFrom(attribute.javaClass) }
-            ?.let { baseClass ->
-                this.attributes[baseClass] =
-                    this.attributes[baseClass]
-                        ?.filter { it.javaClass != attribute.javaClass }
-                        ?.toSet()
-                        ?.let { it + attribute } ?: setOf(attribute)
+        attributes.getOrPut(supportedSuperClass(attribute)) { mutableSetOf() }.add(attribute)
+    }
+
+    companion object {
+        private fun supportedSuperClass(attribute: Attribute<*>): Class<out Attribute<*>> {
+            return when {
+                CellAttribute::class.java.isAssignableFrom(attribute.javaClass) -> CellAttribute::class.java
+                ColumnAttribute::class.java.isAssignableFrom(attribute.javaClass) -> ColumnAttribute::class.java
+                TableAttribute::class.java.isAssignableFrom(attribute.javaClass) -> TableAttribute::class.java
+                RowAttribute::class.java.isAssignableFrom(attribute.javaClass) -> RowAttribute::class.java
+                else -> throw BuilderException("Unsupported attribute class.")
             }
+        }
     }
 }
 
@@ -82,11 +86,9 @@ class TableBuilder<T> : AttributesAwareBuilder<Table<T>>() {
     )
 
     @JvmSynthetic
-    override fun supportedAttributeClasses(): Set<Class<out Attribute<*>>> =
-        setOf(
-            TableAttribute::class.java, CellAttribute::class.java,
-            ColumnAttribute::class.java, RowAttribute::class.java
-        )
+    public override fun <A : Attribute<A>, B: AttributeBuilder<A>> attribute(builder: B) {
+        super.attribute(builder)
+    }
 
 }
 
@@ -160,15 +162,17 @@ class ColumnBuilder<T> internal constructor() : AttributesAwareBuilder<ColumnDef
     var index: Int? = null
 
     @JvmSynthetic
+    fun <A : ColumnAttribute<A>, B: ColumnAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
+
+    @JvmSynthetic
+    fun <A : CellAttribute<A>, B: CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
+
+    @JvmSynthetic
     override fun build(): ColumnDef<T> = ColumnDef(
         id, index, columnType,
         getAttributesByClass(ColumnAttribute::class.java),
         getAttributesByClass(CellAttribute::class.java)
     )
-
-    @JvmSynthetic
-    override fun supportedAttributeClasses(): Set<Class<out Attribute<*>>> =
-        setOf(ColumnAttribute::class.java, CellAttribute::class.java)
 
     companion object {
         @JvmSynthetic
@@ -286,8 +290,10 @@ class RowBuilder<T> private constructor(
     )
 
     @JvmSynthetic
-    override fun supportedAttributeClasses(): Set<Class<out Attribute<*>>> =
-        setOf(RowAttribute::class.java, CellAttribute::class.java)
+    fun <A : RowAttribute<A>, B: RowAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
+
+    @JvmSynthetic
+    fun <A : CellAttribute<A>, B: CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
 
     companion object {
         @JvmSynthetic
@@ -394,7 +400,7 @@ class CellBuilder<T> private constructor() : AttributesAwareBuilder<CellDef<T>>(
         CellDef(value, expression, type, colSpan, rowSpan, getAttributesByClass(CellAttribute::class.java))
 
     @JvmSynthetic
-    override fun supportedAttributeClasses(): Set<Class<out Attribute<*>>> = setOf(CellAttribute::class.java)
+    fun <A : CellAttribute<A>, B: CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
 
     companion object {
         @JvmSynthetic
