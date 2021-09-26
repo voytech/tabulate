@@ -8,12 +8,12 @@ abstract class Attribute<T: Attribute<T>> {
 
     open fun overrideWith(other: T): T = other
 
-    fun isModified(property: KProperty<*>): Boolean {
+    protected fun isModified(property: KProperty<*>): Boolean {
        return nonDefaultProps.contains(property.name)
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <P> takeIfChanged(other: T, property: KProperty1<T, P>) :P =
+    protected fun <P> takeIfChanged(other: T, property: KProperty1<T, P>) :P =
         if (other.isModified(property)) property.invoke(other) else property.invoke(this as T)
 
 }

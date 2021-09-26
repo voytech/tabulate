@@ -20,7 +20,7 @@ import java.util.*
 
 /**
  * [TabulationApi] exposes an API enabling interactive table export.
- * Particulary it allows to:
+ * Particularly it allows to:
  * - export each record respectively with 'nextRow' method,
  * - export all trailing and buffered records with 'finish' method,
  * - flush rendered data into output.
@@ -82,7 +82,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         }
 
         private val resultProvider: ResultProvider<O> by lazy {
-            resolveResultProvider()
+            resolveResultProvider(output)
         }
 
         override fun nextRow(record: T) = bufferRecordAndRenderRow(state, record)
@@ -96,24 +96,19 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
             resultProvider.flush(output)
         }
 
-        @Suppress("UNCHECKED_CAST")
-        private fun resolveResultProvider(): ResultProvider<O> =
-            resultProviders.filter {
-                it.outputClass().isAssignableFrom(output!!::class.java)
-            }.map { it as ResultProvider<O> }
-             .firstOrNull() ?: throw ResultProviderResolvingException()
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun processBuilder(tableBuilder: TableBuilder<T>): TableBuilder<T> =
-        if (ops is TableBuilderTransformer<*>) {
-            (ops as TableBuilderTransformer<T>).transform(tableBuilder)
-        } else {
-            tableBuilder
-        }
+    private fun transform(tableBuilder: TableBuilder<T>): TableBuilder<T> {
+        return (resolveBuilderTransformers() + ops.takeIf {
+            it is TableBuilderTransformer<*>
+        }).filterNotNull()
+            .map { it as TableBuilderTransformer<T> }
+            .fold(tableBuilder) { builder, transformer -> transformer.transform(builder) }
+    }
 
     private fun materialize(tableBuilder: TableBuilder<T>): TabulationState<T> {
-        return processBuilder(tableBuilder).build().let { table ->
+        return transform(tableBuilder).build().let { table ->
             TabulationState(
                 tableModel = table,
                 tableName = table.name,
@@ -133,6 +128,20 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
                     format == it.supportsFormat()
                 }
             } ?: throw ExportOperationsFactoryResolvingException()
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <O> resolveResultProvider(output: O): ResultProvider<O> =
+        resultProviders.filter {
+            it.outputClass().isAssignableFrom(output!!::class.java)
+        }.map { it as ResultProvider<O> }
+            .firstOrNull() ?: throw ResultProviderResolvingException()
+
+    @Suppress("UNCHECKED_CAST")
+    private fun resolveBuilderTransformers(): List<TableBuilderTransformer<T>> {
+        return ServiceLoader.load(TableBuilderTransformer::class.java)
+            .map { it as TableBuilderTransformer<T> }
+            .toList()
     }
 
     /**
