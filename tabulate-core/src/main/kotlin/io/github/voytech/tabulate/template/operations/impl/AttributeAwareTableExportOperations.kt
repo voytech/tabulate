@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.template.operations.impl
 
 import io.github.voytech.tabulate.api.builder.TableBuilder
+import io.github.voytech.tabulate.api.builder.TableBuilderTransformer
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
@@ -13,7 +14,7 @@ import io.github.voytech.tabulate.template.operations.TableExportOperations
 class AttributeAwareTableExportOperations<T>(
     private val attributeOperations: AttributesOperations<T>,
     private val baseTableExportOperations: TableExportOperations<T>
-) : TableExportOperations<T> by baseTableExportOperations {
+) : TableBuilderTransformer<T>, TableExportOperations<T> by baseTableExportOperations {
 
     private fun sortedTableAttributes(tableAttributes: Set<TableAttribute<*>>?): Set<TableAttribute<*>>? {
         return tableAttributes?.toSortedSet(compareBy {
@@ -52,7 +53,7 @@ class AttributeAwareTableExportOperations<T>(
         return builder
     }
 
-    fun process(builder: TableBuilder<T>): TableBuilder<T> = withAllAttributesOperationSorted(builder)
+    override fun transform(builder: TableBuilder<T>): TableBuilder<T> = withAllAttributesOperationSorted(builder)
 
     override fun createTable(context: AttributedTable) {
         return baseTableExportOperations.createTable(context).also {

@@ -12,6 +12,13 @@ abstract class Builder<T> {
     internal abstract fun build(): T
 }
 
+fun interface BuilderTransformer<T, B: Builder<T>> {
+    fun transform(builder: B): B
+}
+
+fun interface TableBuilderTransformer<T>: BuilderTransformer<Table<T>, TableBuilder<T>>
+
+
 typealias DslBlock<T> = (T) -> Unit
 
 abstract class AttributesAwareBuilder<T>: Builder<T>() {

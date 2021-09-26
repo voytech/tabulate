@@ -177,7 +177,11 @@ class ExcelAttributesTests {
                 italic = it.italic,
                 strikeout = it.strikeout,
                 underline = it.underline,
-                weight = it.weight
+                weight = it.weight,
+                wrapText = it.wrapText,
+                rotation = it.rotation,
+                ident = it.ident,
+                fontColor = it.fontColor
             )
         ) }
 
