@@ -8,5 +8,6 @@ package io.github.voytech.tabulate.template.result
  */
 interface ResultProvider<O> {
     fun outputClass(): Class<O>
-    fun flush(output: O)
+    fun setOutput(output: O)
+    fun flush()
 }

@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.excel.template
 
 import io.github.voytech.tabulate.excel.template.Utils.toDate
+import io.github.voytech.tabulate.excel.template.poi.ApachePoiOutputStreamResultProvider
 import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
 import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.attributes.cell.CellAlignmentAttribute
@@ -22,7 +23,6 @@ import io.github.voytech.tabulate.template.operations.impl.putCachedValueIfAbsen
 import io.github.voytech.tabulate.template.result.ResultProvider
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.xssf.streaming.SXSSFCell
-import java.io.OutputStream
 
 class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T, ApachePoiRenderingContext>() {
 
@@ -137,18 +137,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
         )
 
     override fun createResultProviders(renderingContext: ApachePoiRenderingContext): List<ResultProvider<*>> = listOf(
-            object : ResultProvider<OutputStream> {
-                override fun outputClass() = OutputStream::class.java
-
-                override fun flush(output: OutputStream) {
-                    with(renderingContext.workbook()) {
-                        write(output)
-                        close()
-                        output.close()
-                        dispose()
-                    }
-                }
-            }
+        ApachePoiOutputStreamResultProvider(renderingContext)
     )
 
     companion object {

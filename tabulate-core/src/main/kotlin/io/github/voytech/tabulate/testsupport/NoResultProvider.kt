@@ -7,7 +7,11 @@ class NoResultProvider: ResultProvider<Unit> {
 
     override fun outputClass() = Unit.javaClass
 
-    override fun flush(output: Unit) {
+    override fun flush() {
+        logger.info("This is fake implementation of ResultProvider flushing results into ether")
+    }
+
+    override fun setOutput(output: Unit) {
         logger.info("This is fake implementation of ResultProvider flushing results into ether")
     }
 

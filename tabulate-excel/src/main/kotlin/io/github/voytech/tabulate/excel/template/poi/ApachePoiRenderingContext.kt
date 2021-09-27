@@ -5,6 +5,7 @@ import io.github.voytech.tabulate.model.attributes.cell.Color
 import io.github.voytech.tabulate.template.context.CellValue
 import io.github.voytech.tabulate.template.context.Coordinates
 import io.github.voytech.tabulate.template.context.RenderingContext
+import io.github.voytech.tabulate.template.result.OutputStreamResultProvider
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.util.IOUtils
@@ -17,7 +18,18 @@ import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileInputStream
 import java.io.InputStream
+import java.io.OutputStream
 
+class ApachePoiOutputStreamResultProvider(private val context: ApachePoiRenderingContext) : OutputStreamResultProvider() {
+    override fun flush(output: OutputStream) {
+        with(context.workbook()) {
+            write(output)
+            close()
+            output.close()
+            dispose()
+        }
+    }
+}
 
 class ApachePoiRenderingContext : RenderingContext  {
 

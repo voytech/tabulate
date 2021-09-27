@@ -71,18 +71,19 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
     private val resultProviders: List<ResultProvider<*>> by lazy { provider.createResultProviders() }
 
-    inner class TabulationApiImpl<O>(
+    private inner class TabulationApiImpl<O>(
         private val state: TabulationState<T>,
         private val output: O
     ) : TabulationApi<T, O> {
 
-        init {
-            ops.createTable(state.tableModel.createContext(state.getCustomAttributes()))
-            renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
-        }
-
         private val resultProvider: ResultProvider<O> by lazy {
             resolveResultProvider(output)
+        }
+
+        init {
+            resultProvider.setOutput(output)
+            ops.createTable(state.tableModel.createContext(state.getCustomAttributes()))
+            renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
         }
 
         override fun nextRow(record: T) = bufferRecordAndRenderRow(state, record)
@@ -93,7 +94,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         }
 
         override fun flush() {
-            resultProvider.flush(output)
+            resultProvider.flush()
         }
 
     }
