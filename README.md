@@ -54,16 +54,17 @@ First 0.1.0 version will not differ much from current snapshot version, and migr
 ## Basic usage
 Firstly, let us define list of exemplary addresses:
 ```kotlin
-    val addressList = listOf(
-        Address("Jesse", "Pinkman","New Mexico", "Cold street 200","87045"),
+    val listForGus = listOf(
+        Address("Jesse", "Pinkman","New Mexico", "9809 Margo Street","87104"),
         Address("Walter", "White","New Mexico", "308 Negra Arroyo Lane","87045"),
-        Address("Cynthia", "Andrew","New Mexico", "12000 – 12100 Coors Rd SW","87045"),
-    )
+        Address("Saul", "Goodman","New Mexico", "9800 Montgomery Blvd NE","87111"),
+        Address("Mike", "Ehrmantraut","New Mexico", "204 Edith Blvd. NE","87102"),
+  )
 ```
 Now define simple table structure (via property to column bindings):
 ```kotlin
-    addressList.tabulate("address_list.xlsx") {
-          name = "Address list"
+    listForGus.tabulate("address_list.xlsx") {
+          name = "Traitors address list"
           columns { 
               column(Address::firstName)
               column(Address::lastName)
@@ -75,13 +76,13 @@ Now define simple table structure (via property to column bindings):
           }  
     }
 ```
-That is all! This will create an Excel with sheet named "Address list". Sheet will contain 3 entries with automatically adjusted column widths but without any other additional features (like header row) 
+That's it! This will create an Excel with sheet named "Address list". Sheet will contain 4 entries with automatically adjusted column widths but without any other additional features (like header row) 
 
 Want to see header row ? 
 
 ```kotlin
     addressList.tabulate("address_list.xlsx") {
-          name = "Address list"
+          name = "Traitors address list"
           attributes {
             width { auto = true }
           }
@@ -96,11 +97,11 @@ Want to see header row ?
           }  
     }
 ```
-Header row cells should have white font on black background ? 
+Header row cells should have white font on pink background ? 
 
 ```kotlin
     addressList.tabulate("address_list.xlsx") {
-          name = "Address list"
+          name = "Traitors address list"
           attributes {
             width { auto = true }
           }
@@ -115,18 +116,18 @@ Header row cells should have white font on black background ?
                 columnTitles("First Name", "Last Name", "Street", "Post Code")
                 attributes { 
                     text { fontColor = Colors.WHITE }
-                    bacground { color = Colors.BLACK}
+                    background { color = Colors.PINK}
                 }
               }
           }  
     }
 ```
-If You do not want repeatation... 
+If You do not want repetitions... 
 
 ```kotlin
 object TableDefinitions {
   val addressTable = table {
-    name = "Address list"
+    name = "Traitors address list"
     attributes {
       width { auto = true }
     }
@@ -159,7 +160,7 @@ addressList.tabulate("address_list.txt", TableDefinitions.addressTable.copy()) /
 ```
 Let as change sheet name from template table definition:
 ```kotlin
-addressList.tabulate("address_list.xlsx",TableDefinitions.addressTable.copy { name = "Addresses" })
+addressList.tabulate("address_list.xlsx",TableDefinitions.addressTable.copy { name = "Dealers Addresses" })
 ```
 
 I think above requires no word of explanation.
@@ -170,9 +171,9 @@ I think above requires no word of explanation.
 
 Table model describes how table will look like after data exporting. Its building blocks are:  
 
-- `column` - easy to guess - defines a single column in target table,
+- `column` - defines a single column in table,
 - `row`  - may be user defined custom row or row that carries attributes for enriching existing record, 
-- `row cell` - defines cell within row. Cell is bound to a column via column id.
+- `row cell` - defines cell within row. Cell is bound to a column via column id,
 - `attribute` - introduces extensions to basic presentation capabilities. 
 
 Simple table model example: 
@@ -181,17 +182,12 @@ Simple table model example:
 productList.tabulate("file.xlsx") {
     name = "Table id"
     columns {
-        column("nr") {
-            ..
-        }
-        ..
+        column("nr")
     }
     rows {
         row {  // first row when no index provided.           
-            cell("nr") { value = "Nr.:" }
-            ..           
+            cell("nr") { value = "Nr.:" }           
         }
-        ..
     }
 }
 ```
@@ -210,16 +206,13 @@ productList.tabulate("file.xlsx") {
     columns {
         column("nr") {
             attributes { width { px = 40 }}
-            ...
         }
         column(Product::code) {
             attributes { width { auto = true}}
-            ...
         }
-        ...
     }
     rows {
-        row {  // first row when no index provided.
+        row {  // first row when no explicit index provided.
               cell("nr") { 
                 value = "Nr.:" 
                 attributes {
@@ -231,7 +224,6 @@ productList.tabulate("file.xlsx") {
                   background { color = Colors.BLUE }
                 }  
               }
-              ...
         }
     }
 }
@@ -245,11 +237,10 @@ productList.tabulate("file.xlsx") {
 - It finalizes exporting operations (e.g. flushing output stream),
 - It resolves export operations implementors.
 
-
 ### Table DSL builders API.
 
 Kotlin type-safe DSL builders API helps a lot with describing table structure.
-It makes source code to look more concise and readable and makes maintenance tasks much easier due to DSL type-safety. At coding time, your IDE will make use of it by offering completion hints - this elevates developer experience, as almost zero documentation is required to start. 
+It makes source code look more concise and readable and makes maintenance tasks much easier due to DSL type-safety. At coding time, your IDE will make use of it by offering completion hints - this elevates developer experience, as almost zero documentation is required to start. 
 
 DSL functions take lambda receivers as arguments which abstracts away API instantiation details from consumers. Within lambda, you can call API methods which can take downstream builders as arguments. We can end up having multi-level DSL API structure, where each level is extensible via Kotlin extension functions. On each DSL level You are allowed to invoke scope accessible methods and access variables which can lead to interesting results:
 ```kotlin
@@ -274,7 +265,7 @@ DSL functions take lambda receivers as arguments which abstracts away API instan
 ```
 `additionalProducts` collection instance can be easily iterated over with lambda, adding new row definition per collection item. It is a mix of DSL type-safe builders with scope accessible references.
 
-### Table DSL extension functions.
+### Table DSL type-safe builders extension functions.
 
 As already said, it is possible to extend each DSL level by using extension functions on DSL API builder classes.  
 
@@ -367,21 +358,20 @@ Table<Employee> employeeTable =
 
 ### Custom rows.
 
-Sometimes, in addition to records from external source - You need to add user defined rows.
+Sometimes, in addition to records from collection - You need to add user defined rows.
 Table usually contains a header row or summary footer row.
 It is also possible to define interleaving custom rows at specified index or rows that match specific predicate.
 
 Row model allows to define custom cell values as well as cell styles and attributes only.
-It acts as conveyor for additional features for existing external source derived rows, or as a factory for standalone custom rows that can be hooked at definition time.
+It acts as glue for additional features for existing external source derived rows, or as a factory for standalone custom rows that can be hooked at definition time.
 
-Things You can achieve with Row model in terms of custom rows includes:
+Things You can achieve with row model in terms of custom rows includes:
 
 - setting custom cell styles,
-- setting row-level attributes (e.g. row height)
+- setting row-level attributes (e.g., row height),
 - defining row and col spans,
 - inserting images,
 - setting cell values of different types.
-
 
 ### Merging rows.  
 
@@ -674,7 +664,6 @@ This is because of one person (me) who is currently in charge, and due to my int
 ### v0.6.x
 
 - Codegen for user defined attributes.
-
 
 ### TBD ...
 
