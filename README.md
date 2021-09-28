@@ -51,7 +51,7 @@ dependencies {
 
 First 0.1.0 version will not differ much from current snapshot version, and migration to release should be quick.
 
-## Usage (basics)
+## Basic usage
 Firstly, let us define list of exemplary addresses:
 ```kotlin
     val addressList = listOf(
@@ -121,11 +121,11 @@ Header row cells should have white font on black background ?
           }  
     }
 ```
-Suppose You don't want to define table structure all the time. 
+If You do not want repeatation... 
 
 ```kotlin
-object AddressTable {
-  val table = {
+object TableDefinitions {
+  val addressTable = table {
     name = "Address list"
     attributes {
       width { auto = true }
@@ -150,11 +150,19 @@ object AddressTable {
 ```
 And now: 
 ```kotlin
-addressList.tabulate("address_list.xlsx",AddressTable.table)
+addressList.tabulate("address_list.xlsx", TableDefinitions.addressTable.copy())
+```
+and soon: 
+```kotlin
+addressList.tabulate("address_list.pdf", TableDefinitions.addressTable.copy())
+addressList.tabulate("address_list.txt", TableDefinitions.addressTable.copy()) // CLI ASCII table
+```
+Let as change sheet name from template table definition:
+```kotlin
+addressList.tabulate("address_list.xlsx",TableDefinitions.addressTable.copy { name = "Addresses" })
 ```
 
-I do not think above requires word of explanation.
-
+I think above requires no word of explanation.
 
 ## Key concepts
 
