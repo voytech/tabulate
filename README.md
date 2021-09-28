@@ -52,6 +52,109 @@ dependencies {
 First 0.1.0 version will not differ much from current snapshot version, and migration to release should be quick.
 
 ## Usage (basics)
+Firstly, let us define list of exemplary addresses:
+```kotlin
+    val addressList = listOf(
+        Address("Jesse", "Pinkman","New Mexico", "Cold street 200","87045"),
+        Address("Walter", "White","New Mexico", "308 Negra Arroyo Lane","87045"),
+        Address("Cynthia", "Andrew","New Mexico", "12000 – 12100 Coors Rd SW","87045"),
+    )
+```
+Now define simple table structure (via property to column bindings):
+```kotlin
+    addressList.tabulate("address_list.xlsx") {
+          name = "Address list"
+          columns { 
+              column(Address::firstName)
+              column(Address::lastName)
+              column(Address::street)
+              column(Address::postCode)
+          }
+          attributes {
+              width { auto = true }
+          }  
+    }
+```
+That is all! This will create an Excel with sheet named "Address list". Sheet will contain 3 entries with automatically adjusted column widths but without any other additional features (like header row) 
+
+Want to see header row ? 
+
+```kotlin
+    addressList.tabulate("address_list.xlsx") {
+          name = "Address list"
+          attributes {
+            width { auto = true }
+          }
+          columns { 
+              column(Address::firstName)
+              column(Address::lastName)
+              column(Address::street)
+              column(Address::postCode)
+          }
+          rows {
+              header("First Name", "Last Name", "Street", "Post Code")
+          }  
+    }
+```
+Header row cells should have white font on black background ? 
+
+```kotlin
+    addressList.tabulate("address_list.xlsx") {
+          name = "Address list"
+          attributes {
+            width { auto = true }
+          }
+          columns { 
+              column(Address::firstName)
+              column(Address::lastName)
+              column(Address::street)
+              column(Address::postCode)
+          }
+          rows {
+              header { 
+                columnTitles("First Name", "Last Name", "Street", "Post Code")
+                attributes { 
+                    text { fontColor = Colors.WHITE }
+                    bacground { color = Colors.BLACK}
+                }
+              }
+          }  
+    }
+```
+Suppose You don't want to define table structure all the time. 
+
+```kotlin
+object AddressTable {
+  val table = {
+    name = "Address list"
+    attributes {
+      width { auto = true }
+    }
+    columns {
+      column(Address::firstName)
+      column(Address::lastName)
+      column(Address::street)
+      column(Address::postCode)
+    }
+    rows {
+      header {
+        columnTitles("First Name", "Last Name", "Street", "Post Code")
+        attributes {
+          text { fontColor = Colors.WHITE }
+          bacground { color = Colors.BLACK }
+        }
+      }
+    }
+  }
+}
+```
+And now: 
+```kotlin
+addressList.tabulate("address_list.xlsx",AddressTable.table)
+```
+
+I do not think above requires word of explanation.
+
 
 ## Key concepts
 
