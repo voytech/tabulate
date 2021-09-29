@@ -171,7 +171,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
      * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
      * @return [TabulationApi] which enables 'interactive' export.
      */
-    fun <O> create(output: O,tableBuilder: TableBuilder<T>): TabulationApi<T, O> {
+    fun <O> create(output: O, tableBuilder: TableBuilder<T>): TabulationApi<T, O> {
         return TabulationApiImpl(
             materialize(tableBuilder),
             output

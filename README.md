@@ -73,7 +73,7 @@ Now define simple table structure (via property to column bindings):
               column(Address::postCode)
           }
           attributes {
-              width { auto = true }
+              columnWidth { auto = true }
           }  
     }
 ```
@@ -85,7 +85,7 @@ Want to see header row ?
     addressList.tabulate("address_list.xlsx") {
           name = "Traitors address list"
           attributes {
-            width { auto = true }
+            columnWidth { auto = true }
           }
           columns { 
               column(Address::firstName)
@@ -104,7 +104,7 @@ Header row cells should have white font on pink background ?
     addressList.tabulate("address_list.xlsx") {
           name = "Traitors address list"
           attributes {
-            width { auto = true }
+            columnWidth { auto = true }
           }
           columns { 
               column(Address::firstName)
@@ -117,7 +117,10 @@ Header row cells should have white font on pink background ?
                 columnTitles("First Name", "Last Name", "Street", "Post Code")
                 attributes { 
                     text { fontColor = Colors.WHITE }
-                    background { color = Colors.PINK }
+                    background { 
+                      color = Colors.PINK
+                      fill = DefaultCellFill.SOLID
+                    }
                 }
               }
           }  
@@ -127,10 +130,10 @@ If You do not want repetitions...
 
 ```kotlin
 object TableDefinitions {
-  val addressTable = table {
+  val addressTable = Table<Address> {
     name = "Traitors address list"
     attributes {
-      width { auto = true }
+      columnWidth { auto = true }
     }
     columns {
       column(Address::firstName)
@@ -143,7 +146,10 @@ object TableDefinitions {
         columnTitles("First Name", "Last Name", "Street", "Post Code")
         attributes {
           text { fontColor = Colors.WHITE }
-          background { color = Colors.BLACK }
+          background { 
+            color = Colors.BLACK
+            fill = DefaultCellFill.SOLID
+          }
         }
       }
     }
@@ -152,19 +158,57 @@ object TableDefinitions {
 ```
 And now: 
 ```kotlin
-addressList.tabulate("address_list.xlsx", TableDefinitions.addressTable.copy())
+addressList.tabulate("address_list.xlsx", TableDefinitions.addressTable)
 ```
 and soon: 
 ```kotlin
-addressList.tabulate("address_list.pdf", TableDefinitions.addressTable.copy())
-addressList.tabulate("address_list.txt", TableDefinitions.addressTable.copy()) // CLI ASCII table
+addressList.tabulate("address_list.pdf", TableDefinitions.addressTable) // PDFbox implementation
+addressList.tabulate("address_list.txt", TableDefinitions.addressTable) // CLI ASCII table - raw implementation
 ```
-Let as change sheet name from template table definition:
-```kotlin
-addressList.tabulate("address_list.xlsx",TableDefinitions.addressTable.copy { name = "Dealers Addresses" })
-```
+I hope above requires no word of explanation.
 
-I think above requires no word of explanation.
+Let us change sheet name from 'template' table definition:
+```kotlin
+addressList.tabulate("address_list.xlsx",TableDefinitions.addressTable + { name = "Dealers Addresses" })
+```
+Above syntax shows some powers of Kotlin:
+
+`Table { .. }` creates a lambda receiver of function type: `(TableBuilderApi<T>.() -> Unit)`. Lambda receiver prevents external instantiation of `TableBuilderApi` and operates assuming instance was provided. `TableBuilderApi` does not contain any builder state, in fact it delegates all API calls under the hood to `TableBuilder` passed to `TableBuilderApi` as constructor argument (constructor is hidden). `TableBuilder` must mutate its internal state indempotently so that calling `rowBuilder.addCell("id") { ... cell configuration ...  }` should either create new cell builder or re-configure existing one if found at specified key. This upsert-like behaviour must be implemented on every builder level and this property cannot be tampered. 
+
+If we can comply with above contract all the time then we can introduce syntax like:
+```kotlin
+Table { 
+  name = "Table one" 
+  columns { 
+      column("nr1")
+  } 
+  rows { 
+      row {
+          cell { value = "nr1 - value " }
+      }
+  }
+} + Table { 
+  name = "Table two"
+  columns {
+    column("nr1") { 
+        attribute { 
+            width { auto = true }
+        }
+    }
+  }
+}  
+```
+Advantages of the syntax are following: 
+
+- No need for instantiating state eagerly (state materializes not within `TableBuilderApi` template but later, when actual exporting takes place.)
+- No state is present at `TableBuilderApi` template definition time so no state merging can occur
+- Many `TableBuilderApi` blocks  can be summed together by creating composite implementation of `TabulateBuilderApi` (Effectively - It is like merging API instructions not actual state)
+- finally - `TableBuilderApi` can be treated as template and be shared across many exports because:
+  - `TableBuilderApi` cannot be mutated by exporter (exporter does not work on API but on materialized table definition which is hidden from outer world) 
+  - `TabulateBuilderApi` cannot mutate state which is used by exporter as it cannot have access to this state at definition time.
+  - All `TabulateBuilder` state properties live within boundaries of single exporter, and cannot be shared.     
+
+Implementation details of above builder API features will be covered somewhere below some day. 
 
 ## Key concepts
 

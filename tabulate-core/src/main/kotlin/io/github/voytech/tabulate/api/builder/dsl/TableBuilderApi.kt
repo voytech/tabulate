@@ -19,6 +19,38 @@ fun <T> table(block: TableBuilderApi<T>.() -> Unit): TableBuilder<T> {
     }
 }
 
+object Table {
+    @JvmSynthetic
+    operator fun <T> invoke(block : TableBuilderApi<T>.() -> Unit)  = block
+}
+
+@JvmSynthetic
+operator fun <T> (TableBuilderApi<T>.() -> Unit).plus(block : TableBuilderApi<T>.() -> Unit): (TableBuilderApi<T>.() -> Unit) {
+    val self: (TableBuilderApi<T>.() -> Unit) = this
+    return Table {
+        self.invoke(this)
+        block.invoke(this)
+    }
+}
+
+@JvmSynthetic
+fun <T> table(blocks: List<TableBuilderApi<T>.() -> Unit>): TableBuilder<T> {
+    return TableBuilder<T>().also { builder ->
+        blocks.forEach { block ->
+            TableBuilderApi.new(builder).apply(block)
+        }
+    }
+}
+
+@JvmSynthetic
+fun <T> table(vararg block: TableBuilderApi<T>.() -> Unit): TableBuilder<T> {
+    return TableBuilder<T>().also { builder ->
+        block.forEach { block ->
+            TableBuilderApi.new(builder).apply(block)
+        }
+    }
+}
+
 @JvmSynthetic
 fun createTable(block: TableBuilderApi<Unit>.() -> Unit): TableBuilder<Unit> {
     return TableBuilder<Unit>().also {
