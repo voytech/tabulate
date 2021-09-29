@@ -10,14 +10,14 @@ Tabulate helps you with exporting collections of objects into various tabular fi
 
 Exporting data to external file formats can be tedious and cumbersome - especially when business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. In such cases You want to hide implementation details using abstractions, but this is additional effort which is not desirable. 
 
-Tabulate tries to mitigate this little inconvenience by using powers of Kotlin DSL type-safe builders as consumer API.
+Tabulate tries to mitigate this little inconvenience by using powers of Kotlin DSL type-safe builders as consumer facing API.
 
 ### You may want to consider using `tabulate` if:    
 
-- You need to export objects into: 
+- You need to export collection into: 
     - excel (xlsx),
-    - pdf (WIP - 0.2.0),
-    - cli (only plans)
+    - pdf (version 0.2.0),
+    - cli (roadmap plans)
     
 - Exported data needs to be table-formatted. 
 
@@ -32,7 +32,7 @@ Tabulate tries to mitigate this little inconvenience by using powers of Kotlin D
 ## Snapshot repository coordinates
 
 Library is not yet released into maven central.
-Currently you can access its snapshot:
+Currently, you can access its snapshot:
 
 ```
 repositories {
@@ -45,6 +45,7 @@ dependencies {
     implementation(platform("io.github.voytech:tabulate-bom:0.1.0-SNAPSHOT"))
     implementation("io.github.voytech","tabulate-core")   // e.g. DSL,  
     implementation("io.github.voytech","tabulate-excel")  // streaming apache POI excel API.
+    implementation("io.github.voytech","tabulate-reactor")  // Support for tabulation on Flux
 }
 
 ```
@@ -76,7 +77,7 @@ Now define simple table structure (via property to column bindings):
           }  
     }
 ```
-That's it! This will create an Excel with sheet named "Address list". Sheet will contain 4 entries with automatically adjusted column widths but without any other additional features (like header row) 
+That's it! This will create an Excel with sheet named "Traitors address list". Sheet will contain 4 entries with automatically adjusted column widths but without any other additional features (like header row) 
 
 Want to see header row ? 
 
@@ -116,7 +117,7 @@ Header row cells should have white font on pink background ?
                 columnTitles("First Name", "Last Name", "Street", "Post Code")
                 attributes { 
                     text { fontColor = Colors.WHITE }
-                    background { color = Colors.PINK}
+                    background { color = Colors.PINK }
                 }
               }
           }  
@@ -142,7 +143,7 @@ object TableDefinitions {
         columnTitles("First Name", "Last Name", "Street", "Post Code")
         attributes {
           text { fontColor = Colors.WHITE }
-          bacground { color = Colors.BLACK }
+          background { color = Colors.BLACK }
         }
       }
     }
@@ -229,15 +230,15 @@ productList.tabulate("file.xlsx") {
 }
 ```
 
-### `TabulationTemplate` and table export operations.
+### `TabulationTemplate` with table export operations.
 
 `TabulationTemplate` is an entry-point facility that orchestrates all table export operations: 
-- It instantiates result providers and 3rd party underlying APIs, (result providers allows to implement different result transmission strategies per output class),
+- It instantiates result providers and 3rd party underlying APIs, (result providers allows implementing different result generation strategies per output class),
 - It requests data records one by one and delegates context rendering to table operations implementors,
 - It finalizes exporting operations (e.g. flushing output stream),
 - It resolves export operations implementors.
 
-### Table DSL builders API.
+### Table DSL type-safe builders API.
 
 Kotlin type-safe DSL builders API helps a lot with describing table structure.
 It makes source code look more concise and readable and makes maintenance tasks much easier due to DSL type-safety. At coding time, your IDE will make use of it by offering completion hints - this elevates developer experience, as almost zero documentation is required to start. 
@@ -538,7 +539,7 @@ class ExampleExportOperationsConfiguringFactory<T> : ExportOperationsConfiguring
             TemplateFileAttributeRenderOperation(renderingContext)
               ..
       },
-        additionalCellAttributeRenderers = setOf( .. )
+        additionalCellAttributeRenderers = setOf( .. ) 
         additionalTableAttributeRenderers = setOf( .. )
         ..
       )
