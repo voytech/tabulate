@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.resolver
 
 import io.github.voytech.tabulate.api.builder.dsl.footer
 import io.github.voytech.tabulate.api.builder.dsl.header
-import io.github.voytech.tabulate.api.builder.dsl.table
+import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.ColumnKey
@@ -22,7 +22,7 @@ class RowResolverTest {
     @Test
     fun `should resolve AttributedRow to null if no table definition nor data is provided`() {
         val resolver = BufferingRowContextResolver(
-            table<Product> {  }.build(),
+            createTableBuilder<Product> {  }.build(),
             mutableMapOf()
         )
         val resolvedIndexedAttributedRow = resolver.resolve(RowIndex(0))
@@ -34,7 +34,7 @@ class RowResolverTest {
     fun `should resolve AttributedRow from custom row definition`(index: Int) {
         mutableMapOf<String, Any>()
         val resolver = BufferingRowContextResolver(
-            table<Product> {
+            createTableBuilder<Product> {
                 columns {
                     column(Product::code)
                 }
@@ -60,7 +60,7 @@ class RowResolverTest {
     @Test
     fun `should resolve AttributedRow from collection item`() {
         val resolver = BufferingRowContextResolver(
-            table<Product> {
+            createTableBuilder<Product> {
                 columns { column(Product::code) }
             }.build(),
             mutableMapOf()
@@ -85,7 +85,7 @@ class RowResolverTest {
     @Test
     fun `should resolve AttributedRow from collection item and from custom items`() {
         val resolver = BufferingRowContextResolver(
-            table<Product> {
+            createTableBuilder<Product> {
                 columns { column(Product::code) }
                 rows {
                     header("CODE")

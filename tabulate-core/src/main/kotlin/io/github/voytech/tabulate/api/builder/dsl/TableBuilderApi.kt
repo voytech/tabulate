@@ -13,7 +13,7 @@ import kotlin.reflect.KProperty1
 annotation class TabulateMarker
 
 @JvmSynthetic
-fun <T> table(block: TableBuilderApi<T>.() -> Unit): TableBuilder<T> {
+internal fun <T> createTableBuilder(block: TableBuilderApi<T>.() -> Unit): TableBuilder<T> {
     return TableBuilder<T>().also {
         TableBuilderApi.new(it).apply(block)
     }
@@ -30,31 +30,6 @@ operator fun <T> (TableBuilderApi<T>.() -> Unit).plus(block : TableBuilderApi<T>
     return Table {
         self.invoke(this)
         block.invoke(this)
-    }
-}
-
-@JvmSynthetic
-fun <T> table(blocks: List<TableBuilderApi<T>.() -> Unit>): TableBuilder<T> {
-    return TableBuilder<T>().also { builder ->
-        blocks.forEach { block ->
-            TableBuilderApi.new(builder).apply(block)
-        }
-    }
-}
-
-@JvmSynthetic
-fun <T> table(vararg block: TableBuilderApi<T>.() -> Unit): TableBuilder<T> {
-    return TableBuilder<T>().also { builder ->
-        block.forEach { block ->
-            TableBuilderApi.new(builder).apply(block)
-        }
-    }
-}
-
-@JvmSynthetic
-fun createTable(block: TableBuilderApi<Unit>.() -> Unit): TableBuilder<Unit> {
-    return TableBuilder<Unit>().also {
-        TableBuilderApi.new(it).apply(block)
     }
 }
 

@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.template
 import io.github.voytech.tabulate.api.builder.TableBuilder
 import io.github.voytech.tabulate.api.builder.TableBuilderTransformer
 import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.table
+import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
 import io.github.voytech.tabulate.model.ColumnDef
 import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
 import io.github.voytech.tabulate.template.context.*
@@ -17,6 +17,7 @@ import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
+import io.github.voytech.tabulate.api.builder.fluent.TableBuilder as FluentTableBuilderApi
 
 /**
  * [TabulationApi] exposes an API enabling interactive table export.
@@ -155,9 +156,28 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     fun <O> export(
         source: Iterable<T>,
         output: O,
-        tableBuilder: TableBuilder<T>,
+        block: TableBuilderApi<T>.() -> Unit,
     ) {
-        create(output, tableBuilder).let { api ->
+        create(output, block).let { api ->
+            source.forEach { api.nextRow(it) }
+                .also { api.finish() }
+                .also { api.flush() }
+        }
+    }
+
+    /**
+     * Performs actual export.
+     *
+     * @param source iterable collection of objects
+     * @param output an output binding.
+     * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
+     */
+    fun <O> export(
+        source: Iterable<T>,
+        output: O,
+        builder: FluentTableBuilderApi<T>
+    ) {
+        create(output, builder).let { api ->
             source.forEach { api.nextRow(it) }
                 .also { api.finish() }
                 .also { api.flush() }
@@ -171,9 +191,23 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
      * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
      * @return [TabulationApi] which enables 'interactive' export.
      */
-    fun <O> create(output: O, tableBuilder: TableBuilder<T>): TabulationApi<T, O> {
+    fun <O> create(output: O, block: TableBuilderApi<T>.() -> Unit): TabulationApi<T, O> {
         return TabulationApiImpl(
-            materialize(tableBuilder),
+            materialize(createTableBuilder(block)),
+            output
+        )
+    }
+
+    /**
+     * Returns [TabulationApi] which enables 'interactive' export.
+     *
+     * @param output output binding.
+     * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
+     * @return [TabulationApi] which enables 'interactive' export.
+     */
+    fun <O> create(output: O, builder: FluentTableBuilderApi<T>): TabulationApi<T, O> {
+        return TabulationApiImpl(
+            materialize(builder.builderState),
             output
         )
     }
@@ -229,7 +263,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
  * @param output output binding - may be e.g. OutputStream.
  * @receiver top level DSL table builder.
  */
-fun <T, O> TableBuilder<T>.export(format: TabulationFormat, output: O) {
+fun <T, O> (TableBuilderApi<T>.() -> Unit).export(format: TabulationFormat, output: O) {
     TabulationTemplate<T>(format).export(emptyList(), output, this)
 }
 
@@ -244,7 +278,7 @@ fun File.tabulationFormat(provider: String? = null) =
  * @param file A [File].
  * @receiver top level DSL table builder.
  */
-fun <T> TableBuilder<T>.export(file: File) {
+fun <T> (TableBuilderApi<T>.() -> Unit).export(file: File) {
     file.tabulationFormat().let { format ->
         FileOutputStream(file).use {
             TabulationTemplate<T>(format).export(emptyList(), it, this)
@@ -258,7 +292,7 @@ fun <T> TableBuilder<T>.export(file: File) {
  * @param fileName A path of an output file.
  * @receiver top level DSL table builder.
  */
-fun <T> TableBuilder<T>.export(fileName: String) = export(File(fileName))
+fun <T> (TableBuilderApi<T>.() -> Unit).export(fileName: String) = export(File(fileName))
 
 /**
  * Extension function invoked on a collection, which takes [TabulationFormat], output handler and DSL table builder to define table appearance.
@@ -269,7 +303,7 @@ fun <T> TableBuilder<T>.export(fileName: String) = export(File(fileName))
  * @receiver collection of records to be rendered into file.
  */
 fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
-    TabulationTemplate<T>(format).export(this, output, table(block))
+    TabulationTemplate<T>(format).export(this, output, block)
 }
 
 /**
@@ -282,7 +316,7 @@ fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: Tabl
 fun <T> Iterable<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) {
     file.tabulationFormat().let { format ->
         FileOutputStream(file).use {
-            TabulationTemplate<T>(format).export(this, it, table(block))
+            TabulationTemplate<T>(format).export(this, it, block)
         }
     }
 }

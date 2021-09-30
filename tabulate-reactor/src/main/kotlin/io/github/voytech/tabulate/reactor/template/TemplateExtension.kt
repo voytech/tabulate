@@ -1,7 +1,6 @@
 package io.github.voytech.tabulate.reactor.template
 
 import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.template.TabulationFormat
 import io.github.voytech.tabulate.template.TabulationTemplate
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
@@ -21,7 +20,7 @@ import java.io.FileOutputStream
  * @receiver Flux publishing records that are to be rendered into file.
  */
 fun <T, O> Flux<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit): Flux<T> {
-    return TabulationTemplate<T>(format).create(output, table(block)).let { api ->
+    return TabulationTemplate<T>(format).create(output, block).let { api ->
         publishOn(boundedElastic())
         .doOnNext {
             api.nextRow(it)

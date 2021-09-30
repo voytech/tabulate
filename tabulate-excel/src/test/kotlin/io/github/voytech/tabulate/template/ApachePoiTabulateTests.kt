@@ -1,6 +1,9 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.api.builder.dsl.*
+import io.github.voytech.tabulate.api.builder.dsl.Table
+import io.github.voytech.tabulate.api.builder.dsl.footer
+import io.github.voytech.tabulate.api.builder.dsl.header
+import io.github.voytech.tabulate.api.builder.dsl.rowNumberingOn
 import io.github.voytech.tabulate.api.qualifer.RowPredicates.allRows
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
@@ -287,7 +290,7 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export table with custom rows and cell and row spans`() {
-        createTable {
+        Table<Unit> {
             name = "Test table"
             columns { count = 4 }
             rows {
@@ -338,7 +341,7 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export table with custom row with image`() {
-          table<Any> {
+          Table<Any> {
             name = "Test table"
             columns {
                 column("description")

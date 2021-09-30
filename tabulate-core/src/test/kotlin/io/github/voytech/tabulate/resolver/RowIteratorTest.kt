@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.resolver
 
 import io.github.voytech.tabulate.api.builder.dsl.footer
 import io.github.voytech.tabulate.api.builder.dsl.header
-import io.github.voytech.tabulate.api.builder.dsl.table
+import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.ColumnKey
@@ -20,7 +20,7 @@ class RowIteratorTest {
     @Test
     fun `should resolve AttributedRow to null if no table definition nor data is provided`() {
         val resolver = BufferingRowContextResolver(
-            table<Product> {  }.build(),
+            createTableBuilder<Product> {  }.build(),
             mutableMapOf()
         )
         val iterator = RowContextIterator(resolver, EnumStepProvider(DefaultSteps::class.java))
@@ -31,7 +31,7 @@ class RowIteratorTest {
     fun `should resolve AttributedRow from custom row definition`() {
         mutableMapOf<String, Any>()
         val resolver = BufferingRowContextResolver(
-            table<Product> {
+            createTableBuilder<Product> {
                 columns {
                     column(Product::code)
                 }
@@ -58,7 +58,7 @@ class RowIteratorTest {
     @Test
     fun `should resolve AttributedRow from collection item and from custom items`() {
         val resolver = BufferingRowContextResolver(
-            table<Product> {
+            createTableBuilder<Product> {
                 columns { column(Product::code) }
                 rows {
                     header("CODE")

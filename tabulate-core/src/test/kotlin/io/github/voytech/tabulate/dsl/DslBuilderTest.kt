@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.dsl
 
 import io.github.voytech.tabulate.api.builder.dsl.header
-import io.github.voytech.tabulate.api.builder.dsl.table
+import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.model.ColumnKey
 import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
@@ -23,7 +23,7 @@ class DslBuilderTest {
 
     @Test
     fun `should describe table model of columns only`() {
-        with(table<Product> {
+        with(createTableBuilder<Product> {
             name = "Products table"
             columns {
                 column("nr")
@@ -45,7 +45,7 @@ class DslBuilderTest {
 
     @Test
     fun `should describe table model of columns and rows`() {
-        with(table<Product> {
+        with(createTableBuilder<Product> {
             name = "Products table"
             firstRow = 1
             firstColumn = 1
@@ -100,7 +100,7 @@ class DslBuilderTest {
 
     @Test
     fun `should define custom attributes on column level`() {
-        with(table<Product> {
+        with(createTableBuilder<Product> {
             name = "Products table"
             columns {
                 column(Product::code) {
@@ -131,7 +131,7 @@ class DslBuilderTest {
 
     @Test
     fun `should define custom attributes on all levels`() {
-        with(table<Product> {
+        with(createTableBuilder<Product> {
             name = "Products table"
             columns {
                 column(Product::code) {
@@ -197,7 +197,7 @@ class DslBuilderTest {
 
     @Test
     fun `should define table with header`() {
-        with(table<Product> {
+        with(createTableBuilder<Product> {
             name = "Products table"
             columns {
                 column(Product::code)
@@ -228,7 +228,7 @@ class DslBuilderTest {
 
     @Test
     fun `should define table with attributed header`() {
-        with(table<Product> {
+        with(createTableBuilder<Product> {
             name = "Products table"
             columns {
                 column(Product::code)
