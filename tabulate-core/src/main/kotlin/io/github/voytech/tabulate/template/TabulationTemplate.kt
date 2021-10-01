@@ -151,7 +151,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
      *
      * @param source iterable collection of objects
      * @param output an output binding.
-     * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
+     * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.
      */
     fun <O> export(
         source: Iterable<T>,
@@ -170,7 +170,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
      *
      * @param source iterable collection of objects
      * @param output an output binding.
-     * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
+     * @param builder [FluentTableBuilderApi] a top level table fluent builder which defines table appearance.
      */
     fun <O> export(
         source: Iterable<T>,
@@ -188,7 +188,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
      * Returns [TabulationApi] which enables 'interactive' export.
      *
      * @param output output binding.
-     * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
+     * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.
      * @return [TabulationApi] which enables 'interactive' export.
      */
     fun <O> create(output: O, block: TableBuilderApi<T>.() -> Unit): TabulationApi<T, O> {
@@ -202,7 +202,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
      * Returns [TabulationApi] which enables 'interactive' export.
      *
      * @param output output binding.
-     * @param tableBuilder [TableBuilderApi] a top level table DSL builder which defines table appearance.
+     * @param builder [FluentTableBuilderApi] a top level table fluent builder which defines table appearance.
      * @return [TabulationApi] which enables 'interactive' export.
      */
     fun <O> create(output: O, builder: FluentTableBuilderApi<T>): TabulationApi<T, O> {

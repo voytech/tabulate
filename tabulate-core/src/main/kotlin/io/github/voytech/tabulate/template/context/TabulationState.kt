@@ -17,7 +17,7 @@ import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
  * @property stateAttributes - generic map of attributes that may be shared globally within operation implementors. It
  * is a shared property within [RowContext], [ColumnContext], [RowCellContext].
  */
-class TabulationState<T>(
+internal class TabulationState<T>(
     val tableModel: Table<T>,
     val tableName: String = "untitled table",
     val firstRow: Int? = 0,

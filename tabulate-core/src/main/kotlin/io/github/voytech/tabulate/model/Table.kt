@@ -32,15 +32,13 @@ data class Table<T> internal constructor(
             ?.groupBy { it.qualifier.createAt!! }
     }
 
-    fun forEachColumn(consumer: Consumer<in ColumnDef<T>>) = columns.forEach(consumer)
+    internal fun forEachColumn(consumer: Consumer<in ColumnDef<T>>) = columns.forEach(consumer)
 
-    fun forEachColumn(consumer: (Int, ColumnDef<T>) -> Unit) = columns.forEachIndexed(consumer)
+    internal inline fun forEachColumn(consumer: (Int, ColumnDef<T>) -> Unit) = columns.forEachIndexed(consumer)
 
-    fun <E> mapColumns(consumer: (Int, ColumnDef<T>) -> E) = columns.mapIndexed(consumer)
+    internal fun forEachRow(consumer: Consumer<in RowDef<T>>) = rows?.forEach(consumer)
 
-    fun forEachRow(consumer: Consumer<in RowDef<T>>) = rows?.forEach(consumer)
-
-    fun getRowsAt(index: RowIndex): List<RowDef<T>>? {
+    internal fun getRowsAt(index: RowIndex): List<RowDef<T>>? {
         return if (index.labels.isEmpty()) {
             indexedCustomRows?.get(RowIndexDef(index.rowIndex))
         } else {
@@ -52,19 +50,19 @@ data class Table<T> internal constructor(
 
     private fun hasRowsAt(index: RowIndex): Boolean = !getRowsAt(index).isNullOrEmpty()
 
-    fun getNextCustomRowIndex(index: RowIndex): RowIndexDef? {
+    internal fun getNextCustomRowIndex(index: RowIndex): RowIndexDef? {
         return indexedCustomRows?.entries
             ?.firstOrNull { it.key.index > index.rowIndex }
             ?.key
     }
 
-    fun getRows(sourceRow: SourceRow<T>): Set<RowDef<T>> {
+    internal fun getRows(sourceRow: SourceRow<T>): Set<RowDef<T>> {
         val customRows = getRowsAt(sourceRow.rowIndex)?.toSet()
         val matchingRows = rows?.filter { it.isApplicable(sourceRow) }?.toSet()
         return customRows?.let { matchingRows?.plus(it) ?: it } ?: matchingRows ?: emptySet()
     }
 
-    fun hasCustomRows(sourceRow: SourceRow<T>): Boolean {
+    internal fun hasCustomRows(sourceRow: SourceRow<T>): Boolean {
         return hasRowsAt(sourceRow.rowIndex) || rows?.any { it.shouldInsertRow(sourceRow) } ?: false
     }
 
