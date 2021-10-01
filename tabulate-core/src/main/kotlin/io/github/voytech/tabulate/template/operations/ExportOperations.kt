@@ -17,13 +17,7 @@ interface TableExportOperations<T> {
     fun endRow(context: AttributedRow<T>) {}
 }
 
-interface ContextBindingExportOperationsFactory<T, CTX : RenderingContext> {
-    fun createExportOperations(renderingContext: CTX): TableExportOperations<T>
-    fun createResultProviders(renderingContext: CTX): List<ResultProvider<*>>
-}
-
-abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : ExportOperationsProvider<T>,
-    ContextBindingExportOperationsFactory<T, CTX> {
+abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : ExportOperationsProvider<T> {
 
     private val context: CTX by lazy {
         createRenderingContext()
@@ -33,9 +27,13 @@ abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : E
         registerAttributesOperations(context)
     }
 
-    abstract fun createRenderingContext(): CTX
+    protected abstract fun createRenderingContext(): CTX
 
-    open fun getAttributeOperationsFactory(renderingContext: CTX): AttributeRenderOperationsFactory<T>? = null
+    protected abstract fun createExportOperations(renderingContext: CTX): TableExportOperations<T>
+
+    protected abstract fun createResultProviders(renderingContext: CTX): List<ResultProvider<*>>
+
+    protected open fun getAttributeOperationsFactory(renderingContext: CTX): AttributeRenderOperationsFactory<T>? = null
 
     final override fun createExportOperations(): TableExportOperations<T> {
         val tableOps = createExportOperations(context)
