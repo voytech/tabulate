@@ -7,7 +7,7 @@ data class ColumnContext(
     override fun getColumn(): Int = columnIndex
 }
 
-fun AttributedColumn.narrow(): ColumnContext =
+fun AttributedColumn.crop(): ColumnContext =
     ColumnContext(columnIndex, currentPhase).also { it.additionalAttributes = additionalAttributes }
 
 enum class ColumnRenderPhase {

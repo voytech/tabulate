@@ -12,6 +12,7 @@ import io.github.voytech.tabulate.template.exception.ExportOperationsFactoryReso
 import io.github.voytech.tabulate.template.exception.ResultProviderResolvingException
 import io.github.voytech.tabulate.template.exception.UnknownTabulationFormatException
 import io.github.voytech.tabulate.template.operations.TableExportOperations
+import io.github.voytech.tabulate.template.resolvers.RowCompletionNotifier
 import io.github.voytech.tabulate.template.result.ResultProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.io.File
@@ -33,7 +34,7 @@ interface TabulationApi<T, O> {
      * To be called explicitly in order to trigger next row rendering.
      * Notice that record used in parameter list is not always the record being currently rendered. It is
      * first buffered and rendered eventually - according to row qualification rules defined trough table DSL api.
-     * @param record - a record from source collection to be buffered, and transformed into [RowContext] at some point of time.
+     * @param record - a record from source collection to be buffered, and transformed into [RowContextWithCells] at some point of time.
      */
     fun nextRow(record: T)
 
@@ -97,6 +98,17 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         override fun flush() {
             resultProvider.flush()
         }
+    }
+
+    private inner class RowCompletionNotifierImpl : RowCompletionNotifier<T> {
+
+        override fun beginRow(row: AttributedRow<T>) {
+            ops.beginRow(row)
+        }
+
+        override fun onCellContextResolved(cell: AttributedCell) {
+            ops.renderRowCell(cell)
+        }
 
     }
 
@@ -115,7 +127,8 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
                 tableModel = table,
                 tableName = table.name,
                 firstRow = table.firstRow,
-                firstColumn = table.firstColumn
+                firstColumn = table.firstColumn,
+                rowCompletionNotifier = RowCompletionNotifierImpl()
             )
         }
     }
@@ -213,13 +226,13 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     }
 
     private fun bufferRecordAndRenderRow(state: TabulationState<T>, record: T) {
-        state.bufferAndNext(record)?.let { renderRow(state, it) }
+        state.bufferAndNext(record)?.let { ops.endRow(it) }
     }
 
     private fun renderRemainingBufferedRows(state: TabulationState<T>) {
         do {
             val context = state.next()?.let {
-                renderRow(state, it)
+                ops.endRow(it)
                 it
             }
         } while (context != null)
@@ -241,19 +254,6 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         }
     }
 
-    private fun renderRowCells(state: TabulationState<T>, context: AttributedRow<T>) {
-        state.tableModel.forEachColumn { column: ColumnDef<T> ->
-            if (context.rowCellValues.containsKey(column.id)) {
-                ops.renderRowCell(context.rowCellValues[column.id]!!)
-            }
-        }
-    }
-
-    private fun renderRow(state: TabulationState<T>, rowContext: AttributedRow<T>) {
-        ops.beginRow(rowContext)
-        renderRowCells(state, rowContext)
-        ops.endRow(rowContext)
-    }
 }
 
 /**

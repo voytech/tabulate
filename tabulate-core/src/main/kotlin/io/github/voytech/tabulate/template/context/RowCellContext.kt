@@ -9,5 +9,5 @@ data class RowCellContext(
     override fun getColumn(): Int = columnIndex
 }
 
-fun AttributedCell.narrow(): RowCellContext =
+fun AttributedCell.crop(): RowCellContext =
     RowCellContext(value, rowIndex, columnIndex).also { it.additionalAttributes = additionalAttributes }

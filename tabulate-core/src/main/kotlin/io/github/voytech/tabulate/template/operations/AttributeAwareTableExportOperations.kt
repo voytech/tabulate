@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.template.operations.impl
+package io.github.voytech.tabulate.template.operations
 
 import io.github.voytech.tabulate.api.builder.TableBuilder
 import io.github.voytech.tabulate.api.builder.TableBuilderTransformer
@@ -7,14 +7,21 @@ import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
 import io.github.voytech.tabulate.model.attributes.TableAttribute
 import io.github.voytech.tabulate.template.context.*
-import io.github.voytech.tabulate.template.operations.TableExportOperations
 
+interface BasicContextExportOperations<T> {
+    fun createTable(context: TableContext) {}
+    fun renderColumn(context: ColumnContext) {}
+    fun beginRow(context: RowContext<T>) {}
+    fun renderRowCell(context: RowCellContext)
+    fun endRow(context: RowContextWithCells<T>) {}
+}
 
 @Suppress("UNCHECKED_CAST")
 class AttributeAwareTableExportOperations<T>(
     private val attributeOperations: AttributesOperations<T>,
-    private val baseTableExportOperations: TableExportOperations<T>
-) : TableBuilderTransformer<T>, TableExportOperations<T> by baseTableExportOperations {
+    private val baseTableExportOperations: BasicContextExportOperations<T>,
+    private val enableAttributeSetCaching: Boolean = true
+) : TableBuilderTransformer<T>, TableExportOperations<T>  {
 
     private fun sortedTableAttributes(tableAttributes: Set<TableAttribute<*>>): Set<TableAttribute<*>> {
         return tableAttributes.toSortedSet(compareBy {
@@ -57,54 +64,67 @@ class AttributeAwareTableExportOperations<T>(
     override fun transform(builder: TableBuilder<T>): TableBuilder<T> = withAllAttributesOperationSorted(builder)
 
     override fun createTable(context: AttributedTable) {
-        return baseTableExportOperations.createTable(context).also {
-            context.tableAttributes?.forEach { tableAttribute ->
-                attributeOperations.getTableAttributeOperation(tableAttribute.javaClass)?.renderAttribute(context, tableAttribute)
+        with(context.crop()) {
+            return baseTableExportOperations.createTable(this).also {
+                context.tableAttributes?.forEach { tableAttribute ->
+                    attributeOperations.getTableAttributeOperation(tableAttribute.javaClass)?.renderAttribute(this, tableAttribute)
+                }
             }
         }
     }
 
     override fun beginRow(context: AttributedRow<T>) {
-        if (!context.rowAttributes.isNullOrEmpty()) {
-            var operationRendered = false
-            context.rowAttributes.forEach { attribute ->
-                attributeOperations.getRowAttributeOperation(attribute.javaClass)?.let { operation ->
-                    if (operation.priority() >= 0 && !operationRendered) {
-                        baseTableExportOperations.beginRow(context)
-                        operationRendered = true
+        with(context.crop()) {
+            if (!context.rowAttributes.isNullOrEmpty()) {
+                var operationRendered = false
+                context.rowAttributes?.forEach { attribute ->
+                    attributeOperations.getRowAttributeOperation(attribute.javaClass)?.let { operation ->
+                        if (operation.priority() >= 0 && !operationRendered) {
+                            baseTableExportOperations.beginRow(this)
+                            operationRendered = true
+                        }
+                        operation.renderAttribute(this, attribute)
                     }
-                    operation.renderAttribute(context.narrow(), attribute)
                 }
+            } else {
+                baseTableExportOperations.beginRow(this)
             }
-        } else {
-            baseTableExportOperations.beginRow(context)
         }
     }
 
     override fun renderColumn(context: AttributedColumn) {
-        context.columnAttributes?.let { attributes ->
-            attributes.forEach { attribute ->
-                attributeOperations.getColumnAttributeOperation(attribute.javaClass)
-                    ?.renderAttribute(context.narrow(), attribute)
+        with(context.crop()) {
+            context.columnAttributes?.let { attributes ->
+                attributes.forEach { attribute ->
+                    attributeOperations.getColumnAttributeOperation(attribute.javaClass)
+                        ?.renderAttribute(this, attribute)
+                }
             }
         }
     }
 
     override fun renderRowCell(context: AttributedCell) {
-        if (!context.attributes.isNullOrEmpty()) {
-            var operationRendered = false
-            context.attributes.forEach { attribute ->
-                attributeOperations.getCellAttributeOperation(attribute.javaClass)?.let { operation ->
-                    if (operation.priority() >= 0 && !operationRendered) {
-                        baseTableExportOperations.renderRowCell(context)
-                        operationRendered = true
+        if (enableAttributeSetCaching) context.ensureAttributesCacheEntry()
+        with(context.crop()) {
+            if (!context.attributes.isNullOrEmpty()) {
+                var operationRendered = false
+                context.attributes.forEach { attribute ->
+                    attributeOperations.getCellAttributeOperation(attribute.javaClass)?.let { operation ->
+                        if (operation.priority() >= 0 && !operationRendered) {
+                            baseTableExportOperations.renderRowCell(this)
+                            operationRendered = true
+                        }
+                        operation.renderAttribute(this, attribute)
                     }
-                    operation.renderAttribute(context.narrow(), attribute)
                 }
+            } else {
+                baseTableExportOperations.renderRowCell(this)
             }
-        } else {
-            baseTableExportOperations.renderRowCell(context)
         }
+    }
+
+    override fun endRow(context: AttributedRowWithCells<T>) {
+        baseTableExportOperations.endRow(context.crop())
     }
 
 }

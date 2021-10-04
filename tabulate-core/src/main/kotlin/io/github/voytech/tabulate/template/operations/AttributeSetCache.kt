@@ -1,15 +1,13 @@
-package io.github.voytech.tabulate.template.operations.impl
+package io.github.voytech.tabulate.template.operations
 
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
-import io.github.voytech.tabulate.template.context.AttributedCell
-import io.github.voytech.tabulate.template.context.ContextData
-import io.github.voytech.tabulate.template.context.RowCellContext
-import io.github.voytech.tabulate.template.operations.impl.AttributeKeyedCache.Companion.getCache
+import io.github.voytech.tabulate.template.context.*
+import io.github.voytech.tabulate.template.operations.AttributeSetCache.Companion.getCache
 
 @Suppress("UNCHECKED_CAST")
-class AttributeKeyedCache {
+class AttributeSetCache {
     private val rowExtToEntry: MutableMap<Set<RowAttribute>, MutableMap<String, Any>> = mutableMapOf()
     private val cellExtToEntry: MutableMap<Set<CellAttribute>, MutableMap<String, Any>> = mutableMapOf()
     private val collExtToEntry: MutableMap<Set<ColumnAttribute>, MutableMap<String, Any>> = mutableMapOf()
@@ -36,9 +34,9 @@ class AttributeKeyedCache {
 
         private const val ATTRIBUTES_CACHE_KEY = "_attributesCache"
 
-        fun getCache(context: ContextData): AttributeKeyedCache {
-            context.additionalAttributes!!.putIfAbsent(ATTRIBUTES_CACHE_KEY, AttributeKeyedCache())
-            return context.additionalAttributes!![ATTRIBUTES_CACHE_KEY] as AttributeKeyedCache
+        fun getCache(context: ContextData): AttributeSetCache {
+            context.additionalAttributes!!.putIfAbsent(ATTRIBUTES_CACHE_KEY, AttributeSetCache())
+            return context.additionalAttributes!![ATTRIBUTES_CACHE_KEY] as AttributeSetCache
         }
     }
 }
@@ -57,20 +55,22 @@ fun AttributedCell.ensureAttributesCacheEntry() {
     }
 }
 
-fun AttributedCell.putCachedValue(key: String, value: Any): Any? {
-    return this.attributes?.let {
-        getCache(this).getCellCacheEntry(it).put(key, value)
+fun <T> AttributedRowWithCells<T>.ensureAttributesCacheEntry() {
+    this.rowAttributes?.let {
+        getCache(this).getRowCacheEntry(it)
+    }?.also{
+        additionalAttributes?.put("_currentRowAttributesCache", it)
     }
 }
 
-fun AttributedCell.putCachedValueIfAbsent(key: String, value: Any): Any {
-    return this.attributes?.let {
-        getCache(this).getCellCacheEntry(it).let { internalCache ->
-            internalCache.putIfAbsent(key, value)
-            internalCache[key]
-        }
-    } ?: value
+fun AttributedColumn.ensureAttributesCacheEntry() {
+    this.columnAttributes?.let {
+        getCache(this).getColumnCacheEntry(it)
+    }?.also{
+        additionalAttributes?.put("_currentColumnAttributesCache", it)
+    }
 }
+
 
 @Suppress("UNCHECKED_CAST")
 fun RowCellContext.putCachedValueIfAbsent(key: String, value: Any): Any {

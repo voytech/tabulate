@@ -14,10 +14,10 @@ import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderSty
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
-import io.github.voytech.tabulate.template.context.AttributedTable
 import io.github.voytech.tabulate.template.context.ColumnContext
 import io.github.voytech.tabulate.template.context.RowCellContext
 import io.github.voytech.tabulate.template.context.RowContext
+import io.github.voytech.tabulate.template.context.TableContext
 import io.github.voytech.tabulate.template.operations.BaseCellAttributeRenderOperation
 import io.github.voytech.tabulate.template.operations.BaseColumnAttributeRenderOperation
 import io.github.voytech.tabulate.template.operations.BaseRowAttributeRenderOperation
@@ -227,7 +227,7 @@ class RowHeightAttributeRenderOperation<T>(override val renderingContext: Apache
 class FilterAndSortTableAttributeRenderOperation(override val renderingContext: ApachePoiRenderingContext) :
     BaseTableAttributeRenderOperation<ApachePoiRenderingContext, FilterAndSortTableAttribute>(renderingContext) {
     override fun attributeType(): Class<FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class.java
-    override fun renderAttribute(table: AttributedTable, attribute: FilterAndSortTableAttribute) {
+    override fun renderAttribute(table: TableContext, attribute: FilterAndSortTableAttribute) {
         renderingContext.workbook().creationHelper.createAreaReference(
             CellReference(attribute.rowRange.first, attribute.columnRange.first),
             CellReference(attribute.rowRange.last, attribute.columnRange.last)
@@ -247,7 +247,7 @@ class TemplateFileAttributeRenderOperation(override val renderingContext: Apache
     BaseTableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute>(renderingContext) {
     override fun attributeType(): Class<TemplateFileAttribute> = TemplateFileAttribute::class.java
     override fun priority() = -1
-    override fun renderAttribute(table: AttributedTable, attribute: TemplateFileAttribute) {
+    override fun renderAttribute(table: TableContext, attribute: TemplateFileAttribute) {
         renderingContext.createWorkbook(FileInputStream(attribute.fileName), true).let {
             renderingContext.provideSheet(table.getTableId())
         }

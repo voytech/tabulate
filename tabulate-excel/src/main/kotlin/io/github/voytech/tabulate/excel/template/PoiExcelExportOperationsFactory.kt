@@ -13,13 +13,10 @@ import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.template.TabulationFormat
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
-import io.github.voytech.tabulate.template.context.AttributedCell
-import io.github.voytech.tabulate.template.context.AttributedRow
-import io.github.voytech.tabulate.template.context.AttributedTable
 import io.github.voytech.tabulate.template.context.RowCellContext
+import io.github.voytech.tabulate.template.context.RowContext
+import io.github.voytech.tabulate.template.context.TableContext
 import io.github.voytech.tabulate.template.operations.*
-import io.github.voytech.tabulate.template.operations.impl.ensureAttributesCacheEntry
-import io.github.voytech.tabulate.template.operations.impl.putCachedValueIfAbsent
 import io.github.voytech.tabulate.template.result.ResultProvider
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.xssf.streaming.SXSSFCell
@@ -30,19 +27,18 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
     override fun createRenderingContext(): ApachePoiRenderingContext = ApachePoiRenderingContext()
 
-    override fun createExportOperations(renderingContext: ApachePoiRenderingContext): TableExportOperations<T> = object: TableExportOperations<T> {
+    override fun createExportOperations(renderingContext: ApachePoiRenderingContext): BasicContextExportOperations<T> = object: BasicContextExportOperations<T> {
 
-        override fun createTable(context: AttributedTable) {
+        override fun createTable(context: TableContext) {
             renderingContext.createWorkbook()
             renderingContext.provideSheet(context.getTableId())
         }
 
-        override fun beginRow(context: AttributedRow<T>) {
+        override fun beginRow(context: RowContext<T>) {
             renderingContext.provideRow(context.getTableId(), context.rowIndex)
         }
 
-        override fun renderRowCell(context: AttributedCell) {
-            context.ensureAttributesCacheEntry()
+        override fun renderRowCell(context: RowCellContext) {
             with(context.value) {
                 if (type != null) {
                     if (type in CellType.BASIC_TYPES) {
@@ -69,7 +65,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
             }
         }
 
-        private fun AttributedCell.renderBasicTypeCellValue() {
+        private fun RowCellContext.renderBasicTypeCellValue() {
             provideCell(this) {
                 when (value.type) {
                     CellType.STRING -> setCellValue(value.value as? String)
@@ -83,13 +79,13 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
             }
         }
 
-        private fun AttributedCell.renderDefaultTypeCellValue() {
+        private fun RowCellContext.renderDefaultTypeCellValue() {
             provideCell(this) {
                 setCellValue(value.value as? String)
             }
         }
 
-        private fun AttributedCell.renderImageCell() {
+        private fun RowCellContext.renderImageCell() {
             if (value.type == CellType.IMAGE_DATA) {
                 renderingContext.createImageCell(
                     getTableId(), rowIndex, columnIndex, value.rowSpan, value.colSpan, value.value as ByteArray
@@ -101,7 +97,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
             }
         }
 
-        private fun provideCell(context: AttributedCell, block: (SXSSFCell.() -> Unit)) {
+        private fun provideCell(context: RowCellContext, block: (SXSSFCell.() -> Unit)) {
             renderingContext.provideCell(context.getTableId(), context.rowIndex, context.columnIndex) {
                 it.apply(block)
             }

@@ -2,15 +2,17 @@ package io.github.voytech.tabulate.template.resolvers
 
 import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
+import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.context.AttributedCellFactory.createAttributedCell
-import io.github.voytech.tabulate.template.context.AttributedRow
 import io.github.voytech.tabulate.template.context.AttributedRowFactory.createAttributedRow
-import io.github.voytech.tabulate.template.context.RowIndex
-import io.github.voytech.tabulate.template.context.getColumnIndex
-import io.github.voytech.tabulate.template.context.getRowIndex
+
+interface RowCompletionNotifier<T> {
+    fun onCellContextResolved(cell: AttributedCell)
+    fun beginRow(row: AttributedRow<T>)
+}
 
 /**
- * Given requested index, [Table] model, and global custom attributes, it resolves [AttributedRow] context data with
+ * Given requested index, [Table] model, and global custom attributes, it resolves [AttributedRowWithCells] context data with
  * effective index (effective index may differ from requested one if there are no rows matching predicate
  * - in that case - row context with next matching index is returned)
  * @author Wojciech Mąka
@@ -18,10 +20,10 @@ import io.github.voytech.tabulate.template.context.getRowIndex
 abstract class AbstractRowContextResolver<T>(
     private val tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
-) :
-    IndexedContextResolver<T, AttributedRow<T>> {
+    private val notifier: RowCompletionNotifier<T>? = null,
+) : IndexedContextResolver<T, AttributedRowWithCells<T>> {
 
-    private fun resolveAttributedRow(tableRowIndex: RowIndex, record: IndexedValue<T>? = null): AttributedRow<T> {
+    private fun resolveAttributedRow(tableRowIndex: RowIndex, record: IndexedValue<T>? = null): AttributedRowWithCells<T> {
         return SourceRow(
             rowIndex = tableRowIndex,
             objectIndex = record?.index,
@@ -30,6 +32,14 @@ abstract class AbstractRowContextResolver<T>(
             val rowDefinitions = tableModel.getRows(sourceRow)
             val cellDefinitions = rowDefinitions.mergeCells()
             val rowCellAttributes = rowDefinitions.flattenCellAttributes()
+            val attributedRow = createAttributedRow<T>(
+                rowIndex = tableModel.getRowIndex(tableRowIndex.rowIndex),
+                rowAttributes = overrideAttributesLeftToRight(
+                    tableModel.rowAttributes, rowDefinitions.flattenRowAttributes()
+                ),
+                customAttributes = customAttributes
+            )
+            notifier?.beginRow(attributedRow)
             val cellValues = tableModel.columns.mapIndexed { index: Int, column: ColumnDef<T> ->
                 cellDefinitions.resolveCellValue(column, sourceRow)?.let { value ->
                     createAttributedCell(
@@ -43,34 +53,29 @@ abstract class AbstractRowContextResolver<T>(
                             cellDefinitions[column.id]?.cellAttributes
                         ),
                         customAttributes
-                    ).let { column.id to it }
+                    ).also { notifier?.onCellContextResolved(it) }
+                        .let { column.id to it }
+
                 }
             }.mapNotNull { it }.toMap()
-            createAttributedRow(
-                rowIndex = tableModel.getRowIndex(tableRowIndex.rowIndex),
-                rowAttributes = overrideAttributesLeftToRight(
-                    tableModel.rowAttributes, rowDefinitions.flattenRowAttributes()
-                ),
-                cells = cellValues,
-                customAttributes = customAttributes
-            )
+            attributedRow.withCells(cellValues)
         }
     }
 
     private fun resolveRowContext(
         tableRowIndex: RowIndex,
         indexedRecord: IndexedValue<T>? = null,
-    ): IndexedValue<AttributedRow<T>> {
+    ): IndexedValue<AttributedRowWithCells<T>> {
         return IndexedValue(tableRowIndex.rowIndex, resolveAttributedRow(tableRowIndex, indexedRecord))
     }
 
     /**
-     * Resolves indexed [AttributedRow]. Index may be equal to parameter index value, or if there are no matching predicates,
+     * Resolves indexed [AttributedRowWithCells]. Index may be equal to parameter index value, or if there are no matching predicates,
      * it may be next matching index or eventually null when no row can be resolved.
      * @param requestedIndex [RowIndex] - index requested by row iterator.
      * @author Wojciech Mąka
      */
-    override fun resolve(requestedIndex: RowIndex): IndexedValue<AttributedRow<T>>? {
+    override fun resolve(requestedIndex: RowIndex): IndexedValue<AttributedRowWithCells<T>>? {
         return if (tableModel.hasCustomRows(SourceRow(requestedIndex))) {
             resolveRowContext(requestedIndex)
         } else {

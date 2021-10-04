@@ -1,11 +1,10 @@
-package io.github.voytech.tabulate.template.operations.impl
+package io.github.voytech.tabulate.template.operations
 
 import io.github.voytech.tabulate.model.attributes.Attribute
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
-import io.github.voytech.tabulate.template.operations.*
 import java.util.logging.Logger
 
 @Suppress("UNCHECKED_CAST")

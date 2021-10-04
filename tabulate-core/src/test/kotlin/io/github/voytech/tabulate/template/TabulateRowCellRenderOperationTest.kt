@@ -12,7 +12,7 @@ import io.github.voytech.tabulate.model.attributes.column.width
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.row.height
 import io.github.voytech.tabulate.model.attributes.row.rowHeight
-import io.github.voytech.tabulate.template.context.AttributedRow
+import io.github.voytech.tabulate.template.context.AttributedRowWithCells
 import io.github.voytech.tabulate.testsupport.AttributedCellTest
 import io.github.voytech.tabulate.testsupport.AttributedColumnTest
 import io.github.voytech.tabulate.testsupport.AttributedRowTest
@@ -287,7 +287,7 @@ class TabulateRowCellRenderOperationTest {
             }
         }
         TestExportOperationsFactory.rowTest = object : AttributedRowTest {
-            override fun <T> test(context: AttributedRow<T>) {
+            override fun <T> test(context: AttributedRowWithCells<T>) {
                 when (context.rowIndex) {
                     0 -> {
                         assertEquals(1,context.rowAttributes!!.size)

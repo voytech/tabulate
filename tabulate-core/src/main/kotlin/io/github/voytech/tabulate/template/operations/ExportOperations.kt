@@ -1,8 +1,6 @@
 package io.github.voytech.tabulate.template.operations
 
 import io.github.voytech.tabulate.template.context.*
-import io.github.voytech.tabulate.template.operations.impl.AttributeAwareTableExportOperations
-import io.github.voytech.tabulate.template.operations.impl.AttributesOperations
 import io.github.voytech.tabulate.template.result.ResultProvider
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
@@ -14,7 +12,7 @@ interface TableExportOperations<T> {
     fun renderColumn(context: AttributedColumn) {}
     fun beginRow(context: AttributedRow<T>) {}
     fun renderRowCell(context: AttributedCell)
-    fun endRow(context: AttributedRow<T>) {}
+    fun endRow(context: AttributedRowWithCells<T>) {}
 }
 
 abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : ExportOperationsProvider<T> {
@@ -29,20 +27,14 @@ abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : E
 
     protected abstract fun createRenderingContext(): CTX
 
-    protected abstract fun createExportOperations(renderingContext: CTX): TableExportOperations<T>
+    protected abstract fun createExportOperations(renderingContext: CTX): BasicContextExportOperations<T>
 
     protected abstract fun createResultProviders(renderingContext: CTX): List<ResultProvider<*>>
 
     protected open fun getAttributeOperationsFactory(renderingContext: CTX): AttributeRenderOperationsFactory<T>? = null
 
-    final override fun createExportOperations(): TableExportOperations<T> {
-        val tableOps = createExportOperations(context)
-        return if (!attributeOperations.isEmpty()) {
-            AttributeAwareTableExportOperations(attributeOperations, tableOps)
-        } else {
-            tableOps
-        }
-    }
+    final override fun createExportOperations(): TableExportOperations<T> =
+        AttributeAwareTableExportOperations(attributeOperations, createExportOperations(context))
 
     final override fun createResultProviders(): List<ResultProvider<*>> {
         return createResultProviders(context)
