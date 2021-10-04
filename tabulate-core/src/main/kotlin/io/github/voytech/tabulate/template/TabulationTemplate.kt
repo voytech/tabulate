@@ -12,7 +12,7 @@ import io.github.voytech.tabulate.template.exception.ExportOperationsFactoryReso
 import io.github.voytech.tabulate.template.exception.ResultProviderResolvingException
 import io.github.voytech.tabulate.template.exception.UnknownTabulationFormatException
 import io.github.voytech.tabulate.template.operations.TableExportOperations
-import io.github.voytech.tabulate.template.resolvers.RowCompletionNotifier
+import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
 import io.github.voytech.tabulate.template.result.ResultProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.io.File
@@ -21,7 +21,7 @@ import java.util.*
 import io.github.voytech.tabulate.api.builder.fluent.TableBuilder as FluentTableBuilderApi
 
 /**
- * [TabulationApi] exposes an API enabling interactive table export.
+ * [TabulationApi] An API enabling interactive table export.
  * Particularly it allows to:
  * - export each record respectively with 'nextRow' method,
  * - export all trailing and buffered records with 'finish' method,
@@ -100,15 +100,13 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         }
     }
 
-    private inner class RowCompletionNotifierImpl : RowCompletionNotifier<T> {
+    private inner class RowCompletionListenerImpl : RowCompletionListener<T> {
 
-        override fun beginRow(row: AttributedRow<T>) {
-            ops.beginRow(row)
-        }
+        override fun onAttributedRowResolved(row: AttributedRow<T>) = ops.beginRow(row)
 
-        override fun onCellContextResolved(cell: AttributedCell) {
-            ops.renderRowCell(cell)
-        }
+        override fun onAttributedCellResolved(cell: AttributedCell)  = ops.renderRowCell(cell)
+
+        override fun onAttributedRowResolved(row: AttributedRowWithCells<T>) = ops.endRow(row)
 
     }
 
@@ -128,7 +126,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
                 tableName = table.name,
                 firstRow = table.firstRow,
                 firstColumn = table.firstColumn,
-                rowCompletionNotifier = RowCompletionNotifierImpl()
+                rowCompletionListener = RowCompletionListenerImpl()
             )
         }
     }
@@ -226,16 +224,12 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     }
 
     private fun bufferRecordAndRenderRow(state: TabulationState<T>, record: T) {
-        state.bufferAndNext(record)?.let { ops.endRow(it) }
+        state.bufferAndNext(record)
     }
 
     private fun renderRemainingBufferedRows(state: TabulationState<T>) {
-        do {
-            val context = state.next()?.let {
-                ops.endRow(it)
-                it
-            }
-        } while (context != null)
+        @Suppress("ControlFlowWithEmptyBody")
+        while (state.next()!= null);
     }
 
     private fun renderColumns(state: TabulationState<T>, renderPhase: ColumnRenderPhase) {

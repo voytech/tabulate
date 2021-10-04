@@ -12,11 +12,11 @@ import java.util.*
  * row predicates, but will be rendered eventually.
  * @author Wojciech Mąka
  */
-class BufferingRowContextResolver<T>(
+internal class BufferingRowContextResolver<T>(
     tableModel: Table<T>,
     customAttributes: MutableMap<String, Any>,
-    notifier: RowCompletionNotifier<T>? = null
-) : AbstractRowContextResolver<T>(tableModel, customAttributes, notifier) {
+    listener: RowCompletionListener<T>? = null
+) : AbstractRowContextResolver<T>(tableModel, customAttributes, listener) {
 
     private var index: Int = 0
 

@@ -6,21 +6,26 @@ import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.context.AttributedCellFactory.createAttributedCell
 import io.github.voytech.tabulate.template.context.AttributedRowFactory.createAttributedRow
 
-interface RowCompletionNotifier<T> {
-    fun onCellContextResolved(cell: AttributedCell)
-    fun beginRow(row: AttributedRow<T>)
+internal interface RowCompletionListener<T> {
+    fun onAttributedCellResolved(cell: AttributedCell)
+    fun onAttributedRowResolved(row: AttributedRow<T>)
+    fun onAttributedRowResolved(row: AttributedRowWithCells<T>)
 }
 
 /**
  * Given requested index, [Table] model, and global custom attributes, it resolves [AttributedRowWithCells] context data with
  * effective index (effective index may differ from requested one if there are no rows matching predicate
- * - in that case - row context with next matching index is returned)
+ * - in that case - row context with next matching index is returned).
+ * Additionally - while resolving - it notifies about:
+ *  - computed row attributes on row,
+ *  - each computed cell and its attributes,
+ *  - entire row completion - that is completion of row with attributes and all row cells with its attributes.
  * @author Wojciech Mąka
  */
-abstract class AbstractRowContextResolver<T>(
+internal abstract class AbstractRowContextResolver<T>(
     private val tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
-    private val notifier: RowCompletionNotifier<T>? = null,
+    private val listener: RowCompletionListener<T>? = null,
 ) : IndexedContextResolver<T, AttributedRowWithCells<T>> {
 
     private fun resolveAttributedRow(tableRowIndex: RowIndex, record: IndexedValue<T>? = null): AttributedRowWithCells<T> {
@@ -38,8 +43,8 @@ abstract class AbstractRowContextResolver<T>(
                     tableModel.rowAttributes, rowDefinitions.flattenRowAttributes()
                 ),
                 customAttributes = customAttributes
-            )
-            notifier?.beginRow(attributedRow)
+            ).also { listener?.onAttributedRowResolved(it) }
+
             val cellValues = tableModel.columns.mapIndexed { index: Int, column: ColumnDef<T> ->
                 cellDefinitions.resolveCellValue(column, sourceRow)?.let { value ->
                     createAttributedCell(
@@ -53,12 +58,11 @@ abstract class AbstractRowContextResolver<T>(
                             cellDefinitions[column.id]?.cellAttributes
                         ),
                         customAttributes
-                    ).also { notifier?.onCellContextResolved(it) }
+                    ).also { listener?.onAttributedCellResolved(it) }
                         .let { column.id to it }
-
                 }
             }.mapNotNull { it }.toMap()
-            attributedRow.withCells(cellValues)
+            attributedRow.withCells(cellValues).also { listener?.onAttributedRowResolved(it) }
         }
     }
 

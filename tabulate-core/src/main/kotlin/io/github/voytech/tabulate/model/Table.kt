@@ -32,8 +32,6 @@ data class Table<T> internal constructor(
             ?.groupBy { it.qualifier.createAt!! }
     }
 
-    internal fun forEachColumn(consumer: Consumer<in ColumnDef<T>>) = columns.forEach(consumer)
-
     internal inline fun forEachColumn(consumer: (Int, ColumnDef<T>) -> Unit) = columns.forEachIndexed(consumer)
 
     internal fun forEachRow(consumer: Consumer<in RowDef<T>>) = rows?.forEach(consumer)

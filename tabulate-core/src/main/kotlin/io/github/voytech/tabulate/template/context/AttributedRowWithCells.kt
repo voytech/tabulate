@@ -20,7 +20,7 @@ data class AttributedRowWithCells<T>(
 fun <T> AttributedRow<T>.withCells(rowCellValues: Map<ColumnKey<T>, AttributedCell>): AttributedRowWithCells<T> =
     createAttributedRow(
         rowIndex,
-        rowAttributes ?: emptySet(),
+        rowAttributes?: emptySet(),
         rowCellValues,
         additionalAttributes?: mutableMapOf()
     )

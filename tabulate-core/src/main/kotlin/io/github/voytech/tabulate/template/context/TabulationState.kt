@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.template.iterators.EnumStepProvider
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
 import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
-import io.github.voytech.tabulate.template.resolvers.RowCompletionNotifier
+import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
 
 /**
  * @author Wojciech Mąka
@@ -23,11 +23,11 @@ internal class TabulationState<T>(
     val tableName: String = "untitled table",
     val firstRow: Int? = 0,
     val firstColumn: Int? = 0,
-    var rowCompletionNotifier: RowCompletionNotifier<T>? = null,
+    var rowCompletionListener: RowCompletionListener<T>? = null,
 ) {
     private val stateAttributes = mutableMapOf<String, Any>()
     private val rowContextResolver: BufferingRowContextResolver<T> =
-        BufferingRowContextResolver(tableModel, stateAttributes, rowCompletionNotifier)
+        BufferingRowContextResolver(tableModel, stateAttributes, rowCompletionListener)
     private val rowContextIterator: RowContextIterator<T, AttributedRowWithCells<T>> =
         RowContextIterator(rowContextResolver, EnumStepProvider(DefaultSteps::class.java))
 
