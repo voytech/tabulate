@@ -6,13 +6,20 @@ import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.util.*
 
-
 interface TableExportOperations<T> {
     fun createTable(context: AttributedTable)
     fun renderColumn(context: AttributedColumn) {}
     fun beginRow(context: AttributedRow<T>) {}
     fun renderRowCell(context: AttributedCell)
     fun endRow(context: AttributedRowWithCells<T>) {}
+}
+
+interface BasicContextExportOperations<T> {
+    fun createTable(context: TableContext) {}
+    fun renderColumn(context: ColumnContext) {}
+    fun beginRow(context: RowContext<T>) {}
+    fun renderRowCell(context: RowCellContext)
+    fun endRow(context: RowContextWithCells<T>) {}
 }
 
 abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : ExportOperationsProvider<T> {

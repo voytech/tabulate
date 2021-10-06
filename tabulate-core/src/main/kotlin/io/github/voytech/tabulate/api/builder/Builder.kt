@@ -17,13 +17,13 @@ fun interface BuilderTransformer<T, B: Builder<T>> {
     fun transform(builder: B): B
 }
 
-fun interface TableBuilderTransformer<T>: BuilderTransformer<Table<T>, TableBuilder<T>>
+internal fun interface TableBuilderTransformer<T>: BuilderTransformer<Table<T>, TableBuilderState<T>>
 
 typealias DslBlock<T> = (T) -> Unit
 
-abstract class AttributesAwareBuilder<T>: Builder<T>() {
+sealed class AttributesAwareBuilder<T>: Builder<T>() {
 
-    private val attributes: MutableMap<Class<out Attribute<*>>, MutableSet<Attribute<*>>> = mutableMapOf()
+    private var attributes: MutableMap<Class<out Attribute<*>>, Set<Attribute<*>>> = mutableMapOf()
 
     @JvmSynthetic
     protected open fun <A : Attribute<A>, B: AttributeBuilder<A>> attribute(builder: B) {
@@ -33,7 +33,7 @@ abstract class AttributesAwareBuilder<T>: Builder<T>() {
     @Suppress("UNCHECKED_CAST")
     fun <A : Attribute<*>> visit(clazz: Class<A>, visitor: ((current: Set<A>) -> Set<A>)) {
         attributes[clazz]?.let {
-            visitor.invoke(it.toSet() as Set<A>).toMutableSet()
+            visitor.invoke(it as Set<A>)
         }
     }
 
@@ -42,7 +42,11 @@ abstract class AttributesAwareBuilder<T>: Builder<T>() {
     protected fun <C : Attribute<*>> getAttributesByClass(clazz: Class<C>): Set<C>? = attributes[clazz] as Set<C>?
 
     private fun applyAttribute(attribute: Attribute<*>) {
-        attributes.getOrPut(supportedSuperClass(attribute)) { mutableSetOf() }.add(attribute)
+        supportedSuperClass(attribute).let { clazz ->
+            (attributes[clazz]?.plus(attribute) ?: setOf(attribute)).run {
+                attributes[clazz] = this
+            }
+        }
     }
 
     companion object {
@@ -58,27 +62,30 @@ abstract class AttributesAwareBuilder<T>: Builder<T>() {
     }
 }
 
-class TableBuilder<T> : AttributesAwareBuilder<Table<T>>() {
+internal class TableBuilderState<T> : AttributesAwareBuilder<Table<T>>() {
 
-    @JvmSynthetic
-    val columnsBuilder: ColumnsBuilder<T> = ColumnsBuilder()
+    @get:JvmSynthetic
+    internal val columnsBuilderState: ColumnsBuilderState<T> = ColumnsBuilderState.new()
 
-    @JvmSynthetic
-    val rowsBuilder: RowsBuilder<T> = RowsBuilder(columnsBuilder)
+    @get:JvmSynthetic
+    internal val rowsBuilderState: RowsBuilderState<T> = RowsBuilderState.new(columnsBuilderState)
 
-    @JvmSynthetic
-    var name: String = "untitled table"
+    @get:JvmSynthetic
+    @set:JvmSynthetic
+    internal var name: String = "untitled table"
 
-    @JvmSynthetic
-    var firstRow: Int? = 0
+    @get:JvmSynthetic
+    @set:JvmSynthetic
+    internal var firstRow: Int? = 0
 
-    @JvmSynthetic
-    var firstColumn: Int? = 0
+    @get:JvmSynthetic
+    @set:JvmSynthetic
+    internal var firstColumn: Int? = 0
 
     @JvmSynthetic
     override fun build(): Table<T> = Table(
         name, firstRow, firstColumn,
-        columnsBuilder.build(), rowsBuilder.build(),
+        columnsBuilderState.build(), rowsBuilderState.build(),
         getAttributesByClass(TableAttribute::class.java),
         getAttributesByClass(CellAttribute::class.java),
         getAttributesByClass(ColumnAttribute::class.java),
@@ -92,73 +99,76 @@ class TableBuilder<T> : AttributesAwareBuilder<Table<T>>() {
 
 }
 
-class ColumnsBuilder<T> internal constructor() : Builder<List<ColumnDef<T>>>() {
+internal class ColumnsBuilderState<T> private constructor() : Builder<List<ColumnDef<T>>>() {
 
-    @JvmSynthetic
-    val columnBuilders: MutableList<ColumnBuilder<T>> = mutableListOf()
+    @get:JvmSynthetic
+    val columnBuilderStates: MutableList<ColumnBuilderState<T>> = mutableListOf()
 
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     var count: Int?
         get() {
-            return columnBuilders.size
+            return columnBuilderStates.size
         }
         set(value) {
             resize(value)
         }
 
     @JvmSynthetic
-    fun addColumnBuilder(id: String, block: DslBlock<ColumnBuilder<T>>): ColumnBuilder<T> =
+    fun addColumnBuilder(id: String, block: DslBlock<ColumnBuilderState<T>>): ColumnBuilderState<T> =
         ensureColumnBuilder(ColumnKey(id = id)).let {
             block.invoke(it)
             it
         }
 
     @JvmSynthetic
-    fun addColumnBuilder(ref: ColRefId<T>, block: DslBlock<ColumnBuilder<T>>): ColumnBuilder<T> =
+    fun addColumnBuilder(ref: ColRefId<T>, block: DslBlock<ColumnBuilderState<T>>): ColumnBuilderState<T> =
         ensureColumnBuilder(ColumnKey(ref = ref)).let {
             block.invoke(it)
             it
         }
 
-    @JvmSynthetic
-    private fun ensureColumnBuilder(key: ColumnKey<T>): ColumnBuilder<T> =
-        columnBuilders.find { it.id == key } ?: ColumnBuilder.new<T>().let {
-            columnBuilders.add(it.apply { it.id = key })
+    private fun ensureColumnBuilder(key: ColumnKey<T>): ColumnBuilderState<T> =
+        columnBuilderStates.find { it.id == key } ?: ColumnBuilderState.new<T>().let {
+            columnBuilderStates.add(it.apply { it.id = key })
             it
         }
 
-    @JvmSynthetic
-    private fun addColumnBuilder(id: String): ColumnBuilder<T> = ensureColumnBuilder(ColumnKey(id = id))
+    private fun addColumnBuilder(id: String): ColumnBuilderState<T> = ensureColumnBuilder(ColumnKey(id = id))
 
     private fun resize(newSize: Int?) {
-        if (newSize ?: 0 < columnBuilders.size) {
-            columnBuilders.take(newSize ?: 0).also {
-                columnBuilders.retainAll(it)
+        if (newSize ?: 0 < columnBuilderStates.size) {
+            columnBuilderStates.take(newSize ?: 0).also {
+                columnBuilderStates.retainAll(it)
             }
-        } else if (newSize ?: 0 > columnBuilders.size) {
-            (columnBuilders.size + 1..(newSize ?: 0)).forEach { addColumnBuilder("column-$it") }
+        } else if (newSize ?: 0 > columnBuilderStates.size) {
+            (columnBuilderStates.size + 1..(newSize ?: 0)).forEach { addColumnBuilder("column-$it") }
         }
     }
 
     @JvmSynthetic
     override fun build(): List<ColumnDef<T>> {
-        return columnBuilders.map { it.build() }
+        return columnBuilderStates.map { it.build() }
     }
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(): ColumnsBuilder<T> = ColumnsBuilder()
+        internal fun <T> new(): ColumnsBuilderState<T> = ColumnsBuilderState()
     }
 }
 
-class ColumnBuilder<T> internal constructor() : AttributesAwareBuilder<ColumnDef<T>>() {
+internal class ColumnBuilderState<T> private constructor() : AttributesAwareBuilder<ColumnDef<T>>() {
 
-    @JvmSynthetic
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     lateinit var id: ColumnKey<T>
 
-    @JvmSynthetic
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     var columnType: CellType? = null
 
-    @JvmSynthetic
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     var index: Int? = null
 
     @JvmSynthetic
@@ -176,21 +186,21 @@ class ColumnBuilder<T> internal constructor() : AttributesAwareBuilder<ColumnDef
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(): ColumnBuilder<T> = ColumnBuilder()
+        internal fun <T> new(): ColumnBuilderState<T> = ColumnBuilderState()
     }
 }
 
-class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBuilder<T>) : Builder<List<RowDef<T>>>() {
+internal class RowsBuilderState<T> private constructor(private val columnsBuilderState: ColumnsBuilderState<T>) : Builder<List<RowDef<T>>>() {
 
-    @JvmSynthetic
-    val rowBuilders: MutableList<RowBuilder<T>> = mutableListOf()
+    @get:JvmSynthetic
+    val rowBuilderStates: MutableList<RowBuilderState<T>> = mutableListOf()
 
     private var rowIndex: RowIndexDef = RowIndexDef(0)
 
     private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int> = mutableMapOf()
 
     @JvmSynthetic
-    fun addRowBuilder(block: DslBlock<RowBuilder<T>>): RowBuilder<T> =
+    fun addRowBuilder(block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> =
         ensureRowBuilder(RowQualifier(createAt = rowIndex)).let {
             block.invoke(it)
             rowIndex = it.qualifier.createAt?.plus(1) ?: rowIndex
@@ -199,14 +209,14 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
         }
 
     @JvmSynthetic
-    fun addRowBuilder(selector: RowPredicate<T>, block: DslBlock<RowBuilder<T>>): RowBuilder<T> =
+    fun addRowBuilder(selector: RowPredicate<T>, block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> =
         ensureRowBuilder(RowQualifier(applyWhen = selector)).let {
             block.invoke(it)
             it
         }
 
     @JvmSynthetic
-    fun addRowBuilder(at: RowIndexDef, block: DslBlock<RowBuilder<T>>): RowBuilder<T> {
+    fun addRowBuilder(at: RowIndexDef, block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> {
         rowIndex = at
         return ensureRowBuilder(RowQualifier(createAt = rowIndex++)).let {
             block.invoke(it)
@@ -216,7 +226,7 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
     }
 
     @JvmSynthetic
-    fun addRowBuilder(label: DefaultSteps, block: DslBlock<RowBuilder<T>>): RowBuilder<T> {
+    fun addRowBuilder(label: DefaultSteps, block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> {
         if (label.name != rowIndex.offsetLabel) {
             rowIndex = RowIndexDef(index = 0, offsetLabel = label.name)
         }
@@ -227,10 +237,9 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
         }
     }
 
-    @JvmSynthetic
-    private fun ensureRowBuilder(rowQualifier: RowQualifier<T>): RowBuilder<T> =
-        rowBuilders.find { it.qualifier == rowQualifier } ?: RowBuilder.new(columnsBuilder, interceptedRowSpans).let {
-            rowBuilders.add(it)
+    private fun ensureRowBuilder(rowQualifier: RowQualifier<T>): RowBuilderState<T> =
+        rowBuilderStates.find { it.qualifier == rowQualifier } ?: RowBuilderState.new(columnsBuilderState, interceptedRowSpans).let {
+            rowBuilderStates.add(it)
             it.qualifier = rowQualifier
             it
         }
@@ -243,50 +252,51 @@ class RowsBuilder<T> internal constructor(private val columnsBuilder: ColumnsBui
     private fun decreaseRowSpan(key: ColumnKey<T>): Int =
         (interceptedRowSpans[key]?.let { it - 1 } ?: 0).coerceAtLeast(0)
 
-    private fun refreshRowSpans(rowBuilder: RowBuilder<T>) {
-        columnsBuilder.columnBuilders.forEach { columnBuilder ->
-            rowBuilder.getCellBuilder(columnBuilder.id).let {
+    private fun refreshRowSpans(rowBuilderState: RowBuilderState<T>) {
+        columnsBuilderState.columnBuilderStates.forEach { columnBuilder ->
+            rowBuilderState.getCellBuilder(columnBuilder.id).let {
                 interceptedRowSpans[columnBuilder.id] =
                     if (it != null) it.rowSpan - 1 else decreaseRowSpan(columnBuilder.id)
             }
         }
     }
 
-    private fun sortedNullsLast(): List<RowBuilder<T>> {
-        return rowBuilders.sortedWith(compareBy(nullsLast()) { it.qualifier.createAt })
+    private fun sortedNullsLast(): List<RowBuilderState<T>> {
+        return rowBuilderStates.sortedWith(compareBy(nullsLast()) { it.qualifier.createAt })
     }
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(columnsBuilder: ColumnsBuilder<T>): RowsBuilder<T> = RowsBuilder(columnsBuilder)
+        internal fun <T> new(columnsBuilderState: ColumnsBuilderState<T>): RowsBuilderState<T> = RowsBuilderState(columnsBuilderState)
     }
 }
 
-class RowBuilder<T> private constructor(
-    columnsBuilder: ColumnsBuilder<T>,
+internal class RowBuilderState<T> private constructor(
+    columnsBuilderState: ColumnsBuilderState<T>,
     interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
 ) : AttributesAwareBuilder<RowDef<T>>() {
 
-    @JvmSynthetic
-    val cells: MutableMap<ColumnKey<T>, CellBuilder<T>> = mutableMapOf()
+    @get:JvmSynthetic
+    val cells: MutableMap<ColumnKey<T>, CellBuilderState<T>> = mutableMapOf()
 
-    @JvmSynthetic
+    @get:JvmSynthetic
     private val cellIndex: AtomicInteger = AtomicInteger(0)
 
-    @JvmSynthetic
-    val cellsBuilder: CellsBuilder<T> = CellsBuilder.new(columnsBuilder, interceptedRowSpans, cellIndex, cells)
+    @get:JvmSynthetic
+    val cellsBuilderState: CellsBuilderState<T> = CellsBuilderState.new(columnsBuilderState, interceptedRowSpans, cellIndex, cells)
 
-    @JvmSynthetic
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     internal lateinit var qualifier: RowQualifier<T>
 
-    internal fun getCellBuilder(key: ColumnKey<T>): CellBuilder<T>? = cells[key]
+    internal fun getCellBuilder(key: ColumnKey<T>): CellBuilderState<T>? = cells[key]
 
     @JvmSynthetic
     override fun build(): RowDef<T> = RowDef(
         qualifier,
         getAttributesByClass(RowAttribute::class.java),
         getAttributesByClass(CellAttribute::class.java),
-        cellsBuilder.build()
+        cellsBuilderState.build()
     )
 
     @JvmSynthetic
@@ -298,27 +308,27 @@ class RowBuilder<T> private constructor(
     companion object {
         @JvmSynthetic
         internal fun <T> new(
-            columnsBuilder: ColumnsBuilder<T>,
+            columnsBuilderState: ColumnsBuilderState<T>,
             interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
-        ): RowBuilder<T> = RowBuilder(columnsBuilder, interceptedRowSpans)
+        ): RowBuilderState<T> = RowBuilderState(columnsBuilderState, interceptedRowSpans)
     }
 }
 
-class CellsBuilder<T> private constructor(
-    private val columnsBuilder: ColumnsBuilder<T>,
+internal class CellsBuilderState<T> private constructor(
+    private val columnsBuilderState: ColumnsBuilderState<T>,
     private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
     private var cellIndex: AtomicInteger,
-    private val cells: MutableMap<ColumnKey<T>, CellBuilder<T>>,
+    private val cells: MutableMap<ColumnKey<T>, CellBuilderState<T>>,
 ) : Builder<Map<ColumnKey<T>, CellDef<T>>>() {
 
     @JvmSynthetic
-    fun addCellBuilder(id: String, block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
+    fun addCellBuilder(id: String, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
         ensureCellBuilder(ColumnKey(id = id)).apply(block)
             .also { nextCellIndex() }
 
     @JvmSynthetic
-    fun addCellBuilder(index: Int, block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
-        columnsBuilder.columnBuilders[index].let { column ->
+    fun addCellBuilder(index: Int, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
+        columnsBuilderState.columnBuilderStates[index].let { column ->
             ensureCellBuilder(column.id).apply(block)
                 .also {
                     cellIndex.set(index)
@@ -327,12 +337,12 @@ class CellsBuilder<T> private constructor(
         }
 
     @JvmSynthetic
-    fun addCellBuilder(block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
+    fun addCellBuilder(block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
         addCellBuilder(index = currCellIndex(), block)
 
 
     @JvmSynthetic
-    fun addCellBuilder(ref: ColRefId<T>, block: DslBlock<CellBuilder<T>>): CellBuilder<T> =
+    fun addCellBuilder(ref: ColRefId<T>, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
         ensureCellBuilder(ColumnKey(ref = ref)).apply(block)
             .also { nextCellIndex() }
 
@@ -342,22 +352,21 @@ class CellsBuilder<T> private constructor(
         return cells.map { it.key to it.value.build() }.toMap()
     }
 
-    @JvmSynthetic
-    private fun ensureCellBuilder(key: ColumnKey<T>): CellBuilder<T> =
-        cells.entries.find { it.key == key }?.value ?: CellBuilder.new<T>().let {
+    private fun ensureCellBuilder(key: ColumnKey<T>): CellBuilderState<T> =
+        cells.entries.find { it.key == key }?.value ?: CellBuilderState.new<T>().let {
             cellIndex.set(cells.entries.size)
             cells[key] = it
             it
         }
 
-    private fun columnIdByIndex(index: Int): ColumnKey<T> = columnsBuilder.columnBuilders[index].id
+    private fun columnIdByIndex(index: Int): ColumnKey<T> = columnsBuilderState.columnBuilderStates[index].id
 
     private fun columnSpanByIndex(index: Int): Int = cells[columnIdByIndex(index)]?.colSpan ?: 1
 
     private fun rowSpanOffsetByIndex(index: Int): Int = interceptedRowSpans[columnIdByIndex(index)] ?: 0
 
     private fun currCellIndex(): Int {
-        while (rowSpanOffsetByIndex(cellIndex.get()) > 0 && cellIndex.get() < columnsBuilder.columnBuilders.size - 1) {
+        while (rowSpanOffsetByIndex(cellIndex.get()) > 0 && cellIndex.get() < columnsBuilderState.columnBuilderStates.size - 1) {
             cellIndex.getAndIncrement()
         }
         return cellIndex.get()
@@ -370,29 +379,34 @@ class CellsBuilder<T> private constructor(
     companion object {
         @JvmSynthetic
         internal fun <T> new(
-            columnsBuilder: ColumnsBuilder<T>,
+            columnsBuilderState: ColumnsBuilderState<T>,
             interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
             cellIndex: AtomicInteger,
-            cells: MutableMap<ColumnKey<T>, CellBuilder<T>>,
-        ): CellsBuilder<T> = CellsBuilder(columnsBuilder, interceptedRowSpans, cellIndex, cells)
+            cells: MutableMap<ColumnKey<T>, CellBuilderState<T>>,
+        ): CellsBuilderState<T> = CellsBuilderState(columnsBuilderState, interceptedRowSpans, cellIndex, cells)
     }
 }
 
-class CellBuilder<T> private constructor() : AttributesAwareBuilder<CellDef<T>>() {
+internal class CellBuilderState<T> private constructor() : AttributesAwareBuilder<CellDef<T>>() {
 
-    @JvmSynthetic
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     var value: Any? = null
 
-    @JvmSynthetic
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     var expression: RowCellExpression<T>? = null
 
-    @JvmSynthetic
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     var type: CellType? = null
 
-    @JvmSynthetic
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     var colSpan: Int = 1
 
-    @JvmSynthetic
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     var rowSpan: Int = 1
 
     @JvmSynthetic
@@ -404,7 +418,7 @@ class CellBuilder<T> private constructor() : AttributesAwareBuilder<CellDef<T>>(
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(): CellBuilder<T> = CellBuilder()
+        internal fun <T> new(): CellBuilderState<T> = CellBuilderState()
     }
 
 }

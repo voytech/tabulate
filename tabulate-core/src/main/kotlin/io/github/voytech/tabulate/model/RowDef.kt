@@ -5,24 +5,34 @@ import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.template.context.CellValue
 import java.util.function.Predicate
 
-data class RowDef<T> internal constructor(
-    val qualifier: RowQualifier<T>,
-    val rowAttributes: Set<RowAttribute>?,
-    val cellAttributes: Set<CellAttribute>?,
-    val cells: Map<ColumnKey<T>, CellDef<T>>?,
+internal data class RowDef<T> internal constructor(
+    @get:JvmSynthetic
+    internal val qualifier: RowQualifier<T>,
+    @get:JvmSynthetic
+    internal val rowAttributes: Set<RowAttribute>?,
+    @get:JvmSynthetic
+    internal val cellAttributes: Set<CellAttribute>?,
+    @get:JvmSynthetic
+    internal val cells: Map<ColumnKey<T>, CellDef<T>>?,
 ) {
-    fun shouldApplyWhen(source: SourceRow<T>): Boolean = qualifier.applyWhen?.test(source) ?: false
-    fun shouldInsertRow(source: SourceRow<T>): Boolean = qualifier.createWhen?.test(source) ?: false
-    fun isApplicable(source: SourceRow<T>): Boolean = shouldApplyWhen(source) || shouldInsertRow(source)
+    @JvmSynthetic
+    internal fun shouldApplyWhen(source: SourceRow<T>): Boolean = qualifier.applyWhen?.test(source) ?: false
+    @JvmSynthetic
+    internal fun shouldInsertRow(source: SourceRow<T>): Boolean = qualifier.createWhen?.test(source) ?: false
+    @JvmSynthetic
+    internal fun isApplicable(source: SourceRow<T>): Boolean = shouldApplyWhen(source) || shouldInsertRow(source)
 }
 
-fun <T> Collection<RowDef<T>>.flattenRowAttributes(): Set<RowAttribute> =
+@JvmSynthetic
+internal fun <T> Collection<RowDef<T>>.flattenRowAttributes(): Set<RowAttribute> =
     mapNotNull { it.rowAttributes }.fold(setOf()) { acc, r -> acc + r }
 
-fun <T> Collection<RowDef<T>>.flattenCellAttributes(): Set<CellAttribute> =
+@JvmSynthetic
+internal fun <T> Collection<RowDef<T>>.flattenCellAttributes(): Set<CellAttribute> =
     mapNotNull { it.cellAttributes }.fold(setOf()) { acc, r -> acc + r }
 
-fun <T> Collection<RowDef<T>>.mergeCells(): Map<ColumnKey<T>, CellDef<T>> =
+@JvmSynthetic
+internal fun <T> Collection<RowDef<T>>.mergeCells(): Map<ColumnKey<T>, CellDef<T>> =
     mapNotNull { it.cells }.fold(mapOf()) { acc, m -> acc + m }
 
 fun interface RowPredicate<T> : Predicate<SourceRow<T>>

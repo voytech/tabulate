@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.template.operations
 
-import io.github.voytech.tabulate.api.builder.TableBuilder
+import io.github.voytech.tabulate.api.builder.TableBuilderState
 import io.github.voytech.tabulate.api.builder.TableBuilderTransformer
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
@@ -8,16 +8,8 @@ import io.github.voytech.tabulate.model.attributes.RowAttribute
 import io.github.voytech.tabulate.model.attributes.TableAttribute
 import io.github.voytech.tabulate.template.context.*
 
-interface BasicContextExportOperations<T> {
-    fun createTable(context: TableContext) {}
-    fun renderColumn(context: ColumnContext) {}
-    fun beginRow(context: RowContext<T>) {}
-    fun renderRowCell(context: RowCellContext)
-    fun endRow(context: RowContextWithCells<T>) {}
-}
-
 @Suppress("UNCHECKED_CAST")
-class AttributeAwareTableExportOperations<T>(
+internal class AttributeAwareTableExportOperations<T>(
     private val attributeOperations: AttributesOperations<T>,
     private val baseTableExportOperations: BasicContextExportOperations<T>,
     private val enableAttributeSetCaching: Boolean = true
@@ -44,24 +36,24 @@ class AttributeAwareTableExportOperations<T>(
         return rowAttributes.toSortedSet(compareBy { attributeOperations.getRowAttributeOperation(it.javaClass)?.priority() ?: 0 })
     }
 
-    private fun withAllAttributesOperationSorted(builder: TableBuilder<T>): TableBuilder<T> {
-        builder.columnsBuilder.columnBuilders.forEach { columnBuilder ->
+    private fun withAllAttributesOperationSorted(builderState: TableBuilderState<T>): TableBuilderState<T> {
+        builderState.columnsBuilderState.columnBuilderStates.forEach { columnBuilder ->
             columnBuilder.visit(CellAttribute::class.java) { sortedCellAttributes(it) }
             columnBuilder.visit(ColumnAttribute::class.java) { sortedColumnAttributes(it) }
         }
-        builder.rowsBuilder.rowBuilders.forEach { rowBuilder ->
+        builderState.rowsBuilderState.rowBuilderStates.forEach { rowBuilder ->
             rowBuilder.visit(CellAttribute::class.java) { sortedCellAttributes(it) }
             rowBuilder.visit(RowAttribute::class.java) { sortedRowAttributes(it) }
             rowBuilder.cells.forEach { (_, cellBuilder) ->
                 cellBuilder.visit(CellAttribute::class.java) { sortedCellAttributes(it) }
             }
         }
-        builder.visit(TableAttribute::class.java) { sortedTableAttributes(it) }
-        builder.visit(CellAttribute::class.java) { sortedCellAttributes(it) }
-        return builder
+        builderState.visit(TableAttribute::class.java) { sortedTableAttributes(it) }
+        builderState.visit(CellAttribute::class.java) { sortedCellAttributes(it) }
+        return builderState
     }
 
-    override fun transform(builder: TableBuilder<T>): TableBuilder<T> = withAllAttributesOperationSorted(builder)
+    override fun transform(builderState: TableBuilderState<T>): TableBuilderState<T> = withAllAttributesOperationSorted(builderState)
 
     override fun createTable(context: AttributedTable) {
         with(context.crop()) {

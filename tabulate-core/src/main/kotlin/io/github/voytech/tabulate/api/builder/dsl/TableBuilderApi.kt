@@ -13,8 +13,8 @@ import kotlin.reflect.KProperty1
 annotation class TabulateMarker
 
 @JvmSynthetic
-internal fun <T> createTableBuilder(block: TableBuilderApi<T>.() -> Unit): TableBuilder<T> {
-    return TableBuilder<T>().also {
+internal fun <T> createTableBuilder(block: TableBuilderApi<T>.() -> Unit): TableBuilderState<T> {
+    return TableBuilderState<T>().also {
         TableBuilderApi.new(it).apply(block)
     }
 }
@@ -34,199 +34,197 @@ operator fun <T> (TableBuilderApi<T>.() -> Unit).plus(block : TableBuilderApi<T>
 }
 
 @TabulateMarker
-class TableLevelAttributesBuilderApi<T> internal constructor(private val builder: TableBuilder<T>) {
+class TableLevelAttributesBuilderApi<T> internal constructor(private val builderState: TableBuilderState<T>) {
 
     @JvmSynthetic
     fun attribute(attribute: AttributeBuilder<*>) {
-        builder.attribute(attribute)
+        builderState.attribute(attribute)
     }
 
 }
 
 @TabulateMarker
-class ColumnLevelAttributesBuilderApi<T> internal constructor(private val builder: ColumnBuilder<T>) {
+class ColumnLevelAttributesBuilderApi<T> internal constructor(private val builderState: ColumnBuilderState<T>) {
 
     @JvmSynthetic
     fun <B: ColumnAttributeBuilder<A>,A: ColumnAttribute<A>> attribute(attributeBuilder: B) {
-        builder.attribute(attributeBuilder)
+        builderState.attribute(attributeBuilder)
     }
 
     @JvmSynthetic
     fun <B: CellAttributeBuilder<A>,A: CellAttribute<A>> attribute(attributeBuilder: B) {
-        builder.attribute(attributeBuilder)
+        builderState.attribute(attributeBuilder)
     }
 
 }
 
 @TabulateMarker
-class RowLevelAttributesBuilderApi<T> internal constructor(private val builder: RowBuilder<T>) {
+class RowLevelAttributesBuilderApi<T> internal constructor(private val builderState: RowBuilderState<T>) {
 
     @JvmSynthetic
     fun <B: RowAttributeBuilder<A>,A: RowAttribute<A>> attribute(attributeBuilder: B) {
-        builder.attribute(attributeBuilder)
+        builderState.attribute(attributeBuilder)
     }
 
     @JvmSynthetic
     fun <B: CellAttributeBuilder<A>,A: CellAttribute<A>> attribute(attributeBuilder: B) {
-        builder.attribute(attributeBuilder)
+        builderState.attribute(attributeBuilder)
     }
 }
 
 @TabulateMarker
-class CellLevelAttributesBuilderApi<T> internal constructor(private val builder: CellBuilder<T>) {
+class CellLevelAttributesBuilderApi<T> internal constructor(private val builderState: CellBuilderState<T>) {
     @JvmSynthetic
     fun <B: CellAttributeBuilder<A>,A: CellAttribute<A>> attribute(attributeBuilder: B) {
-        builder.attribute(attributeBuilder)
+        builderState.attribute(attributeBuilder)
     }
 }
 
 
 @TabulateMarker
-class TableBuilderApi<T> private constructor(private val builder: TableBuilder<T>)  {
+class TableBuilderApi<T> private constructor(private val builderState: TableBuilderState<T>)  {
 
     @set:JvmSynthetic
-    var name: String by this.builder::name
+    var name: String by this.builderState::name
 
     @set:JvmSynthetic
-    var firstRow: Int? by this.builder::firstRow
+    var firstRow: Int? by this.builderState::firstRow
 
     @set:JvmSynthetic
-    var firstColumn: Int? by this.builder::firstColumn
+    var firstColumn: Int? by this.builderState::firstColumn
 
     @JvmSynthetic
     fun columns(block: ColumnsBuilderApi<T>.() -> Unit) {
-        ColumnsBuilderApi(builder.columnsBuilder).apply(block)
+        ColumnsBuilderApi(builderState.columnsBuilderState).apply(block)
     }
 
     @JvmSynthetic
     fun rows(block: RowsBuilderApi<T>.() -> Unit) {
-        RowsBuilderApi(builder.rowsBuilder).apply(block)
+        RowsBuilderApi(builderState.rowsBuilderState).apply(block)
     }
 
     @JvmSynthetic
     fun attributes(block: TableLevelAttributesBuilderApi<T>.() -> Unit) {
-        TableLevelAttributesBuilderApi(builder).apply(block)
+        TableLevelAttributesBuilderApi(builderState).apply(block)
     }
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(builder: TableBuilder<T>): TableBuilderApi<T> = TableBuilderApi(builder)
+        internal fun <T> new(builderState: TableBuilderState<T>): TableBuilderApi<T> = TableBuilderApi(builderState)
     }
 
 }
 
 @TabulateMarker
-class ColumnsBuilderApi<T> internal constructor(private val builder: ColumnsBuilder<T>)  {
+class ColumnsBuilderApi<T> internal constructor(private val builderState: ColumnsBuilderState<T>)  {
 
     @set:JvmSynthetic
-    var count: Int? by this.builder::count
+    var count: Int? by this.builderState::count
 
     @JvmSynthetic
     fun column(id: String) {
-        builder.addColumnBuilder(id) {}
+        builderState.addColumnBuilder(id) {}
     }
 
     @JvmSynthetic
     fun column(id: String, block: ColumnBuilderApi<T>.() -> Unit) {
-        builder.addColumnBuilder(id) {
+        builderState.addColumnBuilder(id) {
             ColumnBuilderApi.new(it).apply(block)
         }
     }
 
     @JvmSynthetic
     fun column(id: String, block: Consumer<ColumnBuilderApi<T>>) {
-        builder.addColumnBuilder(id) {
+        builderState.addColumnBuilder(id) {
             block.accept(ColumnBuilderApi.new(it))
         }
     }
 
     @JvmSynthetic
     fun column(ref: KProperty1<T,Any?>, block: ColumnBuilderApi<T>.() -> Unit) {
-        builder.addColumnBuilder(ref.id()) {
+        builderState.addColumnBuilder(ref.id()) {
             ColumnBuilderApi.new(it).apply(block)
         }
     }
 
     @JvmSynthetic
     fun column(ref: KProperty1<T,Any?>) {
-        builder.addColumnBuilder(ref.id()) { }
+        builderState.addColumnBuilder(ref.id()) { }
     }
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(builder: ColumnsBuilder<T>): ColumnsBuilderApi<T> = ColumnsBuilderApi(builder)
+        internal fun <T> new(builderState: ColumnsBuilderState<T>): ColumnsBuilderApi<T> = ColumnsBuilderApi(builderState)
     }
 }
 
 @TabulateMarker
-class ColumnBuilderApi<T> private constructor(private val builder: ColumnBuilder<T>)   {
-    @set:JvmSynthetic
-    var id: ColumnKey<T> by builder::id
+class ColumnBuilderApi<T> private constructor(private val builderState: ColumnBuilderState<T>)   {
 
     @set:JvmSynthetic
-    var columnType: CellType? by builder::columnType
+    var columnType: CellType? by builderState::columnType
 
     @set:JvmSynthetic
-    var index: Int?  by builder::index
+    var index: Int?  by builderState::index
 
     @JvmSynthetic
     fun attributes(block: ColumnLevelAttributesBuilderApi<T>.() -> Unit) {
-        ColumnLevelAttributesBuilderApi(builder).apply(block)
+        ColumnLevelAttributesBuilderApi(builderState).apply(block)
     }
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(builder: ColumnBuilder<T>): ColumnBuilderApi<T> = ColumnBuilderApi(builder)
+        internal fun <T> new(builderState: ColumnBuilderState<T>): ColumnBuilderApi<T> = ColumnBuilderApi(builderState)
     }
 }
 
 @TabulateMarker
-class RowsBuilderApi<T> internal constructor(private val builder: RowsBuilder<T>)  {
+class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuilderState<T>)  {
 
     @JvmSynthetic
     fun row(block: RowBuilderApi<T>.() -> Unit) {
-        builder.addRowBuilder { RowBuilderApi.new(it).apply(block) }
+        builderState.addRowBuilder { RowBuilderApi.new(it).apply(block) }
     }
 
     @JvmSynthetic
     fun row(at: Int, block: RowBuilderApi<T>.() -> Unit) {
-        builder.addRowBuilder(RowIndexDef(at)) {
+        builderState.addRowBuilder(RowIndexDef(at)) {
             RowBuilderApi.new(it).apply(block)
         }
     }
 
     @JvmSynthetic
     fun row(at: Int, label: DefaultSteps, block: RowBuilderApi<T>.() -> Unit) {
-        builder.addRowBuilder(RowIndexDef(at,label.name)) {
+        builderState.addRowBuilder(RowIndexDef(at,label.name)) {
             RowBuilderApi.new(it).apply(block)
         }
     }
 
     @JvmSynthetic
     fun row(label: DefaultSteps, block: RowBuilderApi<T>.() -> Unit) {
-        builder.addRowBuilder(label) {
+        builderState.addRowBuilder(label) {
             RowBuilderApi.new(it).apply(block)
         }
     }
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(builder: RowsBuilder<T>): RowsBuilderApi<T> = RowsBuilderApi(builder)
+        internal fun <T> new(builderState: RowsBuilderState<T>): RowsBuilderApi<T> = RowsBuilderApi(builderState)
     }
 }
 
 @TabulateMarker
-class RowBuilderApi<T> private constructor(private val builder: RowBuilder<T>)  {
+class RowBuilderApi<T> private constructor(private val builderState: RowBuilderState<T>)  {
 
     @JvmSynthetic
-    fun matching(predicate : RowPredicate<T>) = apply { builder.qualifier = RowQualifier(applyWhen = predicate) }
+    fun matching(predicate : RowPredicate<T>) = apply { builderState.qualifier = RowQualifier(applyWhen = predicate) }
 
     @JvmSynthetic
-    fun insertWhen(predicate : RowPredicate<T>) = apply { builder.qualifier = RowQualifier(createWhen = predicate) }
+    fun insertWhen(predicate : RowPredicate<T>) = apply { builderState.qualifier = RowQualifier(createWhen = predicate) }
 
     @JvmSynthetic
     fun cells(block: CellsBuilderApi<T>.() -> Unit) {
-        CellsBuilderApi.new(builder.cellsBuilder).apply(block)
+        CellsBuilderApi.new(builderState.cellsBuilderState).apply(block)
     }
 
     @JvmSynthetic
@@ -259,69 +257,77 @@ class RowBuilderApi<T> private constructor(private val builder: RowBuilder<T>)  
 
     @JvmSynthetic
     fun attributes(block: RowLevelAttributesBuilderApi<T>.() -> Unit) {
-        RowLevelAttributesBuilderApi(builder).apply(block)
+        RowLevelAttributesBuilderApi(builderState).apply(block)
     }
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(builder: RowBuilder<T>): RowBuilderApi<T> = RowBuilderApi(builder)
+        internal fun <T> new(builderState: RowBuilderState<T>): RowBuilderApi<T> = RowBuilderApi(builderState)
     }
 }
 
 @TabulateMarker
-class CellsBuilderApi<T> private constructor(private val builder: CellsBuilder<T>) {
+class CellsBuilderApi<T> private constructor(private val builderState: CellsBuilderState<T>) {
 
     @JvmSynthetic
-    fun cell(id: String, block: CellBuilderApi<T>.() -> Unit) = builder.addCellBuilder(id) {
-        CellBuilderApi.new(it).apply(block)
+    fun cell(id: String, block: CellBuilderApi<T>.() -> Unit) {
+        builderState.addCellBuilder(id) {
+            CellBuilderApi.new(it).apply(block)
+        }
     }
 
     @JvmSynthetic
-    fun cell(index: Int, block: CellBuilderApi<T>.() -> Unit) = builder.addCellBuilder(index) {
-        CellBuilderApi.new(it).apply(block)
+    fun cell(index: Int, block: CellBuilderApi<T>.() -> Unit) {
+        builderState.addCellBuilder(index) {
+            CellBuilderApi.new(it).apply(block)
+        }
     }
 
     @JvmSynthetic
-    fun cell(block: CellBuilderApi<T>.() -> Unit) = builder.addCellBuilder {
-        CellBuilderApi.new(it).apply(block)
+    fun cell(block: CellBuilderApi<T>.() -> Unit) {
+        builderState.addCellBuilder {
+            CellBuilderApi.new(it).apply(block)
+        }
     }
 
     @JvmSynthetic
-    fun cell(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) = builder.addCellBuilder(ref.id()) {
-        CellBuilderApi.new(it).apply(block)
+    fun cell(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
+        builderState.addCellBuilder(ref.id()) {
+            CellBuilderApi.new(it).apply(block)
+        }
     }
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(builder: CellsBuilder<T>): CellsBuilderApi<T> = CellsBuilderApi(builder)
+        internal fun <T> new(builderState: CellsBuilderState<T>): CellsBuilderApi<T> = CellsBuilderApi(builderState)
     }
 }
 
 @TabulateMarker
-class CellBuilderApi<T> private constructor(private val builder: CellBuilder<T>) {
+class CellBuilderApi<T> private constructor(private val builderState: CellBuilderState<T>) {
 
     @set:JvmSynthetic
-    var value: Any? by builder::value
+    var value: Any? by builderState::value
 
     @set:JvmSynthetic
-    var expression: RowCellExpression<T>? by builder::expression
+    var expression: RowCellExpression<T>? by builderState::expression
 
     @set:JvmSynthetic
-    var type: CellType? by builder::type
+    var type: CellType? by builderState::type
 
     @set:JvmSynthetic
-    var colSpan: Int by builder::colSpan
+    var colSpan: Int by builderState::colSpan
 
     @set:JvmSynthetic
-    var rowSpan: Int by builder::rowSpan
+    var rowSpan: Int by builderState::rowSpan
 
     @JvmSynthetic
     fun attributes(block: CellLevelAttributesBuilderApi<T>.() -> Unit) {
-        CellLevelAttributesBuilderApi(builder).apply(block)
+        CellLevelAttributesBuilderApi(builderState).apply(block)
     }
 
     companion object {
         @JvmSynthetic
-        internal fun <T> new(builder: CellBuilder<T>): CellBuilderApi<T> = CellBuilderApi(builder)
+        internal fun <T> new(builderState: CellBuilderState<T>): CellBuilderApi<T> = CellBuilderApi(builderState)
     }
 }

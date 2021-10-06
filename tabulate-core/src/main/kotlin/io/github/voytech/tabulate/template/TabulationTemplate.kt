@@ -1,9 +1,10 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.api.builder.TableBuilder
+import io.github.voytech.tabulate.api.builder.TableBuilderState
 import io.github.voytech.tabulate.api.builder.TableBuilderTransformer
 import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
+import io.github.voytech.tabulate.api.builder.fluent.FluentTableBuilderApi
 import io.github.voytech.tabulate.model.ColumnDef
 import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
 import io.github.voytech.tabulate.template.context.*
@@ -18,7 +19,6 @@ import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
-import io.github.voytech.tabulate.api.builder.fluent.TableBuilder as FluentTableBuilderApi
 
 /**
  * [TabulationApi] An API enabling interactive table export.
@@ -60,7 +60,7 @@ interface TabulationApi<T, O> {
  * - [TabulationTemplate.export] - export collection of objects.
  * - [TabulationTemplate.create] - create and return [TabulationApi] for 'interactive' exporting.
  * And following convenience extension methods:
- * - [TableBuilder.export] for exporting fully user defined table.
+ * - [TableBuilderState.export] for exporting fully user defined table.
  * - [Iterable.tabulate] for tabulating collection of objects. The process is called 'tabulate' to emphasize
  * its behaviour - taking a source and making a table from it.
  * @author Wojciech Mąka
@@ -111,16 +111,16 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun transform(tableBuilder: TableBuilder<T>): TableBuilder<T> {
+    private fun transform(tableBuilderState: TableBuilderState<T>): TableBuilderState<T> {
         return (resolveBuilderTransformers() + ops.takeIf {
             it is TableBuilderTransformer<*>
         }).filterNotNull()
             .map { it as TableBuilderTransformer<T> }
-            .fold(tableBuilder) { builder, transformer -> transformer.transform(builder) }
+            .fold(tableBuilderState) { builder, transformer -> transformer.transform(builder) }
     }
 
-    private fun materialize(tableBuilder: TableBuilder<T>): TabulationState<T> {
-        return transform(tableBuilder).build().let { table ->
+    private fun materialize(tableBuilderState: TableBuilderState<T>): TabulationState<T> {
+        return transform(tableBuilderState).build().let { table ->
             TabulationState(
                 tableModel = table,
                 tableName = table.name,
@@ -218,7 +218,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
      */
     fun <O> create(output: O, builder: FluentTableBuilderApi<T>): TabulationApi<T, O> {
         return TabulationApiImpl(
-            materialize(builder.builderState),
+            materialize(builder.root()),
             output
         )
     }
@@ -251,7 +251,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 }
 
 /**
- * Extension function invoked on a [TableBuilder], which takes [TabulationFormat] and output handler
+ * Extension function invoked on a [TableBuilderState], which takes [TabulationFormat] and output handler
  *
  * @param format identifier of [ExportOperationsProvider] to export table to specific file format (xlsx, pdf).
  * @param output output binding - may be e.g. OutputStream.
@@ -267,7 +267,7 @@ fun File.tabulationFormat(provider: String? = null) =
     } else throw UnknownTabulationFormatException()
 
 /**
- * Extension function invoked on a [TableBuilder], which takes output [file].
+ * Extension function invoked on a [TableBuilderState], which takes output [file].
  *
  * @param file A [File].
  * @receiver top level DSL table builder.
@@ -281,7 +281,7 @@ fun <T> (TableBuilderApi<T>.() -> Unit).export(file: File) {
 }
 
 /**
- * Extension function invoked on a [TableBuilder], which takes [fileName].
+ * Extension function invoked on a [TableBuilderState], which takes [fileName].
  *
  * @param fileName A path of an output file.
  * @receiver top level DSL table builder.

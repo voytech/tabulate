@@ -11,6 +11,10 @@ class TabulationFormat(
     val provider: String? = null,
 ) {
     companion object {
+        @JvmStatic
         fun format(formatId: String, provider: String? = null): TabulationFormat = TabulationFormat(formatId, provider)
+
+        @JvmStatic
+        fun format(formatId: String): TabulationFormat = TabulationFormat(formatId)
     }
 }

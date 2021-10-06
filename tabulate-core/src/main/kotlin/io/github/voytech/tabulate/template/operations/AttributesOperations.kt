@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
 import java.util.logging.Logger
 
 @Suppress("UNCHECKED_CAST")
-class AttributesOperations<T> {
+internal class AttributesOperations<T> {
 
     private val tableAttributeRenderOperationsByClass: MutableMap<Class<out TableAttribute>, TableAttributeRenderOperation<out TableAttribute>> = mutableMapOf()
 

@@ -26,9 +26,9 @@ data class RowIndex(
 
     override fun compareTo(other: RowIndex): Int = rowIndex.compareTo(other.rowIndex)
 
-    operator fun plus(increment: Int): RowIndex = RowIndex(rowIndex + increment, labels + increment)
+    internal operator fun plus(increment: Int): RowIndex = RowIndex(rowIndex + increment, labels + increment)
 
-    operator fun plus(increment: RowIndexDef): RowIndex {
+    internal operator fun plus(increment: RowIndexDef): RowIndex {
         return increment.offsetLabel?.let {
             RowIndex(
                 rowIndex = rowIndex + increment.index,
@@ -39,15 +39,15 @@ data class RowIndex(
         } ?: RowIndex(increment.index)
     }
 
-    operator fun inc(): RowIndex = RowIndex(rowIndex = rowIndex + 1, labels + 1)
+    internal operator fun inc(): RowIndex = RowIndex(rowIndex = rowIndex + 1, labels + 1)
 }
 
-operator fun Map<String, IndexMarker>.inc(): Map<String, IndexMarker> = mapValues { it.value + 1 }
+internal operator fun Map<String, IndexMarker>.inc(): Map<String, IndexMarker> = mapValues { it.value + 1 }
 
-operator fun Map<String, IndexMarker>.plus(increment: Int): Map<String, IndexMarker> =
+internal operator fun Map<String, IndexMarker>.plus(increment: Int): Map<String, IndexMarker> =
     mapValues { it.value + increment }
 
-class MutableRowIndex {
+internal class MutableRowIndex {
     var rowIndex: Int = 0
     private val labels: MutableMap<String, IndexMarker> = mutableMapOf()
 

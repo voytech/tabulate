@@ -56,8 +56,11 @@ class TestExportOperationsFactory<T>: ExportOperationsProvider<T> {
 
 
     companion object {
+        @JvmStatic
         var cellTest: AttributedCellTest? = null
+        @JvmStatic
         var rowTest: AttributedRowTest? = null
+        @JvmStatic
         var columnTest: AttributedColumnTest? = null
 
         fun clear() {
