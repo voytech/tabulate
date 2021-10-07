@@ -65,10 +65,10 @@ sealed class AttributesAwareBuilder<T>: Builder<T>() {
 internal class TableBuilderState<T> : AttributesAwareBuilder<Table<T>>() {
 
     @get:JvmSynthetic
-    internal val columnsBuilderState: ColumnsBuilderState<T> = ColumnsBuilderState.new()
+    internal val columnsBuilderState: ColumnsBuilderState<T> = ColumnsBuilderState()
 
     @get:JvmSynthetic
-    internal val rowsBuilderState: RowsBuilderState<T> = RowsBuilderState.new(columnsBuilderState)
+    internal val rowsBuilderState: RowsBuilderState<T> = RowsBuilderState(columnsBuilderState)
 
     @get:JvmSynthetic
     @set:JvmSynthetic
@@ -99,7 +99,7 @@ internal class TableBuilderState<T> : AttributesAwareBuilder<Table<T>>() {
 
 }
 
-internal class ColumnsBuilderState<T> private constructor() : Builder<List<ColumnDef<T>>>() {
+internal class ColumnsBuilderState<T>: Builder<List<ColumnDef<T>>>() {
 
     @get:JvmSynthetic
     val columnBuilderStates: MutableList<ColumnBuilderState<T>> = mutableListOf()
@@ -107,9 +107,7 @@ internal class ColumnsBuilderState<T> private constructor() : Builder<List<Colum
     @get:JvmSynthetic
     @set:JvmSynthetic
     var count: Int?
-        get() {
-            return columnBuilderStates.size
-        }
+        get() = columnBuilderStates.size
         set(value) {
             resize(value)
         }
@@ -129,7 +127,7 @@ internal class ColumnsBuilderState<T> private constructor() : Builder<List<Colum
         }
 
     private fun ensureColumnBuilder(key: ColumnKey<T>): ColumnBuilderState<T> =
-        columnBuilderStates.find { it.id == key } ?: ColumnBuilderState.new<T>().let {
+        columnBuilderStates.find { it.id == key } ?: ColumnBuilderState<T>().let {
             columnBuilderStates.add(it.apply { it.id = key })
             it
         }
@@ -151,13 +149,9 @@ internal class ColumnsBuilderState<T> private constructor() : Builder<List<Colum
         return columnBuilderStates.map { it.build() }
     }
 
-    companion object {
-        @JvmSynthetic
-        internal fun <T> new(): ColumnsBuilderState<T> = ColumnsBuilderState()
-    }
 }
 
-internal class ColumnBuilderState<T> private constructor() : AttributesAwareBuilder<ColumnDef<T>>() {
+internal class ColumnBuilderState<T>: AttributesAwareBuilder<ColumnDef<T>>() {
 
     @get:JvmSynthetic
     @set:JvmSynthetic
@@ -184,13 +178,9 @@ internal class ColumnBuilderState<T> private constructor() : AttributesAwareBuil
         getAttributesByClass(CellAttribute::class.java)
     )
 
-    companion object {
-        @JvmSynthetic
-        internal fun <T> new(): ColumnBuilderState<T> = ColumnBuilderState()
-    }
 }
 
-internal class RowsBuilderState<T> private constructor(private val columnsBuilderState: ColumnsBuilderState<T>) : Builder<List<RowDef<T>>>() {
+internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuilderState<T>) : Builder<List<RowDef<T>>>() {
 
     @get:JvmSynthetic
     val rowBuilderStates: MutableList<RowBuilderState<T>> = mutableListOf()
@@ -265,13 +255,9 @@ internal class RowsBuilderState<T> private constructor(private val columnsBuilde
         return rowBuilderStates.sortedWith(compareBy(nullsLast()) { it.qualifier.createAt })
     }
 
-    companion object {
-        @JvmSynthetic
-        internal fun <T> new(columnsBuilderState: ColumnsBuilderState<T>): RowsBuilderState<T> = RowsBuilderState(columnsBuilderState)
-    }
 }
 
-internal class RowBuilderState<T> private constructor(
+internal class RowBuilderState<T>(
     columnsBuilderState: ColumnsBuilderState<T>,
     interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
 ) : AttributesAwareBuilder<RowDef<T>>() {
@@ -283,7 +269,7 @@ internal class RowBuilderState<T> private constructor(
     private val cellIndex: AtomicInteger = AtomicInteger(0)
 
     @get:JvmSynthetic
-    val cellsBuilderState: CellsBuilderState<T> = CellsBuilderState.new(columnsBuilderState, interceptedRowSpans, cellIndex, cells)
+    val cellsBuilderState: CellsBuilderState<T> = CellsBuilderState(columnsBuilderState, interceptedRowSpans, cellIndex, cells)
 
     @get:JvmSynthetic
     @set:JvmSynthetic
@@ -314,7 +300,7 @@ internal class RowBuilderState<T> private constructor(
     }
 }
 
-internal class CellsBuilderState<T> private constructor(
+internal class CellsBuilderState<T>(
     private val columnsBuilderState: ColumnsBuilderState<T>,
     private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
     private var cellIndex: AtomicInteger,
@@ -338,7 +324,7 @@ internal class CellsBuilderState<T> private constructor(
 
     @JvmSynthetic
     fun addCellBuilder(block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
-        addCellBuilder(index = currCellIndex(), block)
+        addCellBuilder(index = currentCellIndex(), block)
 
 
     @JvmSynthetic
@@ -353,10 +339,16 @@ internal class CellsBuilderState<T> private constructor(
     }
 
     private fun ensureCellBuilder(key: ColumnKey<T>): CellBuilderState<T> =
-        cells.entries.find { it.key == key }?.value ?: CellBuilderState.new<T>().let {
+        //TODO validate if does not clash with row span on column from previous rows.
+        cells.find(key) ?: newCellBuilder(key)
+
+    private fun MutableMap<ColumnKey<T>, CellBuilderState<T>>.find(key: ColumnKey<T>): CellBuilderState<T>? =
+        this.entries.find { it.key == key }?.value
+
+    private fun newCellBuilder(key: ColumnKey<T>): CellBuilderState<T> =
+        CellBuilderState<T>().also {
             cellIndex.set(cells.entries.size)
             cells[key] = it
-            it
         }
 
     private fun columnIdByIndex(index: Int): ColumnKey<T> = columnsBuilderState.columnBuilderStates[index].id
@@ -365,7 +357,7 @@ internal class CellsBuilderState<T> private constructor(
 
     private fun rowSpanOffsetByIndex(index: Int): Int = interceptedRowSpans[columnIdByIndex(index)] ?: 0
 
-    private fun currCellIndex(): Int {
+    private fun currentCellIndex(): Int {
         while (rowSpanOffsetByIndex(cellIndex.get()) > 0 && cellIndex.get() < columnsBuilderState.columnBuilderStates.size - 1) {
             cellIndex.getAndIncrement()
         }
@@ -376,18 +368,9 @@ internal class CellsBuilderState<T> private constructor(
         cellIndex.addAndGet(columnSpanByIndex(cellIndex.get()))
     }
 
-    companion object {
-        @JvmSynthetic
-        internal fun <T> new(
-            columnsBuilderState: ColumnsBuilderState<T>,
-            interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
-            cellIndex: AtomicInteger,
-            cells: MutableMap<ColumnKey<T>, CellBuilderState<T>>,
-        ): CellsBuilderState<T> = CellsBuilderState(columnsBuilderState, interceptedRowSpans, cellIndex, cells)
-    }
 }
 
-internal class CellBuilderState<T> private constructor() : AttributesAwareBuilder<CellDef<T>>() {
+internal class CellBuilderState<T>: AttributesAwareBuilder<CellDef<T>>() {
 
     @get:JvmSynthetic
     @set:JvmSynthetic
@@ -415,12 +398,6 @@ internal class CellBuilderState<T> private constructor() : AttributesAwareBuilde
 
     @JvmSynthetic
     fun <A : CellAttribute<A>, B: CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
-
-    companion object {
-        @JvmSynthetic
-        internal fun <T> new(): CellBuilderState<T> = CellBuilderState()
-    }
-
 }
 
 abstract class AttributeBuilder<T : Attribute<*>> : Builder<T>() {
