@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.api.builder.dsl.Table
 import io.github.voytech.tabulate.api.builder.dsl.footer
 import io.github.voytech.tabulate.api.builder.dsl.header
 import io.github.voytech.tabulate.api.builder.dsl.rowNumberingOn
-import io.github.voytech.tabulate.api.qualifer.RowPredicates.allRows
+import io.github.voytech.tabulate.api.builder.RowPredicates.allRows
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
 import io.github.voytech.tabulate.excel.model.attributes.dataFormat

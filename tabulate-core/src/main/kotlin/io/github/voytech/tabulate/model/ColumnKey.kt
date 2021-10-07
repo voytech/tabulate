@@ -6,7 +6,7 @@ data class ColumnKey<T> internal constructor(
     @get:JvmSynthetic
     internal val id: String? = null,
     @get:JvmSynthetic
-    internal val ref: ColRefId<T>? = null
+    internal val ref: PropertyBindingKey<T>? = null
 ) {
     companion object {
         fun <T> field(fieldRef: KProperty1<T,Any>?) = ColumnKey(ref = fieldRef?.id())

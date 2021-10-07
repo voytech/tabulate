@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.api.qualifer
+package io.github.voytech.tabulate.api.builder
 
 import io.github.voytech.tabulate.model.RowPredicate
 import io.github.voytech.tabulate.template.context.DefaultSteps

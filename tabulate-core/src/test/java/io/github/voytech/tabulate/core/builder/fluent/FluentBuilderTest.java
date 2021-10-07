@@ -21,7 +21,7 @@ import io.github.voytech.tabulate.testsupport.TestExportOperationsFactory;
 import kotlin.Unit;
 import org.junit.jupiter.api.Test;
 
-import static io.github.voytech.tabulate.api.qualifer.RowPredicates.allRows;
+import static io.github.voytech.tabulate.api.builder.RowPredicates.allRows;
 
 public class FluentBuilderTest {
 

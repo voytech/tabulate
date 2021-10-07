@@ -4,6 +4,8 @@ import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
 abstract class Attribute<T: Attribute<T>> {
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     internal var nonDefaultProps: Set<String> = emptySet()
 
     open fun overrideWith(other: T): T = other

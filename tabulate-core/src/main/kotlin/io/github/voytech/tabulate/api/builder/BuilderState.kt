@@ -120,7 +120,7 @@ internal class ColumnsBuilderState<T>: Builder<List<ColumnDef<T>>>() {
         }
 
     @JvmSynthetic
-    fun addColumnBuilder(ref: ColRefId<T>, block: DslBlock<ColumnBuilderState<T>>): ColumnBuilderState<T> =
+    fun addColumnBuilder(ref: PropertyBindingKey<T>, block: DslBlock<ColumnBuilderState<T>>): ColumnBuilderState<T> =
         ensureColumnBuilder(ColumnKey(ref = ref)).let {
             block.invoke(it)
             it
@@ -328,7 +328,7 @@ internal class CellsBuilderState<T>(
 
 
     @JvmSynthetic
-    fun addCellBuilder(ref: ColRefId<T>, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
+    fun addCellBuilder(ref: PropertyBindingKey<T>, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
         ensureCellBuilder(ColumnKey(ref = ref)).apply(block)
             .also { nextCellIndex() }
 
@@ -347,7 +347,7 @@ internal class CellsBuilderState<T>(
 
     private fun newCellBuilder(key: ColumnKey<T>): CellBuilderState<T> =
         CellBuilderState<T>().also {
-            cellIndex.set(cells.entries.size)
+            cellIndex.set(cells.size)
             cells[key] = it
         }
 

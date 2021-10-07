@@ -7,7 +7,7 @@ import io.github.voytech.tabulate.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 
 enum class LengthUnit {
-    PIXEL, CHARACTER
+    PIXEL,
 }
 
 data class ColumnWidthAttribute(

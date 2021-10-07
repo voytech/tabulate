@@ -6,33 +6,33 @@ fun interface RowCellExpression<T> {
     fun evaluate(context: SourceRow<T>): Any?
 }
 
-fun interface ColRefId<T> {
+fun interface PropertyBindingKey<T> {
     fun invoke(record: T) : Any?
 }
 
-private object PropCache {
+private object PropertyBindingsCache {
 
-    private val cache: MutableMap<Int, ColRefId<*>> by lazy { mutableMapOf() }
+    private val CACHE: MutableMap<Int, PropertyBindingKey<*>> by lazy { mutableMapOf() }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> cached(ref: KProperty1<T, Any?>): ColRefId<T> {
-        return cache.computeIfAbsent(ref.hashCode()) {
-            ColRefId<T> { row -> ref.get(row) }
-        } as ColRefId<T>
+    fun <T> cached(ref: KProperty1<T, Any?>): PropertyBindingKey<T> {
+        return CACHE.computeIfAbsent(ref.hashCode()) {
+            PropertyBindingKey<T> { row -> ref.get(row) }
+        } as PropertyBindingKey<T>
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> cached(ref: java.util.function.Function<T, Any?>): ColRefId<T> {
-        return cache.computeIfAbsent(ref.hashCode()) {
-            ColRefId<T> { row -> ref.apply(row) }
-        } as ColRefId<T>
+    fun <T> cached(ref: java.util.function.Function<T, Any?>): PropertyBindingKey<T> {
+        return CACHE.computeIfAbsent(ref.hashCode()) {
+            PropertyBindingKey<T> { row -> ref.apply(row) }
+        } as PropertyBindingKey<T>
     }
 }
 
-fun <T> KProperty1<T, Any?>.id() : ColRefId<T> {
-    return PropCache.cached(this)
+fun <T> KProperty1<T, Any?>.id() : PropertyBindingKey<T> {
+    return PropertyBindingsCache.cached(this)
 }
 
-fun <T> java.util.function.Function<T, Any?>.id() : ColRefId<T>  {
-    return PropCache.cached(this)
+fun <T> java.util.function.Function<T, Any?>.id() : PropertyBindingKey<T>  {
+    return PropertyBindingsCache.cached(this)
 }
