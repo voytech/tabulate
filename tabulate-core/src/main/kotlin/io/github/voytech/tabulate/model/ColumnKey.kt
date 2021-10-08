@@ -13,4 +13,9 @@ data class ColumnKey<T> internal constructor(
     }
     @JvmSynthetic
     fun resolveValue(value: T?): Any? = value?.let { ref?.invoke(it) }
+
+    @Override
+    override fun toString(): String {
+        return "ColumnKey = ${id ?: ref}"
+    }
 }

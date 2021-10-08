@@ -341,7 +341,7 @@ internal class CellsBuilderState<T>(
 
     @JvmSynthetic
     fun addCellBuilder(index: Int, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
-        columnsBuilderState.columnBuilderStates[index].let { column ->
+        columnBuilder(index).let { column ->
             ensureCellBuilder(column.id).apply(block)
                 .also {
                     cellIndex.set(index)
@@ -353,39 +353,59 @@ internal class CellsBuilderState<T>(
     fun addCellBuilder(block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
         addCellBuilder(index = currentCellIndex(), block)
 
-
     @JvmSynthetic
     fun addCellBuilder(ref: PropertyBindingKey<T>, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
         ensureCellBuilder(ColumnKey(ref = ref)).apply(block)
             .also { nextCellIndex() }
-
 
     @JvmSynthetic
     override fun build(transformerContainer: AttributeTransformerContainer?): Map<ColumnKey<T>, CellDef<T>> {
         return cells.map { it.key to it.value.build(transformerContainer) }.toMap()
     }
 
-    private fun ensureCellBuilder(key: ColumnKey<T>): CellBuilderState<T> =
-        //TODO validate if does not clash with row span on column from previous rows.
-        cells.find(key) ?: newCellBuilder(key)
+    private fun ensureCellBuilder(key: ColumnKey<T>): CellBuilderState<T> = cells.find(key) ?: newCellBuilder(key)
 
     private fun MutableMap<ColumnKey<T>, CellBuilderState<T>>.find(key: ColumnKey<T>): CellBuilderState<T>? =
         this.entries.find { it.key == key }?.value
 
-    private fun newCellBuilder(key: ColumnKey<T>): CellBuilderState<T> =
-        CellBuilderState<T>().also {
+    private fun newCellBuilder(key: ColumnKey<T>): CellBuilderState<T> {
+        if (isCellLockedByRowSpan(key)) throw BuilderException("Cannot create cell at $key due to 'rowSpan' lock.")
+        if (isCellLockedByColSpan(key)) throw BuilderException("Cannot create cell at $key due to 'colSpan' lock.")
+        return CellBuilderState<T>().also {
             cellIndex.set(cells.size)
             cells[key] = it
         }
+    }
 
-    private fun columnIdByIndex(index: Int): ColumnKey<T> = columnsBuilderState.columnBuilderStates[index].id
+    private fun columnIdByIndex(index: Int): ColumnKey<T> = columnBuilder(index).id
+
+    private fun columnById(key: ColumnKey<T>): ColumnBuilderState<T>? = columnsBuilder().find { it.id == key }
+
+    private fun columnIndexById(key: ColumnKey<T>): Int = columnsBuilder().indexOf(columnById(key))
 
     private fun columnSpanByIndex(index: Int): Int = cells[columnIdByIndex(index)]?.colSpan ?: 1
 
-    private fun rowSpanOffsetByIndex(index: Int): Int = interceptedRowSpans[columnIdByIndex(index)] ?: 0
+    private fun isCellLockedByRowSpan(index: Int): Boolean = isCellLockedByRowSpan(columnIdByIndex(index))
+
+    private fun isCellLockedByRowSpan(key: ColumnKey<T>): Boolean = (interceptedRowSpans[key] ?: 0) > 0
+
+    private fun isCellLockedByColSpan(key: ColumnKey<T>): Boolean {
+        val index = columnIndexById(key)
+        return if (index > 0) {
+            cells[columnBuilder(index-1).id]?.let {
+                it.colSpan > 1
+            } ?: false
+        } else false
+    }
+
+    private fun columnBuilder(index: Int): ColumnBuilderState<T> = columnsBuilder()[index]
+
+    private fun columnsBuilder(): MutableList<ColumnBuilderState<T>> = columnsBuilderState.columnBuilderStates
+
+    private fun isLastCell(index: Int): Boolean = cellIndex.get() == columnsBuilder().size - 1
 
     private fun currentCellIndex(): Int {
-        while (rowSpanOffsetByIndex(cellIndex.get()) > 0 && cellIndex.get() < columnsBuilderState.columnBuilderStates.size - 1) {
+        while (isCellLockedByRowSpan(cellIndex.get()) && !isLastCell(cellIndex.get())) {
             cellIndex.getAndIncrement()
         }
         return cellIndex.get()
