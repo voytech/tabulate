@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.template.operations
 
-import io.github.voytech.tabulate.api.builder.TableBuilderState
-import io.github.voytech.tabulate.api.builder.TableBuilderTransformer
+import io.github.voytech.tabulate.api.builder.AttributeSetTransformer
+import io.github.voytech.tabulate.api.builder.AttributeTransformerContainer
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
@@ -13,47 +13,43 @@ internal class AttributeAwareTableExportOperations<T>(
     private val attributeOperations: AttributesOperations<T>,
     private val baseTableExportOperations: BasicContextExportOperations<T>,
     private val enableAttributeSetCaching: Boolean = true
-) : TableBuilderTransformer<T>, TableExportOperations<T>  {
+) : TableExportOperations<T>  {
 
-    private fun sortedTableAttributes(tableAttributes: Set<TableAttribute<*>>): Set<TableAttribute<*>> {
-        return tableAttributes.toSortedSet(compareBy {
-            attributeOperations.getTableAttributeOperation(it.javaClass)?.priority() ?: 0
-        })
+    inner class SortedTableAttributeSetTransformer: AttributeSetTransformer<TableAttribute<*>> {
+        override fun transform(input: Set<TableAttribute<*>>): Set<TableAttribute<*>> =
+            input.toSortedSet(compareBy {
+                attributeOperations.getTableAttributeOperation(it.javaClass)?.priority() ?: 0
+            })
     }
 
-    private fun sortedColumnAttributes(columnAttributes: Set<ColumnAttribute<*>>): Set<ColumnAttribute<*>> {
-        return columnAttributes.toSortedSet(compareBy {
-            attributeOperations.getColumnAttributeOperation(it.javaClass)?.priority() ?: 0
-        })
+    inner class SortedColumnAttributeSetTransformer: AttributeSetTransformer<ColumnAttribute<*>> {
+        override fun transform(input: Set<ColumnAttribute<*>>): Set<ColumnAttribute<*>> =
+            input.toSortedSet(compareBy {
+                attributeOperations.getColumnAttributeOperation(it.javaClass)?.priority() ?: 0
+            })
     }
 
-    private fun sortedCellAttributes(cellAttributes: Set<CellAttribute<*>>): Set<CellAttribute<*>> {
-        return cellAttributes.sortedBy { attributeOperations.getCellAttributeOperation(it.javaClass)?.priority() ?: 0 }
-            .toSet()
+    inner class SortedRowAttributeSetTransformer: AttributeSetTransformer<RowAttribute<*>> {
+        override fun transform(input: Set<RowAttribute<*>>): Set<RowAttribute<*>> =
+            input.toSortedSet(compareBy {
+                attributeOperations.getRowAttributeOperation(it.javaClass)?.priority() ?: 0
+            })
+    }
+    inner class SortedCellAttributeSetTransformer: AttributeSetTransformer<CellAttribute<*>> {
+        override fun transform(input: Set<CellAttribute<*>>): Set<CellAttribute<*>> =
+            input.sortedBy {
+                attributeOperations.getCellAttributeOperation(it.javaClass)?.priority() ?: 0
+            }.toSet()
     }
 
-    private fun sortedRowAttributes(rowAttributes: Set<RowAttribute<*>>): Set<RowAttribute<*>> {
-        return rowAttributes.toSortedSet(compareBy { attributeOperations.getRowAttributeOperation(it.javaClass)?.priority() ?: 0 })
-    }
-
-    private fun withAllAttributesOperationSorted(builderState: TableBuilderState<T>): TableBuilderState<T> {
-        builderState.columnsBuilderState.columnBuilderStates.forEach { columnBuilder ->
-            columnBuilder.visit(CellAttribute::class.java) { sortedCellAttributes(it) }
-            columnBuilder.visit(ColumnAttribute::class.java) { sortedColumnAttributes(it) }
+    internal fun createAttributeTransformerContainer() : AttributeTransformerContainer {
+        return AttributeTransformerContainer().also {
+            it.set(TableAttribute::class.java, listOf(SortedTableAttributeSetTransformer()))
+            it.set(ColumnAttribute::class.java, listOf(SortedColumnAttributeSetTransformer()))
+            it.set(RowAttribute::class.java, listOf(SortedRowAttributeSetTransformer()))
+            it.set(CellAttribute::class.java, listOf(SortedCellAttributeSetTransformer()))
         }
-        builderState.rowsBuilderState.rowBuilderStates.forEach { rowBuilder ->
-            rowBuilder.visit(CellAttribute::class.java) { sortedCellAttributes(it) }
-            rowBuilder.visit(RowAttribute::class.java) { sortedRowAttributes(it) }
-            rowBuilder.cells.forEach { (_, cellBuilder) ->
-                cellBuilder.visit(CellAttribute::class.java) { sortedCellAttributes(it) }
-            }
-        }
-        builderState.visit(TableAttribute::class.java) { sortedTableAttributes(it) }
-        builderState.visit(CellAttribute::class.java) { sortedCellAttributes(it) }
-        return builderState
     }
-
-    override fun transform(builderState: TableBuilderState<T>): TableBuilderState<T> = withAllAttributesOperationSorted(builderState)
 
     override fun createTable(context: AttributedTable) {
         with(context.crop()) {

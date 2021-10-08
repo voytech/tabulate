@@ -9,37 +9,60 @@ import kotlin.properties.ObservableProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
+typealias DslBlock<T> = (T) -> Unit
+
 abstract class Builder<T> {
     internal abstract fun build(): T
 }
 
-fun interface BuilderTransformer<T, B: Builder<T>> {
-    fun transform(builder: B): B
+abstract class InternalBuilder<T> {
+    internal abstract fun build(transformerContainer: AttributeTransformerContainer? = null): T
 }
 
-internal fun interface TableBuilderTransformer<T>: BuilderTransformer<Table<T>, TableBuilderState<T>>
+fun interface AttributeSetTransformer<C : Attribute<*>> {
+    fun transform(input: Set<C>): Set<C>
+}
 
-typealias DslBlock<T> = (T) -> Unit
+internal class AttributeTransformersChain<C : Attribute<*>>(
+    private val attributeTransformers: List<AttributeSetTransformer<C>>,
+) : AttributeSetTransformer<C> {
+    override fun transform(input: Set<C>): Set<C> =
+        attributeTransformers.fold(input) { set, transformer -> transformer.transform(set) }
+}
 
-sealed class AttributesAwareBuilder<T>: Builder<T>() {
+internal class AttributeTransformerContainer(
+    private val attributeSetTransformers: MutableMap<Class<out Attribute<*>>, AttributeTransformersChain<Attribute<*>>> = mutableMapOf(),
+) {
+    @Suppress("UNCHECKED_CAST")
+    internal fun <C : Attribute<*>> transform(clazz: Class<C>, attributes: Set<C>): Set<C> =
+        attributeSetTransformers[clazz]?.transform(attributes) as Set<C>
+
+    @Suppress("UNCHECKED_CAST")
+    internal fun <C : Attribute<*>> set(clazz: Class<C>, attributeTransformers: List<AttributeSetTransformer<C>>) {
+        attributeSetTransformers[clazz] =
+            AttributeTransformersChain(attributeTransformers) as AttributeTransformersChain<Attribute<*>>
+    }
+}
+
+sealed class AttributesAwareBuilder<T> : InternalBuilder<T>() {
 
     private var attributes: MutableMap<Class<out Attribute<*>>, Set<Attribute<*>>> = mutableMapOf()
 
     @JvmSynthetic
-    protected open fun <A : Attribute<A>, B: AttributeBuilder<A>> attribute(builder: B) {
+    protected open fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(builder: B) {
         applyAttribute(builder.build())
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <A : Attribute<*>> visit(clazz: Class<A>, visitor: ((current: Set<A>) -> Set<A>)) {
-        attributes[clazz]?.let {
-            visitor.invoke(it as Set<A>)
+    @JvmSynthetic
+    internal fun <C : Attribute<*>> getAttributesByClass(
+        clazz: Class<C>,
+        transformerContainer: AttributeTransformerContainer?,
+    ): Set<C>? {
+        return (attributes[clazz] as Set<C>?)?.let {
+            transformerContainer?.transform(clazz, it) ?: it
         }
     }
-
-    @Suppress("UNCHECKED_CAST")
-    @JvmSynthetic
-    protected fun <C : Attribute<*>> getAttributesByClass(clazz: Class<C>): Set<C>? = attributes[clazz] as Set<C>?
 
     private fun applyAttribute(attribute: Attribute<*>) {
         supportedSuperClass(attribute).let { clazz ->
@@ -60,6 +83,7 @@ sealed class AttributesAwareBuilder<T>: Builder<T>() {
             }
         }
     }
+
 }
 
 internal class TableBuilderState<T> : AttributesAwareBuilder<Table<T>>() {
@@ -83,23 +107,23 @@ internal class TableBuilderState<T> : AttributesAwareBuilder<Table<T>>() {
     internal var firstColumn: Int? = 0
 
     @JvmSynthetic
-    override fun build(): Table<T> = Table(
+    override fun build(transformerContainer: AttributeTransformerContainer?): Table<T> = Table(
         name, firstRow, firstColumn,
-        columnsBuilderState.build(), rowsBuilderState.build(),
-        getAttributesByClass(TableAttribute::class.java),
-        getAttributesByClass(CellAttribute::class.java),
-        getAttributesByClass(ColumnAttribute::class.java),
-        getAttributesByClass(RowAttribute::class.java)
+        columnsBuilderState.build(transformerContainer), rowsBuilderState.build(transformerContainer),
+        getAttributesByClass(TableAttribute::class.java, transformerContainer),
+        getAttributesByClass(CellAttribute::class.java, transformerContainer),
+        getAttributesByClass(ColumnAttribute::class.java, transformerContainer),
+        getAttributesByClass(RowAttribute::class.java, transformerContainer)
     )
 
     @JvmSynthetic
-    public override fun <A : Attribute<A>, B: AttributeBuilder<A>> attribute(builder: B) {
+    public override fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(builder: B) {
         super.attribute(builder)
     }
 
 }
 
-internal class ColumnsBuilderState<T>: Builder<List<ColumnDef<T>>>() {
+internal class ColumnsBuilderState<T> : InternalBuilder<List<ColumnDef<T>>>() {
 
     @get:JvmSynthetic
     val columnBuilderStates: MutableList<ColumnBuilderState<T>> = mutableListOf()
@@ -145,13 +169,13 @@ internal class ColumnsBuilderState<T>: Builder<List<ColumnDef<T>>>() {
     }
 
     @JvmSynthetic
-    override fun build(): List<ColumnDef<T>> {
-        return columnBuilderStates.map { it.build() }
+    override fun build(transformerContainer: AttributeTransformerContainer?): List<ColumnDef<T>> {
+        return columnBuilderStates.map { it.build(transformerContainer) }
     }
 
 }
 
-internal class ColumnBuilderState<T>: AttributesAwareBuilder<ColumnDef<T>>() {
+internal class ColumnBuilderState<T> : AttributesAwareBuilder<ColumnDef<T>>() {
 
     @get:JvmSynthetic
     @set:JvmSynthetic
@@ -166,21 +190,22 @@ internal class ColumnBuilderState<T>: AttributesAwareBuilder<ColumnDef<T>>() {
     var index: Int? = null
 
     @JvmSynthetic
-    fun <A : ColumnAttribute<A>, B: ColumnAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
+    fun <A : ColumnAttribute<A>, B : ColumnAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
 
     @JvmSynthetic
-    fun <A : CellAttribute<A>, B: CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
+    fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
 
     @JvmSynthetic
-    override fun build(): ColumnDef<T> = ColumnDef(
+    override fun build(transformerContainer: AttributeTransformerContainer?): ColumnDef<T> = ColumnDef(
         id, index, columnType,
-        getAttributesByClass(ColumnAttribute::class.java),
-        getAttributesByClass(CellAttribute::class.java)
+        getAttributesByClass(ColumnAttribute::class.java, transformerContainer),
+        getAttributesByClass(CellAttribute::class.java, transformerContainer)
     )
 
 }
 
-internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuilderState<T>) : Builder<List<RowDef<T>>>() {
+internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuilderState<T>) :
+    InternalBuilder<List<RowDef<T>>>() {
 
     @get:JvmSynthetic
     val rowBuilderStates: MutableList<RowBuilderState<T>> = mutableListOf()
@@ -228,15 +253,16 @@ internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuild
     }
 
     private fun ensureRowBuilder(rowQualifier: RowQualifier<T>): RowBuilderState<T> =
-        rowBuilderStates.find { it.qualifier == rowQualifier } ?: RowBuilderState.new(columnsBuilderState, interceptedRowSpans).let {
+        rowBuilderStates.find { it.qualifier == rowQualifier } ?: RowBuilderState.new(columnsBuilderState,
+            interceptedRowSpans).let {
             rowBuilderStates.add(it)
             it.qualifier = rowQualifier
             it
         }
 
     @JvmSynthetic
-    override fun build(): List<RowDef<T>> {
-        return sortedNullsLast().map { it.build() }
+    override fun build(transformerContainer: AttributeTransformerContainer?): List<RowDef<T>> {
+        return sortedNullsLast().map { it.build(transformerContainer) }
     }
 
     private fun decreaseRowSpan(key: ColumnKey<T>): Int =
@@ -269,7 +295,8 @@ internal class RowBuilderState<T>(
     private val cellIndex: AtomicInteger = AtomicInteger(0)
 
     @get:JvmSynthetic
-    val cellsBuilderState: CellsBuilderState<T> = CellsBuilderState(columnsBuilderState, interceptedRowSpans, cellIndex, cells)
+    val cellsBuilderState: CellsBuilderState<T> =
+        CellsBuilderState(columnsBuilderState, interceptedRowSpans, cellIndex, cells)
 
     @get:JvmSynthetic
     @set:JvmSynthetic
@@ -278,18 +305,18 @@ internal class RowBuilderState<T>(
     internal fun getCellBuilder(key: ColumnKey<T>): CellBuilderState<T>? = cells[key]
 
     @JvmSynthetic
-    override fun build(): RowDef<T> = RowDef(
+    override fun build(transformerContainer: AttributeTransformerContainer?): RowDef<T> = RowDef(
         qualifier,
-        getAttributesByClass(RowAttribute::class.java),
-        getAttributesByClass(CellAttribute::class.java),
-        cellsBuilderState.build()
+        getAttributesByClass(RowAttribute::class.java, transformerContainer),
+        getAttributesByClass(CellAttribute::class.java, transformerContainer),
+        cellsBuilderState.build(transformerContainer)
     )
 
     @JvmSynthetic
-    fun <A : RowAttribute<A>, B: RowAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
+    fun <A : RowAttribute<A>, B : RowAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
 
     @JvmSynthetic
-    fun <A : CellAttribute<A>, B: CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
+    fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
 
     companion object {
         @JvmSynthetic
@@ -305,7 +332,7 @@ internal class CellsBuilderState<T>(
     private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
     private var cellIndex: AtomicInteger,
     private val cells: MutableMap<ColumnKey<T>, CellBuilderState<T>>,
-) : Builder<Map<ColumnKey<T>, CellDef<T>>>() {
+) : InternalBuilder<Map<ColumnKey<T>, CellDef<T>>>() {
 
     @JvmSynthetic
     fun addCellBuilder(id: String, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
@@ -334,8 +361,8 @@ internal class CellsBuilderState<T>(
 
 
     @JvmSynthetic
-    override fun build(): Map<ColumnKey<T>, CellDef<T>> {
-        return cells.map { it.key to it.value.build() }.toMap()
+    override fun build(transformerContainer: AttributeTransformerContainer?): Map<ColumnKey<T>, CellDef<T>> {
+        return cells.map { it.key to it.value.build(transformerContainer) }.toMap()
     }
 
     private fun ensureCellBuilder(key: ColumnKey<T>): CellBuilderState<T> =
@@ -370,7 +397,7 @@ internal class CellsBuilderState<T>(
 
 }
 
-internal class CellBuilderState<T>: AttributesAwareBuilder<CellDef<T>>() {
+internal class CellBuilderState<T> : AttributesAwareBuilder<CellDef<T>>() {
 
     @get:JvmSynthetic
     @set:JvmSynthetic
@@ -393,11 +420,14 @@ internal class CellBuilderState<T>: AttributesAwareBuilder<CellDef<T>>() {
     var rowSpan: Int = 1
 
     @JvmSynthetic
-    override fun build(): CellDef<T> =
-        CellDef(value, expression, type, colSpan, rowSpan, getAttributesByClass(CellAttribute::class.java))
+    override fun build(transformerContainer: AttributeTransformerContainer?): CellDef<T> =
+        CellDef(
+            value, expression, type, colSpan, rowSpan,
+            getAttributesByClass(CellAttribute::class.java, transformerContainer)
+        )
 
     @JvmSynthetic
-    fun <A : CellAttribute<A>, B: CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
+    fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
 }
 
 abstract class AttributeBuilder<T : Attribute<*>> : Builder<T>() {
@@ -426,13 +456,13 @@ abstract class AttributeBuilder<T : Attribute<*>> : Builder<T>() {
     }
 }
 
-abstract class TableAttributeBuilder<T: TableAttribute<T>> : AttributeBuilder<T>()
+abstract class TableAttributeBuilder<T : TableAttribute<T>> : AttributeBuilder<T>()
 
 abstract class CellAttributeBuilder<T : CellAttribute<T>> : AttributeBuilder<T>()
 
 abstract class RowAttributeBuilder<T : RowAttribute<T>> : AttributeBuilder<T>()
 
-abstract class ColumnAttributeBuilder<T: ColumnAttribute<T>> : AttributeBuilder<T>()
+abstract class ColumnAttributeBuilder<T : ColumnAttribute<T>> : AttributeBuilder<T>()
 
 
 

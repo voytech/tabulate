@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.template
 
+import io.github.voytech.tabulate.api.builder.AttributeTransformerContainer
 import io.github.voytech.tabulate.api.builder.TableBuilderState
-import io.github.voytech.tabulate.api.builder.TableBuilderTransformer
 import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
 import io.github.voytech.tabulate.api.builder.fluent.FluentTableBuilderApi
@@ -12,6 +12,7 @@ import io.github.voytech.tabulate.template.context.AttributedColumnFactory.creat
 import io.github.voytech.tabulate.template.exception.ExportOperationsFactoryResolvingException
 import io.github.voytech.tabulate.template.exception.ResultProviderResolvingException
 import io.github.voytech.tabulate.template.exception.UnknownTabulationFormatException
+import io.github.voytech.tabulate.template.operations.AttributeAwareTableExportOperations
 import io.github.voytech.tabulate.template.operations.TableExportOperations
 import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
 import io.github.voytech.tabulate.template.result.ResultProvider
@@ -111,16 +112,15 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun transform(tableBuilderState: TableBuilderState<T>): TableBuilderState<T> {
-        return (resolveBuilderTransformers() + ops.takeIf {
-            it is TableBuilderTransformer<*>
-        }).filterNotNull()
-            .map { it as TableBuilderTransformer<T> }
-            .fold(tableBuilderState) { builder, transformer -> transformer.transform(builder) }
+    private fun detectAttributeTransformers(): AttributeTransformerContainer? {
+        if (ops is AttributeAwareTableExportOperations<T>) {
+            return (ops as AttributeAwareTableExportOperations<T>).createAttributeTransformerContainer()
+        }
+        return null
     }
 
     private fun materialize(tableBuilderState: TableBuilderState<T>): TabulationState<T> {
-        return transform(tableBuilderState).build().let { table ->
+        return tableBuilderState.build(detectAttributeTransformers()).let { table ->
             TabulationState(
                 tableModel = table,
                 tableName = table.name,
@@ -149,13 +149,6 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
             it.outputClass().isAssignableFrom(output!!::class.java)
         }.map { it as ResultProvider<O> }
             .firstOrNull() ?: throw ResultProviderResolvingException()
-
-    @Suppress("UNCHECKED_CAST")
-    private fun resolveBuilderTransformers(): List<TableBuilderTransformer<T>> {
-        return ServiceLoader.load(TableBuilderTransformer::class.java)
-            .map { it as TableBuilderTransformer<T> }
-            .toList()
-    }
 
     /**
      * Performs actual export.
