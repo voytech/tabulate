@@ -86,7 +86,7 @@ class ColumnBuilder<T> internal constructor(
     private val parent: ColumnsBuilder<T>,
 ) : FluentTableBuilderApi<T>() {
 
-    fun index(index: Int?) = apply {
+    fun index(index: Int) = apply {
         builderState.index = index
     }
 

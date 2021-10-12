@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.api.builder.exception.BuilderException
 import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.*
 import io.github.voytech.tabulate.template.context.DefaultSteps
-import java.util.concurrent.atomic.AtomicInteger
+import kotlin.properties.Delegates.vetoable
 import kotlin.properties.ObservableProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -138,23 +138,21 @@ internal class ColumnsBuilderState<T> : InternalBuilder<List<ColumnDef<T>>>() {
 
     @JvmSynthetic
     fun addColumnBuilder(id: String, block: DslBlock<ColumnBuilderState<T>>): ColumnBuilderState<T> =
-        ensureColumnBuilder(ColumnKey(id = id)).let {
+        ensureColumnBuilder(ColumnKey(id = id)).also {
             block.invoke(it)
-            it
         }
 
     @JvmSynthetic
     fun addColumnBuilder(ref: PropertyBindingKey<T>, block: DslBlock<ColumnBuilderState<T>>): ColumnBuilderState<T> =
-        ensureColumnBuilder(ColumnKey(ref = ref)).let {
+        ensureColumnBuilder(ColumnKey(ref = ref)).also {
             block.invoke(it)
-            it
         }
 
     private fun ensureColumnBuilder(key: ColumnKey<T>): ColumnBuilderState<T> =
-        columnBuilderStates.find { it.id == key } ?: ColumnBuilderState<T>().let {
-            columnBuilderStates.add(it.apply { it.id = key })
-            it
-        }
+        columnBuilderStates.find { it.id == key } ?: ColumnBuilderState(columnBuilderStates).apply {
+            id = key
+            index = columnBuilderStates.lastOrNull()?.index?.plus(1) ?: 0
+        }.also { columnBuilderStates.add(it) }
 
     private fun addColumnBuilder(id: String): ColumnBuilderState<T> = ensureColumnBuilder(ColumnKey(id = id))
 
@@ -172,10 +170,81 @@ internal class ColumnsBuilderState<T> : InternalBuilder<List<ColumnDef<T>>>() {
     override fun build(transformerContainer: AttributeTransformerContainer?): List<ColumnDef<T>> {
         return columnBuilderStates.map { it.build(transformerContainer) }
     }
-
 }
 
-internal class ColumnBuilderState<T> : AttributesAwareBuilder<ColumnDef<T>>() {
+
+@JvmSynthetic
+internal fun <T> List<ColumnBuilderState<T>>.findByKey(key: ColumnKey<T>): ColumnBuilderState<T>? =
+    find { it.id == key }
+
+@JvmSynthetic
+internal fun <T> List<ColumnBuilderState<T>>.findByIndex(index: Int): ColumnBuilderState<T>? =
+    find { it.index == index }
+
+@JvmSynthetic
+internal fun <T> List<ColumnBuilderState<T>>.findPrevious(index: Int): ColumnBuilderState<T>? {
+    return sortedBy { it.index }.findLast { it.index < index }
+}
+
+@JvmSynthetic
+internal fun <T> List<ColumnBuilderState<T>>.findPrevious(key: ColumnKey<T>): ColumnBuilderState<T>? {
+    return findByKey(key)?.let { column ->
+        sortedBy { it.index }.findLast { it.index < column.index }
+    }
+}
+
+@JvmSynthetic
+internal fun <T> List<ColumnBuilderState<T>>.findNext(key: ColumnKey<T>): ColumnBuilderState<T>? {
+    return findByKey(key)?.let { column ->
+        sortedBy { it.index }.find { it.index > column.index }
+    }
+}
+
+@JvmSynthetic
+internal fun <T, R> List<ColumnBuilderState<T>>.searchBackwardUntil(block: (col: ColumnBuilderState<T>) -> R?): R? =
+    sortedBy { it.index }
+        .reversed()
+        .asSequence()
+        .firstNotNullOfOrNull { block(it) }
+
+@JvmSynthetic
+internal fun <T, R> List<ColumnBuilderState<T>>.searchBackwardStartingBefore(
+    index: Int,
+    block: (col: ColumnBuilderState<T>) -> R?,
+): R? =
+    searchBackwardUntil {
+        if (it.index < index) block(it) else null
+    }
+
+@JvmSynthetic
+internal fun <T, R> List<ColumnBuilderState<T>>.searchForwardUntil(block: (col: ColumnBuilderState<T>) -> R?): R? =
+    sortedBy { it.index }
+        .asSequence()
+        .firstNotNullOfOrNull { block(it) }
+
+@JvmSynthetic
+internal fun <T, R> List<ColumnBuilderState<T>>.searchForwardStartingAfter(
+    index: Int,
+    block: (col: ColumnBuilderState<T>) -> R?,
+): R? =
+    searchForwardUntil {
+        if (it.index > index) block(it) else null
+    }
+
+@JvmSynthetic
+internal fun <T, R> List<ColumnBuilderState<T>>.searchForwardStartingWith(
+    index: Int,
+    block: (col: ColumnBuilderState<T>) -> R?,
+): R? =
+    searchForwardUntil {
+        if (it.index >= index) block(it) else null
+    }
+
+@JvmSynthetic
+internal fun <T> List<ColumnBuilderState<T>>.lastIndex(): Int = lastOrNull()?.index ?: 0
+
+internal class ColumnBuilderState<T>(private val columnBuilderStates: List<ColumnBuilderState<T>>) :
+    AttributesAwareBuilder<ColumnDef<T>>() {
 
     @get:JvmSynthetic
     @set:JvmSynthetic
@@ -187,7 +256,12 @@ internal class ColumnBuilderState<T> : AttributesAwareBuilder<ColumnDef<T>>() {
 
     @get:JvmSynthetic
     @set:JvmSynthetic
-    var index: Int? = null
+    var index: Int by vetoable(columnBuilderStates.lastOrNull()?.index?.plus(1)?: 0) { _, _, newValue ->
+        columnBuilderStates.findByIndex(newValue)?.let {
+            if (it === this) true
+            else throw BuilderException("Could not set column index $newValue because index is in use by another column.")
+        } ?: true
+    }
 
     @JvmSynthetic
     fun <A : ColumnAttribute<A>, B : ColumnAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
@@ -216,27 +290,24 @@ internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuild
 
     @JvmSynthetic
     fun addRowBuilder(block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> =
-        ensureRowBuilder(RowQualifier(createAt = rowIndex)).let {
+        ensureRowBuilder(RowQualifier(createAt = rowIndex)).also {
             block.invoke(it)
             rowIndex = it.qualifier.createAt?.plus(1) ?: rowIndex
             refreshRowSpans(it)
-            it
         }
 
     @JvmSynthetic
     fun addRowBuilder(selector: RowPredicate<T>, block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> =
-        ensureRowBuilder(RowQualifier(applyWhen = selector)).let {
+        ensureRowBuilder(RowQualifier(applyWhen = selector)).also {
             block.invoke(it)
-            it
         }
 
     @JvmSynthetic
     fun addRowBuilder(at: RowIndexDef, block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> {
         rowIndex = at
-        return ensureRowBuilder(RowQualifier(createAt = rowIndex++)).let {
+        return ensureRowBuilder(RowQualifier(createAt = rowIndex++)).also {
             block.invoke(it)
             refreshRowSpans(it)
-            it
         }
     }
 
@@ -245,19 +316,17 @@ internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuild
         if (label.name != rowIndex.offsetLabel) {
             rowIndex = RowIndexDef(index = 0, offsetLabel = label.name)
         }
-        return ensureRowBuilder(RowQualifier(createAt = rowIndex++)).let {
+        return ensureRowBuilder(RowQualifier(createAt = rowIndex++)).also {
             block.invoke(it)
             refreshRowSpans(it)
-            it
         }
     }
 
     private fun ensureRowBuilder(rowQualifier: RowQualifier<T>): RowBuilderState<T> =
         rowBuilderStates.find { it.qualifier == rowQualifier } ?: RowBuilderState.new(columnsBuilderState,
-            interceptedRowSpans).let {
+            interceptedRowSpans).also {
             rowBuilderStates.add(it)
             it.qualifier = rowQualifier
-            it
         }
 
     @JvmSynthetic
@@ -292,11 +361,8 @@ internal class RowBuilderState<T>(
     val cells: MutableMap<ColumnKey<T>, CellBuilderState<T>> = mutableMapOf()
 
     @get:JvmSynthetic
-    private val cellIndex: AtomicInteger = AtomicInteger(0)
-
-    @get:JvmSynthetic
     val cellsBuilderState: CellsBuilderState<T> =
-        CellsBuilderState(columnsBuilderState, interceptedRowSpans, cellIndex, cells)
+        CellsBuilderState(columnsBuilderState, interceptedRowSpans, cells)
 
     @get:JvmSynthetic
     @set:JvmSynthetic
@@ -330,40 +396,46 @@ internal class RowBuilderState<T>(
 internal class CellsBuilderState<T>(
     private val columnsBuilderState: ColumnsBuilderState<T>,
     private val interceptedRowSpans: MutableMap<ColumnKey<T>, Int>,
-    private var cellIndex: AtomicInteger,
     private val cells: MutableMap<ColumnKey<T>, CellBuilderState<T>>,
 ) : InternalBuilder<Map<ColumnKey<T>, CellDef<T>>>() {
+
+    private var finished: Boolean = false
+
+    private var current: ColumnBuilderState<T> = columnsBuilderState.columnBuilderStates.first()
 
     @JvmSynthetic
     fun addCellBuilder(id: String, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
         ensureCellBuilder(ColumnKey(id = id)).apply(block)
-            .also { nextCellIndex() }
+            .also { setNextAvailableColumn() }
 
     @JvmSynthetic
     fun addCellBuilder(index: Int, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
-        columnBuilder(index).let { column ->
+        columnBuilder(index)?.let { column ->
             ensureCellBuilder(column.id).apply(block)
-                .also {
-                    cellIndex.set(index)
-                    nextCellIndex()
-                }
-        }
+                .also { setNextAvailableColumn() }
+        } ?: throw BuilderException("There is no column definition present at index $index")
 
     @JvmSynthetic
     fun addCellBuilder(block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
-        addCellBuilder(index = currentCellIndex(), block)
+        if (!finished) {
+            findCurrentAvailableColumn()?.let {
+                ensureCellBuilder(it.id).apply(block)
+                    .also { setNextAvailableColumn() }
+            } ?: throw BuilderException("Cannot create new cell. No more bindable column definition exists")
+        } else throw BuilderException("Cannot create new cell. No more bindable column definition exists")
 
     @JvmSynthetic
     fun addCellBuilder(ref: PropertyBindingKey<T>, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
         ensureCellBuilder(ColumnKey(ref = ref)).apply(block)
-            .also { nextCellIndex() }
+            .also { setNextAvailableColumn() }
 
     @JvmSynthetic
     override fun build(transformerContainer: AttributeTransformerContainer?): Map<ColumnKey<T>, CellDef<T>> {
         return cells.map { it.key to it.value.build(transformerContainer) }.toMap()
     }
 
-    private fun ensureCellBuilder(key: ColumnKey<T>): CellBuilderState<T> = cells.find(key) ?: newCellBuilder(key)
+    private fun ensureCellBuilder(key: ColumnKey<T>): CellBuilderState<T> =
+        cells.find(key) ?: newCellBuilder(key)
 
     private fun MutableMap<ColumnKey<T>, CellBuilderState<T>>.find(key: ColumnKey<T>): CellBuilderState<T>? =
         this.entries.find { it.key == key }?.value
@@ -372,47 +444,47 @@ internal class CellsBuilderState<T>(
         if (isCellLockedByRowSpan(key)) throw BuilderException("Cannot create cell at $key due to 'rowSpan' lock.")
         if (isCellLockedByColSpan(key)) throw BuilderException("Cannot create cell at $key due to 'colSpan' lock.")
         return CellBuilderState<T>().also {
-            cellIndex.set(cells.size)
+            current =
+                columnById(key) ?: throw BuilderException("Cannot add cell builder. No column definition for : $key")
             cells[key] = it
         }
     }
 
-    private fun columnIdByIndex(index: Int): ColumnKey<T> = columnBuilder(index).id
+    private fun columnById(key: ColumnKey<T>): ColumnBuilderState<T>? = columnBuilders().find { it.id == key }
 
-    private fun columnById(key: ColumnKey<T>): ColumnBuilderState<T>? = columnsBuilder().find { it.id == key }
-
-    private fun columnIndexById(key: ColumnKey<T>): Int = columnsBuilder().indexOf(columnById(key))
-
-    private fun columnSpanByIndex(index: Int): Int = cells[columnIdByIndex(index)]?.colSpan ?: 1
-
-    private fun isCellLockedByRowSpan(index: Int): Boolean = isCellLockedByRowSpan(columnIdByIndex(index))
+    private fun getPreviousCell(key: ColumnKey<T>): Pair<ColumnBuilderState<T>, CellBuilderState<T>>? {
+        return columnById(key)?.let { baseColumn ->
+            columnBuilders().searchBackwardStartingBefore(baseColumn.index) { column ->
+                cells[column.id]?.let { column to it }
+            }
+        }
+    }
 
     private fun isCellLockedByRowSpan(key: ColumnKey<T>): Boolean = (interceptedRowSpans[key] ?: 0) > 0
 
     private fun isCellLockedByColSpan(key: ColumnKey<T>): Boolean {
-        val index = columnIndexById(key)
-        return if (index > 0) {
-            cells[columnBuilder(index-1).id]?.let {
-                it.colSpan > 1
-            } ?: false
-        } else false
+        val currentIndex = columnById(key)?.index ?: return false
+        return getPreviousCell(key)?.let {
+            it.first.index + it.second.colSpan > currentIndex
+        } ?: false
     }
 
-    private fun columnBuilder(index: Int): ColumnBuilderState<T> = columnsBuilder()[index]
+    private fun columnBuilder(index: Int): ColumnBuilderState<T>? = columnBuilders().findByIndex(index)
 
-    private fun columnsBuilder(): MutableList<ColumnBuilderState<T>> = columnsBuilderState.columnBuilderStates
+    private fun columnBuilders(): MutableList<ColumnBuilderState<T>> = columnsBuilderState.columnBuilderStates
 
-    private fun isLastCell(index: Int): Boolean = cellIndex.get() == columnsBuilder().size - 1
-
-    private fun currentCellIndex(): Int {
-        while (isCellLockedByRowSpan(cellIndex.get()) && !isLastCell(cellIndex.get())) {
-            cellIndex.getAndIncrement()
+    private fun findNextAvailableColumnOrNull(): ColumnBuilderState<T>? {
+        return columnBuilders().searchForwardStartingAfter(current.index) {
+            if (!isCellLockedByRowSpan(it.id) && !isCellLockedByColSpan(it.id)) it.also { current = it } else null
         }
-        return cellIndex.get()
     }
 
-    private fun nextCellIndex() {
-        cellIndex.addAndGet(columnSpanByIndex(cellIndex.get()))
+    private fun setNextAvailableColumn() = findNextAvailableColumnOrNull() ?: run { finished = true }
+
+    private fun findCurrentAvailableColumn(): ColumnBuilderState<T>? {
+        return columnBuilders().searchForwardStartingWith(current.index) {
+            if (!isCellLockedByRowSpan(it.id) && !isCellLockedByColSpan(it.id)) it.also { current = it } else null
+        }
     }
 
 }

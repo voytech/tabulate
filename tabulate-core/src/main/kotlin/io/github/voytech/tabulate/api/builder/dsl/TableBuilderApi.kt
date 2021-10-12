@@ -160,7 +160,7 @@ class ColumnBuilderApi<T> internal constructor(private val builderState: ColumnB
 
     @set:JvmSynthetic
     @get:JvmSynthetic
-    var index: Int? by builderState::index
+    var index: Int by builderState::index
 
     @JvmSynthetic
     fun attributes(block: ColumnLevelAttributesBuilderApi<T>.() -> Unit) {

@@ -12,18 +12,18 @@ fun interface PropertyBindingKey<T> {
 
 private object PropertyBindingsCache {
 
-    private val CACHE: MutableMap<Int, PropertyBindingKey<*>> by lazy { mutableMapOf() }
+    private val CACHE: MutableMap<String, PropertyBindingKey<*>> by lazy { mutableMapOf() }
 
     @Suppress("UNCHECKED_CAST")
     fun <T> cached(ref: KProperty1<T, Any?>): PropertyBindingKey<T> {
-        return CACHE.computeIfAbsent(ref.hashCode()) {
+        return CACHE.computeIfAbsent(ref.toString()) {
             PropertyBindingKey<T> { row -> ref.get(row) }
         } as PropertyBindingKey<T>
     }
 
     @Suppress("UNCHECKED_CAST")
     fun <T> cached(ref: java.util.function.Function<T, Any?>): PropertyBindingKey<T> {
-        return CACHE.computeIfAbsent(ref.hashCode()) {
+        return CACHE.computeIfAbsent(ref.hashCode().toString()) {
             PropertyBindingKey<T> { row -> ref.apply(row) }
         } as PropertyBindingKey<T>
     }

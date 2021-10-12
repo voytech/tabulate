@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.dsl
+package io.github.voytech.tabulate.builder
 
 import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
 import io.github.voytech.tabulate.api.builder.dsl.header

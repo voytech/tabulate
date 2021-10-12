@@ -19,12 +19,14 @@ import io.github.voytech.tabulate.template.context.AttributedRowWithCells;
 import io.github.voytech.tabulate.testsupport.AttributedRowTest;
 import io.github.voytech.tabulate.testsupport.TestExportOperationsFactory;
 import kotlin.Unit;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static io.github.voytech.tabulate.api.builder.RowPredicates.allRows;
 
 public class FluentBuilderTest {
 
+	@Disabled("Depends on 'Add property literals emulation for java Fluent Builder (property to column binding key) #140'")
 	@Test
 	public void createTableDefinitionTest() {
 		TestExportOperationsFactory.setRowTest(new AttributedRowTest() {
