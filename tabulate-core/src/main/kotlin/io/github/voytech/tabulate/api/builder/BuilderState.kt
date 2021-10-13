@@ -126,7 +126,7 @@ internal class TableBuilderState<T> : AttributesAwareBuilder<Table<T>>() {
 internal class ColumnsBuilderState<T> : InternalBuilder<List<ColumnDef<T>>>() {
 
     @get:JvmSynthetic
-    val columnBuilderStates: MutableList<ColumnBuilderState<T>> = mutableListOf()
+    internal val columnBuilderStates: MutableList<ColumnBuilderState<T>> = mutableListOf()
 
     @get:JvmSynthetic
     @set:JvmSynthetic
@@ -149,8 +149,7 @@ internal class ColumnsBuilderState<T> : InternalBuilder<List<ColumnDef<T>>>() {
         }
 
     private fun ensureColumnBuilder(key: ColumnKey<T>): ColumnBuilderState<T> =
-        columnBuilderStates.find { it.id == key } ?: ColumnBuilderState(columnBuilderStates).apply {
-            id = key
+        columnBuilderStates.find { it.id == key } ?: ColumnBuilderState(key,columnBuilderStates).apply {
             index = columnBuilderStates.lastOrNull()?.index?.plus(1) ?: 0
         }.also { columnBuilderStates.add(it) }
 
@@ -243,12 +242,10 @@ internal fun <T, R> List<ColumnBuilderState<T>>.searchForwardStartingWith(
 @JvmSynthetic
 internal fun <T> List<ColumnBuilderState<T>>.lastIndex(): Int = lastOrNull()?.index ?: 0
 
-internal class ColumnBuilderState<T>(private val columnBuilderStates: List<ColumnBuilderState<T>>) :
-    AttributesAwareBuilder<ColumnDef<T>>() {
-
-    @get:JvmSynthetic
-    @set:JvmSynthetic
-    lateinit var id: ColumnKey<T>
+internal class ColumnBuilderState<T>(
+    internal val id: ColumnKey<T>,
+    private val columnBuilderStates: List<ColumnBuilderState<T>>,
+) : AttributesAwareBuilder<ColumnDef<T>>() {
 
     @get:JvmSynthetic
     @set:JvmSynthetic

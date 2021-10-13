@@ -69,11 +69,9 @@ class TableBuilder<T> : FluentTableBuilderApi<T>() {
 class ColumnsBuilder<T> internal constructor(private val parent: TableBuilder<T>) : FluentTableBuilderApi<T>() {
 
     fun column(id: String) = ColumnBuilder(parent.builderState.columnsBuilderState.addColumnBuilder(id) {
-        it.id = ColumnKey(id = id)
     }, this)
 
     fun column(ref: JFunction<T, Any?>) = ColumnBuilder(parent.builderState.columnsBuilderState.addColumnBuilder(ref.id()) {
-        it.id = ColumnKey(ref = ref.id())
     }, this)
 
     @JvmSynthetic
