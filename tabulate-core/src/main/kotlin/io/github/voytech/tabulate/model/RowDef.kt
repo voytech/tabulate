@@ -3,7 +3,6 @@ package io.github.voytech.tabulate.model
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.template.context.CellValue
-import java.util.function.Predicate
 
 internal data class RowDef<T> internal constructor(
     @get:JvmSynthetic
@@ -35,7 +34,6 @@ internal fun <T> Collection<RowDef<T>>.flattenCellAttributes(): Set<CellAttribut
 internal fun <T> Collection<RowDef<T>>.mergeCells(): Map<ColumnKey<T>, CellDef<T>> =
     mapNotNull { it.cells }.fold(mapOf()) { acc, m -> acc + m }
 
-fun interface RowPredicate<T> : Predicate<SourceRow<T>>
 
 data class RowIndexDef(
     val index: Int = 0,
