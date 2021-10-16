@@ -16,8 +16,10 @@ internal data class RowDef<T> internal constructor(
 ) {
     @JvmSynthetic
     internal fun shouldApplyWhen(source: SourceRow<T>): Boolean = qualifier.applyWhen?.test(source) ?: false
+
     @JvmSynthetic
     internal fun shouldInsertRow(source: SourceRow<T>): Boolean = qualifier.createWhen?.test(source) ?: false
+
     @JvmSynthetic
     internal fun isApplicable(source: SourceRow<T>): Boolean = shouldApplyWhen(source) || shouldInsertRow(source)
 }
@@ -42,9 +44,18 @@ data class RowIndexDef(
 
     operator fun plus(increment: Int): RowIndexDef = RowIndexDef(index + increment, offsetLabel)
 
+    operator fun minus(increment: Int): RowIndexDef =
+        RowIndexDef((index - increment).coerceAtLeast(0), offsetLabel)
+
+
     operator fun inc(): RowIndexDef = RowIndexDef(index + 1, offsetLabel)
 
     override fun compareTo(other: RowIndexDef): Int = index.compareTo(other.index)
+
+    companion object {
+        fun maxValue(offsetLabel: String?) = RowIndexDef(Int.MAX_VALUE, offsetLabel)
+        fun minValue(offsetLabel: String?) = RowIndexDef(0, offsetLabel)
+    }
 }
 
 data class RowQualifier<T>(

@@ -149,7 +149,7 @@ internal class ColumnsBuilderState<T> : InternalBuilder<List<ColumnDef<T>>>() {
         }
 
     private fun ensureColumnBuilder(key: ColumnKey<T>): ColumnBuilderState<T> =
-        columnBuilderStates.find { it.id == key } ?: ColumnBuilderState(key,columnBuilderStates).apply {
+        columnBuilderStates.find { it.id == key } ?: ColumnBuilderState(key, columnBuilderStates).apply {
             index = columnBuilderStates.lastOrNull()?.index?.plus(1) ?: 0
         }.also { columnBuilderStates.add(it) }
 
@@ -253,7 +253,7 @@ internal class ColumnBuilderState<T>(
 
     @get:JvmSynthetic
     @set:JvmSynthetic
-    var index: Int by vetoable(columnBuilderStates.lastOrNull()?.index?.plus(1)?: 0) { _, _, newValue ->
+    var index: Int by vetoable(columnBuilderStates.lastOrNull()?.index?.plus(1) ?: 0) { _, _, newValue ->
         columnBuilderStates.findByIndex(newValue)?.let {
             if (it === this) true
             else throw BuilderException("Could not set column index $newValue because index is in use by another column.")
@@ -320,8 +320,10 @@ internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuild
     }
 
     private fun ensureRowBuilder(rowQualifier: RowQualifier<T>): RowBuilderState<T> =
-        rowBuilderStates.find { it.qualifier == rowQualifier } ?: RowBuilderState.new(columnsBuilderState,
-            interceptedRowSpans).also {
+        rowBuilderStates.find { it.qualifier == rowQualifier } ?: newRowBuilder(rowQualifier)
+
+    private fun newRowBuilder(rowQualifier: RowQualifier<T>): RowBuilderState<T> =
+        RowBuilderState.new(columnsBuilderState, interceptedRowSpans).also {
             rowBuilderStates.add(it)
             it.qualifier = rowQualifier
         }
@@ -440,7 +442,7 @@ internal class CellsBuilderState<T>(
     private fun newCellBuilder(key: ColumnKey<T>): CellBuilderState<T> {
         if (isCellLockedByRowSpan(key)) throw BuilderException("Cannot create cell at $key due to 'rowSpan' lock.")
         if (isCellLockedByColSpan(key)) throw BuilderException("Cannot create cell at $key due to 'colSpan' lock.")
-        return CellBuilderState<T>().also {
+        return CellBuilderState(key).also {
             current =
                 columnById(key) ?: throw BuilderException("Cannot add cell builder. No column definition for : $key")
             cells[key] = it
@@ -486,7 +488,7 @@ internal class CellsBuilderState<T>(
 
 }
 
-internal class CellBuilderState<T> : AttributesAwareBuilder<CellDef<T>>() {
+internal class CellBuilderState<T>(private val key: ColumnKey<T>) : AttributesAwareBuilder<CellDef<T>>() {
 
     @get:JvmSynthetic
     @set:JvmSynthetic
@@ -506,7 +508,13 @@ internal class CellBuilderState<T> : AttributesAwareBuilder<CellDef<T>>() {
 
     @get:JvmSynthetic
     @set:JvmSynthetic
-    var rowSpan: Int = 1
+    var rowSpan: Int by vetoable(1) { _, _, newValue ->
+        if (newValue > 1 && key.ref != null) {
+            throw BuilderException("Could not set rowSpan > 1 on cell with property literal as column key")
+        } else if (newValue < 1) {
+            throw BuilderException("Min value for rowSpan is 1")
+        } else true
+    }
 
     @JvmSynthetic
     override fun build(transformerContainer: AttributeTransformerContainer?): CellDef<T> =

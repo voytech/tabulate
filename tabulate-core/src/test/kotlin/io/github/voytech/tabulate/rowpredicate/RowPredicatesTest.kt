@@ -52,40 +52,40 @@ class RowPredicatesTest {
     @Test
     fun `should properly calculate range index on simple binary predicate literals`() {
         with(RowIndexPredicateLiteral<Record>(eq(2)).computeRanges()) {
-            assertEquals(2, first().start.rowIndex)
-            assertEquals(2, first().endInclusive.rowIndex)
+            assertEquals(2, first().start.index)
+            assertEquals(2, first().endInclusive.index)
         }
         with(RowIndexPredicateLiteral<Record>(lt(2)).computeRanges()) {
-            assertEquals(0, first().start.rowIndex)
-            assertEquals(1, first().endInclusive.rowIndex)
+            assertEquals(0, first().start.index)
+            assertEquals(1, first().endInclusive.index)
         }
         with(RowIndexPredicateLiteral<Record>(lte(2)).computeRanges()) {
-            assertEquals(0, first().start.rowIndex)
-            assertEquals(2, first().endInclusive.rowIndex)
+            assertEquals(0, first().start.index)
+            assertEquals(2, first().endInclusive.index)
         }
         with(RowIndexPredicateLiteral<Record>(gt(2)).computeRanges()) {
-            assertEquals(3, first().start.rowIndex)
-            assertEquals(Int.MAX_VALUE, first().endInclusive.rowIndex)
+            assertEquals(3, first().start.index)
+            assertEquals(Int.MAX_VALUE, first().endInclusive.index)
         }
         with(RowIndexPredicateLiteral<Record>(gte(2)).computeRanges()) {
-            assertEquals(2, first().start.rowIndex)
-            assertEquals(Int.MAX_VALUE, first().endInclusive.rowIndex)
+            assertEquals(2, first().start.index)
+            assertEquals(Int.MAX_VALUE, first().endInclusive.index)
         }
     }
 
     @Test
     fun `should properly calculate range index with 'and' predicate literal`() {
         with(RowIndexPredicateLiteral<Record>(gt(2) and lt(6)).computeRanges()) {
-            assertEquals(3, first().start.rowIndex)
-            assertEquals(5, first().endInclusive.rowIndex)
+            assertEquals(3, first().start.index)
+            assertEquals(5, first().endInclusive.index)
         }
         with(RowIndexPredicateLiteral<Record>(gte(2) and lte(6)).computeRanges()) {
-            assertEquals(2, first().start.rowIndex)
-            assertEquals(6, first().endInclusive.rowIndex)
+            assertEquals(2, first().start.index)
+            assertEquals(6, first().endInclusive.index)
         }
         with(RowIndexPredicateLiteral<Record>(eq(2) and lte(6)).computeRanges()) {
-            assertEquals(2, first().start.rowIndex)
-            assertEquals(2, first().endInclusive.rowIndex)
+            assertEquals(2, first().start.index)
+            assertEquals(2, first().endInclusive.index)
         }
         with(RowIndexPredicateLiteral<Record>(gte(2) and eq(1)).computeRanges()) {
             assertNull(firstOrNull())
@@ -95,39 +95,39 @@ class RowPredicatesTest {
     @Test
     fun `should properly calculate range index with 'or' predicate literal`() {
         with(RowIndexPredicateLiteral<Record>(gt(2) or lt(6)).computeRanges()) {
-            assertEquals(0, first().start.rowIndex)
-            assertEquals(Int.MAX_VALUE, first().endInclusive.rowIndex)
+            assertEquals(0, first().start.index)
+            assertEquals(Int.MAX_VALUE, first().endInclusive.index)
         }
         with(RowIndexPredicateLiteral<Record>(gt(6) or lt(5)).computeRanges()) {
             assertTrue(size == 2)
-            assertNotNull(find { it.start.rowIndex == 0 && it.endInclusive.rowIndex == 4 })
-            assertNotNull(find { it.start.rowIndex == 7 && it.endInclusive.rowIndex == Int.MAX_VALUE })
+            assertNotNull(find { it.start.index == 0 && it.endInclusive.index == 4 })
+            assertNotNull(find { it.start.index == 7 && it.endInclusive.index == Int.MAX_VALUE })
         }
         with(RowIndexPredicateLiteral<Record>(gt(6) or lt(8)).computeRanges()) {
             assertTrue(size == 1)
-            assertEquals(0, first().start.rowIndex)
-            assertEquals(Int.MAX_VALUE, first().endInclusive.rowIndex)
+            assertEquals(0, first().start.index)
+            assertEquals(Int.MAX_VALUE, first().endInclusive.index)
         }
         with(RowIndexPredicateLiteral<Record>(gte(6) or lte(6)).computeRanges()) {
             assertTrue(size == 1)
-            assertEquals(0, first().start.rowIndex)
-            assertEquals(Int.MAX_VALUE, first().endInclusive.rowIndex)
+            assertEquals(0, first().start.index)
+            assertEquals(Int.MAX_VALUE, first().endInclusive.index)
         }
     }
 
     @Test
     fun `should properly calculate range index for complex predicate literals`() {
         with(RowIndexPredicateLiteral<Record>(gt(2) and lt(6) and eq(4)).computeRanges()) {
-            assertEquals(4, first().start.rowIndex)
-            assertEquals(4, first().endInclusive.rowIndex)
+            assertEquals(4, first().start.index)
+            assertEquals(4, first().endInclusive.index)
         }
         with(RowIndexPredicateLiteral<Record>(gt(2) and lt(6) and gt(6) and lt(8)).computeRanges()) {
             assertNull(firstOrNull())
         }
         with(RowIndexPredicateLiteral<Record>((gt(2) and lt(6)) or (gt(6) and lt(8))).computeRanges()) {
             assertTrue(size == 2)
-            assertNotNull(find { it.start.rowIndex == 3 && it.endInclusive.rowIndex == 5 })
-            assertNotNull(find { it.start.rowIndex == 7 && it.endInclusive.rowIndex == 7 })
+            assertNotNull(find { it.start.index == 3 && it.endInclusive.index == 5 })
+            assertNotNull(find { it.start.index == 7 && it.endInclusive.index == 7 })
         }
     }
 

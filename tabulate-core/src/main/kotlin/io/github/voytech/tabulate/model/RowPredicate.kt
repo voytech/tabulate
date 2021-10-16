@@ -1,13 +1,13 @@
 package io.github.voytech.tabulate.model
 
+import io.github.voytech.tabulate.model.RowIndexDef.Companion.maxValue
+import io.github.voytech.tabulate.model.RowIndexDef.Companion.minValue
 import io.github.voytech.tabulate.template.context.RowIndex
 import java.util.function.Predicate
 
 fun interface RowPredicate<T> : Predicate<SourceRow<T>>
 
 fun interface IndexPredicate : Predicate<RowIndex>
-
-fun interface IndexedValuePredicate<T>: Predicate<IndexedValue<T>>
 
 enum class Operator {
     EQ,
@@ -23,65 +23,62 @@ enum class LogicalOperator {
 }
 
 interface PredicateLiteral : IndexPredicate {
-    fun computeRanges(): Array<ClosedRange<RowIndex>>
+    fun computeRanges(): Array<ClosedRange<RowIndexDef>>
 }
 
 class RowIndexPredicateLiteral<T>(
     private val indexPredicate: PredicateLiteral,
 ) : Predicate<SourceRow<T>> {
     override fun test(sourceRow: SourceRow<T>): Boolean = indexPredicate.test(sourceRow.rowIndex)
-    fun computeRanges(): Array<ClosedRange<RowIndex>> = indexPredicate.computeRanges()
+    fun computeRanges(): Array<ClosedRange<RowIndexDef>> = indexPredicate.computeRanges()
 }
 
-class RecordPredicateLiteral<T>(
-    private val recordPredicate: IndexedValuePredicate<T>,
-) : Predicate<SourceRow<T>> {
-    override fun test(sourceRow: SourceRow<T>): Boolean =
-        if (sourceRow.objectIndex != null && sourceRow.record != null)
-            recordPredicate.test(IndexedValue(sourceRow.objectIndex, sourceRow.record))
-        else false
-}
-
+fun RowIndex.getBy(other: RowIndexDef): RowIndexDef =
+    if (other.offsetLabel != null) {
+        RowIndexDef(getIndex(other.offsetLabel),other.offsetLabel)
+    } else {
+        RowIndexDef(getIndex())
+    }
 
 sealed class OperatorBasedIndexPredicateLiteral(
     private val operator: Operator,
-    private val operand: RowIndex
+    private val operand: RowIndexDef
 ): PredicateLiteral
 
-class Eq(private val operand: RowIndex) : OperatorBasedIndexPredicateLiteral(Operator.EQ,operand) {
-    override fun computeRanges(): Array<ClosedRange<RowIndex>> = arrayOf(operand..operand)
-    override fun test(index: RowIndex): Boolean = index == operand
+class Eq(private val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.EQ,operand) {
+    override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = arrayOf(operand..operand)
+    override fun test(index: RowIndex): Boolean = index.getBy(operand) == operand
 }
 
-fun eq(index: Int): Eq = Eq(RowIndex(index))
+fun eq(index: Int): Eq = Eq(RowIndexDef(index))
 
-class Gt(private val operand: RowIndex) : OperatorBasedIndexPredicateLiteral(Operator.GT,operand) {
-    override fun computeRanges(): Array<ClosedRange<RowIndex>> = arrayOf(operand + 1..RowIndex(Int.MAX_VALUE))
-    override fun test(index: RowIndex): Boolean = index > operand
+class Gt(private val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.GT,operand) {
+    override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = arrayOf(operand + 1 .. maxValue(operand.offsetLabel))
+    override fun test(index: RowIndex): Boolean = index.getBy(operand) > operand
 }
 
-fun gt(index: Int): Gt = Gt(RowIndex(index))
+fun gt(index: Int): Gt = Gt(RowIndexDef(index))
 
-class Lt(private val operand: RowIndex) : OperatorBasedIndexPredicateLiteral(Operator.LT,operand) {
-    override fun computeRanges(): Array<ClosedRange<RowIndex>> = arrayOf(RowIndex(0)..operand - 1)
-    override fun test(index: RowIndex): Boolean = index < operand
+class Lt(private val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.LT,operand) {
+    override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = arrayOf(minValue(operand.offsetLabel).. operand - 1)
+    override fun test(index: RowIndex): Boolean = index.getBy(operand) < operand
 }
-fun lt(index: Int): Lt = Lt(RowIndex(index))
+fun lt(index: Int): Lt = Lt(RowIndexDef(index))
 
 
-class Gte(private val operand: RowIndex) : OperatorBasedIndexPredicateLiteral(Operator.GTE,operand) {
-    override fun computeRanges(): Array<ClosedRange<RowIndex>> = arrayOf(operand..RowIndex(Int.MAX_VALUE))
-    override fun test(index: RowIndex): Boolean = index >= operand
-}
-
-fun gte(index: Int): Gte = Gte(RowIndex(index))
-
-class Lte(private val operand: RowIndex) : OperatorBasedIndexPredicateLiteral(Operator.LTE,operand) {
-    override fun computeRanges(): Array<ClosedRange<RowIndex>> = arrayOf(RowIndex(0)..operand)
-    override fun test(index: RowIndex): Boolean = index <= operand
+class Gte(private val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.GTE,operand) {
+    override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = arrayOf(operand..maxValue(operand.offsetLabel))
+    override fun test(index: RowIndex): Boolean = index.getBy(operand) >= operand
 }
 
-fun lte(index: Int): Lte = Lte(RowIndex(index))
+fun gte(index: Int): Gte = Gte(RowIndexDef(index))
+
+class Lte(private val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.LTE,operand) {
+    override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = arrayOf(minValue(operand.offsetLabel)..operand)
+    override fun test(index: RowIndex): Boolean = index.getBy(operand) <= operand
+}
+
+fun lte(index: Int): Lte = Lte(RowIndexDef(index))
 
 
 sealed class LogicalOperation(
@@ -91,7 +88,7 @@ sealed class LogicalOperation(
 ): PredicateLiteral
 
 class And(private val operandA: PredicateLiteral, private val operandB: PredicateLiteral) : LogicalOperation(LogicalOperator.AND, operandA, operandB) {
-    override fun computeRanges(): Array<ClosedRange<RowIndex>> = operandA.computeRanges() and operandB.computeRanges()
+    override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = operandA.computeRanges() and operandB.computeRanges()
 
     override fun test(index: RowIndex): Boolean = operandA.test(index).and(operandB.test(index))
 }
@@ -100,26 +97,25 @@ infix fun PredicateLiteral.and(other: PredicateLiteral): And = And(this,other)
 
 
 class Or(private val operandA: PredicateLiteral, private val  operandB: PredicateLiteral) : LogicalOperation(LogicalOperator.OR, operandA, operandB) {
-    override fun computeRanges(): Array<ClosedRange<RowIndex>> = operandA.computeRanges() or operandB.computeRanges()
+    override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = operandA.computeRanges() or operandB.computeRanges()
 
     override fun test(index: RowIndex): Boolean = operandA.test(index).or(operandB.test(index))
 }
 
 infix fun PredicateLiteral.or(other: PredicateLiteral): Or = Or(this,other)
 
-
-infix fun ClosedRange<RowIndex>.intersects(other: ClosedRange<RowIndex>) : Boolean =
+infix fun ClosedRange<RowIndexDef>.intersects(other: ClosedRange<RowIndexDef>) : Boolean =
     (endInclusive >= other.start && other.endInclusive >= start)
 
-infix fun ClosedRange<RowIndex>.or(other: ClosedRange<RowIndex>): Array<ClosedRange<RowIndex>> {
+infix fun ClosedRange<RowIndexDef>.or(other: ClosedRange<RowIndexDef>): Array<ClosedRange<RowIndexDef>> {
     return if (this intersects other) {
         arrayOf(minOf(start,other.start) .. maxOf(endInclusive, other.endInclusive))
     } else arrayOf(this, other)
 }
 
-infix fun Array<ClosedRange<RowIndex>>.or(other: ClosedRange<RowIndex>): Array<ClosedRange<RowIndex>> {
+infix fun Array<ClosedRange<RowIndexDef>>.or(other: ClosedRange<RowIndexDef>): Array<ClosedRange<RowIndexDef>> {
     return fold(mutableListOf(other)) { acc, next ->
-        val newAcc = mutableListOf<ClosedRange<RowIndex>>()
+        val newAcc = mutableListOf<ClosedRange<RowIndexDef>>()
         acc.forEach {
             if (it intersects next) {
                 newAcc.add((it or next).first())
@@ -131,17 +127,17 @@ infix fun Array<ClosedRange<RowIndex>>.or(other: ClosedRange<RowIndex>): Array<C
     }.toTypedArray()
 }
 
-infix fun Array<ClosedRange<RowIndex>>.or(other: Array<ClosedRange<RowIndex>>): Array<ClosedRange<RowIndex>> {
+infix fun Array<ClosedRange<RowIndexDef>>.or(other: Array<ClosedRange<RowIndexDef>>): Array<ClosedRange<RowIndexDef>> {
     return fold(other) { acc, next -> acc or next}
 }
 
-infix fun ClosedRange<RowIndex>.and(other: ClosedRange<RowIndex>): ClosedRange<RowIndex>? {
+infix fun ClosedRange<RowIndexDef>.and(other: ClosedRange<RowIndexDef>): ClosedRange<RowIndexDef>? {
     return if (this intersects other) {
         maxOf(start,other.start) .. minOf(endInclusive, other.endInclusive)
     } else null
 }
 
-infix fun Array<ClosedRange<RowIndex>>.and(other: Array<ClosedRange<RowIndex>>): Array<ClosedRange<RowIndex>> {
+infix fun Array<ClosedRange<RowIndexDef>>.and(other: Array<ClosedRange<RowIndexDef>>): Array<ClosedRange<RowIndexDef>> {
     return flatMap { left ->
         other.mapNotNull { right ->
             left and right
