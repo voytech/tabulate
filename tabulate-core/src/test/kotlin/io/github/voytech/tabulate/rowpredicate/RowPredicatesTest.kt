@@ -124,10 +124,19 @@ class RowPredicatesTest {
         with(RowIndexPredicateLiteral<Record>(gt(2) and lt(6) and gt(6) and lt(8)).computeRanges()) {
             assertNull(firstOrNull())
         }
-        with(RowIndexPredicateLiteral<Record>((gt(2) and lt(6)) or (gt(6) and lt(8))).computeRanges()) {
-            assertTrue(size == 2)
-            assertNotNull(find { it.start.index == 3 && it.endInclusive.index == 5 })
-            assertNotNull(find { it.start.index == 7 && it.endInclusive.index == 7 })
+        with(RowIndexPredicateLiteral<Record>((gt(2) and lt(6)) or (gt(6) and lt(8)))) {
+            with(computeRanges()) {
+                assertTrue(size == 2)
+                assertNotNull(find { it.start.index == 3 && it.endInclusive.index == 5 })
+                assertNotNull(find { it.start.index == 7 && it.endInclusive.index == 7 })
+            }
+            with(materialize()) {
+                assertTrue(contains(RowIndexDef(3)))
+                assertTrue(contains(RowIndexDef(4)))
+                assertTrue(contains(RowIndexDef(5)))
+                assertTrue(contains(RowIndexDef(7)))
+            }
+
         }
     }
 

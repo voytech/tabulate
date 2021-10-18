@@ -198,14 +198,15 @@ class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuild
     }
 }
 
+
 @TabulateMarker
 class RowBuilderApi<T> internal constructor(private val builderState: RowBuilderState<T>) {
 
     @JvmSynthetic
-    fun matching(predicate: RowPredicate<T>) = apply { builderState.qualifier = RowQualifier(applyWhen = predicate) }
+    fun matching(predicate: RowPredicate<T>) = apply { builderState.qualifier = RowQualifier(matching = predicate) }
 
     @JvmSynthetic
-    fun insertWhen(predicate: RowPredicate<T>) = apply { builderState.qualifier = RowQualifier(createWhen = predicate) }
+    fun index(predicate: () -> PredicateLiteral) = apply { builderState.qualifier = RowQualifier(index = RowIndexPredicateLiteral(predicate())) }
 
     @JvmSynthetic
     fun cells(block: CellsBuilderApi<T>.() -> Unit) {

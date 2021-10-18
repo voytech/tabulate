@@ -287,22 +287,22 @@ internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuild
 
     @JvmSynthetic
     fun addRowBuilder(block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> =
-        ensureRowBuilder(RowQualifier(createAt = rowIndex)).also {
+        ensureRowBuilder(RowQualifier(index = RowIndexPredicateLiteral(Eq(rowIndex)))).also {
             block.invoke(it)
-            rowIndex = it.qualifier.createAt?.plus(1) ?: rowIndex
+            rowIndex = it.qualifier.index?.lastIndex()?.plus(1) ?: rowIndex
             refreshRowSpans(it)
         }
 
     @JvmSynthetic
     fun addRowBuilder(selector: RowPredicate<T>, block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> =
-        ensureRowBuilder(RowQualifier(applyWhen = selector)).also {
+        ensureRowBuilder(RowQualifier(matching = selector)).also {
             block.invoke(it)
         }
 
     @JvmSynthetic
     fun addRowBuilder(at: RowIndexDef, block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> {
         rowIndex = at
-        return ensureRowBuilder(RowQualifier(createAt = rowIndex++)).also {
+        return ensureRowBuilder(RowQualifier(index = RowIndexPredicateLiteral(Eq(rowIndex++)))).also {
             block.invoke(it)
             refreshRowSpans(it)
         }
@@ -313,7 +313,7 @@ internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuild
         if (label.name != rowIndex.offsetLabel) {
             rowIndex = RowIndexDef(index = 0, offsetLabel = label.name)
         }
-        return ensureRowBuilder(RowQualifier(createAt = rowIndex++)).also {
+        return ensureRowBuilder(RowQualifier(index = RowIndexPredicateLiteral(Eq(rowIndex++)))).also {
             block.invoke(it)
             refreshRowSpans(it)
         }
@@ -346,7 +346,7 @@ internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuild
     }
 
     private fun sortedNullsLast(): List<RowBuilderState<T>> {
-        return rowBuilderStates.sortedWith(compareBy(nullsLast()) { it.qualifier.createAt })
+        return rowBuilderStates.sortedWith(compareBy(nullsLast()) { it.qualifier.index?.computeRanges()?.last()?.endInclusive })
     }
 
 }

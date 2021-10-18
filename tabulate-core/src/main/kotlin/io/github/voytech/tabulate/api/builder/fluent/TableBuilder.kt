@@ -148,12 +148,12 @@ class RowsBuilder<T> internal constructor(
 
     fun row(at: Int) =
         RowBuilder(parent.builderState.rowsBuilderState.addRowBuilder {
-            it.qualifier = RowQualifier(createAt = RowIndexDef(at))
+            it.qualifier = RowQualifier(index = RowIndexPredicateLiteral(eq(at)))
         }, this)
 
     fun row(at: Int, offset: DefaultSteps) =
         RowBuilder(parent.builderState.rowsBuilderState.addRowBuilder {
-            it.qualifier = RowQualifier(createAt = RowIndexDef(at, offset.name))
+            it.qualifier = RowQualifier(index = RowIndexPredicateLiteral(eq(at, offset.name)))
         }, this)
 
     @JvmSynthetic
@@ -167,11 +167,7 @@ class RowBuilder<T> internal constructor(
 ) : FluentTableBuilderApi<T>() {
 
     fun allMatching(predicate: RowPredicate<T>) = apply {
-        builderState.qualifier = RowQualifier(applyWhen = predicate)
-    }
-
-    fun insertWhen(predicate: RowPredicate<T>) = apply {
-        builderState.qualifier = RowQualifier(createWhen = predicate)
+        builderState.qualifier = RowQualifier(matching = predicate)
     }
 
     fun cell() = CellBuilder(builderState.cellsBuilderState.addCellBuilder { }, this)

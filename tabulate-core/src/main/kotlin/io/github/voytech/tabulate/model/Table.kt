@@ -34,9 +34,10 @@ class Table<T> internal constructor(
     private var indexedCustomRows: Map<RowIndexDef, List<RowDef<T>>>? = null
 
     init {
-        indexedCustomRows = rows?.filter { it.qualifier.createAt != null }
-            ?.sortedBy { it.qualifier.createAt!! }
-            ?.groupBy { it.qualifier.createAt!! }
+        indexedCustomRows = rows?.filter { it.qualifier.index != null }
+            ?.map { it.qualifier.index?.materialize() to it }
+            ?.flatMap { it.first?.map { index -> index to it.second } ?: emptyList() }
+            ?.groupBy({ it.first },{ it.second })
     }
 
     @JvmSynthetic

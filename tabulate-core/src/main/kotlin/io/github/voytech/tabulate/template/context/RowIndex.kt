@@ -26,6 +26,8 @@ data class RowIndex(
 
     fun getIndex(label: String? = null): Int = label?.let { labels[it]?.index } ?: rowIndex
 
+    fun getIndexOrNull(label: String): Int? = labels[label]?.index
+
     override fun compareTo(other: RowIndex): Int = rowIndex.compareTo(other.rowIndex)
 
     internal operator fun plus(increment: Int): RowIndex = RowIndex(rowIndex + increment, labels + increment)

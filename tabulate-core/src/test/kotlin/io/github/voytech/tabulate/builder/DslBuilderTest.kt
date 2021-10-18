@@ -260,7 +260,7 @@ class DslBuilderTest {
             }
         }.build()) {
             assertNotNull(this)
-            assertEquals(rows!!.size, 2)
+            assertEquals(2, rows!!.size)
             rows.first().let { header ->
                 assertEquals(2,header.cells!!.size)
                 assertEquals("Code", header.cells[ColumnKey(ref = Product::code.id())]!!.value)

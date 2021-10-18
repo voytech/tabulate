@@ -12,6 +12,7 @@ import io.github.voytech.tabulate.model.attributes.column.width
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.row.height
 import io.github.voytech.tabulate.model.attributes.row.rowHeight
+import io.github.voytech.tabulate.model.eq
 import io.github.voytech.tabulate.template.context.AttributedRowWithCells
 import io.github.voytech.tabulate.testsupport.AttributedCellTest
 import io.github.voytech.tabulate.testsupport.AttributedColumnTest
@@ -440,9 +441,7 @@ class TabulateRowCellRenderOperationTest {
             }
             rows {
                 row {
-                    insertWhen {
-                        it.rowIndexValue() == 5
-                    }
+                    index { eq(5)  }
                     cell {
                         value = "Custom row cell"
                     }

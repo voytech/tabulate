@@ -15,10 +15,10 @@ internal data class RowDef<T> internal constructor(
     internal val cells: Map<ColumnKey<T>, CellDef<T>>?,
 ) {
     @JvmSynthetic
-    internal fun shouldApplyWhen(source: SourceRow<T>): Boolean = qualifier.applyWhen?.test(source) ?: false
+    internal fun shouldApplyWhen(source: SourceRow<T>): Boolean = qualifier.matching?.test(source) ?: false
 
     @JvmSynthetic
-    internal fun shouldInsertRow(source: SourceRow<T>): Boolean = qualifier.createWhen?.test(source) ?: false
+    internal fun shouldInsertRow(source: SourceRow<T>): Boolean = qualifier.index?.test(source) ?: false
 
     @JvmSynthetic
     internal fun isApplicable(source: SourceRow<T>): Boolean = shouldApplyWhen(source) || shouldInsertRow(source)
@@ -59,9 +59,8 @@ data class RowIndexDef(
 }
 
 data class RowQualifier<T>(
-    val applyWhen: RowPredicate<T>? = null,
-    val createWhen: RowPredicate<T>? = null,
-    val createAt: RowIndexDef? = null,
+    val matching: RowPredicate<T>? = null,
+    val index: RowIndexPredicateLiteral<T>? = null,
 )
 
 internal fun <T> Map<ColumnKey<T>, CellDef<T>>?.resolveCellValue(
