@@ -346,10 +346,19 @@ internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuild
     }
 
     private fun sortedNullsLast(): List<RowBuilderState<T>> {
-        return rowBuilderStates.sortedWith(compareBy(nullsLast()) { it.qualifier.index?.computeRanges()?.last()?.endInclusive })
+        return rowBuilderStates.sortedWith(compareBy(nullsLast()) {
+            it.qualifier.index?.computeRanges()?.last()?.endInclusive
+        })
     }
 
 }
+
+@JvmSynthetic
+internal fun <T, R> MutableList<RowBuilderState<T>>.searchRowsBackwardUntil(block: (row: RowBuilderState<T>) -> R?): R? =
+    filter { it.qualifier.index != null }
+        .sortedBy { it.qualifier.index!!.lastIndex() }
+        .reversed()
+        .firstNotNullOfOrNull { block(it) }
 
 internal class RowBuilderState<T>(
     columnsBuilderState: ColumnsBuilderState<T>,
@@ -430,7 +439,20 @@ internal class CellsBuilderState<T>(
 
     @JvmSynthetic
     override fun build(transformerContainer: AttributeTransformerContainer?): Map<ColumnKey<T>, CellDef<T>> {
-        return cells.map { it.key to it.value.build(transformerContainer) }.toMap()
+        return cells.map {
+            validateCell(it.key, it.value)
+            it.key to it.value.build(transformerContainer)
+        }.toMap()
+    }
+
+    private fun validateCell(key: ColumnKey<T>, cellBuilder: CellBuilderState<T>) {
+        if (cellBuilder.rowSpan > 1
+            && cellBuilder.value == null
+            && cellBuilder.expression == null
+            && key.ref != null
+        ) {
+            throw BuilderException("At least one cell addressed with property literal column key does not define custom value")
+        }
     }
 
     private fun ensureCellBuilder(key: ColumnKey<T>): CellBuilderState<T> =
@@ -442,7 +464,7 @@ internal class CellsBuilderState<T>(
     private fun newCellBuilder(key: ColumnKey<T>): CellBuilderState<T> {
         if (isCellLockedByRowSpan(key)) throw BuilderException("Cannot create cell at $key due to 'rowSpan' lock.")
         if (isCellLockedByColSpan(key)) throw BuilderException("Cannot create cell at $key due to 'colSpan' lock.")
-        return CellBuilderState(key).also {
+        return CellBuilderState<T>().also {
             current =
                 columnById(key) ?: throw BuilderException("Cannot add cell builder. No column definition for : $key")
             cells[key] = it
@@ -488,7 +510,7 @@ internal class CellsBuilderState<T>(
 
 }
 
-internal class CellBuilderState<T>(private val key: ColumnKey<T>) : AttributesAwareBuilder<CellDef<T>>() {
+internal class CellBuilderState<T> : AttributesAwareBuilder<CellDef<T>>() {
 
     @get:JvmSynthetic
     @set:JvmSynthetic
@@ -504,22 +526,28 @@ internal class CellBuilderState<T>(private val key: ColumnKey<T>) : AttributesAw
 
     @get:JvmSynthetic
     @set:JvmSynthetic
-    var colSpan: Int = 1
+    var colSpan: Int by vetoable(1) { _, _, newValue ->
+        if (newValue < 1) {
+            throw BuilderException("Minimum value for colSpan is 1")
+        } else true
+    }
 
     @get:JvmSynthetic
     @set:JvmSynthetic
     var rowSpan: Int by vetoable(1) { _, _, newValue ->
-        if (newValue > 1 && key.ref != null) {
-            throw BuilderException("Could not set rowSpan > 1 on cell with property literal as column key")
-        } else if (newValue < 1) {
-            throw BuilderException("Min value for rowSpan is 1")
+        if (newValue < 1) {
+            throw BuilderException("Minimum value for rowSpan is 1")
         } else true
     }
+
+    @get:JvmSynthetic
+    @set:JvmSynthetic
+    var rowSpanStrategy: CollidingRowSpanStrategy = CollidingRowSpanStrategy.SHADOW
 
     @JvmSynthetic
     override fun build(transformerContainer: AttributeTransformerContainer?): CellDef<T> =
         CellDef(
-            value, expression, type, colSpan, rowSpan,
+            value, expression, type, colSpan, rowSpan, rowSpanStrategy,
             getAttributesByClass(CellAttribute::class.java, transformerContainer)
         )
 

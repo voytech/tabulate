@@ -3,6 +3,31 @@ package io.github.voytech.tabulate.model
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.template.context.CellValue
 
+/**
+ * Defines behaviours for cases when row span setting causes row to overlay downstream rows.
+ */
+internal enum class CollidingRowSpanStrategy {
+    /**
+     When row span causes row to overlay downstream rows, downstream row values are not rendered, but skipped.
+     That behaviours is lossy.
+     */
+    SHADOW,
+    /**
+    When row span causes row to overlay downstream rows, then all custom rows definitions are shifted down by row span value.
+    Also next row index to be requested by iterator is advanced by the value of row span.
+     */
+    SHIFT,
+    /**
+    When row span causes row to overlay downstream rows, then none of downstream custom rows definitions are shifted.
+    Only next row index to be requested by iterator is advanced by the value of row span.
+     */
+    SKIP,
+    /**
+    When row span causes row to overlay downstream rows, then an exception is thrown.
+     */
+    THROW
+}
+
 internal data class CellDef<T> internal constructor(
     @get:JvmSynthetic
     val value: Any?,
@@ -14,6 +39,8 @@ internal data class CellDef<T> internal constructor(
     val colSpan: Int = 1,
     @get:JvmSynthetic
     val rowSpan: Int = 1,
+    @get:JvmSynthetic
+    val rowSpanMode: CollidingRowSpanStrategy = CollidingRowSpanStrategy.SHADOW,
     @get:JvmSynthetic
     val cellAttributes: Set<CellAttribute>?
 ) {

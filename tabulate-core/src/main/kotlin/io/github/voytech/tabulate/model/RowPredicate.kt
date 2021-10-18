@@ -23,7 +23,7 @@ enum class LogicalOperator {
     OR
 }
 
-fun ClosedRange<RowIndexDef>.progression(): IntProgression = fromClosedRange(start.index,endInclusive.index,1)
+fun ClosedRange<RowIndexDef>.progression(): IntProgression = fromClosedRange(start.index, endInclusive.index, 1)
 
 interface PredicateLiteral : IndexPredicate {
     fun computeRanges(): Array<ClosedRange<RowIndexDef>>
@@ -45,7 +45,7 @@ data class RowIndexPredicateLiteral<T>(
 fun RowIndex.lookup(other: RowIndexDef): RowIndexDef? =
     if (other.offsetLabel != null) {
         getIndexOrNull(other.offsetLabel)?.let {
-            RowIndexDef(it,other.offsetLabel)
+            RowIndexDef(it, other.offsetLabel)
         }
     } else {
         RowIndexDef(getIndex())
@@ -53,74 +53,97 @@ fun RowIndex.lookup(other: RowIndexDef): RowIndexDef? =
 
 sealed class OperatorBasedIndexPredicateLiteral(
     protected open val operator: Operator,
-    protected open val operand: RowIndexDef
-): PredicateLiteral
+    protected open val operand: RowIndexDef,
+) : PredicateLiteral
 
-data class Eq(override val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.EQ,operand) {
+data class Eq(override val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.EQ, operand) {
     override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = arrayOf(operand..operand)
     override fun test(index: RowIndex): Boolean = index.lookup(operand) == operand
 }
 
-fun eq(index: Int, label: String? = null): Eq = Eq(RowIndexDef(index,label))
+fun eq(index: Int, label: String? = null): Eq = Eq(RowIndexDef(index, label))
 
-data class Gt(override val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.GT,operand) {
-    override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = arrayOf(operand + 1 .. maxValue(operand.offsetLabel))
+data class Gt(override val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.GT, operand) {
+    override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = arrayOf(operand + 1..maxValue(operand.offsetLabel))
     override fun test(index: RowIndex): Boolean = index.lookup(operand)?.let { it > operand } ?: false
 }
 
-fun gt(index: Int, label: String? = null): Gt = Gt(RowIndexDef(index,label))
+fun gt(index: Int, label: String? = null): Gt = Gt(RowIndexDef(index, label))
 
-data class Lt(override val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.LT,operand) {
-    override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = arrayOf(minValue(operand.offsetLabel).. operand - 1)
+data class Lt(override val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.LT, operand) {
+    override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = arrayOf(minValue(operand.offsetLabel)..operand - 1)
     override fun test(index: RowIndex): Boolean = index.lookup(operand)?.let { it < operand } ?: false
 }
-fun lt(index: Int, label: String? = null): Lt = Lt(RowIndexDef(index,label))
+
+fun lt(index: Int, label: String? = null): Lt = Lt(RowIndexDef(index, label))
 
 
-data class Gte(override val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.GTE,operand) {
+data class Gte(override val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.GTE, operand) {
     override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = arrayOf(operand..maxValue(operand.offsetLabel))
     override fun test(index: RowIndex): Boolean = index.lookup(operand)?.let { it >= operand } ?: false
 }
 
-fun gte(index: Int, label: String? = null): Gte = Gte(RowIndexDef(index,label))
+fun gte(index: Int, label: String? = null): Gte = Gte(RowIndexDef(index, label))
 
-data class Lte(override val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.LTE,operand) {
+data class Lte(override val operand: RowIndexDef) : OperatorBasedIndexPredicateLiteral(Operator.LTE, operand) {
     override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = arrayOf(minValue(operand.offsetLabel)..operand)
     override fun test(index: RowIndex): Boolean = index.lookup(operand)?.let { it <= operand } ?: false
 }
 
-fun lte(index: Int, label: String? = null): Lte = Lte(RowIndexDef(index,label))
+fun lte(index: Int, label: String? = null): Lte = Lte(RowIndexDef(index, label))
 
 
 sealed class LogicalOperation(
     protected open val operator: LogicalOperator,
     protected open val operandA: PredicateLiteral,
     protected open val operandB: PredicateLiteral,
-): PredicateLiteral
+) : PredicateLiteral {
+    override fun equals(other: Any?): Boolean {
+        if (other === this) return true
+        if (other == null) return false
+        return if (other.javaClass == this.javaClass) {
+            (other as LogicalOperation).let {
+                operator == it.operator &&
+                        ((operandA == it.operandA && operandB == it.operandB) ||
+                                (operandA == it.operandB && operandB == it.operandA))
+            }
+        } else false
+    }
 
-data class And(override val operandA: PredicateLiteral, override val operandB: PredicateLiteral) : LogicalOperation(LogicalOperator.AND, operandA, operandB) {
-    override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = operandA.computeRanges() and operandB.computeRanges()
+    override fun hashCode(): Int {
+        var result = operator.hashCode()
+        result = 31 * result + operandA.hashCode()
+        result = 31 * result + operandB.hashCode()
+        return result
+    }
+}
+
+class And(override val operandA: PredicateLiteral, override val operandB: PredicateLiteral) :
+    LogicalOperation(LogicalOperator.AND, operandA, operandB) {
+    override fun computeRanges(): Array<ClosedRange<RowIndexDef>> =
+        operandA.computeRanges() and operandB.computeRanges()
 
     override fun test(index: RowIndex): Boolean = operandA.test(index).and(operandB.test(index))
 }
 
-infix fun PredicateLiteral.and(other: PredicateLiteral): And = And(this,other)
+infix fun PredicateLiteral.and(other: PredicateLiteral): And = And(this, other)
 
 
-data class Or(override val operandA: PredicateLiteral, override val  operandB: PredicateLiteral) : LogicalOperation(LogicalOperator.OR, operandA, operandB) {
+class Or(override val operandA: PredicateLiteral, override val operandB: PredicateLiteral) :
+    LogicalOperation(LogicalOperator.OR, operandA, operandB) {
     override fun computeRanges(): Array<ClosedRange<RowIndexDef>> = operandA.computeRanges() or operandB.computeRanges()
 
     override fun test(index: RowIndex): Boolean = operandA.test(index).or(operandB.test(index))
 }
 
-infix fun PredicateLiteral.or(other: PredicateLiteral): Or = Or(this,other)
+infix fun PredicateLiteral.or(other: PredicateLiteral): Or = Or(this, other)
 
-infix fun ClosedRange<RowIndexDef>.intersects(other: ClosedRange<RowIndexDef>) : Boolean =
+infix fun ClosedRange<RowIndexDef>.intersects(other: ClosedRange<RowIndexDef>): Boolean =
     (endInclusive >= other.start && other.endInclusive >= start)
 
 infix fun ClosedRange<RowIndexDef>.or(other: ClosedRange<RowIndexDef>): Array<ClosedRange<RowIndexDef>> {
     return if (this intersects other) {
-        arrayOf(minOf(start,other.start) .. maxOf(endInclusive, other.endInclusive))
+        arrayOf(minOf(start, other.start)..maxOf(endInclusive, other.endInclusive))
     } else arrayOf(this, other)
 }
 
@@ -139,12 +162,12 @@ infix fun Array<ClosedRange<RowIndexDef>>.or(other: ClosedRange<RowIndexDef>): A
 }
 
 infix fun Array<ClosedRange<RowIndexDef>>.or(other: Array<ClosedRange<RowIndexDef>>): Array<ClosedRange<RowIndexDef>> {
-    return fold(other) { acc, next -> acc or next}
+    return fold(other) { acc, next -> acc or next }
 }
 
 infix fun ClosedRange<RowIndexDef>.and(other: ClosedRange<RowIndexDef>): ClosedRange<RowIndexDef>? {
     return if (this intersects other) {
-        maxOf(start,other.start) .. minOf(endInclusive, other.endInclusive)
+        maxOf(start, other.start)..minOf(endInclusive, other.endInclusive)
     } else null
 }
 
