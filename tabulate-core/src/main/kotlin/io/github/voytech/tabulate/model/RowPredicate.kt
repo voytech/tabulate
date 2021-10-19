@@ -32,14 +32,23 @@ interface PredicateLiteral : IndexPredicate {
 data class RowIndexPredicateLiteral<T>(
     private val indexPredicate: PredicateLiteral,
 ) : Predicate<SourceRow<T>> {
-    override fun test(sourceRow: SourceRow<T>): Boolean = indexPredicate.test(sourceRow.rowIndex)
-    fun computeRanges(): Array<ClosedRange<RowIndexDef>> = indexPredicate.computeRanges()
-    fun lastIndex(): RowIndexDef = computeRanges().last().endInclusive
-    fun materialize(): Set<RowIndexDef> =
-        computeRanges().fold(mutableSetOf()) { agg, next ->
+
+    private val computedRanges: Array<ClosedRange<RowIndexDef>> by lazy {
+         indexPredicate.computeRanges()
+    }
+
+    private val computedIndices: Set<RowIndexDef> by lazy {
+        computedRanges.fold(mutableSetOf()) { agg, next ->
             val label = next.start.offsetLabel
             next.progression().forEach { agg.add(RowIndexDef(it, label)) }.let { agg }
         }
+    }
+
+    override fun test(sourceRow: SourceRow<T>): Boolean = indexPredicate.test(sourceRow.rowIndex)
+    fun computeRanges(): Array<ClosedRange<RowIndexDef>> = computedRanges
+    fun lastIndex(): RowIndexDef = computeRanges().last().endInclusive
+    fun firsIndex(): RowIndexDef = computeRanges().first().start
+    fun materialize(): Set<RowIndexDef> = computedIndices
 }
 
 fun RowIndex.lookup(other: RowIndexDef): RowIndexDef? =
