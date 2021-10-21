@@ -6,7 +6,6 @@ import io.github.voytech.tabulate.model.attributes.Attribute
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
-import io.github.voytech.tabulate.template.context.DefaultSteps
 import java.util.concurrent.Callable
 import java.util.function.Consumer
 import java.util.function.Function as JFunction
@@ -151,9 +150,9 @@ class RowsBuilder<T> internal constructor(
             it.qualifier = RowQualifier(index = RowIndexPredicateLiteral(eq(at)))
         }, this)
 
-    fun row(at: Int, offset: DefaultSteps) =
+    fun row(at: Int, offset: Enum<*>) =
         RowBuilder(parent.builderState.rowsBuilderState.addRowBuilder {
-            it.qualifier = RowQualifier(index = RowIndexPredicateLiteral(eq(at, offset.name)))
+            it.qualifier = RowQualifier(index = RowIndexPredicateLiteral(eq(at, offset)))
         }, this)
 
     @JvmSynthetic

@@ -39,22 +39,22 @@ internal fun <T> Collection<RowDef<T>>.mergeCells(): Map<ColumnKey<T>, CellDef<T
 
 data class RowIndexDef(
     val index: Int = 0,
-    val offsetLabel: String? = null,
+    val step: Enum<*>? = null,
 ) : Comparable<RowIndexDef> {
 
-    operator fun plus(increment: Int): RowIndexDef = RowIndexDef(index + increment, offsetLabel)
+    operator fun plus(increment: Int): RowIndexDef = RowIndexDef(index + increment, step)
 
     operator fun minus(increment: Int): RowIndexDef =
-        RowIndexDef((index - increment).coerceAtLeast(0), offsetLabel)
+        RowIndexDef((index - increment).coerceAtLeast(0), step)
 
 
-    operator fun inc(): RowIndexDef = RowIndexDef(index + 1, offsetLabel)
+    operator fun inc(): RowIndexDef = RowIndexDef(index + 1, step)
 
     override fun compareTo(other: RowIndexDef): Int = index.compareTo(other.index)
 
     companion object {
-        fun maxValue(offsetLabel: String?) = RowIndexDef(Int.MAX_VALUE, offsetLabel)
-        fun minValue(offsetLabel: String?) = RowIndexDef(0, offsetLabel)
+        fun maxValue(step: Enum<*>?) = RowIndexDef(Int.MAX_VALUE, step)
+        fun minValue(step: Enum<*>?) = RowIndexDef(0, step)
     }
 }
 

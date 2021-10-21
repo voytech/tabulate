@@ -2,49 +2,50 @@ package io.github.voytech.tabulate.template.context
 
 import io.github.voytech.tabulate.model.RowIndexDef
 
+
 enum class DefaultSteps {
     TRAILING_ROWS,
 }
 
 data class IndexMarker(
-    val label: String,
+    val step: String,
     val index: Int,
 ) {
-    operator fun plus(increment: Int): IndexMarker = IndexMarker(label, index + increment)
+    operator fun plus(increment: Int): IndexMarker = IndexMarker(step, index + increment)
 
-    operator fun minus(increment: Int): IndexMarker = IndexMarker(label, index - increment)
+    operator fun minus(increment: Int): IndexMarker = IndexMarker(step, index - increment)
 
-    operator fun inc(): IndexMarker = IndexMarker(label, index + 1)
+    operator fun inc(): IndexMarker = IndexMarker(step, index + 1)
 }
 
 data class RowIndex(
     val rowIndex: Int = 0,
-    val labels: Map<String, IndexMarker> = emptyMap(),
+    val steps: Map<String, IndexMarker> = emptyMap(),
 ) : Comparable<RowIndex> {
 
-    fun hasLabel(label: String) = labels.containsKey(label)
+    fun hasLabel(label: String) = steps.containsKey(label)
 
-    fun getIndex(label: String? = null): Int = label?.let { labels[it]?.index } ?: rowIndex
+    fun getIndex(label:String? = null): Int = label?.let { steps[it]?.index } ?: rowIndex
 
-    fun getIndexOrNull(label: String): Int? = labels[label]?.index
+    fun getIndexOrNull(label: String): Int? = steps[label]?.index
 
     override fun compareTo(other: RowIndex): Int = rowIndex.compareTo(other.rowIndex)
 
-    internal operator fun plus(increment: Int): RowIndex = RowIndex(rowIndex + increment, labels + increment)
-    internal operator fun minus(increment: Int): RowIndex = RowIndex(rowIndex - increment, labels - increment)
+    internal operator fun plus(increment: Int): RowIndex = RowIndex(rowIndex + increment, steps + increment)
+    internal operator fun minus(increment: Int): RowIndex = RowIndex(rowIndex - increment, steps - increment)
 
     internal operator fun plus(increment: RowIndexDef): RowIndex {
-        return increment.offsetLabel?.let {
+        return increment.step?.let {
             RowIndex(
                 rowIndex = rowIndex + increment.index,
-                labels = labels + mapOf(
-                    it to IndexMarker(index = increment.index, label = it)
+                steps = steps + mapOf(
+                    it.name to IndexMarker(index = increment.index, step = it.name)
                 )
             )
         } ?: RowIndex(increment.index)
     }
 
-    internal operator fun inc(): RowIndex = RowIndex(rowIndex = rowIndex + 1, labels + 1)
+    internal operator fun inc(): RowIndex = RowIndex(rowIndex = rowIndex + 1, steps + 1)
 
 }
 
@@ -58,28 +59,28 @@ internal operator fun Map<String, IndexMarker>.minus(increment: Int): Map<String
 
 internal class MutableRowIndex {
     var rowIndex: Int = 0
-    private val labels: MutableMap<String, IndexMarker> = mutableMapOf()
+    private val steps: MutableMap<String, IndexMarker> = mutableMapOf()
 
-    fun mark(label: String): RowIndex {
-        if (!labels.containsKey(label)) {
-            labels[label] = IndexMarker(label, 0)
+    fun mark(step: String): RowIndex {
+        if (!steps.containsKey(step)) {
+            steps[step] = IndexMarker(step, 0)
         }
-        return RowIndex(rowIndex, labels)
+        return RowIndex(rowIndex, steps)
     }
 
     fun inc() {
         rowIndex++
-        labels.forEach { labels[it.key] = it.value + 1 }
+        steps.forEach { steps[it.key] = it.value + 1 }
     }
 
     fun assign(value: Int) {
         val offset = value - rowIndex
         rowIndex = value
-        labels.forEach { labels[it.key] = it.value + offset }
+        steps.forEach { steps[it.key] = it.value + offset }
     }
 
-    private fun cloneLabels(): Map<String, IndexMarker> =
-        labels.mapValues { it.value.copy() }
+    private fun cloneSteps(): Map<String, IndexMarker> =
+        steps.mapValues { it.value.copy() }
 
-    fun getRowIndex(): RowIndex = RowIndex(rowIndex, cloneLabels())
+    fun getRowIndex(): RowIndex = RowIndex(rowIndex, cloneSteps())
 }

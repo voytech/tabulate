@@ -5,7 +5,6 @@ import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
-import io.github.voytech.tabulate.template.context.DefaultSteps
 import java.util.function.Consumer
 import kotlin.reflect.KProperty1
 
@@ -184,15 +183,15 @@ class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuild
     }
 
     @JvmSynthetic
-    fun row(at: Int, label: DefaultSteps, block: RowBuilderApi<T>.() -> Unit) {
-        builderState.addRowBuilder(RowIndexDef(at, label.name)) {
+    fun row(at: Int, step: Enum<*>, block: RowBuilderApi<T>.() -> Unit) {
+        builderState.addRowBuilder(RowIndexDef(at, step)) {
             RowBuilderApi(it).apply(block)
         }
     }
 
     @JvmSynthetic
-    fun row(label: DefaultSteps, block: RowBuilderApi<T>.() -> Unit) {
-        builderState.addRowBuilder(label) {
+    fun row(step: Enum<*>, block: RowBuilderApi<T>.() -> Unit) {
+        builderState.addRowBuilder(step) {
             RowBuilderApi(it).apply(block)
         }
     }

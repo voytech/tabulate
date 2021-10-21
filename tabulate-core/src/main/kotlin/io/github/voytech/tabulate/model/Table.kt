@@ -4,6 +4,7 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
+import io.github.voytech.tabulate.template.context.DefaultSteps
 import io.github.voytech.tabulate.template.context.RowIndex
 import java.util.function.Consumer
 
@@ -33,6 +34,13 @@ class Table<T> internal constructor(
 ) {
     private var indexedCustomRows: Map<RowIndexDef, List<RowDef<T>>>? = null
 
+    //TODO move to dedicated class which allows overriding step providing enums.
+    private val stepClass : Class<out Enum<*>> = DefaultSteps::class.java
+
+    //TODO move to dedicated class
+    private fun parseStep(step: String): Enum<*> = stepClass.enumConstants.find { step == it.name }
+        ?: throw error("Could not resolve step enum")
+
     init {
         indexedCustomRows = rows?.filter { it.qualifier.index != null }
             ?.map { it.qualifier.index?.materialize() to it }
@@ -48,11 +56,11 @@ class Table<T> internal constructor(
 
     @JvmSynthetic
     internal fun getRowsAt(index: RowIndex): List<RowDef<T>>? {
-        return if (index.labels.isEmpty()) {
+        return if (index.steps.isEmpty()) {
             indexedCustomRows?.get(RowIndexDef(index.rowIndex))
         } else {
-            index.labels.mapNotNull {
-                indexedCustomRows?.get(RowIndexDef(index = it.value.index, offsetLabel = it.key))
+            index.steps.mapNotNull {
+                indexedCustomRows?.get(RowIndexDef(index = it.value.index, step =  parseStep(it.key)))
             }.flatten()
         }
     }
