@@ -58,6 +58,13 @@ data class RowIndexDef(
     }
 }
 
+internal fun ClosedRange<RowIndexDef>.progression(): IntProgression =
+    IntProgression.fromClosedRange(start.index, endInclusive.index, 1)
+
+internal fun ClosedRange<RowIndexDef>.materialize(): Set<RowIndexDef> =
+    progression().map { RowIndexDef(it, start.step) }.toSet()
+
+
 data class RowQualifier<T>(
     val matching: RowPredicate<T>? = null,
     val index: RowIndexPredicateLiteral<T>? = null,

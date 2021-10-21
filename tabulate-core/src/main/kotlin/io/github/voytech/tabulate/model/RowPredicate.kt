@@ -4,7 +4,6 @@ import io.github.voytech.tabulate.model.RowIndexDef.Companion.maxValue
 import io.github.voytech.tabulate.model.RowIndexDef.Companion.minValue
 import io.github.voytech.tabulate.template.context.RowIndex
 import java.util.function.Predicate
-import kotlin.ranges.IntProgression.Companion.fromClosedRange
 
 fun interface RowPredicate<T> : Predicate<SourceRow<T>>
 
@@ -23,8 +22,6 @@ enum class LogicalOperator {
     OR
 }
 
-fun ClosedRange<RowIndexDef>.progression(): IntProgression = fromClosedRange(start.index, endInclusive.index, 1)
-
 interface PredicateLiteral : IndexPredicate {
     fun computeRanges(): Array<ClosedRange<RowIndexDef>>
 }
@@ -38,10 +35,7 @@ data class RowIndexPredicateLiteral<T>(
     }
 
     private val computedIndices: Set<RowIndexDef> by lazy {
-        computedRanges.fold(mutableSetOf()) { agg, next ->
-            val label = next.start.step
-            next.progression().forEach { agg.add(RowIndexDef(it, label)) }.let { agg }
-        }
+        computedRanges.fold(setOf()) { agg, next -> agg + next.materialize() }
     }
 
     override fun test(sourceRow: SourceRow<T>): Boolean = indexPredicate.test(sourceRow.rowIndex)

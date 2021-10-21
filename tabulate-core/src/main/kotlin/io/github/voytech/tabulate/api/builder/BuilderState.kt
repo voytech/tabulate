@@ -281,14 +281,17 @@ internal class RowSpans<T> {
 
     private fun Map.Entry<RowIndexDef,Int>.rowIndex(): RowIndexDef = key
 
-    private fun Map.Entry<RowIndexDef,Int>.rowSpanIndexSpace(): Int = value - 1
+    private fun Map.Entry<RowIndexDef,Int>.rowSpan(): Int = value - 1
 
-    internal operator fun plusAssign(map: Pair<ColumnKey<T>, Map<RowIndexDef,Int>>) {
-         rowSpans.getOrPut(map.first) { mutableMapOf() } += map.second
+    private fun Map.Entry<RowIndexDef,Int>.materializeRowSpan(): Set<RowIndexDef> =
+        (rowIndex() .. (rowIndex() + rowSpan())).materialize()
+
+    internal operator fun plusAssign(spansByColumn: Pair<ColumnKey<T>, Map<RowIndexDef,Int>>) {
+         rowSpans.getOrPut(spansByColumn.first) { mutableMapOf() } += spansByColumn.second
     }
 
     private fun applyRowSpanOffsets(column: ColumnKey<T>): Set<RowIndexDef> =
-        rowSpans[column]?.entries?.map { it.rowIndex() + it.rowSpanIndexSpace() }?.toSet() ?: emptySet()
+        rowSpans[column]?.entries?.flatMap { it.materializeRowSpan() }?.toSet() ?: emptySet()
 
     internal fun RowBuilderState<T>.isColumnLocked(column: ColumnKey<T>): Boolean {
         return qualifier.index?.materialize()?.let { rowIndices ->
