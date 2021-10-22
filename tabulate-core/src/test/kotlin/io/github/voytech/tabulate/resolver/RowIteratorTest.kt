@@ -36,7 +36,7 @@ class RowIteratorTest {
                     column(Product::code)
                 }
                 rows {
-                    row {
+                    newRow {
                         cell {
                             value = "CustomProductCode"
                         }

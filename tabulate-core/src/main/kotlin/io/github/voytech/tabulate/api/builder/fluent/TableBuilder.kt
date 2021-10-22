@@ -10,7 +10,7 @@ import java.util.concurrent.Callable
 import java.util.function.Consumer
 import java.util.function.Function as JFunction
 
-sealed class FluentTableBuilderApi<T>  {
+sealed class FluentTableBuilderApi<T> {
 
     @JvmSynthetic
     internal abstract fun up(): FluentTableBuilderApi<T>
@@ -23,6 +23,25 @@ sealed class FluentTableBuilderApi<T>  {
         }
         return (upper as TableBuilder<T>).builderState
     }
+}
+
+interface RowBuilderMethods<T> {
+    fun row(): RowBuilder<T>
+    fun row(at: Int): RowBuilder<T>
+    fun row(at: Int, offset: Enum<*>): RowBuilder<T>
+    fun row(predicate: RowPredicate<T>): RowBuilder<T>
+}
+
+interface CellBuilderMethods<T> {
+    fun cell(): CellBuilder<T>
+    fun cell(id: String): CellBuilder<T>
+    fun cell(ref: JFunction<T, Any?>): CellBuilder<T>
+    fun cell(index: Int): CellBuilder<T>
+}
+
+interface ColumnsBuilderMethods<T> {
+    fun column(id: String): ColumnBuilder<T>
+    fun column(ref: JFunction<T, Any?>): ColumnBuilder<T>
 }
 
 class TableBuilder<T> : FluentTableBuilderApi<T>() {
@@ -65,13 +84,14 @@ class TableBuilder<T> : FluentTableBuilderApi<T>() {
     override fun up(): FluentTableBuilderApi<T> = this
 }
 
-class ColumnsBuilder<T> internal constructor(private val parent: TableBuilder<T>) : FluentTableBuilderApi<T>() {
+class ColumnsBuilder<T> internal constructor(private val parent: TableBuilder<T>) :
+    FluentTableBuilderApi<T>(), ColumnsBuilderMethods<T> {
 
-    fun column(id: String) = ColumnBuilder(parent.builderState.columnsBuilderState.addColumnBuilder(id) {
-    }, this)
+    override fun column(id: String) =
+        ColumnBuilder(parent.builderState.columnsBuilderState.addColumnBuilder(id) {}, this)
 
-    fun column(ref: JFunction<T, Any?>) = ColumnBuilder(parent.builderState.columnsBuilderState.addColumnBuilder(ref.id()) {
-    }, this)
+    override fun column(ref: JFunction<T, Any?>) =
+        ColumnBuilder(parent.builderState.columnsBuilderState.addColumnBuilder(ref.id()) {}, this)
 
     @JvmSynthetic
     override fun up(): TableBuilder<T> = parent
@@ -81,7 +101,7 @@ class ColumnsBuilder<T> internal constructor(private val parent: TableBuilder<T>
 class ColumnBuilder<T> internal constructor(
     private val builderState: ColumnBuilderState<T>,
     private val parent: ColumnsBuilder<T>,
-) : FluentTableBuilderApi<T>() {
+) : FluentTableBuilderApi<T>(), ColumnsBuilderMethods<T> by parent {
 
     fun index(index: Int) = apply {
         builderState.index = index
@@ -89,14 +109,6 @@ class ColumnBuilder<T> internal constructor(
 
     fun columnType(columnType: CellType?) = apply {
         builderState.columnType = columnType
-    }
-
-    fun column(id: String): ColumnBuilder<T> {
-        return parent.column(id)
-    }
-
-    fun column(ref: JFunction<T, Any?>): ColumnBuilder<T> {
-        return parent.column(ref)
     }
 
     fun rows() = up().up().rows()
@@ -141,19 +153,18 @@ class ColumnBuilder<T> internal constructor(
 
 class RowsBuilder<T> internal constructor(
     private val parent: TableBuilder<T>,
-) : FluentTableBuilderApi<T>() {
+) : FluentTableBuilderApi<T>(), RowBuilderMethods<T> {
 
-    fun row() = RowBuilder(parent.builderState.rowsBuilderState.addRowBuilder {}, this)
+    override fun row() = RowBuilder(parent.builderState.rowsBuilderState.addRowBuilder(), this)
 
-    fun row(at: Int) =
-        RowBuilder(parent.builderState.rowsBuilderState.addRowBuilder {
-            it.qualifier = RowQualifier(index = RowIndexPredicateLiteral(eq(at)))
-        }, this)
+    override fun row(at: Int) =
+        RowBuilder(parent.builderState.rowsBuilderState.addRowBuilder(RowIndexPredicateLiteral(eq(at))), this)
 
-    fun row(at: Int, offset: Enum<*>) =
-        RowBuilder(parent.builderState.rowsBuilderState.addRowBuilder {
-            it.qualifier = RowQualifier(index = RowIndexPredicateLiteral(eq(at, offset)))
-        }, this)
+    override fun row(at: Int, offset: Enum<*>) =
+        RowBuilder(parent.builderState.rowsBuilderState.addRowBuilder(RowIndexPredicateLiteral(eq(at, offset))), this)
+
+    override fun row(predicate: RowPredicate<T>) =
+        RowBuilder(parent.builderState.rowsBuilderState.addRowBuilder(predicate), this)
 
     @JvmSynthetic
     override fun up(): TableBuilder<T> = parent
@@ -163,24 +174,19 @@ class RowsBuilder<T> internal constructor(
 class RowBuilder<T> internal constructor(
     private val builderState: RowBuilderState<T>,
     private val parent: RowsBuilder<T>,
-) : FluentTableBuilderApi<T>() {
+) : FluentTableBuilderApi<T>(),
+    RowBuilderMethods<T> by parent,
+    CellBuilderMethods<T> {
 
-    fun allMatching(predicate: RowPredicate<T>) = apply {
-        builderState.qualifier = RowQualifier(matching = predicate)
-    }
+    override fun cell() = CellBuilder(builderState.cellsBuilderState.addCellBuilder { }, this)
 
-    fun cell() = CellBuilder(builderState.cellsBuilderState.addCellBuilder { }, this)
+    override fun cell(id: String) = CellBuilder(builderState.cellsBuilderState.addCellBuilder(id) {}, this)
 
-    fun cell(id: String) = CellBuilder(builderState.cellsBuilderState.addCellBuilder(id) {}, this)
+    override fun cell(ref: JFunction<T, Any?>) =
+        CellBuilder(builderState.cellsBuilderState.addCellBuilder(ref.id()) {}, this)
 
-    fun cell(ref: JFunction<T, Any?>) = CellBuilder(builderState.cellsBuilderState.addCellBuilder(ref.id()) {}, this)
-
-    fun cell(index: Int): CellBuilder<T> = CellBuilder(builderState.cellsBuilderState.addCellBuilder(index) {}, this)
-
-    fun row() = parent.row()
-
-    fun row(at: Int) = parent.row(at)
-
+    override fun cell(index: Int): CellBuilder<T> =
+        CellBuilder(builderState.cellsBuilderState.addCellBuilder(index) {}, this)
 
     @JvmName("rowAttribute")
     fun <A : RowAttribute<A>, B : RowAttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
@@ -223,7 +229,9 @@ class RowBuilder<T> internal constructor(
 class CellBuilder<T> internal constructor(
     private val builderState: CellBuilderState<T>,
     private val parent: RowBuilder<T>,
-) : FluentTableBuilderApi<T>() {
+) : FluentTableBuilderApi<T>(),
+    RowBuilderMethods<T> by parent,
+    CellBuilderMethods<T> by parent {
 
     fun value(value: Any?) = apply {
         builderState.value = value
@@ -261,16 +269,6 @@ class CellBuilder<T> internal constructor(
             }
         )
     }
-
-    fun cell(id: String) = parent.cell(id)
-
-    fun cell(ref: JFunction<T, Any?>) = parent.cell(ref)
-
-    fun cell(index: Int): CellBuilder<T> = parent.cell(index)
-
-    fun row() = parent.row()
-
-    fun row(at: Int) = parent.row(at)
 
     @JvmSynthetic
     override fun up(): RowBuilder<T> = parent

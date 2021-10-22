@@ -137,6 +137,12 @@ internal class ColumnsBuilderState<T> : InternalBuilder<List<ColumnDef<T>>>() {
         }
 
     @JvmSynthetic
+    fun addColumnBuilder(block: DslBlock<ColumnBuilderState<T>>? = null): ColumnBuilderState<T> =
+        ensureColumnBuilder(ColumnKey(id = "column-$count")).also {
+            block?.invoke(it)
+        }
+
+    @JvmSynthetic
     fun addColumnBuilder(id: String, block: DslBlock<ColumnBuilderState<T>>): ColumnBuilderState<T> =
         ensureColumnBuilder(ColumnKey(id = id)).also {
             block.invoke(it)
@@ -150,7 +156,7 @@ internal class ColumnsBuilderState<T> : InternalBuilder<List<ColumnDef<T>>>() {
 
     private fun ensureColumnBuilder(key: ColumnKey<T>): ColumnBuilderState<T> =
         columnBuilderStates.find { it.id == key } ?: ColumnBuilderState(key, columnBuilderStates).apply {
-            index = columnBuilderStates.lastOrNull()?.index?.plus(1) ?: 0
+            index = columnBuilderStates.findLastOrNull()?.index?.plus(1) ?: 0
         }.also { columnBuilderStates.add(it) }
 
     private fun addColumnBuilder(id: String): ColumnBuilderState<T> = ensureColumnBuilder(ColumnKey(id = id))
@@ -198,6 +204,10 @@ internal fun <T> List<ColumnBuilderState<T>>.findNext(key: ColumnKey<T>): Column
         sortedBy { it.index }.find { it.index > column.index }
     }
 }
+
+@JvmSynthetic
+internal fun <T> List<ColumnBuilderState<T>>.findLastOrNull(): ColumnBuilderState<T>? = maxByOrNull { it.index }
+
 
 @JvmSynthetic
 internal fun <T, R> List<ColumnBuilderState<T>>.searchBackwardUntil(block: (col: ColumnBuilderState<T>) -> R?): R? =
@@ -311,33 +321,41 @@ internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuild
     private var rowIndex: RowIndexDef = RowIndexDef(0)
 
     @JvmSynthetic
-    fun addRowBuilder(block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> =
+    fun addRowBuilder(block: DslBlock<RowBuilderState<T>>? = null): RowBuilderState<T> =
         ensureRowBuilder(RowQualifier(index = RowIndexPredicateLiteral(Eq(rowIndex)))).also {
-            block.invoke(it)
+            block?.invoke(it)
             rowIndex = it.qualifier.index?.lastIndex()?.plus(1) ?: rowIndex
         }
 
     @JvmSynthetic
-    fun addRowBuilder(selector: RowPredicate<T>, block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> =
+    fun addRowBuilder(selector: RowPredicate<T>, block: DslBlock<RowBuilderState<T>>? = null): RowBuilderState<T> =
         ensureRowBuilder(RowQualifier(matching = selector)).also {
-            block.invoke(it)
+            block?.invoke(it)
         }
 
     @JvmSynthetic
-    fun addRowBuilder(at: RowIndexDef, block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> {
+    fun addRowBuilder(at: RowIndexPredicateLiteral<T>, block: DslBlock<RowBuilderState<T>>? = null): RowBuilderState<T> {
+        rowIndex = at.lastIndex()
+        return ensureRowBuilder(RowQualifier(index = at)).also {
+            block?.invoke(it)
+        }.also { rowIndex++ }
+    }
+
+    @JvmSynthetic
+    fun addRowBuilder(at: RowIndexDef, block: DslBlock<RowBuilderState<T>>? = null): RowBuilderState<T> {
         rowIndex = at
         return ensureRowBuilder(RowQualifier(index = RowIndexPredicateLiteral(Eq(rowIndex++)))).also {
-            block.invoke(it)
+            block?.invoke(it)
         }
     }
 
     @JvmSynthetic
-    fun addRowBuilder(step: Enum<*>, block: DslBlock<RowBuilderState<T>>): RowBuilderState<T> {
+    fun addRowBuilder(step: Enum<*>, block: DslBlock<RowBuilderState<T>>? = null): RowBuilderState<T> {
         if (step != rowIndex.step) {
             rowIndex = RowIndexDef(index = 0, step = step)
         }
         return ensureRowBuilder(RowQualifier(index = RowIndexPredicateLiteral(Eq(rowIndex++)))).also {
-            block.invoke(it)
+            block?.invoke(it)
         }
     }
 
@@ -345,9 +363,8 @@ internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuild
         rowBuilderStates.find { it.qualifier == rowQualifier } ?: newRowBuilder(rowQualifier)
 
     private fun newRowBuilder(rowQualifier: RowQualifier<T>): RowBuilderState<T> =
-        RowBuilderState.new(columnsBuilderState, this).also {
+        RowBuilderState(rowQualifier,columnsBuilderState, this).also {
             rowBuilderStates.add(it)
-            it.qualifier = rowQualifier
         }
 
     @JvmSynthetic
@@ -364,8 +381,9 @@ internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuild
 }
 
 internal class RowBuilderState<T>(
-    internal val columnsBuilderState: ColumnsBuilderState<T>,
-    internal val rowsBuilderState: RowsBuilderState<T>,
+    @get:JvmSynthetic internal val qualifier: RowQualifier<T>,
+    @get:JvmSynthetic internal val columnsBuilderState: ColumnsBuilderState<T>,
+    @get:JvmSynthetic internal val rowsBuilderState: RowsBuilderState<T>,
 ) : AttributesAwareBuilder<RowDef<T>>() {
 
     @get:JvmSynthetic
@@ -374,12 +392,6 @@ internal class RowBuilderState<T>(
     @get:JvmSynthetic
     val cellsBuilderState: CellsBuilderState<T> =
         CellsBuilderState(this, cells)
-
-    @get:JvmSynthetic
-    @set:JvmSynthetic
-    internal lateinit var qualifier: RowQualifier<T>
-
-    internal fun getCellBuilder(key: ColumnKey<T>): CellBuilderState<T>? = cells[key]
 
     internal fun applyRowSpan(cellBuilder: CellBuilderState<T>) {
         if (qualifier.index != null) {
@@ -407,13 +419,6 @@ internal class RowBuilderState<T>(
         isColumnLocked(key)
     }
 
-    companion object {
-        @JvmSynthetic
-        internal fun <T> new(
-            columnsBuilderState: ColumnsBuilderState<T>,
-            rowsBuilderState: RowsBuilderState<T>,
-        ): RowBuilderState<T> = RowBuilderState(columnsBuilderState, rowsBuilderState)
-    }
 }
 
 internal class CellsBuilderState<T>(
@@ -424,7 +429,8 @@ internal class CellsBuilderState<T>(
 
     private var finished: Boolean = false
 
-    internal var currentColumn: ColumnBuilderState<T> = columnBuilders.first()
+    internal var currentColumn: ColumnBuilderState<T> = columnBuilders.firstOrNull() ?:
+        rowBuilderState.columnsBuilderState.addColumnBuilder()
 
     @JvmSynthetic
     fun addCellBuilder(id: String, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =

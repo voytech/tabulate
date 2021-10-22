@@ -12,7 +12,7 @@ class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
 
     @JvmSynthetic
     fun columnTitle(id: String, block: CellBuilderApi<T>.() -> Unit) {
-        builder.row(HEADER_ROW_INDEX) {
+        builder.newRow(HEADER_ROW_INDEX) {
             cells {
                 cell(id, block)
             }
@@ -21,7 +21,7 @@ class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
 
     @JvmSynthetic
     fun columnTitle(ref: KProperty1<T, Any?>, block: CellBuilderApi<T>.() -> Unit) {
-        builder.row(HEADER_ROW_INDEX) {
+        builder.newRow(HEADER_ROW_INDEX) {
             cells {
                 cell(ref, block)
             }
@@ -30,7 +30,7 @@ class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
 
     @JvmSynthetic
     fun columnTitles(vararg names: String) =
-        builder.row(HEADER_ROW_INDEX) {
+        builder.newRow(HEADER_ROW_INDEX) {
             cells {
                 names.forEach {
                     cell { value = it }
@@ -40,7 +40,7 @@ class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
 
     @JvmSynthetic
     fun attributes(block: RowLevelAttributesBuilderApi<T>.() -> Unit) {
-        builder.row(HEADER_ROW_INDEX) {
+        builder.newRow(HEADER_ROW_INDEX) {
             attributes(block)
         }
     }
@@ -56,7 +56,7 @@ fun <T> RowsBuilderApi<T>.header(block: HeaderBuilderApi<T>.() -> Unit) =
 
 
 fun <T> RowsBuilderApi<T>.header(vararg names: String) =
-    row(0) {
+    newRow(0) {
         cells {
             names.forEach {
                 cell { value = it }
@@ -65,8 +65,7 @@ fun <T> RowsBuilderApi<T>.header(vararg names: String) =
     }
 
 fun <T> RowsBuilderApi<T>.rowNumberingOn(id: String) {
-    row {
-        matching { source -> source.rowIndexValue() > 0 && source.rowIndex.steps.isEmpty() }
+    row({ source -> source.rowIndexValue() > 0 && source.rowIndex.steps.isEmpty() }) {
         cells {
             cell(id) {
                 expression = RowCellExpression { source -> source.rowIndexValue() }
@@ -76,15 +75,15 @@ fun <T> RowsBuilderApi<T>.rowNumberingOn(id: String) {
 }
 
 fun <T> RowsBuilderApi<T>.footer(block: RowBuilderApi<T>.() -> Unit) {
-    row(0, DefaultSteps.TRAILING_ROWS, block)
+    newRow(0, DefaultSteps.TRAILING_ROWS, block)
 }
 
 fun <T> RowsBuilderApi<T>.trailingRow(block: RowBuilderApi<T>.() -> Unit) {
-    row(DefaultSteps.TRAILING_ROWS, block)
+    newRow(DefaultSteps.TRAILING_ROWS, block)
 }
 
 fun <T> RowsBuilderApi<T>.trailingRow(index: Int, block: RowBuilderApi<T>.() -> Unit) {
-    row(index, DefaultSteps.TRAILING_ROWS, block)
+    newRow(index, DefaultSteps.TRAILING_ROWS, block)
 }
 
 private fun <T, R> cellBuilderBlock(

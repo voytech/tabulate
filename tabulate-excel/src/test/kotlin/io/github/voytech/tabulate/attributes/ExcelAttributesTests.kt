@@ -52,7 +52,7 @@ class ExcelAttributesTests {
             name = "test"
             columns { count = 1 }
             rows {
-                row {
+                newRow {
                     cells {
                         cell {
                             value = "Value"
@@ -89,7 +89,7 @@ class ExcelAttributesTests {
             name = "test"
             columns { count = 1 }
             rows {
-                row {
+                newRow {
                     cells {
                         cell {
                             value = "Value"

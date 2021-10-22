@@ -47,7 +47,6 @@ data class RowIndexDef(
     operator fun minus(increment: Int): RowIndexDef =
         RowIndexDef((index - increment).coerceAtLeast(0), step)
 
-
     operator fun inc(): RowIndexDef = RowIndexDef(index + 1, step)
 
     override fun compareTo(other: RowIndexDef): Int = index.compareTo(other.index)
@@ -68,7 +67,12 @@ internal fun ClosedRange<RowIndexDef>.materialize(): Set<RowIndexDef> =
 data class RowQualifier<T>(
     val matching: RowPredicate<T>? = null,
     val index: RowIndexPredicateLiteral<T>? = null,
-)
+) {
+    companion object {
+        fun <T> index(predicateLiteral: RowIndexPredicateLiteral<T>): RowQualifier<T> =
+            RowQualifier(index = predicateLiteral)
+    }
+}
 
 internal fun <T> Map<ColumnKey<T>, CellDef<T>>?.resolveCellValue(
     column: ColumnDef<T>,

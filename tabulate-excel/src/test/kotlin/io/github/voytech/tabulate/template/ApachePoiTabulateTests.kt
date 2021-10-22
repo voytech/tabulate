@@ -1,10 +1,10 @@
 package io.github.voytech.tabulate.template
 
+import io.github.voytech.tabulate.api.builder.RowPredicates.allRows
 import io.github.voytech.tabulate.api.builder.dsl.Table
 import io.github.voytech.tabulate.api.builder.dsl.footer
 import io.github.voytech.tabulate.api.builder.dsl.header
 import io.github.voytech.tabulate.api.builder.dsl.rowNumberingOn
-import io.github.voytech.tabulate.api.builder.RowPredicates.allRows
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
 import io.github.voytech.tabulate.excel.model.attributes.dataFormat
@@ -222,8 +222,7 @@ class ApachePoiTabulateTests {
                 }
             }
             rows {
-                row {
-                    matching(allRows())
+                row(allRows()) {
                     cells {
                         cell("nr") { expression = RowCellExpression{ row -> row.objectIndex?.plus(1) } }
                     }
@@ -294,12 +293,12 @@ class ApachePoiTabulateTests {
             name = "Test table"
             columns { count = 4 }
             rows {
-                row {
+                newRow {
                     cell { rowSpan = 2; value = "Row span" }
                     cell { colSpan = 2; value = "This is very long title. 2 columns span. Row 1" }
                     cell { value = "Last column. Row 1" }
                 }
-                row {
+                newRow {
                     cell { colSpan = 2; value = "This is very long title. 2 columns span. Row 2" }
                     cell { value = "Last column. Row 2" }
                 }
@@ -350,7 +349,7 @@ class ApachePoiTabulateTests {
                 }
             }
             rows {
-                row {
+                newRow {
                     attributes{height { px = 200 }}
                     cell { value = "It is : " }
                     cell {

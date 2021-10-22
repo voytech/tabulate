@@ -152,7 +152,7 @@ class TabulateRowCellRenderOperationTest {
                 column(Product::manufacturer)
             }
             rows {
-                row(5) {
+                newRow(5) {
                     cell {
                         value = "Custom row cell"
                     }
@@ -243,20 +243,20 @@ class TabulateRowCellRenderOperationTest {
                 column(Product::manufacturer)
             }
             rows {
-                row {
+                newRow {
                     attributes { text { fontColor = Colors.WHITE } }
                     cell {
                         attributes { text { fontColor = Colors.GREEN } }
                         value = "Green cell"
                     }
                 }
-                row {
+                newRow {
                     attributes { text { fontColor = Colors.WHITE } }
                     cell {
                         value = "White cell"
                     }
                 }
-                row {
+                newRow {
                     cell {
                         value = "Red cell"
                     }
@@ -372,7 +372,7 @@ class TabulateRowCellRenderOperationTest {
                 column(Product::manufacturer)
             }
             rows {
-                row {
+                newRow {
                     attributes {
                         text { weight = DefaultWeightStyle.BOLD }
                         height { px = 50 }
@@ -382,13 +382,13 @@ class TabulateRowCellRenderOperationTest {
                         value = "Black, strikeout, bold, italic cell"
                     }
                 }
-                row {
+                newRow {
                     attributes { text { weight = DefaultWeightStyle.BOLD } }
                     cell {
                         value = "Black, strikeout, bold cell"
                     }
                 }
-                row {
+                newRow {
                     cell {
                         value = "Black, strikeout cell"
                     }
@@ -440,8 +440,7 @@ class TabulateRowCellRenderOperationTest {
                 column(Product::manufacturer)
             }
             rows {
-                row {
-                    index { eq(5)  }
+                newRow(eq(5)) {
                     cell {
                         value = "Custom row cell"
                     }

@@ -171,27 +171,41 @@ class ColumnBuilderApi<T> internal constructor(private val builderState: ColumnB
 class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuilderState<T>) {
 
     @JvmSynthetic
-    fun row(block: RowBuilderApi<T>.() -> Unit) {
+    fun newRow(block: RowBuilderApi<T>.() -> Unit) {
         builderState.addRowBuilder { RowBuilderApi(it).apply(block) }
     }
 
     @JvmSynthetic
-    fun row(at: Int, block: RowBuilderApi<T>.() -> Unit) {
+    fun newRow(at: Int, block: RowBuilderApi<T>.() -> Unit) {
         builderState.addRowBuilder(RowIndexDef(at)) {
             RowBuilderApi(it).apply(block)
         }
     }
 
     @JvmSynthetic
-    fun row(at: Int, step: Enum<*>, block: RowBuilderApi<T>.() -> Unit) {
+    fun newRow(predicate: PredicateLiteral, block: RowBuilderApi<T>.() -> Unit) {
+        builderState.addRowBuilder(RowIndexPredicateLiteral(predicate)) {
+            RowBuilderApi(it).apply(block)
+        }
+    }
+
+    @JvmSynthetic
+    fun newRow(at: Int, step: Enum<*>, block: RowBuilderApi<T>.() -> Unit) {
         builderState.addRowBuilder(RowIndexDef(at, step)) {
             RowBuilderApi(it).apply(block)
         }
     }
 
     @JvmSynthetic
-    fun row(step: Enum<*>, block: RowBuilderApi<T>.() -> Unit) {
+    fun newRow(step: Enum<*>, block: RowBuilderApi<T>.() -> Unit) {
         builderState.addRowBuilder(step) {
+            RowBuilderApi(it).apply(block)
+        }
+    }
+
+    @JvmSynthetic
+    fun row(predicate: RowPredicate<T>, block: RowBuilderApi<T>.() -> Unit) {
+        builderState.addRowBuilder(predicate) {
             RowBuilderApi(it).apply(block)
         }
     }
@@ -200,12 +214,6 @@ class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuild
 
 @TabulateMarker
 class RowBuilderApi<T> internal constructor(private val builderState: RowBuilderState<T>) {
-
-    @JvmSynthetic
-    fun matching(predicate: RowPredicate<T>) = apply { builderState.qualifier = RowQualifier(matching = predicate) }
-
-    @JvmSynthetic
-    fun index(predicate: () -> PredicateLiteral) = apply { builderState.qualifier = RowQualifier(index = RowIndexPredicateLiteral(predicate())) }
 
     @JvmSynthetic
     fun cells(block: CellsBuilderApi<T>.() -> Unit) {

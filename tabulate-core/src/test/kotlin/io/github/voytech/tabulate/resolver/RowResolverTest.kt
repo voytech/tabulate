@@ -39,7 +39,7 @@ class RowResolverTest {
                     column(Product::code)
                 }
                 rows {
-                    row(index) {
+                    newRow(index) {
                         cell {
                             value = "CustomProductCode"
                         }

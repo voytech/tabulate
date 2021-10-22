@@ -57,7 +57,7 @@ class DslBuilderTest {
                 column(Product::manufacturer)
             }
             rows {
-                row {
+                newRow {
                     attributes { height { px = 20 } }
                     cells {
                         cell {
@@ -148,7 +148,7 @@ class DslBuilderTest {
                 }
             }
             rows {
-                row {
+                newRow {
                     attributes {
                         height {
                             px = 100
@@ -206,7 +206,7 @@ class DslBuilderTest {
             }
             rows {
                 header("Code", "Description")
-                row {
+                newRow {
                     cell { value = "1" }
                     cell { value = "First item" }
                 }
@@ -253,7 +253,7 @@ class DslBuilderTest {
                         height { px = 100 }
                     }
                 }
-                row {
+                newRow {
                     cell { value = "1" }
                     cell { value = "First item" }
                 }

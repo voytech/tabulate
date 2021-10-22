@@ -75,8 +75,7 @@ public class FluentBuilderTest {
 									.value("Employee First Name")
 								.cell(Employee::getLastName)
 									.value("Employee Last Name")
-							.row()
-								.allMatching(allRows())
+							.row(allRows())
 								.cell("rowNumbering")
 									.eval(SourceRow::getRowIndex);
 		final List<Employee> employeeList = Lists.newArrayList(new Employee(
