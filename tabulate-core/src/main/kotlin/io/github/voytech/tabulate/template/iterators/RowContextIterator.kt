@@ -25,7 +25,7 @@ internal class RowContextIterator<T, CTX : ContextData>(
         resolver.resolve(indexIncrement.getRowIndex()).also {
             if (it != null) {
                 val currentContext = it.value
-                if (it.index > indexIncrement.getRowIndex().rowIndex) {
+                if (it.index > indexIncrement.getRowIndex().value) {
                     indexIncrement.assign(it.index)
                 }
                 setNext(currentContext)

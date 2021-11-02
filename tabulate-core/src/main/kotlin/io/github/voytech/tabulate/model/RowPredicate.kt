@@ -41,7 +41,9 @@ data class RowIndexPredicateLiteral<T>(
     override fun test(sourceRow: SourceRow<T>): Boolean = indexPredicate.test(sourceRow.rowIndex)
     fun computeRanges(): Array<ClosedRange<RowIndexDef>> = computedRanges
     fun lastIndex(): RowIndexDef = computeRanges().last().endInclusive
-    fun firsIndex(): RowIndexDef = computeRanges().first().start
+    fun firstIndex(): RowIndexDef = computeRanges().first().start
+    fun lastIndexValue(): Int = lastIndex().index
+    fun firstIndexValue(): Int = firstIndex().index
     fun materialize(): Set<RowIndexDef> = computedIndices
 }
 

@@ -88,10 +88,10 @@ class ColumnsBuilder<T> internal constructor(private val parent: TableBuilder<T>
     FluentTableBuilderApi<T>(), ColumnsBuilderMethods<T> {
 
     override fun column(id: String) =
-        ColumnBuilder(parent.builderState.columnsBuilderState.addColumnBuilder(id) {}, this)
+        ColumnBuilder(parent.builderState.columnsBuilderState.ensureColumnBuilder(id) {}, this)
 
     override fun column(ref: JFunction<T, Any?>) =
-        ColumnBuilder(parent.builderState.columnsBuilderState.addColumnBuilder(ref.id()) {}, this)
+        ColumnBuilder(parent.builderState.columnsBuilderState.ensureColumnBuilder(ref.id()) {}, this)
 
     @JvmSynthetic
     override fun up(): TableBuilder<T> = parent

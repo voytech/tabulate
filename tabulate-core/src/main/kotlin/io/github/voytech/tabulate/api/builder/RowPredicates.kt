@@ -28,7 +28,7 @@ object RowPredicates {
 
     @JvmStatic
     fun <T> isAt(rowIndex: Int): RowPredicate<T> = RowPredicate {
-        it.rowIndex == RowIndex(rowIndex = rowIndex)
+        it.rowIndex == RowIndex(value = rowIndex)
     }
 
     @JvmStatic

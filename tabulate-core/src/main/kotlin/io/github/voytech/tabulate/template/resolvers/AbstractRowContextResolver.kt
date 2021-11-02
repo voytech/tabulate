@@ -38,7 +38,7 @@ internal abstract class AbstractRowContextResolver<T>(
             val cellDefinitions = rowDefinitions.mergeCells()
             val rowCellAttributes = rowDefinitions.flattenCellAttributes()
             val attributedRow = createAttributedRow<T>(
-                rowIndex = tableModel.getRowIndex(tableRowIndex.rowIndex),
+                rowIndex = tableModel.getRowIndex(tableRowIndex.value),
                 rowAttributes = overrideAttributesLeftToRight(
                     tableModel.rowAttributes, rowDefinitions.flattenRowAttributes()
                 ),
@@ -48,7 +48,7 @@ internal abstract class AbstractRowContextResolver<T>(
             val cellValues = tableModel.columns.mapIndexed { index: Int, column: ColumnDef<T> ->
                 cellDefinitions.resolveCellValue(column, sourceRow)?.let { value ->
                     createAttributedCell(
-                        rowIndex = tableModel.getRowIndex(tableRowIndex.rowIndex),
+                        rowIndex = tableModel.getRowIndex(tableRowIndex.value),
                         columnIndex = tableModel.getColumnIndex(column.index ?: index),
                         value = value,
                         attributes = overrideAttributesLeftToRight(
@@ -70,7 +70,7 @@ internal abstract class AbstractRowContextResolver<T>(
         tableRowIndex: RowIndex,
         indexedRecord: IndexedValue<T>? = null,
     ): IndexedValue<AttributedRowWithCells<T>> {
-        return IndexedValue(tableRowIndex.rowIndex, resolveAttributedRow(tableRowIndex, indexedRecord))
+        return IndexedValue(tableRowIndex.value, resolveAttributedRow(tableRowIndex, indexedRecord))
     }
 
     /**

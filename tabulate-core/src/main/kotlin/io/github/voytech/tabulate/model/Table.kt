@@ -57,7 +57,7 @@ class Table<T> internal constructor(
     @JvmSynthetic
     internal fun getRowsAt(index: RowIndex): List<RowDef<T>>? {
         return if (index.steps.isEmpty()) {
-            indexedCustomRows?.get(RowIndexDef(index.rowIndex))
+            indexedCustomRows?.get(RowIndexDef(index.value))
         } else {
             index.steps.mapNotNull {
                 indexedCustomRows?.get(RowIndexDef(index = it.value.index, step =  parseStep(it.key)))
@@ -70,7 +70,7 @@ class Table<T> internal constructor(
     @JvmSynthetic
     internal fun getNextCustomRowIndex(index: RowIndex): RowIndexDef? {
         return indexedCustomRows?.entries
-            ?.firstOrNull { it.key.index > index.rowIndex }
+            ?.firstOrNull { it.key.index > index.value }
             ?.key
     }
 

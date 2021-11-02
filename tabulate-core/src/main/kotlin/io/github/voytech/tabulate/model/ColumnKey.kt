@@ -4,18 +4,18 @@ import kotlin.reflect.KProperty1
 
 data class ColumnKey<T> internal constructor(
     @get:JvmSynthetic
-    internal val id: String? = null,
+    internal val name: String? = null,
     @get:JvmSynthetic
-    internal val ref: PropertyBindingKey<T>? = null
+    internal val property: PropertyBindingKey<T>? = null
 ) {
     companion object {
-        fun <T> field(fieldRef: KProperty1<T,Any>?) = ColumnKey(ref = fieldRef?.id())
+        fun <T> field(fieldRef: KProperty1<T,Any>?) = ColumnKey(property = fieldRef?.id())
     }
     @JvmSynthetic
-    fun resolveValue(value: T?): Any? = value?.let { ref?.invoke(it) }
+    fun resolveValue(value: T?): Any? = value?.let { property?.invoke(it) }
 
     @Override
     override fun toString(): String {
-        return "ColumnKey = ${id ?: ref}"
+        return "ColumnKey = ${name ?: property}"
     }
 }

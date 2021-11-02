@@ -1,21 +1,17 @@
 package io.github.voytech.tabulate.template
 
 import io.github.voytech.tabulate.api.builder.RowPredicates.allRows
-import io.github.voytech.tabulate.api.builder.dsl.Table
-import io.github.voytech.tabulate.api.builder.dsl.footer
-import io.github.voytech.tabulate.api.builder.dsl.header
-import io.github.voytech.tabulate.api.builder.dsl.rowNumberingOn
+import io.github.voytech.tabulate.api.builder.dsl.*
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
 import io.github.voytech.tabulate.excel.model.attributes.dataFormat
 import io.github.voytech.tabulate.excel.model.attributes.filterAndSort
+import io.github.voytech.tabulate.excel.model.attributes.format
 import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.RowCellExpression
 import io.github.voytech.tabulate.model.attributes.cell.*
-import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultBorderStyle
-import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultHorizontalAlignment
-import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultVerticalAlignment
-import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultWeightStyle
+import io.github.voytech.tabulate.model.attributes.cell.enums.*
+import io.github.voytech.tabulate.model.attributes.column.columnWidth
 import io.github.voytech.tabulate.model.attributes.column.width
 import io.github.voytech.tabulate.model.attributes.row.height
 import io.github.voytech.tabulate.model.attributes.table.template
@@ -272,7 +268,7 @@ class ApachePoiTabulateTests {
                 column(Product::price)
                 column(Product::distributionDate) {
                     attributes{
-                        dataFormat { value = "dd.mm.YYYY" }
+                        format { "dd.mm.YYYY" }
                     }
                 }
             }
@@ -289,9 +285,8 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export table with custom rows and cell and row spans`() {
-        Table<Unit> {
+        CustomTable {
             name = "Test table"
-            columns { count = 4 }
             rows {
                 newRow {
                     cell { rowSpan = 2; value = "Row span" }
@@ -334,27 +329,28 @@ class ApachePoiTabulateTests {
                 ),
             )
         ).perform().also {
-            it.cleanup()
+           it.cleanup()
         }
     }
 
     @Test
     fun `should export table with custom row with image`() {
-          Table<Any> {
+          CustomTable {
             name = "Test table"
             columns {
                 column("description")
                 column("image") {
-                    attributes{ width { px = 300 }}
+                    attributes { width { px = 300 }}
                 }
             }
             rows {
                 newRow {
-                    attributes{height { px = 200 }}
+                    attributes { height { px = 200 } }
                     cell { value = "It is : " }
                     cell {
                         value = "src/test/resources/kotlin.jpeg"
                         type = CellType.IMAGE_URL
+                        //attributes { type { "IMAGE_URL" } }
                     }
                 }
             }
@@ -374,6 +370,59 @@ class ApachePoiTabulateTests {
             it.cleanup()
         }
     }
+
+    @Test
+    fun `should export table using general table template`() {
+        val styleTemplate = CustomTable {
+            attributes {
+                columnWidth { auto = true }
+            }
+            rows {
+                header {
+                    attributes {
+                        background {
+                            fill = DefaultCellFill.SOLID
+                            color = Colors.BLACK
+                        }
+                        text {
+                            fontColor = Colors.WHITE
+                            weight = DefaultWeightStyle.BOLD
+                        }
+                    }
+                }
+                row({ (it.rowIndex.value % 2) == 0  && it.rowIndex.value > 0 }) {
+                    attributes {
+                        background {
+                            fill = DefaultCellFill.SOLID
+                            color = Colors.GREEN
+                        }
+                    }
+                }
+            }
+        }
+
+        createDataSet(4).tabulate("test.xlsx",styleTemplate + Table {
+            name = "Products"
+            columns {
+                column(Product::code)
+                column(Product::name)
+                column(Product::description)
+                column(Product::price)
+            }
+            rows {
+                header("Id", "Name", "Description", "Price")
+            }
+        })
+
+        PoiTableAssert<Product>(
+            tableName = "Products",
+            file = File("test.xlsx"),
+            cellTests = mapOf() // TODO write some assertions.
+        ).perform().also {
+            it.cleanup()
+        }
+    }
+
 
     private fun createDataSet(count: Int? = 1): List<Product> {
         val random = Random(count!!)

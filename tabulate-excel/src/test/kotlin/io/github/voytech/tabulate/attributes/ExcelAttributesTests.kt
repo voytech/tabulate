@@ -50,7 +50,6 @@ class ExcelAttributesTests {
         // when
         Table<Any> {
             name = "test"
-            columns { count = 1 }
             rows {
                 newRow {
                     cells {
@@ -87,7 +86,6 @@ class ExcelAttributesTests {
         // when
         Table<Any> {
             name = "test"
-            columns { count = 1 }
             rows {
                 newRow {
                     cells {

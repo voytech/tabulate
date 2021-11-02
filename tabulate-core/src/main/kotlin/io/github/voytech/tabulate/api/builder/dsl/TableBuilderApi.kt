@@ -5,7 +5,6 @@ import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
-import java.util.function.Consumer
 import kotlin.reflect.KProperty1
 
 @DslMarker
@@ -23,11 +22,17 @@ object Table {
     operator fun <T> invoke(block: TableBuilderApi<T>.() -> Unit) = block
 }
 
+object CustomTable {
+    @JvmSynthetic
+    operator fun invoke(block: TableBuilderApi<Unit>.() -> Unit) = block
+}
+
+@Suppress("UNCHECKED_CAST")
 @JvmSynthetic
-operator fun <T> (TableBuilderApi<T>.() -> Unit).plus(block: TableBuilderApi<T>.() -> Unit): (TableBuilderApi<T>.() -> Unit) {
-    val self: (TableBuilderApi<T>.() -> Unit) = this
+operator fun <T> (TableBuilderApi<Unit>.() -> Unit).plus(block: TableBuilderApi<T>.() -> Unit): (TableBuilderApi<T>.() -> Unit) {
+    val self: (TableBuilderApi<Unit>.() -> Unit) = this
     return Table {
-        self.invoke(this)
+        self.invoke(this as TableBuilderApi<Unit>)
         block.invoke(this)
     }
 }
@@ -79,7 +84,6 @@ class CellLevelAttributesBuilderApi<T> internal constructor(private val builderS
     }
 }
 
-
 @TabulateMarker
 class TableBuilderApi<T> internal constructor(private val builderState: TableBuilderState<T>) {
 
@@ -114,39 +118,35 @@ class TableBuilderApi<T> internal constructor(private val builderState: TableBui
 @TabulateMarker
 class ColumnsBuilderApi<T> internal constructor(private val builderState: ColumnsBuilderState<T>) {
 
-    @set:JvmSynthetic
-    @get:JvmSynthetic
-    var count: Int? by this.builderState::count
-
     @JvmSynthetic
     fun column(id: String) {
-        builderState.addColumnBuilder(id) {}
+        builderState.ensureColumnBuilder(id) {}
     }
 
     @JvmSynthetic
     fun column(id: String, block: ColumnBuilderApi<T>.() -> Unit) {
-        builderState.addColumnBuilder(id) {
+        builderState.ensureColumnBuilder(id) {
             ColumnBuilderApi(it).apply(block)
         }
     }
 
     @JvmSynthetic
-    fun column(id: String, block: Consumer<ColumnBuilderApi<T>>) {
-        builderState.addColumnBuilder(id) {
-            block.accept(ColumnBuilderApi(it))
+    fun column(index: Int, block: ColumnBuilderApi<T>.() -> Unit) {
+        builderState.ensureColumnBuilder(index) {
+            ColumnBuilderApi(it).apply(block)
         }
     }
 
     @JvmSynthetic
     fun column(ref: KProperty1<T, Any?>, block: ColumnBuilderApi<T>.() -> Unit) {
-        builderState.addColumnBuilder(ref.id()) {
+        builderState.ensureColumnBuilder(ref.id()) {
             ColumnBuilderApi(it).apply(block)
         }
     }
 
     @JvmSynthetic
     fun column(ref: KProperty1<T, Any?>) {
-        builderState.addColumnBuilder(ref.id()) { }
+        builderState.ensureColumnBuilder(ref.id()) { }
     }
 }
 
@@ -160,6 +160,27 @@ class ColumnBuilderApi<T> internal constructor(private val builderState: ColumnB
     @set:JvmSynthetic
     @get:JvmSynthetic
     var index: Int by builderState::index
+
+    @set:JvmSynthetic
+    @get:JvmSynthetic
+    var property: KProperty1<T, Any?>? = null
+        set(value) {
+            field = value
+            if (value!=null) {
+                builderState.id = ColumnKey(property = value.id())
+            }
+        }
+
+
+    @set:JvmSynthetic
+    @get:JvmSynthetic
+    var name: String?
+        set(value) {
+            if (value!=null) {
+                builderState.id = ColumnKey(value)
+            }
+        }
+        get() = builderState.id.name
 
     @JvmSynthetic
     fun attributes(block: ColumnLevelAttributesBuilderApi<T>.() -> Unit) {

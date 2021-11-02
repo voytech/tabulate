@@ -35,11 +35,11 @@ class DslBuilderTest {
         }.build()) {
             assertNotNull(this)
             assertEquals(columns.size, 5)
-            assertEquals("nr", columns[0].id.id, "nr 0 should have id 'nr'")
-            assertEquals(Product::code.id(), columns[1].id.ref, "nr 1 should have id ref 'Product::code'")
-            assertEquals(Product::name.id(), columns[2].id.ref, "nr 2 should have id ref 'Product::name'")
-            assertEquals(Product::description.id(), columns[3].id.ref, "nr 3 should have id ref 'Product::description'")
-            assertEquals(Product::manufacturer.id(), columns[4].id.ref, "nr 4 should have id ref 'Product::manufacturer'")
+            assertEquals("nr", columns[0].id.name, "nr 0 should have id 'nr'")
+            assertEquals(Product::code.id(), columns[1].id.property, "nr 1 should have id ref 'Product::code'")
+            assertEquals(Product::name.id(), columns[2].id.property, "nr 2 should have id ref 'Product::name'")
+            assertEquals(Product::description.id(), columns[3].id.property, "nr 3 should have id ref 'Product::description'")
+            assertEquals(Product::manufacturer.id(), columns[4].id.property, "nr 4 should have id ref 'Product::manufacturer'")
         }
     }
 
@@ -73,11 +73,11 @@ class DslBuilderTest {
             assertEquals(1, firstColumn)
             assertEquals(1, firstRow)
             assertEquals( 5,columns.size)
-            assertEquals("nr", columns[0].id.id, "nr 0 should have id 'nr'")
-            assertEquals(Product::code.id(), columns[1].id.ref, "nr 1 should have id ref 'Product::code'")
-            assertEquals(Product::name.id(), columns[2].id.ref, "nr 2 should have id ref 'Product::name'")
-            assertEquals(Product::description.id(), columns[3].id.ref, "nr 3 should have id ref 'Product::description'")
-            assertEquals(Product::manufacturer.id(), columns[4].id.ref, "nr 4 should have id ref 'Product::manufacturer'")
+            assertEquals("nr", columns[0].id.name, "nr 0 should have id 'nr'")
+            assertEquals(Product::code.id(), columns[1].id.property, "nr 1 should have id ref 'Product::code'")
+            assertEquals(Product::name.id(), columns[2].id.property, "nr 2 should have id ref 'Product::name'")
+            assertEquals(Product::description.id(), columns[3].id.property, "nr 3 should have id ref 'Product::description'")
+            assertEquals(Product::manufacturer.id(), columns[4].id.property, "nr 4 should have id ref 'Product::manufacturer'")
             assertEquals(columns.first().columnAttributes?.size, 1)
             assertEquals(columns.first().columnAttributes?.first(), ColumnWidthAttribute(px = 100))
 
@@ -117,7 +117,7 @@ class DslBuilderTest {
             assertNotNull(this)
             assertEquals(columns.size, 1)
             columns.first().let { column ->
-                assertEquals(Product::code.id(), column.id.ref, "nr 1 should have id ref 'Product::code'")
+                assertEquals(Product::code.id(), column.id.property, "nr 1 should have id ref 'Product::code'")
                 assertNotNull(column.cellAttributes)
                 assertEquals(1, column.cellAttributes!!.size)
                 (column.cellAttributes.first() as CellTextStylesAttribute).let { attribute ->
@@ -169,7 +169,7 @@ class DslBuilderTest {
         }.build()) {
             assertNotNull(this)
             assertEquals(1, columns.size )
-            assertEquals(Product::code.id(), columns[0].id.ref, "nr 1 should have id ref 'Product::code'")
+            assertEquals(Product::code.id(), columns[0].id.property, "nr 1 should have id ref 'Product::code'")
             assertEquals(1, columns.first().columnAttributes?.size)
             assertEquals(1, columns.first().cellAttributes?.size)
             assertEquals(ColumnWidthAttribute(px = 100), columns.first().columnAttributes?.first())
@@ -216,13 +216,13 @@ class DslBuilderTest {
             assertEquals(rows!!.size, 2)
             rows.first().let { header ->
                 assertEquals(2,header.cells!!.size)
-                assertEquals("Code", header.cells[ColumnKey(ref = Product::code.id())]!!.value)
-                assertEquals("Description", header.cells[ColumnKey(ref = Product::description.id())]!!.value)
+                assertEquals("Code", header.cells[ColumnKey(property = Product::code.id())]!!.value)
+                assertEquals("Description", header.cells[ColumnKey(property = Product::description.id())]!!.value)
             }
             rows.last().let { firstRow ->
                 assertEquals(2,firstRow.cells!!.size)
-                assertEquals("1", firstRow.cells[ColumnKey(ref = Product::code.id())]!!.value)
-                assertEquals("First item", firstRow.cells[ColumnKey(ref = Product::description.id())]!!.value)
+                assertEquals("1", firstRow.cells[ColumnKey(property = Product::code.id())]!!.value)
+                assertEquals("First item", firstRow.cells[ColumnKey(property = Product::description.id())]!!.value)
             }
         }
     }
@@ -263,19 +263,19 @@ class DslBuilderTest {
             assertEquals(2, rows!!.size)
             rows.first().let { header ->
                 assertEquals(2,header.cells!!.size)
-                assertEquals("Code", header.cells[ColumnKey(ref = Product::code.id())]!!.value)
-                assertEquals("Description", header.cells[ColumnKey(ref = Product::description.id())]!!.value)
+                assertEquals("Code", header.cells[ColumnKey(property = Product::code.id())]!!.value)
+                assertEquals("Description", header.cells[ColumnKey(property = Product::description.id())]!!.value)
                 assertEquals(1, header.rowAttributes!!.size)
                 assertEquals(RowHeightAttribute(px = 100), header.rowAttributes.first())
                 header.cells.let { cells ->
-                    assertEquals(CellTextStylesAttribute(fontColor = Colors.BLACK), cells[ColumnKey(ref = Product::code.id())]!!.cellAttributes!!.first())
-                    assertEquals(CellTextStylesAttribute(fontColor = Colors.BLACK), cells[ColumnKey(ref = Product::description.id())]!!.cellAttributes!!.first())
+                    assertEquals(CellTextStylesAttribute(fontColor = Colors.BLACK), cells[ColumnKey(property = Product::code.id())]!!.cellAttributes!!.first())
+                    assertEquals(CellTextStylesAttribute(fontColor = Colors.BLACK), cells[ColumnKey(property = Product::description.id())]!!.cellAttributes!!.first())
                 }
             }
             rows.last().let { firstRow ->
                 assertEquals(2,firstRow.cells!!.size)
-                assertEquals("1", firstRow.cells[ColumnKey(ref = Product::code.id())]!!.value)
-                assertEquals("First item", firstRow.cells[ColumnKey(ref = Product::description.id())]!!.value)
+                assertEquals("1", firstRow.cells[ColumnKey(property = Product::code.id())]!!.value)
+                assertEquals("First item", firstRow.cells[ColumnKey(property = Product::description.id())]!!.value)
             }
         }
     }

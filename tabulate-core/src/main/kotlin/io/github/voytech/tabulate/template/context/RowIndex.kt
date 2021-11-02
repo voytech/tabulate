@@ -19,25 +19,25 @@ data class IndexMarker(
 }
 
 data class RowIndex(
-    val rowIndex: Int = 0,
+    val value: Int = 0,
     val steps: Map<String, IndexMarker> = emptyMap(),
 ) : Comparable<RowIndex> {
 
     fun hasLabel(label: String) = steps.containsKey(label)
 
-    fun getIndex(label:String? = null): Int = label?.let { steps[it]?.index } ?: rowIndex
+    fun getIndex(label:String? = null): Int = label?.let { steps[it]?.index } ?: value
 
     fun getIndexOrNull(label: String): Int? = steps[label]?.index
 
-    override fun compareTo(other: RowIndex): Int = rowIndex.compareTo(other.rowIndex)
+    override fun compareTo(other: RowIndex): Int = value.compareTo(other.value)
 
-    internal operator fun plus(increment: Int): RowIndex = RowIndex(rowIndex + increment, steps + increment)
-    internal operator fun minus(increment: Int): RowIndex = RowIndex(rowIndex - increment, steps - increment)
+    internal operator fun plus(increment: Int): RowIndex = RowIndex(value + increment, steps + increment)
+    internal operator fun minus(increment: Int): RowIndex = RowIndex(value - increment, steps - increment)
 
     internal operator fun plus(increment: RowIndexDef): RowIndex {
         return increment.step?.let {
             RowIndex(
-                rowIndex = rowIndex + increment.index,
+                value = value + increment.index,
                 steps = steps + mapOf(
                     it.name to IndexMarker(index = increment.index, step = it.name)
                 )
@@ -45,7 +45,7 @@ data class RowIndex(
         } ?: RowIndex(increment.index)
     }
 
-    internal operator fun inc(): RowIndex = RowIndex(rowIndex = rowIndex + 1, steps + 1)
+    internal operator fun inc(): RowIndex = RowIndex(value = value + 1, steps + 1)
 
 }
 

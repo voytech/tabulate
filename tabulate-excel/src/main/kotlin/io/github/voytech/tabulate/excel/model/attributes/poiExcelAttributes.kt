@@ -23,9 +23,6 @@ data class CellExcelDataFormatAttribute(
 
 }
 
-fun <T> TableLevelAttributesBuilderApi<T>.dataTestAttributeRenderOperationsProviderFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
-    attribute(CellExcelDataFormatAttribute.Builder().apply(block))
-
 fun <T> CellLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
     attribute(CellExcelDataFormatAttribute.Builder().apply(block))
 
@@ -35,6 +32,8 @@ fun <T> RowLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAtt
 fun <T> ColumnLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
     attribute(CellExcelDataFormatAttribute.Builder().apply(block))
 
+fun <T> ColumnLevelAttributesBuilderApi<T>.format(block: () -> String) =
+    attribute(CellExcelDataFormatAttribute.Builder().apply { value = block() })
 
 data class FilterAndSortTableAttribute(
     val columnRange: IntRange,

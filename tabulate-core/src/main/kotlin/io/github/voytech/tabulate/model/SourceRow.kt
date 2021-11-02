@@ -28,5 +28,5 @@ data class SourceRow<T> (
 ) {
     fun hasRecord(): Boolean = record != null && objectIndex != null
 
-    fun rowIndexValue(): Int = rowIndex.rowIndex
+    fun rowIndexValue(): Int = rowIndex.value
 }
