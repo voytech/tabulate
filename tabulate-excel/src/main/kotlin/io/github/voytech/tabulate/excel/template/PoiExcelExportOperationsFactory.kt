@@ -39,7 +39,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
         }
 
         override fun renderRowCell(context: RowCellContext) {
-            with(context.value) {
+            with(context.getValue()) {
                 if (type != null) {
                     if (type in CellType.BASIC_TYPES) {
                         context.renderBasicTypeCellValue()
@@ -53,13 +53,13 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
                     context.renderDefaultTypeCellValue()
                 }
             }.also { _ ->
-                context.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.let {
+                context.takeIf { it.getValue().colSpan > 1 || it.getValue().rowSpan > 1 }?.let {
                     renderingContext.mergeCells(
                         context.getTableId(),
-                        context.rowIndex,
-                        context.columnIndex,
-                        context.value.rowSpan,
-                        context.value.colSpan
+                        context.getRow(),
+                        context.getColumn(),
+                        context.getValue().rowSpan,
+                        context.getValue().colSpan
                     )
                 }
             }
@@ -67,13 +67,13 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
         private fun RowCellContext.renderBasicTypeCellValue() {
             provideCell(this) {
-                when (value.type) {
-                    CellType.STRING -> setCellValue(value.value as? String)
-                    CellType.BOOLEAN -> setCellValue(value.value as Boolean)
-                    CellType.DATE -> setCellValue(toDate(value.value))
-                    CellType.NUMERIC -> setCellValue((value.value as Number).toDouble())
-                    CellType.FUNCTION -> cellFormula = value.value.toString()
-                    CellType.ERROR -> setCellErrorValue(value.value as Byte)
+                when (getValue().type) {
+                    CellType.STRING -> setCellValue(getRawValue() as? String)
+                    CellType.BOOLEAN -> setCellValue(getRawValue() as Boolean)
+                    CellType.DATE -> setCellValue(toDate(getRawValue()))
+                    CellType.NUMERIC -> setCellValue((getRawValue() as Number).toDouble())
+                    CellType.FUNCTION -> cellFormula = getRawValue().toString()
+                    CellType.ERROR -> setCellErrorValue(getRawValue() as Byte)
                     else -> renderDefaultTypeCellValue()
                 }
             }
@@ -81,24 +81,24 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
         private fun RowCellContext.renderDefaultTypeCellValue() {
             provideCell(this) {
-                setCellValue(value.value as? String)
+                setCellValue(getRawValue() as? String)
             }
         }
 
         private fun RowCellContext.renderImageCell() {
-            if (value.type == CellType.IMAGE_DATA) {
+            if (getValue().type == CellType.IMAGE_DATA) {
                 renderingContext.createImageCell(
-                    getTableId(), rowIndex, columnIndex, value.rowSpan, value.colSpan, value.value as ByteArray
+                    getTableId(), getRow(), getColumn(), getValue().rowSpan, getValue().colSpan, getRawValue() as ByteArray
                 )
             } else {
                 renderingContext.createImageCell(
-                    getTableId(), rowIndex, columnIndex, value.rowSpan, value.colSpan, value.value as String
+                    getTableId(),  getRow(), getColumn(), getValue().rowSpan, getValue().colSpan, getRawValue() as String
                 )
             }
         }
 
         private fun provideCell(context: RowCellContext, block: (SXSSFCell.() -> Unit)) {
-            renderingContext.provideCell(context.getTableId(), context.rowIndex, context.columnIndex) {
+            renderingContext.provideCell(context.getTableId(), context.getRow(), context.getColumn()) {
                 it.apply(block)
             }
         }

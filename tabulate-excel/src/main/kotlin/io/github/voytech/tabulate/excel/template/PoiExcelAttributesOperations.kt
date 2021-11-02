@@ -38,8 +38,8 @@ class CellTextStylesAttributeRenderOperation(override val renderingContext: Apac
     override fun renderAttribute(context: RowCellContext, attribute: CellTextStylesAttribute) {
         renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
-            rowIndex = context.rowIndex,
-            columnIndex = context.columnIndex,
+            rowIndex = context.getRow(),
+            columnIndex = context.getColumn(),
             provideCellStyle = { getCachedStyle(renderingContext, context) }
         ).let {
             val font: XSSFFont = renderingContext.workbook().createFont() as XSSFFont
@@ -68,8 +68,8 @@ class CellBackgroundAttributeRenderOperation(override val renderingContext: Apac
     ) {
         renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
-            rowIndex = context.rowIndex,
-            columnIndex = context.columnIndex,
+            rowIndex = context.getRow(),
+            columnIndex = context.getColumn(),
             provideCellStyle = { getCachedStyle(renderingContext, context) }
         ).let {
             if (attribute.color != null) {
@@ -104,8 +104,8 @@ class CellBordersAttributeRenderOperation(override val renderingContext: ApacheP
     override fun renderAttribute(context: RowCellContext, attribute: CellBordersAttribute) {
         renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
-            rowIndex = context.rowIndex,
-            columnIndex = context.columnIndex,
+            rowIndex = context.getRow(),
+            columnIndex = context.getColumn(),
             provideCellStyle = { getCachedStyle(renderingContext, context) }
         ).let {
             attribute.leftBorderColor?.run { (it as XSSFCellStyle).setLeftBorderColor(ApachePoiRenderingContext.color(this)) }
@@ -148,8 +148,8 @@ class CellAlignmentAttributeRenderOperation(override val renderingContext: Apach
     override fun renderAttribute(context: RowCellContext, attribute: CellAlignmentAttribute) {
         renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
-            rowIndex = context.rowIndex,
-            columnIndex = context.columnIndex,
+            rowIndex = context.getRow(),
+            columnIndex = context.getColumn(),
             provideCellStyle = { getCachedStyle(renderingContext, context) }
         ).let {
             with(attribute.horizontal) {
@@ -187,8 +187,8 @@ class CellDataFormatAttributeRenderOperation(override val renderingContext: Apac
     ) {
         renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
-            rowIndex = context.rowIndex,
-            columnIndex = context.columnIndex,
+            rowIndex = context.getRow(),
+            columnIndex = context.getColumn(),
             provideCellStyle = { getCachedStyle(renderingContext, context) }
         ).let {
             it.dataFormat = renderingContext.workbook().createDataFormat().getFormat(attribute.dataFormat)

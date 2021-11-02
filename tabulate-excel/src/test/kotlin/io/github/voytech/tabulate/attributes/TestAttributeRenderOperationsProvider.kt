@@ -53,8 +53,8 @@ class SimpleTestCellAttributeRenderOperation(poi: ApachePoiRenderingContext) :
     override fun renderAttribute(context: RowCellContext, attribute: SimpleTestCellAttribute) {
         with(renderingContext.provideCell(
             context.getTableId(),
-            context.rowIndex,
-            context.columnIndex
+            context.getRow(),
+            context.getColumn()
         )) {
             this.setCellValue("${this.stringCellValue}_${attribute.valueSuffix}")
         }

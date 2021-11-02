@@ -341,6 +341,7 @@ class ApachePoiTabulateTests {
                 column("description")
                 column("image") {
                     attributes { width { px = 300 }}
+                    //attributes { cellType { DefaultTypeHints.IMAGE_URL } }
                 }
             }
             rows {
@@ -350,7 +351,6 @@ class ApachePoiTabulateTests {
                     cell {
                         value = "src/test/resources/kotlin.jpeg"
                         type = CellType.IMAGE_URL
-                        //attributes { type { "IMAGE_URL" } }
                     }
                 }
             }
