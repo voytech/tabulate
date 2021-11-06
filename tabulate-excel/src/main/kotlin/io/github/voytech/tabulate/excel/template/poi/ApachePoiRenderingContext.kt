@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.excel.template.poi
 
-import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.attributes.cell.Color
 import io.github.voytech.tabulate.template.context.CellValue
 import io.github.voytech.tabulate.template.context.Coordinates
@@ -129,7 +128,6 @@ class ApachePoiRenderingContext : RenderingContext  {
             ?.let {
                 CellValue(
                     value = it.pictureData.data,
-                    type = CellType.IMAGE_DATA,
                     colSpan = it.clientAnchor.col2.toInt() - it.clientAnchor.col1.toInt(),
                     rowSpan = it.clientAnchor.row2 - it.clientAnchor.row1
                 )

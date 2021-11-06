@@ -259,10 +259,6 @@ internal class ColumnBuilderState<T>(private val columnBuilderStates: List<Colum
 
     @get:JvmSynthetic
     @set:JvmSynthetic
-    var columnType: CellType? = null
-
-    @get:JvmSynthetic
-    @set:JvmSynthetic
     var index: Int by vetoable(columnBuilderStates.lastOrNull()?.index?.plus(1) ?: 0) { _, _, newValue ->
         columnBuilderStates.findByIndex(newValue)?.let {
             if (it === this) true
@@ -278,7 +274,7 @@ internal class ColumnBuilderState<T>(private val columnBuilderStates: List<Colum
 
     @JvmSynthetic
     override fun build(transformerContainer: AttributeTransformerContainer?): ColumnDef<T> = ColumnDef(
-        id, index, columnType,
+        id, index,
         getAttributesByClass(ColumnAttribute::class.java, transformerContainer),
         getAttributesByClass(CellAttribute::class.java, transformerContainer)
     )
@@ -568,10 +564,6 @@ internal class CellBuilderState<T>(
 
     @get:JvmSynthetic
     @set:JvmSynthetic
-    var type: CellType? = null
-
-    @get:JvmSynthetic
-    @set:JvmSynthetic
     var colSpan: Int by vetoable(1) { _, _, newValue ->
         if (newValue < 1) {
             throw BuilderException("Minimum value for colSpan is 1")
@@ -595,7 +587,7 @@ internal class CellBuilderState<T>(
     @JvmSynthetic
     override fun build(transformerContainer: AttributeTransformerContainer?): CellDef<T> =
         CellDef(
-            value, expression, type, colSpan, rowSpan, rowSpanStrategy,
+            value, expression, colSpan, rowSpan, rowSpanStrategy,
             getAttributesByClass(CellAttribute::class.java, transformerContainer)
         )
 

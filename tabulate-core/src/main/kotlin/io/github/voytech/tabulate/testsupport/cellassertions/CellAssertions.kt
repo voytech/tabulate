@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.testsupport.cellassertions
 
-import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.template.context.CellValue
 import io.github.voytech.tabulate.template.context.Coordinates
@@ -15,17 +14,12 @@ import kotlin.test.fail
 
 class AssertCellValue<E>(
     private val expectedValue: Any,
-    private val expectedType: CellType? = null,
     private val expectedColspan: Int? = null,
     private val expectedRowspan: Int? = null
 ) : CellTest<E> {
     override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
         assertNotNull(def?.cellValue, "Expected cell value to be present")
         assertValueEquals(expectedValue, def?.cellValue?.value, "Expected cell value to be $expectedValue")
-        expectedType?.let {
-            assertNotNull(def?.cellValue?.type, "Expected cell type to be present")
-            assertEquals(expectedType, def?.cellValue?.type, "Expected cell type to be $it")
-        }
         expectedColspan?.let {
             assertNotNull(def?.cellValue?.colSpan, "Expected cell collSpan to be present")
             assertEquals(expectedColspan, def?.cellValue?.colSpan, "Expected cell colSpan to be $it")

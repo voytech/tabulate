@@ -7,7 +7,6 @@ import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttr
 import io.github.voytech.tabulate.excel.model.attributes.dataFormat
 import io.github.voytech.tabulate.excel.model.attributes.filterAndSort
 import io.github.voytech.tabulate.excel.model.attributes.format
-import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.RowCellExpression
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
@@ -158,10 +157,10 @@ class ApachePoiTabulateTests {
                     )
                 ),
                 CellPosition(2, 2) to AssertMany(
-                    AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
+                    AssertCellValue(expectedValue = "Nr.:"),
                 ),
                 CellPosition(2, 3) to AssertMany(
-                    AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
+                    AssertCellValue(expectedValue = "Code"),
                     AssertContainsCellAttributes(
                         CellTextStylesAttribute(
                             fontFamily = "Times New Roman",
@@ -173,18 +172,15 @@ class ApachePoiTabulateTests {
                         CellBackgroundAttribute(color = Colors.BLUE)
                     )
                 ),
-                CellPosition(2, 4) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
+                CellPosition(2, 4) to AssertCellValue(expectedValue = "Name"),
                 CellPosition(2, 5) to AssertCellValue(
-                    expectedType = CellType.STRING,
                     expectedValue = "Description"
                 ),
                 CellPosition(2, 6) to AssertCellValue(
-                    expectedType = CellType.STRING,
                     expectedValue = "Manufacturer"
                 ),
-                CellPosition(2, 7) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Price"),
+                CellPosition(2, 7) to AssertCellValue(expectedValue = "Price"),
                 CellPosition(2, 8) to AssertCellValue(
-                    expectedType = CellType.STRING,
                     expectedValue = "Distribution"
                 ),
                 CellPosition(3, 8) to AssertContainsCellAttributes(CellExcelDataFormatAttribute("dd.mm.YYYY"))
@@ -230,19 +226,16 @@ class ApachePoiTabulateTests {
             tableName = "Products table",
             file = File("test2.xlsx"),
             cellTests = mapOf(
-                CellPosition(0, 0) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Nr.:"),
-                CellPosition(0, 1) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Code"),
-                CellPosition(0, 2) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "Name"),
+                CellPosition(0, 0) to AssertCellValue(expectedValue = "Nr.:"),
+                CellPosition(0, 1) to AssertCellValue(expectedValue = "Code"),
+                CellPosition(0, 2) to AssertCellValue(expectedValue = "Name"),
                 CellPosition(0, 3) to AssertCellValue(
-                    expectedType = CellType.STRING,
                     expectedValue = "Description"
                 ),
                 CellPosition(0, 4) to AssertCellValue(
-                    expectedType = CellType.STRING,
                     expectedValue = "Manufacturer"
                 ),
                 CellPosition(0, 5) to AssertCellValue(
-                    expectedType = CellType.STRING,
                     expectedValue = "Distribution"
                 ),
                 CellPosition(1, 5) to AssertContainsCellAttributes(
@@ -305,26 +298,21 @@ class ApachePoiTabulateTests {
             file = File("test1.xlsx"),
             cellTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(
-                    expectedType = CellType.STRING,
                     expectedValue = "Row span",
                     expectedRowspan = 2
                 ),
                 CellPosition(0, 1) to AssertCellValue(
-                    expectedType = CellType.STRING,
                     expectedValue = "This is very long title. 2 columns span. Row 1",
                     expectedColspan = 2
                 ),
                 CellPosition(0, 3) to AssertCellValue(
-                    expectedType = CellType.STRING,
                     expectedValue = "Last column. Row 1"
                 ),
                 CellPosition(1, 1) to AssertCellValue(
-                    expectedType = CellType.STRING,
                     expectedValue = "This is very long title. 2 columns span. Row 2",
                     expectedColspan = 2
                 ),
                 CellPosition(1, 3) to AssertCellValue(
-                    expectedType = CellType.STRING,
                     expectedValue = "Last column. Row 2"
                 ),
             )
@@ -340,8 +328,7 @@ class ApachePoiTabulateTests {
             columns {
                 column("description")
                 column("image") {
-                    attributes { width { px = 300 }}
-                    //attributes { cellType { DefaultTypeHints.IMAGE_URL } }
+                    attributes { width { px = 300 } }
                 }
             }
             rows {
@@ -350,7 +337,7 @@ class ApachePoiTabulateTests {
                     cell { value = "It is : " }
                     cell {
                         value = "src/test/resources/kotlin.jpeg"
-                        type = CellType.IMAGE_URL
+                        typeHint { DefaultTypeHints.IMAGE_URL }
                     }
                 }
             }
@@ -360,9 +347,8 @@ class ApachePoiTabulateTests {
             tableName = "Test table",
             file = File("test_img.xlsx"),
             cellTests = mapOf(
-                CellPosition(0, 0) to AssertCellValue(expectedType = CellType.STRING, expectedValue = "It is : "),
+                CellPosition(0, 0) to AssertCellValue(expectedValue = "It is : "),
                 CellPosition(0, 1) to AssertCellValue(
-                    expectedType = CellType.IMAGE_DATA,
                     expectedValue = FileInputStream("src/test/resources/kotlin.jpeg").readBytes()
                 )
             )

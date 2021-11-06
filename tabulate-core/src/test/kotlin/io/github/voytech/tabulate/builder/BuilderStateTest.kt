@@ -30,37 +30,28 @@ class BuilderStateTest {
     @Test
     fun `should define columns`() {
         val builder = TableBuilderState<ExportedData>().apply {
-            columnsBuilderState.ensureColumnBuilder("customCol1") {
-                it.columnType = CellType.STRING
-            }
-            columnsBuilderState.ensureColumnBuilder(ExportedData::string.id()) {
-                it.columnType = CellType.STRING
-            }
+            columnsBuilderState.ensureColumnBuilder("customCol1") {}
+            columnsBuilderState.ensureColumnBuilder(ExportedData::string.id()) {}
         }
         assertEquals(2, builder.columnsBuilderState.columnBuilderStates.size)
 
         with(builder.columnsBuilderState.find(ColumnKey("customCol1"))) {
             assertEquals("customCol1", this?.id?.name)
             assertEquals(0, this?.index)
-            assertEquals(CellType.STRING, this?.columnType)
         }
 
         with(builder.columnsBuilderState.find(ColumnKey(property = ExportedData::string.id()))) {
             assertEquals(ExportedData::string.id(), this?.id?.property)
             assertEquals(1, this?.index)
-            assertEquals(CellType.STRING, this?.columnType)
         }
 
-        builder.columnsBuilderState.ensureColumnBuilder("customCol1") {
-            it.columnType = CellType.NUMERIC
-        }
+        builder.columnsBuilderState.ensureColumnBuilder("customCol1") {}
 
         assertEquals(2, builder.columnsBuilderState.columnBuilderStates.size)
 
         with(builder.columnsBuilderState.find(ColumnKey("customCol1"))) {
             assertEquals("customCol1", this?.id?.name)
             assertEquals(0, this?.index)
-            assertEquals(CellType.NUMERIC, this?.columnType)
         }
 
         val exception = assertThrows<BuilderException> {
@@ -78,7 +69,6 @@ class BuilderStateTest {
         with(builder.columnsBuilderState.find(ColumnKey("customCol1"))) {
             assertEquals("customCol1", this?.id?.name)
             assertEquals(2, this?.index)
-            assertEquals(CellType.NUMERIC, this?.columnType)
         }
 
         builder.columnsBuilderState.ensureColumnBuilder("customCol2") {
@@ -283,7 +273,7 @@ class BuilderStateTest {
             }
 
             rowsBuilderState.addRowBuilder(RowIndexPredicateLiteral(eq(9))) { row_2 ->
-                row_2.cellsBuilderState.addCellBuilder() {}
+                row_2.cellsBuilderState.addCellBuilder {}
                 assertEquals(2, row_2.cells.size)
                 assertNotNull(row_2.cells[ColumnKey("column-2")])
             }

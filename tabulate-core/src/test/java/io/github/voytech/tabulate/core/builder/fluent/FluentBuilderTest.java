@@ -1,12 +1,8 @@
 package io.github.voytech.tabulate.core.builder.fluent;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 import com.google.common.collect.Lists;
 import io.github.voytech.tabulate.api.builder.fluent.FluentTableBuilderApi;
 import io.github.voytech.tabulate.api.builder.fluent.TableBuilder;
-import io.github.voytech.tabulate.model.CellType;
 import io.github.voytech.tabulate.model.SourceRow;
 import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute;
 import io.github.voytech.tabulate.model.attributes.cell.Colors;
@@ -21,6 +17,9 @@ import io.github.voytech.tabulate.testsupport.TestExportOperationsFactory;
 import kotlin.Unit;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 import static io.github.voytech.tabulate.api.builder.RowPredicates.allRows;
 
@@ -47,16 +46,12 @@ public class FluentBuilderTest {
 						.attribute(RowHeightAttribute::builder, builder -> builder.setPx(20))
 						.columns()
 							.column("rowNumbering")
-								.columnType(CellType.NUMERIC)
 								.columnAttribute(ColumnWidthAttribute::builder)
 							.column(Employee::getId)
-								.columnType(CellType.NUMERIC)
 								.columnAttribute(ColumnWidthAttribute::builder)
 							.column(Employee::getFirstName)
-								.columnType(CellType.STRING)
 								.columnAttribute(ColumnWidthAttribute::builder)
 							.column(Employee::getLastName)
-								.columnType(CellType.STRING)
 								.columnAttribute(ColumnWidthAttribute::builder)
 						.rows()
 							.row(0)

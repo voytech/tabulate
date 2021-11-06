@@ -4,7 +4,6 @@ import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
 import io.github.voytech.tabulate.api.builder.dsl.Table
 import io.github.voytech.tabulate.excel.model.ExcelCellFills
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
-import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
@@ -70,7 +69,6 @@ class ExcelAttributesTests {
             file = File("test1.xlsx"),
             cellTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(
-                    expectedType = CellType.STRING,
                     expectedValue = "Value"
                 ),
                 CellPosition(0, 0) to AssertEqualAttribute(expectedAttribute)
@@ -108,7 +106,6 @@ class ExcelAttributesTests {
             file = File("test1.xlsx"),
             cellTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(
-                    expectedType = CellType.STRING,
                     expectedValue = "Value"
                 ),
                 CellPosition(0, 0) to AssertEqualAttribute(SimpleTestCellAttribute(valueSuffix = "AdditionalAttribute"))

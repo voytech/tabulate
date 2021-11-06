@@ -32,7 +32,7 @@ interface TableAttributeRenderOperation<T : TableAttribute> : AttributeOperation
 }
 
 interface RowAttributeRenderOperation<E,T : RowAttribute> : AttributeOperation<T> {
-    fun renderAttribute(context: RowContext<E>, attribute: T)
+    fun renderAttribute(context: RowContext, attribute: T)
 }
 
 interface CellAttributeRenderOperation<T : CellAttribute> : AttributeOperation<T> {

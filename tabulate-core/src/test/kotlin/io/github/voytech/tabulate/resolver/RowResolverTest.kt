@@ -1,10 +1,9 @@
 package io.github.voytech.tabulate.resolver
 
+import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
 import io.github.voytech.tabulate.api.builder.dsl.footer
 import io.github.voytech.tabulate.api.builder.dsl.header
-import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
 import io.github.voytech.tabulate.data.Product
-import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.ColumnKey
 import io.github.voytech.tabulate.template.context.IndexMarker
 import io.github.voytech.tabulate.template.context.RowIndex
@@ -53,7 +52,6 @@ class RowResolverTest {
         assertEquals(index, resolvedIndexedAttributedRow!!.index)
         with(resolvedIndexedAttributedRow.value) {
             assertEquals("CustomProductCode",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
-            assertEquals(CellType.STRING,rowCellValues[ColumnKey.field(Product::code)]!!.value.type)
         }
     }
 
@@ -78,7 +76,6 @@ class RowResolverTest {
         assertEquals(0, resolvedIndexedAttributedRow!!.index)
         with(resolvedIndexedAttributedRow.value) {
             assertEquals("code1",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
-            assertEquals(CellType.STRING,rowCellValues[ColumnKey.field(Product::code)]!!.value.type)
         }
     }
 
@@ -113,19 +110,16 @@ class RowResolverTest {
         assertEquals(0, header!!.index)
         with(header.value) {
             assertEquals("CODE",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
-            assertEquals(CellType.STRING,rowCellValues[ColumnKey.field(Product::code)]!!.value.type)
         }
         assertNotNull(value)
         assertEquals(1, value!!.index)
         with(value.value) {
             assertEquals("code1",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
-            assertEquals(CellType.STRING,rowCellValues[ColumnKey.field(Product::code)]!!.value.type)
         }
         assertNotNull(footer)
         assertEquals(2, footer!!.index)
         with(footer.value) {
             assertEquals("footer",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
-            assertEquals(CellType.STRING,rowCellValues[ColumnKey.field(Product::code)]!!.value.type)
         }
     }
 

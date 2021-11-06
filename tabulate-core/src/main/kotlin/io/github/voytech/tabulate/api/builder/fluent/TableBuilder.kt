@@ -6,8 +6,10 @@ import io.github.voytech.tabulate.model.attributes.Attribute
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
+import io.github.voytech.tabulate.model.attributes.cell.TypeHintAttribute
 import java.util.concurrent.Callable
 import java.util.function.Consumer
+import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellType as TypeHint
 import java.util.function.Function as JFunction
 
 sealed class FluentTableBuilderApi<T> {
@@ -105,10 +107,6 @@ class ColumnBuilder<T> internal constructor(
 
     fun index(index: Int) = apply {
         builderState.index = index
-    }
-
-    fun columnType(columnType: CellType?) = apply {
-        builderState.columnType = columnType
     }
 
     fun rows() = up().up().rows()
@@ -241,8 +239,8 @@ class CellBuilder<T> internal constructor(
         builderState.expression = expression
     }
 
-    fun type(type: CellType?) = apply {
-        builderState.type = type
+    fun type(type: TypeHint) = apply {
+        builderState.attribute(TypeHintAttribute.Builder().apply { this.type = type })
     }
 
     fun colSpan(colSpan: Int) = apply {

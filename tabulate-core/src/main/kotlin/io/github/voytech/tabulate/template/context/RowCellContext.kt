@@ -1,11 +1,12 @@
 package io.github.voytech.tabulate.template.context
 
 import io.github.voytech.tabulate.model.attributes.CellAttribute
+import io.github.voytech.tabulate.model.attributes.cell.TypeHintAttribute
 
 abstract class RowCellContext : ContextData(), RowCellCoordinate {
     abstract fun getValue(): CellValue
     abstract fun getRawValue(): Any
-    abstract fun <T: CellAttribute<T>> getAttribute(clazz: Class<CellAttribute<T>>):  List<CellAttribute<T>>
+    abstract fun <T: CellAttribute<T>> getAttributes(clazz: Class<T>):  List<T>
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -26,9 +27,16 @@ fun AttributedCell.crop(): RowCellContext = object : RowCellContext() {
 
     override fun getColumn(): Int = columnIndex
 
-    override fun <T : CellAttribute<T>> getAttribute(clazz: Class<CellAttribute<T>>): List<CellAttribute<T>> =
-        attributeMap[clazz as Class<CellAttribute<*>>] as List<CellAttribute<T>>
+    override fun <T : CellAttribute<T>> getAttributes(clazz: Class<T>): List<T> =
+        if (attributeMap.containsKey(clazz as Class<CellAttribute<*>>)) {
+            attributeMap[clazz] as List<T>
+        } else emptyList()
+
 }
 
-//fun RowCellContext.getTypeHintAttribute(): CellAttribute<TypeHintAttribute>? =
-//    getAttribute<TypeHintAttribute>(TypeHintAttribute::class.java).firstOrNull()
+inline fun <reified T: CellAttribute<T>> RowCellContext.getAttributes():  List<T> = getAttributes(T::class.java)
+
+inline fun <reified T: CellAttribute<T>> RowCellContext.getFirstAttributeOrNull():  T? =
+        getAttributes(T::class.java).firstOrNull()
+
+fun RowCellContext.getTypeHint(): TypeHintAttribute? = getFirstAttributeOrNull<TypeHintAttribute>()

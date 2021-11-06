@@ -5,7 +5,9 @@ import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
+import io.github.voytech.tabulate.model.attributes.cell.cellType
 import kotlin.reflect.KProperty1
+import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellType as TypeHint
 
 @DslMarker
 annotation class TabulateMarker
@@ -152,10 +154,6 @@ class ColumnsBuilderApi<T> internal constructor(private val builderState: Column
 
 @TabulateMarker
 class ColumnBuilderApi<T> internal constructor(private val builderState: ColumnBuilderState<T>) {
-
-    @set:JvmSynthetic
-    @get:JvmSynthetic
-    var columnType: CellType? by builderState::columnType
 
     @set:JvmSynthetic
     @get:JvmSynthetic
@@ -322,15 +320,16 @@ class CellBuilderApi<T> internal constructor(private val builderState: CellBuild
 
     @set:JvmSynthetic
     @get:JvmSynthetic
-    var type: CellType? by builderState::type
-
-    @set:JvmSynthetic
-    @get:JvmSynthetic
     var colSpan: Int by builderState::colSpan
 
     @set:JvmSynthetic
     @get:JvmSynthetic
     var rowSpan: Int by builderState::rowSpan
+
+    @JvmSynthetic
+    fun typeHint(block: () -> TypeHint) {
+        attributes { cellType(block) }
+    }
 
     @JvmSynthetic
     fun attributes(block: CellLevelAttributesBuilderApi<T>.() -> Unit) {

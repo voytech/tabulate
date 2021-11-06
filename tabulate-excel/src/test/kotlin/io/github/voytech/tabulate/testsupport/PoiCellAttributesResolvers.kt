@@ -1,18 +1,20 @@
 package io.github.voytech.tabulate.testsupport
 
-import org.apache.poi.ss.usermodel.FillPatternType
-import org.apache.poi.ss.usermodel.Font
-import org.apache.poi.xssf.usermodel.XSSFColor
+import io.github.voytech.tabulate.excel.model.ExcelBorderStyle
+import io.github.voytech.tabulate.excel.model.ExcelCellFills
+import io.github.voytech.tabulate.excel.model.ExcelTypeHints
+import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
+import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
+import io.github.voytech.tabulate.excel.template.poi.ApachePoiUtils
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
 import io.github.voytech.tabulate.template.context.Coordinates
-import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
-import io.github.voytech.tabulate.excel.template.poi.ApachePoiUtils
-import io.github.voytech.tabulate.excel.model.ExcelBorderStyle
-import io.github.voytech.tabulate.excel.model.ExcelCellFills
-import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
+import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.FillPatternType
+import org.apache.poi.ss.usermodel.Font
+import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 import org.apache.poi.ss.usermodel.HorizontalAlignment as PoiHorizontalAlignment
 import org.apache.poi.ss.usermodel.VerticalAlignment as PoiVerticalAlignment
@@ -118,6 +120,25 @@ class PoiCellDataFormatAttributeResolver : AttributeResolver<ApachePoiRenderingC
                     dataFormat = dataFormat
                 )
             } ?: CellExcelDataFormatAttribute("INVALID")
+        }
+    }
+}
+
+class PoiCellTypeHintAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
+    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute {
+        return api.xssfCell(coordinates).let {
+            it?.cellType?.let { type ->
+                TypeHintAttribute(
+                        type = when (type) {
+                            CellType.BOOLEAN -> ExcelTypeHints.BOOLEAN
+                            CellType.NUMERIC -> ExcelTypeHints.NUMERIC
+                            CellType.ERROR -> ExcelTypeHints.ERROR
+                            CellType.FORMULA -> ExcelTypeHints.FORMULA
+                            CellType.STRING -> ExcelTypeHints.STRING
+                            else -> ExcelTypeHints.STRING
+                        }
+                )
+            } ?: TypeHintAttribute(ExcelTypeHints.STRING)
         }
     }
 }

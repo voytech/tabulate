@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.api.builder.dsl
 
-import io.github.voytech.tabulate.model.CellType
 import io.github.voytech.tabulate.model.RowCellExpression
 import io.github.voytech.tabulate.template.context.DefaultSteps
 import java.math.BigDecimal
@@ -89,13 +88,11 @@ fun <T> RowsBuilderApi<T>.trailingRow(index: Int, block: RowBuilderApi<T>.() -> 
 private fun <T, R> cellBuilderBlock(
     cSpan: Int = 1,
     rSpan: Int = 1,
-    cType: CellType,
     valueSupplier: () -> R,
 ): CellBuilderApi<T>.() -> Unit = {
     colSpan = cSpan
     rowSpan = rSpan
     value = valueSupplier()
-    type = cType
 }
 
 fun <T> RowBuilderApi<T>.textCell(
@@ -104,7 +101,7 @@ fun <T> RowBuilderApi<T>.textCell(
     rowSpan: Int = 1,
     valueSupplier: () -> String
 ) {
-    val block = cellBuilderBlock<T, String>(colSpan, rowSpan, CellType.STRING, valueSupplier)
+    val block = cellBuilderBlock<T, String>(colSpan, rowSpan, valueSupplier)
     index?.let { cell(it, block) } ?: cell(block)
 }
 
@@ -114,7 +111,7 @@ fun <T> RowBuilderApi<T>.decimalCell(
     rowSpan: Int = 1,
     valueSupplier: () -> BigDecimal
 ) {
-    val block = cellBuilderBlock<T, BigDecimal>(colSpan, rowSpan, CellType.NUMERIC, valueSupplier)
+    val block = cellBuilderBlock<T, BigDecimal>(colSpan, rowSpan, valueSupplier)
     index?.let { cell(it, block) } ?: cell(block)
 }
 
@@ -123,7 +120,7 @@ fun <T> RowBuilderApi<T>.dataCell(
     colSpan: Int = 1,
     rowSpan: Int = 1,
     valueSupplier: () -> LocalDate) {
-    val block = cellBuilderBlock<T, LocalDate>(colSpan, rowSpan, CellType.DATE, valueSupplier)
+    val block = cellBuilderBlock<T, LocalDate>(colSpan, rowSpan, valueSupplier)
     index?.let { cell(it, block) } ?: cell(block)
 }
 
@@ -132,7 +129,7 @@ fun <T> RowBuilderApi<T>.boolCell(
     colSpan: Int = 1,
     rowSpan: Int = 1,
     valueSupplier: () -> Boolean) {
-    val block = cellBuilderBlock<T, Boolean>(colSpan, rowSpan, CellType.BOOLEAN, valueSupplier)
+    val block = cellBuilderBlock<T, Boolean>(colSpan, rowSpan, valueSupplier)
     index?.let { cell(it, block) } ?: cell(block)
 }
 
@@ -141,7 +138,7 @@ fun <T> RowBuilderApi<T>.imageUrlCell(
     colSpan: Int = 1,
     rowSpan: Int = 1,
     valueSupplier: () -> String) {
-    val block = cellBuilderBlock<T, String>(colSpan, rowSpan, CellType.IMAGE_URL, valueSupplier)
+    val block = cellBuilderBlock<T, String>(colSpan, rowSpan, valueSupplier)
     index?.let { cell(it, block) } ?: cell(block)
 }
 
@@ -150,6 +147,6 @@ fun <T> RowBuilderApi<T>.imageDataCell(
     colSpan: Int = 1,
     rowSpan: Int = 1,
     valueSupplier: () -> ByteArray) {
-    val block = cellBuilderBlock<T, ByteArray>(colSpan, rowSpan, CellType.IMAGE_DATA, valueSupplier)
+    val block = cellBuilderBlock<T, ByteArray>(colSpan, rowSpan, valueSupplier)
     index?.let { cell(it, block) } ?: cell(block)
 }

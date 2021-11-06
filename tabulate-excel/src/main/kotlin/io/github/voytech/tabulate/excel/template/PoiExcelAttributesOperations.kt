@@ -204,12 +204,12 @@ class ColumnWidthAttributeRenderOperation(override val renderingContext: ApacheP
     override fun renderAttribute(context: ColumnContext, attribute: ColumnWidthAttribute) {
         renderingContext.provideSheet(context.getTableId()).let {
             if (attribute.auto == true || attribute.px <= 0) {
-                if (!it.isColumnTrackedForAutoSizing(context.columnIndex)) {
-                    it.trackColumnForAutoSizing(context.columnIndex)
+                if (!it.isColumnTrackedForAutoSizing(context.getColumn())) {
+                    it.trackColumnForAutoSizing(context.getColumn())
                 }
-                it.autoSizeColumn(context.columnIndex)
+                it.autoSizeColumn(context.getColumn())
             } else {
-                it.setColumnWidth(context.columnIndex, ApachePoiUtils.widthFromPixels(attribute.px))
+                it.setColumnWidth(context.getColumn(), ApachePoiUtils.widthFromPixels(attribute.px))
             }
         }
     }
@@ -218,8 +218,8 @@ class ColumnWidthAttributeRenderOperation(override val renderingContext: ApacheP
 class RowHeightAttributeRenderOperation<T>(override val renderingContext: ApachePoiRenderingContext) :
     BaseRowAttributeRenderOperation<ApachePoiRenderingContext, T, RowHeightAttribute>(renderingContext) {
     override fun attributeType(): Class<RowHeightAttribute> = RowHeightAttribute::class.java
-    override fun renderAttribute(context: RowContext<T>, attribute: RowHeightAttribute) {
-        renderingContext.provideRow(context.getTableId(), context.rowIndex).height =
+    override fun renderAttribute(context: RowContext, attribute: RowHeightAttribute) {
+        renderingContext.provideRow(context.getTableId(), context.getRow()).height =
             ApachePoiUtils.heightFromPixels(attribute.px)
     }
 }

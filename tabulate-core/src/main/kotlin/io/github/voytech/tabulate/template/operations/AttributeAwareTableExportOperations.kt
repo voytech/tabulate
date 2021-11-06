@@ -63,8 +63,8 @@ internal class AttributeAwareTableExportOperations<T>(
 
     override fun beginRow(context: AttributedRow<T>) {
         with(context.crop()) {
+            var operationRendered = false
             if (!context.rowAttributes.isNullOrEmpty()) {
-                var operationRendered = false
                 context.rowAttributes?.forEach { attribute ->
                     attributeOperations.getRowAttributeOperation(attribute.javaClass)?.let { operation ->
                         if (operation.priority() >= 0 && !operationRendered) {
@@ -74,7 +74,8 @@ internal class AttributeAwareTableExportOperations<T>(
                         operation.renderAttribute(this, attribute)
                     }
                 }
-            } else {
+            }
+            if (!operationRendered) {
                 baseTableExportOperations.beginRow(this)
             }
         }
@@ -94,8 +95,8 @@ internal class AttributeAwareTableExportOperations<T>(
     override fun renderRowCell(context: AttributedCell) {
         if (enableAttributeSetCaching) context.ensureAttributesCacheEntry()
         with(context.crop()) {
+            var operationRendered = false
             if (!context.attributes.isNullOrEmpty()) {
-                var operationRendered = false
                 context.attributes.forEach { attribute ->
                     attributeOperations.getCellAttributeOperation(attribute.javaClass)?.let { operation ->
                         if (operation.priority() >= 0 && !operationRendered) {
@@ -105,7 +106,8 @@ internal class AttributeAwareTableExportOperations<T>(
                         operation.renderAttribute(this, attribute)
                     }
                 }
-            } else {
+            }
+            if (!operationRendered){
                 baseTableExportOperations.renderRowCell(this)
             }
         }

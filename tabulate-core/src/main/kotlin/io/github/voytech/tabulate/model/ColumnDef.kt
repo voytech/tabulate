@@ -9,8 +9,6 @@ internal class ColumnDef<T> internal constructor(
     @get:JvmSynthetic
     internal val index: Int?,
     @get:JvmSynthetic
-    internal val columnType: CellType?,
-    @get:JvmSynthetic
     internal val columnAttributes: Set<ColumnAttribute>?,
     @get:JvmSynthetic
     internal val cellAttributes: Set<CellAttribute>?

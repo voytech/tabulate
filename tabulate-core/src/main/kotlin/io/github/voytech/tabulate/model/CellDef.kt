@@ -34,8 +34,6 @@ internal data class CellDef<T> internal constructor(
     @get:JvmSynthetic
     val expression: RowCellExpression<T>?,
     @get:JvmSynthetic
-    val type: CellType?,
-    @get:JvmSynthetic
     val colSpan: Int = 1,
     @get:JvmSynthetic
     val rowSpan: Int = 1,
@@ -60,10 +58,9 @@ internal fun <T> CellDef<T>?.resolveCellValue(column: ColumnDef<T>, maybeRow: So
         it.resolveRawValue(maybeRow)?.let { rawValue ->
             CellValue(
                 rawValue,
-                (it.type ?: column.columnType).orProbe(rawValue),
                 it.colSpan,
                 it.rowSpan
             )
         }
-    } ?: column.resolveRawValue(maybeRow?.record)?.let { CellValue(it, column.columnType.orProbe(it)) }
+    } ?: column.resolveRawValue(maybeRow?.record)?.let { CellValue(it) }
 }

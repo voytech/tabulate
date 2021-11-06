@@ -17,7 +17,7 @@ interface TableExportOperations<T> {
 interface BasicContextExportOperations<T> {
     fun createTable(context: TableContext) {}
     fun renderColumn(context: ColumnContext) {}
-    fun beginRow(context: RowContext<T>) {}
+    fun beginRow(context: RowContext) {}
     fun renderRowCell(context: RowCellContext)
     fun endRow(context: RowContextWithCells<T>) {}
 }
