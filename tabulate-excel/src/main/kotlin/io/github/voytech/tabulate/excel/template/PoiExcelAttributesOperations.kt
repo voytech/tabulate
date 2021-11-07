@@ -14,10 +14,7 @@ import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderSty
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
-import io.github.voytech.tabulate.template.context.ColumnContext
-import io.github.voytech.tabulate.template.context.RowCellContext
-import io.github.voytech.tabulate.template.context.RowContext
-import io.github.voytech.tabulate.template.context.TableContext
+import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.operations.BaseCellAttributeRenderOperation
 import io.github.voytech.tabulate.template.operations.BaseColumnAttributeRenderOperation
 import io.github.voytech.tabulate.template.operations.BaseRowAttributeRenderOperation
@@ -218,7 +215,7 @@ class ColumnWidthAttributeRenderOperation(override val renderingContext: ApacheP
 class RowHeightAttributeRenderOperation<T>(override val renderingContext: ApachePoiRenderingContext) :
     BaseRowAttributeRenderOperation<ApachePoiRenderingContext, T, RowHeightAttribute>(renderingContext) {
     override fun attributeType(): Class<RowHeightAttribute> = RowHeightAttribute::class.java
-    override fun renderAttribute(context: RowContext, attribute: RowHeightAttribute) {
+    override fun renderAttribute(context: RowContext<T>, attribute: RowHeightAttribute) {
         renderingContext.provideRow(context.getTableId(), context.getRow()).height =
             ApachePoiUtils.heightFromPixels(attribute.px)
     }

@@ -56,7 +56,7 @@ fun AttributedCell.ensureAttributesCacheEntry() {
 }
 
 fun <T> AttributedRowWithCells<T>.ensureAttributesCacheEntry() {
-    this.rowAttributes?.let {
+    this.attributes?.let {
         getCache(this).getRowCacheEntry(it)
     }?.also{
         additionalAttributes?.put("_currentRowAttributesCache", it)
@@ -64,7 +64,7 @@ fun <T> AttributedRowWithCells<T>.ensureAttributesCacheEntry() {
 }
 
 fun AttributedColumn.ensureAttributesCacheEntry() {
-    this.columnAttributes?.let {
+    this.attributes?.let {
         getCache(this).getColumnCacheEntry(it)
     }?.also{
         additionalAttributes?.put("_currentColumnAttributesCache", it)
@@ -74,7 +74,7 @@ fun AttributedColumn.ensureAttributesCacheEntry() {
 
 @Suppress("UNCHECKED_CAST")
 fun RowCellContext.putCachedValueIfAbsent(key: String, value: Any): Any {
-    return (this.additionalAttributes?.get("_currentCellAttributesCache") as MutableMap<String, Any>).let {
+    return (this.getContextAttributes()?.get("_currentCellAttributesCache") as MutableMap<String, Any>).let {
         it.computeIfAbsent(key){ value }
     }
 }

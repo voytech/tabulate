@@ -3,54 +3,18 @@ package io.github.voytech.tabulate.template.context
 import io.github.voytech.tabulate.model.ColumnKey
 import io.github.voytech.tabulate.model.attributes.RowAttribute
 
+open class RowContext<T>(private val attributedContext: AttributedRow<T>) :
+        Context by attributedContext,
+        RowCoordinate by attributedContext,
+        ModelAttributeAccessor<RowAttribute<*>>(attributedContext)
 
-abstract class RowContext : ContextData(), RowCoordinate {
-    abstract fun <T: RowAttribute<T>> getAttributes(clazz: Class<T>):  List<T>
+class RowContextWithCells<T>(private val attributedContext: AttributedRowWithCells<T>) : RowContext<T>(attributedContext) {
+    fun getCells(): Map<ColumnKey<T>, RowCellContext> = attributedContext.rowCellValues.crop()
 }
 
-abstract class RowContextWithCells<T> : RowContext() {
-    abstract fun getCells(): Map<ColumnKey<T>, RowCellContext>
-}
+fun <T> AttributedRowWithCells<T>.crop(): RowContextWithCells<T> = RowContextWithCells(this)
 
-fun <T> AttributedRowWithCells<T>.crop(): RowContextWithCells<T> = object : RowContextWithCells<T>() {
-    private val attributeMap: Map<Class<RowAttribute<*>>,List<RowAttribute<*>>> by lazy {
-        rowAttributes?.groupBy { it.javaClass } ?: emptyMap()
-    }
-
-    init {
-        additionalAttributes = this@crop.additionalAttributes
-    }
-
-    override fun getRow(): Int = rowIndex
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : RowAttribute<T>> getAttributes(clazz: Class<T>): List<T> =
-        if (attributeMap.containsKey(clazz as Class<RowAttribute<*>>)) {
-            attributeMap[clazz] as List<T>
-        } else emptyList()
-
-    override fun getCells(): Map<ColumnKey<T>, RowCellContext> = rowCellValues.crop()
-
-}
-
-fun <T> AttributedRow<T>.crop(): RowContext = object: RowContext() {
-    private val attributeMap: Map<Class<RowAttribute<*>>,List<RowAttribute<*>>> by lazy {
-        rowAttributes?.groupBy { it.javaClass } ?: emptyMap()
-    }
-
-    init {
-        additionalAttributes = this@crop.additionalAttributes
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : RowAttribute<T>> getAttributes(clazz: Class<T>): List<T> =
-        if (attributeMap.containsKey(clazz as Class<RowAttribute<*>>)) {
-            attributeMap[clazz] as List<T>
-        } else emptyList()
-
-    override fun getRow(): Int = rowIndex
-
-}
+fun <T> AttributedRow<T>.crop(): RowContext<T> = RowContext(this)
 
 private fun <T> Map<ColumnKey<T>, AttributedCell>.crop(): Map<ColumnKey<T>, RowCellContext> {
     return entries.associate {

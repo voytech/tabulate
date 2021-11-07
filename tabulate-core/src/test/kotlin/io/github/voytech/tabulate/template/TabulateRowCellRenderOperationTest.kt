@@ -278,12 +278,12 @@ class TabulateRowCellRenderOperationTest {
         TestExportOperationsFactory.columnTest = AttributedColumnTest {
             when(it.columnIndex) {
                 0 -> {
-                    assertEquals(1,it.columnAttributes!!.size)
-                    assertEquals(ColumnWidthAttribute(px = 45),it.columnAttributes!!.first())
+                    assertEquals(1,it.attributes!!.size)
+                    assertEquals(ColumnWidthAttribute(px = 45),it.attributes!!.first())
                 }
                 1 -> {
-                    assertEquals(1,it.columnAttributes!!.size)
-                    assertEquals(ColumnWidthAttribute(px = 100),it.columnAttributes!!.first())
+                    assertEquals(1,it.attributes!!.size)
+                    assertEquals(ColumnWidthAttribute(px = 100),it.attributes!!.first())
                 }
             }
         }
@@ -291,8 +291,8 @@ class TabulateRowCellRenderOperationTest {
             override fun <T> test(context: AttributedRowWithCells<T>) {
                 when (context.rowIndex) {
                     0 -> {
-                        assertEquals(1,context.rowAttributes!!.size)
-                        assertEquals(RowHeightAttribute(px = 50),context.rowAttributes!!.first())
+                        assertEquals(1,context.attributes!!.size)
+                        assertEquals(RowHeightAttribute(px = 50),context.attributes!!.first())
 
                         assertEquals(1,context.rowCellValues.size)
                         val attributedCell = context.rowCellValues.values.first()
@@ -310,8 +310,8 @@ class TabulateRowCellRenderOperationTest {
                         )
                     }
                     1 -> {
-                        assertEquals(1,context.rowAttributes!!.size)
-                        assertEquals(RowHeightAttribute(px = 20),context.rowAttributes!!.first())
+                        assertEquals(1,context.attributes!!.size)
+                        assertEquals(RowHeightAttribute(px = 20),context.attributes!!.first())
 
                         assertEquals(1,context.rowCellValues.size)
                         val attributedCell = context.rowCellValues.values.first()
@@ -328,8 +328,8 @@ class TabulateRowCellRenderOperationTest {
                         )
                     }
                     2 -> {
-                        assertEquals(1,context.rowAttributes!!.size)
-                        assertEquals(RowHeightAttribute(px = 20),context.rowAttributes!!.first())
+                        assertEquals(1,context.attributes!!.size)
+                        assertEquals(RowHeightAttribute(px = 20),context.attributes!!.first())
 
                         assertEquals(2,context.rowCellValues.size)
                         val attributedCell1 = context.rowCellValues.values.find { it.columnIndex == 0 }

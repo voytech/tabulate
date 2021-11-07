@@ -54,7 +54,7 @@ internal class AttributeAwareTableExportOperations<T>(
     override fun createTable(context: AttributedTable) {
         with(context.crop()) {
             return baseTableExportOperations.createTable(this).also {
-                context.tableAttributes?.forEach { tableAttribute ->
+                context.attributes?.forEach { tableAttribute ->
                     attributeOperations.getTableAttributeOperation(tableAttribute.javaClass)?.renderAttribute(this, tableAttribute)
                 }
             }
@@ -64,8 +64,8 @@ internal class AttributeAwareTableExportOperations<T>(
     override fun beginRow(context: AttributedRow<T>) {
         with(context.crop()) {
             var operationRendered = false
-            if (!context.rowAttributes.isNullOrEmpty()) {
-                context.rowAttributes?.forEach { attribute ->
+            if (!context.attributes.isNullOrEmpty()) {
+                context.attributes?.forEach { attribute ->
                     attributeOperations.getRowAttributeOperation(attribute.javaClass)?.let { operation ->
                         if (operation.priority() >= 0 && !operationRendered) {
                             baseTableExportOperations.beginRow(this)
@@ -83,7 +83,7 @@ internal class AttributeAwareTableExportOperations<T>(
 
     override fun renderColumn(context: AttributedColumn) {
         with(context.crop()) {
-            context.columnAttributes?.let { attributes ->
+            context.attributes?.let { attributes ->
                 attributes.forEach { attribute ->
                     attributeOperations.getColumnAttributeOperation(attribute.javaClass)
                         ?.renderAttribute(this, attribute)

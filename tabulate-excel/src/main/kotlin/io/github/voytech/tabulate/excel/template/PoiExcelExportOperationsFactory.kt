@@ -13,10 +13,7 @@ import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.template.TabulationFormat
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
-import io.github.voytech.tabulate.template.context.RowCellContext
-import io.github.voytech.tabulate.template.context.RowContext
-import io.github.voytech.tabulate.template.context.TableContext
-import io.github.voytech.tabulate.template.context.getTypeHint
+import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.result.ResultProvider
 import org.apache.poi.ss.usermodel.CellStyle
@@ -40,7 +37,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
             renderingContext.provideSheet(context.getTableId())
         }
 
-        override fun beginRow(context: RowContext) {
+        override fun beginRow(context: RowContext<T>) {
             renderingContext.provideRow(context.getTableId(), context.getRow())
         }
 
@@ -55,13 +52,13 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
                 }
             } ?: context.renderBasicTypeCellValue())
                     .also { _ ->
-                        context.takeIf { it.getValue().colSpan > 1 || it.getValue().rowSpan > 1 }?.let {
+                        context.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.let {
                             renderingContext.mergeCells(
                                     context.getTableId(),
                                     context.getRow(),
                                     context.getColumn(),
-                                    context.getValue().rowSpan,
-                                    context.getValue().colSpan
+                                    context.value.rowSpan,
+                                    context.value.colSpan
                             )
                         }
                     }
@@ -69,12 +66,12 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
         private fun RowCellContext.renderBasicTypeCellValue() {
             provideCell(this) {
-                when (getRawValue()) {
-                    is String -> setCellValue(getRawValue() as? String)
-                    is Boolean -> setCellValue(getRawValue() as Boolean)
+                when (rawValue) {
+                    is String -> setCellValue(rawValue as? String)
+                    is Boolean -> setCellValue(rawValue as Boolean)
                     is LocalDate,
                     is LocalDateTime,
-                    is Date -> setCellValue(toDate(getRawValue()))
+                    is Date -> setCellValue(toDate(rawValue))
                     is Int,
                     is Long,
                     is Float,
@@ -82,7 +79,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
                     is Byte,
                     is Short,
                     is BigDecimal,
-                    is BigInteger -> setCellValue((getRawValue() as Number).toDouble())
+                    is BigInteger -> setCellValue((rawValue as Number).toDouble())
                     else -> renderDefaultTypeCellValue()
                 }
             }
@@ -90,30 +87,30 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
         private fun RowCellContext.renderDefaultTypeCellValue() {
             provideCell(this) {
-                setCellValue(getRawValue() as? String)
+                setCellValue(rawValue as? String)
             }
         }
 
         private fun RowCellContext.renderFormulaCell() {
             provideCell(this) {
-                cellFormula = getRawValue() as? String
+                cellFormula = rawValue as? String
             }
         }
 
         private fun RowCellContext.renderErrorCell() {
             provideCell(this) {
-                setCellErrorValue(getRawValue() as Byte)
+                setCellErrorValue(rawValue as Byte)
             }
         }
 
         private fun RowCellContext.renderImageCell() {
             if (getTypeHint()?.type?.getCellTypeId() == ExcelTypeHints.IMAGE_DATA.getCellTypeId()) {
                 renderingContext.createImageCell(
-                        getTableId(), getRow(), getColumn(), getValue().rowSpan, getValue().colSpan, getRawValue() as ByteArray
+                        getTableId(), getRow(), getColumn(), value.rowSpan, value.colSpan, rawValue as ByteArray
                 )
             } else {
                 renderingContext.createImageCell(
-                        getTableId(), getRow(), getColumn(), getValue().rowSpan, getValue().colSpan, getRawValue() as String
+                        getTableId(), getRow(), getColumn(), value.rowSpan, value.colSpan, rawValue as String
                 )
             }
         }
