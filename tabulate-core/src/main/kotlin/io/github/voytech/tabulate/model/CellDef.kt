@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.model
 
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
-import io.github.voytech.tabulate.template.context.CellValue
+import io.github.voytech.tabulate.template.operations.CellValue
 
 /**
  * Defines behaviours for cases when row span setting causes row to overlay downstream rows.

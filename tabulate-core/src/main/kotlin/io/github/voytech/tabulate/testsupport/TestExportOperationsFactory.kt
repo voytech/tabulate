@@ -1,10 +1,8 @@
 package io.github.voytech.tabulate.testsupport
 
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
-import io.github.voytech.tabulate.template.context.*
-import io.github.voytech.tabulate.template.operations.BasicContextExportOperations
-import io.github.voytech.tabulate.template.operations.ExportOperationsConfiguringFactory
-import io.github.voytech.tabulate.template.operations.TableExportOperations
+import io.github.voytech.tabulate.template.context.RenderingContext
+import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.result.ResultProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 
@@ -76,7 +74,7 @@ class CompetingTestExportOperationsFactory<T>: ExportOperationsConfiguringFactor
 
     override fun supportsFormat() = format("test-2")
 
-    override fun createExportOperations(renderingContext: ExampleContext): BasicContextExportOperations<T> = object: BasicContextExportOperations<T> {
+    override fun createExportOperations(renderingContext: ExampleContext): ExposedContextExportOperations<T> = object: ExposedContextExportOperations<T> {
         override fun renderRowCell(context: RowCellContext) {
             println("cell context: $context")
         }

@@ -12,10 +12,6 @@ import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
-import io.github.voytech.tabulate.template.context.ColumnContext
-import io.github.voytech.tabulate.template.context.RowCellContext
-import io.github.voytech.tabulate.template.context.RowContext
-import io.github.voytech.tabulate.template.context.TableContext
 
 interface AttributeOperation<T : Attribute<*>> {
     fun attributeType(): Class<out T>

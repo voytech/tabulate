@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.template.resolvers
 
-import io.github.voytech.tabulate.template.context.ContextData
 import io.github.voytech.tabulate.template.context.RowIndex
+import io.github.voytech.tabulate.template.operations.ContextData
 
 /**
  * Given requested index from upstream iterator, it resolves [ContextData]

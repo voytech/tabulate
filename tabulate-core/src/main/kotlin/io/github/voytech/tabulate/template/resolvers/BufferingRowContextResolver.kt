@@ -1,7 +1,6 @@
 package io.github.voytech.tabulate.template.resolvers
 
 import io.github.voytech.tabulate.model.Table
-import io.github.voytech.tabulate.template.context.AttributedRowWithCells
 import java.util.*
 
 /**

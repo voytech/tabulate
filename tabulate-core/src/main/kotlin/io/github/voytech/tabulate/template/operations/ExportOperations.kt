@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.template.operations
 
-import io.github.voytech.tabulate.template.context.*
+import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.result.ResultProvider
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
@@ -14,7 +14,7 @@ interface TableExportOperations<T> {
     fun endRow(context: AttributedRowWithCells<T>) {}
 }
 
-interface BasicContextExportOperations<T> {
+interface ExposedContextExportOperations<T> {
     fun createTable(context: TableContext) {}
     fun renderColumn(context: ColumnContext) {}
     fun beginRow(context: RowContext<T>) {}
@@ -34,7 +34,7 @@ abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : E
 
     protected abstract fun createRenderingContext(): CTX
 
-    protected abstract fun createExportOperations(renderingContext: CTX): BasicContextExportOperations<T>
+    protected abstract fun createExportOperations(renderingContext: CTX): ExposedContextExportOperations<T>
 
     protected abstract fun createResultProviders(renderingContext: CTX): List<ResultProvider<*>>
 

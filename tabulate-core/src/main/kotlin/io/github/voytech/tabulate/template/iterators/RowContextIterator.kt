@@ -1,8 +1,8 @@
 package io.github.voytech.tabulate.template.iterators
 
-import io.github.voytech.tabulate.template.context.ContextData
 import io.github.voytech.tabulate.template.context.MutableRowIndex
 import io.github.voytech.tabulate.template.context.RowIndex
+import io.github.voytech.tabulate.template.operations.ContextData
 import io.github.voytech.tabulate.template.resolvers.IndexedContextResolver
 
 fun interface StepProvider {

@@ -5,11 +5,7 @@ import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
 import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.template.context.RenderingContext
-import io.github.voytech.tabulate.template.context.RowCellContext
-import io.github.voytech.tabulate.template.context.getTableId
-import io.github.voytech.tabulate.template.operations.AttributeRenderOperationsFactory
-import io.github.voytech.tabulate.template.operations.BaseCellAttributeRenderOperation
-import io.github.voytech.tabulate.template.operations.CellAttributeRenderOperation
+import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute as CellAttributeAlias
 

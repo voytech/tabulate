@@ -1,9 +1,9 @@
 package io.github.voytech.tabulate.excel.template.poi
 
 import io.github.voytech.tabulate.model.attributes.cell.Color
-import io.github.voytech.tabulate.template.context.CellValue
-import io.github.voytech.tabulate.template.context.Coordinates
 import io.github.voytech.tabulate.template.context.RenderingContext
+import io.github.voytech.tabulate.template.operations.CellValue
+import io.github.voytech.tabulate.template.operations.Coordinates
 import io.github.voytech.tabulate.template.result.OutputStreamResultProvider
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.util.CellRangeAddress

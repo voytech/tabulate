@@ -1,8 +1,8 @@
 package io.github.voytech.tabulate.testsupport.cellassertions
 
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
-import io.github.voytech.tabulate.template.context.CellValue
-import io.github.voytech.tabulate.template.context.Coordinates
+import io.github.voytech.tabulate.template.operations.CellValue
+import io.github.voytech.tabulate.template.operations.Coordinates
 import io.github.voytech.tabulate.testsupport.CellDefinition
 import io.github.voytech.tabulate.testsupport.CellTest
 import java.util.zip.CRC32

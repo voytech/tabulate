@@ -2,9 +2,11 @@ package io.github.voytech.tabulate.template.resolvers
 
 import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
-import io.github.voytech.tabulate.template.context.*
-import io.github.voytech.tabulate.template.context.AttributedCellFactory.createAttributedCell
-import io.github.voytech.tabulate.template.context.AttributedRowFactory.createAttributedRow
+import io.github.voytech.tabulate.template.context.RowIndex
+import io.github.voytech.tabulate.template.operations.*
+import io.github.voytech.tabulate.template.operations.AttributedCellFactory.createAttributedCell
+import io.github.voytech.tabulate.template.operations.AttributedRowFactory.createAttributedRow
+
 
 internal interface RowCompletionListener<T> {
     fun onAttributedCellResolved(cell: AttributedCell)

@@ -6,12 +6,11 @@ import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
 import io.github.voytech.tabulate.model.attributes.TableAttribute
-import io.github.voytech.tabulate.template.context.*
 
 @Suppress("UNCHECKED_CAST")
 internal class AttributeAwareTableExportOperations<T>(
     private val attributeOperations: AttributesOperations<T>,
-    private val baseTableExportOperations: BasicContextExportOperations<T>,
+    private val baseTableExportOperations: ExposedContextExportOperations<T>,
     private val enableAttributeSetCaching: Boolean = true
 ) : TableExportOperations<T>  {
 

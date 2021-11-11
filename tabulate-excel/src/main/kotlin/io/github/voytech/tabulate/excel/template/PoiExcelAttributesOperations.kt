@@ -14,11 +14,7 @@ import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderSty
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
-import io.github.voytech.tabulate.template.context.*
-import io.github.voytech.tabulate.template.operations.BaseCellAttributeRenderOperation
-import io.github.voytech.tabulate.template.operations.BaseColumnAttributeRenderOperation
-import io.github.voytech.tabulate.template.operations.BaseRowAttributeRenderOperation
-import io.github.voytech.tabulate.template.operations.BaseTableAttributeRenderOperation
+import io.github.voytech.tabulate.template.operations.*
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.FontUnderline
 import org.apache.poi.ss.util.CellReference

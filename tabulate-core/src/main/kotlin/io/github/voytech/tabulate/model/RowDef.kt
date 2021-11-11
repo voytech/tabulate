@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.model
 
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
-import io.github.voytech.tabulate.template.context.CellValue
+import io.github.voytech.tabulate.template.operations.CellValue
 
 internal data class RowDef<T> internal constructor(
     @get:JvmSynthetic

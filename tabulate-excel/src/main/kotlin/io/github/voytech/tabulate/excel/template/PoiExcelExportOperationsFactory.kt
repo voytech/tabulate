@@ -13,7 +13,6 @@ import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.template.TabulationFormat
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
-import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.result.ResultProvider
 import org.apache.poi.ss.usermodel.CellStyle
@@ -30,7 +29,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
     override fun createRenderingContext(): ApachePoiRenderingContext = ApachePoiRenderingContext()
 
-    override fun createExportOperations(renderingContext: ApachePoiRenderingContext): BasicContextExportOperations<T> = object : BasicContextExportOperations<T> {
+    override fun createExportOperations(renderingContext: ApachePoiRenderingContext): ExposedContextExportOperations<T> = object : ExposedContextExportOperations<T> {
 
         override fun createTable(context: TableContext) {
             renderingContext.createWorkbook()

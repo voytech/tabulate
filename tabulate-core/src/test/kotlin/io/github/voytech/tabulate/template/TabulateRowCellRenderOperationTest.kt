@@ -13,7 +13,7 @@ import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.row.height
 import io.github.voytech.tabulate.model.attributes.row.rowHeight
 import io.github.voytech.tabulate.model.eq
-import io.github.voytech.tabulate.template.context.AttributedRowWithCells
+import io.github.voytech.tabulate.template.operations.AttributedRowWithCells
 import io.github.voytech.tabulate.testsupport.AttributedCellTest
 import io.github.voytech.tabulate.testsupport.AttributedColumnTest
 import io.github.voytech.tabulate.testsupport.AttributedRowTest

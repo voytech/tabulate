@@ -1,8 +1,8 @@
 package io.github.voytech.tabulate.testsupport
 
 import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
-import io.github.voytech.tabulate.template.context.CellValue
-import io.github.voytech.tabulate.template.context.Coordinates
+import io.github.voytech.tabulate.template.operations.CellValue
+import io.github.voytech.tabulate.template.operations.Coordinates
 import org.apache.poi.openxml4j.util.ZipSecureFile
 import org.apache.poi.ss.util.CellRangeAddress
 import java.io.File

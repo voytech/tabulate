@@ -3,6 +3,7 @@ package io.github.voytech.tabulate.template.context
 import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.template.iterators.EnumStepProvider
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
+import io.github.voytech.tabulate.template.operations.AttributedRowWithCells
 import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
 import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
 
