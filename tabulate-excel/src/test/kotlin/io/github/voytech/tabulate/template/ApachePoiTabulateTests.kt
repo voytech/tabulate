@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.api.builder.RowPredicates.allRows
+import io.github.voytech.tabulate.api.builder.RowPredicates.all
 import io.github.voytech.tabulate.api.builder.RowPredicates.even
 import io.github.voytech.tabulate.api.builder.RowPredicates.gt
 import io.github.voytech.tabulate.api.builder.dsl.*
@@ -217,7 +217,7 @@ class ApachePoiTabulateTests {
                 }
             }
             rows {
-                row(allRows()) {
+                row(all()) {
                     cells {
                         cell("nr") { expression = RowCellExpression{ row -> row.objectIndex?.plus(1) } }
                     }

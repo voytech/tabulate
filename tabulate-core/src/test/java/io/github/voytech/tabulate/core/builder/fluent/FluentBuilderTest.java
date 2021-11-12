@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static io.github.voytech.tabulate.api.builder.RowPredicates.allRows;
+import static io.github.voytech.tabulate.api.builder.RowPredicates.all;
 
 public class FluentBuilderTest {
 
@@ -70,7 +70,7 @@ public class FluentBuilderTest {
 									.value("Employee First Name")
 								.cell(Employee::getLastName)
 									.value("Employee Last Name")
-							.row(allRows())
+							.row(all())
 								.cell("rowNumbering")
 									.eval(SourceRow::getRowIndex);
 		final List<Employee> employeeList = Lists.newArrayList(new Employee(
