@@ -5,6 +5,10 @@ import io.github.voytech.tabulate.model.RowIndexDef.Companion.minValue
 import io.github.voytech.tabulate.template.context.RowIndex
 import java.util.function.Predicate
 
+
+infix fun <T> RowPredicate<T>.and(other: RowPredicate<T>): RowPredicate<T> = RowPredicate { test(it) && other.test(it)}
+infix fun <T> RowPredicate<T>.or(other: RowPredicate<T>): RowPredicate<T> = RowPredicate { test(it) || other.test(it)}
+
 fun interface RowPredicate<T> : Predicate<SourceRow<T>>
 
 fun interface IndexPredicate : Predicate<RowIndex>

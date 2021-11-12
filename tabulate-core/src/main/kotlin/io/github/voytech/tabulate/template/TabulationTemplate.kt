@@ -112,8 +112,8 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
     @Suppress("UNCHECKED_CAST")
     private fun detectAttributeTransformers(): AttributeTransformerContainer? {
-        if (ops is AttributeAwareTableExportOperations<T>) {
-            return (ops as AttributeAwareTableExportOperations<T>).createAttributeTransformerContainer()
+        if (ops is AttributeDelegatingExportOperations<T>) {
+            return (ops as AttributeDelegatingExportOperations<T>).createAttributeTransformerContainer()
         }
         return null
     }

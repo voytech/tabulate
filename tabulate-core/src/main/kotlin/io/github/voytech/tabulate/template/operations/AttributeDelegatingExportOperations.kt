@@ -8,36 +8,36 @@ import io.github.voytech.tabulate.model.attributes.RowAttribute
 import io.github.voytech.tabulate.model.attributes.TableAttribute
 
 @Suppress("UNCHECKED_CAST")
-internal class AttributeAwareTableExportOperations<T>(
-    private val attributeOperations: AttributesOperations<T>,
-    private val baseTableExportOperations: ExposedContextExportOperations<T>,
+internal class AttributeDelegatingExportOperations<T>(
+    private val attributeOperationsContainer: AttributesOperationsContainer<T>,
+    private val exposedExportOperations: ExposedContextExportOperations<T>,
     private val enableAttributeSetCaching: Boolean = true
 ) : TableExportOperations<T>  {
 
     inner class SortedTableAttributeSetTransformer: AttributeSetTransformer<TableAttribute<*>> {
         override fun transform(input: Set<TableAttribute<*>>): Set<TableAttribute<*>> =
             input.toSortedSet(compareBy {
-                attributeOperations.getTableAttributeOperation(it.javaClass)?.priority() ?: 0
+                attributeOperationsContainer.getTableAttributeOperation(it.javaClass)?.priority() ?: 0
             })
     }
 
     inner class SortedColumnAttributeSetTransformer: AttributeSetTransformer<ColumnAttribute<*>> {
         override fun transform(input: Set<ColumnAttribute<*>>): Set<ColumnAttribute<*>> =
             input.toSortedSet(compareBy {
-                attributeOperations.getColumnAttributeOperation(it.javaClass)?.priority() ?: 0
+                attributeOperationsContainer.getColumnAttributeOperation(it.javaClass)?.priority() ?: 0
             })
     }
 
     inner class SortedRowAttributeSetTransformer: AttributeSetTransformer<RowAttribute<*>> {
         override fun transform(input: Set<RowAttribute<*>>): Set<RowAttribute<*>> =
             input.toSortedSet(compareBy {
-                attributeOperations.getRowAttributeOperation(it.javaClass)?.priority() ?: 0
+                attributeOperationsContainer.getRowAttributeOperation(it.javaClass)?.priority() ?: 0
             })
     }
     inner class SortedCellAttributeSetTransformer: AttributeSetTransformer<CellAttribute<*>> {
         override fun transform(input: Set<CellAttribute<*>>): Set<CellAttribute<*>> =
             input.sortedBy {
-                attributeOperations.getCellAttributeOperation(it.javaClass)?.priority() ?: 0
+                attributeOperationsContainer.getCellAttributeOperation(it.javaClass)?.priority() ?: 0
             }.toSet()
     }
 
@@ -52,9 +52,9 @@ internal class AttributeAwareTableExportOperations<T>(
 
     override fun createTable(context: AttributedTable) {
         with(context.crop()) {
-            return baseTableExportOperations.createTable(this).also {
+            return exposedExportOperations.createTable(this).also {
                 context.attributes?.forEach { tableAttribute ->
-                    attributeOperations.getTableAttributeOperation(tableAttribute.javaClass)?.renderAttribute(this, tableAttribute)
+                    attributeOperationsContainer.getTableAttributeOperation(tableAttribute.javaClass)?.renderAttribute(this, tableAttribute)
                 }
             }
         }
@@ -65,9 +65,9 @@ internal class AttributeAwareTableExportOperations<T>(
             var operationRendered = false
             if (!context.attributes.isNullOrEmpty()) {
                 context.attributes?.forEach { attribute ->
-                    attributeOperations.getRowAttributeOperation(attribute.javaClass)?.let { operation ->
+                    attributeOperationsContainer.getRowAttributeOperation(attribute.javaClass)?.let { operation ->
                         if (operation.priority() >= 0 && !operationRendered) {
-                            baseTableExportOperations.beginRow(this)
+                            exposedExportOperations.beginRow(this)
                             operationRendered = true
                         }
                         operation.renderAttribute(this, attribute)
@@ -75,7 +75,7 @@ internal class AttributeAwareTableExportOperations<T>(
                 }
             }
             if (!operationRendered) {
-                baseTableExportOperations.beginRow(this)
+                exposedExportOperations.beginRow(this)
             }
         }
     }
@@ -84,7 +84,7 @@ internal class AttributeAwareTableExportOperations<T>(
         with(context.crop()) {
             context.attributes?.let { attributes ->
                 attributes.forEach { attribute ->
-                    attributeOperations.getColumnAttributeOperation(attribute.javaClass)
+                    attributeOperationsContainer.getColumnAttributeOperation(attribute.javaClass)
                         ?.renderAttribute(this, attribute)
                 }
             }
@@ -97,9 +97,9 @@ internal class AttributeAwareTableExportOperations<T>(
             var operationRendered = false
             if (!context.attributes.isNullOrEmpty()) {
                 context.attributes.forEach { attribute ->
-                    attributeOperations.getCellAttributeOperation(attribute.javaClass)?.let { operation ->
+                    attributeOperationsContainer.getCellAttributeOperation(attribute.javaClass)?.let { operation ->
                         if (operation.priority() >= 0 && !operationRendered) {
-                            baseTableExportOperations.renderRowCell(this)
+                            exposedExportOperations.renderRowCell(this)
                             operationRendered = true
                         }
                         operation.renderAttribute(this, attribute)
@@ -107,13 +107,13 @@ internal class AttributeAwareTableExportOperations<T>(
                 }
             }
             if (!operationRendered){
-                baseTableExportOperations.renderRowCell(this)
+                exposedExportOperations.renderRowCell(this)
             }
         }
     }
 
     override fun endRow(context: AttributedRowWithCells<T>) {
-        baseTableExportOperations.endRow(context.crop())
+        exposedExportOperations.endRow(context.crop())
     }
 
 }

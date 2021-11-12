@@ -9,6 +9,22 @@ object RowPredicates {
     fun <T> allRows(): RowPredicate<T> = RowPredicate{ true }
 
     @JvmStatic
+    fun <T> even(): RowPredicate<T> = RowPredicate { row ->
+        (row.rowIndex.value % 2) == 0
+    }
+
+    @JvmName("evenUnit")
+    @JvmStatic
+    fun even(): RowPredicate<Unit> = RowPredicate { row ->
+        (row.rowIndex.value % 2) == 0
+    }
+
+    @JvmStatic
+    fun <T> odd(): RowPredicate<T> = RowPredicate { row ->
+        (row.rowIndex.value % 2) != 0
+    }
+
+    @JvmStatic
     fun <T> isCustomAt(rowIndex: Int, label: String ? = null): RowPredicate<T> = RowPredicate { row ->
         !row.hasRecord() && row.rowIndex.getIndex(label) == rowIndex
     }
@@ -32,10 +48,10 @@ object RowPredicates {
     }
 
     @JvmStatic
-    fun <T> isLowerThan(rowIndex: Int): RowPredicate<T> =
+    fun <T> lt(rowIndex: Int): RowPredicate<T> =
         RowPredicate { data -> data.objectIndex?.let { it < rowIndex } ?: false }
 
     @JvmStatic
-    fun <T> isHigherThan(rowIndex: Int): RowPredicate<T> =
+    fun <T> gt(rowIndex: Int): RowPredicate<T> =
         RowPredicate { data -> data.objectIndex?.let { it > rowIndex } ?: false }
 }

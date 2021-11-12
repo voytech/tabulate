@@ -28,7 +28,7 @@ abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : E
         createRenderingContext()
     }
 
-    private val attributeOperations: AttributesOperations<T> by lazy {
+    private val attributeOperationsContainer: AttributesOperationsContainer<T> by lazy {
         registerAttributesOperations(context)
     }
 
@@ -41,43 +41,37 @@ abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : E
     protected open fun getAttributeOperationsFactory(renderingContext: CTX): AttributeRenderOperationsFactory<T>? = null
 
     final override fun createExportOperations(): TableExportOperations<T> =
-        AttributeAwareTableExportOperations(attributeOperations, createExportOperations(context))
+        AttributeDelegatingExportOperations(attributeOperationsContainer, createExportOperations(context))
 
     final override fun createResultProviders(): List<ResultProvider<*>> {
         return createResultProviders(context)
     }
 
     private fun registerAttributesOperations(
-        attributeOperations: AttributesOperations<T>,
+        attributeOperationsContainer: AttributesOperationsContainer<T>,
         factory: AttributeRenderOperationsFactory<T>?,
-    ): AttributesOperations<T> {
-        return attributeOperations.apply {
-            factory?.let {
-                it.createCellAttributeRenderOperations()?.forEach { op -> this.register(op) }
-                it.createTableAttributeRenderOperations()?.forEach { op -> this.register(op) }
-                it.createRowAttributeRenderOperations()?.forEach { op -> this.register(op) }
-                it.createColumnAttributeRenderOperations()?.forEach { op -> this.register(op) }
-            }
+    ): AttributesOperationsContainer<T> {
+        return attributeOperationsContainer.apply {
+            factory?.let { this.registerAttributesOperations(it) }
         }
     }
-
 
     @Suppress("UNCHECKED_CAST")
     private fun registerClientDefinedAttributesOperations(
         renderingContext: CTX,
-        attributeOperations: AttributesOperations<T>,
-    ): AttributesOperations<T> {
+        attributeOperationsContainer: AttributesOperationsContainer<T>,
+    ): AttributesOperationsContainer<T> {
         ServiceLoader.load(AttributeRenderOperationsProvider::class.java)
             .filter { it.getContextClass() == renderingContext.javaClass }
             .map { it as AttributeRenderOperationsProvider<T, CTX> }
             .forEach {
-                registerAttributesOperations(attributeOperations, it.getAttributeOperationsFactory(renderingContext))
+                registerAttributesOperations(attributeOperationsContainer, it.getAttributeOperationsFactory(renderingContext))
             }
-        return attributeOperations
+        return attributeOperationsContainer
     }
 
-    private fun registerAttributesOperations(renderingContext: CTX): AttributesOperations<T> {
-        return AttributesOperations<T>().let {
+    private fun registerAttributesOperations(renderingContext: CTX): AttributesOperationsContainer<T> {
+        return AttributesOperationsContainer<T>().let {
             registerAttributesOperations(it, getAttributeOperationsFactory(renderingContext))
             registerClientDefinedAttributesOperations(renderingContext, it)
         }

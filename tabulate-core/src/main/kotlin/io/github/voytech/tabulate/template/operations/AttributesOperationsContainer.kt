@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
 import java.util.logging.Logger
 
 @Suppress("UNCHECKED_CAST")
-internal class AttributesOperations<T> {
+internal class AttributesOperationsContainer<T> {
 
     private val tableAttributeRenderOperationsByClass: MutableMap<Class<out TableAttribute>, TableAttributeRenderOperation<out TableAttribute>> = mutableMapOf()
 
@@ -42,20 +42,28 @@ internal class AttributesOperations<T> {
         if (operation == null) logger.warning("No attribute render operation for class: ${clazz.name} !")
     }
 
-    fun register(operation: CellAttributeRenderOperation<out CellAttribute>) {
+    private fun register(operation: CellAttributeRenderOperation<out CellAttribute>) {
         cellAttributeRenderOperationsByClass[operation.attributeType()] = operation
     }
 
-    fun register(operation: RowAttributeRenderOperation<T,out RowAttribute>) {
+    private fun register(operation: RowAttributeRenderOperation<T,out RowAttribute>) {
         rowAttributeRenderOperationsByClass[operation.attributeType()] = operation
     }
 
-    fun register(operation: ColumnAttributeRenderOperation<out ColumnAttribute>) {
+    private fun register(operation: ColumnAttributeRenderOperation<out ColumnAttribute>) {
         columnAttributeRenderOperationsByClass[operation.attributeType()] = operation
     }
 
-    fun register(operation: TableAttributeRenderOperation<out TableAttribute>) {
+    private fun register(operation: TableAttributeRenderOperation<out TableAttribute>) {
         tableAttributeRenderOperationsByClass[operation.attributeType()] = operation
+    }
+
+    internal fun registerAttributesOperations(factory: AttributeRenderOperationsFactory<T>): AttributesOperationsContainer<T> {
+        factory.createCellAttributeRenderOperations()?.forEach { register(it) }
+        factory.createTableAttributeRenderOperations()?.forEach { register(it) }
+        factory.createRowAttributeRenderOperations()?.forEach { register(it) }
+        factory.createColumnAttributeRenderOperations()?.forEach { register(it) }
+        return this
     }
 
     fun isEmpty(): Boolean =
@@ -65,6 +73,6 @@ internal class AttributesOperations<T> {
             .and(tableAttributeRenderOperationsByClass.isEmpty())
 
     companion object {
-        val logger: Logger = Logger.getLogger(AttributesOperations::class.java.name)
+        val logger: Logger = Logger.getLogger(AttributesOperationsContainer::class.java.name)
     }
 }

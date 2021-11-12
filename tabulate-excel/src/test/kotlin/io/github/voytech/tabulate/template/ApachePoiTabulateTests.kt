@@ -1,6 +1,8 @@
 package io.github.voytech.tabulate.template
 
 import io.github.voytech.tabulate.api.builder.RowPredicates.allRows
+import io.github.voytech.tabulate.api.builder.RowPredicates.even
+import io.github.voytech.tabulate.api.builder.RowPredicates.gt
 import io.github.voytech.tabulate.api.builder.dsl.*
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
@@ -8,6 +10,7 @@ import io.github.voytech.tabulate.excel.model.attributes.dataFormat
 import io.github.voytech.tabulate.excel.model.attributes.filterAndSort
 import io.github.voytech.tabulate.excel.model.attributes.format
 import io.github.voytech.tabulate.model.RowCellExpression
+import io.github.voytech.tabulate.model.and
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.column.columnWidth
@@ -376,7 +379,7 @@ class ApachePoiTabulateTests {
                         }
                     }
                 }
-                row({ (it.rowIndex.value % 2) == 0  && it.rowIndex.value > 0 }) {
+                row(even() and gt(0)) {
                     attributes {
                         background {
                             fill = DefaultCellFill.SOLID
