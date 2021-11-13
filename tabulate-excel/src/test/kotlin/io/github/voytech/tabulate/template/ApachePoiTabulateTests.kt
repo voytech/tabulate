@@ -1,8 +1,6 @@
 package io.github.voytech.tabulate.template
 
 import io.github.voytech.tabulate.api.builder.RowPredicates.all
-import io.github.voytech.tabulate.api.builder.RowPredicates.even
-import io.github.voytech.tabulate.api.builder.RowPredicates.gt
 import io.github.voytech.tabulate.api.builder.dsl.*
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
@@ -379,7 +377,9 @@ class ApachePoiTabulateTests {
                         }
                     }
                 }
-                row(even() and gt(0)) {
+                row {
+                    even() and gt(0)
+                } let {
                     attributes {
                         background {
                             fill = DefaultCellFill.SOLID

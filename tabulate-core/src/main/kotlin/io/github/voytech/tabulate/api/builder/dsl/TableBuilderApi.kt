@@ -6,6 +6,7 @@ import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
 import io.github.voytech.tabulate.model.attributes.cell.cellType
+import io.github.voytech.tabulate.template.context.DefaultSteps
 import kotlin.reflect.KProperty1
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellType as TypeHint
 
@@ -186,6 +187,55 @@ class ColumnBuilderApi<T> internal constructor(private val builderState: ColumnB
     }
 }
 
+/**
+ * [RowPredicateBuilderApi] simplifies row predicate construction as it brings all default [RowPredicate] methods into scope of
+ * lambda (lambda with receiver). Consumer of an API do not need to know [RowPredicate] methods and do not need to import
+ * them explicitly. Goal here is to make using DSL builder API as intuitive as it only can be.
+ */
+class RowPredicateBuilderApi<T> {
+    @JvmSynthetic
+    fun all(): RowPredicate<T> = RowPredicates.all()
+
+    @JvmSynthetic
+    fun even(): RowPredicate<T> = RowPredicates.even<T>()
+
+    @JvmSynthetic
+    fun odd(): RowPredicate<T> = RowPredicates.odd<T>()
+
+    @JvmSynthetic
+    fun eq(rowIndex: Int): RowPredicate<T> = RowPredicates.eq(rowIndex)
+
+    @JvmSynthetic
+    fun lt(rowIndex: Int): RowPredicate<T> = RowPredicates.lt(rowIndex)
+
+    @JvmSynthetic
+    fun gt(rowIndex: Int): RowPredicate<T> = RowPredicates.gt(rowIndex)
+
+    @JvmSynthetic
+    fun gte(rowIndex: Int): RowPredicate<T> = RowPredicates.gte(rowIndex)
+
+    @JvmSynthetic
+    fun lte(rowIndex: Int): RowPredicate<T> = RowPredicates.lte(rowIndex)
+
+    @JvmSynthetic
+    fun eq(rowIndex: Int, steps: Enum<*>): RowPredicate<T> = RowPredicates.eq(rowIndex, steps)
+
+    @JvmSynthetic
+    fun header(): RowPredicate<T> = eq(0)
+
+    @JvmSynthetic
+    fun footer(): RowPredicate<T> = eq(0, DefaultSteps.TRAILING_ROWS)
+
+    @JvmSynthetic
+    fun record(listIndex: Int): RowPredicate<T> = RowPredicates.record(listIndex)
+
+    @JvmSynthetic
+    fun records(): RowPredicate<T> = RowPredicates.records()
+
+    @JvmSynthetic
+    fun matching(provider: () -> RowPredicate<T>): RowPredicate<T> = provider()
+}
+
 @TabulateMarker
 class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuilderState<T>) {
 
@@ -222,10 +272,23 @@ class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuild
         }
     }
 
+
     @JvmSynthetic
     fun row(predicate: RowPredicate<T>, block: RowBuilderApi<T>.() -> Unit) {
         builderState.addRowBuilder(predicate) {
             RowBuilderApi(it).apply(block)
+        }
+    }
+
+    @JvmSynthetic
+    fun row(predicateBlock: RowPredicateBuilderApi<T>.() -> RowPredicate<T>) = predicateBlock
+
+    @JvmSynthetic
+    infix fun (RowPredicateBuilderApi<T>.() -> RowPredicate<T>).let(block: RowBuilderApi<T>.() -> Unit) {
+        this(RowPredicateBuilderApi()).let { predicate ->
+            builderState.addRowBuilder(predicate) {
+                RowBuilderApi(it).apply(block)
+            }
         }
     }
 }

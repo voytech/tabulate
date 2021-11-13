@@ -44,7 +44,7 @@ object RowPredicates {
     }
 
     @JvmStatic
-    fun <T> eq(rowIndex: Int, label: DefaultSteps): RowPredicate<T> = eq(rowIndex, label.name)
+    fun <T> eq(rowIndex: Int, step: Enum<*>): RowPredicate<T> = eq(rowIndex, step.name)
 
     @JvmStatic
     fun <T> header(): RowPredicate<T> = eq(0)
