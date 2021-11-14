@@ -377,9 +377,7 @@ class ApachePoiTabulateTests {
                         }
                     }
                 }
-                row {
-                    even() and gt(0)
-                } let {
+                matching { even() and gt(0) } assign {
                     attributes {
                         background {
                             fill = DefaultCellFill.SOLID

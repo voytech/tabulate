@@ -236,6 +236,47 @@ class RowPredicateBuilderApi<T> {
     fun matching(provider: () -> RowPredicate<T>): RowPredicate<T> = provider()
 }
 
+/**
+ * [RowIndexPredicateBuilderApi] simplifies row index literal predicate construction as it brings all default methods into scope of
+ * lambda (lambda with receiver). Consumer of an API do not need to know predicate methods in advance and do not need to import
+ * them explicitly. Goal here is to make using DSL builder API as intuitive as it only can be.
+ */
+class RowIndexPredicateBuilderApi {
+
+    @JvmSynthetic
+    fun even(): OperatorBasedIndexPredicateLiteral = TODO("figure out")
+
+    @JvmSynthetic
+    fun odd(): OperatorBasedIndexPredicateLiteral = TODO("figure out")
+
+    @JvmSynthetic
+    fun eq(rowIndex: Int,step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
+        io.github.voytech.tabulate.model.eq(rowIndex, step)
+
+    @JvmSynthetic
+    fun lt(rowIndex: Int,step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
+        io.github.voytech.tabulate.model.lt(rowIndex, step)
+
+    @JvmSynthetic
+    fun gt(rowIndex: Int,step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
+        io.github.voytech.tabulate.model.gt(rowIndex, step)
+
+    @JvmSynthetic
+    fun gte(rowIndex: Int,step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
+        io.github.voytech.tabulate.model.gte(rowIndex, step)
+
+    @JvmSynthetic
+    fun lte(rowIndex: Int,step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
+        io.github.voytech.tabulate.model.lte(rowIndex, step)
+
+    @JvmSynthetic
+    fun header(): OperatorBasedIndexPredicateLiteral = eq(0)
+
+    @JvmSynthetic
+    fun footer(): OperatorBasedIndexPredicateLiteral = eq(0, DefaultSteps.TRAILING_ROWS)
+
+}
+
 @TabulateMarker
 class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuilderState<T>) {
 
@@ -247,13 +288,6 @@ class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuild
     @JvmSynthetic
     fun newRow(at: Int, block: RowBuilderApi<T>.() -> Unit) {
         builderState.addRowBuilder(RowIndexDef(at)) {
-            RowBuilderApi(it).apply(block)
-        }
-    }
-
-    @JvmSynthetic
-    fun newRow(predicate: PredicateLiteral, block: RowBuilderApi<T>.() -> Unit) {
-        builderState.addRowBuilder(RowIndexPredicateLiteral(predicate)) {
             RowBuilderApi(it).apply(block)
         }
     }
@@ -272,6 +306,22 @@ class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuild
         }
     }
 
+    @JvmSynthetic
+    fun newRow(predicate: PredicateLiteral, block: RowBuilderApi<T>.() -> Unit) {
+        builderState.addRowBuilder(RowIndexPredicateLiteral(predicate)) {
+            RowBuilderApi(it).apply(block)
+        }
+    }
+
+    @JvmSynthetic
+    fun at(predicateBlock: RowIndexPredicateBuilderApi.() -> PredicateLiteral) = predicateBlock
+
+    @JvmName("letRowIndexPredicateBuilderApiPredicateLiteral")
+    @JvmSynthetic
+    infix fun (RowIndexPredicateBuilderApi.() -> PredicateLiteral).insert(block: RowBuilderApi<T>.() -> Unit) {
+        newRow(this(RowIndexPredicateBuilderApi()),block)
+    }
+
 
     @JvmSynthetic
     fun row(predicate: RowPredicate<T>, block: RowBuilderApi<T>.() -> Unit) {
@@ -281,15 +331,11 @@ class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuild
     }
 
     @JvmSynthetic
-    fun row(predicateBlock: RowPredicateBuilderApi<T>.() -> RowPredicate<T>) = predicateBlock
+    fun matching(predicateBlock: RowPredicateBuilderApi<T>.() -> RowPredicate<T>) = predicateBlock
 
     @JvmSynthetic
-    infix fun (RowPredicateBuilderApi<T>.() -> RowPredicate<T>).let(block: RowBuilderApi<T>.() -> Unit) {
-        this(RowPredicateBuilderApi()).let { predicate ->
-            builderState.addRowBuilder(predicate) {
-                RowBuilderApi(it).apply(block)
-            }
-        }
+    infix fun (RowPredicateBuilderApi<T>.() -> RowPredicate<T>).assign(block: RowBuilderApi<T>.() -> Unit) {
+        row(this(RowPredicateBuilderApi()),block)
     }
 }
 
