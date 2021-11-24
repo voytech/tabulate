@@ -368,7 +368,6 @@ class ApachePoiTabulateTests {
                 header {
                     attributes {
                         background {
-                            fill = DefaultCellFill.SOLID
                             color = Colors.BLACK
                         }
                         text {
@@ -380,8 +379,14 @@ class ApachePoiTabulateTests {
                 matching { even() and gt(0) } assign {
                     attributes {
                         background {
-                            fill = DefaultCellFill.SOLID
                             color = Colors.GREEN
+                        }
+                    }
+                }
+                matching { footer() } assign {
+                    attributes {
+                        background {
+                            color = Colors.BLACK
                         }
                     }
                 }
@@ -398,6 +403,9 @@ class ApachePoiTabulateTests {
             }
             rows {
                 header("Id", "Name", "Description", "Price")
+                index { footer() } newRow {
+                    cell(Product::code) { value = "Footer first cell" }
+                }
             }
         })
 

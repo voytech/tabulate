@@ -10,6 +10,7 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
+import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellFill
 import io.github.voytech.tabulate.template.operations.Coordinates
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.FillPatternType
@@ -64,17 +65,17 @@ class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiRenderingC
                             FillPatternType.SOLID_FOREGROUND -> DefaultCellFill.SOLID
                             else -> resolveCellFillPattern(it)
                         }
-                    }
+                    } ?: DefaultCellFill.SOLID
                 )
             } else CellBackgroundAttribute()
         }
     }
 
-    private fun resolveCellFillPattern(fillPattern: FillPatternType?): ExcelCellFills? {
+    private fun resolveCellFillPattern(fillPattern: FillPatternType?): CellFill? {
         return try {
-            if (fillPattern != null) ExcelCellFills.valueOf(fillPattern.name) else null
+            if (fillPattern != null) ExcelCellFills.valueOf(fillPattern.name) else DefaultCellFill.SOLID
         } catch (e: IllegalArgumentException) {
-            null
+            DefaultCellFill.SOLID
         }
     }
 }
