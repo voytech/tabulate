@@ -7,6 +7,7 @@ import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttr
 import io.github.voytech.tabulate.excel.model.attributes.dataFormat
 import io.github.voytech.tabulate.excel.model.attributes.filterAndSort
 import io.github.voytech.tabulate.excel.model.attributes.format
+import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
 import io.github.voytech.tabulate.model.RowCellExpression
 import io.github.voytech.tabulate.model.and
 import io.github.voytech.tabulate.model.attributes.cell.*
@@ -18,9 +19,7 @@ import io.github.voytech.tabulate.model.attributes.table.template
 import io.github.voytech.tabulate.testsupport.CellPosition
 import io.github.voytech.tabulate.testsupport.CellRange
 import io.github.voytech.tabulate.testsupport.PoiTableAssert
-import io.github.voytech.tabulate.testsupport.cellassertions.AssertCellValue
-import io.github.voytech.tabulate.testsupport.cellassertions.AssertContainsCellAttributes
-import io.github.voytech.tabulate.testsupport.cellassertions.AssertMany
+import io.github.voytech.tabulate.testsupport.cellassertions.*
 import org.apache.poi.openxml4j.util.ZipSecureFile
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -71,7 +70,7 @@ class ApachePoiTabulateTests {
                     column(Product::manufacturer)
                     column(Product::price)
                     column(Product::distributionDate) {
-                        attributes{
+                        attributes {
                             dataFormat { value = "dd.mm.YYYY" }
                         }
                     }
@@ -107,15 +106,15 @@ class ApachePoiTabulateTests {
                     }
                     rowNumberingOn("nr")
                     footer {
-                       cell { value = "Footer column 1" }
-                       cell { value = "Footer column 2" }
-                       cell { value = "Footer column 3" }
-                       cell { value = "Footer column 4" }
-                       attributes { text {  }}
+                        cell { value = "Footer column 1" }
+                        cell { value = "Footer column 2" }
+                        cell { value = "Footer column 3" }
+                        cell { value = "Footer column 4" }
+                        attributes { text { } }
                     }
                 }
             }
-        } .also {
+        }.also {
             println("Elapsed time: $it")
         }
 
@@ -199,7 +198,7 @@ class ApachePoiTabulateTests {
             firstRow = 1
             attributes {
                 template {
-                    fileName =  "src/test/resources/template.xlsx"
+                    fileName = "src/test/resources/template.xlsx"
                 }
             }
             columns {
@@ -217,7 +216,7 @@ class ApachePoiTabulateTests {
             rows {
                 row(all()) {
                     cells {
-                        cell("nr") { expression = RowCellExpression{ row -> row.objectIndex?.plus(1) } }
+                        cell("nr") { expression = RowCellExpression { row -> row.objectIndex?.plus(1) } }
                     }
                 }
             }
@@ -253,7 +252,7 @@ class ApachePoiTabulateTests {
         val productList = createDataSet(1000)
         productList.tabulate("test3.xlsx") {
             name = "Products table"
-            attributes{ filterAndSort {} }
+            attributes { filterAndSort {} }
             columns {
                 column(Product::code)
                 column(Product::name)
@@ -261,7 +260,7 @@ class ApachePoiTabulateTests {
                 column(Product::manufacturer)
                 column(Product::price)
                 column(Product::distributionDate) {
-                    attributes{
+                    attributes {
                         format { "dd.mm.YYYY" }
                     }
                 }
@@ -318,13 +317,13 @@ class ApachePoiTabulateTests {
                 ),
             )
         ).perform().also {
-           it.cleanup()
+            it.cleanup()
         }
     }
 
     @Test
     fun `should export table with custom row with image`() {
-          CustomTable {
+        CustomTable {
             name = "Test table"
             columns {
                 column("description")
@@ -342,7 +341,7 @@ class ApachePoiTabulateTests {
                     }
                 }
             }
-        }.export( File("test_img.xlsx"))
+        }.export(File("test_img.xlsx"))
 
         PoiTableAssert<Product>(
             tableName = "Test table",
@@ -359,8 +358,8 @@ class ApachePoiTabulateTests {
     }
 
     @Test
-    fun `should export table using general table template`() {
-        val styleTemplate = CustomTable {
+    fun `should export table using shared table template`() {
+        val sharedStyleTemplate = CustomTable {
             attributes {
                 columnWidth { auto = true }
             }
@@ -393,7 +392,7 @@ class ApachePoiTabulateTests {
             }
         }
 
-        createDataSet(4).tabulate("test.xlsx",styleTemplate + Table {
+        createDataSet(4).tabulate("test.xlsx", sharedStyleTemplate + Table {
             name = "Products"
             columns {
                 column(Product::code)
@@ -403,16 +402,45 @@ class ApachePoiTabulateTests {
             }
             rows {
                 header("Id", "Name", "Description", "Price")
-                index { footer() } newRow {
+                atIndex { footer() } newRow {
                     cell(Product::code) { value = "Footer first cell" }
                 }
             }
         })
-
+        val headerAttributes = AssertMany<ApachePoiRenderingContext>(
+            AssertEqualsAttribute(
+                expectedAttribute = CellTextStylesAttribute(
+                    fontColor = Colors.WHITE,
+                    weight = DefaultWeightStyle.BOLD
+                ),
+                onlyProperties = setOf(
+                    CellTextStylesAttribute::fontColor,
+                    CellTextStylesAttribute::weight
+                )
+            ),
+            AssertEqualsAttribute(CellBackgroundAttribute(color = Colors.BLACK))
+        )
         PoiTableAssert<Product>(
             tableName = "Products",
             file = File("test.xlsx"),
-            cellTests = mapOf() // TODO write some assertions.
+            cellTests = mapOf(
+                CellPosition(0, 0) to AssertMany(
+                    AssertCellValue(expectedValue = "Id"), headerAttributes
+                ),
+                CellPosition(0, 1) to AssertMany(
+                    AssertCellValue(expectedValue = "Name"), headerAttributes
+                ),
+                CellPosition(0, 2) to AssertMany(
+                    AssertCellValue(expectedValue = "Description"), headerAttributes
+                ),
+                CellPosition(0, 3) to AssertMany(
+                    AssertCellValue(expectedValue = "Price"), headerAttributes
+                ),
+                CellRange((1..1), (0..3)) to AssertNoAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
+                CellRange((2..2), (0..3)) to AssertEqualsAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
+                CellRange((3..3), (0..3)) to AssertNoAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
+                CellRange((4..4), (0..3)) to AssertEqualsAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
+            )
         ).perform().also {
             it.cleanup()
         }
@@ -422,7 +450,7 @@ class ApachePoiTabulateTests {
     private fun createDataSet(count: Int? = 1): List<Product> {
         val random = Random(count!!)
         return (0..count).map {
-             Product(
+            Product(
                 if (it % 2 == 0) "prod_nr_${it}${it % 2}" else "prod_nr_$it",
                 "Name $it",
                 "This is description $it",

@@ -7,6 +7,7 @@ import io.github.voytech.tabulate.testsupport.CellDefinition
 import io.github.voytech.tabulate.testsupport.CellTest
 import java.util.zip.CRC32
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -91,11 +92,41 @@ class AssertMany<E>(private vararg val cellTests: CellTest<E>) : CellTest<E> {
     }
 }
 
-class AssertEqualAttribute<E>(private val expectedAttribute: CellAttribute) : CellTest<E> {
+class AssertEqualsAttribute<E>(
+    private val expectedAttribute: CellAttribute,
+    private val onlyProperties: Set<KProperty1<out CellAttribute, Any?>>? = null
+) : CellTest<E> {
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <A: CellAttribute> A.matchProperties(expected: A) =
+        onlyProperties!!.map { it as KProperty1<A, Any?>  }.all { it(this) ==  it(expected)}
+
     override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
-        assertTrue(def?.cellAttributes?.contains(expectedAttribute) ?: false,"CellAttribute $expectedAttribute not found")
+        if (onlyProperties?.isNotEmpty() == true) {
+            assertTrue(
+                def?.cellAttributes?.any { it.matchProperties(expectedAttribute) } ?: false,
+                "CellAttribute $expectedAttribute with matching properties ${onlyProperties.joinToString(",") { it.name }} not found"
+            )
+        } else {
+            assertTrue(
+                def?.cellAttributes?.contains(expectedAttribute) ?: false,
+                "CellAttribute $expectedAttribute not found"
+            )
+        }
     }
 }
+
+class AssertNoAttribute<E>(private val expectedAttribute: CellAttribute) : CellTest<E> {
+
+    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
+        assertTrue(
+            def?.cellAttributes?.contains(expectedAttribute) == false,
+            "CellAttribute $expectedAttribute found but not expected!"
+        )
+    }
+}
+
+
 
 class AssertAttributeExpression(
     private val attributeClass: KClass<out CellAttribute>,

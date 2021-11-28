@@ -13,7 +13,7 @@ import io.github.voytech.tabulate.testsupport.CellPosition
 import io.github.voytech.tabulate.testsupport.PoiTableAssert
 import io.github.voytech.tabulate.testsupport.cellassertions.AssertCellValue
 import io.github.voytech.tabulate.testsupport.cellassertions.AssertContainsCellAttributes
-import io.github.voytech.tabulate.testsupport.cellassertions.AssertEqualAttribute
+import io.github.voytech.tabulate.testsupport.cellassertions.AssertEqualsAttribute
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -71,7 +71,7 @@ class ExcelAttributesTests {
                 CellPosition(0, 0) to AssertCellValue(
                     expectedValue = "Value"
                 ),
-                CellPosition(0, 0) to AssertEqualAttribute(expectedAttribute)
+                CellPosition(0, 0) to AssertEqualsAttribute(expectedAttribute)
             )
         ).perform().also {
             it.cleanup()
@@ -108,7 +108,7 @@ class ExcelAttributesTests {
                 CellPosition(0, 0) to AssertCellValue(
                     expectedValue = "Value"
                 ),
-                CellPosition(0, 0) to AssertEqualAttribute(SimpleTestCellAttribute(valueSuffix = "AdditionalAttribute"))
+                CellPosition(0, 0) to AssertEqualsAttribute(SimpleTestCellAttribute(valueSuffix = "AdditionalAttribute"))
             )
         ).perform().also {
             it.cleanup()

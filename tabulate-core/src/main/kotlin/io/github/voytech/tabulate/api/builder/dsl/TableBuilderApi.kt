@@ -314,7 +314,7 @@ class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuild
     }
 
     @JvmSynthetic
-    fun index(predicateBlock: RowIndexPredicateBuilderApi.() -> PredicateLiteral) = predicateBlock
+    fun atIndex(predicateBlock: RowIndexPredicateBuilderApi.() -> PredicateLiteral) = predicateBlock
 
     @JvmName("newRowAtIndex")
     @JvmSynthetic
