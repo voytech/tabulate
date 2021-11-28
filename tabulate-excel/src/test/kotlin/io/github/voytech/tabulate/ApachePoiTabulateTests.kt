@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.template
+package io.github.voytech.tabulate
 
 import io.github.voytech.tabulate.api.builder.RowPredicates.all
 import io.github.voytech.tabulate.api.builder.dsl.*
@@ -16,6 +16,8 @@ import io.github.voytech.tabulate.model.attributes.column.columnWidth
 import io.github.voytech.tabulate.model.attributes.column.width
 import io.github.voytech.tabulate.model.attributes.row.height
 import io.github.voytech.tabulate.model.attributes.table.template
+import io.github.voytech.tabulate.template.export
+import io.github.voytech.tabulate.template.tabulate
 import io.github.voytech.tabulate.testsupport.CellPosition
 import io.github.voytech.tabulate.testsupport.CellRange
 import io.github.voytech.tabulate.testsupport.PoiTableAssert
@@ -30,14 +32,14 @@ import java.time.LocalDate
 import kotlin.random.Random
 import kotlin.system.measureTimeMillis
 
-@DisplayName("Testing export to excel")
+@DisplayName("Testing various excel exports")
 class ApachePoiTabulateTests {
 
     @Test
-    fun `should export product data set to excel file`() {
+    fun `should export products to excel file with various style attributes`() {
         val productList = createDataSet(1000)
         measureTimeMillis {
-            productList.tabulate("test0.xlsx") {
+            productList.tabulate("test.xlsx") {
                 name = "Products table"
                 firstRow = 2
                 firstColumn = 2
@@ -120,7 +122,7 @@ class ApachePoiTabulateTests {
 
         PoiTableAssert<Product>(
             tableName = "Products table",
-            file = File("test0.xlsx"),
+            file = File("test.xlsx"),
             cellTests = mapOf(
                 CellPosition(2, 2) to AssertContainsCellAttributes(
                     CellTextStylesAttribute(
@@ -193,7 +195,7 @@ class ApachePoiTabulateTests {
     @Test
     fun `should interpolate dataset on excel template file`() {
         ZipSecureFile.setMinInflateRatio(0.001)
-        createDataSet(1000).tabulate("test2.xlsx") {
+        createDataSet(1000).tabulate("test.xlsx") {
             name = "Products table"
             firstRow = 1
             attributes {
@@ -224,7 +226,7 @@ class ApachePoiTabulateTests {
 
         PoiTableAssert<Product>(
             tableName = "Products table",
-            file = File("test2.xlsx"),
+            file = File("test.xlsx"),
             cellTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(expectedValue = "Nr.:"),
                 CellPosition(0, 1) to AssertCellValue(expectedValue = "Code"),
@@ -248,9 +250,9 @@ class ApachePoiTabulateTests {
     }
 
     @Test
-    fun `should export to excel file with excel table feature`() {
+    fun `should export to excel file with "excel table" feature`() {
         val productList = createDataSet(1000)
-        productList.tabulate("test3.xlsx") {
+        productList.tabulate("test.xlsx") {
             name = "Products table"
             attributes { filterAndSort {} }
             columns {
@@ -269,7 +271,7 @@ class ApachePoiTabulateTests {
 
         PoiTableAssert<Product>(
             tableName = "Products table",
-            file = File("test3.xlsx"),
+            file = File("test.xlsx"),
             cellTests = mapOf()
         ).perform().also {
             it.cleanup()
@@ -291,11 +293,11 @@ class ApachePoiTabulateTests {
                     cell { value = "Last column. Row 2" }
                 }
             }
-        }.export(File("test1.xlsx"))
+        }.export(File("test.xlsx"))
 
         PoiTableAssert<Product>(
             tableName = "Test table",
-            file = File("test1.xlsx"),
+            file = File("test.xlsx"),
             cellTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(
                     expectedValue = "Row span",
@@ -341,11 +343,11 @@ class ApachePoiTabulateTests {
                     }
                 }
             }
-        }.export(File("test_img.xlsx"))
+        }.export(File("test.xlsx"))
 
         PoiTableAssert<Product>(
             tableName = "Test table",
-            file = File("test_img.xlsx"),
+            file = File("test.xlsx"),
             cellTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(expectedValue = "It is : "),
                 CellPosition(0, 1) to AssertCellValue(

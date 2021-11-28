@@ -6,13 +6,13 @@ data class ColumnKey<T> internal constructor(
     @get:JvmSynthetic
     internal val name: String? = null,
     @get:JvmSynthetic
-    internal val property: PropertyBindingKey<T>? = null
+    internal val property: PropertyReferenceColumnKey<T>? = null
 ) {
     companion object {
         fun <T> field(fieldRef: KProperty1<T,Any>?) = ColumnKey(property = fieldRef?.id())
     }
     @JvmSynthetic
-    fun resolveValue(value: T?): Any? = value?.let { property?.invoke(it) }
+    fun resolveValue(value: T?): Any? = value?.let { property?.getPropertyValue(it) }
 
     @Override
     override fun toString(): String {

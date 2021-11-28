@@ -14,5 +14,5 @@ internal class ColumnDef<T> internal constructor(
     internal val cellAttributes: Set<CellAttribute>?
 ) {
     @JvmSynthetic
-    internal fun resolveRawValue(value: T?): Any? = value?.let { id.property?.invoke(it) }
+    internal fun resolveRawValue(value: T?): Any? = value?.let { id.property?.getPropertyValue(it) }
 }

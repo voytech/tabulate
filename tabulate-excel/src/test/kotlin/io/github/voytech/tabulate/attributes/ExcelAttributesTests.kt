@@ -61,12 +61,12 @@ class ExcelAttributesTests {
                     }
                 }
             }
-        }.export(File("test1.xlsx"))
+        }.export(File("test.xlsx"))
 
         // then
         PoiTableAssert<Any>(
             tableName = "test",
-            file = File("test1.xlsx"),
+            file = File("test.xlsx"),
             cellTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(
                     expectedValue = "Value"

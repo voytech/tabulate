@@ -10,7 +10,6 @@ import io.github.voytech.tabulate.model.attributes.cell.TypeHintAttribute
 import java.util.concurrent.Callable
 import java.util.function.Consumer
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellType as TypeHint
-import java.util.function.Function as JFunction
 
 sealed class FluentTableBuilderApi<T> {
 
@@ -37,13 +36,13 @@ interface RowBuilderMethods<T> {
 interface CellBuilderMethods<T> {
     fun cell(): CellBuilder<T>
     fun cell(id: String): CellBuilder<T>
-    fun cell(ref: JFunction<T, Any?>): CellBuilder<T>
+    fun cell(ref: NamedPropertyReference<T>): CellBuilder<T>
     fun cell(index: Int): CellBuilder<T>
 }
 
 interface ColumnsBuilderMethods<T> {
     fun column(id: String): ColumnBuilder<T>
-    fun column(ref: JFunction<T, Any?>): ColumnBuilder<T>
+    fun column(ref: NamedPropertyReference<T>): ColumnBuilder<T>
 }
 
 class TableBuilder<T> : FluentTableBuilderApi<T>() {
@@ -92,8 +91,8 @@ class ColumnsBuilder<T> internal constructor(private val parent: TableBuilder<T>
     override fun column(id: String) =
         ColumnBuilder(parent.builderState.columnsBuilderState.ensureColumnBuilder(id) {}, this)
 
-    override fun column(ref: JFunction<T, Any?>) =
-        ColumnBuilder(parent.builderState.columnsBuilderState.ensureColumnBuilder(ref.id()) {}, this)
+    override fun column(ref: NamedPropertyReference<T>) =
+        ColumnBuilder(parent.builderState.columnsBuilderState.ensureColumnBuilder(ref) {}, this)
 
     @JvmSynthetic
     override fun up(): TableBuilder<T> = parent
@@ -180,8 +179,8 @@ class RowBuilder<T> internal constructor(
 
     override fun cell(id: String) = CellBuilder(builderState.cellsBuilderState.addCellBuilder(id) {}, this)
 
-    override fun cell(ref: JFunction<T, Any?>) =
-        CellBuilder(builderState.cellsBuilderState.addCellBuilder(ref.id()) {}, this)
+    override fun cell(ref: NamedPropertyReference<T>) =
+        CellBuilder(builderState.cellsBuilderState.addCellBuilder(ref) {}, this)
 
     override fun cell(index: Int): CellBuilder<T> =
         CellBuilder(builderState.cellsBuilderState.addCellBuilder(index) {}, this)

@@ -6,7 +6,7 @@ import io.github.voytech.tabulate.model.attributes.cell.TypeHintAttribute
 
 /**
  * Class encapsulates shared, generic logic for accessing attribute instance of selected attribute class.
- * Class is intended to be derived by all classes representing attribute-trimmed contexts like:
+ * Class is intended to be derived by all classes representing attribute-less contexts like:
  * [RowCellContext], [ColumnContext], [RowContext], [RowContextWithCells], [TableContext]
  * @author Wojciech Mąka
  */

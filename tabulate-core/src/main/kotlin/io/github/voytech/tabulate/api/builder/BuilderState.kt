@@ -142,7 +142,7 @@ internal class ColumnsBuilderState<T> : InternalBuilder<List<ColumnDef<T>>>() {
         }
 
     @JvmSynthetic
-    fun ensureColumnBuilder(ref: PropertyBindingKey<T>, block: DslBlock<ColumnBuilderState<T>>? = null): ColumnBuilderState<T> =
+    fun ensureColumnBuilder(ref: PropertyReferenceColumnKey<T>, block: DslBlock<ColumnBuilderState<T>>? = null): ColumnBuilderState<T> =
         ensureColumnBuilder(ColumnKey(property = ref)).also {
             block?.invoke(it)
         }
@@ -452,7 +452,7 @@ internal class CellsBuilderState<T>(
         }
 
     @JvmSynthetic
-    fun addCellBuilder(ref: PropertyBindingKey<T>, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
+    fun addCellBuilder(ref: PropertyReferenceColumnKey<T>, block: DslBlock<CellBuilderState<T>>): CellBuilderState<T> =
         ensureCellBuilder(ColumnKey(property = ref)).apply(block)
 
     @JvmSynthetic

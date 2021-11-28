@@ -3,6 +3,7 @@ package io.github.voytech.tabulate.core.builder.fluent;
 import com.google.common.collect.Lists;
 import io.github.voytech.tabulate.api.builder.fluent.FluentTableBuilderApi;
 import io.github.voytech.tabulate.api.builder.fluent.TableBuilder;
+import io.github.voytech.tabulate.model.NamedPropertyReference;
 import io.github.voytech.tabulate.model.SourceRow;
 import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute;
 import io.github.voytech.tabulate.model.attributes.cell.Colors;
@@ -15,7 +16,6 @@ import io.github.voytech.tabulate.template.operations.AttributedRowWithCells;
 import io.github.voytech.tabulate.testsupport.AttributedRowTest;
 import io.github.voytech.tabulate.testsupport.TestExportOperationsFactory;
 import kotlin.Unit;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -23,9 +23,9 @@ import java.util.List;
 
 import static io.github.voytech.tabulate.api.builder.RowPredicates.all;
 
+
 public class FluentBuilderTest {
 
-	@Disabled("Depends on 'Add property literals emulation for java Fluent Builder (property to column binding key) #140'")
 	@Test
 	public void createTableDefinitionTest() {
 		TestExportOperationsFactory.setRowTest(new AttributedRowTest() {
@@ -47,11 +47,11 @@ public class FluentBuilderTest {
 						.columns()
 							.column("rowNumbering")
 								.columnAttribute(ColumnWidthAttribute::builder)
-							.column(Employee::getId)
+							.column(NamedPropertyReference.of("id", Employee::getId))
 								.columnAttribute(ColumnWidthAttribute::builder)
-							.column(Employee::getFirstName)
+							.column(NamedPropertyReference.of("firstName", Employee::getFirstName))
 								.columnAttribute(ColumnWidthAttribute::builder)
-							.column(Employee::getLastName)
+							.column(NamedPropertyReference.of("lastName", Employee::getLastName))
 								.columnAttribute(ColumnWidthAttribute::builder)
 						.rows()
 							.row(0)
@@ -64,11 +64,11 @@ public class FluentBuilderTest {
 										builder.setFontColor(Colors.INSTANCE.getBLUE());
 										builder.setFontFamily("Times News Roman");
 									})
-								.cell(Employee::getId)
+								.cell(NamedPropertyReference.of("id"))
 									.value("Employee ID")
 								.cell(2)
 									.value("Employee First Name")
-								.cell(Employee::getLastName)
+								.cell(NamedPropertyReference.of("lastName"))
 									.value("Employee Last Name")
 							.row(all())
 								.cell("rowNumbering")
