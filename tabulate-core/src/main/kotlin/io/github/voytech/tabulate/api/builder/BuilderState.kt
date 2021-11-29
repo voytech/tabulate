@@ -551,7 +551,7 @@ internal class CellsBuilderState<T>(
 }
 
 internal class CellBuilderState<T>(
-    internal val rowBuilderState: RowBuilderState<T>,
+    private val rowBuilderState: RowBuilderState<T>,
 ) : AttributesAwareBuilder<CellDef<T>>() {
 
     @get:JvmSynthetic

@@ -228,6 +228,40 @@ class DslBuilderTest {
     }
 
     @Test
+    fun `should define table with header using row predicate literal notation`() {
+        with(createTableBuilder<Product> {
+            name = "Products table"
+            columns {
+                column(Product::code)
+                column(Product::description)
+            }
+            rows {
+                atIndex { header() } newRow {
+                    cell { value = "Code" }
+                    cell { value = "Description" }
+                }
+                newRow {
+                    cell { value = "1" }
+                    cell { value = "First item" }
+                }
+            }
+        }.build()) {
+            assertNotNull(this)
+            assertEquals(rows!!.size, 2)
+            rows.first().let { header ->
+                assertEquals(2,header.cells!!.size)
+                assertEquals("Code", header.cells[ColumnKey(property = Product::code.id())]!!.value)
+                assertEquals("Description", header.cells[ColumnKey(property = Product::description.id())]!!.value)
+            }
+            rows.last().let { firstRow ->
+                assertEquals(2,firstRow.cells!!.size)
+                assertEquals("1", firstRow.cells[ColumnKey(property = Product::code.id())]!!.value)
+                assertEquals("First item", firstRow.cells[ColumnKey(property = Product::description.id())]!!.value)
+            }
+        }
+    }
+
+    @Test
     fun `should define table with attributed header`() {
         with(createTableBuilder<Product> {
             name = "Products table"

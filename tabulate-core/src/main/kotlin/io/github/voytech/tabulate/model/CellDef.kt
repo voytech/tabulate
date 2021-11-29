@@ -4,28 +4,33 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.template.operations.CellValue
 
 /**
- * Defines behaviours for cases when row span setting causes row to overlay downstream rows.
+ * Defines behaviours for situations when row span setting causes row to collide with downstream rows at runtime.
  */
-internal enum class CollidingRowSpanStrategy {
+internal enum class CollidingRowSpanStrategy(private val priority: Int) {
     /**
      When row span causes row to overlay downstream rows, downstream row values are not rendered, but skipped.
-     That behaviours is lossy.
+     That behaviour is lossy.
+     This strategy has lowest possible priority.
      */
-    SHADOW,
+    SHADOW(1),
     /**
-    When row span causes row to overlay downstream rows, then all custom rows definitions are shifted down by row span value.
-    Also next row index to be requested by iterator is advanced by the value of row span.
+     When row span causes row to overlay downstream rows, then all custom rows definitions are shifted down by row span value.
+     Also next row index to be requested by iterator is advanced by the value of row span.
+     This strategy takes precedence over SHADOW and SKIP strategy.
      */
-    SHIFT,
+    PUSHBACK(3),
     /**
-    When row span causes row to overlay downstream rows, then none of downstream custom rows definitions are shifted.
-    Only next row index to be requested by iterator is advanced by the value of row span.
+     When row span causes row to overlay downstream rows, then none of downstream custom rows definitions are shifted.
+     Only next row index to be requested by iterator is advanced by the value of row span.
+     This strategy takes precedence over SHADOW strategy.
      */
-    SKIP,
+    SKIP(2),
     /**
-    When row span causes row to overlay downstream rows, then an exception is thrown.
+     When row span causes row to overlay downstream rows, then an exception is thrown.
+     This strategy has HIGHEST priority which means that no matter what different strategy will be set on other cell in the row,
+     exception will be thrown eventually.
      */
-    THROW
+    THROW(4)
 }
 
 internal data class CellDef<T> internal constructor(
@@ -38,7 +43,7 @@ internal data class CellDef<T> internal constructor(
     @get:JvmSynthetic
     val rowSpan: Int = 1,
     @get:JvmSynthetic
-    val rowSpanMode: CollidingRowSpanStrategy = CollidingRowSpanStrategy.SHADOW,
+    val rowSpanMode: CollidingRowSpanStrategy = CollidingRowSpanStrategy.THROW,
     @get:JvmSynthetic
     val cellAttributes: Set<CellAttribute>?
 ) {
