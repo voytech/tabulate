@@ -12,6 +12,7 @@ import java.time.LocalDateTime
 import java.util.logging.Logger
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class BuilderStateTest {
 
@@ -29,61 +30,72 @@ class BuilderStateTest {
 
     @Test
     fun `should define columns`() {
-        val builder = TableBuilderState<ExportedData>().apply {
-            columnsBuilderState.ensureColumnBuilder("customCol1") {}
-            columnsBuilderState.ensureColumnBuilder(ExportedData::string.id()) {}
-        }
-        assertEquals(2, builder.columnsBuilderState.columnBuilderStates.size)
-
-        with(builder.columnsBuilderState.find(ColumnKey("customCol1"))) {
-            assertEquals("customCol1", this?.id?.name)
-            assertEquals(0, this?.index)
-        }
-
-        with(builder.columnsBuilderState.find(ColumnKey(property = ExportedData::string.id()))) {
-            assertEquals(ExportedData::string.id(), this?.id?.property)
-            assertEquals(1, this?.index)
-        }
-
-        builder.columnsBuilderState.ensureColumnBuilder("customCol1") {}
-
-        assertEquals(2, builder.columnsBuilderState.columnBuilderStates.size)
-
-        with(builder.columnsBuilderState.find(ColumnKey("customCol1"))) {
-            assertEquals("customCol1", this?.id?.name)
-            assertEquals(0, this?.index)
-        }
-
-        val exception = assertThrows<BuilderException> {
-            builder.columnsBuilderState.ensureColumnBuilder("customCol1") {
-                it.index = 1
+        val builder = step("Define table with two columns") {
+            TableBuilderState<ExportedData>().apply {
+                columnsBuilderState.ensureColumnBuilder("customCol1") {}
+                columnsBuilderState.ensureColumnBuilder(ExportedData::string.id()) {}
+            }.also {
+                assertEquals(2, it.columnsBuilderState.columnBuilderStates.size)
             }
         }
-        assertEquals("Could not set column index 1 because index is in use by another column.", exception.message)
+        step("Assert that indices where properly set") {
+            with(builder.columnsBuilderState.find(ColumnKey("customCol1"))) {
+                assertEquals("customCol1", this?.id?.name)
+                assertEquals(0, this?.index)
+            }
 
-        builder.columnsBuilderState.ensureColumnBuilder("customCol1") {
-            it.index = 2
+            with(builder.columnsBuilderState.find(ColumnKey(property = ExportedData::string.id()))) {
+                assertEquals(ExportedData::string.id(), this?.id?.property)
+                assertEquals(1, this?.index)
+            }
+        }
+        step("Check if no new column was created in the mean time.") {
+            builder.columnsBuilderState.ensureColumnBuilder("customCol1") {}
+            assertEquals(2, builder.columnsBuilderState.columnBuilderStates.size)
+        }
+        step("Ensure it is not possible to set colliding index on column definition.") {
+            val exception = assertThrows<BuilderException> {
+                builder.columnsBuilderState.ensureColumnBuilder("customCol1") {
+                    it.index = 1
+                }
+            }
+            assertEquals("Could not set column index 1 because index is in use by another column.", exception.message)
         }
 
-        assertEquals(2, builder.columnsBuilderState.columnBuilderStates.size)
-        with(builder.columnsBuilderState.find(ColumnKey("customCol1"))) {
-            assertEquals("customCol1", this?.id?.name)
-            assertEquals(2, this?.index)
+        step("Reorder first column by setting higher index") {
+            builder.columnsBuilderState.ensureColumnBuilder("customCol1") {
+                it.index = 2
+            }
+            with(builder.columnsBuilderState.find(ColumnKey("customCol1"))) {
+                assertEquals("customCol1", this?.id?.name)
+                assertEquals(2, this?.index)
+            }
         }
-
-        builder.columnsBuilderState.ensureColumnBuilder("customCol2") {
-            it.index = 4
+        step("Check if no new column was created in the mean time.") {
+            assertEquals(2, builder.columnsBuilderState.columnBuilderStates.size)
         }
-        assertEquals(3, builder.columnsBuilderState.columnBuilderStates.size)
-
-        with(builder.columnsBuilderState.find(ColumnKey("customCol2"))) {
-            assertEquals(4, this?.index)
+        step("Add new column with highest index") {
+            builder.columnsBuilderState.ensureColumnBuilder("customCol2") {
+                it.index = 4
+            }
+            assertEquals(3, builder.columnsBuilderState.columnBuilderStates.size)
+            with(builder.columnsBuilderState.find(ColumnKey("customCol2"))) {
+                assertEquals(4, this?.index)
+            }
         }
-
-        builder.columnsBuilderState.ensureColumnBuilder("customCol3") {}
-        assertEquals(4, builder.columnsBuilderState.columnBuilderStates.size)
-        with(builder.columnsBuilderState.find(ColumnKey("customCol3"))) {
-            assertEquals(5, this?.index)
+        step("Add new column and check if index has been set automatically and correctly") {
+            builder.columnsBuilderState.ensureColumnBuilder("customCol3") {}
+            assertEquals(4, builder.columnsBuilderState.columnBuilderStates.size)
+            with(builder.columnsBuilderState.find(ColumnKey("customCol3"))) {
+                assertEquals(5, this?.index)
+            }
+        }
+        step("Assert that columns are sorted according to their indices after building table.") {
+            with(builder.columnsBuilderState.build()) {
+                assertTrue { this[0].index!! < this[1].index!! }
+                assertTrue { this[1].index!! < this[2].index!! }
+                assertTrue { this[2].index!! < this[3].index!! }
+            }
         }
     }
 

@@ -169,7 +169,7 @@ internal class ColumnsBuilderState<T> : InternalBuilder<List<ColumnDef<T>>>() {
 
     @JvmSynthetic
     override fun build(transformerContainer: AttributeTransformerContainer?): List<ColumnDef<T>> {
-        return columnBuilderStates.map { it.build(transformerContainer) }
+        return columnBuilderStates.map { it.build(transformerContainer) }.sortedBy { it.index }
     }
 }
 
