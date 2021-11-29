@@ -36,13 +36,13 @@ interface RowBuilderMethods<T> {
 interface CellBuilderMethods<T> {
     fun cell(): CellBuilder<T>
     fun cell(id: String): CellBuilder<T>
-    fun cell(ref: NamedPropertyReference<T>): CellBuilder<T>
+    fun cell(ref: NamedPropertyReferenceColumnKey<T>): CellBuilder<T>
     fun cell(index: Int): CellBuilder<T>
 }
 
 interface ColumnsBuilderMethods<T> {
     fun column(id: String): ColumnBuilder<T>
-    fun column(ref: NamedPropertyReference<T>): ColumnBuilder<T>
+    fun column(ref: NamedPropertyReferenceColumnKey<T>): ColumnBuilder<T>
 }
 
 class TableBuilder<T> : FluentTableBuilderApi<T>() {
@@ -91,7 +91,7 @@ class ColumnsBuilder<T> internal constructor(private val parent: TableBuilder<T>
     override fun column(id: String) =
         ColumnBuilder(parent.builderState.columnsBuilderState.ensureColumnBuilder(id) {}, this)
 
-    override fun column(ref: NamedPropertyReference<T>) =
+    override fun column(ref: NamedPropertyReferenceColumnKey<T>) =
         ColumnBuilder(parent.builderState.columnsBuilderState.ensureColumnBuilder(ref) {}, this)
 
     @JvmSynthetic
@@ -179,7 +179,7 @@ class RowBuilder<T> internal constructor(
 
     override fun cell(id: String) = CellBuilder(builderState.cellsBuilderState.addCellBuilder(id) {}, this)
 
-    override fun cell(ref: NamedPropertyReference<T>) =
+    override fun cell(ref: NamedPropertyReferenceColumnKey<T>) =
         CellBuilder(builderState.cellsBuilderState.addCellBuilder(ref) {}, this)
 
     override fun cell(index: Int): CellBuilder<T> =

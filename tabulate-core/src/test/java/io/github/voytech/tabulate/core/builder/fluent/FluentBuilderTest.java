@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.core.builder.fluent;
 import com.google.common.collect.Lists;
 import io.github.voytech.tabulate.api.builder.fluent.FluentTableBuilderApi;
 import io.github.voytech.tabulate.api.builder.fluent.TableBuilder;
-import io.github.voytech.tabulate.model.NamedPropertyReference;
+import io.github.voytech.tabulate.model.NamedPropertyReferenceColumnKey;
 import io.github.voytech.tabulate.model.SourceRow;
 import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute;
 import io.github.voytech.tabulate.model.attributes.cell.Colors;
@@ -22,9 +22,36 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static io.github.voytech.tabulate.api.builder.RowPredicates.all;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class FluentBuilderTest {
+
+	@Test
+	public void createCustomTableDefinitionTest() {
+		final FluentTableBuilderApi<Employee> fluentBuilder = new TableBuilder<Employee>()
+			.rows()
+				.row(0)
+					.cell("nr")
+						.value("Nr")
+					.cell(NamedPropertyReferenceColumnKey.of("id",Employee::getId))
+						.value("Employee ID")
+					.cell(NamedPropertyReferenceColumnKey.of("firstName",Employee::getFirstName))
+						.value("First Name")
+					.cell(NamedPropertyReferenceColumnKey.of("lastName",Employee::getLastName))
+						.value("Last Name")
+					.cell(NamedPropertyReferenceColumnKey.of("age",Employee::getAge))
+						.value("Age")
+					.row(all())
+						.cell("rowNumbering")
+						.eval(SourceRow::getRowIndex);
+
+		final List<Employee> employeeList = Lists.newArrayList(new Employee(
+				"firstName", "lastName", 25, BigDecimal.ZERO, "id"
+		));
+		new TabulationTemplate<Employee>(TabulationFormat.format("test")).export(employeeList, Unit.INSTANCE, fluentBuilder);
+		assertTrue(true);
+	}
 
 	@Test
 	public void createTableDefinitionTest() {
@@ -47,11 +74,11 @@ public class FluentBuilderTest {
 						.columns()
 							.column("rowNumbering")
 								.columnAttribute(ColumnWidthAttribute::builder)
-							.column(NamedPropertyReference.of("id", Employee::getId))
+							.column(NamedPropertyReferenceColumnKey.of("id", Employee::getId))
 								.columnAttribute(ColumnWidthAttribute::builder)
-							.column(NamedPropertyReference.of("firstName", Employee::getFirstName))
+							.column(NamedPropertyReferenceColumnKey.of("firstName", Employee::getFirstName))
 								.columnAttribute(ColumnWidthAttribute::builder)
-							.column(NamedPropertyReference.of("lastName", Employee::getLastName))
+							.column(NamedPropertyReferenceColumnKey.of("lastName", Employee::getLastName))
 								.columnAttribute(ColumnWidthAttribute::builder)
 						.rows()
 							.row(0)
@@ -64,11 +91,11 @@ public class FluentBuilderTest {
 										builder.setFontColor(Colors.INSTANCE.getBLUE());
 										builder.setFontFamily("Times News Roman");
 									})
-								.cell(NamedPropertyReference.of("id"))
+								.cell(NamedPropertyReferenceColumnKey.of("id"))
 									.value("Employee ID")
 								.cell(2)
 									.value("Employee First Name")
-								.cell(NamedPropertyReference.of("lastName"))
+								.cell(NamedPropertyReferenceColumnKey.of("lastName"))
 									.value("Employee Last Name")
 							.row(all())
 								.cell("rowNumbering")
