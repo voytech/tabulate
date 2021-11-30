@@ -4,12 +4,12 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.template.operations.CellValue
 
 /**
- * Defines behaviours for situations when row span setting causes row to collide with downstream rows at runtime.
+ * Defines behaviour for situation when row-span causes row to collide with downstream rows at runtime.
  */
 internal enum class CollidingRowSpanStrategy(private val priority: Int) {
     /**
      When row span causes row to overlay downstream rows, downstream row values are not rendered, but skipped.
-     That behaviour is lossy.
+     WARNING: That behaviour is lossy.
      This strategy has lowest possible priority.
      */
     SHADOW(1),
@@ -33,25 +33,46 @@ internal enum class CollidingRowSpanStrategy(private val priority: Int) {
     THROW(4)
 }
 
+/**
+ * Defines single cell exposing specific property of a data-set record being rendered. Contains cell value which may be
+ * evaluated in several ways:
+ * - by evaluating property getter function on processed object (row)
+ * - by evaluating expression [RowCellExpression]
+ * - by injecting predefined value [value]
+ * [CellDef] can also control [colSpan] and [rowSpan] attributes as well as customize [rowSpanMode]
+ */
 internal data class CellDef<T> internal constructor(
+    /**
+     * Predefined value to be used when rendering cell.
+     */
     @get:JvmSynthetic
     val value: Any?,
+    /**
+     * Expression (late value evaluation) to be used when rendering cell.
+     */
     @get:JvmSynthetic
     val expression: RowCellExpression<T>?,
+    /**
+     * Defines how many columns will be occupied for specific cell.
+     */
     @get:JvmSynthetic
     val colSpan: Int = 1,
+    /**
+     * Defines how many rows must will be occupied for specific cell.
+     */
     @get:JvmSynthetic
     val rowSpan: Int = 1,
+    /**
+     * Defines strategy to be used when resolving downstream rows, when row span conflicts are detected.
+     */
     @get:JvmSynthetic
     val rowSpanMode: CollidingRowSpanStrategy = CollidingRowSpanStrategy.THROW,
+    /**
+     * Aggregates set of [CellAttribute] that enable customization of table cell appearance
+     */
     @get:JvmSynthetic
     val cellAttributes: Set<CellAttribute>?
 ) {
-    @JvmSynthetic
-    fun colSpanOffset() = colSpan - 1
-
-    @JvmSynthetic
-    fun rowSpanOffset() = rowSpan - 1
 
     @JvmSynthetic
     internal fun resolveRawValue(context: SourceRow<T>? = null) : Any? = context?.let { expression?.evaluate(it) } ?: value

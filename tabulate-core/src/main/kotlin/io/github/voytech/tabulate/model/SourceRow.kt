@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.template.context.RowIndex
 
 /**
  * This class wraps dataset record for further row context evaluation.
- * It adds additional information for context resolving:
+ * It adds extra information for context resolving:
  *  - current row index increment value
  *  - index of an dataset entry
  *  Raw dataset record and index information is then used by row predicates in order to figure out what row definitions

@@ -4,7 +4,9 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 
 /**
- * Defines column. Column may contain column and cell level attributes.
+ * Defines single table column. Column groups cells that expose specific property of data-set record.
+ * Column must have mandatory column key - an identifier which is used on row cell to establish cell-to-column binding.
+ * Column may contain column and cell attributes that enable table appearance customisation.
  * @author Wojciech Mąka
  */
 internal class ColumnDef<T> internal constructor(

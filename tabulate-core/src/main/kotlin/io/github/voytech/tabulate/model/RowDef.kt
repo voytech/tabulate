@@ -4,13 +4,34 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.template.operations.CellValue
 
+/**
+ * Defines single row in table which represents single record from exported data-set.
+ * May also contain custom cell values (e.g. to display table header or footer).
+ * @author Wojciech Mąka
+ */
 internal data class RowDef<T> internal constructor(
+    /**
+     * Given [SourceRow] qualifies specific row definition for row context resolving.
+     * When row definition is matched for specific [SourceRow] then:
+     * - all its row attributes as well as cell attributes are used to build row context for renderer.
+     * - all custom cells are merged with other custom cells from other row definitions matching specific [SourceRow].
+     */
     @get:JvmSynthetic
     internal val qualifier: RowQualifier<T>,
+    /**
+     * Row level attributes to be used in row context while rendering row.
+     */
     @get:JvmSynthetic
     internal val rowAttributes: Set<RowAttribute>?,
+    /**
+     * Cell level attributes to be used in row cell context while rendering cell.
+     */
     @get:JvmSynthetic
     internal val cellAttributes: Set<CellAttribute>?,
+    /**
+     * All custom cell definitions. Each cell definition may contain custom value and/or cell attributes to be applied on
+     * value resolved from data-set record.
+     */
     @get:JvmSynthetic
     internal val cells: Map<ColumnKey<T>, CellDef<T>>?,
 ) {
