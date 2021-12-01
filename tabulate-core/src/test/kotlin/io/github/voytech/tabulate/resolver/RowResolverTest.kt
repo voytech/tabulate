@@ -15,7 +15,6 @@ import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.time.LocalDate
 
-
 class RowResolverTest {
 
     @Test

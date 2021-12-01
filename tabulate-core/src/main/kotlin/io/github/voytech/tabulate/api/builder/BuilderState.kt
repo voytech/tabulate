@@ -628,6 +628,3 @@ abstract class CellAttributeBuilder<T : CellAttribute<T>> : AttributeBuilder<T>(
 abstract class RowAttributeBuilder<T : RowAttribute<T>> : AttributeBuilder<T>()
 
 abstract class ColumnAttributeBuilder<T : ColumnAttribute<T>> : AttributeBuilder<T>()
-
-
-

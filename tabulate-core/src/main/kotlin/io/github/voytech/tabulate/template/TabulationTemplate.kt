@@ -22,9 +22,9 @@ import java.util.*
 
 /**
  * [TabulationApi] An API enabling interactive table export.
- * Particularly it allows to:
- * - export each record respectively with 'nextRow' method,
- * - export all trailing and buffered records with 'finish' method,
+ * Allows to:
+ * - export each collection element with 'nextRow' method,
+ * - export all trailing (custom trailing rows like table footer) and buffered records with 'finish' method,
  * - flush rendered data into output.
  * @author Wojciech Mąka
  */
@@ -55,14 +55,15 @@ interface TabulationApi<T, O> {
 }
 
 /**
- * An entry point for data exporting.
- * Contains core exporting methods:
+ * An entry point of table export.
+ * Contains entry point methods:
  * - [TabulationTemplate.export] - export collection of objects.
- * - [TabulationTemplate.create] - create and return [TabulationApi] for 'interactive' exporting.
- * And following convenience extension methods:
- * - [TableBuilderState.export] for exporting fully user defined table.
- * - [Iterable.tabulate] for tabulating collection of objects. The process is called 'tabulate' to emphasize
- * its behaviour - taking a source and making a table from it.
+ * - [TabulationTemplate.create] - create [TabulationApi] to enable 'interactive' export. Removes restriction of exporting
+ * only iterables. Gives full control on when to schedule next item for rendering.
+ * And convenience extension methods:
+ * - [TableBuilderState.export] for exporting user defined table.
+ * - [Iterable.tabulate] for tabulating collection of elements. Method is called 'tabulate' to emphasize
+ * its sole role - constructing tables from from various objects.
  * @author Wojciech Mąka
  */
 class TabulationTemplate<T>(private val format: TabulationFormat) {

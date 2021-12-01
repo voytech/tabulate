@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
-import io.github.voytech.tabulate.template.context.DefaultSteps
+import io.github.voytech.tabulate.template.context.AdditionalSteps
 import io.github.voytech.tabulate.template.context.RowIndex
 import java.util.function.Consumer
 
@@ -63,7 +63,7 @@ class Table<T> internal constructor(
     private var indexedCustomRows: Map<RowIndexDef, List<RowDef<T>>>? = null
 
     //TODO move to dedicated class which allows overriding step providing enums.
-    private val stepClass : Class<out Enum<*>> = DefaultSteps::class.java
+    private val stepClass : Class<out Enum<*>> = AdditionalSteps::class.java
 
     //TODO move to dedicated class
     private fun parseStep(step: String): Enum<*> = stepClass.enumConstants.find { step == it.name }

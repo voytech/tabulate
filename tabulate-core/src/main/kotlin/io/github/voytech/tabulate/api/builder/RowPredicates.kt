@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.api.builder
 
 import io.github.voytech.tabulate.model.RowPredicate
-import io.github.voytech.tabulate.template.context.DefaultSteps
+import io.github.voytech.tabulate.template.context.AdditionalSteps
 import io.github.voytech.tabulate.template.context.RowIndex
 
 object RowPredicates {
@@ -50,7 +50,7 @@ object RowPredicates {
     fun <T> header(): RowPredicate<T> = eq(0)
 
     @JvmStatic
-    fun <T> footer(): RowPredicate<T> = eq(0, DefaultSteps.TRAILING_ROWS)
+    fun <T> footer(): RowPredicate<T> = eq(0, AdditionalSteps.TRAILING_ROWS)
 
     @JvmStatic
     fun <T> record(listIndex: Int): RowPredicate<T> =

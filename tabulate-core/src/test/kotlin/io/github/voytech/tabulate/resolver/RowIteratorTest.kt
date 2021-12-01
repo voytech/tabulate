@@ -1,11 +1,12 @@
 package io.github.voytech.tabulate.resolver
 
+import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
 import io.github.voytech.tabulate.api.builder.dsl.footer
 import io.github.voytech.tabulate.api.builder.dsl.header
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.model.ColumnKey
-import io.github.voytech.tabulate.template.context.DefaultSteps
+import io.github.voytech.tabulate.template.context.AdditionalSteps
 import io.github.voytech.tabulate.template.iterators.EnumStepProvider
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
 import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
@@ -16,21 +17,33 @@ import java.time.LocalDate
 
 class RowIteratorTest {
 
+    private data class Wrapper<T>(
+        val iterator: RowContextIterator<T>,
+        val resolver: BufferingRowContextResolver<T>,
+        val customAttributes: Map<String, Any>
+    )
+
+    private fun <T> createDefaultIterator(block: TableBuilderApi<T>.() -> Unit): Wrapper<T> =
+        mutableMapOf<String, Any>().let {
+            it to BufferingRowContextResolver(createTableBuilder(block).build(), it)
+        }.let {
+            Wrapper(
+                iterator = RowContextIterator(it.second, EnumStepProvider(AdditionalSteps::class.java)),
+                resolver = it.second,
+                customAttributes = it.first
+            )
+        }
+
+
     @Test
     fun `should resolve AttributedRow to null if no table definition nor data is provided`() {
-        val resolver = BufferingRowContextResolver(
-            createTableBuilder<Product> {  }.build(),
-            mutableMapOf()
-        )
-        val iterator = RowContextIterator(resolver, EnumStepProvider(DefaultSteps::class.java))
-        assertFalse(iterator.hasNext())
+        val wrapper = createDefaultIterator<Product> {  }
+        assertFalse(wrapper.iterator.hasNext())
     }
 
     @Test
     fun `should resolve AttributedRow from custom row definition`() {
-        mutableMapOf<String, Any>()
-        val resolver = BufferingRowContextResolver(
-            createTableBuilder<Product> {
+        val wrapper = createDefaultIterator<Product> {
                 columns {
                     column(Product::code)
                 }
@@ -41,11 +54,8 @@ class RowIteratorTest {
                         }
                     }
                 }
-            }.build(),
-            mutableMapOf()
-        )
-        val iterator = RowContextIterator(resolver, EnumStepProvider(DefaultSteps::class.java))
-        val resolvedIndexedAttributedRow = iterator.next()
+            }
+        val resolvedIndexedAttributedRow = wrapper.iterator.next()
         assertNotNull(resolvedIndexedAttributedRow)
         assertEquals(0, resolvedIndexedAttributedRow.rowIndex)
         with(resolvedIndexedAttributedRow) {
@@ -55,22 +65,18 @@ class RowIteratorTest {
 
     @Test
     fun `should resolve AttributedRow from collection item and from custom items`() {
-        val resolver = BufferingRowContextResolver(
-            createTableBuilder<Product> {
-                columns { column(Product::code) }
-                rows {
-                    header("CODE")
-                    footer {
-                        cell {
-                            value = "footer"
-                        }
+        val wrapper = createDefaultIterator<Product> {
+            columns { column(Product::code) }
+            rows {
+                header("CODE")
+                footer {
+                    cell {
+                        value = "footer"
                     }
                 }
-            }.build(),
-            mutableMapOf()
-        )
-        val iterator = RowContextIterator(resolver, EnumStepProvider(DefaultSteps::class.java))
-        resolver.buffer(Product(
+            }
+        }
+        wrapper.resolver.buffer(Product(
             "code1",
             "name1",
             "description1",
@@ -78,10 +84,10 @@ class RowIteratorTest {
             LocalDate.now(),
             BigDecimal.TEN
         ))
-        val header = iterator.next()
-        val value = iterator.next()
-        val footer = iterator.next()
-        assertFalse(iterator.hasNext())
+        val header = wrapper.iterator.next()
+        val value = wrapper.iterator.next()
+        val footer = wrapper.iterator.next()
+        assertFalse(wrapper.iterator.hasNext())
         assertNotNull(header)
         assertEquals(0, header.rowIndex)
         with(header) {

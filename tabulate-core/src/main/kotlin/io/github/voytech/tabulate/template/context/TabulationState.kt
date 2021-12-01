@@ -8,16 +8,16 @@ import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
 import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
 
 /**
- * @author Wojciech Mąka
  * [TabulationState] keeps state separated from [TabulationTemplate] so that tabulate method invoked on [TabulationTemplate]
  * always starts with clear state from the beginning.
  * TabulationState manages following properties:
- * @property rowContextResolver - strategy for transforming current index, table model, and current record into [RowContextWithCells]
- * which is used then by rendering operations and delegate rendering context (e.g. third party API like Apache POI)
- * @property rowContextIterator - iterates over index and uses [RowContextResolver] in order to resolve [RowContextWithCells] for
- * current index.
- * @property stateAttributes - generic map of attributes that may be shared globally within operation implementors. It
- * is a shared property within [RowContextWithCells], [ColumnContext], [RowCellContext].
+ * @property rowContextResolver - strategy for transforming current index, table model, and current collection element
+ * into [RowContextWithCells] which is used then by rendering operations and delegate rendering context (e.g. third party API like Apache POI)
+ * @property rowContextIterator - iterates over elements and uses [RowContextResolver] in order to resolve [RowContextWithCells] for
+ * requested index.
+ * @property stateAttributes - generic map of attributes that may be shared globally within operation implementors.
+ * It is a property shared across: [RowContextWithCells], [ColumnContext], [RowCellContext].
+ * @author Wojciech Mąka
  */
 internal class TabulationState<T>(
     val tableModel: Table<T>,
@@ -29,14 +29,14 @@ internal class TabulationState<T>(
     private val stateAttributes = mutableMapOf<String, Any>()
     private val rowContextResolver: BufferingRowContextResolver<T> =
         BufferingRowContextResolver(tableModel, stateAttributes, rowCompletionListener)
-    private val rowContextIterator: RowContextIterator<T, AttributedRowWithCells<T>> =
-        RowContextIterator(rowContextResolver, EnumStepProvider(DefaultSteps::class.java))
+    private val rowContextIterator: RowContextIterator<T> =
+        RowContextIterator(rowContextResolver, EnumStepProvider(AdditionalSteps::class.java))
 
     init {
         stateAttributes["_tableId"] = tableName
     }
 
-    fun mark(label: DefaultSteps): RowIndex {
+    fun mark(label: AdditionalSteps): RowIndex {
         return rowContextIterator.mark(label.name)
     }
 

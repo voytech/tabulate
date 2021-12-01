@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.api.builder.dsl
 
 import io.github.voytech.tabulate.model.RowCellExpression
-import io.github.voytech.tabulate.template.context.DefaultSteps
+import io.github.voytech.tabulate.template.context.AdditionalSteps
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.reflect.KProperty1
@@ -74,15 +74,15 @@ fun <T> RowsBuilderApi<T>.rowNumberingOn(id: String) {
 }
 
 fun <T> RowsBuilderApi<T>.footer(block: RowBuilderApi<T>.() -> Unit) {
-    newRow(0, DefaultSteps.TRAILING_ROWS, block)
+    newRow(0, AdditionalSteps.TRAILING_ROWS, block)
 }
 
 fun <T> RowsBuilderApi<T>.trailingRow(block: RowBuilderApi<T>.() -> Unit) {
-    newRow(DefaultSteps.TRAILING_ROWS, block)
+    newRow(AdditionalSteps.TRAILING_ROWS, block)
 }
 
 fun <T> RowsBuilderApi<T>.trailingRow(index: Int, block: RowBuilderApi<T>.() -> Unit) {
-    newRow(index, DefaultSteps.TRAILING_ROWS, block)
+    newRow(index, AdditionalSteps.TRAILING_ROWS, block)
 }
 
 private fun <T, R> cellBuilderBlock(

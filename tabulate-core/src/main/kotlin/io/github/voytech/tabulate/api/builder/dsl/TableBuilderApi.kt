@@ -6,7 +6,7 @@ import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
 import io.github.voytech.tabulate.model.attributes.cell.cellType
-import io.github.voytech.tabulate.template.context.DefaultSteps
+import io.github.voytech.tabulate.template.context.AdditionalSteps
 import kotlin.reflect.KProperty1
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellType as TypeHint
 
@@ -224,7 +224,7 @@ class RowPredicateBuilderApi<T> {
     fun header(): RowPredicate<T> = eq(0)
 
     @JvmSynthetic
-    fun footer(): RowPredicate<T> = eq(0, DefaultSteps.TRAILING_ROWS)
+    fun footer(): RowPredicate<T> = eq(0, AdditionalSteps.TRAILING_ROWS)
 
     @JvmSynthetic
     fun record(listIndex: Int): RowPredicate<T> = RowPredicates.record(listIndex)
@@ -273,7 +273,7 @@ class RowIndexPredicateBuilderApi {
     fun header(): OperatorBasedIndexPredicateLiteral = eq(0)
 
     @JvmSynthetic
-    fun footer(): OperatorBasedIndexPredicateLiteral = eq(0, DefaultSteps.TRAILING_ROWS)
+    fun footer(): OperatorBasedIndexPredicateLiteral = eq(0, AdditionalSteps.TRAILING_ROWS)
 
 }
 
