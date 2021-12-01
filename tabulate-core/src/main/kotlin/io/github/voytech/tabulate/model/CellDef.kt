@@ -8,25 +8,28 @@ import io.github.voytech.tabulate.template.operations.CellValue
  */
 internal enum class CollidingRowSpanStrategy(private val priority: Int) {
     /**
-     When row span causes row to overlay downstream rows, downstream row values are not rendered, but skipped.
+     When row span causes row to collide with downstream rows, downstream rows are rendered normally excluding cells which
+     have been shadowed by corresponding (same column) upstream row cells row span values.
      WARNING: That behaviour is lossy.
-     This strategy has lowest possible priority.
+     This strategy has lowest possible priority, and is set to be default strategy.
      */
     SHADOW(1),
     /**
-     When row span causes row to overlay downstream rows, then all custom rows definitions are shifted down by row span value.
+     When row span causes row to collide with downstream rows, then all custom rows definitions are pushed down by row span value.
      Also next row index to be requested by iterator is advanced by the value of row span.
      This strategy takes precedence over SHADOW and SKIP strategy.
      */
     PUSHBACK(3),
     /**
-     When row span causes row to overlay downstream rows, then none of downstream custom rows definitions are shifted.
-     Only next row index to be requested by iterator is advanced by the value of row span.
+     When row span causes row to collide with downstream rows, then none of downstream row definitions are pushed down.
+     Only next row index to be requested by iterator is advanced by the value of row span, which means that all colliding
+     downstream rows will be skipped.
+     WARNING: That behaviour is lossy.
      This strategy takes precedence over SHADOW strategy.
      */
     SKIP(2),
     /**
-     When row span causes row to overlay downstream rows, then an exception is thrown.
+     When row span causes row to collide with downstream rows, then an exception is thrown.
      This strategy has HIGHEST priority which means that no matter what different strategy will be set on other cell in the row,
      exception will be thrown eventually.
      */
@@ -34,7 +37,7 @@ internal enum class CollidingRowSpanStrategy(private val priority: Int) {
 }
 
 /**
- * Defines single cell exposing specific property of a data-set record being rendered. Contains cell value which may be
+ * Defines single cell exposing specific property of exported ]collection element. Contains cell value which may be
  * evaluated in several ways:
  * - by evaluating property getter function on processed object (row)
  * - by evaluating expression [RowCellExpression]
@@ -48,17 +51,17 @@ internal data class CellDef<T> internal constructor(
     @get:JvmSynthetic
     val value: Any?,
     /**
-     * Expression (late value evaluation) to be used when rendering cell.
+     * Expression (late evaluation) to be used when rendering cell.
      */
     @get:JvmSynthetic
     val expression: RowCellExpression<T>?,
     /**
-     * Defines how many columns will be occupied for specific cell.
+     * Defines how many columns will be occupied for particular cell.
      */
     @get:JvmSynthetic
     val colSpan: Int = 1,
     /**
-     * Defines how many rows must will be occupied for specific cell.
+     * Defines how many rows must will be occupied for particular cell.
      */
     @get:JvmSynthetic
     val rowSpan: Int = 1,
@@ -66,9 +69,9 @@ internal data class CellDef<T> internal constructor(
      * Defines strategy to be used when resolving downstream rows, when row span conflicts are detected.
      */
     @get:JvmSynthetic
-    val rowSpanMode: CollidingRowSpanStrategy = CollidingRowSpanStrategy.THROW,
+    val rowSpanMode: CollidingRowSpanStrategy = CollidingRowSpanStrategy.SHADOW,
     /**
-     * Aggregates set of [CellAttribute] that enable customization of table cell appearance
+     * Set of [CellAttribute] instances that enable customization of table cell appearance
      */
     @get:JvmSynthetic
     val cellAttributes: Set<CellAttribute>?

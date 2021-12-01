@@ -2,14 +2,17 @@ package io.github.voytech.tabulate.model
 
 import kotlin.reflect.KProperty1
 
-fun interface RowCellExpression<T> {
-    fun evaluate(context: SourceRow<T>): Any?
-}
-
+/**
+ * Defines property "literal" based column key.
+ */
 fun interface PropertyReferenceColumnKey<T> {
     fun getPropertyValue(record: T) : Any?
 }
 
+/**
+ * Internal property literal cache.
+ * TODO This cache should be passed into context of tabulation rather than static one.
+ */
 private object PropertyReferencesCache {
 
     private val CACHE: MutableMap<Any, PropertyReferenceColumnKey<*>> by lazy { mutableMapOf() }
@@ -38,11 +41,18 @@ fun <T> KProperty1<T, Any?>.id() : PropertyReferenceColumnKey<T> {
     return PropertyReferencesCache.cached(this)
 }
 
+/**
+ * Kotlin [KProperty1] based property literal
+ */
 @JvmInline
 value class PropertyLiteralColumnKey<T>(private val propertyLiteral: KProperty1<T, Any?>) : PropertyReferenceColumnKey<T> {
     override fun getPropertyValue(record: T): Any? = propertyLiteral(record)
 }
 
+/**
+ * Java [java.util.function.Function] based property literal. Should be used by passing getter method reference as function,
+ * and unique id to make this key referencable from cell definition.
+ */
 class NamedPropertyReferenceColumnKey<T>(
     private val key: String,
     private val reference: java.util.function.Function<T, Any?>

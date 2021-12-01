@@ -3,22 +3,22 @@ package io.github.voytech.tabulate.model
 import io.github.voytech.tabulate.template.context.RowIndex
 
 /**
- * This class wraps dataset record for further row context evaluation.
- * It adds extra information for context resolving:
- *  - current row index increment value
- *  - index of an dataset entry
- *  Raw dataset record and index information is then used by row predicates in order to figure out what row definitions
- *  should be applied and when.
+ * Wraps collection element for further row context evaluation.
+ * It adds extra information for row context resolving:
+ *  - current row index value,
+ *  - index of a collection element,
+ *  - collection item
+ *  Collection item and index information is then used by row predicates in order to match all table row definitions.
  *
  * @author Wojciech Mąka
  */
 data class SourceRow<T> (
     /**
-     * index of a row in entire table (including synthetic rows).
+     * index of a row in table (including both: custom and collection sourced rows).
      */
     val rowIndex: RowIndex,
     /**
-     * Index of an object within dataset.
+     * Index of an element within collection.
      */
     val objectIndex: Int? = null,
     /**

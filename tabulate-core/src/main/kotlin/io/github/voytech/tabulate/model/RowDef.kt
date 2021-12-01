@@ -11,10 +11,11 @@ import io.github.voytech.tabulate.template.operations.CellValue
  */
 internal data class RowDef<T> internal constructor(
     /**
-     * Given [SourceRow] qualifies specific row definition for row context resolving.
+     * Takes [SourceRow] instance and tests it against row definition qualification rules (within [RowQualifier]).
+     *
      * When row definition is matched for specific [SourceRow] then:
-     * - all its row attributes as well as cell attributes are used to build row context for renderer.
-     * - all custom cells are merged with other custom cells from other row definitions matching specific [SourceRow].
+     * - all its row attributes as well as cell attributes are used to build row context for row rendering/exporting.
+     * - all custom cells are merged with other custom cells from other row definitions matching this particular [SourceRow].
      */
     @get:JvmSynthetic
     internal val qualifier: RowQualifier<T>,
@@ -93,6 +94,10 @@ data class RowQualifier<T>(
         fun <T> index(predicateLiteral: RowIndexPredicateLiteral<T>): RowQualifier<T> =
             RowQualifier(index = predicateLiteral)
     }
+}
+
+fun interface RowCellExpression<T> {
+    fun evaluate(context: SourceRow<T>): Any?
 }
 
 internal fun <T> Map<ColumnKey<T>, CellDef<T>>?.resolveCellValue(
