@@ -9,11 +9,11 @@ import io.github.voytech.tabulate.model.attributes.TableAttribute
 import io.github.voytech.tabulate.template.context.RenderingContext
 
 @Suppress("UNCHECKED_CAST")
-internal class AttributeDelegatingExportOperations<T, CTX: RenderingContext>(
+internal class AttributeDispatchingTableOperations<T, CTX: RenderingContext>(
     private val attributeOperationsContainer: AttributesOperationsContainer<CTX, T>,
-    private val exposedExportOperations: ExposedContextExportOperations<T,CTX>,
+    private val exposedExportOperations: TableExportOperations<T,CTX>,
     private val enableAttributeSetCaching: Boolean = true
-) : TableExportOperations<T,CTX>  {
+) : AttributedContextExportOperations<T,CTX>  {
 
     inner class SortedTableAttributeSetTransformer: AttributeSetTransformer<TableAttribute<*>> {
         override fun transform(input: Set<TableAttribute<*>>): Set<TableAttribute<*>> =

@@ -70,7 +70,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
     private val provider: ExportOperationsProvider<RenderingContext,T> by lazy { resolveExportOperationsFactory(format) }
 
-    private val ops: TableExportOperations<T,RenderingContext> by lazy { provider.createExportOperations() }
+    private val ops: AttributedContextExportOperations<T,RenderingContext> by lazy { provider.createExportOperations() }
 
     private val resultProviders: List<ResultProvider<RenderingContext,*>> by lazy { provider.createResultProviders() }
 
@@ -113,8 +113,8 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
     @Suppress("UNCHECKED_CAST")
     private fun detectAttributeTransformers(): AttributeTransformerContainer? {
-        if (ops is AttributeDelegatingExportOperations<T, out RenderingContext>) {
-            return (ops as AttributeDelegatingExportOperations<T, out RenderingContext>).createAttributeTransformerContainer()
+        if (ops is AttributeDispatchingTableOperations<T, out RenderingContext>) {
+            return (ops as AttributeDispatchingTableOperations<T, out RenderingContext>).createAttributeTransformerContainer()
         }
         return null
     }

@@ -1,7 +1,6 @@
 package io.github.voytech.tabulate.excel.template
 
 import io.github.voytech.tabulate.excel.model.ExcelTypeHints
-import io.github.voytech.tabulate.excel.template.ApachePoiRenderingContext
 import io.github.voytech.tabulate.excel.template.Utils.toDate
 import io.github.voytech.tabulate.model.attributes.cell.CellAlignmentAttribute
 import io.github.voytech.tabulate.model.attributes.cell.CellBackgroundAttribute
@@ -30,8 +29,8 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
     override fun createRenderingContext(): ApachePoiRenderingContext = ApachePoiRenderingContext()
 
-    override fun provideExportOperations(): ExposedContextExportOperations<T, ApachePoiRenderingContext> =
-        object : ExposedContextExportOperations<T, ApachePoiRenderingContext> {
+    override fun provideExportOperations(): TableExportOperations<T, ApachePoiRenderingContext> =
+        object : TableExportOperations<T, ApachePoiRenderingContext> {
 
             override fun createTable(renderingContext: ApachePoiRenderingContext, context: TableContext) {
                 renderingContext.createWorkbook()

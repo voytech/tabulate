@@ -6,7 +6,7 @@ import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.util.*
 
-interface TableExportOperations<T, CTX: RenderingContext> {
+interface AttributedContextExportOperations<T, CTX: RenderingContext> {
     fun createTable(renderingContext: CTX, context: AttributedTable)
     fun renderColumn(renderingContext: CTX, context: AttributedColumn) {}
     fun beginRow(renderingContext: CTX, context: AttributedRow<T>) {}
@@ -14,7 +14,7 @@ interface TableExportOperations<T, CTX: RenderingContext> {
     fun endRow(renderingContext: CTX, context: AttributedRowWithCells<T>) {}
 }
 
-interface ExposedContextExportOperations<T, CTX: RenderingContext> {
+interface TableExportOperations<T, CTX: RenderingContext> {
     fun createTable(renderingContext: CTX, context: TableContext) {}
     fun renderColumn(renderingContext: CTX, context: ColumnContext) {}
     fun beginRow(renderingContext: CTX, context: RowContext<T>) {}
@@ -28,14 +28,14 @@ abstract class ExportOperationsConfiguringFactory<T, CTX : RenderingContext> : E
         registerAttributesOperations()
     }
 
-    protected abstract fun provideExportOperations(): ExposedContextExportOperations<T, CTX>
+    protected abstract fun provideExportOperations(): TableExportOperations<T, CTX>
 
     abstract override fun createResultProviders(): List<ResultProvider<CTX,*>>
 
     protected open fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<CTX, T>? = null
 
-    final override fun createExportOperations(): TableExportOperations<T, CTX> =
-        AttributeDelegatingExportOperations(attributeOperationsContainer, provideExportOperations())
+    final override fun createExportOperations(): AttributedContextExportOperations<T, CTX> =
+        AttributeDispatchingTableOperations(attributeOperationsContainer, provideExportOperations())
 
     private fun registerAttributesOperations(
         attributeOperationsContainer: AttributesOperationsContainer<CTX, T>,

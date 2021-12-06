@@ -24,7 +24,7 @@ class TestExportOperationsFactory<T>: ExportOperationsProvider<TestRenderingCont
 
     override fun supportsFormat() = format("test")
 
-    override fun createExportOperations(): TableExportOperations<T,TestRenderingContext> = object: TableExportOperations<T,TestRenderingContext> {
+    override fun createExportOperations(): AttributedContextExportOperations<T,TestRenderingContext> = object: AttributedContextExportOperations<T,TestRenderingContext> {
 
         override fun renderColumn(renderingContext: TestRenderingContext, context: AttributedColumn) {
             columnTest?.test(context)
@@ -78,7 +78,7 @@ class CompetingTestExportOperationsFactory<T>: ExportOperationsConfiguringFactor
 
     override fun supportsFormat() = format("test-2")
 
-    override fun provideExportOperations(): ExposedContextExportOperations<T, ExampleContext> = object: ExposedContextExportOperations<T, ExampleContext> {
+    override fun provideExportOperations(): TableExportOperations<T, ExampleContext> = object: TableExportOperations<T, ExampleContext> {
         override fun renderRowCell(renderingContext: ExampleContext, context: RowCellContext) {
             println("cell context: $context")
         }
