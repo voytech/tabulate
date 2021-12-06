@@ -5,36 +5,37 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
+import io.github.voytech.tabulate.template.context.RenderingContext
 import java.util.logging.Logger
 
 @Suppress("UNCHECKED_CAST")
-internal class AttributesOperationsContainer<T> {
+internal class AttributesOperationsContainer<CTX: RenderingContext, T> {
 
-    private val tableAttributeRenderOperationsByClass: MutableMap<Class<out TableAttribute>, TableAttributeRenderOperation<out TableAttribute>> = mutableMapOf()
+    private val tableAttributeRenderOperationsByClass: MutableMap<Class<out TableAttribute>, TableAttributeRenderOperation<CTX, out TableAttribute>> = mutableMapOf()
 
-    private val columnAttributeRenderOperationsByClass: MutableMap<Class<out ColumnAttribute>, ColumnAttributeRenderOperation<out ColumnAttribute>> = mutableMapOf()
+    private val columnAttributeRenderOperationsByClass: MutableMap<Class<out ColumnAttribute>, ColumnAttributeRenderOperation<CTX, out ColumnAttribute>> = mutableMapOf()
 
-    private val rowAttributeRenderOperationsByClass: MutableMap<Class<out RowAttribute>, RowAttributeRenderOperation<T,out RowAttribute>> = mutableMapOf()
+    private val rowAttributeRenderOperationsByClass: MutableMap<Class<out RowAttribute>, RowAttributeRenderOperation<CTX, T,out RowAttribute>> = mutableMapOf()
 
-    private val cellAttributeRenderOperationsByClass: MutableMap<Class<out CellAttribute>, CellAttributeRenderOperation<out CellAttribute>> = mutableMapOf()
+    private val cellAttributeRenderOperationsByClass: MutableMap<Class<out CellAttribute>, CellAttributeRenderOperation<CTX, out CellAttribute>> = mutableMapOf()
 
-    fun getCellAttributeOperation(clazz: Class<out CellAttribute>): CellAttributeRenderOperation<CellAttribute>? =
-        (cellAttributeRenderOperationsByClass[clazz] as CellAttributeRenderOperation<CellAttribute>?).also {
+    fun getCellAttributeOperation(clazz: Class<out CellAttribute>): CellAttributeRenderOperation<CTX, CellAttribute>? =
+        (cellAttributeRenderOperationsByClass[clazz] as CellAttributeRenderOperation<CTX, CellAttribute>?).also {
             warnNoOperation(it, clazz)
         }
 
-    fun getRowAttributeOperation(clazz: Class<out RowAttribute>): RowAttributeRenderOperation<T, RowAttribute>? =
-        (rowAttributeRenderOperationsByClass[clazz] as RowAttributeRenderOperation<T, RowAttribute>?).also {
+    fun getRowAttributeOperation(clazz: Class<out RowAttribute>): RowAttributeRenderOperation<CTX, T, RowAttribute>? =
+        (rowAttributeRenderOperationsByClass[clazz] as RowAttributeRenderOperation<CTX, T, RowAttribute>?).also {
             warnNoOperation(it, clazz)
         }
 
-    fun getColumnAttributeOperation(clazz: Class<out ColumnAttribute>): ColumnAttributeRenderOperation<ColumnAttribute>? =
-        (columnAttributeRenderOperationsByClass[clazz] as ColumnAttributeRenderOperation<ColumnAttribute>?).also {
+    fun getColumnAttributeOperation(clazz: Class<out ColumnAttribute>): ColumnAttributeRenderOperation<CTX, ColumnAttribute>? =
+        (columnAttributeRenderOperationsByClass[clazz] as ColumnAttributeRenderOperation<CTX, ColumnAttribute>?).also {
             warnNoOperation(it, clazz)
         }
 
-    fun getTableAttributeOperation(clazz: Class<out TableAttribute>): TableAttributeRenderOperation<TableAttribute>? =
-        (tableAttributeRenderOperationsByClass[clazz] as TableAttributeRenderOperation<TableAttribute>?).also {
+    fun getTableAttributeOperation(clazz: Class<out TableAttribute>): TableAttributeRenderOperation<CTX, TableAttribute>? =
+        (tableAttributeRenderOperationsByClass[clazz] as TableAttributeRenderOperation<CTX, TableAttribute>?).also {
             warnNoOperation(it, clazz)
         }
 
@@ -42,23 +43,23 @@ internal class AttributesOperationsContainer<T> {
         if (operation == null) logger.warning("No attribute render operation for class: ${clazz.name} !")
     }
 
-    private fun register(operation: CellAttributeRenderOperation<out CellAttribute>) {
+    private fun register(operation: CellAttributeRenderOperation<CTX, out CellAttribute>) {
         cellAttributeRenderOperationsByClass[operation.attributeType()] = operation
     }
 
-    private fun register(operation: RowAttributeRenderOperation<T,out RowAttribute>) {
+    private fun register(operation: RowAttributeRenderOperation<CTX, T,out RowAttribute>) {
         rowAttributeRenderOperationsByClass[operation.attributeType()] = operation
     }
 
-    private fun register(operation: ColumnAttributeRenderOperation<out ColumnAttribute>) {
+    private fun register(operation: ColumnAttributeRenderOperation<CTX, out ColumnAttribute>) {
         columnAttributeRenderOperationsByClass[operation.attributeType()] = operation
     }
 
-    private fun register(operation: TableAttributeRenderOperation<out TableAttribute>) {
+    private fun register(operation: TableAttributeRenderOperation<CTX, out TableAttribute>) {
         tableAttributeRenderOperationsByClass[operation.attributeType()] = operation
     }
 
-    internal fun registerAttributesOperations(factory: AttributeRenderOperationsFactory<T>): AttributesOperationsContainer<T> {
+    internal fun registerAttributesOperations(factory: AttributeRenderOperationsFactory<CTX, T>): AttributesOperationsContainer<CTX, T> {
         factory.createCellAttributeRenderOperations()?.forEach { register(it) }
         factory.createTableAttributeRenderOperations()?.forEach { register(it) }
         factory.createRowAttributeRenderOperations()?.forEach { register(it) }

@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.excel.model.ExcelBorderStyle
 import io.github.voytech.tabulate.excel.model.ExcelCellFills
 import io.github.voytech.tabulate.excel.model.ExcelTypeHints
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
-import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
+import io.github.voytech.tabulate.excel.template.ApachePoiRenderingContext
 import io.github.voytech.tabulate.excel.template.poi.ApachePoiUtils
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.cell.*

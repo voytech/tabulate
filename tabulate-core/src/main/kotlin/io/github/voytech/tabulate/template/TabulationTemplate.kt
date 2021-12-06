@@ -68,24 +68,24 @@ interface TabulationApi<T, O> {
  */
 class TabulationTemplate<T>(private val format: TabulationFormat) {
 
-    private val provider: ExportOperationsProvider<T> by lazy { resolveExportOperationsFactory(format) }
+    private val provider: ExportOperationsProvider<RenderingContext,T> by lazy { resolveExportOperationsFactory(format) }
 
-    private val ops: TableExportOperations<T> by lazy { provider.createExportOperations() }
+    private val ops: TableExportOperations<T,RenderingContext> by lazy { provider.createExportOperations() }
 
-    private val resultProviders: List<ResultProvider<*>> by lazy { provider.createResultProviders() }
+    private val resultProviders: List<ResultProvider<RenderingContext,*>> by lazy { provider.createResultProviders() }
 
     private inner class TabulationApiImpl<O>(
         private val state: TabulationState<T>,
         private val output: O
     ) : TabulationApi<T, O> {
 
-        private val resultProvider: ResultProvider<O> by lazy {
+        private val resultProvider: ResultProvider<RenderingContext,O> by lazy {
             resolveResultProvider(output)
         }
 
         init {
-            resultProvider.setOutput(output)
-            ops.createTable(state.tableModel.createContext(state.getCustomAttributes()))
+            resultProvider.setOutput(state.renderingContext, output)
+            ops.createTable(state.renderingContext, state.tableModel.createContext(state.getCustomAttributes()))
             renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
         }
 
@@ -101,40 +101,36 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         }
     }
 
-    private inner class RowCompletionListenerImpl : RowCompletionListener<T> {
+    private inner class RowCompletionListenerImpl(private val renderingContext: RenderingContext) : RowCompletionListener<T> {
 
-        override fun onAttributedRowResolved(row: AttributedRow<T>) = ops.beginRow(row)
+        override fun onAttributedRowResolved(row: AttributedRow<T>) = ops.beginRow(renderingContext, row)
 
-        override fun onAttributedCellResolved(cell: AttributedCell)  = ops.renderRowCell(cell)
+        override fun onAttributedCellResolved(cell: AttributedCell)  = ops.renderRowCell(renderingContext, cell)
 
-        override fun onAttributedRowResolved(row: AttributedRowWithCells<T>) = ops.endRow(row)
+        override fun onAttributedRowResolved(row: AttributedRowWithCells<T>) = ops.endRow(renderingContext, row)
 
     }
 
     @Suppress("UNCHECKED_CAST")
     private fun detectAttributeTransformers(): AttributeTransformerContainer? {
-        if (ops is AttributeDelegatingExportOperations<T>) {
-            return (ops as AttributeDelegatingExportOperations<T>).createAttributeTransformerContainer()
+        if (ops is AttributeDelegatingExportOperations<T, out RenderingContext>) {
+            return (ops as AttributeDelegatingExportOperations<T, out RenderingContext>).createAttributeTransformerContainer()
         }
         return null
     }
 
     private fun materialize(tableBuilderState: TableBuilderState<T>): TabulationState<T> {
         return tableBuilderState.build(detectAttributeTransformers()).let { table ->
-            TabulationState(
-                tableModel = table,
-                tableName = table.name,
-                firstRow = table.firstRow,
-                firstColumn = table.firstColumn,
-                rowCompletionListener = RowCompletionListenerImpl()
-            )
+            provider.createRenderingContext().let { renderingContext ->
+                TabulationState(renderingContext, table, RowCompletionListenerImpl(renderingContext))
+            }
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun resolveExportOperationsFactory(format: TabulationFormat): ExportOperationsProvider<T> {
+    private fun resolveExportOperationsFactory(format: TabulationFormat): ExportOperationsProvider<RenderingContext, T> {
         return ServiceLoader.load(ExportOperationsProvider::class.java)
-            .filterIsInstance<ExportOperationsProvider<T>>().find {
+            .filterIsInstance<ExportOperationsProvider<RenderingContext,T>>().find {
                 if (format.provider.isNullOrBlank()) {
                     format.id == it.supportsFormat().id
                 } else {
@@ -144,10 +140,10 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <O> resolveResultProvider(output: O): ResultProvider<O> =
+    private fun <O> resolveResultProvider(output: O): ResultProvider<RenderingContext, O> =
         resultProviders.filter {
             it.outputClass().isAssignableFrom(output!!::class.java)
-        }.map { it as ResultProvider<O> }
+        }.map { it as ResultProvider<RenderingContext, O> }
             .firstOrNull() ?: throw ResultProviderResolvingException()
 
     /**
@@ -227,7 +223,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
     private fun renderColumns(state: TabulationState<T>, renderPhase: ColumnRenderPhase) {
         state.tableModel.forEachColumn { columnIndex: Int, column: ColumnDef<T> ->
-            ops.renderColumn(
+            ops.renderColumn(state.renderingContext,
                 createAttributedColumn(
                     state.tableModel.getColumnIndex(column.index ?: columnIndex),
                     renderPhase,

@@ -20,36 +20,36 @@ fun interface AttributedColumnTest {
     fun test(context: AttributedColumn)
 }
 
-class TestExportOperationsFactory<T>: ExportOperationsProvider<T> {
+class TestExportOperationsFactory<T>: ExportOperationsProvider<TestRenderingContext,T> {
 
     override fun supportsFormat() = format("test")
 
-    override fun createExportOperations(): TableExportOperations<T> = object: TableExportOperations<T> {
+    override fun createExportOperations(): TableExportOperations<T,TestRenderingContext> = object: TableExportOperations<T,TestRenderingContext> {
 
-        override fun renderColumn(context: AttributedColumn) {
+        override fun renderColumn(renderingContext: TestRenderingContext, context: AttributedColumn) {
             columnTest?.test(context)
         }
 
-        override fun renderRowCell(context: AttributedCell) {
+        override fun renderRowCell(renderingContext: TestRenderingContext, context: AttributedCell) {
             cellTest?.test(context)
         }
 
-        override fun beginRow(context: AttributedRow<T>) {
+        override fun beginRow(renderingContext: TestRenderingContext, context: AttributedRow<T>) {
             println("begin row: $context")
         }
 
-        override fun endRow(context: AttributedRowWithCells<T>) {
+        override fun endRow(renderingContext: TestRenderingContext, context: AttributedRowWithCells<T>) {
             rowTest?.test(context)
         }
 
-        override fun createTable(context: AttributedTable) {
+        override fun createTable(renderingContext: TestRenderingContext, context: AttributedTable) {
             println("table context: $context")
         }
 
     }
 
-    override fun createResultProviders(): List<ResultProvider<*>> = listOf(
-        NoResultProvider(), OutputStreamTestResultProvider()
+    override fun createResultProviders(): List<ResultProvider<TestRenderingContext,*>> = listOf(
+        TestResultProvider(), OutputStreamTestResultProvider()
     )
 
 
@@ -68,24 +68,30 @@ class TestExportOperationsFactory<T>: ExportOperationsProvider<T> {
         }
     }
 
+    override fun getContextClass(): Class<TestRenderingContext> = TestRenderingContext::class.java
+
+    override fun createRenderingContext(): TestRenderingContext = TestRenderingContext()
+
 }
 
 class CompetingTestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, ExampleContext>() {
 
     override fun supportsFormat() = format("test-2")
 
-    override fun createExportOperations(renderingContext: ExampleContext): ExposedContextExportOperations<T> = object: ExposedContextExportOperations<T> {
-        override fun renderRowCell(context: RowCellContext) {
+    override fun provideExportOperations(): ExposedContextExportOperations<T, ExampleContext> = object: ExposedContextExportOperations<T, ExampleContext> {
+        override fun renderRowCell(renderingContext: ExampleContext, context: RowCellContext) {
             println("cell context: $context")
         }
 
-        override fun createTable(context: TableContext) {
+        override fun createTable(renderingContext: ExampleContext, context: TableContext) {
             println("table context: $context")
         }
     }
 
     override fun createRenderingContext(): ExampleContext = ExampleContext()
 
-    override fun createResultProviders(renderingContext: ExampleContext): List<ResultProvider<*>> = listOf(NoResultProvider())
+    override fun getContextClass(): Class<ExampleContext> = ExampleContext::class.java
+
+    override fun createResultProviders(): List<ResultProvider<ExampleContext,*>> = listOf(Test2ResultProvider())
 
 }
