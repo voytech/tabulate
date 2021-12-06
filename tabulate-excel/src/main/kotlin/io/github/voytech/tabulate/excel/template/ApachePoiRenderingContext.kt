@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.excel.template.poi
+package io.github.voytech.tabulate.excel.template
 
 import io.github.voytech.tabulate.model.attributes.cell.Color
 import io.github.voytech.tabulate.template.context.RenderingContext
@@ -19,9 +19,9 @@ import java.io.FileInputStream
 import java.io.InputStream
 import java.io.OutputStream
 
-class ApachePoiOutputStreamResultProvider(private val context: ApachePoiRenderingContext) : OutputStreamResultProvider() {
+class ApachePoiOutputStreamResultProvider : OutputStreamResultProvider<ApachePoiRenderingContext>() {
     override fun flush(output: OutputStream) {
-        with(context.workbook()) {
+        with(renderingContext.workbook()) {
             write(output)
             close()
             output.close()

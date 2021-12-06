@@ -4,9 +4,9 @@ import io.github.voytech.tabulate.template.result.ResultProvider
 import java.io.OutputStream
 import java.util.logging.Logger
 
-class OutputStreamTestResultProvider: ResultProvider<OutputStream> {
+class OutputStreamTestResultProvider: ResultProvider<TestRenderingContext, OutputStream> {
     override fun outputClass() = OutputStream::class.java
-    override fun setOutput(output: OutputStream) {
+    override fun setOutput(renderingContext: TestRenderingContext,output: OutputStream) {
         logger.info("This is fake implementation of ResultProvider flushing results into OutputStream")
     }
 

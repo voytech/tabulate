@@ -6,13 +6,14 @@ import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
 import io.github.voytech.tabulate.model.attributes.TableAttribute
+import io.github.voytech.tabulate.template.context.RenderingContext
 
 @Suppress("UNCHECKED_CAST")
-internal class AttributeDelegatingExportOperations<T>(
-    private val attributeOperationsContainer: AttributesOperationsContainer<T>,
-    private val exposedExportOperations: ExposedContextExportOperations<T>,
+internal class AttributeDelegatingExportOperations<T, CTX: RenderingContext>(
+    private val attributeOperationsContainer: AttributesOperationsContainer<CTX, T>,
+    private val exposedExportOperations: ExposedContextExportOperations<T,CTX>,
     private val enableAttributeSetCaching: Boolean = true
-) : TableExportOperations<T>  {
+) : TableExportOperations<T,CTX>  {
 
     inner class SortedTableAttributeSetTransformer: AttributeSetTransformer<TableAttribute<*>> {
         override fun transform(input: Set<TableAttribute<*>>): Set<TableAttribute<*>> =
@@ -50,48 +51,48 @@ internal class AttributeDelegatingExportOperations<T>(
         }
     }
 
-    override fun createTable(context: AttributedTable) {
+    override fun createTable(renderingContext: CTX, context: AttributedTable) {
         with(context.crop()) {
-            return exposedExportOperations.createTable(this).also {
+            return exposedExportOperations.createTable(renderingContext, this).also {
                 context.attributes?.forEach { tableAttribute ->
-                    attributeOperationsContainer.getTableAttributeOperation(tableAttribute.javaClass)?.renderAttribute(this, tableAttribute)
+                    attributeOperationsContainer.getTableAttributeOperation(tableAttribute.javaClass)?.renderAttribute(renderingContext, this, tableAttribute)
                 }
             }
         }
     }
 
-    override fun beginRow(context: AttributedRow<T>) {
+    override fun beginRow(renderingContext: CTX,context: AttributedRow<T>) {
         with(context.crop()) {
             var operationRendered = false
             if (!context.attributes.isNullOrEmpty()) {
                 context.attributes?.forEach { attribute ->
                     attributeOperationsContainer.getRowAttributeOperation(attribute.javaClass)?.let { operation ->
                         if (operation.priority() >= 0 && !operationRendered) {
-                            exposedExportOperations.beginRow(this)
+                            exposedExportOperations.beginRow(renderingContext, this)
                             operationRendered = true
                         }
-                        operation.renderAttribute(this, attribute)
+                        operation.renderAttribute(renderingContext, this, attribute)
                     }
                 }
             }
             if (!operationRendered) {
-                exposedExportOperations.beginRow(this)
+                exposedExportOperations.beginRow(renderingContext, this)
             }
         }
     }
 
-    override fun renderColumn(context: AttributedColumn) {
+    override fun renderColumn(renderingContext: CTX,context: AttributedColumn) {
         with(context.crop()) {
             context.attributes?.let { attributes ->
                 attributes.forEach { attribute ->
                     attributeOperationsContainer.getColumnAttributeOperation(attribute.javaClass)
-                        ?.renderAttribute(this, attribute)
+                        ?.renderAttribute(renderingContext, this, attribute)
                 }
             }
         }
     }
 
-    override fun renderRowCell(context: AttributedCell) {
+    override fun renderRowCell(renderingContext: CTX,context: AttributedCell) {
         if (enableAttributeSetCaching) context.ensureAttributesCacheEntry()
         with(context.crop()) {
             var operationRendered = false
@@ -99,21 +100,21 @@ internal class AttributeDelegatingExportOperations<T>(
                 context.attributes.forEach { attribute ->
                     attributeOperationsContainer.getCellAttributeOperation(attribute.javaClass)?.let { operation ->
                         if (operation.priority() >= 0 && !operationRendered) {
-                            exposedExportOperations.renderRowCell(this)
+                            exposedExportOperations.renderRowCell(renderingContext, this)
                             operationRendered = true
                         }
-                        operation.renderAttribute(this, attribute)
+                        operation.renderAttribute(renderingContext, this, attribute)
                     }
                 }
             }
             if (!operationRendered){
-                exposedExportOperations.renderRowCell(this)
+                exposedExportOperations.renderRowCell(renderingContext, this)
             }
         }
     }
 
-    override fun endRow(context: AttributedRowWithCells<T>) {
-        exposedExportOperations.endRow(context.crop())
+    override fun endRow(renderingContext: CTX,context: AttributedRowWithCells<T>) {
+        exposedExportOperations.endRow(renderingContext, context.crop())
     }
 
 }

@@ -20,10 +20,8 @@ import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
  * @author Wojciech Mąka
  */
 internal class TabulationState<T>(
+    val renderingContext: RenderingContext,
     val tableModel: Table<T>,
-    val tableName: String = "untitled table",
-    val firstRow: Int? = 0,
-    val firstColumn: Int? = 0,
     var rowCompletionListener: RowCompletionListener<T>? = null,
 ) {
     private val stateAttributes = mutableMapOf<String, Any>()
@@ -33,7 +31,7 @@ internal class TabulationState<T>(
         RowContextIterator(rowContextResolver, EnumStepProvider(AdditionalSteps::class.java))
 
     init {
-        stateAttributes["_tableId"] = tableName
+        stateAttributes["_tableId"] = tableModel.name
     }
 
     fun mark(label: AdditionalSteps): RowIndex {

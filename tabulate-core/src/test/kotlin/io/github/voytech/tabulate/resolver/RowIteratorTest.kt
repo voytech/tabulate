@@ -11,6 +11,7 @@ import io.github.voytech.tabulate.template.iterators.EnumStepProvider
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
 import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -61,6 +62,72 @@ class RowIteratorTest {
         with(resolvedIndexedAttributedRow) {
             assertEquals("CustomProductCode",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
         }
+    }
+
+    @Test
+    fun `should resolve AttributedRow from custom items when columns are scattered`() {
+        val wrapper = createDefaultIterator<Product> {
+            columns {
+                column("c0") { index = 0 }
+                column("c2") { index = 2 }
+                column("c4") { index = 4 }
+            }
+            rows {
+                newRow {
+                    cell { value = "R0C0" }
+                    cell(2) { value = "R0C2" }
+                    cell(4) { value = "R0C4" }
+                }
+                newRow {
+                    cell { value = "R1C0" }
+                    cell(2) { value = "R1C2" }
+                    cell(4) { value = "R1C4" }
+                }
+            }
+        }
+        val firstRow = wrapper.iterator.next()
+        val secondRow = wrapper.iterator.next()
+        assertNotNull(firstRow)
+        assertNotNull(secondRow)
+        with(firstRow) {
+            assertEquals("R0C0",rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals(0,rowCellValues[ColumnKey("c0")]!!.columnIndex)
+            assertEquals("R0C2",rowCellValues[ColumnKey("c2")]!!.value.value)
+            assertEquals(2,rowCellValues[ColumnKey("c2")]!!.columnIndex)
+            assertEquals("R0C4",rowCellValues[ColumnKey("c4")]!!.value.value)
+            assertEquals(4,rowCellValues[ColumnKey("c4")]!!.columnIndex)
+        }
+        with(secondRow) {
+            assertEquals("R1C0",rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals(0,rowCellValues[ColumnKey("c0")]!!.columnIndex)
+            assertEquals("R1C2",rowCellValues[ColumnKey("c2")]!!.value.value)
+            assertEquals(2,rowCellValues[ColumnKey("c2")]!!.columnIndex)
+            assertEquals("R1C4",rowCellValues[ColumnKey("c4")]!!.value.value)
+            assertEquals(4,rowCellValues[ColumnKey("c4")]!!.columnIndex)
+        }
+    }
+
+    @Disabled("Consider such usage with not throwing errors.")
+    @Test
+    fun `should resolve AttributedRow from custom items with columns at various indices`() {
+        val wrapper = createDefaultIterator<Product> {
+            rows {
+                newRow {
+                    cell { value = "R0C0" }
+                    cell(2) { value = "R0C2" }
+                    cell(4) { value = "R0C4" }
+                }
+                newRow {
+                    cell(1) { value = "R0C1" }
+                    cell(3) { value = "R0C3" }
+                }
+            }
+        }
+        val firstRow = wrapper.iterator.next()
+        val secondRow = wrapper.iterator.next()
+        assertNotNull(firstRow)
+        assertNotNull(secondRow)
+
     }
 
     @Test

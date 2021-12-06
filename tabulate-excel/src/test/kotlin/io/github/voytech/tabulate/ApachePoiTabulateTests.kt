@@ -7,7 +7,7 @@ import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttr
 import io.github.voytech.tabulate.excel.model.attributes.dataFormat
 import io.github.voytech.tabulate.excel.model.attributes.filterAndSort
 import io.github.voytech.tabulate.excel.model.attributes.format
-import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
+import io.github.voytech.tabulate.excel.template.ApachePoiRenderingContext
 import io.github.voytech.tabulate.model.RowCellExpression
 import io.github.voytech.tabulate.model.and
 import io.github.voytech.tabulate.model.attributes.cell.*

@@ -2,33 +2,35 @@ package io.github.voytech.tabulate.attributes
 
 import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
 import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
-import io.github.voytech.tabulate.excel.template.poi.ApachePoiRenderingContext
+import io.github.voytech.tabulate.excel.template.ApachePoiRenderingContext
 import io.github.voytech.tabulate.model.attributes.CellAttribute
-import io.github.voytech.tabulate.template.context.RenderingContext
-import io.github.voytech.tabulate.template.operations.*
+import io.github.voytech.tabulate.template.operations.AttributeRenderOperationsFactory
+import io.github.voytech.tabulate.template.operations.CellAttributeRenderOperation
+import io.github.voytech.tabulate.template.operations.RowCellContext
+import io.github.voytech.tabulate.template.operations.getTableId
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
+import io.github.voytech.tabulate.testsupport.TestRenderingContext
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute as CellAttributeAlias
 
-class FakeContext: RenderingContext
 
-class FakeTestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvider<T, FakeContext> {
+class NoopTestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvider<T, TestRenderingContext> {
 
-    override fun getAttributeOperationsFactory(renderingContext: FakeContext): AttributeRenderOperationsFactory<T> {
-        return object : AttributeRenderOperationsFactory<T> {
-            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<out CellAttributeAlias>> =
-                setOf(FakeSimpleTestCellAttributeRenderOperation(renderingContext))
+    override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<TestRenderingContext,T> {
+        return object : AttributeRenderOperationsFactory<TestRenderingContext,T> {
+            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttributeAlias>> =
+                setOf(NoopSimpleTestCellAttributeRenderOperation())
         }
     }
 
-    override fun getContextClass(): Class<FakeContext> = FakeContext::class.java
+    override fun getContextClass(): Class<TestRenderingContext> = TestRenderingContext::class.java
 }
 
 class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvider<T, ApachePoiRenderingContext> {
 
-    override fun getAttributeOperationsFactory(renderingContext: ApachePoiRenderingContext): AttributeRenderOperationsFactory<T> {
-        return object : AttributeRenderOperationsFactory<T> {
-            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<out CellAttributeAlias>> =
-                setOf(SimpleTestCellAttributeRenderOperation(renderingContext))
+    override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<ApachePoiRenderingContext, T> {
+        return object : AttributeRenderOperationsFactory<ApachePoiRenderingContext,T> {
+            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<ApachePoiRenderingContext, out CellAttributeAlias>> =
+                setOf(SimpleTestCellAttributeRenderOperation())
         }
     }
 
@@ -42,30 +44,32 @@ data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<Simp
     }
 }
 
-class SimpleTestCellAttributeRenderOperation(poi: ApachePoiRenderingContext) :
-    BaseCellAttributeRenderOperation<ApachePoiRenderingContext, SimpleTestCellAttribute>(poi) {
+class SimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<ApachePoiRenderingContext, SimpleTestCellAttribute> {
 
     override fun attributeType(): Class<out SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
 
-    override fun renderAttribute(context: RowCellContext, attribute: SimpleTestCellAttribute) {
-        with(renderingContext.provideCell(
-            context.getTableId(),
-            context.getRow(),
-            context.getColumn()
-        )) {
+    override fun renderAttribute(
+        renderingContext: ApachePoiRenderingContext,
+        context: RowCellContext,
+        attribute: SimpleTestCellAttribute
+    ) {
+        with(renderingContext.provideCell(context.getTableId(), context.getRow(), context.getColumn())) {
             this.setCellValue("${this.stringCellValue}_${attribute.valueSuffix}")
         }
     }
 }
 
-class FakeSimpleTestCellAttributeRenderOperation(fakeContext: FakeContext) :
-    BaseCellAttributeRenderOperation<FakeContext, SimpleTestCellAttribute>(fakeContext) {
+class NoopSimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<TestRenderingContext, SimpleTestCellAttribute> {
 
     override fun attributeType(): Class<out SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
-
-    override fun renderAttribute(context: RowCellContext, attribute: SimpleTestCellAttribute) {
+    override fun renderAttribute(
+        renderingContext: TestRenderingContext,
+        context: RowCellContext,
+        attribute: SimpleTestCellAttribute
+    ) {
 
     }
+
 }
 
 fun <T> CellLevelAttributesBuilderApi<T>.simpleTestCellAttrib(block: SimpleTestCellAttribute.Builder.() -> Unit) =
