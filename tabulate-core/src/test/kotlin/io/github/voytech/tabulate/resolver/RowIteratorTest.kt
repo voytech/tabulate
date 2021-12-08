@@ -6,6 +6,12 @@ import io.github.voytech.tabulate.api.builder.dsl.footer
 import io.github.voytech.tabulate.api.builder.dsl.header
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.model.ColumnKey
+import io.github.voytech.tabulate.model.RowCellExpression
+import io.github.voytech.tabulate.model.and
+import io.github.voytech.tabulate.model.attributes.cell.CellBackgroundAttribute
+import io.github.voytech.tabulate.model.attributes.cell.Colors
+import io.github.voytech.tabulate.model.attributes.cell.background
+import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultCellFill
 import io.github.voytech.tabulate.template.context.AdditionalSteps
 import io.github.voytech.tabulate.template.iterators.EnumStepProvider
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
@@ -80,16 +86,30 @@ class RowIteratorTest {
                 }
                 newRow {
                     cell { value = "R1C0" }
-                    cell(2) { value = "R1C2" }
-                    cell(4) { value = "R1C4" }
+                    cell { value = "R1C2" }
+                    cell { value = "R1C4" }
+                }
+                newRow(3) {
+                    cell { value = "R3C0" }
+                }
+                atIndex { gt(3) and lt(6) } newRow {
+                    cell { expression = RowCellExpression { "R${it.rowIndex.getIndex()}C0" } } // TODO <-- simplify this
                 }
             }
         }
         val firstRow = wrapper.iterator.next()
         val secondRow = wrapper.iterator.next()
+        val thirdRow = wrapper.iterator.next()
+        val fourthRow = wrapper.iterator.next()
+        val fifthRow = wrapper.iterator.next()
+        assertFalse(wrapper.iterator.hasNext())
         assertNotNull(firstRow)
         assertNotNull(secondRow)
+        assertNotNull(thirdRow)
+        assertNotNull(fourthRow)
+        assertNotNull(fifthRow)
         with(firstRow) {
+            assertEquals(0, rowIndex)
             assertEquals("R0C0",rowCellValues[ColumnKey("c0")]!!.value.value)
             assertEquals(0,rowCellValues[ColumnKey("c0")]!!.columnIndex)
             assertEquals("R0C2",rowCellValues[ColumnKey("c2")]!!.value.value)
@@ -98,6 +118,7 @@ class RowIteratorTest {
             assertEquals(4,rowCellValues[ColumnKey("c4")]!!.columnIndex)
         }
         with(secondRow) {
+            assertEquals(1, rowIndex)
             assertEquals("R1C0",rowCellValues[ColumnKey("c0")]!!.value.value)
             assertEquals(0,rowCellValues[ColumnKey("c0")]!!.columnIndex)
             assertEquals("R1C2",rowCellValues[ColumnKey("c2")]!!.value.value)
@@ -105,6 +126,87 @@ class RowIteratorTest {
             assertEquals("R1C4",rowCellValues[ColumnKey("c4")]!!.value.value)
             assertEquals(4,rowCellValues[ColumnKey("c4")]!!.columnIndex)
         }
+        with(thirdRow) {
+            assertEquals(3, rowIndex)
+            assertEquals("R3C0",rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals(0,rowCellValues[ColumnKey("c0")]!!.columnIndex)
+        }
+        with(fourthRow) {
+            assertEquals(4, rowIndex)
+            assertEquals("R4C0",rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals(0,rowCellValues[ColumnKey("c0")]!!.columnIndex)
+        }
+        with(fifthRow) {
+            assertEquals(5, rowIndex)
+            assertEquals("R5C0",rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals(0,rowCellValues[ColumnKey("c0")]!!.columnIndex)
+        }
+    }
+
+    @Test
+    fun `should resolve AttributedRow from custom item with attributes applied trough separate row definition`() {
+        val wrapper = createDefaultIterator<Product> {
+            rows {
+                newRow {
+                    cell {
+                        value = "R0C0"
+                        attributes {
+                            background { fill = DefaultCellFill.BRICKS }
+                        }
+                    }
+                    cell { value = "R0C1" }
+                    cell { value = "R0C2" }
+                }
+                matching { eq(0) } assign {
+                   cell {
+                       attributes {
+                           background { color = Colors.BLACK }
+                       }
+                   }
+                }
+            }
+        }
+        val firstRow = wrapper.iterator.next()
+        assertFalse(wrapper.iterator.hasNext())
+        assertNotNull(firstRow)
+        with(firstRow) {
+            assertEquals(0, rowIndex)
+            assertEquals("R0C0",rowCellValues[ColumnKey("column-0")]!!.value.value)
+            assertEquals(0,rowCellValues[ColumnKey("column-0")]!!.columnIndex)
+            assertEquals(1,rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
+            with(rowCellValues[ColumnKey("column-0")]!!.attributes!!.first()) {
+                assertTrue(this is CellBackgroundAttribute)
+                assertEquals(Colors.BLACK, (this as CellBackgroundAttribute).color)
+                assertEquals(DefaultCellFill.BRICKS, this.fill)
+            }
+        }
+    }
+
+    @Test
+    fun `should resolve AttributedRow's in proper order`() {
+        val wrapper = createDefaultIterator<Product> {
+            rows {
+                footer { cell { value = "footer" } }
+                header("header")
+            }
+        }
+        val header = wrapper.iterator.next()
+        val footer = wrapper.iterator.next()
+        assertFalse(wrapper.iterator.hasNext())
+        assertNotNull(header)
+        assertNotNull(footer)
+        with(header) {
+            assertEquals(0, rowIndex)
+        }
+        with(footer) {
+            assertEquals(1, rowIndex)
+        }
+    }
+
+    @Test
+    @Disabled("Functionality not exists yet")
+    fun `should resolve footer AttributedRow when summarizing is enabled on column`() {
+
     }
 
     @Disabled("Consider such usage with not throwing errors.")
@@ -127,7 +229,6 @@ class RowIteratorTest {
         val secondRow = wrapper.iterator.next()
         assertNotNull(firstRow)
         assertNotNull(secondRow)
-
     }
 
     @Test

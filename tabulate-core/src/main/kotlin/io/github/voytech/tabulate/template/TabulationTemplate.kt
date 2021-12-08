@@ -228,8 +228,8 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
                     state.tableModel.getColumnIndex(column.index ?: columnIndex),
                     renderPhase,
                     overrideAttributesLeftToRight(
-                        state.tableModel.columnAttributes,
-                        column.columnAttributes
+                        state.tableModel.columnAttributes.orEmpty() +
+                        column.columnAttributes.orEmpty()
                     ),
                     state.getCustomAttributes()
                 )

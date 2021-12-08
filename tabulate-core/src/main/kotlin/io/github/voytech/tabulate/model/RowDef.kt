@@ -58,6 +58,12 @@ internal fun <T> Collection<RowDef<T>>.flattenCellAttributes(): Set<CellAttribut
 internal fun <T> Collection<RowDef<T>>.mergeCells(): Map<ColumnKey<T>, CellDef<T>> =
     mapNotNull { it.cells }.fold(mapOf()) { acc, m -> acc + m }
 
+private operator fun <T> Map<ColumnKey<T>, CellDef<T>>.plus(map: Map<ColumnKey<T>, CellDef<T>>): Map<ColumnKey<T>, CellDef<T>> =
+    LinkedHashMap(this).apply {
+        map.keys.forEach { columnKey ->
+            this[columnKey] = this[columnKey] + map[columnKey]!!
+        }
+    }
 
 data class RowIndexDef(
     val index: Int = 0,

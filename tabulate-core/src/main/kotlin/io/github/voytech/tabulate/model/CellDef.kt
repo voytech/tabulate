@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.model
 
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
+import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
 import io.github.voytech.tabulate.template.operations.CellValue
 
 /**
@@ -92,4 +93,20 @@ internal fun <T> CellDef<T>?.resolveCellValue(column: ColumnDef<T>, maybeRow: So
             )
         }
     } ?: column.resolveRawValue(maybeRow?.record)?.let { CellValue(it) }
+}
+
+@JvmSynthetic
+internal operator fun <T> CellDef<T>?.plus(other: CellDef<T>): CellDef<T> {
+    return if (this != null) {
+        CellDef(
+            value = other.value ?: value,
+            expression = other.expression ?: expression,
+            colSpan = other.colSpan,
+            rowSpan = other.rowSpan,
+            rowSpanMode = other.rowSpanMode,
+            cellAttributes = overrideAttributesLeftToRight(
+                cellAttributes.orEmpty() + other.cellAttributes.orEmpty()
+            )
+        )
+    } else other
 }

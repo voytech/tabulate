@@ -38,12 +38,8 @@ fun <A : Attribute<A>> List<A>.mergeAttributes(): A {
         }
 }
 
-fun <C: Attribute<*>> overrideAttributesLeftToRight(attributeSet: List<C>): Set<C> {
+fun <C: Attribute<*>> overrideAttributesLeftToRight(attributeSet: Set<C>): Set<C> {
     return attributeSet.groupBy { it.javaClass }
         .map { it.value.mergeAttributes() }
         .toSet()
-}
-
-fun <C: Attribute<*>> overrideAttributesLeftToRight(vararg attributeSets: Set<C>?): Set<C> {
-    return attributeSets.filterNotNull().flatten().let { overrideAttributesLeftToRight(it) }
 }

@@ -42,7 +42,7 @@ internal abstract class AbstractRowContextResolver<T>(
             val attributedRow = createAttributedRow<T>(
                 rowIndex = tableModel.getRowIndex(tableRowIndex.value),
                 rowAttributes = overrideAttributesLeftToRight(
-                    tableModel.rowAttributes, rowDefinitions.flattenRowAttributes()
+                    tableModel.rowAttributes.orEmpty() + rowDefinitions.flattenRowAttributes()
                 ),
                 customAttributes = customAttributes
             ).also { listener?.onAttributedRowResolved(it) }
@@ -54,10 +54,10 @@ internal abstract class AbstractRowContextResolver<T>(
                         columnIndex = tableModel.getColumnIndex(column.index ?: index),
                         value = value,
                         attributes = overrideAttributesLeftToRight(
-                            tableModel.cellAttributes,
-                            column.cellAttributes,
-                            rowCellAttributes,
-                            cellDefinitions[column.id]?.cellAttributes
+                            tableModel.cellAttributes.orEmpty() +
+                            column.cellAttributes.orEmpty() +
+                            rowCellAttributes +
+                            (cellDefinitions[column.id]?.cellAttributes).orEmpty()
                         ),
                         customAttributes
                     ).also { listener?.onAttributedCellResolved(it) }
