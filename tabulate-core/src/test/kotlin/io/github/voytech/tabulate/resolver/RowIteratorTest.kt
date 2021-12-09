@@ -1,11 +1,9 @@
 package io.github.voytech.tabulate.resolver
 
-import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
-import io.github.voytech.tabulate.api.builder.dsl.footer
-import io.github.voytech.tabulate.api.builder.dsl.header
+import io.github.voytech.tabulate.api.builder.dsl.*
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.model.ColumnKey
+import io.github.voytech.tabulate.model.PredicateLiteral
 import io.github.voytech.tabulate.model.RowCellExpression
 import io.github.voytech.tabulate.model.and
 import io.github.voytech.tabulate.model.attributes.cell.CellBackgroundAttribute
@@ -19,8 +17,12 @@ import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.stream.Stream
 
 class RowIteratorTest {
 
@@ -44,29 +46,29 @@ class RowIteratorTest {
 
     @Test
     fun `should resolve AttributedRow to null if no table definition nor data is provided`() {
-        val wrapper = createDefaultIterator<Product> {  }
+        val wrapper = createDefaultIterator<Product> { }
         assertFalse(wrapper.iterator.hasNext())
     }
 
     @Test
     fun `should resolve AttributedRow from custom row definition`() {
         val wrapper = createDefaultIterator<Product> {
-                columns {
-                    column(Product::code)
-                }
-                rows {
-                    newRow {
-                        cell {
-                            value = "CustomProductCode"
-                        }
+            columns {
+                column(Product::code)
+            }
+            rows {
+                newRow {
+                    cell {
+                        value = "CustomProductCode"
                     }
                 }
             }
+        }
         val resolvedIndexedAttributedRow = wrapper.iterator.next()
         assertNotNull(resolvedIndexedAttributedRow)
         assertEquals(0, resolvedIndexedAttributedRow.rowIndex)
         with(resolvedIndexedAttributedRow) {
-            assertEquals("CustomProductCode",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("CustomProductCode", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
         }
     }
 
@@ -110,36 +112,36 @@ class RowIteratorTest {
         assertNotNull(fifthRow)
         with(firstRow) {
             assertEquals(0, rowIndex)
-            assertEquals("R0C0",rowCellValues[ColumnKey("c0")]!!.value.value)
-            assertEquals(0,rowCellValues[ColumnKey("c0")]!!.columnIndex)
-            assertEquals("R0C2",rowCellValues[ColumnKey("c2")]!!.value.value)
-            assertEquals(2,rowCellValues[ColumnKey("c2")]!!.columnIndex)
-            assertEquals("R0C4",rowCellValues[ColumnKey("c4")]!!.value.value)
-            assertEquals(4,rowCellValues[ColumnKey("c4")]!!.columnIndex)
+            assertEquals("R0C0", rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals(0, rowCellValues[ColumnKey("c0")]!!.columnIndex)
+            assertEquals("R0C2", rowCellValues[ColumnKey("c2")]!!.value.value)
+            assertEquals(2, rowCellValues[ColumnKey("c2")]!!.columnIndex)
+            assertEquals("R0C4", rowCellValues[ColumnKey("c4")]!!.value.value)
+            assertEquals(4, rowCellValues[ColumnKey("c4")]!!.columnIndex)
         }
         with(secondRow) {
             assertEquals(1, rowIndex)
-            assertEquals("R1C0",rowCellValues[ColumnKey("c0")]!!.value.value)
-            assertEquals(0,rowCellValues[ColumnKey("c0")]!!.columnIndex)
-            assertEquals("R1C2",rowCellValues[ColumnKey("c2")]!!.value.value)
-            assertEquals(2,rowCellValues[ColumnKey("c2")]!!.columnIndex)
-            assertEquals("R1C4",rowCellValues[ColumnKey("c4")]!!.value.value)
-            assertEquals(4,rowCellValues[ColumnKey("c4")]!!.columnIndex)
+            assertEquals("R1C0", rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals(0, rowCellValues[ColumnKey("c0")]!!.columnIndex)
+            assertEquals("R1C2", rowCellValues[ColumnKey("c2")]!!.value.value)
+            assertEquals(2, rowCellValues[ColumnKey("c2")]!!.columnIndex)
+            assertEquals("R1C4", rowCellValues[ColumnKey("c4")]!!.value.value)
+            assertEquals(4, rowCellValues[ColumnKey("c4")]!!.columnIndex)
         }
         with(thirdRow) {
             assertEquals(3, rowIndex)
-            assertEquals("R3C0",rowCellValues[ColumnKey("c0")]!!.value.value)
-            assertEquals(0,rowCellValues[ColumnKey("c0")]!!.columnIndex)
+            assertEquals("R3C0", rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals(0, rowCellValues[ColumnKey("c0")]!!.columnIndex)
         }
         with(fourthRow) {
             assertEquals(4, rowIndex)
-            assertEquals("R4C0",rowCellValues[ColumnKey("c0")]!!.value.value)
-            assertEquals(0,rowCellValues[ColumnKey("c0")]!!.columnIndex)
+            assertEquals("R4C0", rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals(0, rowCellValues[ColumnKey("c0")]!!.columnIndex)
         }
         with(fifthRow) {
             assertEquals(5, rowIndex)
-            assertEquals("R5C0",rowCellValues[ColumnKey("c0")]!!.value.value)
-            assertEquals(0,rowCellValues[ColumnKey("c0")]!!.columnIndex)
+            assertEquals("R5C0", rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals(0, rowCellValues[ColumnKey("c0")]!!.columnIndex)
         }
     }
 
@@ -158,11 +160,11 @@ class RowIteratorTest {
                     cell { value = "R0C2" }
                 }
                 matching { eq(0) } assign {
-                   cell {
-                       attributes {
-                           background { color = Colors.BLACK }
-                       }
-                   }
+                    cell {
+                        attributes {
+                            background { color = Colors.BLACK }
+                        }
+                    }
                 }
             }
         }
@@ -171,9 +173,154 @@ class RowIteratorTest {
         assertNotNull(firstRow)
         with(firstRow) {
             assertEquals(0, rowIndex)
-            assertEquals("R0C0",rowCellValues[ColumnKey("column-0")]!!.value.value)
-            assertEquals(0,rowCellValues[ColumnKey("column-0")]!!.columnIndex)
-            assertEquals(1,rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
+            assertEquals("R0C0", rowCellValues[ColumnKey("column-0")]!!.value.value)
+            assertEquals(0, rowCellValues[ColumnKey("column-0")]!!.columnIndex)
+            assertEquals(1, rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
+            with(rowCellValues[ColumnKey("column-0")]!!.attributes!!.first()) {
+                assertTrue(this is CellBackgroundAttribute)
+                assertEquals(Colors.BLACK, (this as CellBackgroundAttribute).color)
+                assertEquals(DefaultCellFill.BRICKS, this.fill)
+            }
+        }
+    }
+
+    @Test
+    fun `should resolve AttributedRow containing cell attribute re-defined at column builder with same index`() {
+        val template = CustomTable {
+            columns {
+                column(0) {
+                    attributes {
+                        background {
+                            fill = DefaultCellFill.BRICKS
+                            color = Colors.GREEN
+                        }
+                    }
+                }
+            }
+        }
+        val wrapper = createDefaultIterator<Product>(template + {
+            columns {
+                column(0) {
+                    attributes {
+                        background {
+                            color = Colors.BLACK
+                        }
+                    }
+                }
+            }
+            rows {
+                newRow {
+                    cell { value = "R0C0" }
+                }
+            }
+        })
+        val first = wrapper.iterator.next()
+        assertFalse(wrapper.iterator.hasNext())
+        assertNotNull(first)
+        with(first) {
+            assertEquals(0, rowIndex)
+            assertEquals(1, rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
+            with(rowCellValues[ColumnKey("column-0")]!!.attributes!!.first()) {
+                assertTrue(this is CellBackgroundAttribute)
+                assertEquals(Colors.BLACK, (this as CellBackgroundAttribute).color)
+                assertEquals(DefaultCellFill.BRICKS, this.fill)
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("indexPredicateLiteralProvider")
+    fun `should resolve AttributedRow containing cell attribute re-defined at row builder with same index predicate literal`(
+        firstLiteral: RowIndexPredicateBuilderApi.() -> PredicateLiteral,
+        secondLiteral: RowIndexPredicateBuilderApi.() -> PredicateLiteral
+    ) {
+        val template = CustomTable {
+            rows {
+                atIndex(firstLiteral) newRow {
+                    cell { value = "?" }
+                    attributes {
+                        background {
+                            fill = DefaultCellFill.BRICKS
+                            color = Colors.GREEN
+                        }
+                    }
+                }
+            }
+        }
+        val wrapper = createDefaultIterator<Product>(template + {
+            rows {
+                atIndex(secondLiteral) newRow {
+                    cell(0) { value = "R0C0" }
+                    attributes {
+                        background {
+                            color = Colors.BLACK
+                        }
+                    }
+                }
+            }
+        })
+        val first = wrapper.iterator.next()
+        assertNotNull(first)
+        with(first) {
+            assertEquals("R0C0", rowCellValues[ColumnKey("column-0")]!!.value.value)
+            assertEquals(1, rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
+            with(rowCellValues[ColumnKey("column-0")]!!.attributes!!.first()) {
+                assertTrue(this is CellBackgroundAttribute)
+                assertEquals(Colors.BLACK, (this as CellBackgroundAttribute).color)
+                assertEquals(DefaultCellFill.BRICKS, this.fill)
+            }
+        }
+    }
+
+    @Test
+    fun `should resolve AttributedRow containing cell attribute merged from different row definitions`() {
+        val template = CustomTable {
+            rows {
+                atIndex { gte(0) and lte(3) } newRow {
+                    cell { value = "?" }
+                    attributes {
+                        background {
+                            fill = DefaultCellFill.BRICKS
+                            color = Colors.GREEN
+                        }
+                    }
+                }
+            }
+        }
+        val wrapper = createDefaultIterator<Product>(template + {
+            rows {
+                atIndex { eq(1) } newRow {
+                    cell(0) { value = "R0C0" }
+                    attributes {
+                        background {
+                            color = Colors.BLACK
+                        }
+                    }
+                }
+            }
+        })
+
+        val first = wrapper.iterator.next()
+        val second = wrapper.iterator.next()
+        val third = wrapper.iterator.next()
+        val fourth = wrapper.iterator.next()
+        assertFalse(wrapper.iterator.hasNext())
+        assertNotNull(first)
+        assertNotNull(second)
+        assertNotNull(third)
+        assertNotNull(fourth)
+        listOf(first,third,fourth).forEach {
+            assertEquals("?", it.rowCellValues[ColumnKey("column-0")]!!.value.value)
+            assertEquals(1, it.rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
+            with(it.rowCellValues[ColumnKey("column-0")]!!.attributes!!.first()) {
+                assertTrue(this is CellBackgroundAttribute)
+                assertEquals(Colors.GREEN, (this as CellBackgroundAttribute).color)
+                assertEquals(DefaultCellFill.BRICKS, this.fill)
+            }
+        }
+        with(second) {
+            assertEquals("R0C0", rowCellValues[ColumnKey("column-0")]!!.value.value)
+            assertEquals(1, rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
             with(rowCellValues[ColumnKey("column-0")]!!.attributes!!.first()) {
                 assertTrue(this is CellBackgroundAttribute)
                 assertEquals(Colors.BLACK, (this as CellBackgroundAttribute).color)
@@ -244,14 +391,16 @@ class RowIteratorTest {
                 }
             }
         }
-        wrapper.resolver.buffer(Product(
-            "code1",
-            "name1",
-            "description1",
-            "manufacturer1",
-            LocalDate.now(),
-            BigDecimal.TEN
-        ))
+        wrapper.resolver.buffer(
+            Product(
+                "code1",
+                "name1",
+                "description1",
+                "manufacturer1",
+                LocalDate.now(),
+                BigDecimal.TEN
+            )
+        )
         val header = wrapper.iterator.next()
         val value = wrapper.iterator.next()
         val footer = wrapper.iterator.next()
@@ -259,17 +408,33 @@ class RowIteratorTest {
         assertNotNull(header)
         assertEquals(0, header.rowIndex)
         with(header) {
-            assertEquals("CODE",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("CODE", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
         }
         assertNotNull(value)
         assertEquals(1, value.rowIndex)
         with(value) {
-            assertEquals("code1",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("code1", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
         }
         assertNotNull(footer)
         assertEquals(2, footer.rowIndex)
         with(footer) {
-            assertEquals("footer",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("footer", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        }
+    }
+
+    companion object {
+        private fun indexLiteral(block: RowIndexPredicateBuilderApi.() -> PredicateLiteral): RowIndexPredicateBuilderApi.() -> PredicateLiteral =
+            block
+
+        @JvmStatic
+        fun indexPredicateLiteralProvider(): Stream<Arguments> {
+            return listOf(
+                Arguments.of(indexLiteral { eq(0) }, indexLiteral { eq(0) }),
+                Arguments.of(indexLiteral { gt(0) and lt(2) }, indexLiteral { gt(0) and lt(2) }),
+                Arguments.of(indexLiteral { gte(0) and lte(1) }, indexLiteral { gte(0) and lte(1) }),
+                Arguments.of(indexLiteral { gt(0) and lt(2) }, indexLiteral { lt(2) and gt(0) }),
+                Arguments.of(indexLiteral { gte(0) and lte(1) }, indexLiteral { lte(1) and gte(0) }),
+            ).stream()
         }
     }
 

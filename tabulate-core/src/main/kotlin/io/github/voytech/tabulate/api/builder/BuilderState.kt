@@ -368,13 +368,7 @@ internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuild
 
     @JvmSynthetic
     override fun build(transformerContainer: AttributeTransformerContainer?): List<RowDef<T>> {
-        return sortedNullsLast().map { it.build(transformerContainer) }
-    }
-
-    private fun sortedNullsLast(): List<RowBuilderState<T>> {
-        return rowBuilderStates.sortedWith(compareBy(nullsLast()) {
-            it.qualifier.index?.computeRanges()?.last()?.endInclusive
-        })
+        return rowBuilderStates.map { it.build(transformerContainer) }
     }
 
 }
