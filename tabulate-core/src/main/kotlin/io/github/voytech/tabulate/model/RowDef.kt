@@ -77,7 +77,7 @@ data class RowIndexDef(
 
     operator fun inc(): RowIndexDef = RowIndexDef(index + 1, step)
 
-    override fun compareTo(other: RowIndexDef): Int = index.compareTo(other.index)
+    override fun compareTo(other: RowIndexDef): Int = index.compareTo(other.index) //TODO buggy comparable
 
     companion object {
         fun maxValue(step: Enum<*>?) = RowIndexDef(Int.MAX_VALUE, step)

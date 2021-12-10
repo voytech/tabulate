@@ -70,6 +70,7 @@ class Table<T> internal constructor(
         ?: throw error("Could not resolve step enum")
 
     init {
+        //TODO map should be ordered by row index. Implement correct RowIndexDef comparable.
         indexedCustomRows = rows?.filter { it.qualifier.index != null }
             ?.map { it.qualifier.index?.materialize() to it }
             ?.flatMap { it.first?.map { index -> index to it.second } ?: emptyList() }
@@ -88,7 +89,7 @@ class Table<T> internal constructor(
             indexedCustomRows?.get(RowIndexDef(index.value))
         } else {
             index.steps.mapNotNull {
-                indexedCustomRows?.get(RowIndexDef(index = it.value.index, step =  parseStep(it.key)))
+                indexedCustomRows?.get(RowIndexDef(index = it.value.index, step = parseStep(it.key)))
             }.flatten()
         }
     }
@@ -98,7 +99,7 @@ class Table<T> internal constructor(
     @JvmSynthetic
     internal fun getNextCustomRowIndex(index: RowIndex): RowIndexDef? {
         return indexedCustomRows?.entries
-            ?.firstOrNull { it.key.index > index.value }
+            ?.firstOrNull { it.key.index > index.value } //TODO fix comparing when RowIndexDef has step.
             ?.key
     }
 

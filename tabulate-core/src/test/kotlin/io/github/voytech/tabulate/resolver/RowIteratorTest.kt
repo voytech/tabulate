@@ -309,7 +309,7 @@ class RowIteratorTest {
         assertNotNull(second)
         assertNotNull(third)
         assertNotNull(fourth)
-        listOf(first,third,fourth).forEach {
+        listOf(first, third, fourth).forEach {
             assertEquals("?", it.rowCellValues[ColumnKey("column-0")]!!.value.value)
             assertEquals(1, it.rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
             with(it.rowCellValues[ColumnKey("column-0")]!!.attributes!!.first()) {
@@ -379,6 +379,44 @@ class RowIteratorTest {
     }
 
     @Test
+    fun `should resolve AttributedRows when rows are scattered`() {
+        val wrapper = createDefaultIterator<Product> {
+            columns { column(Product::code) }
+            rows {
+                newRow(2) { cell { value = "R2C0" } }
+                newRow(3) { cell { value = "R3C0" } }
+                newRow(7) { cell { value = "R7C0" } }
+            }
+        }
+        val firstRow = wrapper.iterator.next()
+        wrapper.resolver.buffer()
+        val secondRow = wrapper.iterator.next()
+        val thirdRow = wrapper.iterator.next()
+        val fourthRow = wrapper.iterator.next()
+        assertFalse(wrapper.iterator.hasNext())
+        assertNotNull(firstRow)
+        assertNotNull(secondRow)
+        assertNotNull(thirdRow)
+        assertNotNull(fourthRow)
+        with(firstRow) {
+            assertEquals(2, rowIndex)
+            assertEquals("R2C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        }
+        with(secondRow) {
+            assertEquals(3, rowIndex)
+            assertEquals("R3C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        }
+        with(thirdRow) {
+            assertEquals(4, rowIndex)
+            assertEquals("C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        }
+        with(fourthRow) {
+            assertEquals(7, rowIndex)
+            assertEquals("R7C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        }
+    }
+
+    @Test
     fun `should resolve AttributedRow from collection item and from custom items`() {
         val wrapper = createDefaultIterator<Product> {
             columns { column(Product::code) }
@@ -421,6 +459,16 @@ class RowIteratorTest {
             assertEquals("footer", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
         }
     }
+
+    private fun BufferingRowContextResolver<Product>.buffer(code: String = "C0") =
+        buffer(Product(
+            code,
+            "Product code - $code",
+            "Product description",
+            "tangibles",
+            LocalDate.now(),
+            BigDecimal.valueOf(1000)
+        ))
 
     companion object {
         private fun indexLiteral(block: RowIndexPredicateBuilderApi.() -> PredicateLiteral): RowIndexPredicateBuilderApi.() -> PredicateLiteral =
