@@ -77,11 +77,11 @@ fun <T> RowsBuilderApi<T>.footer(block: RowBuilderApi<T>.() -> Unit) {
     newRow(0, AdditionalSteps.TRAILING_ROWS, block)
 }
 
-fun <T> RowsBuilderApi<T>.trailingRow(block: RowBuilderApi<T>.() -> Unit) {
+fun <T> RowsBuilderApi<T>.newTrailingRow(block: RowBuilderApi<T>.() -> Unit) {
     newRow(AdditionalSteps.TRAILING_ROWS, block)
 }
 
-fun <T> RowsBuilderApi<T>.trailingRow(index: Int, block: RowBuilderApi<T>.() -> Unit) {
+fun <T> RowsBuilderApi<T>.newTrailingRow(index: Int, block: RowBuilderApi<T>.() -> Unit) {
     newRow(index, AdditionalSteps.TRAILING_ROWS, block)
 }
 

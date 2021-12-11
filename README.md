@@ -4,30 +4,30 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/voytech/tabulate/badge?s=356351985a7dd58359040b23f6d896d28af928af)](https://www.codefactor.io/repository/github/voytech/tabulate)
 [![Java CI with Gradle](https://github.com/voytech/tabulate/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/voytech/tabulate/actions/workflows/gradle.yml)
 
-Tabulate helps you with exporting collections of objects into various tabular file formats.    
+Tabulate helps you with exporting collections of elements into various tabular file formats.    
 
 ## Why ?
 
 Exporting data to external file formats can be tedious and cumbersome - especially when business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. In such cases You want to hide implementation details using abstractions, but this is additional effort which is not desirable. 
 
-Tabulate tries to mitigate this little inconvenience by using powers of Kotlin DSL type-safe builders as consumer facing API.
+`Tabulate` tries to mitigate above problems with the help of kotlin, its type-safe DSL builders and extension functions.
 
 ### You may want to consider using `tabulate` if:    
 
-- You need to export collection into: 
+- You need to export data into following formats: 
     - excel (xlsx),
     - pdf (version 0.2.0),
     - cli (roadmap plans)
     
-- Exported data needs to be table-formatted. 
+- Exported data needs to be in tabular format. 
 
-- You want to reuse table structure for many tabular file formats (excel, pdf)
+- You want to reuse table definition for many exports targeting various file formats like excel or pdf
   
 - You need to preserve styles across different file formats.  
 
-- You want to be able to implement your own attributes.
+- You want to extend resulting table look&feel by your own-crafted attributes.
 
-- You want to use extensible and type-safe DSL builder API.
+- You like Kotlin type-safe builders and extension functions.
 
 ## Snapshot repository coordinates
 
@@ -53,7 +53,7 @@ dependencies {
 First 0.1.0 version will not differ much from current snapshot version, and migration to release should be quick.
 
 ## Basic usage
-Firstly, let us define list of exemplary addresses:
+Let's start simple. Given list of addresses as below:
 ```kotlin
     val listForGus = listOf(
         Address("Jesse", "Pinkman","New Mexico", "9809 Margo Street","87104"),
@@ -62,10 +62,10 @@ Firstly, let us define list of exemplary addresses:
         Address("Mike", "Ehrmantraut","New Mexico", "204 Edith Blvd. NE","87102"),
   )
 ```
-Now define simple table structure (via property to column bindings):
+Invoke `tabulate` extension function with basic table definition passed as a function argument:
 ```kotlin
     listForGus.tabulate("address_list.xlsx") {
-          name = "Traitors address list"
+          name = "Associates"
           columns { 
               column(Address::firstName)
               column(Address::lastName)
@@ -77,13 +77,14 @@ Now define simple table structure (via property to column bindings):
           }  
     }
 ```
-That's it! This will create an Excel with sheet named "Traitors address list". Sheet will contain 4 entries with automatically adjusted column widths but without any other additional features (like header row) 
+That's it. 
+This will create an Excel file with sheet named "Associates". Sheet will contain 4 entries with automatically adjusted column widths but without any additional features (like header row) 
 
-Want to see header row ? 
+Let's add header now: 
 
 ```kotlin
     addressList.tabulate("address_list.xlsx") {
-          name = "Traitors address list"
+          name = "Associates"
           attributes {
             columnWidth { auto = true }
           }
@@ -98,11 +99,11 @@ Want to see header row ?
           }  
     }
 ```
-Header row cells should have white font on pink background ? 
+We can make header look a bit differently:  
 
 ```kotlin
     addressList.tabulate("address_list.xlsx") {
-          name = "Traitors address list"
+          name = "Associates"
           attributes {
             columnWidth { auto = true }
           }
@@ -118,7 +119,7 @@ Header row cells should have white font on pink background ?
                 attributes { 
                     text { fontColor = Colors.WHITE }
                     background { 
-                      color = Colors.PINK
+                      color = Colors.BLACK
                       fill = DefaultCellFill.SOLID
                     }
                 }
@@ -126,7 +127,7 @@ Header row cells should have white font on pink background ?
           }  
     }
 ```
-If You do not want repetitions... 
+Until now, we were passing table definition directly to `tabulate` method. In real life scenario we may want to keep table definition separated as below:
 
 ```kotlin
 object TableDefinitions {
@@ -165,50 +166,47 @@ and soon:
 addressList.tabulate("address_list.pdf", TableDefinitions.addressTable) // PDFbox implementation
 addressList.tabulate("address_list.txt", TableDefinitions.addressTable) // CLI ASCII table - raw implementation
 ```
-I hope above requires no word of explanation.
-
-Let us change sheet name from 'template' table definition:
+Keeping table definition as a separate object is a first step into templating. It is best seen on example below:
 ```kotlin
 addressList.tabulate("address_list.xlsx",TableDefinitions.addressTable + { name = "Dealers Addresses" })
 ```
-Above syntax shows some powers of Kotlin:
+Above syntax is very intuitive and shows some powers of Kotlin. We have used overridden `+` operator in order to merge two table definitions. Merging evaluates in the same way as normal method's arguments. Logic behind this feature is very simple - `+` operator takes two lambdas with receiver, then it returns another lambda with receiver which internally delegates invocations to original lambdas one by one. Effectively it is nothing more than receiver configuration / re-configuration (invocation of subsequent builders on the same receiver one by one). This is simple solution, yet imposes few restrictions on how to manage underlying builder state. (Explanation is out of the scope of this README file. I will try to cover this subject in more details in documentation)
 
-`Table { .. }` creates a lambda receiver of function type: `(TableBuilderApi<T>.() -> Unit)`. Lambda receiver prevents external instantiation of `TableBuilderApi` and operates assuming instance was provided. `TableBuilderApi` does not contain any builder state, in fact it delegates all API calls under the hood to `TableBuilder` passed to `TableBuilderApi` as constructor argument (constructor is hidden). `TableBuilder` must mutate its internal state indempotently so that calling `rowBuilder.addCell("id") { ... cell configuration ...  }` should either create new cell builder or re-configure existing one if found at specified key. This upsert-like behaviour must be implemented on every builder level and this property cannot be tampered. 
-
-If we can comply with above contract all the time then we can introduce syntax like:
+Below - far more real-life templating example:
 ```kotlin
-Table { 
-  name = "Table one" 
-  columns { 
-      column("nr1")
-  } 
-  rows { 
-      row {
-          cell { value = "nr1 - value " }
-      }
-  }
-} + Table { 
-  name = "Table two"
-  columns {
-    column("nr1") { 
-        attribute { 
-            width { auto = true }
+object TableDefinitions {
+  val appBasicTemplate = CustomTable {
+    name = "Basic template"
+    rows {
+      atIndex { header() } newRow {
+        attributes {
+          background {
+            color = Colors.BLACK
+          }
+          text {
+            fontColor = Colors.WHITE
+          }
         }
+      }
     }
   }
-}  
+}
+
+addressList.tabulate("address_list.xlsx",appBasicTemplate + {
+  columns {
+    column(Address::firstName)
+    column(Address::lastName)
+    column(Address::street)
+    column(Address::postCode)
+  }
+  rows {
+    header {
+      columnTitles("First Name", "Last Name", "Street", "Post Code")
+    }
+  }
+})
+ 
 ```
-Advantages of the syntax are following: 
-
-- No need for instantiating state eagerly (state materializes not within `TableBuilderApi` template but later, when actual exporting takes place.)
-- No state is present at `TableBuilderApi` template definition time so no state merging can occur
-- Many `TableBuilderApi` blocks  can be summed together by creating composite implementation of `TabulateBuilderApi` (Effectively - It is like merging API instructions not actual state)
-- finally - `TableBuilderApi` can be treated as template and be shared across many exports because:
-  - `TableBuilderApi` cannot be mutated by exporter (exporter does not work on API but on materialized table definition which is hidden from outer world) 
-  - `TabulateBuilderApi` cannot mutate state which is used by exporter as it cannot have access to this state at definition time.
-  - All `TabulateBuilder` state properties live within boundaries of single exporter, and cannot be shared.     
-
-Implementation details of above builder API features will be covered somewhere below some day. 
 
 ## Key concepts
 
