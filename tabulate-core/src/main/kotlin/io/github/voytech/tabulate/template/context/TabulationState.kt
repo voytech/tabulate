@@ -1,7 +1,6 @@
 package io.github.voytech.tabulate.template.context
 
 import io.github.voytech.tabulate.model.Table
-import io.github.voytech.tabulate.template.iterators.EnumStepProvider
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
 import io.github.voytech.tabulate.template.operations.AttributedRowWithCells
 import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
@@ -28,14 +27,10 @@ internal class TabulationState<T>(
     private val rowContextResolver: BufferingRowContextResolver<T> =
         BufferingRowContextResolver(tableModel, stateAttributes, rowCompletionListener)
     private val rowContextIterator: RowContextIterator<T> =
-        RowContextIterator(rowContextResolver, EnumStepProvider(AdditionalSteps::class.java))
+        RowContextIterator(rowContextResolver)
 
     init {
         stateAttributes["_tableId"] = tableModel.name
-    }
-
-    fun mark(label: AdditionalSteps): RowIndex {
-        return rowContextIterator.mark(label.name)
     }
 
     fun bufferAndNext(record: T): AttributedRowWithCells<T>? {

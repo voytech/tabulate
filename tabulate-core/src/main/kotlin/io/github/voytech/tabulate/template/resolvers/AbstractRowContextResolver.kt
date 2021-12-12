@@ -71,8 +71,8 @@ internal abstract class AbstractRowContextResolver<T>(
     private fun resolveRowContext(
         tableRowIndex: RowIndex,
         indexedRecord: IndexedValue<T>? = null,
-    ): IndexedValue<AttributedRowWithCells<T>> {
-        return IndexedValue(tableRowIndex.value, resolveAttributedRow(tableRowIndex, indexedRecord))
+    ): IndexedContext<AttributedRowWithCells<T>> {
+        return IndexedContext(tableRowIndex, resolveAttributedRow(tableRowIndex, indexedRecord))
     }
 
     /**
@@ -81,7 +81,7 @@ internal abstract class AbstractRowContextResolver<T>(
      * @param requestedIndex [RowIndex] - index requested by row iterator.
      * @author Wojciech Mąka
      */
-    override fun resolve(requestedIndex: RowIndex): IndexedValue<AttributedRowWithCells<T>>? {
+    override fun resolve(requestedIndex: RowIndex): IndexedContext<AttributedRowWithCells<T>>? {
         return if (tableModel.hasCustomRows(SourceRow(requestedIndex))) {
             resolveRowContext(requestedIndex)
         } else {

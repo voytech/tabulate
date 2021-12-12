@@ -75,6 +75,7 @@ class Table<T> internal constructor(
             ?.map { it.qualifier.index?.materialize() to it }
             ?.flatMap { it.first?.map { index -> index to it.second } ?: emptyList() }
             ?.groupBy({ it.first },{ it.second })
+            ?.toSortedMap()
     }
 
     @JvmSynthetic
@@ -85,13 +86,9 @@ class Table<T> internal constructor(
 
     @JvmSynthetic
     internal fun getRowsAt(index: RowIndex): List<RowDef<T>>? {
-        return if (index.steps.isEmpty()) {
-            indexedCustomRows?.get(RowIndexDef(index.value))
-        } else {
-            index.steps.mapNotNull {
-                indexedCustomRows?.get(RowIndexDef(index = it.value.index, step = parseStep(it.key)))
-            }.flatten()
-        }
+        return indexedCustomRows?.get(
+            index.step?.let { RowIndexDef(index = it.index, step = parseStep(it.step)) } ?: RowIndexDef(index.value)
+        )
     }
 
     private fun hasRowsAt(index: RowIndex): Boolean = !getRowsAt(index).isNullOrEmpty()
@@ -99,7 +96,7 @@ class Table<T> internal constructor(
     @JvmSynthetic
     internal fun getNextCustomRowIndex(index: RowIndex): RowIndexDef? {
         return indexedCustomRows?.entries
-            ?.firstOrNull { it.key.index > index.value } //TODO fix comparing when RowIndexDef has step.
+            ?.firstOrNull { it.key > index.asRowIndexDef(stepClass) } //TODO fix comparing when RowIndexDef has step.
             ?.key
     }
 

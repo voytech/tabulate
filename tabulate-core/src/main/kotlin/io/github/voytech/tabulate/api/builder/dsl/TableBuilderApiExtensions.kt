@@ -64,7 +64,7 @@ fun <T> RowsBuilderApi<T>.header(vararg names: String) =
     }
 
 fun <T> RowsBuilderApi<T>.rowNumberingOn(id: String) {
-    row({ source -> source.rowIndexValue() > 0 && source.rowIndex.steps.isEmpty() }) {
+    row({ source -> source.rowIndexValue() > 0 && source.rowIndex.step == null }) {
         cells {
             cell(id) {
                 expression = RowCellExpression { source -> source.rowIndexValue() }

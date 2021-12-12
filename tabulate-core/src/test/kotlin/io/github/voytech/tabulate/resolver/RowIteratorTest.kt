@@ -10,8 +10,6 @@ import io.github.voytech.tabulate.model.attributes.cell.CellBackgroundAttribute
 import io.github.voytech.tabulate.model.attributes.cell.Colors
 import io.github.voytech.tabulate.model.attributes.cell.background
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultCellFill
-import io.github.voytech.tabulate.template.context.AdditionalSteps
-import io.github.voytech.tabulate.template.iterators.EnumStepProvider
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
 import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
 import org.junit.jupiter.api.Assertions.*
@@ -37,12 +35,11 @@ class RowIteratorTest {
             it to BufferingRowContextResolver(createTableBuilder(block).build(), it)
         }.let {
             Wrapper(
-                iterator = RowContextIterator(it.second, EnumStepProvider(AdditionalSteps::class.java)),
+                iterator = RowContextIterator(it.second),
                 resolver = it.second,
                 customAttributes = it.first
             )
         }
-
 
     @Test
     fun `should resolve AttributedRow to null if no table definition nor data is provided`() {
@@ -386,6 +383,7 @@ class RowIteratorTest {
                 newRow(2) { cell { value = "R2C0" } }
                 newRow(3) { cell { value = "R3C0" } }
                 newRow(7) { cell { value = "R7C0" } }
+                newTrailingRow { cell { value = "FOOTER_R0C0" } }
             }
         }
         val firstRow = wrapper.iterator.next()
@@ -393,11 +391,13 @@ class RowIteratorTest {
         val secondRow = wrapper.iterator.next()
         val thirdRow = wrapper.iterator.next()
         val fourthRow = wrapper.iterator.next()
+        val trailingRow = wrapper.iterator.next()
         assertFalse(wrapper.iterator.hasNext())
         assertNotNull(firstRow)
         assertNotNull(secondRow)
         assertNotNull(thirdRow)
         assertNotNull(fourthRow)
+        assertNotNull(trailingRow)
         with(firstRow) {
             assertEquals(2, rowIndex)
             assertEquals("R2C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
@@ -414,6 +414,79 @@ class RowIteratorTest {
             assertEquals(7, rowIndex)
             assertEquals("R7C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
         }
+        with(trailingRow) {
+            assertEquals(8, rowIndex)
+            assertEquals("FOOTER_R0C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        }
+    }
+
+    @Test
+    fun `should resolve footer AttributedRow`() {
+        val wrapper = createDefaultIterator<Product> {
+            columns { column(Product::code) }
+            rows {
+                newRow(2) { cell { value = "R2C0" } }
+                newTrailingRow { cell { value = "T0C0" } }
+            }
+        }
+        val firstRow = wrapper.iterator.next()
+        val footerRow = wrapper.iterator.next()
+        assertFalse(wrapper.iterator.hasNext())
+        assertNotNull(firstRow)
+        assertNotNull(footerRow)
+        with(firstRow) {
+            assertEquals(2, rowIndex)
+            assertEquals("R2C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        }
+        with(footerRow) {
+            assertEquals(3, rowIndex)
+            assertEquals("T0C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        }
+    }
+
+    @Test
+    fun `should resolve trailing AttributedRow when row indices are scattered`() {
+        val wrapper = createDefaultIterator<Product> {
+            columns { column(Product::code) }
+            rows {
+                newRow(2) { cell { value = "R2C0" } }
+                newTrailingRow(2) { cell { value = "T2C0" } }
+                newTrailingRow(3) { cell { value = "T3C0" } }
+                newTrailingRow(5) { cell { value = "T5C0" } }
+            }
+        }
+        val firstRow = wrapper.iterator.next()
+        wrapper.resolver.buffer()
+        val secondRow = wrapper.iterator.next()
+        val trailingRow1 = wrapper.iterator.next()
+        val trailingRow2 = wrapper.iterator.next()
+        val trailingRow3 = wrapper.iterator.next()
+        assertFalse(wrapper.iterator.hasNext())
+        assertNotNull(firstRow)
+        assertNotNull(secondRow)
+        assertNotNull(trailingRow1)
+        assertNotNull(trailingRow2)
+        assertNotNull(trailingRow3)
+        with(firstRow) {
+            assertEquals(2, rowIndex)
+            assertEquals("R2C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        }
+        with(secondRow) {
+            assertEquals(3, rowIndex)
+            assertEquals("C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        }
+        with(trailingRow1) {
+            assertEquals(6, rowIndex)
+            assertEquals("T2C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        }
+        with(trailingRow2) {
+            assertEquals(7, rowIndex)
+            assertEquals("T3C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        }
+        with(trailingRow3) {
+            assertEquals(9, rowIndex)
+            assertEquals("T5C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        }
     }
 
     @Test
@@ -429,16 +502,7 @@ class RowIteratorTest {
                 }
             }
         }
-        wrapper.resolver.buffer(
-            Product(
-                "code1",
-                "name1",
-                "description1",
-                "manufacturer1",
-                LocalDate.now(),
-                BigDecimal.TEN
-            )
-        )
+        wrapper.resolver.buffer()
         val header = wrapper.iterator.next()
         val value = wrapper.iterator.next()
         val footer = wrapper.iterator.next()
@@ -451,7 +515,7 @@ class RowIteratorTest {
         assertNotNull(value)
         assertEquals(1, value.rowIndex)
         with(value) {
-            assertEquals("code1", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
         }
         assertNotNull(footer)
         assertEquals(2, footer.rowIndex)
