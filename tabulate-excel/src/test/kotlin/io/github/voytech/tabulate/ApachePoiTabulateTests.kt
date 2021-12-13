@@ -7,7 +7,6 @@ import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttr
 import io.github.voytech.tabulate.excel.model.attributes.dataFormat
 import io.github.voytech.tabulate.excel.model.attributes.filterAndSort
 import io.github.voytech.tabulate.excel.model.attributes.format
-import io.github.voytech.tabulate.excel.template.ApachePoiRenderingContext
 import io.github.voytech.tabulate.model.RowCellExpression
 import io.github.voytech.tabulate.model.and
 import io.github.voytech.tabulate.model.attributes.cell.*
@@ -18,10 +17,10 @@ import io.github.voytech.tabulate.model.attributes.row.height
 import io.github.voytech.tabulate.model.attributes.table.template
 import io.github.voytech.tabulate.template.export
 import io.github.voytech.tabulate.template.tabulate
-import io.github.voytech.tabulate.testsupport.CellPosition
-import io.github.voytech.tabulate.testsupport.CellRange
+import io.github.voytech.tabulate.test.CellPosition
+import io.github.voytech.tabulate.test.CellRange
+import io.github.voytech.tabulate.test.cellassertions.*
 import io.github.voytech.tabulate.testsupport.PoiTableAssert
-import io.github.voytech.tabulate.testsupport.cellassertions.*
 import org.apache.poi.openxml4j.util.ZipSecureFile
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -409,7 +408,7 @@ class ApachePoiTabulateTests {
                 }
             }
         })
-        val headerAttributes = AssertMany<ApachePoiRenderingContext>(
+        val headerAttributes = AssertMany(
             AssertEqualsAttribute(
                 expectedAttribute = CellTextStylesAttribute(
                     fontColor = Colors.WHITE,

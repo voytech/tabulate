@@ -3,6 +3,7 @@ package io.github.voytech.tabulate.testsupport
 import io.github.voytech.tabulate.excel.template.ApachePoiRenderingContext
 import io.github.voytech.tabulate.template.operations.CellValue
 import io.github.voytech.tabulate.template.operations.Coordinates
+import io.github.voytech.tabulate.test.*
 import org.apache.poi.openxml4j.util.ZipSecureFile
 import org.apache.poi.ss.util.CellRangeAddress
 import java.io.File
@@ -27,9 +28,9 @@ class PoiStateProvider : StateProvider<ApachePoiRenderingContext> {
 }
 
 class PoiTableAssert<T>(
-        tableName: String,
-        cellTests: Map<CellSelect, CellTest<ApachePoiRenderingContext>>,
-        file: File
+    tableName: String,
+    cellTests: Map<CellSelect, CellTest>,
+    file: File
 ) {
     private val assert = TableAssert<T, ApachePoiRenderingContext>(
             stateProvider = PoiStateProvider(),
@@ -82,7 +83,7 @@ class PoiTableAssert<T>(
             tableName = tableName
     )
 
-    fun perform(): TableAssert<T, ApachePoiRenderingContext> = assert.perform()
+    fun perform(): TableAssert<T,ApachePoiRenderingContext> = assert.perform()
 }
 
 

@@ -8,4 +8,4 @@ pluginManagement {
 }
 
 rootProject.name = "tabulate"
-include("tabulate-core", "tabulate-excel", "tabulate-reactor", "tabulate-bom")
+include("tabulate-core", "tabulate-test", "tabulate-excel", "tabulate-reactor", "tabulate-bom")

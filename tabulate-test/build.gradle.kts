@@ -10,12 +10,11 @@ plugins {
 }
 
 scmVersion {
-    tag.prefix = "tabulate.core"
+    tag.prefix = "tabulate.test"
     tag.versionSeparator = "-"
 }
 
 dependencies {
-    api("org.reactivestreams","reactive-streams", reactiveStreamsVersion)
-    testImplementation("io.projectreactor","reactor-core", projectReactorVersion)
-    testImplementation("io.projectreactor","reactor-test", projectReactorVersion)
+    implementation("org.jetbrains.kotlin","kotlin-test", kotlinVersion)
+    implementation(project(":tabulate-core"))
 }

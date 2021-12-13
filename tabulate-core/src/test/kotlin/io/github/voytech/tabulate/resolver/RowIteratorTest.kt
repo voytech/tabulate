@@ -10,6 +10,7 @@ import io.github.voytech.tabulate.model.attributes.cell.CellBackgroundAttribute
 import io.github.voytech.tabulate.model.attributes.cell.Colors
 import io.github.voytech.tabulate.model.attributes.cell.background
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultCellFill
+import io.github.voytech.tabulate.model.attributes.cell.text
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
 import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
 import org.junit.jupiter.api.Assertions.*
@@ -49,7 +50,24 @@ class RowIteratorTest {
 
     @Test
     fun `should resolve AttributedRow having no cells`() {
-
+        val wrapper = createDefaultIterator<Product> {
+            columns {
+                column(Product::code)
+            }
+            rows {
+                newRow {
+                    attributes {
+                        text { fontColor = Colors.WHITE }
+                    }
+                }
+            }
+        }
+        val resolvedIndexedAttributedRow = wrapper.iterator.next()
+        assertNotNull(resolvedIndexedAttributedRow)
+        assertEquals(0, resolvedIndexedAttributedRow.rowIndex)
+        with(resolvedIndexedAttributedRow) {
+            assertEquals(0, rowCellValues.size)
+        }
     }
 
     @Test

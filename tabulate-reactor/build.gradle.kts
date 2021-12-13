@@ -16,5 +16,6 @@ dependencies {
     implementation(project(":tabulate-core"))
     implementation("io.projectreactor","reactor-core", projectReactorVersion)
     testImplementation("io.projectreactor","reactor-test", projectReactorVersion)
+    testImplementation(project(":tabulate-test"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }

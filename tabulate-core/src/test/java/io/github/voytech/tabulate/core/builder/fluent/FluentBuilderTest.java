@@ -12,9 +12,6 @@ import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute;
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute;
 import io.github.voytech.tabulate.template.TabulationFormat;
 import io.github.voytech.tabulate.template.TabulationTemplate;
-import io.github.voytech.tabulate.template.operations.AttributedRowWithCells;
-import io.github.voytech.tabulate.testsupport.AttributedRowTest;
-import io.github.voytech.tabulate.testsupport.TestExportOperationsFactory;
 import kotlin.Unit;
 import org.junit.jupiter.api.Test;
 
@@ -55,11 +52,6 @@ public class FluentBuilderTest {
 
 	@Test
 	public void createTableDefinitionTest() {
-		TestExportOperationsFactory.setRowTest(new AttributedRowTest() {
-			public void test(AttributedRowWithCells row) {
-				System.out.println(row.toString());
-			}
-		});
 		final FluentTableBuilderApi<Employee> fluentBuilder =
 				new TableBuilder<Employee>()
 						.attribute(CellTextStylesAttribute::builder, builder -> {

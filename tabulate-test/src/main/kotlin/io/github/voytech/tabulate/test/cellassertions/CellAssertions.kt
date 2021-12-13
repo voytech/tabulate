@@ -1,10 +1,10 @@
-package io.github.voytech.tabulate.testsupport.cellassertions
+package io.github.voytech.tabulate.test.cellassertions
 
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.template.operations.CellValue
 import io.github.voytech.tabulate.template.operations.Coordinates
-import io.github.voytech.tabulate.testsupport.CellDefinition
-import io.github.voytech.tabulate.testsupport.CellTest
+import io.github.voytech.tabulate.test.CellDefinition
+import io.github.voytech.tabulate.test.CellTest
 import java.util.zip.CRC32
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -13,12 +13,12 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
-class AssertCellValue<E>(
+class AssertCellValue(
     private val expectedValue: Any,
     private val expectedColspan: Int? = null,
     private val expectedRowspan: Int? = null
-) : CellTest<E> {
-    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
+) : CellTest {
+    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
         assertNotNull(def?.cellValue, "Expected cell value to be present")
         assertValueEquals(expectedValue, def?.cellValue?.value, "Expected cell value to be $expectedValue")
         expectedColspan?.let {
@@ -49,8 +49,8 @@ class AssertCellValue<E>(
     }
 }
 
-class AssertCellValueExpr<E>(private val invoke: (CellValue) -> Unit) : CellTest<E> {
-    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
+class AssertCellValueExpr(private val invoke: (CellValue) -> Unit) : CellTest {
+    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
         assertNotNull(def?.cellValue, "Expected cell value to be present")
         def?.cellValue?.let { invoke.invoke(it) }
     }
@@ -61,8 +61,8 @@ interface AssertCellAttribute {
     fun attributeClass(): KClass<out CellAttribute>
 }
 
-class CellAttributesAssertions<E>(private vararg val cellAttributesTests: AssertCellAttribute) : CellTest<E> {
-    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
+class CellAttributesAssertions(private vararg val cellAttributesTests: AssertCellAttribute) : CellTest {
+    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
         val cellExtensionByClass = def?.cellAttributes?.groupBy { it::class }
         cellAttributesTests.forEach {
             if (cellExtensionByClass?.containsKey(it.attributeClass()) == false) {
@@ -75,8 +75,8 @@ class CellAttributesAssertions<E>(private vararg val cellAttributesTests: Assert
     }
 }
 
-class AssertContainsCellAttributes<E>(private vararg val targets: CellAttribute) : CellTest<E> {
-    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
+class AssertContainsCellAttributes(private vararg val targets: CellAttribute) : CellTest {
+    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
         val existingAttributes = def?.cellAttributes?.asIterable() ?: emptyList()
         assertEquals(
             targets.toSet(),
@@ -86,22 +86,22 @@ class AssertContainsCellAttributes<E>(private vararg val targets: CellAttribute)
     }
 }
 
-class AssertMany<E>(private vararg val cellTests: CellTest<E>) : CellTest<E> {
-    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
-        cellTests.forEach { it.performCellTest(api, coordinates, def) }
+class AssertMany(private vararg val cellTests: CellTest) : CellTest {
+    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
+        cellTests.forEach { it.performCellTest(coordinates, def) }
     }
 }
 
-class AssertEqualsAttribute<E>(
+class AssertEqualsAttribute(
     private val expectedAttribute: CellAttribute,
     private val onlyProperties: Set<KProperty1<out CellAttribute, Any?>>? = null
-) : CellTest<E> {
+) : CellTest {
 
     @Suppress("UNCHECKED_CAST")
     private fun <A: CellAttribute> A.matchProperties(expected: A) =
         onlyProperties!!.map { it as KProperty1<A, Any?>  }.all { it(this) ==  it(expected)}
 
-    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
+    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
         if (onlyProperties?.isNotEmpty() == true) {
             assertTrue(
                 def?.cellAttributes?.any { it.matchProperties(expectedAttribute) } ?: false,
@@ -116,9 +116,9 @@ class AssertEqualsAttribute<E>(
     }
 }
 
-class AssertNoAttribute<E>(private val expectedAttribute: CellAttribute) : CellTest<E> {
+class AssertNoAttribute(private val expectedAttribute: CellAttribute) : CellTest {
 
-    override fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition?) {
+    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
         assertTrue(
             def?.cellAttributes?.contains(expectedAttribute) == false,
             "CellAttribute $expectedAttribute found but not expected!"

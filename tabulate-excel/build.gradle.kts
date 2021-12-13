@@ -18,5 +18,6 @@ dependencies {
     api("org.apache.poi:poi:$apachePoiVersion")
     api("org.apache.poi:poi-ooxml:$apachePoiVersion")
     implementation("org.apache.commons:commons-math3:$commonsMathVersion")
+    testImplementation(project(":tabulate-test"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }

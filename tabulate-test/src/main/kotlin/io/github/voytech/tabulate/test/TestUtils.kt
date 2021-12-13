@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.testsupport
+package io.github.voytech.tabulate.test
 
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.template.operations.CellValue
@@ -31,8 +31,8 @@ interface ValueResolver<E> {
     fun resolve(api: E, coordinates: Coordinates): CellValue
 }
 
-interface CellTest<E> {
-    fun performCellTest(api: E, coordinates: Coordinates, def: CellDefinition? = null)
+interface CellTest {
+    fun performCellTest(coordinates: Coordinates, def: CellDefinition? = null)
 }
 
 
@@ -46,17 +46,16 @@ class TableAssert<T, E>(
     private val stateProvider: StateProvider<E>,
     private val cellAttributeResolvers: List<AttributeResolver<E>>? = emptyList(),
     private val cellValueResolver: ValueResolver<E>? = null,
-    private val cellTests: Map<CellSelect, CellTest<E>>,
+    private val cellTests: Map<CellSelect, CellTest>,
     private val file: File
 ) {
     var state: E? = null
 
     private fun performTestsOnCell(coordinates: Coordinates, select: CellSelect) {
         if (cellAttributeResolvers?.isEmpty() == true && cellValueResolver == null) {
-            cellTests[select]?.performCellTest(api = state!!, coordinates = coordinates)
+            cellTests[select]?.performCellTest(coordinates = coordinates)
         } else {
             cellTests[select]?.performCellTest(
-                api = state!!,
                 coordinates = coordinates,
                 def = CellDefinition(
                     cellAttributes = cellAttributeResolvers?.map { it.resolve(state!!, coordinates) }?.toSet(),

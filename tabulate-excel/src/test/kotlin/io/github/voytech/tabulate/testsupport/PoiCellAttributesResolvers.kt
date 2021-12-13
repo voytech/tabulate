@@ -12,6 +12,7 @@ import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellFill
 import io.github.voytech.tabulate.template.operations.Coordinates
+import io.github.voytech.tabulate.test.AttributeResolver
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.Font

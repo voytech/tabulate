@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.testsupport
+package io.github.voytech.tabulate.support
 
 import io.github.voytech.tabulate.template.result.ResultProvider
 import java.util.logging.Logger

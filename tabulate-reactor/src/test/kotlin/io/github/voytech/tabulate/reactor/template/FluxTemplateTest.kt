@@ -3,8 +3,8 @@ package io.github.voytech.tabulate.reactor.template
 import io.github.voytech.tabulate.reactor.data.Product
 import io.github.voytech.tabulate.reactor.data.Products
 import io.github.voytech.tabulate.template.TabulationFormat
-import io.github.voytech.tabulate.testsupport.AttributedCellTest
-import io.github.voytech.tabulate.testsupport.TestExportOperationsFactory
+import io.github.voytech.tabulate.test.AttributedCellTest
+import io.github.voytech.tabulate.test.TestExportOperationsFactory
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue

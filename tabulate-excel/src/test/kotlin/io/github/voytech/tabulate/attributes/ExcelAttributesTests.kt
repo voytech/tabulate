@@ -9,11 +9,11 @@ import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
 import io.github.voytech.tabulate.template.export
-import io.github.voytech.tabulate.testsupport.CellPosition
+import io.github.voytech.tabulate.test.CellPosition
+import io.github.voytech.tabulate.test.cellassertions.AssertCellValue
+import io.github.voytech.tabulate.test.cellassertions.AssertContainsCellAttributes
+import io.github.voytech.tabulate.test.cellassertions.AssertEqualsAttribute
 import io.github.voytech.tabulate.testsupport.PoiTableAssert
-import io.github.voytech.tabulate.testsupport.cellassertions.AssertCellValue
-import io.github.voytech.tabulate.testsupport.cellassertions.AssertContainsCellAttributes
-import io.github.voytech.tabulate.testsupport.cellassertions.AssertEqualsAttribute
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

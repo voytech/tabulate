@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.testsupport
+package io.github.voytech.tabulate.support
 
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.context.RenderingContext
@@ -22,9 +22,13 @@ fun interface AttributedColumnTest {
 
 class TestExportOperationsFactory<T>: ExportOperationsProvider<TestRenderingContext,T> {
 
+    init {
+        CURRENT_FACTORY_INSTANCE = this
+    }
+
     override fun supportsFormat() = format("test")
 
-    override fun createExportOperations(): AttributedContextExportOperations<T,TestRenderingContext> = object: AttributedContextExportOperations<T,TestRenderingContext> {
+    override fun createExportOperations(): AttributedContextExportOperations<T, TestRenderingContext> = object: AttributedContextExportOperations<T, TestRenderingContext> {
 
         override fun renderColumn(renderingContext: TestRenderingContext, context: AttributedColumn) {
             columnTest?.test(context)
@@ -52,6 +56,11 @@ class TestExportOperationsFactory<T>: ExportOperationsProvider<TestRenderingCont
         TestResultProvider(), OutputStreamTestResultProvider()
     )
 
+    override fun getContextClass(): Class<TestRenderingContext> = TestRenderingContext::class.java
+
+    override fun createRenderingContext(): TestRenderingContext = TestRenderingContext().also {
+        CURRENT_RENDERING_CONTEXT_INSTANCE = it
+    }
 
     companion object {
         @JvmStatic
@@ -61,16 +70,18 @@ class TestExportOperationsFactory<T>: ExportOperationsProvider<TestRenderingCont
         @JvmStatic
         var columnTest: AttributedColumnTest? = null
 
+        @JvmStatic
+        var CURRENT_FACTORY_INSTANCE: TestExportOperationsFactory<*>? = null
+
+        @JvmStatic
+        var CURRENT_RENDERING_CONTEXT_INSTANCE: TestRenderingContext? = null
+
         fun clear() {
             cellTest = null
             rowTest = null
             columnTest = null
         }
     }
-
-    override fun getContextClass(): Class<TestRenderingContext> = TestRenderingContext::class.java
-
-    override fun createRenderingContext(): TestRenderingContext = TestRenderingContext()
 
 }
 

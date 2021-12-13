@@ -34,7 +34,8 @@ configure(
     listOf(
         project(":tabulate-core"),
         project(":tabulate-excel"),
-        project(":tabulate-reactor")
+        project(":tabulate-reactor"),
+        project(":tabulate-test")
     )
 ) {
     apply(plugin = "org.jetbrains.kotlin.jvm")
