@@ -206,30 +206,24 @@ addressList.tabulate("address_list.xlsx",appBasicTemplate + {
  
 ```
 
-
 ## Roadmap
 
 Starting from version 0.1.0, minor version will advance relatively fast due to tiny milestones.
-This is because of one person (me) who is currently in charge, and due to my intention of "non-blocking realese cycles" for too long.
+This is because of one person (me) who is currently in charge, and due to my intention of working within non-blocking release cycles.
 
 ### v0.2.x
  
-- PDF table export operations implementation.
-- Definition time validation for cell spans.
+- PDF table export operations.
 
 ### v0.3.x
 
-- CLI table
+- CLI table export operations.
 
 ### v0.4.x
 
-- Composition of multiple table models (TableBuilder.include).
-
-### v0.5.x
-
 - Multi-part output files. (chunking large files)
 
-### v0.6.x
+### v0.5.x
 
 - Codegen for user defined attributes.
 

@@ -48,6 +48,11 @@ class RowIteratorTest {
     }
 
     @Test
+    fun `should resolve AttributedRow having no cells`() {
+
+    }
+
+    @Test
     fun `should resolve AttributedRow from custom row definition`() {
         val wrapper = createDefaultIterator<Product> {
             columns {
