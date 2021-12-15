@@ -7,44 +7,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-
-/*
-Row predicates will allow following notations:
-
-1. Insertion of new custom row
-
- insertRow {
-    index { gt(3) and lt(7) }
-    cell {
-        value = "Some spanned values"
-        rowSpan = 2
-    }
-    cell {
-        eval { "Value $it.index" }
-    }
- }
-
-2. Enrichment of existing row
-
- row {
-    index { gt(3) and lt(7) }
-    cell {
-        value = "Some value"
-    }
- }
-
- row {
-    when {
-        index { gt(3) and lt(7) }  // index works on absolute table row index.
-        matching { it.price >= 1000 }  // matching works only on Indexed<T> - record.
-    }
-    cell {
-        value = "Some value"
-    }
- }
-
- */
-
 class RowPredicatesTest {
 
     data class Record(private val field: String)

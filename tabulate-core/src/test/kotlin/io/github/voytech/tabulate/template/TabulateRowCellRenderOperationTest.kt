@@ -86,59 +86,14 @@ class TabulateRowCellRenderOperationTest {
                     column(Product::manufacturer)
                 }
             }
-            val firstPassInstance = TestExportOperationsFactory.CURRENT_FACTORY_INSTANCE
             val firstPassRenderingContext = TestExportOperationsFactory.CURRENT_RENDERING_CONTEXT_INSTANCE
             tabulation.export(Products.ITEMS, Unit) {
                 name = "Product codes list"
                 columns { column(Product::code) }
             }
-            val secondPassInstance = TestExportOperationsFactory.CURRENT_FACTORY_INSTANCE
             val secondPassRenderingContext = TestExportOperationsFactory.CURRENT_RENDERING_CONTEXT_INSTANCE
-            assertEquals(firstPassInstance, secondPassInstance)
             assertNotEquals(firstPassRenderingContext, secondPassRenderingContext)
         }
-    }
-
-    @Test
-    @Disabled("ServiceLoader does not cache ExportOperationProvider! Why!")
-    fun `should perform subsequent exports on different TabulationTemplates`() {
-        TestExportOperationsFactory.cellTest = AttributedCellTest { attributedCell ->
-            Assertions.assertNotNull(attributedCell)
-            when (attributedCell.rowIndex) {
-                0 -> {
-                    when (attributedCell.columnIndex) {
-                        0 -> assertEquals(attributedCell.value.value, "code1")
-                    }
-                }
-            }
-        }
-
-        TabulationTemplate<Product>(format("test")).let { tabulation ->
-            tabulation.export(Products.ITEMS, Unit) {
-                name = "Products table"
-                columns {
-                    column(Product::code)
-                    column(Product::name)
-                    column(Product::description)
-                    column(Product::manufacturer)
-                }
-            }
-        }
-        val firstPassInstance = TestExportOperationsFactory.CURRENT_FACTORY_INSTANCE
-        val firstPassRenderingContext = TestExportOperationsFactory.CURRENT_RENDERING_CONTEXT_INSTANCE
-
-        TabulationTemplate<Product>(format("test")).let { tabulation ->
-            tabulation.export(Products.ITEMS, Unit) {
-                name = "Product codes list"
-                columns { column(Product::code) }
-            }
-        }
-
-        val secondPassInstance = TestExportOperationsFactory.CURRENT_FACTORY_INSTANCE
-        val secondPassRenderingContext = TestExportOperationsFactory.CURRENT_RENDERING_CONTEXT_INSTANCE
-
-        assertEquals(firstPassInstance, secondPassInstance)
-        assertNotEquals(firstPassRenderingContext, secondPassRenderingContext)
     }
 
     @Test

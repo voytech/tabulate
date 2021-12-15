@@ -22,10 +22,6 @@ fun interface AttributedColumnTest {
 
 class TestExportOperationsFactory<T>: ExportOperationsProvider<TestRenderingContext,T> {
 
-    init {
-        CURRENT_FACTORY_INSTANCE = this
-    }
-
     override fun supportsFormat() = format("test")
 
     override fun createExportOperations(): AttributedContextExportOperations<T, TestRenderingContext> = object: AttributedContextExportOperations<T, TestRenderingContext> {
@@ -69,9 +65,6 @@ class TestExportOperationsFactory<T>: ExportOperationsProvider<TestRenderingCont
         var rowTest: AttributedRowTest? = null
         @JvmStatic
         var columnTest: AttributedColumnTest? = null
-
-        @JvmStatic
-        var CURRENT_FACTORY_INSTANCE: TestExportOperationsFactory<*>? = null
 
         @JvmStatic
         var CURRENT_RENDERING_CONTEXT_INSTANCE: TestRenderingContext? = null
