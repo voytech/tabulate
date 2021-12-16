@@ -88,19 +88,6 @@ configure(
                 html.isEnabled = true
             }
         }
-
-//        register<JacocoReport>("codeCoverageReport") {
-//            executionData(fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec"))
-//            subprojects.forEach {
-//                sourceSets(it.sourceSets.main.get())
-//            }
-//            reports {
-//                xml.isEnabled = true
-//                xml.destination = file("${buildDir}/reports/jacoco/report.xml")
-//                html.isEnabled = true
-//            }
-//            dependsOn("test")
-//        }
     }
 
     java {

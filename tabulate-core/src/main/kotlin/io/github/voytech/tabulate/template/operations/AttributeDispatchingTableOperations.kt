@@ -12,7 +12,7 @@ import io.github.voytech.tabulate.template.context.RenderingContext
 internal class AttributeDispatchingTableOperations<T, CTX: RenderingContext>(
     private val attributeOperationsContainer: AttributesOperationsContainer<CTX, T>,
     private val exposedExportOperations: TableExportOperations<T,CTX>,
-    private val enableAttributeSetCaching: Boolean = true
+    private val enableAttributeSetBasedCaching: Boolean = true
 ) : AttributedContextExportOperations<T,CTX>  {
 
     inner class SortedTableAttributeSetTransformer: AttributeSetTransformer<TableAttribute<*>> {
@@ -52,6 +52,7 @@ internal class AttributeDispatchingTableOperations<T, CTX: RenderingContext>(
     }
 
     override fun createTable(renderingContext: CTX, context: AttributedTable) {
+        if (enableAttributeSetBasedCaching) context.setupCacheAndGet()
         with(context.crop()) {
             return exposedExportOperations.createTable(renderingContext, this).also {
                 context.attributes?.forEach { tableAttribute ->
@@ -62,6 +63,7 @@ internal class AttributeDispatchingTableOperations<T, CTX: RenderingContext>(
     }
 
     override fun beginRow(renderingContext: CTX,context: AttributedRow<T>) {
+        if (enableAttributeSetBasedCaching) context.setupCacheAndGet()
         with(context.crop()) {
             var operationRendered = false
             if (!context.attributes.isNullOrEmpty()) {
@@ -82,6 +84,7 @@ internal class AttributeDispatchingTableOperations<T, CTX: RenderingContext>(
     }
 
     override fun renderColumn(renderingContext: CTX,context: AttributedColumn) {
+        if (enableAttributeSetBasedCaching) context.setupCacheAndGet()
         with(context.crop()) {
             context.attributes?.let { attributes ->
                 attributes.forEach { attribute ->
@@ -93,7 +96,7 @@ internal class AttributeDispatchingTableOperations<T, CTX: RenderingContext>(
     }
 
     override fun renderRowCell(renderingContext: CTX,context: AttributedCell) {
-        if (enableAttributeSetCaching) context.ensureAttributesCacheEntry()
+        if (enableAttributeSetBasedCaching) context.setupCacheAndGet()
         with(context.crop()) {
             var operationRendered = false
             if (!context.attributes.isNullOrEmpty()) {
