@@ -16,6 +16,18 @@ internal value class AttributeClassBasedCache<T : Attribute<*>>(
     }
 }
 
+/**
+ * Multi-level cache that resides in dedicated [ContextData.additionalAttributes] state entry. This cache have following
+ * properties:
+ *  - it uses attribute-set as cache key which enables passing attribute-set bound context across different rows, cells and columns.
+ *  - it consists of nested internal caches representing all attribute categories (row, cell, table, column)
+ * Usage Scenario:
+ * If we have the same set of cell attributes defined on column level then it is possible that some of cells
+ * belonging to this particular column shares exactly the same attributes. This means that as long as third party rendering context
+ * maintains its own internal state per given attribute set, then it can be simply cached and applied on all compatible cells,
+ * without need of instantiating logically equal objects multiple times.
+ * @author Wojciech Mąka
+ */
 @Suppress("UNCHECKED_CAST")
 class AttributeSetBasedCache {
     private val rowAttributesAsKeyCache: AttributeClassBasedCache<RowAttribute<*>> = AttributeClassBasedCache()
@@ -24,22 +36,31 @@ class AttributeSetBasedCache {
     private val tableAttributesAsKeyCache: AttributeClassBasedCache<TableAttribute<*>> = AttributeClassBasedCache()
 
     internal inline fun <reified T : Attribute<*>> getCache(attributes: Set<T>): MutableMap<String, Any> {
-        return when  {
+        return when {
             TableAttribute::class.java == T::class.java -> tableAttributesAsKeyCache[attributes as Set<TableAttribute<*>>]
             ColumnAttribute::class.java == T::class.java -> columnAttributesAsKeyCache[attributes as Set<ColumnAttribute<*>>]
             RowAttribute::class.java == T::class.java -> rowAttributesAsKeyCache[attributes as Set<RowAttribute<*>>]
             CellAttribute::class.java == T::class.java -> cellAttributesAsKeyCache[attributes as Set<CellAttribute<*>>]
-            else -> error("Requested attribute class is not supported!")
+            else -> error("Requested attribute class (category) is not supported!")
         }
     }
 }
 
+/**
+ * Obtains or creates (if does not exist) a cache instance. Cache resides in [ContextData.additionalAttributes]
+ * @author Wojciech Mąka
+ */
+@JvmSynthetic
 internal fun ContextData.ensureAttributeSetBasedCache(): AttributeSetBasedCache {
     additionalAttributes!!.putIfAbsent("_attribute_set_based_cache", AttributeSetBasedCache())
     return additionalAttributes!!["_attribute_set_based_cache"] as AttributeSetBasedCache
 }
 
-inline fun <reified T : Attribute<*>> getAttributeClassId(): String = when  {
+/**
+ * Given attribute, resolves attribute category identifier. One of: [table|column|row|cell].
+ * @author Wojciech Mąka
+ */
+inline fun <reified T : Attribute<*>> getAttributeClassId(): String = when {
     TableAttribute::class.java == T::class.java -> "table"
     ColumnAttribute::class.java == T::class.java -> "column"
     RowAttribute::class.java == T::class.java -> "row"
@@ -47,24 +68,54 @@ inline fun <reified T : Attribute<*>> getAttributeClassId(): String = when  {
     else -> error("Requested attribute class is not supported!")
 }
 
+/**
+ * Given [AttributedModel], resolves mutable map (internal cache). This internal cache is accessed by attribute-set
+ * (`attributes` property) of this particular [AttributedModel] receiver.
+ * @author Wojciech Mąka
+ */
+@JvmSynthetic
 internal inline fun <reified T : Attribute<*>> AttributedModel<T>.setupCacheAndGet(): MutableMap<String, Any>? {
     return this.attributes?.takeIf { it.isNotEmpty() }?.let {
         ensureAttributeSetBasedCache().getCache(it)
-    }?.also {
-        additionalAttributes?.put("_current_${getAttributeClassId<T>()}_attributes_cache", it)
     }
 }
 
-@Suppress("UNCHECKED_CAST")
-inline fun <reified M : Attribute<*>, T> T.putCachedValueIfAbsent(key: String, value: Any): Any
-        where T : ModelAttributeAccessor<M>,
-              T : Context =
-    (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as MutableMap<String, Any>)
-        .let { it.computeIfAbsent(key) { value } }
+/**
+ * Allows to perform operations in scope of given [AttributedModel] with internal cache exposed using [AttributedModel]
+ * attribute-set.
+ * When using invocations like :
+ * `attributedCell.skipAttributes().let { cellContext -> cellContext.cacheValueByContextAttributes("someKey", "someVal") }`
+ * we can put value to, or query internal cache valid for attribute-set `attributeCell.attributes` from `cellContext` which
+ * itself does not expose attributes to consumer.
+ * @author Wojciech Mąka
+ */
+@JvmSynthetic
+internal inline fun <reified T : Attribute<*>> AttributedModel<T>.withAttributeSetBasedCache(block: (cache: MutableMap<String, Any>?) -> Unit) {
+    return setupCacheAndGet()?.also {
+        additionalAttributes?.put("_current_${getAttributeClassId<T>()}_attributes_cache", it)
+    }.run(block).also {
+        additionalAttributes?.remove("_current_${getAttributeClassId<T>()}_attributes_cache")
+    }
+}
 
+/**
+ * Given [ModelAttributeAccessor] (a simplified, truncated [AttributedModel] view), resolves internal cache value for given key.
+ * @author Wojciech Mąka
+ */
 @Suppress("UNCHECKED_CAST")
-inline fun <reified M : Attribute<*>, T> T.getCachedValue(key: String): Any?
+inline fun <reified M : Attribute<*>, T> T.cacheValueByContextAttributes(key: String, value: Any): Any
         where T : ModelAttributeAccessor<M>,
               T : Context =
-    (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as MutableMap<String, Any>)
-        .let { it[key] }
+    (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as? MutableMap<String, Any>)
+        ?.let { it.computeIfAbsent(key) { value } } ?: error("not within attribute-set cached scope!")
+
+/**
+ * Given [ModelAttributeAccessor] (a simplified, truncated [AttributedModel] view), gets internal cache value for given key.
+ * @author Wojciech Mąka
+ */
+@Suppress("UNCHECKED_CAST")
+inline fun <reified M : Attribute<*>, T> T.getContextAttributesCachedValue(key: String): Any?
+        where T : ModelAttributeAccessor<M>,
+              T : Context =
+    (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as? MutableMap<String, Any>)
+        ?.let { it[key] } ?: error("not within attribute-set cached scope!")

@@ -54,7 +54,7 @@ class TableContext(private val attributedContext: AttributedTable) :
         Context by attributedContext,
         ModelAttributeAccessor<TableAttribute<*>>(attributedContext)
 
-fun AttributedTable.crop(): TableContext = TableContext(this)
+fun AttributedTable.skipAttributes(): TableContext = TableContext(this)
 
 class ColumnContext(private val attributedContext: AttributedColumn):
         Context by attributedContext,
@@ -63,7 +63,7 @@ class ColumnContext(private val attributedContext: AttributedColumn):
     val currentPhase: ColumnRenderPhase? = attributedContext.currentPhase
 }
 
-fun AttributedColumn.crop(): ColumnContext = ColumnContext(this)
+fun AttributedColumn.skipAttributes(): ColumnContext = ColumnContext(this)
 
 enum class ColumnRenderPhase {
     BEFORE_FIRST_ROW,
@@ -76,16 +76,16 @@ open class RowContext<T>(private val attributedContext: AttributedRow<T>) :
         ModelAttributeAccessor<RowAttribute<*>>(attributedContext)
 
 class RowContextWithCells<T>(private val attributedContext: AttributedRowWithCells<T>) : RowContext<T>(attributedContext) {
-    fun getCells(): Map<ColumnKey<T>, RowCellContext> = attributedContext.rowCellValues.crop()
+    fun getCells(): Map<ColumnKey<T>, RowCellContext> = attributedContext.rowCellValues.skipAttributes()
 }
 
-fun <T> AttributedRowWithCells<T>.crop(): RowContextWithCells<T> = RowContextWithCells(this)
+fun <T> AttributedRowWithCells<T>.skipAttributes(): RowContextWithCells<T> = RowContextWithCells(this)
 
-fun <T> AttributedRow<T>.crop(): RowContext<T> = RowContext(this)
+fun <T> AttributedRow<T>.skipAttributes(): RowContext<T> = RowContext(this)
 
-private fun <T> Map<ColumnKey<T>, AttributedCell>.crop(): Map<ColumnKey<T>, RowCellContext> {
+private fun <T> Map<ColumnKey<T>, AttributedCell>.skipAttributes(): Map<ColumnKey<T>, RowCellContext> {
     return entries.associate {
-        it.key to it.value.crop()
+        it.key to it.value.skipAttributes()
     }
 }
 
@@ -100,6 +100,6 @@ class RowCellContext(private val attributedContext: AttributedCell) :
 }
 
 @Suppress("UNCHECKED_CAST")
-fun AttributedCell.crop(): RowCellContext = RowCellContext(this)
+fun AttributedCell.skipAttributes(): RowCellContext = RowCellContext(this)
 
 fun RowCellContext.getTypeHint(): TypeHintAttribute? = getFirstAttributeOrNull<TypeHintAttribute>()
