@@ -111,7 +111,7 @@ inline fun <reified M : Attribute<*>, T> T.cacheOnAttributeSet(key: String, valu
         where T : ModelAttributeAccessor<M>,
               T : Context =
     (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as? MutableMap<String, Any>)
-        ?.let { it.computeIfAbsent(key) { value } } ?: error("not within attribute-set cached scope!")
+        ?.let { it.computeIfAbsent(key) { value } } ?: error("cannot resolve cached value in scope!")
 
 /**
  * Given [ModelAttributeAccessor] (truncated, attribute-set-less [AttributedModel] view), gets cached value stored under given key.
@@ -123,4 +123,4 @@ inline fun <reified M : Attribute<*>, T> T.getCachedOnAttributeSet(key: String):
         where T : ModelAttributeAccessor<M>,
               T : Context =
     (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as? MutableMap<String, Any>)
-        ?.let { it[key] } ?: error("not within attribute-set cached scope!")
+        ?.let { it[key] } ?: error("cannot resolve cached value in scope!")
