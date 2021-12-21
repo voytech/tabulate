@@ -66,9 +66,9 @@ interface TabulationApi<T, O> {
  */
 class TabulationTemplate<T>(private val format: TabulationFormat) {
 
-    private val provider: ExportOperationsProvider<RenderingContext, T> by lazy { resolveExportOperationsFactory(format) }
+    private val provider: ExportOperationsProvider<RenderingContext> by lazy { resolveExportOperationsFactory(format) }
 
-    private val ops: AttributedContextExportOperations<T, RenderingContext> by lazy { provider.createExportOperations() }
+    private val ops: AttributedContextExportOperations<RenderingContext> by lazy { provider.createExportOperations() }
 
     private val resultProviders: List<ResultProvider<RenderingContext, *>> by lazy { provider.createResultProviders() }
 
@@ -112,8 +112,8 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
     @Suppress("UNCHECKED_CAST")
     private fun detectAttributeTransformers(): AttributeTransformerContainer? {
-        if (ops is AttributeDispatchingTableOperations<T, out RenderingContext>) {
-            return (ops as AttributeDispatchingTableOperations<T, out RenderingContext>).createAttributeTransformerContainer()
+        if (ops is AttributeDispatchingTableOperations<out RenderingContext>) {
+            return (ops as AttributeDispatchingTableOperations<out RenderingContext>).createAttributeTransformerContainer()
         }
         return null
     }
@@ -127,9 +127,9 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun resolveExportOperationsFactory(format: TabulationFormat): ExportOperationsProvider<RenderingContext, T> {
+    private fun resolveExportOperationsFactory(format: TabulationFormat): ExportOperationsProvider<RenderingContext> {
         return ServiceLoader.load(ExportOperationsProvider::class.java)
-            .filterIsInstance<ExportOperationsProvider<RenderingContext, T>>().find {
+            .filterIsInstance<ExportOperationsProvider<RenderingContext>>().find {
                 if (format.provider.isNullOrBlank()) {
                     format.id == it.supportsFormat().id
                 } else {

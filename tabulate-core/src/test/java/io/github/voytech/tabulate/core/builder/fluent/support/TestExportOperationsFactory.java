@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class TestExportOperationsFactory<T> implements ExportOperationsProvider<TestRenderingContext,T> {
+public class TestExportOperationsFactory<T> implements ExportOperationsProvider<TestRenderingContext> {
     @NotNull
     @Override
     public Class<TestRenderingContext> getContextClass() {
@@ -24,14 +24,14 @@ public class TestExportOperationsFactory<T> implements ExportOperationsProvider<
 
     @NotNull
     @Override
-    public AttributedContextExportOperations<T, TestRenderingContext> createExportOperations() {
-        return new AttributedContextExportOperations<T, TestRenderingContext>() {
+    public AttributedContextExportOperations<TestRenderingContext> createExportOperations() {
+        return new AttributedContextExportOperations<TestRenderingContext>() {
             @Override
-            public void endRow(@NotNull TestRenderingContext renderingContext, @NotNull AttributedRowWithCells<T> context) {
+            public <T> void endRow(@NotNull TestRenderingContext renderingContext, @NotNull AttributedRowWithCells<T> context) {
             }
 
             @Override
-            public void beginRow(@NotNull TestRenderingContext renderingContext, @NotNull AttributedRow<T> context) {
+            public <T> void beginRow(@NotNull TestRenderingContext renderingContext, @NotNull AttributedRow<T> context) {
             }
 
             @Override

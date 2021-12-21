@@ -7,12 +7,12 @@ import io.github.voytech.tabulate.template.operations.AttributeRenderOperationsF
  * Service provider interface for extending existing third party exporter with additional custom attributes.
  * @author Wojciech Mąka
  */
-interface AttributeRenderOperationsProvider<T, CTX: RenderingContext> {
+interface AttributeRenderOperationsProvider<CTX: RenderingContext> {
 
     /**
      * @return Factory for providing custom attribute operations compatible with particular [RenderingContext].
      */
-    fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<CTX,T>
+    fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<CTX>
 
     /**
      * @return Compatible [RenderingContext] class.

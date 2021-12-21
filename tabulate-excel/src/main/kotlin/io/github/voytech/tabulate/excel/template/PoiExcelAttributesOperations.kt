@@ -3,7 +3,6 @@ package io.github.voytech.tabulate.excel.template
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
 import io.github.voytech.tabulate.excel.model.attributes.FilterAndSortTableAttribute
 import io.github.voytech.tabulate.excel.template.PoiExcelExportOperationsFactory.Companion.getCachedStyle
-import io.github.voytech.tabulate.excel.template.ApachePoiRenderingContext
 import io.github.voytech.tabulate.excel.template.poi.ApachePoiUtils
 import io.github.voytech.tabulate.model.attributes.cell.CellAlignmentAttribute
 import io.github.voytech.tabulate.model.attributes.cell.CellBackgroundAttribute
@@ -204,9 +203,9 @@ class ColumnWidthAttributeRenderOperation: ColumnAttributeRenderOperation<Apache
     }
 }
 
-class RowHeightAttributeRenderOperation<T>: RowAttributeRenderOperation<ApachePoiRenderingContext, T, RowHeightAttribute> {
+class RowHeightAttributeRenderOperation : RowAttributeRenderOperation<ApachePoiRenderingContext, RowHeightAttribute> {
     override fun attributeType(): Class<RowHeightAttribute> = RowHeightAttribute::class.java
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowContext<T>, attribute: RowHeightAttribute) {
+    override fun <E> renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowContext<E>, attribute: RowHeightAttribute) {
         renderingContext.provideRow(context.getTableId(), context.getRow()).height =
             ApachePoiUtils.heightFromPixels(attribute.px)
     }

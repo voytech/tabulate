@@ -28,8 +28,8 @@ interface TableAttributeRenderOperation<CTX: RenderingContext, T : TableAttribut
     fun renderAttribute(renderingContext: CTX, table: TableContext, attribute: T)
 }
 
-interface RowAttributeRenderOperation<CTX: RenderingContext, E, T : RowAttribute> : AttributeOperation<T> {
-    fun renderAttribute(renderingContext: CTX, context: RowContext<E>, attribute: T)
+interface RowAttributeRenderOperation<CTX: RenderingContext,T : RowAttribute> : AttributeOperation<T> {
+    fun <E> renderAttribute(renderingContext: CTX, context: RowContext<E>, attribute: T)
 }
 
 interface CellAttributeRenderOperation<CTX: RenderingContext, T : CellAttribute> : AttributeOperation<T> {
@@ -40,35 +40,35 @@ interface ColumnAttributeRenderOperation<CTX: RenderingContext, T : ColumnAttrib
     fun renderAttribute(renderingContext: CTX, context: ColumnContext, attribute: T)
 }
 
-interface AttributeRenderOperationsFactory<CTX: RenderingContext,T> {
+interface AttributeRenderOperationsFactory<CTX: RenderingContext> {
     fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<CTX, out TableAttribute>>? = null
-    fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<CTX, T, out RowAttribute>>? = null
+    fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<CTX, out RowAttribute>>? = null
     fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<CTX, out ColumnAttribute>>? = null
     fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<CTX, out CellAttribute>>? = null
 }
 
-interface StandardAttributeRenderOperationsProvider<CTX: RenderingContext, T> {
+interface StandardAttributeRenderOperationsProvider<CTX: RenderingContext> {
     fun createTemplateFileRenderer(): TableAttributeRenderOperation<CTX, TemplateFileAttribute>
     fun createColumnWidthRenderer(): ColumnAttributeRenderOperation<CTX, ColumnWidthAttribute>
-    fun createRowHeightRenderer(): RowAttributeRenderOperation<CTX, T, RowHeightAttribute>
+    fun createRowHeightRenderer(): RowAttributeRenderOperation<CTX, RowHeightAttribute>
     fun createCellTextStyleRenderer(): CellAttributeRenderOperation<CTX, CellTextStylesAttribute>
     fun createCellBordersRenderer(): CellAttributeRenderOperation<CTX, CellBordersAttribute>
     fun createCellAlignmentRenderer(): CellAttributeRenderOperation<CTX, CellAlignmentAttribute>
     fun createCellBackgroundRenderer(): CellAttributeRenderOperation<CTX, CellBackgroundAttribute>
 }
 
-class StandardAttributeRenderOperationsFactory<CTX: RenderingContext,T>(
-    private val standardAttributeRenderers: StandardAttributeRenderOperationsProvider<CTX, T>,
+class StandardAttributeRenderOperationsFactory<CTX: RenderingContext>(
+    private val standardAttributeRenderers: StandardAttributeRenderOperationsProvider<CTX>,
     private val additionalTableAttributeRenderers:  Set<TableAttributeRenderOperation<CTX, out TableAttribute>> = setOf(),
     private val additionalColumnAttributeRenderers:  Set<ColumnAttributeRenderOperation<CTX, out ColumnAttribute>> = setOf(),
-    private val additionalRowAttributeRenderers:  Set<RowAttributeRenderOperation<CTX, T, out RowAttribute>> = setOf(),
-    private val additionalCellAttributeRenderers:  Set<CellAttributeRenderOperation<CTX, out CellAttribute>> = setOf()) : AttributeRenderOperationsFactory<CTX,T> {
+    private val additionalRowAttributeRenderers:  Set<RowAttributeRenderOperation<CTX, out RowAttribute>> = setOf(),
+    private val additionalCellAttributeRenderers:  Set<CellAttributeRenderOperation<CTX, out CellAttribute>> = setOf()) : AttributeRenderOperationsFactory<CTX> {
 
     override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<CTX, out TableAttribute>> = setOf(
         standardAttributeRenderers.createTemplateFileRenderer()
     ) union additionalTableAttributeRenderers
 
-    override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<CTX, T, out RowAttribute>> = setOf(
+    override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<CTX, out RowAttribute>> = setOf(
         standardAttributeRenderers.createRowHeightRenderer()
     ) union additionalRowAttributeRenderers
 

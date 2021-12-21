@@ -54,13 +54,13 @@ class OutputStreamTestResultProvider: ResultProvider<TestRenderingContext, Outpu
     }
 }
 
-class TestExportOperationsFactory<T>:
-    ExportOperationsProvider<TestRenderingContext, T> {
+class TestExportOperationsFactory:
+    ExportOperationsProvider<TestRenderingContext> {
 
     override fun supportsFormat() = TabulationFormat.format("test")
 
-    override fun createExportOperations(): AttributedContextExportOperations<T, TestRenderingContext> = object:
-        AttributedContextExportOperations<T, TestRenderingContext> {
+    override fun createExportOperations(): AttributedContextExportOperations<TestRenderingContext> = object:
+        AttributedContextExportOperations<TestRenderingContext> {
 
         override fun renderColumn(renderingContext: TestRenderingContext, context: AttributedColumn) {
             columnTest?.test(context)
@@ -70,11 +70,11 @@ class TestExportOperationsFactory<T>:
             cellTest?.test(context)
         }
 
-        override fun beginRow(renderingContext: TestRenderingContext, context: AttributedRow<T>) {
+        override fun <T> beginRow(renderingContext: TestRenderingContext, context: AttributedRow<T>) {
             println("begin row: $context")
         }
 
-        override fun endRow(renderingContext: TestRenderingContext, context: AttributedRowWithCells<T>) {
+        override fun <T> endRow(renderingContext: TestRenderingContext, context: AttributedRowWithCells<T>) {
             rowTest?.test(context)
         }
 

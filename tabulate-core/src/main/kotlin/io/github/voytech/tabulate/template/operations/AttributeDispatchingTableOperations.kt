@@ -6,11 +6,11 @@ import io.github.voytech.tabulate.model.attributes.*
 import io.github.voytech.tabulate.template.context.RenderingContext
 
 @Suppress("UNCHECKED_CAST")
-internal class AttributeDispatchingTableOperations<T, CTX : RenderingContext>(
-    private val attributeOperationsContainer: AttributesOperationsContainer<CTX, T>,
-    private val exposedExportOperations: TableExportOperations<T, CTX>,
+internal class AttributeDispatchingTableOperations<CTX : RenderingContext>(
+    private val attributeOperationsContainer: AttributesOperationsContainer<CTX>,
+    private val exposedExportOperations: TableExportOperations<CTX>,
     private val enableAttributeSetBasedCaching: Boolean = true
-) : AttributedContextExportOperations<T, CTX> {
+) : AttributedContextExportOperations<CTX> {
 
     inner class SortedTableAttributeSetTransformer : AttributeSetTransformer<TableAttribute<*>> {
         override fun transform(input: Set<TableAttribute<*>>): Set<TableAttribute<*>> =
@@ -66,7 +66,7 @@ internal class AttributeDispatchingTableOperations<T, CTX : RenderingContext>(
         }
     }
 
-    override fun beginRow(renderingContext: CTX, context: AttributedRow<T>) {
+    override fun <T> beginRow(renderingContext: CTX, context: AttributedRow<T>) {
         context.withAttributeSetCacheIfEnabled {
             context.skipAttributes().let { rowContext ->
                 var operationRendered = false
@@ -123,7 +123,7 @@ internal class AttributeDispatchingTableOperations<T, CTX : RenderingContext>(
         }
     }
 
-    override fun endRow(renderingContext: CTX, context: AttributedRowWithCells<T>) {
+    override fun <T> endRow(renderingContext: CTX, context: AttributedRowWithCells<T>) {
         exposedExportOperations.endRow(renderingContext, context.skipAttributes())
     }
 

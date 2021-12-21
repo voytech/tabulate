@@ -13,10 +13,10 @@ import io.github.voytech.tabulate.testsupport.TestRenderingContext
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute as CellAttributeAlias
 
 
-class NoopTestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvider<T, TestRenderingContext> {
+class NoopTestAttributeRenderOperationsProvider : AttributeRenderOperationsProvider<TestRenderingContext> {
 
-    override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<TestRenderingContext,T> {
-        return object : AttributeRenderOperationsFactory<TestRenderingContext,T> {
+    override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<TestRenderingContext> {
+        return object : AttributeRenderOperationsFactory<TestRenderingContext> {
             override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttributeAlias>> =
                 setOf(NoopSimpleTestCellAttributeRenderOperation())
         }
@@ -25,10 +25,10 @@ class NoopTestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsPr
     override fun getContextClass(): Class<TestRenderingContext> = TestRenderingContext::class.java
 }
 
-class TestAttributeRenderOperationsProvider<T> : AttributeRenderOperationsProvider<T, ApachePoiRenderingContext> {
+class TestAttributeRenderOperationsProvider : AttributeRenderOperationsProvider<ApachePoiRenderingContext> {
 
-    override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<ApachePoiRenderingContext, T> {
-        return object : AttributeRenderOperationsFactory<ApachePoiRenderingContext,T> {
+    override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<ApachePoiRenderingContext> {
+        return object : AttributeRenderOperationsFactory<ApachePoiRenderingContext> {
             override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<ApachePoiRenderingContext, out CellAttributeAlias>> =
                 setOf(SimpleTestCellAttributeRenderOperation())
         }

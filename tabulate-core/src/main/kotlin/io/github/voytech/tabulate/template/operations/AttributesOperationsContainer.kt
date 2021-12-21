@@ -9,13 +9,13 @@ import io.github.voytech.tabulate.template.context.RenderingContext
 import java.util.logging.Logger
 
 @Suppress("UNCHECKED_CAST")
-internal class AttributesOperationsContainer<CTX: RenderingContext, T> {
+internal class AttributesOperationsContainer<CTX: RenderingContext> {
 
     private val tableAttributeRenderOperationsByClass: MutableMap<Class<out TableAttribute>, TableAttributeRenderOperation<CTX, out TableAttribute>> = mutableMapOf()
 
     private val columnAttributeRenderOperationsByClass: MutableMap<Class<out ColumnAttribute>, ColumnAttributeRenderOperation<CTX, out ColumnAttribute>> = mutableMapOf()
 
-    private val rowAttributeRenderOperationsByClass: MutableMap<Class<out RowAttribute>, RowAttributeRenderOperation<CTX, T,out RowAttribute>> = mutableMapOf()
+    private val rowAttributeRenderOperationsByClass: MutableMap<Class<out RowAttribute>, RowAttributeRenderOperation<CTX, out RowAttribute>> = mutableMapOf()
 
     private val cellAttributeRenderOperationsByClass: MutableMap<Class<out CellAttribute>, CellAttributeRenderOperation<CTX, out CellAttribute>> = mutableMapOf()
 
@@ -24,8 +24,8 @@ internal class AttributesOperationsContainer<CTX: RenderingContext, T> {
             warnNoOperation(it, clazz)
         }
 
-    fun getRowAttributeOperation(clazz: Class<out RowAttribute>): RowAttributeRenderOperation<CTX, T, RowAttribute>? =
-        (rowAttributeRenderOperationsByClass[clazz] as RowAttributeRenderOperation<CTX, T, RowAttribute>?).also {
+    fun getRowAttributeOperation(clazz: Class<out RowAttribute>): RowAttributeRenderOperation<CTX, RowAttribute>? =
+        (rowAttributeRenderOperationsByClass[clazz] as RowAttributeRenderOperation<CTX, RowAttribute>?).also {
             warnNoOperation(it, clazz)
         }
 
@@ -47,7 +47,7 @@ internal class AttributesOperationsContainer<CTX: RenderingContext, T> {
         cellAttributeRenderOperationsByClass[operation.attributeType()] = operation
     }
 
-    private fun register(operation: RowAttributeRenderOperation<CTX, T,out RowAttribute>) {
+    private fun register(operation: RowAttributeRenderOperation<CTX, out RowAttribute>) {
         rowAttributeRenderOperationsByClass[operation.attributeType()] = operation
     }
 
@@ -59,7 +59,7 @@ internal class AttributesOperationsContainer<CTX: RenderingContext, T> {
         tableAttributeRenderOperationsByClass[operation.attributeType()] = operation
     }
 
-    internal fun registerAttributesOperations(factory: AttributeRenderOperationsFactory<CTX, T>): AttributesOperationsContainer<CTX, T> {
+    internal fun registerAttributesOperations(factory: AttributeRenderOperationsFactory<CTX>): AttributesOperationsContainer<CTX> {
         factory.createCellAttributeRenderOperations()?.forEach { register(it) }
         factory.createTableAttributeRenderOperations()?.forEach { register(it) }
         factory.createRowAttributeRenderOperations()?.forEach { register(it) }

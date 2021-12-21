@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.template.result.ResultProvider
  * Service provider interface enabling third party table exporters.
  * @author Wojciech Mąka
  */
-interface ExportOperationsProvider<CTX: RenderingContext,T> : Identifiable {
+interface ExportOperationsProvider<CTX: RenderingContext> : Identifiable {
 
     /**
      * @return third party API aware class to transform current context into third party tabular representation.
@@ -27,7 +27,7 @@ interface ExportOperationsProvider<CTX: RenderingContext,T> : Identifiable {
      * Those export operations communicates with third party exporter via rendering context.
      * @author Wojciech Mąka
      */
-    fun createExportOperations(): AttributedContextExportOperations<T,CTX>
+    fun createExportOperations(): AttributedContextExportOperations<CTX>
 
     /**
      * Creates rendering context aware result provider. Result provider instance creates a binding between rendering context

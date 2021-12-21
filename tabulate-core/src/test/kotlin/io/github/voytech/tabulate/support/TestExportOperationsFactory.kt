@@ -20,11 +20,11 @@ fun interface AttributedColumnTest {
     fun test(context: AttributedColumn)
 }
 
-class TestExportOperationsFactory<T>: ExportOperationsProvider<TestRenderingContext,T> {
+class TestExportOperationsFactory<T>: ExportOperationsProvider<TestRenderingContext> {
 
     override fun supportsFormat() = format("test")
 
-    override fun createExportOperations(): AttributedContextExportOperations<T, TestRenderingContext> = object: AttributedContextExportOperations<T, TestRenderingContext> {
+    override fun createExportOperations(): AttributedContextExportOperations<TestRenderingContext> = object: AttributedContextExportOperations<TestRenderingContext> {
 
         override fun renderColumn(renderingContext: TestRenderingContext, context: AttributedColumn) {
             columnTest?.test(context)
@@ -34,11 +34,11 @@ class TestExportOperationsFactory<T>: ExportOperationsProvider<TestRenderingCont
             cellTest?.test(context)
         }
 
-        override fun beginRow(renderingContext: TestRenderingContext, context: AttributedRow<T>) {
+        override fun <T> beginRow(renderingContext: TestRenderingContext, context: AttributedRow<T>) {
             println("begin row: $context")
         }
 
-        override fun endRow(renderingContext: TestRenderingContext, context: AttributedRowWithCells<T>) {
+        override fun <T> endRow(renderingContext: TestRenderingContext, context: AttributedRowWithCells<T>) {
             rowTest?.test(context)
         }
 
@@ -78,11 +78,11 @@ class TestExportOperationsFactory<T>: ExportOperationsProvider<TestRenderingCont
 
 }
 
-class CompetingTestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<T, ExampleContext>() {
+class CompetingTestExportOperationsFactory<T>: ExportOperationsConfiguringFactory<ExampleContext>() {
 
     override fun supportsFormat() = format("test-2")
 
-    override fun provideExportOperations(): TableExportOperations<T, ExampleContext> = object: TableExportOperations<T, ExampleContext> {
+    override fun provideExportOperations(): TableExportOperations<ExampleContext> = object: TableExportOperations<ExampleContext> {
         override fun renderRowCell(renderingContext: ExampleContext, context: RowCellContext) {
             println("cell context: $context")
         }

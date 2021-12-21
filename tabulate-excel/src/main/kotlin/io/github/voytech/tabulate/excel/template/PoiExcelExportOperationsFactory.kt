@@ -21,7 +21,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T, ApachePoiRenderingContext>() {
+class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<ApachePoiRenderingContext>() {
 
     override fun supportsFormat(): TabulationFormat = format("xlsx", "poi")
 
@@ -29,15 +29,15 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
     override fun createRenderingContext(): ApachePoiRenderingContext = ApachePoiRenderingContext()
 
-    override fun provideExportOperations(): TableExportOperations<T, ApachePoiRenderingContext> =
-        object : TableExportOperations<T, ApachePoiRenderingContext> {
+    override fun provideExportOperations(): TableExportOperations<ApachePoiRenderingContext> =
+        object : TableExportOperations<ApachePoiRenderingContext> {
 
             override fun createTable(renderingContext: ApachePoiRenderingContext, context: TableContext) {
                 renderingContext.createWorkbook()
                 renderingContext.provideSheet(context.getTableId())
             }
 
-            override fun beginRow(renderingContext: ApachePoiRenderingContext, context: RowContext<T>) {
+            override fun <T> beginRow(renderingContext: ApachePoiRenderingContext, context: RowContext<T>) {
                 renderingContext.provideRow(context.getTableId(), context.getRow())
             }
 
@@ -127,16 +127,16 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
 
         }
 
-    override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<ApachePoiRenderingContext, T> =
+    override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<ApachePoiRenderingContext> =
         StandardAttributeRenderOperationsFactory(
-            object : StandardAttributeRenderOperationsProvider<ApachePoiRenderingContext, T> {
+            object : StandardAttributeRenderOperationsProvider<ApachePoiRenderingContext> {
                 override fun createTemplateFileRenderer(): TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute> =
                     TemplateFileAttributeRenderOperation()
 
                 override fun createColumnWidthRenderer(): ColumnAttributeRenderOperation<ApachePoiRenderingContext, ColumnWidthAttribute> =
                     ColumnWidthAttributeRenderOperation()
 
-                override fun createRowHeightRenderer(): RowAttributeRenderOperation<ApachePoiRenderingContext, T, RowHeightAttribute> =
+                override fun createRowHeightRenderer(): RowAttributeRenderOperation<ApachePoiRenderingContext, RowHeightAttribute> =
                     RowHeightAttributeRenderOperation()
 
                 override fun createCellTextStyleRenderer(): CellAttributeRenderOperation<ApachePoiRenderingContext, CellTextStylesAttribute> =
