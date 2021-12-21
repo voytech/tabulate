@@ -6,13 +6,11 @@ import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
 import io.github.voytech.tabulate.api.builder.fluent.FluentTableBuilderApi
 import io.github.voytech.tabulate.model.ColumnDef
-import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
 import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.exception.ExportOperationsFactoryResolvingException
 import io.github.voytech.tabulate.template.exception.ResultProviderResolvingException
 import io.github.voytech.tabulate.template.exception.UnknownTabulationFormatException
 import io.github.voytech.tabulate.template.operations.*
-import io.github.voytech.tabulate.template.operations.AttributedColumnFactory.createAttributedColumn
 import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
 import io.github.voytech.tabulate.template.result.ResultProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
@@ -68,18 +66,18 @@ interface TabulationApi<T, O> {
  */
 class TabulationTemplate<T>(private val format: TabulationFormat) {
 
-    private val provider: ExportOperationsProvider<RenderingContext,T> by lazy { resolveExportOperationsFactory(format) }
+    private val provider: ExportOperationsProvider<RenderingContext, T> by lazy { resolveExportOperationsFactory(format) }
 
-    private val ops: AttributedContextExportOperations<T,RenderingContext> by lazy { provider.createExportOperations() }
+    private val ops: AttributedContextExportOperations<T, RenderingContext> by lazy { provider.createExportOperations() }
 
-    private val resultProviders: List<ResultProvider<RenderingContext,*>> by lazy { provider.createResultProviders() }
+    private val resultProviders: List<ResultProvider<RenderingContext, *>> by lazy { provider.createResultProviders() }
 
     private inner class TabulationApiImpl<O>(
         private val state: TabulationState<T>,
         private val output: O
     ) : TabulationApi<T, O> {
 
-        private val resultProvider: ResultProvider<RenderingContext,O> by lazy {
+        private val resultProvider: ResultProvider<RenderingContext, O> by lazy {
             resolveResultProvider(output)
         }
 
@@ -101,11 +99,12 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         }
     }
 
-    private inner class RowCompletionListenerImpl(private val renderingContext: RenderingContext) : RowCompletionListener<T> {
+    private inner class RowCompletionListenerImpl(private val renderingContext: RenderingContext) :
+        RowCompletionListener<T> {
 
         override fun onAttributedRowResolved(row: AttributedRow<T>) = ops.beginRow(renderingContext, row)
 
-        override fun onAttributedCellResolved(cell: AttributedCell)  = ops.renderRowCell(renderingContext, cell)
+        override fun onAttributedCellResolved(cell: AttributedCell) = ops.renderRowCell(renderingContext, cell)
 
         override fun onAttributedRowResolved(row: AttributedRowWithCells<T>) = ops.endRow(renderingContext, row)
 
@@ -130,7 +129,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     @Suppress("UNCHECKED_CAST")
     private fun resolveExportOperationsFactory(format: TabulationFormat): ExportOperationsProvider<RenderingContext, T> {
         return ServiceLoader.load(ExportOperationsProvider::class.java)
-            .filterIsInstance<ExportOperationsProvider<RenderingContext,T>>().find {
+            .filterIsInstance<ExportOperationsProvider<RenderingContext, T>>().find {
                 if (format.provider.isNullOrBlank()) {
                     format.id == it.supportsFormat().id
                 } else {
@@ -218,22 +217,21 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
     private fun renderRemainingBufferedRows(state: TabulationState<T>) {
         @Suppress("ControlFlowWithEmptyBody")
-        while (state.next()!= null);
+        while (state.next() != null);
     }
 
     private fun renderColumns(state: TabulationState<T>, renderPhase: ColumnRenderPhase) {
-        state.tableModel.forEachColumn { columnIndex: Int, column: ColumnDef<T> ->
-            ops.renderColumn(state.renderingContext,
-                createAttributedColumn(
-                    state.tableModel.getColumnIndex(column.index ?: columnIndex),
-                    renderPhase,
-                    overrideAttributesLeftToRight(
-                        state.tableModel.columnAttributes.orEmpty() +
-                        column.columnAttributes.orEmpty()
-                    ),
-                    state.getCustomAttributes()
+        with(state) {
+            tableModel.columns.forEach { column: ColumnDef<T> ->
+                ops.renderColumn(
+                    renderingContext,
+                    tableModel.createAttributedColumn(
+                        column,
+                        renderPhase,
+                        state.getCustomAttributes()
+                    )
                 )
-            )
+            }
         }
     }
 

@@ -79,9 +79,6 @@ class Table<T> internal constructor(
     }
 
     @JvmSynthetic
-    internal inline fun forEachColumn(consumer: (Int, ColumnDef<T>) -> Unit) = columns.forEachIndexed(consumer)
-
-    @JvmSynthetic
     internal fun forEachRow(consumer: Consumer<in RowDef<T>>) = rows?.forEach(consumer)
 
     @JvmSynthetic

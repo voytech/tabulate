@@ -92,9 +92,9 @@ class BuilderStateTest {
         }
         step("Assert that columns are sorted according to their indices after building table.") {
             with(builder.columnsBuilderState.build()) {
-                assertTrue { this[0].index!! < this[1].index!! }
-                assertTrue { this[1].index!! < this[2].index!! }
-                assertTrue { this[2].index!! < this[3].index!! }
+                assertTrue { this[0].index < this[1].index }
+                assertTrue { this[1].index < this[2].index }
+                assertTrue { this[2].index < this[3].index }
             }
         }
     }

@@ -1,12 +1,57 @@
 package io.github.voytech.tabulate.template.resolvers
 
 import io.github.voytech.tabulate.model.*
+import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
+import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
 import io.github.voytech.tabulate.template.context.RowIndex
 import io.github.voytech.tabulate.template.operations.*
-import io.github.voytech.tabulate.template.operations.AttributedCellFactory.createAttributedCell
-import io.github.voytech.tabulate.template.operations.AttributedRowFactory.createAttributedRow
 
+internal class SyntheticRow<T>(
+    internal val table: Table<T>,
+    private val rowDefinitions: Set<RowDef<T>>,
+    internal val cellDefinitions: Map<ColumnKey<T>, CellDef<T>> = rowDefinitions.mergeCells(),
+    private val rowCellAttributes: Set<CellAttribute> = rowDefinitions.flattenCellAttributes(),
+    internal val rowAttributes: Set<RowAttribute> = overrideAttributesLeftToRight(
+        table.rowAttributes.orEmpty() + rowDefinitions.flattenRowAttributes()
+    ),
+    internal val cellAttributes: MutableMap<ColumnDef<T>, Set<CellAttribute>> = mutableMapOf()
+) {
+
+    @Suppress("NOTHING_TO_INLINE")
+    inline fun mergeCellAttributes(column: ColumnDef<T>) =
+        overrideAttributesLeftToRight(
+            table.cellAttributes.orEmpty() +
+                    column.cellAttributes.orEmpty() +
+                    rowCellAttributes +
+                    (cellDefinitions[column.id]?.cellAttributes).orEmpty()
+        )
+
+    internal fun mapEachCell(
+        block: (syntheticRow: SyntheticRow<T>, column: ColumnDef<T>) -> AttributedCell?
+    ): Map<ColumnKey<T>, AttributedCell> =
+        if (cellAttributes.isEmpty()) {
+            table.columns.mapNotNull { column ->
+                cellAttributes[column] = mergeCellAttributes(column)
+                block(this, column)?.let { column.id to it }
+            }.toMap()
+        } else {
+            cellAttributes.keys.mapNotNull { column ->
+                block(this, column)?.let { column.id to it }
+            }.toMap()
+        }
+}
+
+internal class QualifiedRows<T>(private val table: Table<T>) {
+    private var qualifiedRowsIndex: MutableMap<Set<RowDef<T>>, SyntheticRow<T>> = mutableMapOf()
+
+    internal fun findQualifying(sourceRow: SourceRow<T>): SyntheticRow<T> =
+        table.getRows(sourceRow).let { matchedRowDefs ->
+            qualifiedRowsIndex.computeIfAbsent(matchedRowDefs) {
+                SyntheticRow(table, it)
+            }
+        }
+}
 
 internal interface RowCompletionListener<T> {
     fun onAttributedCellResolved(cell: AttributedCell)
@@ -30,41 +75,36 @@ internal abstract class AbstractRowContextResolver<T>(
     private val listener: RowCompletionListener<T>? = null,
 ) : IndexedContextResolver<T, AttributedRowWithCells<T>> {
 
-    private fun resolveAttributedRow(tableRowIndex: RowIndex, record: IndexedValue<T>? = null): AttributedRowWithCells<T> {
-        return SourceRow(
-            rowIndex = tableRowIndex,
-            objectIndex = record?.index,
-            record = record?.value
-        ).let { sourceRow ->
-            val rowDefinitions = tableModel.getRows(sourceRow)
-            val cellDefinitions = rowDefinitions.mergeCells()
-            val rowCellAttributes = rowDefinitions.flattenCellAttributes()
-            val attributedRow = createAttributedRow<T>(
-                rowIndex = tableModel.getRowIndex(tableRowIndex.value),
-                rowAttributes = overrideAttributesLeftToRight(
-                    tableModel.rowAttributes.orEmpty() + rowDefinitions.flattenRowAttributes()
-                ),
-                customAttributes = customAttributes
-            ).also { listener?.onAttributedRowResolved(it) }
+    private val rows = QualifiedRows(tableModel)
 
-            val cellValues = tableModel.columns.mapIndexed { index: Int, column: ColumnDef<T> ->
-                cellDefinitions.resolveCellValue(column, sourceRow)?.let { value ->
-                    createAttributedCell(
-                        rowIndex = tableModel.getRowIndex(tableRowIndex.value),
-                        columnIndex = tableModel.getColumnIndex(column.index ?: index),
-                        value = value,
-                        attributes = overrideAttributesLeftToRight(
-                            tableModel.cellAttributes.orEmpty() +
-                            column.cellAttributes.orEmpty() +
-                            rowCellAttributes +
-                            (cellDefinitions[column.id]?.cellAttributes).orEmpty()
-                        ),
-                        customAttributes
-                    ).also { listener?.onAttributedCellResolved(it) }
-                        .let { column.id to it }
-                }
-            }.mapNotNull { it }.toMap()
-            attributedRow.withCells(cellValues).also { listener?.onAttributedRowResolved(it) }
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun AttributedRow<T>.notify(): AttributedRow<T> =
+        also { listener?.onAttributedRowResolved(it) }
+
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun AttributedRowWithCells<T>.notify(): AttributedRowWithCells<T> =
+        also { listener?.onAttributedRowResolved(it) }
+
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun AttributedCell.notify(): AttributedCell =
+        also { listener?.onAttributedCellResolved(it) }
+
+
+    private fun resolveAttributedRow(
+        tableRowIndex: RowIndex,
+        record: IndexedValue<T>? = null
+    ): AttributedRowWithCells<T> {
+        return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
+            with(rows.findQualifying(sourceRow)) {
+                createAttributedRow(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
+                    .let {
+                        it.withCells(
+                            mapEachCell { row, column ->
+                                row.createAttributedCell(row = sourceRow, column = column, customAttributes)?.notify()
+                            }
+                        )
+                    }.notify()
+            }
         }
     }
 

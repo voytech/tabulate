@@ -164,7 +164,7 @@ class PoiExcelExportOperationsFactory<T> : ExportOperationsConfiguringFactory<T,
         private const val CELL_STYLE_CACHE_KEY: String = "cellStyle"
 
         fun getCachedStyle(poi: ApachePoiRenderingContext, context: RowCellContext): CellStyle {
-            return context.cacheValueByContextAttributes(
+            return context.cacheOnAttributeSet(
                 CELL_STYLE_CACHE_KEY,
                 poi.workbook().createCellStyle()
             ) as CellStyle

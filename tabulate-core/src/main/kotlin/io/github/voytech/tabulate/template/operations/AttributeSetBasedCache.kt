@@ -6,11 +6,13 @@ import io.github.voytech.tabulate.model.attributes.*
 internal value class AttributeClassBasedCache<T : Attribute<*>>(
     private val cache: MutableMap<Set<T>, MutableMap<String, Any>> = mutableMapOf()
 ) {
+    @JvmSynthetic
     operator fun get(key: Set<T>): MutableMap<String, Any> = cache[key] ?: kotlin.run {
         cache[key] = mutableMapOf()
         cache[key]!!
     }
 
+    @JvmSynthetic
     operator fun set(key: Set<T>, value: MutableMap<String, Any>) {
         cache[key] = value
     }
@@ -29,12 +31,13 @@ internal value class AttributeClassBasedCache<T : Attribute<*>>(
  * @author Wojciech Mąka
  */
 @Suppress("UNCHECKED_CAST")
-class AttributeSetBasedCache {
+internal class AttributeSetBasedCache {
     private val rowAttributesAsKeyCache: AttributeClassBasedCache<RowAttribute<*>> = AttributeClassBasedCache()
     private val cellAttributesAsKeyCache: AttributeClassBasedCache<CellAttribute<*>> = AttributeClassBasedCache()
     private val columnAttributesAsKeyCache: AttributeClassBasedCache<ColumnAttribute<*>> = AttributeClassBasedCache()
     private val tableAttributesAsKeyCache: AttributeClassBasedCache<TableAttribute<*>> = AttributeClassBasedCache()
 
+    @JvmSynthetic
     internal inline fun <reified T : Attribute<*>> getCache(attributes: Set<T>): MutableMap<String, Any> {
         return when {
             TableAttribute::class.java == T::class.java -> tableAttributesAsKeyCache[attributes as Set<TableAttribute<*>>]
@@ -81,10 +84,10 @@ internal inline fun <reified T : Attribute<*>> AttributedModel<T>.setupCacheAndG
 }
 
 /**
- * Allows to perform operations in scope of given [AttributedModel] with internal cache exposed using [AttributedModel]
+ * Allows to perform operations in scope of given [AttributedModel] with its internal cache exposed using [AttributedModel]'s
  * attribute-set.
  * When using invocations like :
- * `attributedCell.skipAttributes().let { cellContext -> cellContext.cacheValueByContextAttributes("someKey", "someVal") }`
+ * `attributedCell.skipAttributes().let { cellContext -> cellContext.cacheOnAttributeSet("someKey", "someVal") }`
  * we can put value to, or query internal cache valid for attribute-set `attributeCell.attributes` from `cellContext` which
  * itself does not expose attributes to consumer.
  * @author Wojciech Mąka
@@ -99,22 +102,24 @@ internal inline fun <reified T : Attribute<*>> AttributedModel<T>.withAttributeS
 }
 
 /**
- * Given [ModelAttributeAccessor] (a simplified, truncated [AttributedModel] view), resolves internal cache value for given key.
+ * Given [ModelAttributeAccessor] (truncated, attribute-set-less [AttributedModel] view), caches any value under specific key.
+ * Key-value pair is stored in internal cache valid for / accessed by [AttributedModel]'s attributes (attribute-set).
  * @author Wojciech Mąka
  */
 @Suppress("UNCHECKED_CAST")
-inline fun <reified M : Attribute<*>, T> T.cacheValueByContextAttributes(key: String, value: Any): Any
+inline fun <reified M : Attribute<*>, T> T.cacheOnAttributeSet(key: String, value: Any): Any
         where T : ModelAttributeAccessor<M>,
               T : Context =
     (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as? MutableMap<String, Any>)
         ?.let { it.computeIfAbsent(key) { value } } ?: error("not within attribute-set cached scope!")
 
 /**
- * Given [ModelAttributeAccessor] (a simplified, truncated [AttributedModel] view), gets internal cache value for given key.
+ * Given [ModelAttributeAccessor] (truncated, attribute-set-less [AttributedModel] view), gets cached value stored under given key.
+ * Key-value pair is stored in internal cache valid for / accessed by [AttributedModel]'s attributes (attribute-set).
  * @author Wojciech Mąka
  */
 @Suppress("UNCHECKED_CAST")
-inline fun <reified M : Attribute<*>, T> T.getContextAttributesCachedValue(key: String): Any?
+inline fun <reified M : Attribute<*>, T> T.getCachedOnAttributeSet(key: String): Any?
         where T : ModelAttributeAccessor<M>,
               T : Context =
     (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as? MutableMap<String, Any>)

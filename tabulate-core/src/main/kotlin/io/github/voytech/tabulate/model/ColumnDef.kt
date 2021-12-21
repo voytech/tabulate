@@ -26,7 +26,7 @@ internal class ColumnDef<T> internal constructor(
      * An index at which column should be rendered in the exported table.
      */
     @get:JvmSynthetic
-    internal val index: Int?,
+    internal val index: Int,
     /**
      * column attributes for controlling appearance of entire column, which are applicable column-wide not per cell. (e.g. width)
      */

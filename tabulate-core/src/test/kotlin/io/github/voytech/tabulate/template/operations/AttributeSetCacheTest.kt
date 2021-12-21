@@ -1,8 +1,14 @@
 package io.github.voytech.tabulate.template.operations
 
+import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
 import io.github.voytech.tabulate.model.Table
+import io.github.voytech.tabulate.model.attributes.cell.Colors
+import io.github.voytech.tabulate.model.attributes.cell.background
+import io.github.voytech.tabulate.model.attributes.cell.borders
+import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultBorderStyle
+import io.github.voytech.tabulate.model.attributes.cell.text
 import io.github.voytech.tabulate.model.attributes.table.template
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
@@ -13,6 +19,9 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class AttributeSetCacheTest {
+
+    private fun createTableModelWithCellAttributes(block: ColumnLevelAttributesBuilderApi<Unit>.() -> Unit): Table<Unit> =
+        createTableModel { columns { column(0) { attributes(block) } } }
 
     private fun createTableModel(block: TableBuilderApi<Unit>.() -> Unit): Table<Unit> =
         createTableBuilder(block).build()
@@ -73,6 +82,28 @@ class AttributeSetCacheTest {
     }
 
     @Test
+    fun `should setup internal caches and fail to lookup value in second cache for different cell attribute sets`() {
+        val customAttributes = mutableMapOf<String, Any>()
+
+        val firstTable = createTableModelWithCellAttributes {
+            text { fontColor = Colors.BLACK }
+            background { color = Colors.WHITE }
+            borders { leftBorderStyle = DefaultBorderStyle.SOLID }
+        }
+
+        //firstTable.processRows(SourceRow(RowIndex(0))).let {
+        //    val firstAttributedCell: AttributedCell = firstTable.createAttributedCell(
+        //        0,0, it.mergedRowAttributes,customAttributes)
+        //}
+
+        val secondTable = createTableModelWithCellAttributes {
+            text { fontColor = Colors.BLACK }
+            background { color = Colors.WHITE }
+            borders { leftBorderStyle = DefaultBorderStyle.DOTTED }
+        }
+    }
+
+    @Test
     fun `should correctly perform withAttributeSetBasedCache() scoping`() {
         val customAttributes = mutableMapOf<String, Any>()
 
@@ -86,30 +117,30 @@ class AttributeSetCacheTest {
         val thirdAttributedTable: AttributedTable = thirdTable.createContext(customAttributes)
 
         firstAttributedTable.withAttributeSetBasedCache {
-            firstAttributedTable.skipAttributes().cacheValueByContextAttributes("someKey", "someValue")
+            firstAttributedTable.skipAttributes().cacheOnAttributeSet("someKey", "someValue")
         }
         val error = assertThrows<IllegalStateException> {
-            firstAttributedTable.skipAttributes().getContextAttributesCachedValue("someKey")
+            firstAttributedTable.skipAttributes().getCachedOnAttributeSet("someKey")
         }
         assertEquals("not within attribute-set cached scope!", error.message)
 
 
         secondAttributedTable.withAttributeSetBasedCache {
             secondAttributedTable.skipAttributes().let { tableContext ->
-                tableContext.cacheValueByContextAttributes("someKey", "tryOverride")
-                assertEquals("someValue", tableContext.getContextAttributesCachedValue("someKey"))
+                tableContext.cacheOnAttributeSet("someKey", "tryOverride")
+                assertEquals("someValue", tableContext.getCachedOnAttributeSet("someKey"))
             }
         }
 
         thirdAttributedTable.withAttributeSetBasedCache {
             thirdAttributedTable.skipAttributes().let { tableContext ->
-                tableContext.cacheValueByContextAttributes(
+                tableContext.cacheOnAttributeSet(
                     "someKey",
                     "thisIsNewValueInNewInternalCacheCosAttributesDiffers"
                 )
                 assertEquals(
                     "thisIsNewValueInNewInternalCacheCosAttributesDiffers",
-                    tableContext.getContextAttributesCachedValue("someKey")
+                    tableContext.getCachedOnAttributeSet("someKey")
                 )
             }
         }
