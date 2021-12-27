@@ -205,7 +205,7 @@ class ColumnWidthAttributeRenderOperation: ColumnAttributeRenderOperation<Apache
 
 class RowHeightAttributeRenderOperation : RowAttributeRenderOperation<ApachePoiRenderingContext, RowHeightAttribute> {
     override fun attributeType(): Class<RowHeightAttribute> = RowHeightAttribute::class.java
-    override fun <E> renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowContext<E>, attribute: RowHeightAttribute) {
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowContext, attribute: RowHeightAttribute) {
         renderingContext.provideRow(context.getTableId(), context.getRow()).height =
             ApachePoiUtils.heightFromPixels(attribute.px)
     }
@@ -213,17 +213,17 @@ class RowHeightAttributeRenderOperation : RowAttributeRenderOperation<ApachePoiR
 
 class FilterAndSortTableAttributeRenderOperation: TableAttributeRenderOperation<ApachePoiRenderingContext, FilterAndSortTableAttribute> {
     override fun attributeType(): Class<FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class.java
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, table: TableContext, attribute: FilterAndSortTableAttribute) {
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: TableContext, attribute: FilterAndSortTableAttribute) {
         renderingContext.workbook().creationHelper.createAreaReference(
             CellReference(attribute.rowRange.first, attribute.columnRange.first),
             CellReference(attribute.rowRange.last, attribute.columnRange.last)
-        ).let { renderingContext.workbook().xssfWorkbook.getSheet(table.getTableId()).createTable(it) }
+        ).let { renderingContext.workbook().xssfWorkbook.getSheet(context.getTableId()).createTable(it) }
             .let {
                 attribute.columnRange.forEach { index ->
                     it.ctTable.tableColumns.getTableColumnArray(index).id = (index + 1).toLong()
                 }
-                it.name = table.getTableId()
-                it.displayName = table.getTableId()
+                it.name = context.getTableId()
+                it.displayName = context.getTableId()
                 it.ctTable.addNewAutoFilter().ref = it.area.formatAsString()
             }
     }
@@ -232,9 +232,9 @@ class FilterAndSortTableAttributeRenderOperation: TableAttributeRenderOperation<
 class TemplateFileAttributeRenderOperation: TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute> {
     override fun attributeType(): Class<TemplateFileAttribute> = TemplateFileAttribute::class.java
     override fun priority() = -1
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, table: TableContext, attribute: TemplateFileAttribute) {
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: TableContext, attribute: TemplateFileAttribute) {
         renderingContext.createWorkbook(FileInputStream(attribute.fileName), true).let {
-            renderingContext.provideSheet(table.getTableId())
+            renderingContext.provideSheet(context.getTableId())
         }
     }
 }

@@ -7,7 +7,7 @@ import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.model.ColumnKey
 import io.github.voytech.tabulate.template.context.RowIndex
 import io.github.voytech.tabulate.template.context.Step
-import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
+import io.github.voytech.tabulate.template.resolvers.AccumulatingRowContextResolver
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -19,7 +19,7 @@ class RowResolverTest {
 
     @Test
     fun `should resolve AttributedRow to null if no table definition nor data is provided`() {
-        val resolver = BufferingRowContextResolver(
+        val resolver = AccumulatingRowContextResolver(
             createTableBuilder<Product> {  }.build(),
             mutableMapOf()
         )
@@ -31,7 +31,7 @@ class RowResolverTest {
     @ValueSource(ints =  [0,  1] )
     fun `should resolve AttributedRow from custom row definition`(index: Int) {
         mutableMapOf<String, Any>()
-        val resolver = BufferingRowContextResolver(
+        val resolver = AccumulatingRowContextResolver(
             createTableBuilder<Product> {
                 columns {
                     column(Product::code)
@@ -56,13 +56,13 @@ class RowResolverTest {
 
     @Test
     fun `should resolve AttributedRow from collection item`() {
-        val resolver = BufferingRowContextResolver(
+        val resolver = AccumulatingRowContextResolver(
             createTableBuilder<Product> {
                 columns { column(Product::code) }
             }.build(),
             mutableMapOf()
         )
-        resolver.buffer(Product(
+        resolver.append(Product(
             "code1",
             "name1",
             "description1",
@@ -80,7 +80,7 @@ class RowResolverTest {
 
     @Test
     fun `should resolve AttributedRow from collection item and from custom items`() {
-        val resolver = BufferingRowContextResolver(
+        val resolver = AccumulatingRowContextResolver(
             createTableBuilder<Product> {
                 columns { column(Product::code) }
                 rows {
@@ -94,7 +94,7 @@ class RowResolverTest {
             }.build(),
             mutableMapOf()
         )
-        resolver.buffer(Product(
+        resolver.append(Product(
             "code1",
             "name1",
             "description1",

@@ -87,7 +87,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
             renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
         }
 
-        override fun nextRow(record: T) = bufferRecordAndRenderRow(state, record)
+        override fun nextRow(record: T) = captureRecordAndRenderRow(state, record)
 
         override fun finish() {
             renderRemainingBufferedRows(state)
@@ -211,8 +211,8 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         )
     }
 
-    private fun bufferRecordAndRenderRow(state: TabulationState<T>, record: T) {
-        state.bufferAndNext(record)
+    private fun captureRecordAndRenderRow(state: TabulationState<T>, record: T) {
+        state.capture(record)
     }
 
     private fun renderRemainingBufferedRows(state: TabulationState<T>) {

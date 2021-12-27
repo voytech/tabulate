@@ -11,7 +11,7 @@ import java.util.*
  * row predicates, but will be rendered eventually.
  * @author Wojciech Mąka
  */
-internal class BufferingRowContextResolver<T>(
+internal class AccumulatingRowContextResolver<T>(
     tableModel: Table<T>,
     customAttributes: MutableMap<String, Any>,
     listener: RowCompletionListener<T>? = null
@@ -27,7 +27,7 @@ internal class BufferingRowContextResolver<T>(
         }
     }
 
-    fun buffer(record: T) {
+    fun append(record: T) {
         dataSourceBuffer.add(record)
     }
 

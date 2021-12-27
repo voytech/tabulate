@@ -37,7 +37,7 @@ class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<Apach
                 renderingContext.provideSheet(context.getTableId())
             }
 
-            override fun <T> beginRow(renderingContext: ApachePoiRenderingContext, context: RowContext<T>) {
+            override fun beginRow(renderingContext: ApachePoiRenderingContext, context: RowContext) {
                 renderingContext.provideRow(context.getTableId(), context.getRow())
             }
 

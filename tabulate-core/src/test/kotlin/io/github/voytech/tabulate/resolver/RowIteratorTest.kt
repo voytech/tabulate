@@ -12,7 +12,7 @@ import io.github.voytech.tabulate.model.attributes.cell.background
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultCellFill
 import io.github.voytech.tabulate.model.attributes.cell.text
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
-import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
+import io.github.voytech.tabulate.template.resolvers.AccumulatingRowContextResolver
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -27,13 +27,13 @@ class RowIteratorTest {
 
     private data class Wrapper<T>(
         val iterator: RowContextIterator<T>,
-        val resolver: BufferingRowContextResolver<T>,
+        val resolver: AccumulatingRowContextResolver<T>,
         val customAttributes: Map<String, Any>
     )
 
     private fun <T> createDefaultIterator(block: TableBuilderApi<T>.() -> Unit): Wrapper<T> =
         mutableMapOf<String, Any>().let {
-            it to BufferingRowContextResolver(createTableBuilder(block).build(), it)
+            it to AccumulatingRowContextResolver(createTableBuilder(block).build(), it)
         }.let {
             Wrapper(
                 iterator = RowContextIterator(it.second),
@@ -547,8 +547,8 @@ class RowIteratorTest {
         }
     }
 
-    private fun BufferingRowContextResolver<Product>.buffer(code: String = "C0") =
-        buffer(Product(
+    private fun AccumulatingRowContextResolver<Product>.buffer(code: String = "C0") =
+        append(Product(
             code,
             "Product code - $code",
             "Product description",

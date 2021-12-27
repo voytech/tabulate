@@ -11,31 +11,33 @@ import io.github.voytech.tabulate.model.attributes.cell.text
 import io.github.voytech.tabulate.model.attributes.column.width
 import io.github.voytech.tabulate.support.*
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
-import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
+import io.github.voytech.tabulate.template.resolvers.AccumulatingRowContextResolver
 import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
 import org.junit.jupiter.api.Test
 
 class AttributeDispatchingTableOperationsTest {
+    private fun createAttributeOperationsContainer(spy: Spy) =
+        AttributesOperationsContainer<TestRenderingContext>().also {
+            it.registerAttributesOperations(object : AttributeRenderOperationsFactory<TestRenderingContext> {
+                override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttribute>> =
+                    setOf(TestCellTextStyleRenderOperation(spy), TestBorderStyleRenderOperation(spy))
+
+                override fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<TestRenderingContext, out ColumnAttribute>> =
+                    setOf(TestColumnWidthRenderOperation(spy))
+
+                override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<TestRenderingContext, out RowAttribute>> =
+                    setOf(TestRowHeightRenderOperation(spy))
+
+                override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<TestRenderingContext, out TableAttribute>> =
+                    setOf(TestTableTemplateAttributeRenderOperation(spy))
+
+            })
+        }
 
     @Test
     fun `should dispatch attributes to corresponding operations`() {
-        val container = AttributesOperationsContainer<TestRenderingContext>()
-        val visitor = Visitor()
-        container.registerAttributesOperations(object : AttributeRenderOperationsFactory<TestRenderingContext> {
-            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttribute>> =
-                setOf(TestCellTextStyleRenderOperation(visitor), TestBorderStyleRenderOperation(visitor))
-
-            override fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<TestRenderingContext, out ColumnAttribute>> =
-                setOf(TestColumnWidthRenderOperation(visitor))
-
-            override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<TestRenderingContext, out RowAttribute>> =
-                setOf(TestRowHeightRenderOperation(visitor))
-
-            override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<TestRenderingContext, out TableAttribute>> =
-                setOf(TestTableTemplateAttributeRenderOperation(visitor))
-
-        })
-
+        val spy = Spy()
+        val container = createAttributeOperationsContainer(spy)
         val dispatchingTableOperations = AttributeDispatchingTableOperations(
             container,
             object : TableExportOperations<TestRenderingContext> {
@@ -43,7 +45,7 @@ class AttributeDispatchingTableOperationsTest {
 
                 }
 
-                override fun <T> beginRow(renderingContext: TestRenderingContext, context: RowContext<T>) {
+                override fun beginRow(renderingContext: TestRenderingContext, context: RowContext) {
 
                 }
 
@@ -78,7 +80,7 @@ class AttributeDispatchingTableOperationsTest {
             }
         }.build(dispatchingTableOperations.createAttributeTransformerContainer())
         val additionalAttributes = mutableMapOf<String, Any>()
-        val iterator = RowContextIterator(BufferingRowContextResolver(
+        val iterator = RowContextIterator(AccumulatingRowContextResolver(
             table, additionalAttributes,
             object : RowCompletionListener<Unit> {
                 override fun onAttributedCellResolved(cell: AttributedCell) =
@@ -94,7 +96,7 @@ class AttributeDispatchingTableOperationsTest {
         val attributedTable = table.createContext(additionalAttributes)
         dispatchingTableOperations.createTable(TestRenderingContext(), attributedTable)
         iterator.next()
-        visitor.assertOrder(
+        spy.assertOrder(
             TestBorderStyleRenderOperation(),
             TestCellTextStyleRenderOperation()
         )

@@ -46,7 +46,7 @@ data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<Simp
 
 class SimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<ApachePoiRenderingContext, SimpleTestCellAttribute> {
 
-    override fun attributeType(): Class<out SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
+    override fun attributeType(): Class<SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
 
     override fun renderAttribute(
         renderingContext: ApachePoiRenderingContext,
@@ -61,7 +61,7 @@ class SimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<Apac
 
 class NoopSimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<TestRenderingContext, SimpleTestCellAttribute> {
 
-    override fun attributeType(): Class<out SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
+    override fun attributeType(): Class<SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
     override fun renderAttribute(
         renderingContext: TestRenderingContext,
         context: RowCellContext,

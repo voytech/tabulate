@@ -14,31 +14,32 @@ import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.template.context.RenderingContext
 
-interface AttributeOperation<T : Attribute<*>> {
-    fun attributeType(): Class<out T>
-    fun priority(): Int = HIGHER
+private typealias AttributeCategory = Attribute<*>
+
+interface AttributeOperation<CTX: RenderingContext, ATTR_CAT : AttributeCategory, ATTR: ATTR_CAT, E: ModelAttributeAccessor<ATTR_CAT>> {
+    fun attributeType(): Class<ATTR>
+    fun priority(): Int = DEFAULT
+    fun renderAttribute(renderingContext: CTX, context: E, attribute: ATTR)
 
     companion object {
+        const val LOWEST = Int.MIN_VALUE
         const val LOWER = -1
-        const val HIGHER = 1
+        const val DEFAULT = 1
     }
 }
 
-interface TableAttributeRenderOperation<CTX: RenderingContext, T : TableAttribute> : AttributeOperation<T> {
-    fun renderAttribute(renderingContext: CTX, table: TableContext, attribute: T)
-}
+interface TableAttributeRenderOperation<CTX: RenderingContext, ATTR : TableAttribute>
+    : AttributeOperation<CTX, TableAttribute, ATTR, TableContext>
 
-interface RowAttributeRenderOperation<CTX: RenderingContext,T : RowAttribute> : AttributeOperation<T> {
-    fun <E> renderAttribute(renderingContext: CTX, context: RowContext<E>, attribute: T)
-}
+interface RowAttributeRenderOperation<CTX: RenderingContext, ATTR : RowAttribute>
+    : AttributeOperation<CTX, RowAttribute, ATTR, RowContext>
 
-interface CellAttributeRenderOperation<CTX: RenderingContext, T : CellAttribute> : AttributeOperation<T> {
-    fun renderAttribute(renderingContext: CTX, context: RowCellContext, attribute: T)
-}
+interface CellAttributeRenderOperation<CTX: RenderingContext, ATTR : CellAttribute>
+    : AttributeOperation<CTX, CellAttribute, ATTR, RowCellContext>
 
-interface ColumnAttributeRenderOperation<CTX: RenderingContext, T : ColumnAttribute> : AttributeOperation<T> {
-    fun renderAttribute(renderingContext: CTX, context: ColumnContext, attribute: T)
-}
+interface ColumnAttributeRenderOperation<CTX: RenderingContext, ATTR : ColumnAttribute>
+    : AttributeOperation<CTX, ColumnAttribute, ATTR, ColumnContext>
+
 
 interface AttributeRenderOperationsFactory<CTX: RenderingContext> {
     fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<CTX, out TableAttribute>>? = null

@@ -11,7 +11,7 @@ import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultBorderStyle
 import io.github.voytech.tabulate.model.attributes.cell.text
 import io.github.voytech.tabulate.model.attributes.table.template
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
-import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
+import io.github.voytech.tabulate.template.resolvers.AccumulatingRowContextResolver
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -80,7 +80,7 @@ class AttributeSetCacheTest {
             borders { leftBorderStyle = DefaultBorderStyle.SOLID }
         }
 
-        val iterator = RowContextIterator(BufferingRowContextResolver(firstTable, customAttributes))
+        val iterator = RowContextIterator(AccumulatingRowContextResolver(firstTable, customAttributes))
         val attributedCell = iterator.next().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
             attributedCell.skipAttributes().cacheOnAttributeSet("key", "value")
@@ -89,7 +89,7 @@ class AttributeSetCacheTest {
             assertEquals("value",attributedCell.skipAttributes().getCachedOnAttributeSet("key"))
         }
 
-        val secondIterator = RowContextIterator(BufferingRowContextResolver(secondTable, customAttributes))
+        val secondIterator = RowContextIterator(AccumulatingRowContextResolver(secondTable, customAttributes))
         val secondAttributedCell = secondIterator.next().rowCellValues.firstNotNullOf { it.value }
         secondAttributedCell.withAttributeSetBasedCache {
             assertEquals("value",secondAttributedCell.skipAttributes().getCachedOnAttributeSet("key"))
@@ -123,7 +123,7 @@ class AttributeSetCacheTest {
             background { color = Colors.WHITE }
             borders { leftBorderStyle = DefaultBorderStyle.SOLID }
         }
-        val iterator = RowContextIterator(BufferingRowContextResolver(firstTable, customAttributes))
+        val iterator = RowContextIterator(AccumulatingRowContextResolver(firstTable, customAttributes))
         val attributedCell = iterator.next().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
             attributedCell.skipAttributes().cacheOnAttributeSet("key", "value")
@@ -137,7 +137,7 @@ class AttributeSetCacheTest {
             background { color = Colors.WHITE }
             borders { leftBorderStyle = DefaultBorderStyle.DOTTED }
         }
-        val secondIterator = RowContextIterator(BufferingRowContextResolver(secondTable, customAttributes))
+        val secondIterator = RowContextIterator(AccumulatingRowContextResolver(secondTable, customAttributes))
         val secondAttributedCell = secondIterator.next().rowCellValues.firstNotNullOf { it.value }
         secondAttributedCell.withAttributeSetBasedCache {
             assertThrows<IllegalStateException> { secondAttributedCell.skipAttributes().getCachedOnAttributeSet("key") }

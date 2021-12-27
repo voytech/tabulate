@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.template.context
 import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
 import io.github.voytech.tabulate.template.operations.AttributedRowWithCells
-import io.github.voytech.tabulate.template.resolvers.BufferingRowContextResolver
+import io.github.voytech.tabulate.template.resolvers.AccumulatingRowContextResolver
 import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
 
 /**
@@ -24,8 +24,8 @@ internal class TabulationState<T>(
     var rowCompletionListener: RowCompletionListener<T>? = null,
 ) {
     private val stateAttributes = mutableMapOf<String, Any>()
-    private val rowContextResolver: BufferingRowContextResolver<T> =
-        BufferingRowContextResolver(tableModel, stateAttributes, rowCompletionListener)
+    private val rowContextResolver: AccumulatingRowContextResolver<T> =
+        AccumulatingRowContextResolver(tableModel, stateAttributes, rowCompletionListener)
     private val rowContextIterator: RowContextIterator<T> =
         RowContextIterator(rowContextResolver)
 
@@ -33,8 +33,8 @@ internal class TabulationState<T>(
         stateAttributes["_tableId"] = tableModel.name
     }
 
-    fun bufferAndNext(record: T): AttributedRowWithCells<T>? {
-        rowContextResolver.buffer(record)
+    fun capture(record: T): AttributedRowWithCells<T>? {
+        rowContextResolver.append(record)
         return next()
     }
 
