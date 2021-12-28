@@ -66,7 +66,7 @@ internal class AttributeDispatchingTableOperations<CTX : RenderingContext>(
         }
     }
 
-    override fun <T> beginRow(renderingContext: CTX, context: AttributedRow<T>) {
+    override fun beginRow(renderingContext: CTX, context: AttributedRow) {
         context.withAttributeSetCacheIfEnabled {
             context.skipAttributes().let { rowContext ->
                 var operationRendered = false

@@ -70,7 +70,7 @@ class TestExportOperationsFactory:
             cellTest?.test(context)
         }
 
-        override fun <T> beginRow(renderingContext: TestRenderingContext, context: AttributedRow<T>) {
+        override fun beginRow(renderingContext: TestRenderingContext, context: AttributedRow) {
             println("begin row: $context")
         }
 

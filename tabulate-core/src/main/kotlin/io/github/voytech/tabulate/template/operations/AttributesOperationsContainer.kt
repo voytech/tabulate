@@ -38,7 +38,7 @@ internal class AttributesOperationsContainer<CTX : RenderingContext> {
         if (operation == null) logger.warning("No attribute render operation for class: ${clazz.name} !")
     }
 
-    private fun register(operation: AttributeOperation<CTX, out Attribute<*>, out Attribute<*>, out ModelAttributeAccessor<out Attribute<*>>>) {
+    private fun register(operation: AttributeOperation<CTX, *, *, *>) {
         attributeRenderOperationsByClass[operation.attributeType()] = operation
     }
 

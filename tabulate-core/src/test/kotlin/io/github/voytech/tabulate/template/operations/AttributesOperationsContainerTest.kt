@@ -21,16 +21,16 @@ class AttributesOperationsContainerTest {
         val container = AttributesOperationsContainer<TestRenderingContext>()
         container.registerAttributesOperations(object: AttributeRenderOperationsFactory<TestRenderingContext> {
             override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttribute>>
-                = setOf(TestCellTextStyleRenderOperation(), TestBorderStyleRenderOperation())
+                = setOf(CellTextStylesAttributeTestRenderOperation(), CellBordersAttributeTestRenderOperation())
 
             override fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<TestRenderingContext, out ColumnAttribute>>
-                = setOf(TestColumnWidthRenderOperation())
+                = setOf(ColumnWidthAttributeTestRenderOperation())
 
             override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<TestRenderingContext, out RowAttribute>>
-               = setOf(TestRowHeightRenderOperation())
+               = setOf(RowHeightAttributeTestRenderOperation())
 
             override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<TestRenderingContext, out TableAttribute>>
-               = setOf(TestTableTemplateAttributeRenderOperation())
+               = setOf(TemplateFileAttributeTestRenderOperation())
 
         })
         assertFalse(container.isEmpty())

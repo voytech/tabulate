@@ -55,7 +55,7 @@ internal class QualifiedRows<T>(private val table: Table<T>) {
 
 internal interface RowCompletionListener<T> {
     fun onAttributedCellResolved(cell: AttributedCell)
-    fun onAttributedRowResolved(row: AttributedRow<T>)
+    fun onAttributedRowResolved(row: AttributedRow)
     fun onAttributedRowResolved(row: AttributedRowWithCells<T>)
 }
 
@@ -78,7 +78,7 @@ internal abstract class AbstractRowContextResolver<T>(
     private val rows = QualifiedRows(tableModel)
 
     @Suppress("NOTHING_TO_INLINE")
-    private inline fun AttributedRow<T>.notify(): AttributedRow<T> =
+    private inline fun AttributedRow.notify(): AttributedRow =
         also { listener?.onAttributedRowResolved(it) }
 
     @Suppress("NOTHING_TO_INLINE")

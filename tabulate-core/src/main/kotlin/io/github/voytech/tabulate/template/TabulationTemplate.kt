@@ -102,7 +102,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     private inner class RowCompletionListenerImpl(private val renderingContext: RenderingContext) :
         RowCompletionListener<T> {
 
-        override fun onAttributedRowResolved(row: AttributedRow<T>) = ops.beginRow(renderingContext, row)
+        override fun onAttributedRowResolved(row: AttributedRow) = ops.beginRow(renderingContext, row)
 
         override fun onAttributedCellResolved(cell: AttributedCell) = ops.renderRowCell(renderingContext, cell)
 

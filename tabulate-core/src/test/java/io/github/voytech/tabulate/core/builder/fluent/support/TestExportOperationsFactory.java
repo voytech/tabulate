@@ -31,7 +31,7 @@ public class TestExportOperationsFactory<T> implements ExportOperationsProvider<
             }
 
             @Override
-            public <T> void beginRow(@NotNull TestRenderingContext renderingContext, @NotNull AttributedRow<T> context) {
+            public void beginRow(@NotNull TestRenderingContext renderingContext, @NotNull AttributedRow context) {
             }
 
             @Override

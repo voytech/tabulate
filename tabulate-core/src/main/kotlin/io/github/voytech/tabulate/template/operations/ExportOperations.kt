@@ -9,7 +9,7 @@ import java.util.*
 interface AttributedContextExportOperations<CTX: RenderingContext> {
     fun createTable(renderingContext: CTX, context: AttributedTable)
     fun renderColumn(renderingContext: CTX, context: AttributedColumn) {}
-    fun <T> beginRow(renderingContext: CTX, context: AttributedRow<T>) {}
+    fun beginRow(renderingContext: CTX, context: AttributedRow) {}
     fun renderRowCell(renderingContext: CTX, context: AttributedCell)
     fun <T> endRow(renderingContext: CTX, context: AttributedRowWithCells<T>) {}
 }

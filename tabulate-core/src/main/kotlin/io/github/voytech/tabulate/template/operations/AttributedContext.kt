@@ -18,7 +18,7 @@ data class AttributedTable(
 internal fun <T> Table<T>.createContext(customAttributes: MutableMap<String, Any>): AttributedTable =
     AttributedTable(tableAttributes).apply { additionalAttributes = customAttributes }
 
-open class AttributedRow<T>(
+open class AttributedRow(
     override val attributes: Set<RowAttribute>?,
     open val rowIndex: Int
 ) : AttributedModel<RowAttribute>(attributes), RowCoordinate {
@@ -28,8 +28,8 @@ open class AttributedRow<T>(
 internal fun <T> SyntheticRow<T>.createAttributedRow(
     rowIndex: Int,
     customAttributes: MutableMap<String, Any>
-): AttributedRow<T> {
-    return AttributedRow<T>(rowIndex = table.getRowIndex(rowIndex), attributes = rowAttributes)
+): AttributedRow {
+    return AttributedRow(rowIndex = table.getRowIndex(rowIndex), attributes = rowAttributes)
         .apply { additionalAttributes = customAttributes }
 }
 
@@ -37,9 +37,9 @@ data class AttributedRowWithCells<T>(
     override val attributes: Set<RowAttribute>?,
     val rowCellValues: Map<ColumnKey<T>, AttributedCell>,
     override val rowIndex: Int
-) : AttributedRow<T>(attributes, rowIndex)
+) : AttributedRow(attributes, rowIndex)
 
-fun <T> AttributedRow<T>.withCells(rowCellValues: Map<ColumnKey<T>, AttributedCell>): AttributedRowWithCells<T> =
+fun <T> AttributedRow.withCells(rowCellValues: Map<ColumnKey<T>, AttributedCell>): AttributedRowWithCells<T> =
     AttributedRowWithCells(
         rowIndex = this@withCells.rowIndex,
         attributes = this@withCells.attributes ?: emptySet(),

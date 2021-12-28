@@ -70,7 +70,7 @@ enum class ColumnRenderPhase {
     AFTER_LAST_ROW
 }
 
-open class RowContext(private val attributedContext: AttributedRow<*>) :
+open class RowContext(private val attributedContext: AttributedRow) :
         Context by attributedContext,
         RowCoordinate by attributedContext,
         ModelAttributeAccessor<RowAttribute<*>>(attributedContext)
@@ -81,7 +81,7 @@ class RowContextWithCells<T>(private val attributedContext: AttributedRowWithCel
 
 fun <T> AttributedRowWithCells<T>.skipAttributes(): RowContextWithCells<T> = RowContextWithCells(this)
 
-fun <T> AttributedRow<T>.skipAttributes(): RowContext = RowContext(this)
+fun AttributedRow.skipAttributes(): RowContext = RowContext(this)
 
 private fun <T> Map<ColumnKey<T>, AttributedCell>.skipAttributes(): Map<ColumnKey<T>, RowCellContext> {
     return entries.associate {
