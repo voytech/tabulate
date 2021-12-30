@@ -46,7 +46,7 @@ public class FluentBuilderTest {
 		final List<Employee> employeeList = Lists.newArrayList(new Employee(
 				"firstName", "lastName", 25, BigDecimal.ZERO, "id"
 		));
-		new TabulationTemplate<Employee>(TabulationFormat.format("test")).export(employeeList, Unit.INSTANCE, fluentBuilder);
+		new TabulationTemplate<Employee>(TabulationFormat.format("spy")).export(employeeList, Unit.INSTANCE, fluentBuilder);
 		assertTrue(true);
 	}
 
@@ -95,7 +95,7 @@ public class FluentBuilderTest {
 		final List<Employee> employeeList = Lists.newArrayList(new Employee(
 				"firstName", "lastName", 25, BigDecimal.ZERO, "id"
 		));
-		new TabulationTemplate<Employee>(TabulationFormat.format("test")).export(
+		new TabulationTemplate<Employee>(TabulationFormat.format("spy")).export(
 				employeeList, Unit.INSTANCE, fluentBuilder
 		);
 	}

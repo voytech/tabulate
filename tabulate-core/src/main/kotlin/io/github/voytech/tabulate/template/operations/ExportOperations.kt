@@ -16,7 +16,6 @@ interface AttributedContextExportOperations<CTX: RenderingContext> {
 
 interface TableExportOperations<CTX: RenderingContext> {
     fun createTable(renderingContext: CTX, context: TableContext) {}
-    fun renderColumn(renderingContext: CTX, context: ColumnContext) {}
     fun beginRow(renderingContext: CTX, context: RowContext) {}
     fun renderRowCell(renderingContext: CTX, context: RowCellContext)
     fun <T> endRow(renderingContext: CTX, context: RowContextWithCells<T>) {}
