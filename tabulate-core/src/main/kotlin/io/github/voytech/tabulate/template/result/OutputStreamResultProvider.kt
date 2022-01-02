@@ -14,14 +14,14 @@ abstract class OutputStreamResultProvider<CTX: RenderingContext> : ResultProvide
     final override fun setOutput(renderingContext: CTX, output: OutputStream) {
         outputStream = output
         this.renderingContext = renderingContext
-        onOutput(outputStream)
+        onBind(renderingContext, outputStream)
     }
 
     final override fun flush() {
         flush(outputStream)
     }
 
-    open fun onOutput(output: OutputStream) { }
+    protected open fun onBind(renderingContext: CTX, output: OutputStream) { }
 
     abstract fun flush(output: OutputStream)
 

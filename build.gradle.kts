@@ -36,6 +36,7 @@ configure(
     listOf(
         project(":tabulate-core"),
         project(":tabulate-excel"),
+        project(":tabulate-csv"),
         project(":tabulate-reactor"),
         project(":tabulate-test")
     )
