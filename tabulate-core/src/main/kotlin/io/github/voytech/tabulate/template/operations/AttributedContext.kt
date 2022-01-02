@@ -63,10 +63,7 @@ internal fun <T> Table<T>.createAttributedColumn(
         currentPhase = phase,
         attributes = overrideAttributesLeftToRight(
             columnAttributes.orEmpty() + column.columnAttributes.orEmpty()
-        ).filter { attribute ->
-            ((ColumnRenderPhase.BEFORE_FIRST_ROW == phase) && attribute.beforeFirstRow()) ||
-                    ((ColumnRenderPhase.AFTER_LAST_ROW == phase) && attribute.afterLastRow())
-        }.toSet(),
+        ).toSet(),
     ).apply { additionalAttributes = customAttributes }
 
 data class AttributedCell(

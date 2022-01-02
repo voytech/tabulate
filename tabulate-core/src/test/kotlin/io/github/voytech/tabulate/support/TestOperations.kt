@@ -8,6 +8,7 @@ import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
+import io.github.voytech.tabulate.support.Spy.Companion.operationPriorities
 import io.github.voytech.tabulate.template.operations.*
 import java.util.*
 
@@ -31,15 +32,16 @@ class Spy private constructor() {
 
     companion object {
         val spy: Spy = Spy()
+        val operationPriorities: MutableMap<Class<out Attribute<*>>,Int> = mutableMapOf()
     }
 }
 
 interface InterceptedOperation
 
 abstract class InterceptedRenderOperation<T : Attribute<*>, G : T, E : ModelAttributeAccessor<T>>(
-    private val spy: Spy? = null, private val clazz: Class<G>, private val priority: Int = 1
+    private val spy: Spy? = null, private val clazz: Class<G>
 ) : AttributeOperation<TestRenderingContext, T, G, E>, InterceptedOperation {
-    override fun priority(): Int = priority
+    override fun priority(): Int = operationPriorities[clazz] ?: 1
     override fun attributeType(): Class<G> = clazz
     override fun renderAttribute(renderingContext: TestRenderingContext, context: E, attribute: G) {
         spy?.track(this, context, attribute)
@@ -68,49 +70,45 @@ class TableExportTestOperations(private val spy: Spy? = null) : TableExportOpera
 
 abstract class InterceptedCellAttributeRenderOperation<T : CellAttribute<*>>(
     spy: Spy? = null,
-    clazz: Class<T>,
-    priority: Int = 1
-) : InterceptedRenderOperation<CellAttribute<*>, T, RowCellContext>(spy, clazz, priority),
+    clazz: Class<T>
+) : InterceptedRenderOperation<CellAttribute<*>, T, RowCellContext>(spy, clazz),
     CellAttributeRenderOperation<TestRenderingContext,T>
 
 abstract class InterceptedRowAttributeRenderOperation<T : RowAttribute<*>>(
     spy: Spy? = null,
-    clazz: Class<T>,
-    priority: Int = 1
-) : InterceptedRenderOperation<RowAttribute<*>, T, RowContext>(spy, clazz, priority),
+    clazz: Class<T>
+) : InterceptedRenderOperation<RowAttribute<*>, T, RowContext>(spy, clazz),
     RowAttributeRenderOperation<TestRenderingContext,T>
 
 abstract class InterceptedColumnAttributeRenderOperation<T : ColumnAttribute<*>>(
     spy: Spy? = null,
-    clazz: Class<T>,
-    priority: Int = 1
-) : InterceptedRenderOperation<ColumnAttribute<*>, T, ColumnContext>(spy, clazz, priority),
+    clazz: Class<T>
+) : InterceptedRenderOperation<ColumnAttribute<*>, T, ColumnContext>(spy, clazz),
     ColumnAttributeRenderOperation<TestRenderingContext,T>
 
 abstract class InterceptedTableAttributeRenderOperation<T : TableAttribute<*>>(
     spy: Spy? = null,
-    clazz: Class<T>,
-    priority: Int = 1
-) : InterceptedRenderOperation<TableAttribute<*>, T, TableContext>(spy, clazz, priority),
+    clazz: Class<T>
+) : InterceptedRenderOperation<TableAttribute<*>, T, TableContext>(spy, clazz),
     TableAttributeRenderOperation<TestRenderingContext,T>
 
-class CellTextStylesAttributeTestRenderOperation(spy: Spy? = null, priority: Int = 1) :
-    InterceptedCellAttributeRenderOperation<CellTextStylesAttribute>(spy, CellTextStylesAttribute::class.java, priority)
+class CellTextStylesAttributeTestRenderOperation(spy: Spy? = null) :
+    InterceptedCellAttributeRenderOperation<CellTextStylesAttribute>(spy, CellTextStylesAttribute::class.java)
 
-class CellBordersAttributeTestRenderOperation(spy: Spy? = null, priority: Int = 1) :
-    InterceptedCellAttributeRenderOperation<CellBordersAttribute>(spy, CellBordersAttribute::class.java, priority)
+class CellBordersAttributeTestRenderOperation(spy: Spy? = null) :
+    InterceptedCellAttributeRenderOperation<CellBordersAttribute>(spy, CellBordersAttribute::class.java)
 
-class CellBackgroundAttributeTestRenderOperation(spy: Spy? = null, priority: Int = 1) :
-    InterceptedCellAttributeRenderOperation<CellBackgroundAttribute>(spy, CellBackgroundAttribute::class.java, priority)
+class CellBackgroundAttributeTestRenderOperation(spy: Spy? = null) :
+    InterceptedCellAttributeRenderOperation<CellBackgroundAttribute>(spy, CellBackgroundAttribute::class.java)
 
-class CellAlignmentAttributeTestRenderOperation(spy: Spy? = null, priority: Int = 1) :
-    InterceptedCellAttributeRenderOperation<CellAlignmentAttribute>(spy, CellAlignmentAttribute::class.java, priority)
+class CellAlignmentAttributeTestRenderOperation(spy: Spy? = null) :
+    InterceptedCellAttributeRenderOperation<CellAlignmentAttribute>(spy, CellAlignmentAttribute::class.java)
 
-class ColumnWidthAttributeTestRenderOperation(spy: Spy? = null, priority: Int = 1) :
-    InterceptedColumnAttributeRenderOperation<ColumnWidthAttribute>(spy, ColumnWidthAttribute::class.java, priority)
+class ColumnWidthAttributeTestRenderOperation(spy: Spy? = null) :
+    InterceptedColumnAttributeRenderOperation<ColumnWidthAttribute>(spy, ColumnWidthAttribute::class.java)
 
-class RowHeightAttributeTestRenderOperation(spy: Spy? = null, priority: Int = 1) :
-    InterceptedRowAttributeRenderOperation<RowHeightAttribute>(spy, RowHeightAttribute::class.java, priority)
+class RowHeightAttributeTestRenderOperation(spy: Spy? = null) :
+    InterceptedRowAttributeRenderOperation<RowHeightAttribute>(spy, RowHeightAttribute::class.java)
 
-class TemplateFileAttributeTestRenderOperation(spy: Spy? = null, priority: Int = 1) :
-    InterceptedTableAttributeRenderOperation<TemplateFileAttribute>(spy, TemplateFileAttribute::class.java, priority)
+class TemplateFileAttributeTestRenderOperation(spy: Spy? = null) :
+    InterceptedTableAttributeRenderOperation<TemplateFileAttribute>(spy, TemplateFileAttribute::class.java)

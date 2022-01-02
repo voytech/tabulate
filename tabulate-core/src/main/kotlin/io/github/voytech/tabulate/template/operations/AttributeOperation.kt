@@ -38,7 +38,9 @@ interface CellAttributeRenderOperation<CTX: RenderingContext, ATTR : CellAttribu
     : AttributeOperation<CTX, CellAttribute, ATTR, RowCellContext>
 
 interface ColumnAttributeRenderOperation<CTX: RenderingContext, ATTR : ColumnAttribute>
-    : AttributeOperation<CTX, ColumnAttribute, ATTR, ColumnContext>
+    : AttributeOperation<CTX, ColumnAttribute, ATTR, ColumnContext> {
+    fun applicableRenderingPhases(): List<ColumnRenderPhase> = listOf(ColumnRenderPhase.BEFORE_FIRST_ROW)
+}
 
 
 interface AttributeRenderOperationsFactory<CTX: RenderingContext> {

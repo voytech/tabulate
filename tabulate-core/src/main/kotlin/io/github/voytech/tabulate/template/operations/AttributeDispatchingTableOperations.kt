@@ -94,6 +94,7 @@ internal class AttributeDispatchingTableOperations<CTX : RenderingContext>(
                 context.attributes?.let { attributes ->
                     attributes.forEach { attribute ->
                         attributeOperationsContainer.getColumnAttributeOperation(attribute.javaClass)
+                            ?.takeIf { context.currentPhase in it.applicableRenderingPhases() }
                             ?.renderAttribute(renderingContext, columnContext, attribute)
                     }
                 }

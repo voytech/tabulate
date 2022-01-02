@@ -22,10 +22,7 @@ abstract class Attribute<T: Attribute<T>> {
 
 abstract class CellAttribute<T : CellAttribute<T>> : Attribute<T>()
 
-abstract class ColumnAttribute<T : ColumnAttribute<T>> : Attribute<T>() {
-    open fun beforeFirstRow(): Boolean = true
-    open fun afterLastRow(): Boolean = false
-}
+abstract class ColumnAttribute<T : ColumnAttribute<T>> : Attribute<T>()
 
 abstract class RowAttribute<T : RowAttribute<T>>  : Attribute<T>()
 

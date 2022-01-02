@@ -16,7 +16,7 @@ class TestEnabledAttributes : AttributeRenderOperationsFactory<TestRenderingCont
     override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttribute>> =
         setOf(
             CellTextStylesAttributeTestRenderOperation(Spy.spy),
-            CellBordersAttributeTestRenderOperation(Spy.spy, -1),
+            CellBordersAttributeTestRenderOperation(Spy.spy),
             CellBackgroundAttributeTestRenderOperation(Spy.spy),
             CellAlignmentAttributeTestRenderOperation(Spy.spy)
         )
@@ -29,6 +29,7 @@ class TestEnabledAttributes : AttributeRenderOperationsFactory<TestRenderingCont
 
     override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<TestRenderingContext, out TableAttribute>> =
         setOf(TemplateFileAttributeTestRenderOperation(Spy.spy))
+
 }
 
 class AttributedTestExportOperationsFactory : ExportOperationsConfiguringFactory<TestRenderingContext>() {

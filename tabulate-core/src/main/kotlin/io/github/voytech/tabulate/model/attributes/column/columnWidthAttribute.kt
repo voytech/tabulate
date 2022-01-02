@@ -15,8 +15,6 @@ data class ColumnWidthAttribute(
     val px: Int = -1,
     val unit: LengthUnit = LengthUnit.PIXEL
 ) : ColumnAttribute<ColumnWidthAttribute>() {
-    override fun beforeFirstRow() = true
-    override fun afterLastRow() = true
 
     @TabulateMarker
     class Builder : ColumnAttributeBuilder<ColumnWidthAttribute>() {

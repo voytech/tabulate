@@ -3,6 +3,7 @@ package io.github.voytech.tabulate.template.operations
 import io.github.voytech.tabulate.api.builder.dsl.CustomTable
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.column.width
+import io.github.voytech.tabulate.support.Spy.Companion.operationPriorities
 import io.github.voytech.tabulate.support.Spy.Companion.spy
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.export
@@ -15,6 +16,9 @@ class AttributeDispatchingTableOperationsTest {
 
     @Test
     fun `should dispatch attributes to corresponding operations`() {
+        operationPriorities[CellBordersAttribute::class.java] = -1   // should be rendered first,
+        operationPriorities[CellTextStylesAttribute::class.java] = 1 // should be rendered next.
+
         CustomTable {
             columns {
                 column(0) {
@@ -56,9 +60,6 @@ class AttributeDispatchingTableOperationsTest {
         }
         history.next().run {
             assertTrue { RowContextWithCells::class.java == context.javaClass }
-        }
-        history.next().run {
-            assertTrue { ColumnContext::class.java == context.javaClass } // TODO remove this buggy column operation invocation at the end
         }
         assertFalse(history.hasNext())
     }

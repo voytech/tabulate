@@ -189,6 +189,8 @@ class ColumnWidthAttributeRenderOperation: ColumnAttributeRenderOperation<Apache
 
     override fun attributeType(): Class<ColumnWidthAttribute> = ColumnWidthAttribute::class.java
 
+    override fun applicableRenderingPhases(): List<ColumnRenderPhase> = listOf(ColumnRenderPhase.BEFORE_FIRST_ROW, ColumnRenderPhase.AFTER_LAST_ROW)
+
     override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: ColumnContext, attribute: ColumnWidthAttribute) {
         renderingContext.provideSheet(context.getTableId()).let {
             if (attribute.auto == true || attribute.px <= 0) {
