@@ -1,12 +1,12 @@
 package io.github.voytech.tabulate.csv
 
+import io.github.voytech.tabulate.csv.attributes.CellSeparatorCharacterAttribute
 import io.github.voytech.tabulate.template.TabulationFormat
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.result.OutputStreamResultProvider
 import io.github.voytech.tabulate.template.result.ResultProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
-import java.io.BufferedOutputStream
 import java.io.BufferedWriter
 import java.io.OutputStream
 
@@ -17,33 +17,38 @@ class CsvOutputStreamResultProvider : OutputStreamResultProvider<CsvRenderingCon
     }
 
     override fun flush(output: OutputStream) {
-        output.flush()
+        renderingContext.finish()
         output.close()
     }
 }
 
 class CsvRenderingContext: RenderingContext {
-    private lateinit var bufferedOutputStream: BufferedOutputStream
     private lateinit var bufferedWriter: BufferedWriter
     private val line = StringBuilder()
 
     fun doBind(output: OutputStream) {
-        bufferedOutputStream = output.buffered()
-        bufferedWriter = bufferedOutputStream.bufferedWriter()
+        bufferedWriter = output.bufferedWriter()
     }
 
     fun startRow() {
         line.clear()
     }
 
+    private fun AttributedCell.getSeparatorCharacter(): String =
+        attributes?.filterIsInstance<CellSeparatorCharacterAttribute>()?.firstOrNull()?.separator ?: ","
+
     fun <T> endRow(context: AttributedRowWithCells<T>) {
         val lastIndex = context.rowCellValues.size - 1
         context.rowCellValues.values.forEachIndexed { index, cell ->
             line.append(cell.value.value.toString())
-            if (index < lastIndex) line.append(",")
+            if (index < lastIndex) line.append(cell.getSeparatorCharacter())
         }
         bufferedWriter.write(line.toString())
         bufferedWriter.newLine()
+    }
+
+    fun finish() {
+        bufferedWriter.close()
     }
 }
 
@@ -57,13 +62,16 @@ class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> 
 
     override fun createExportOperations(): AttributedContextExportOperations<CsvRenderingContext> = object : AttributedContextExportOperations<CsvRenderingContext> {
 
-        override fun createTable(renderingContext: CsvRenderingContext, context: AttributedTable) { }
+        override fun createTable(renderingContext: CsvRenderingContext, context: AttributedTable) {
+        }
 
         override fun beginRow(renderingContext: CsvRenderingContext, context: AttributedRow) {
             renderingContext.startRow()
         }
 
-        override fun renderRowCell(renderingContext: CsvRenderingContext, context: AttributedCell) { }
+        override fun renderRowCell(renderingContext: CsvRenderingContext, context: AttributedCell) {
+
+        }
 
         override fun <T> endRow(renderingContext: CsvRenderingContext, context: AttributedRowWithCells<T>) {
             renderingContext.endRow(context)

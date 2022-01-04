@@ -108,6 +108,14 @@ class TableBuilderApi<T> internal constructor(private val builderState: TableBui
     }
 
     @JvmSynthetic
+    fun columns(vararg refs: KProperty1<T, Any?>) {
+        ColumnsBuilderApi(builderState.columnsBuilderState).apply {
+            refs.forEach { column(it)}
+        }
+    }
+
+
+    @JvmSynthetic
     fun rows(block: RowsBuilderApi<T>.() -> Unit) {
         RowsBuilderApi(builderState.rowsBuilderState).apply(block)
     }
