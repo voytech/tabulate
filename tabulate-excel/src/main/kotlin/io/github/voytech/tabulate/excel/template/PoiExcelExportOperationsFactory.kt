@@ -21,6 +21,10 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
+/**
+ * Apache POI based excel export operations provider implementation.
+ * @author Wojciech Mąka
+ */
 class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<ApachePoiRenderingContext>() {
 
     override fun supportsFormat(): TabulationFormat = format("xlsx", "poi")

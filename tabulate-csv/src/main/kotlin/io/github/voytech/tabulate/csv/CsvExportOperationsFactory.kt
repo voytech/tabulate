@@ -22,7 +22,7 @@ class CsvOutputStreamResultProvider : OutputStreamResultProvider<CsvRenderingCon
     }
 }
 
-class CsvRenderingContext: RenderingContext {
+open class CsvRenderingContext: RenderingContext {
     private lateinit var bufferedWriter: BufferedWriter
     private val line = StringBuilder()
 
@@ -52,6 +52,10 @@ class CsvRenderingContext: RenderingContext {
     }
 }
 
+/**
+ * Simple .csv export operations provider implementation.
+ * @author Wojciech Mąka
+ */
 class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> {
 
     override fun getContextClass(): Class<CsvRenderingContext> = CsvRenderingContext::class.java

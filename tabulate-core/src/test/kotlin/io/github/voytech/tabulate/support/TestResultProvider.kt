@@ -20,7 +20,7 @@ class TestResultProvider: ResultProvider<TestRenderingContext, Unit> {
     }
 }
 
-class Test2ResultProvider: ResultProvider<ExampleContext, Unit> {
+class AlternativeTestResultProvider: ResultProvider<AlternativeTestRenderingContext, Unit> {
 
     override fun outputClass() = Unit.javaClass
 
@@ -28,7 +28,7 @@ class Test2ResultProvider: ResultProvider<ExampleContext, Unit> {
         logger.info("This is fake implementation of ResultProvider flushing results into ether")
     }
 
-    override fun setOutput(renderingContext: ExampleContext, output: Unit) {
+    override fun setOutput(renderingContext: AlternativeTestRenderingContext, output: Unit) {
         logger.info("This is fake implementation of ResultProvider flushing results into ether")
     }
 

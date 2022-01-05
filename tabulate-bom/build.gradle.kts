@@ -14,6 +14,7 @@ repositories {
 dependencies {
     constraints {
         api(project(":tabulate-core"))
+        api(project(":tabulate-csv"))
         api(project(":tabulate-excel"))
         api(project(":tabulate-reactor"))
         api("org.apache.poi:poi:$apachePoiVersion") // # kts bug when form is: api("org.apache.poi","poi",apachePoiVersion)

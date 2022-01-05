@@ -11,7 +11,7 @@ import io.github.voytech.tabulate.model.attributes.column.columnWidth
 import io.github.voytech.tabulate.model.attributes.column.width
 import io.github.voytech.tabulate.model.attributes.row.height
 import io.github.voytech.tabulate.model.attributes.row.rowHeight
-import io.github.voytech.tabulate.support.AttributedTestExportOperationsFactory
+import io.github.voytech.tabulate.support.TestExportOperationsFactory
 import io.github.voytech.tabulate.support.Spy
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.operations.*
@@ -72,12 +72,12 @@ class TabulationTemplateTest {
                     column(Product::manufacturer)
                 }
             }
-            val firstPassRenderingContext = AttributedTestExportOperationsFactory.CURRENT_RENDERING_CONTEXT_INSTANCE
+            val firstPassRenderingContext = TestExportOperationsFactory.CURRENT_RENDERING_CONTEXT_INSTANCE
             tabulation.export(Products.ITEMS, Unit) {
                 name = "Product codes list"
                 columns { column(Product::code) }
             }
-            val secondPassRenderingContext = AttributedTestExportOperationsFactory.CURRENT_RENDERING_CONTEXT_INSTANCE
+            val secondPassRenderingContext = TestExportOperationsFactory.CURRENT_RENDERING_CONTEXT_INSTANCE
             assertNotEquals(firstPassRenderingContext, secondPassRenderingContext)
             Spy.spy.readHistory()
         }

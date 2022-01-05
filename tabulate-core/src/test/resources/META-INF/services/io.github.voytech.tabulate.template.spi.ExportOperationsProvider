@@ -1,2 +1,2 @@
-io.github.voytech.tabulate.support.CompetingTestExportOperationsFactory
-io.github.voytech.tabulate.support.AttributedTestExportOperationsFactory
+io.github.voytech.tabulate.support.AnotherTestExportOperationsFactory
+io.github.voytech.tabulate.support.TestExportOperationsFactory

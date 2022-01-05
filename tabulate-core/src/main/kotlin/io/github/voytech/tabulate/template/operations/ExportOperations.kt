@@ -50,7 +50,7 @@ abstract class ExportOperationsConfiguringFactory<CTX : RenderingContext> : Expo
         attributeOperationsContainer: AttributesOperationsContainer<CTX>,
     ): AttributesOperationsContainer<CTX> {
         ServiceLoader.load(AttributeRenderOperationsProvider::class.java)
-            .filter { it.getContextClass() == getContextClass() }
+            .filter { getContextClass().isAssignableFrom(it.getContextClass()) }
             .map { it as AttributeRenderOperationsProvider<CTX> }
             .forEach {
                 registerAttributesOperations(attributeOperationsContainer, it.getAttributeOperationsFactory())

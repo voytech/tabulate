@@ -19,8 +19,6 @@ data class CellRange(
 
 interface StateProvider<E> {
     fun createState(file: File): E
-    fun getPresentTableNames(api: E): List<String>?
-    fun hasTableNamed(api: E, name: String): Boolean
 }
 
 interface AttributeResolver<E> {

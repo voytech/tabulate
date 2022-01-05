@@ -10,9 +10,7 @@ import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.result.ResultProvider
 
-class ExampleContext : RenderingContext
-
-class TestEnabledAttributes : AttributeRenderOperationsFactory<TestRenderingContext> {
+class TestAttributeOperations : AttributeRenderOperationsFactory<TestRenderingContext> {
     override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttribute>> =
         setOf(
             CellTextStylesAttributeTestRenderOperation(Spy.spy),
@@ -32,7 +30,7 @@ class TestEnabledAttributes : AttributeRenderOperationsFactory<TestRenderingCont
 
 }
 
-class AttributedTestExportOperationsFactory : ExportOperationsConfiguringFactory<TestRenderingContext>() {
+class TestExportOperationsFactory : ExportOperationsConfiguringFactory<TestRenderingContext>() {
 
     override fun provideExportOperations(): TableExportOperations<TestRenderingContext> =
         TableExportTestOperations(Spy.spy)
@@ -50,35 +48,34 @@ class AttributedTestExportOperationsFactory : ExportOperationsConfiguringFactory
     override fun supportsFormat(): TabulationFormat = format("spy")
 
     override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<TestRenderingContext> =
-        TestEnabledAttributes()
+        TestAttributeOperations()
 
     companion object {
-
         @JvmStatic
         var CURRENT_RENDERING_CONTEXT_INSTANCE: TestRenderingContext? = null
     }
 
 }
 
-class CompetingTestExportOperationsFactory : ExportOperationsConfiguringFactory<ExampleContext>() {
+class AlternativeTestRenderingContext : RenderingContext
 
-    override fun supportsFormat() = format("test-2")
+class AnotherTestExportOperationsFactory : ExportOperationsConfiguringFactory<AlternativeTestRenderingContext>() {
 
-    override fun provideExportOperations(): TableExportOperations<ExampleContext> =
-        object : TableExportOperations<ExampleContext> {
-            override fun renderRowCell(renderingContext: ExampleContext, context: RowCellContext) {
-                println("cell context: $context")
-            }
+    /**
+     * atf - Alternative Test Format ;)
+     */
+    override fun supportsFormat() = format("atf")
 
-            override fun createTable(renderingContext: ExampleContext, context: TableContext) {
-                println("table context: $context")
-            }
+    override fun provideExportOperations(): TableExportOperations<AlternativeTestRenderingContext> =
+        object : TableExportOperations<AlternativeTestRenderingContext> {
+            override fun renderRowCell(renderingContext: AlternativeTestRenderingContext, context: RowCellContext) {}
+            override fun createTable(renderingContext: AlternativeTestRenderingContext, context: TableContext) {}
         }
 
-    override fun createRenderingContext(): ExampleContext = ExampleContext()
+    override fun createRenderingContext(): AlternativeTestRenderingContext = AlternativeTestRenderingContext()
 
-    override fun getContextClass(): Class<ExampleContext> = ExampleContext::class.java
+    override fun getContextClass(): Class<AlternativeTestRenderingContext> = AlternativeTestRenderingContext::class.java
 
-    override fun createResultProviders(): List<ResultProvider<ExampleContext, *>> = listOf(Test2ResultProvider())
+    override fun createResultProviders(): List<ResultProvider<AlternativeTestRenderingContext, *>> = listOf(AlternativeTestResultProvider())
 
 }

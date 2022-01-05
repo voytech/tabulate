@@ -18,13 +18,6 @@ class PoiStateProvider : StateProvider<ApachePoiRenderingContext> {
         }
     }
 
-    override fun getPresentTableNames(api: ApachePoiRenderingContext): List<String> =
-            api.workbook().let { (0 until it.numberOfSheets).map { index -> api.workbook().getSheetAt(index).sheetName } }
-
-
-    override fun hasTableNamed(api: ApachePoiRenderingContext, name: String): Boolean =
-            api.workbook().getSheet(name) != null
-
 }
 
 class PoiTableAssert<T>(
