@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.template.TabulationFormat
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.*
-import io.github.voytech.tabulate.template.result.ResultProvider
+import io.github.voytech.tabulate.template.result.OutputBinding
 
 class TestAttributeOperations : AttributeRenderOperationsFactory<TestRenderingContext> {
     override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttribute>> =
@@ -35,8 +35,8 @@ class TestExportOperationsFactory : ExportOperationsConfiguringFactory<TestRende
     override fun provideExportOperations(): TableExportOperations<TestRenderingContext> =
         TableExportTestOperations(Spy.spy)
 
-    override fun createResultProviders(): List<ResultProvider<TestRenderingContext, *>> = listOf(
-        TestResultProvider(), OutputStreamTestResultProvider()
+    override fun createOutputBindings(): List<OutputBinding<TestRenderingContext, *>> = listOf(
+        TestOutputBinding(), OutputStreamTestOutputBinding()
     )
 
     override fun getContextClass(): Class<TestRenderingContext> = TestRenderingContext::class.java
@@ -76,6 +76,6 @@ class AnotherTestExportOperationsFactory : ExportOperationsConfiguringFactory<Al
 
     override fun getContextClass(): Class<AlternativeTestRenderingContext> = AlternativeTestRenderingContext::class.java
 
-    override fun createResultProviders(): List<ResultProvider<AlternativeTestRenderingContext, *>> = listOf(AlternativeTestResultProvider())
+    override fun createOutputBindings(): List<OutputBinding<AlternativeTestRenderingContext, *>> = listOf(AlternativeTestOutputBinding())
 
 }

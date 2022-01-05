@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.template.context.RenderingContext
  * @author
  * Wojciech Mąka
  */
-interface ResultProvider<CTX: RenderingContext, O> {
+interface OutputBinding<CTX: RenderingContext, O> {
     fun outputClass(): Class<O>
     fun setOutput(renderingContext: CTX, output: O)
     fun flush()

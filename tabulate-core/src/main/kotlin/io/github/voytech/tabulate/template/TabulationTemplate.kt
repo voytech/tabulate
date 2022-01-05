@@ -12,7 +12,7 @@ import io.github.voytech.tabulate.template.exception.ResultProviderResolvingExce
 import io.github.voytech.tabulate.template.exception.UnknownTabulationFormatException
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
-import io.github.voytech.tabulate.template.result.ResultProvider
+import io.github.voytech.tabulate.template.result.OutputBinding
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.io.File
 import java.io.FileOutputStream
@@ -70,19 +70,19 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
     private val ops: AttributedContextExportOperations<RenderingContext> by lazy { provider.createExportOperations() }
 
-    private val resultProviders: List<ResultProvider<RenderingContext, *>> by lazy { provider.createResultProviders() }
+    private val outputBindings: List<OutputBinding<RenderingContext, *>> by lazy { provider.createOutputBindings() }
 
     private inner class TabulationApiImpl<O>(
         private val state: TabulationState<T>,
         private val output: O
     ) : TabulationApi<T, O> {
 
-        private val resultProvider: ResultProvider<RenderingContext, O> by lazy {
+        private val outputBinding: OutputBinding<RenderingContext, O> by lazy {
             resolveResultProvider(output)
         }
 
         init {
-            resultProvider.setOutput(state.renderingContext, output)
+            outputBinding.setOutput(state.renderingContext, output)
             ops.createTable(state.renderingContext, state.tableModel.createContext(state.getCustomAttributes()))
             renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
         }
@@ -95,7 +95,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         }
 
         override fun flush() {
-            resultProvider.flush()
+            outputBinding.flush()
         }
     }
 
@@ -139,10 +139,10 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <O> resolveResultProvider(output: O): ResultProvider<RenderingContext, O> =
-        resultProviders.filter {
+    private fun <O> resolveResultProvider(output: O): OutputBinding<RenderingContext, O> =
+        outputBindings.filter {
             it.outputClass().isAssignableFrom(output!!::class.java)
-        }.map { it as ResultProvider<RenderingContext, O> }
+        }.map { it as OutputBinding<RenderingContext, O> }
             .firstOrNull() ?: throw ResultProviderResolvingException()
 
     /**

@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.template.result
 import io.github.voytech.tabulate.template.context.RenderingContext
 import java.io.OutputStream
 
-abstract class OutputStreamResultProvider<CTX: RenderingContext> : ResultProvider<CTX,OutputStream> {
+abstract class OutputStreamOutputBinding<CTX: RenderingContext> : OutputBinding<CTX,OutputStream> {
 
     lateinit var outputStream: OutputStream
 

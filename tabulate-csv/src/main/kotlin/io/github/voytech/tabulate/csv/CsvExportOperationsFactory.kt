@@ -2,15 +2,16 @@ package io.github.voytech.tabulate.csv
 
 import io.github.voytech.tabulate.csv.attributes.CellSeparatorCharacterAttribute
 import io.github.voytech.tabulate.template.TabulationFormat
+import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.*
-import io.github.voytech.tabulate.template.result.OutputStreamResultProvider
-import io.github.voytech.tabulate.template.result.ResultProvider
+import io.github.voytech.tabulate.template.result.OutputBinding
+import io.github.voytech.tabulate.template.result.OutputStreamOutputBinding
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.io.BufferedWriter
 import java.io.OutputStream
 
-class CsvOutputStreamResultProvider : OutputStreamResultProvider<CsvRenderingContext>() {
+class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingContext>() {
 
     override fun onBind(renderingContext: CsvRenderingContext, output: OutputStream) {
         renderingContext.doBind(output)
@@ -62,11 +63,12 @@ class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> 
 
     override fun createRenderingContext() = CsvRenderingContext()
 
-    override fun supportsFormat(): TabulationFormat = TabulationFormat.format("csv")
+    override fun supportsFormat(): TabulationFormat = format("csv")
 
     override fun createExportOperations(): AttributedContextExportOperations<CsvRenderingContext> = object : AttributedContextExportOperations<CsvRenderingContext> {
 
         override fun createTable(renderingContext: CsvRenderingContext, context: AttributedTable) {
+
         }
 
         override fun beginRow(renderingContext: CsvRenderingContext, context: AttributedRow) {
@@ -82,6 +84,6 @@ class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> 
         }
     }
 
-    override fun createResultProviders(): List<ResultProvider<CsvRenderingContext, *>> = listOf(CsvOutputStreamResultProvider())
+    override fun createOutputBindings(): List<OutputBinding<CsvRenderingContext, *>> = listOf(CsvOutputStreamOutputBinding())
 
 }

@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.template.spi
 
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.AttributedContextExportOperations
-import io.github.voytech.tabulate.template.result.ResultProvider
+import io.github.voytech.tabulate.template.result.OutputBinding
 
 /**
  * Service provider interface enabling third party table exporters.
@@ -30,11 +30,10 @@ interface ExportOperationsProvider<CTX: RenderingContext> : Identifiable {
     fun createExportOperations(): AttributedContextExportOperations<CTX>
 
     /**
-     * Creates rendering context aware result provider. Result provider instance creates a binding between rendering context
-     * and output type, then it flushes binary/text representation managed by rendering context into output.
-     * This allows to decouple flushing from actual table-representing state adaptation flow.
-     * (State adaptation from `tabulate` to third party exporter)
+     * Creates rendering context aware output binding. Output binding instance takes responsibility of conveying
+     * rendering context representation into specific output.
+     * This decouples flushing from actual table state management while performing rendering/exporting.
      * @author Wojciech Mąka
      */
-    fun createResultProviders(): List<ResultProvider<CTX,*>>
+    fun createOutputBindings(): List<OutputBinding<CTX,*>>
 }

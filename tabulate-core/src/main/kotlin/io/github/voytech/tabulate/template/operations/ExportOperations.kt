@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.template.operations
 
 import io.github.voytech.tabulate.template.context.RenderingContext
-import io.github.voytech.tabulate.template.result.ResultProvider
+import io.github.voytech.tabulate.template.result.OutputBinding
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.util.*
@@ -29,7 +29,7 @@ abstract class ExportOperationsConfiguringFactory<CTX : RenderingContext> : Expo
 
     protected abstract fun provideExportOperations(): TableExportOperations<CTX>
 
-    abstract override fun createResultProviders(): List<ResultProvider<CTX,*>>
+    abstract override fun createOutputBindings(): List<OutputBinding<CTX,*>>
 
     protected open fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<CTX>? = null
 

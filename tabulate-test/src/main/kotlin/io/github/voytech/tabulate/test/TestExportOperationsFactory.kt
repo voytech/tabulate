@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.test
 import io.github.voytech.tabulate.template.TabulationFormat
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.*
-import io.github.voytech.tabulate.template.result.ResultProvider
+import io.github.voytech.tabulate.template.result.OutputBinding
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.io.OutputStream
 import java.util.logging.Logger
@@ -22,7 +22,7 @@ fun interface AttributedColumnTest {
     fun test(context: AttributedColumn)
 }
 
-class TestResultProvider: ResultProvider<TestRenderingContext, Unit> {
+class TestOutputBinding: OutputBinding<TestRenderingContext, Unit> {
 
     override fun outputClass() = Unit.javaClass
 
@@ -35,11 +35,11 @@ class TestResultProvider: ResultProvider<TestRenderingContext, Unit> {
     }
 
     companion object {
-        val logger: Logger = Logger.getLogger(TestResultProvider::class.java.name)
+        val logger: Logger = Logger.getLogger(TestOutputBinding::class.java.name)
     }
 }
 
-class OutputStreamTestResultProvider: ResultProvider<TestRenderingContext, OutputStream> {
+class OutputStreamTestOutputBinding: OutputBinding<TestRenderingContext, OutputStream> {
     override fun outputClass() = OutputStream::class.java
     override fun setOutput(renderingContext: TestRenderingContext, output: OutputStream) {
         logger.info("This is fake implementation of ResultProvider flushing results into OutputStream")
@@ -50,7 +50,7 @@ class OutputStreamTestResultProvider: ResultProvider<TestRenderingContext, Outpu
     }
 
     companion object {
-        val logger: Logger = Logger.getLogger(OutputStreamTestResultProvider::class.java.name)
+        val logger: Logger = Logger.getLogger(OutputStreamTestOutputBinding::class.java.name)
     }
 }
 
@@ -84,8 +84,8 @@ class TestExportOperationsFactory:
 
     }
 
-    override fun createResultProviders(): List<ResultProvider<TestRenderingContext, *>> = listOf(
-        TestResultProvider(), OutputStreamTestResultProvider()
+    override fun createOutputBindings(): List<OutputBinding<TestRenderingContext, *>> = listOf(
+        TestOutputBinding(), OutputStreamTestOutputBinding()
     )
 
     companion object {

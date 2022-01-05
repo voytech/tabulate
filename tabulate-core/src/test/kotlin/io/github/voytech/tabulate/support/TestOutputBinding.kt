@@ -1,9 +1,9 @@
 package io.github.voytech.tabulate.support
 
-import io.github.voytech.tabulate.template.result.ResultProvider
+import io.github.voytech.tabulate.template.result.OutputBinding
 import java.util.logging.Logger
 
-class TestResultProvider: ResultProvider<TestRenderingContext, Unit> {
+class TestOutputBinding: OutputBinding<TestRenderingContext, Unit> {
 
     override fun outputClass() = Unit.javaClass
 
@@ -16,11 +16,11 @@ class TestResultProvider: ResultProvider<TestRenderingContext, Unit> {
     }
 
     companion object {
-        val logger: Logger = Logger.getLogger(TestResultProvider::class.java.name)
+        val logger: Logger = Logger.getLogger(TestOutputBinding::class.java.name)
     }
 }
 
-class AlternativeTestResultProvider: ResultProvider<AlternativeTestRenderingContext, Unit> {
+class AlternativeTestOutputBinding: OutputBinding<AlternativeTestRenderingContext, Unit> {
 
     override fun outputClass() = Unit.javaClass
 
@@ -33,6 +33,6 @@ class AlternativeTestResultProvider: ResultProvider<AlternativeTestRenderingCont
     }
 
     companion object {
-        val logger: Logger = Logger.getLogger(TestResultProvider::class.java.name)
+        val logger: Logger = Logger.getLogger(TestOutputBinding::class.java.name)
     }
 }

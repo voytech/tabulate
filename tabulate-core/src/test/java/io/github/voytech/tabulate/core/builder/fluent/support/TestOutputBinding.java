@@ -1,10 +1,10 @@
 package io.github.voytech.tabulate.core.builder.fluent.support;
 
-import io.github.voytech.tabulate.template.result.ResultProvider;
+import io.github.voytech.tabulate.template.result.OutputBinding;
 import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 
-public class TestResultProvider implements ResultProvider<TestRenderingContext, Unit> {
+public class TestOutputBinding implements OutputBinding<TestRenderingContext, Unit> {
     @NotNull
     @Override
     public Class<Unit> outputClass() {

@@ -1,11 +1,11 @@
 package io.github.voytech.tabulate.core.builder.fluent.support;
 
-import io.github.voytech.tabulate.template.result.ResultProvider;
+import io.github.voytech.tabulate.template.result.OutputBinding;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.OutputStream;
 
-public class OutputStreamTestResultProvider implements ResultProvider<TestRenderingContext, OutputStream> {
+public class OutputStreamTestOutputBinding implements OutputBinding<TestRenderingContext, OutputStream> {
 
     @NotNull
     @Override

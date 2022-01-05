@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.core.builder.fluent.support;
 import com.google.common.collect.Lists;
 import io.github.voytech.tabulate.template.TabulationFormat;
 import io.github.voytech.tabulate.template.operations.*;
-import io.github.voytech.tabulate.template.result.ResultProvider;
+import io.github.voytech.tabulate.template.result.OutputBinding;
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -52,8 +52,8 @@ public class TestExportOperationsFactory<T> implements ExportOperationsProvider<
 
     @NotNull
     @Override
-    public List<ResultProvider<TestRenderingContext, ?>> createResultProviders() {
-        return Lists.newArrayList(new TestResultProvider());
+    public List<OutputBinding<TestRenderingContext, ?>> createOutputBindings() {
+        return Lists.newArrayList(new TestOutputBinding());
     }
 
     @NotNull

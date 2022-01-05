@@ -12,7 +12,7 @@ import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.template.TabulationFormat
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.operations.*
-import io.github.voytech.tabulate.template.result.ResultProvider
+import io.github.voytech.tabulate.template.result.OutputBinding
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.xssf.streaming.SXSSFCell
 import java.math.BigDecimal
@@ -159,8 +159,8 @@ class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<Apach
             additionalTableAttributeRenderers = setOf(FilterAndSortTableAttributeRenderOperation())
         )
 
-    override fun createResultProviders(): List<ResultProvider<ApachePoiRenderingContext, *>> = listOf(
-        ApachePoiOutputStreamResultProvider()
+    override fun createOutputBindings(): List<OutputBinding<ApachePoiRenderingContext, *>> = listOf(
+        ApachePoiOutputStreamOutputBinding()
     )
 
     companion object {

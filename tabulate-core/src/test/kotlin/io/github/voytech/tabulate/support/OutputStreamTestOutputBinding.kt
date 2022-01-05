@@ -1,10 +1,10 @@
 package io.github.voytech.tabulate.support
 
-import io.github.voytech.tabulate.template.result.ResultProvider
+import io.github.voytech.tabulate.template.result.OutputBinding
 import java.io.OutputStream
 import java.util.logging.Logger
 
-class OutputStreamTestResultProvider: ResultProvider<TestRenderingContext, OutputStream> {
+class OutputStreamTestOutputBinding: OutputBinding<TestRenderingContext, OutputStream> {
     override fun outputClass() = OutputStream::class.java
     override fun setOutput(renderingContext: TestRenderingContext, output: OutputStream) {
         logger.info("This is fake implementation of ResultProvider flushing results into OutputStream")
@@ -15,6 +15,6 @@ class OutputStreamTestResultProvider: ResultProvider<TestRenderingContext, Outpu
     }
 
     companion object {
-        val logger: Logger = Logger.getLogger(OutputStreamTestResultProvider::class.java.name)
+        val logger: Logger = Logger.getLogger(OutputStreamTestOutputBinding::class.java.name)
     }
 }
