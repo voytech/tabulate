@@ -9,8 +9,16 @@ import java.util.function.Predicate
 infix fun <T> RowPredicate<T>.and(other: RowPredicate<T>): RowPredicate<T> = RowPredicate { test(it) && other.test(it)}
 infix fun <T> RowPredicate<T>.or(other: RowPredicate<T>): RowPredicate<T> = RowPredicate { test(it) || other.test(it)}
 
+/**
+ * Predicate testing [SourceRow] instance
+ * @author Wojciech Mąka
+ */
 fun interface RowPredicate<T> : Predicate<SourceRow<T>>
 
+/**
+ * Predicate testing [RowIndex] instance. A base class for predicate literals.
+ * @author Wojciech Mąka
+ */
 fun interface IndexPredicate : Predicate<RowIndex>
 
 enum class Operator {

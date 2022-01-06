@@ -2,7 +2,6 @@ package io.github.voytech.tabulate
 
 import io.github.voytech.tabulate.api.builder.RowPredicates.all
 import io.github.voytech.tabulate.api.builder.dsl.*
-import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
 import io.github.voytech.tabulate.excel.model.attributes.dataFormat
 import io.github.voytech.tabulate.excel.model.attributes.filterAndSort
@@ -20,15 +19,13 @@ import io.github.voytech.tabulate.template.tabulate
 import io.github.voytech.tabulate.test.CellPosition
 import io.github.voytech.tabulate.test.CellRange
 import io.github.voytech.tabulate.test.cellassertions.*
+import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import io.github.voytech.tabulate.testsupport.PoiTableAssert
 import org.apache.poi.openxml4j.util.ZipSecureFile
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.io.FileInputStream
-import java.math.BigDecimal
-import java.time.LocalDate
-import kotlin.random.Random
 import kotlin.system.measureTimeMillis
 
 @DisplayName("Testing various excel exports")
@@ -36,7 +33,7 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export products to excel file with various style attributes`() {
-        val productList = createDataSet(1000)
+        val productList = SampleProduct.create(1000)
         measureTimeMillis {
             productList.tabulate("test.xlsx") {
                 name = "Products table"
@@ -56,7 +53,7 @@ class ApachePoiTabulateTests {
                             }
                         }
                     }
-                    column(Product::code) {
+                    column(SampleProduct::code) {
                         attributes {
                             text {
                                 fontFamily = "Times New Roman"
@@ -66,11 +63,11 @@ class ApachePoiTabulateTests {
                             background { color = Colors.BLUE }
                         }
                     }
-                    column(Product::name)
-                    column(Product::description)
-                    column(Product::manufacturer)
-                    column(Product::price)
-                    column(Product::distributionDate) {
+                    column(SampleProduct::name)
+                    column(SampleProduct::description)
+                    column(SampleProduct::manufacturer)
+                    column(SampleProduct::price)
+                    column(SampleProduct::distributionDate) {
                         attributes {
                             dataFormat { value = "dd.mm.YYYY" }
                         }
@@ -119,7 +116,7 @@ class ApachePoiTabulateTests {
             println("Elapsed time: $it")
         }
 
-        PoiTableAssert<Product>(
+        PoiTableAssert<SampleProduct>(
             tableName = "Products table",
             file = File("test.xlsx"),
             cellTests = mapOf(
@@ -194,7 +191,7 @@ class ApachePoiTabulateTests {
     @Test
     fun `should interpolate dataset on excel template file`() {
         ZipSecureFile.setMinInflateRatio(0.001)
-        createDataSet(1000).tabulate("test.xlsx") {
+        SampleProduct.create(1000).tabulate("test.xlsx") {
             name = "Products table"
             firstRow = 1
             attributes {
@@ -204,11 +201,11 @@ class ApachePoiTabulateTests {
             }
             columns {
                 column("nr")
-                column(Product::code)
-                column(Product::name)
-                column(Product::description)
-                column(Product::manufacturer)
-                column(Product::distributionDate) {
+                column(SampleProduct::code)
+                column(SampleProduct::name)
+                column(SampleProduct::description)
+                column(SampleProduct::manufacturer)
+                column(SampleProduct::distributionDate) {
                     attributes {
                         dataFormat { value = "dd.mm.YYYY" }
                     }
@@ -223,7 +220,7 @@ class ApachePoiTabulateTests {
             }
         }
 
-        PoiTableAssert<Product>(
+        PoiTableAssert<SampleProduct>(
             tableName = "Products table",
             file = File("test.xlsx"),
             cellTests = mapOf(
@@ -250,17 +247,17 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export to excel file with "excel table" feature`() {
-        val productList = createDataSet(1000)
+        val productList = SampleProduct.create(1000)
         productList.tabulate("test.xlsx") {
             name = "Products table"
             attributes { filterAndSort {} }
             columns {
-                column(Product::code)
-                column(Product::name)
-                column(Product::description)
-                column(Product::manufacturer)
-                column(Product::price)
-                column(Product::distributionDate) {
+                column(SampleProduct::code)
+                column(SampleProduct::name)
+                column(SampleProduct::description)
+                column(SampleProduct::manufacturer)
+                column(SampleProduct::price)
+                column(SampleProduct::distributionDate) {
                     attributes {
                         format { "dd.mm.YYYY" }
                     }
@@ -268,7 +265,7 @@ class ApachePoiTabulateTests {
             }
         }
 
-        PoiTableAssert<Product>(
+        PoiTableAssert<SampleProduct>(
             tableName = "Products table",
             file = File("test.xlsx"),
             cellTests = mapOf()
@@ -294,7 +291,7 @@ class ApachePoiTabulateTests {
             }
         }.export(File("test.xlsx"))
 
-        PoiTableAssert<Product>(
+        PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
             cellTests = mapOf(
@@ -344,7 +341,7 @@ class ApachePoiTabulateTests {
             }
         }.export(File("test.xlsx"))
 
-        PoiTableAssert<Product>(
+        PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
             cellTests = mapOf(
@@ -393,18 +390,18 @@ class ApachePoiTabulateTests {
             }
         }
 
-        createDataSet(4).tabulate("test.xlsx", sharedStyleTemplate + Table {
+        SampleProduct.create(4).tabulate("test.xlsx", sharedStyleTemplate + Table {
             name = "Products"
             columns {
-                column(Product::code)
-                column(Product::name)
-                column(Product::description)
-                column(Product::price)
+                column(SampleProduct::code)
+                column(SampleProduct::name)
+                column(SampleProduct::description)
+                column(SampleProduct::price)
             }
             rows {
                 header("Id", "Name", "Description", "Price")
                 atIndex { footer() } newRow {
-                    cell(Product::code) { value = "Footer first cell" }
+                    cell(SampleProduct::code) { value = "Footer first cell" }
                 }
             }
         })
@@ -421,7 +418,7 @@ class ApachePoiTabulateTests {
             ),
             AssertEqualsAttribute(CellBackgroundAttribute(color = Colors.BLACK))
         )
-        PoiTableAssert<Product>(
+        PoiTableAssert<SampleProduct>(
             tableName = "Products",
             file = File("test.xlsx"),
             cellTests = mapOf(
@@ -444,21 +441,6 @@ class ApachePoiTabulateTests {
             )
         ).perform().also {
             it.cleanup()
-        }
-    }
-
-
-    private fun createDataSet(count: Int? = 1): List<Product> {
-        val random = Random(count!!)
-        return (0..count).map {
-            Product(
-                if (it % 2 == 0) "prod_nr_${it}${it % 2}" else "prod_nr_$it",
-                "Name $it",
-                "This is description $it",
-                "manufacturer $it",
-                LocalDate.now(),
-                BigDecimal(random.nextDouble(200.00, 1000.00))
-            )
         }
     }
 }

@@ -3,15 +3,16 @@ package io.github.voytech.tabulate.model
 import kotlin.reflect.KProperty1
 
 /**
- * Defines property "literal" based column key.
+ * Defines object's property reference "literal" based column key.
  */
 fun interface PropertyReferenceColumnKey<T> {
     fun getPropertyValue(record: T) : Any?
 }
 
 /**
- * Internal property literal cache.
+ * Internal property reference literal cache.
  * TODO This cache should be passed into context of tabulation rather than static one.
+ * @author Wojciech Mąka
  */
 private object PropertyReferencesCache {
 
@@ -42,7 +43,8 @@ fun <T> KProperty1<T, Any?>.id() : PropertyReferenceColumnKey<T> {
 }
 
 /**
- * Kotlin [KProperty1] based property literal
+ * Kotlin [KProperty1] based property reference literal
+ * @author Wojciech Mąka
  */
 @JvmInline
 value class PropertyLiteralColumnKey<T>(private val propertyLiteral: KProperty1<T, Any?>) : PropertyReferenceColumnKey<T> {
@@ -52,6 +54,7 @@ value class PropertyLiteralColumnKey<T>(private val propertyLiteral: KProperty1<
 /**
  * Java [java.util.function.Function] based property literal. Should be used by passing getter method reference as function,
  * and unique id to make this key referencable from cell definition.
+ * @author Wojciech Mąka
  */
 class NamedPropertyReferenceColumnKey<T>(
     private val key: String,

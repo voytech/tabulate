@@ -66,10 +66,7 @@ class NoopSimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<
         renderingContext: TestRenderingContext,
         context: RowCellContext,
         attribute: SimpleTestCellAttribute
-    ) {
-
-    }
-
+    ) {}
 }
 
 fun <T> CellLevelAttributesBuilderApi<T>.simpleTestCellAttrib(block: SimpleTestCellAttribute.Builder.() -> Unit) =

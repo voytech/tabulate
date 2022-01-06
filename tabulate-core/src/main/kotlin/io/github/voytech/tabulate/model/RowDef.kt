@@ -65,6 +65,13 @@ private operator fun <T> Map<ColumnKey<T>, CellDef<T>>.plus(map: Map<ColumnKey<T
         }
     }
 
+/**
+ * Complex index definition. It can act as absolute index when no step enum is provided (indexing starts from the very
+ * first row being exported), or index value relative to specific exporting phase (step). This is required in order
+ * to define row position when we cannot tell absolute index at definition time. Currently it only happens when we
+ * want to insert footer row and do not know about size of exported collection, because it can vary at run-time.
+ * @author Wojciech Mąka
+ */
 data class RowIndexDef(
     val index: Int = 0,
     val step: Enum<*>? = null,
@@ -119,12 +126,4 @@ internal fun <T> Map<ColumnKey<T>, CellDef<T>>?.resolveCellValue(
     maybeRow: SourceRow<T>? = null,
 ): CellValue? {
     return this?.get(column.id).resolveCellValue(column, maybeRow)
-}
-
-@JvmName("resolveCell2")
-internal fun <T> Map<ColumnDef<T>, CellDef<T>>?.resolveCellValue(
-    column: ColumnDef<T>,
-    maybeRow: SourceRow<T>? = null,
-): CellValue? {
-    return this?.get(column).resolveCellValue(column, maybeRow)
 }

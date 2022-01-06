@@ -11,6 +11,10 @@ import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.io.BufferedWriter
 import java.io.OutputStream
 
+/**
+ * Default binding of [CsvRenderingContext] to [OutputStream]
+ * @author Wojciech Mąka
+ */
 class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingContext>() {
 
     override fun onBind(renderingContext: CsvRenderingContext, output: OutputStream) {
@@ -23,6 +27,10 @@ class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingConte
     }
 }
 
+/**
+ * CSV rendering context holding required state to be shared by all compatible renderers.
+ * @author Wojciech Mąka
+ */
 open class CsvRenderingContext: RenderingContext {
     private lateinit var bufferedWriter: BufferedWriter
     private val line = StringBuilder()

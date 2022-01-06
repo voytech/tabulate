@@ -5,6 +5,10 @@ import io.github.voytech.tabulate.api.builder.dsl.TableLevelAttributesBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 
+/**
+ * Attribute that tells what cell separator will be used in CSV file.
+ * @author Wojciech Mąka
+ */
 data class CellSeparatorCharacterAttribute(val separator: String = ","):
     CellAttribute<CellSeparatorCharacterAttribute>() {
     @TabulateMarker
@@ -14,11 +18,6 @@ data class CellSeparatorCharacterAttribute(val separator: String = ","):
     }
 
     override fun overrideWith(other: CellSeparatorCharacterAttribute): CellSeparatorCharacterAttribute = other
-
-    companion object {
-        @JvmStatic
-        fun builder() : Builder = Builder()
-    }
 }
 
 fun <T> TableLevelAttributesBuilderApi<T>.separator(block: CellSeparatorCharacterAttribute.Builder.() -> Unit) =
