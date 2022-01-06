@@ -1,6 +1,5 @@
 val kotlinVersion: String by project
 val guavaVersion: String by project
-val reactiveStreamsVersion: String by project
 val junitVersion: String by project
 
 plugins {
@@ -49,7 +48,6 @@ configure(
         testImplementation("org.jetbrains.kotlin","kotlin-test", kotlinVersion)
         testImplementation(platform("org.junit:junit-bom:$junitVersion"))
         testImplementation("org.junit.jupiter","junit-jupiter")
-        testImplementation("com.google.truth","truth","1.0.1")
         testRuntimeOnly("org.jetbrains.kotlin","kotlin-reflect", kotlinVersion)
     }
     jacoco {

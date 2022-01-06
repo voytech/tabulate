@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.core.builder.fluent;
 
-import com.google.common.collect.Lists;
 import io.github.voytech.tabulate.api.builder.fluent.FluentTableBuilderApi;
 import io.github.voytech.tabulate.api.builder.fluent.TableBuilder;
 import io.github.voytech.tabulate.model.NamedPropertyReferenceColumnKey;
@@ -16,6 +15,7 @@ import kotlin.Unit;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 
 import static io.github.voytech.tabulate.api.builder.RowPredicates.all;
@@ -43,7 +43,7 @@ public class FluentBuilderTest {
 						.cell("rowNumbering")
 						.eval(SourceRow::getRowIndex);
 
-		final List<Employee> employeeList = Lists.newArrayList(new Employee(
+		final List<Employee> employeeList = Collections.singletonList(new Employee(
 				"firstName", "lastName", 25, BigDecimal.ZERO, "id"
 		));
 		new TabulationTemplate<Employee>(TabulationFormat.format("spy")).export(employeeList, Unit.INSTANCE, fluentBuilder);
@@ -92,7 +92,7 @@ public class FluentBuilderTest {
 							.row(all())
 								.cell("rowNumbering")
 									.eval(SourceRow::getRowIndex);
-		final List<Employee> employeeList = Lists.newArrayList(new Employee(
+		final List<Employee> employeeList = Collections.singletonList(new Employee(
 				"firstName", "lastName", 25, BigDecimal.ZERO, "id"
 		));
 		new TabulationTemplate<Employee>(TabulationFormat.format("spy")).export(
