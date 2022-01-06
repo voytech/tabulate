@@ -1,7 +1,5 @@
-val kotlinVersion: String by project
 val apachePoiVersion: String by project
 val commonsMathVersion: String by project
-val projectReactorVersion: String by project
 
 plugins {
     kotlin("jvm")

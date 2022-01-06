@@ -1,8 +1,5 @@
 val kotlinVersion: String by project
-val guavaVersion: String by project
-val reactiveStreamsVersion: String by project
 val junitVersion: String by project
-val projectReactorVersion: String by project
 
 plugins {
     kotlin("jvm")
