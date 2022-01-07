@@ -4,16 +4,13 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
-import io.github.voytech.tabulate.template.context.AdditionalSteps
-import io.github.voytech.tabulate.template.context.RowIndex
-import java.util.function.Consumer
 
 /**
  * A top-level definition of tabular layout. Aggregates column as well as all row definitions. It can also contain
  * globally defined attributes for table, cells, columns and rows. Such attributes applies to each model level
  * @author Wojciech Mąka
  */
-class Table<T> internal constructor(
+internal class Table<T> internal constructor(
     /**
      * Name of a table. May be used as a sheet name (e.g.: in xlsx files).
      */
@@ -59,53 +56,4 @@ class Table<T> internal constructor(
      */
     @get:JvmSynthetic
     internal val rowAttributes: Set<RowAttribute>?
-) {
-    private var indexedCustomRows: Map<RowIndexDef, List<RowDef<T>>>? = null
-
-    //TODO move to dedicated class which allows overriding step providing enums.
-    private val stepClass : Class<out Enum<*>> = AdditionalSteps::class.java
-
-    //TODO move to dedicated class
-    private fun parseStep(step: String): Enum<*> = stepClass.enumConstants.find { step == it.name }
-        ?: throw error("Could not resolve step enum")
-
-    init {
-        //TODO map should be ordered by row index. Implement correct RowIndexDef comparable.
-        indexedCustomRows = rows?.filter { it.qualifier.index != null }
-            ?.map { it.qualifier.index?.materialize() to it }
-            ?.flatMap { it.first?.map { index -> index to it.second } ?: emptyList() }
-            ?.groupBy({ it.first },{ it.second })
-            ?.toSortedMap()
-    }
-
-    @JvmSynthetic
-    internal fun forEachRow(consumer: Consumer<in RowDef<T>>) = rows?.forEach(consumer)
-
-    @JvmSynthetic
-    internal fun getRowsAt(index: RowIndex): List<RowDef<T>>? {
-        return indexedCustomRows?.get(
-            index.step?.let { RowIndexDef(index = it.index, step = parseStep(it.step)) } ?: RowIndexDef(index.value)
-        )
-    }
-
-    private fun hasRowsAt(index: RowIndex): Boolean = !getRowsAt(index).isNullOrEmpty()
-
-    @JvmSynthetic
-    internal fun getNextCustomRowIndex(index: RowIndex): RowIndexDef? {
-        return indexedCustomRows?.entries
-            ?.firstOrNull { it.key > index.asRowIndexDef(stepClass) } //TODO fix comparing when RowIndexDef has step.
-            ?.key
-    }
-
-    @JvmSynthetic
-    internal fun getRows(sourceRow: SourceRow<T>): Set<RowDef<T>> {
-        val customRows = getRowsAt(sourceRow.rowIndex)?.toSet()
-        val matchingRows = rows?.filter { it.isApplicable(sourceRow) }?.toSet()
-        return customRows?.let { matchingRows?.plus(it) ?: it } ?: matchingRows ?: emptySet()
-    }
-
-    @JvmSynthetic
-    internal fun hasCustomRows(sourceRow: SourceRow<T>): Boolean {
-        return hasRowsAt(sourceRow.rowIndex) || rows?.any { it.shouldInsertRow(sourceRow) } ?: false
-    }
-}
+)

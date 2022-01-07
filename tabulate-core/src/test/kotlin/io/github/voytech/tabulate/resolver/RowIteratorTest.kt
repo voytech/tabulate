@@ -25,13 +25,13 @@ import java.util.stream.Stream
 
 class RowIteratorTest {
 
-    private data class Wrapper<T>(
+    internal data class Wrapper<T>(
         val iterator: RowContextIterator<T>,
         val resolver: AccumulatingRowContextResolver<T>,
         val customAttributes: Map<String, Any>
     )
 
-    private fun <T> createDefaultIterator(block: TableBuilderApi<T>.() -> Unit): Wrapper<T> =
+    internal fun <T> createDefaultIterator(block: TableBuilderApi<T>.() -> Unit): Wrapper<T> =
         mutableMapOf<String, Any>().let {
             it to AccumulatingRowContextResolver(createTableBuilder(block).build(), it)
         }.let {

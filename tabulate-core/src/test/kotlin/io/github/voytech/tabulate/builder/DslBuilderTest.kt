@@ -15,6 +15,7 @@ import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.model.attributes.table.template
 import io.github.voytech.tabulate.model.id
 import io.github.voytech.tabulate.template.context.RowIndex
+import io.github.voytech.tabulate.template.resolvers.IndexedTableRows
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
@@ -81,7 +82,8 @@ class DslBuilderTest {
             assertEquals(columns.first().columnAttributes?.size, 1)
             assertEquals(columns.first().columnAttributes?.first(), ColumnWidthAttribute(px = 100))
 
-            val zeroRows = getRowsAt(RowIndex(0))
+            val indexedRows = IndexedTableRows(this)
+            val zeroRows = indexedRows.getRowsAt(RowIndex(0))
             assertEquals(zeroRows?.size, 1)
             assertEquals(rows?.size, 1)
             with(zeroRows?.first()!!) {
@@ -177,7 +179,8 @@ class DslBuilderTest {
                 CellTextStylesAttribute(fontColor = Colors.AERO, fontFamily = "Times New Roman", fontSize = 12),
                 columns.first().cellAttributes?.first()
             )
-            val zeroRows = getRowsAt(RowIndex(0))
+            val indexedRows = IndexedTableRows(this)
+            val zeroRows = indexedRows.getRowsAt(RowIndex(0))
             assertEquals(zeroRows?.size, 1)
             assertEquals(rows?.size, 1)
             with(zeroRows?.first()!!) {

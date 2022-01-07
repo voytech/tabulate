@@ -45,6 +45,6 @@ data class Coordinates(
     }
 }
 
-fun <T> Table<T>.getRowIndex(rowIndex: Int) = (firstRow ?: 0) + rowIndex
+internal fun <T> Table<T>.getRowIndex(rowIndex: Int) = (firstRow ?: 0) + rowIndex
 
-fun <T> Table<T>.getColumnIndex(columnIndex: Int) = (firstColumn ?: 0) + columnIndex
+internal fun <T> Table<T>.getColumnIndex(columnIndex: Int) = (firstColumn ?: 0) + columnIndex

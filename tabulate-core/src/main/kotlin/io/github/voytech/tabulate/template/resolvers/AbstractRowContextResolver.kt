@@ -4,8 +4,54 @@ import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
+import io.github.voytech.tabulate.template.context.AdditionalSteps
 import io.github.voytech.tabulate.template.context.RowIndex
 import io.github.voytech.tabulate.template.operations.*
+
+internal class IndexedTableRows<T>(
+    val table: Table<T>,
+    private val stepClass: Class<out Enum<*>> = AdditionalSteps::class.java
+) {
+    private val indexedCustomRows: Map<RowIndexDef, List<RowDef<T>>>? = table.rows
+        ?.filter { it.qualifier.index != null }
+        ?.map { it.qualifier.index?.materialize() to it }
+        ?.flatMap { it.first?.map { index -> index to it.second } ?: emptyList() }
+        ?.groupBy({ it.first }, { it.second })
+        ?.toSortedMap()
+
+    private fun parseStep(step: String): Enum<*> = stepClass.enumConstants.find { step == it.name }
+        ?: throw error("Could not resolve step enum")
+
+    @JvmSynthetic
+    internal fun getRowsAt(index: RowIndex): List<RowDef<T>>? {
+        return indexedCustomRows?.get(
+            index.step?.let { RowIndexDef(index = it.index, step = parseStep(it.step)) } ?: RowIndexDef(index.value)
+        )
+    }
+
+    private fun hasRowsAt(index: RowIndex): Boolean = !getRowsAt(index).isNullOrEmpty()
+
+    @JvmSynthetic
+    internal fun getNextCustomRowIndex(index: RowIndex): RowIndexDef? {
+        return indexedCustomRows?.entries
+            ?.firstOrNull { it.key > index.asRowIndexDef(stepClass) }
+            ?.key
+    }
+
+    @JvmSynthetic
+    internal fun getRows(sourceRow: SourceRow<T>): Set<RowDef<T>> {
+        val customRows = getRowsAt(sourceRow.rowIndex)?.toSet()
+        val matchingRows = table.rows?.filter { it.isApplicable(sourceRow) }?.toSet()
+        return customRows?.let { matchingRows?.plus(it) ?: it } ?: matchingRows ?: emptySet()
+    }
+
+    @JvmSynthetic
+    internal fun hasCustomRows(sourceRow: SourceRow<T>): Boolean {
+        return hasRowsAt(sourceRow.rowIndex) || table.rows?.any { it.shouldInsertRow(sourceRow) } ?: false
+    }
+}
+
+internal fun <T> Table<T>.indexRows(): IndexedTableRows<T> = IndexedTableRows(this)
 
 internal class SyntheticRow<T>(
     internal val table: Table<T>,
@@ -42,13 +88,13 @@ internal class SyntheticRow<T>(
         }
 }
 
-internal class QualifiedRows<T>(private val table: Table<T>) {
+internal class QualifiedRows<T>(private val indexedTableRows: IndexedTableRows<T>) {
     private var qualifiedRowsIndex: MutableMap<Set<RowDef<T>>, SyntheticRow<T>> = mutableMapOf()
 
     internal fun findQualifying(sourceRow: SourceRow<T>): SyntheticRow<T> =
-        table.getRows(sourceRow).let { matchedRowDefs ->
+        indexedTableRows.getRows(sourceRow).let { matchedRowDefs ->
             qualifiedRowsIndex.computeIfAbsent(matchedRowDefs) {
-                SyntheticRow(table, it)
+                SyntheticRow(indexedTableRows.table, it)
             }
         }
 }
@@ -70,23 +116,24 @@ internal interface RowCompletionListener<T> {
  * @author Wojciech Mąka
  */
 internal abstract class AbstractRowContextResolver<T>(
-    private val tableModel: Table<T>,
+    tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
     private val listener: RowCompletionListener<T>? = null,
 ) : IndexedContextResolver<T, AttributedRowWithCells<T>> {
 
-    private val rows = QualifiedRows(tableModel)
+    private val indexedTableRows: IndexedTableRows<T> = tableModel.indexRows()
+    private val rows = QualifiedRows(indexedTableRows)
 
     @Suppress("NOTHING_TO_INLINE")
-    private inline fun AttributedRow.notify(): AttributedRow =
+    protected inline fun AttributedRow.notify(): AttributedRow =
         also { listener?.onAttributedRowResolved(it) }
 
     @Suppress("NOTHING_TO_INLINE")
-    private inline fun AttributedRowWithCells<T>.notify(): AttributedRowWithCells<T> =
+    protected inline fun AttributedRowWithCells<T>.notify(): AttributedRowWithCells<T> =
         also { listener?.onAttributedRowResolved(it) }
 
     @Suppress("NOTHING_TO_INLINE")
-    private inline fun AttributedCell.notify(): AttributedCell =
+    protected inline fun AttributedCell.notify(): AttributedCell =
         also { listener?.onAttributedCellResolved(it) }
 
 
@@ -122,14 +169,14 @@ internal abstract class AbstractRowContextResolver<T>(
      * @author Wojciech Mąka
      */
     override fun resolve(requestedIndex: RowIndex): IndexedContext<AttributedRowWithCells<T>>? {
-        return if (tableModel.hasCustomRows(SourceRow(requestedIndex))) {
+        return if (indexedTableRows.hasCustomRows(SourceRow(requestedIndex))) {
             resolveRowContext(requestedIndex)
         } else {
             getNextRecord().let {
                 if (it != null) {
                     resolveRowContext(requestedIndex, it)
                 } else {
-                    tableModel.getNextCustomRowIndex(requestedIndex)
+                    indexedTableRows.getNextCustomRowIndex(requestedIndex)
                         ?.let { nextIndexDef ->
                             resolveRowContext(requestedIndex + nextIndexDef)
                         }
