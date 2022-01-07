@@ -31,7 +31,7 @@ class RowIteratorTest {
         val customAttributes: Map<String, Any>
     )
 
-    internal fun <T> createDefaultIterator(block: TableBuilderApi<T>.() -> Unit): Wrapper<T> =
+    private fun <T> createDefaultIterator(block: TableBuilderApi<T>.() -> Unit): Wrapper<T> =
         mutableMapOf<String, Any>().let {
             it to AccumulatingRowContextResolver(createTableBuilder(block).build(), it)
         }.let {

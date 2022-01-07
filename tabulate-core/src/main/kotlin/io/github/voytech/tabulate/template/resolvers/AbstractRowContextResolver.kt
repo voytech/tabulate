@@ -19,6 +19,8 @@ internal class IndexedTableRows<T>(
         ?.groupBy({ it.first }, { it.second })
         ?.toSortedMap()
 
+    private val rowsWithPredicates = table.rows?.filter { it.qualifier.matching != null }
+
     private fun parseStep(step: String): Enum<*> = stepClass.enumConstants.find { step == it.name }
         ?: throw error("Could not resolve step enum")
 
@@ -41,13 +43,13 @@ internal class IndexedTableRows<T>(
     @JvmSynthetic
     internal fun getRows(sourceRow: SourceRow<T>): Set<RowDef<T>> {
         val customRows = getRowsAt(sourceRow.rowIndex)?.toSet()
-        val matchingRows = table.rows?.filter { it.isApplicable(sourceRow) }?.toSet()
+        val matchingRows = rowsWithPredicates?.filter { it.shouldApplyWhen(sourceRow) }?.toSet()
         return customRows?.let { matchingRows?.plus(it) ?: it } ?: matchingRows ?: emptySet()
     }
 
     @JvmSynthetic
     internal fun hasCustomRows(sourceRow: SourceRow<T>): Boolean {
-        return hasRowsAt(sourceRow.rowIndex) || table.rows?.any { it.shouldInsertRow(sourceRow) } ?: false
+        return hasRowsAt(sourceRow.rowIndex)
     }
 }
 

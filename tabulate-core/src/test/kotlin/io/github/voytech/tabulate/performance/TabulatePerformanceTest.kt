@@ -45,7 +45,7 @@ class TabulatePerformanceTest {
                 column("c-1")
             }
             rows {
-                for (i in 1..20000) {
+                for (i in 1..50000) {
                     newRow {
                         cell { value = "c-1" }
                     }

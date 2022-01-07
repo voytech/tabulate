@@ -16,10 +16,11 @@ import io.github.voytech.tabulate.template.resolvers.SyntheticRow
 internal class SlowRowResolver<T>(
     private val tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
-    private val listener: RowCompletionListener<T>? = null
+    listener: RowCompletionListener<T>? = null
 ): AbstractRowContextResolver<T>(tableModel, customAttributes, listener) {
 
     private val customRows = tableModel.rows?.filter { it.qualifier.index != null }
+    private val rowsWithPredicates = tableModel.rows?.filter { it.qualifier.matching != null }
 
     private fun getRowsAt(index: RowIndex): List<RowDef<T>>? {
         return customRows
@@ -30,12 +31,12 @@ internal class SlowRowResolver<T>(
 
     private fun getRows(sourceRow: SourceRow<T>): Set<RowDef<T>> {
         val customRows = getRowsAt(sourceRow.rowIndex)?.toSet()
-        val matchingRows = tableModel.rows?.filter { it.isApplicable(sourceRow) }?.toSet()
+        val matchingRows = rowsWithPredicates?.filter { it.shouldApplyWhen(sourceRow) }?.toSet()
         return customRows?.let { matchingRows?.plus(it) ?: it } ?: matchingRows ?: emptySet()
     }
 
     private fun hasCustomRows(sourceRow: SourceRow<T>): Boolean {
-        return hasRowsAt(sourceRow.rowIndex) || tableModel.rows?.any { it.shouldInsertRow(sourceRow) } ?: false
+        return hasRowsAt(sourceRow.rowIndex)
     }
 
     private fun resolveAttributedRow(
@@ -44,7 +45,7 @@ internal class SlowRowResolver<T>(
     ): AttributedRowWithCells<T> {
         return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
             val rowDefinitions = getRows(sourceRow)
-            with(SyntheticRow(tableModel,rowDefinitions)) {
+            with(SyntheticRow(tableModel, rowDefinitions)) {
                 createAttributedRow(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
                     .let {
                         it.withCells(
