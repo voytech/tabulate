@@ -24,6 +24,8 @@ sealed class FluentTableBuilderApi<T> {
         }
         return (upper as TableBuilder<T>).builderState
     }
+
+    fun build() :Table<T> = root().build()
 }
 
 interface RowBuilderMethods<T> {

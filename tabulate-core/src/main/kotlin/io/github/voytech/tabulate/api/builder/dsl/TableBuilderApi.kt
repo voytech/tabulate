@@ -20,6 +20,9 @@ internal fun <T> createTableBuilder(block: TableBuilderApi<T>.() -> Unit): Table
     }
 }
 
+fun <T> createTable(block: TableBuilderApi<T>.() -> Unit): io.github.voytech.tabulate.model.Table<T> =
+    createTableBuilder(block).build()
+
 object Table {
     @JvmSynthetic
     operator fun <T> invoke(block: TableBuilderApi<T>.() -> Unit) = block
@@ -110,7 +113,7 @@ class TableBuilderApi<T> internal constructor(private val builderState: TableBui
     @JvmSynthetic
     fun columns(vararg refs: KProperty1<T, Any?>) {
         ColumnsBuilderApi(builderState.columnsBuilderState).apply {
-            refs.forEach { column(it)}
+            refs.forEach { column(it) }
         }
     }
 
@@ -173,7 +176,7 @@ class ColumnBuilderApi<T> internal constructor(private val builderState: ColumnB
     var property: KProperty1<T, Any?>? = null
         set(value) {
             field = value
-            if (value!=null) {
+            if (value != null) {
                 builderState.id = ColumnKey(property = value.id())
             }
         }
@@ -183,7 +186,7 @@ class ColumnBuilderApi<T> internal constructor(private val builderState: ColumnB
     @get:JvmSynthetic
     var name: String?
         set(value) {
-            if (value!=null) {
+            if (value != null) {
                 builderState.id = ColumnKey(value)
             }
         }
@@ -258,23 +261,23 @@ class RowIndexPredicateBuilderApi {
     fun odd(): OperatorBasedIndexPredicateLiteral = TODO("figure out")
 
     @JvmSynthetic
-    fun eq(rowIndex: Int,step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
+    fun eq(rowIndex: Int, step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
         io.github.voytech.tabulate.model.eq(rowIndex, step)
 
     @JvmSynthetic
-    fun lt(rowIndex: Int,step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
+    fun lt(rowIndex: Int, step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
         io.github.voytech.tabulate.model.lt(rowIndex, step)
 
     @JvmSynthetic
-    fun gt(rowIndex: Int,step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
+    fun gt(rowIndex: Int, step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
         io.github.voytech.tabulate.model.gt(rowIndex, step)
 
     @JvmSynthetic
-    fun gte(rowIndex: Int,step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
+    fun gte(rowIndex: Int, step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
         io.github.voytech.tabulate.model.gte(rowIndex, step)
 
     @JvmSynthetic
-    fun lte(rowIndex: Int,step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
+    fun lte(rowIndex: Int, step: Enum<*>? = null): OperatorBasedIndexPredicateLiteral =
         io.github.voytech.tabulate.model.lte(rowIndex, step)
 
     @JvmSynthetic
@@ -327,7 +330,7 @@ class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuild
     @JvmName("newRowAtIndex")
     @JvmSynthetic
     infix fun (RowIndexPredicateBuilderApi.() -> PredicateLiteral).newRow(block: RowBuilderApi<T>.() -> Unit) {
-        newRow(this(RowIndexPredicateBuilderApi()),block)
+        newRow(this(RowIndexPredicateBuilderApi()), block)
     }
 
 
@@ -343,7 +346,7 @@ class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuild
 
     @JvmSynthetic
     infix fun (RowPredicateBuilderApi<T>.() -> RowPredicate<T>).assign(block: RowBuilderApi<T>.() -> Unit) {
-        row(this(RowPredicateBuilderApi()),block)
+        row(this(RowPredicateBuilderApi()), block)
     }
 }
 

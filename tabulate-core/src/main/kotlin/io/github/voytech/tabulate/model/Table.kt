@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.model
 
+import io.github.voytech.tabulate.model.attributes.Attributes
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
@@ -10,7 +11,7 @@ import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
  * globally defined attributes for table, cells, columns and rows. Such attributes applies to each model level
  * @author Wojciech Mąka
  */
-internal class Table<T> internal constructor(
+class Table<T> internal constructor(
     /**
      * Name of a table. May be used as a sheet name (e.g.: in xlsx files).
      */
@@ -40,20 +41,20 @@ internal class Table<T> internal constructor(
      * Table attributes.
      */
     @get:JvmSynthetic
-    internal val tableAttributes: Set<TableAttribute>?,
+    internal val tableAttributes: Attributes<TableAttribute>?,
     /**
      * Cell attributes. To be applied on each cell within entire table.
      */
     @get:JvmSynthetic
-    internal val cellAttributes: Set<CellAttribute>?,
+    internal val cellAttributes: Attributes<CellAttribute>?,
     /**
      * Column attributes. To be applied on each column within entire table.
      */
     @get:JvmSynthetic
-    internal val columnAttributes: Set<ColumnAttribute>?,
+    internal val columnAttributes: Attributes<ColumnAttribute>?,
     /**
      * Row attributes. To be applied on each row within entire table.
      */
     @get:JvmSynthetic
-    internal val rowAttributes: Set<RowAttribute>?
+    internal val rowAttributes: Attributes<RowAttribute>?
 )

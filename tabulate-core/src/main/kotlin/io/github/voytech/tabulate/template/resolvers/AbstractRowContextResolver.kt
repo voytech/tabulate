@@ -1,9 +1,10 @@
 package io.github.voytech.tabulate.template.resolvers
 
 import io.github.voytech.tabulate.model.*
+import io.github.voytech.tabulate.model.attributes.Attributes
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
-import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
+import io.github.voytech.tabulate.model.attributes.orEmpty
 import io.github.voytech.tabulate.template.context.AdditionalSteps
 import io.github.voytech.tabulate.template.context.RowIndex
 import io.github.voytech.tabulate.template.operations.*
@@ -59,21 +60,19 @@ internal class SyntheticRow<T>(
     internal val table: Table<T>,
     private val rowDefinitions: Set<RowDef<T>>,
     internal val cellDefinitions: Map<ColumnKey<T>, CellDef<T>> = rowDefinitions.mergeCells(),
-    private val rowCellAttributes: Set<CellAttribute> = rowDefinitions.flattenCellAttributes(),
-    internal val rowAttributes: Set<RowAttribute> = overrideAttributesLeftToRight(
-        table.rowAttributes.orEmpty() + rowDefinitions.flattenRowAttributes()
-    ),
-    internal val cellAttributes: MutableMap<ColumnDef<T>, Set<CellAttribute>> = mutableMapOf()
+    private val rowCellAttributes: Attributes<CellAttribute> = rowDefinitions.flattenCellAttributes(),
+    internal val rowAttributes: Attributes<RowAttribute> =
+        table.rowAttributes.orEmpty() + rowDefinitions.flattenRowAttributes(),
+    internal val cellAttributes: MutableMap<ColumnDef<T>, Attributes<CellAttribute>> = mutableMapOf()
 ) {
 
     @Suppress("NOTHING_TO_INLINE")
     inline fun mergeCellAttributes(column: ColumnDef<T>) =
-        overrideAttributesLeftToRight(
             table.cellAttributes.orEmpty() +
-                    column.cellAttributes.orEmpty() +
-                    rowCellAttributes +
-                    (cellDefinitions[column.id]?.cellAttributes).orEmpty()
-        )
+            column.cellAttributes.orEmpty() +
+            rowCellAttributes +
+            (cellDefinitions[column.id]?.cellAttributes).orEmpty()
+
 
     internal fun mapEachCell(
         block: (syntheticRow: SyntheticRow<T>, column: ColumnDef<T>) -> AttributedCell?

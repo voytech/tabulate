@@ -1,7 +1,8 @@
 package io.github.voytech.tabulate.model
 
+import io.github.voytech.tabulate.model.attributes.Attributes
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
-import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
+import io.github.voytech.tabulate.model.attributes.orEmpty
 import io.github.voytech.tabulate.template.operations.CellValue
 
 /**
@@ -75,7 +76,7 @@ internal data class CellDef<T> internal constructor(
      * Set of [CellAttribute] instances that enable customization of table cell appearance
      */
     @get:JvmSynthetic
-    val cellAttributes: Set<CellAttribute>?
+    val cellAttributes: Attributes<CellAttribute>?
 ) {
 
     @JvmSynthetic
@@ -104,9 +105,7 @@ internal operator fun <T> CellDef<T>?.plus(other: CellDef<T>): CellDef<T> {
             colSpan = other.colSpan,
             rowSpan = other.rowSpan,
             rowSpanMode = other.rowSpanMode,
-            cellAttributes = overrideAttributesLeftToRight(
-                cellAttributes.orEmpty() + other.cellAttributes.orEmpty()
-            )
+            cellAttributes = cellAttributes.orEmpty() + other.cellAttributes.orEmpty()
         )
     } else other
 }

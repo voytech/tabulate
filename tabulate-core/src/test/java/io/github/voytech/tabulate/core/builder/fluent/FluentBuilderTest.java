@@ -46,7 +46,7 @@ public class FluentBuilderTest {
 		final List<Employee> employeeList = Collections.singletonList(new Employee(
 				"firstName", "lastName", 25, BigDecimal.ZERO, "id"
 		));
-		new TabulationTemplate<Employee>(TabulationFormat.format("spy")).export(employeeList, Unit.INSTANCE, fluentBuilder);
+		new TabulationTemplate<Employee>(TabulationFormat.format("spy")).export(employeeList, Unit.INSTANCE, fluentBuilder.build());
 		assertTrue(true);
 	}
 
@@ -96,7 +96,7 @@ public class FluentBuilderTest {
 				"firstName", "lastName", 25, BigDecimal.ZERO, "id"
 		));
 		new TabulationTemplate<Employee>(TabulationFormat.format("spy")).export(
-				employeeList, Unit.INSTANCE, fluentBuilder
+				employeeList, Unit.INSTANCE, fluentBuilder.build()
 		);
 	}
 

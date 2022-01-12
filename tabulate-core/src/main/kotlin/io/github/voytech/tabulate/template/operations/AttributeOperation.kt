@@ -13,6 +13,7 @@ import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.template.context.RenderingContext
+import java.util.*
 
 private typealias AttributeCategory = Attribute<*>
 
@@ -39,7 +40,7 @@ interface CellAttributeRenderOperation<CTX: RenderingContext, ATTR : CellAttribu
 
 interface ColumnAttributeRenderOperation<CTX: RenderingContext, ATTR : ColumnAttribute>
     : AttributeOperation<CTX, ColumnAttribute, ATTR, ColumnContext> {
-    fun applicableRenderingPhases(): List<ColumnRenderPhase> = listOf(ColumnRenderPhase.BEFORE_FIRST_ROW)
+    fun applicableRenderingPhases(): EnumSet<ColumnRenderPhase> = EnumSet.of(ColumnRenderPhase.BEFORE_FIRST_ROW)
 }
 
 

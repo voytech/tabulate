@@ -80,7 +80,7 @@ class DslBuilderTest {
             assertEquals(Product::description.id(), columns[3].id.property, "nr 3 should have id ref 'Product::description'")
             assertEquals(Product::manufacturer.id(), columns[4].id.property, "nr 4 should have id ref 'Product::manufacturer'")
             assertEquals(columns.first().columnAttributes?.size, 1)
-            assertEquals(columns.first().columnAttributes?.first(), ColumnWidthAttribute(px = 100))
+            assertEquals(columns.first().columnAttributes?.get(ColumnWidthAttribute::class.java), ColumnWidthAttribute(px = 100))
 
             val indexedRows = IndexedTableRows(this)
             val zeroRows = indexedRows.getRowsAt(RowIndex(0))
@@ -89,12 +89,12 @@ class DslBuilderTest {
             with(zeroRows?.first()!!) {
                 assertNotNull(cells)
                 assertEquals(rowAttributes?.size, 1)
-                assertEquals(rowAttributes?.first(), RowHeightAttribute(px = 20))
+                assertEquals(rowAttributes?.get(RowHeightAttribute::class.java), RowHeightAttribute(px = 20))
                 assert(cells?.containsKey(ColumnKey("nr")) ?: false)
                 with(cells?.get(ColumnKey("nr"))!!) {
                     assertEquals(resolveRawValue(), "cell value at: 0.0")
                     assertEquals(cellAttributes?.size, 1)
-                    assertEquals(cellAttributes?.first(), CellTextStylesAttribute(fontFamily = "Courier"))
+                    assertEquals(cellAttributes?.get(CellTextStylesAttribute::class.java), CellTextStylesAttribute(fontFamily = "Courier"))
                 }
             }
         }
@@ -122,10 +122,10 @@ class DslBuilderTest {
                 assertEquals(Product::code.id(), column.id.property, "nr 1 should have id ref 'Product::code'")
                 assertNotNull(column.cellAttributes)
                 assertEquals(1, column.cellAttributes!!.size)
-                (column.cellAttributes.first() as CellTextStylesAttribute).let { attribute ->
-                    assertEquals(Colors.AERO, attribute.fontColor)
-                    assertEquals(12, attribute.fontSize)
-                    assertEquals("Times New Roman", attribute.fontFamily)
+                (column.cellAttributes[CellTextStylesAttribute::class.java]).let { attribute ->
+                    assertEquals(Colors.AERO, attribute?.fontColor)
+                    assertEquals(12, attribute?.fontSize)
+                    assertEquals("Times New Roman", attribute?.fontFamily)
                 }
             }
         }
@@ -174,10 +174,10 @@ class DslBuilderTest {
             assertEquals(Product::code.id(), columns[0].id.property, "nr 1 should have id ref 'Product::code'")
             assertEquals(1, columns.first().columnAttributes?.size)
             assertEquals(1, columns.first().cellAttributes?.size)
-            assertEquals(ColumnWidthAttribute(px = 100), columns.first().columnAttributes?.first())
+            assertEquals(ColumnWidthAttribute(px = 100), columns.first().columnAttributes?.get(ColumnWidthAttribute::class.java))
             assertEquals(
                 CellTextStylesAttribute(fontColor = Colors.AERO, fontFamily = "Times New Roman", fontSize = 12),
-                columns.first().cellAttributes?.first()
+                columns.first().cellAttributes?.get(CellTextStylesAttribute::class.java)
             )
             val indexedRows = IndexedTableRows(this)
             val zeroRows = indexedRows.getRowsAt(RowIndex(0))
@@ -186,16 +186,16 @@ class DslBuilderTest {
             with(zeroRows?.first()!!) {
                 assertNotNull(cells)
                 assertEquals(1,rowAttributes?.size)
-                assertEquals(RowHeightAttribute(px = 100), rowAttributes?.first())
+                assertEquals(RowHeightAttribute(px = 100), rowAttributes?.get(RowHeightAttribute::class.java))
                 assertEquals(1,cells?.size)
                 with(cells?.values?.first()) {
                     assertEquals(this?.cellAttributes?.size, 1)
-                    assertEquals(this?.cellAttributes?.first(), CellTextStylesAttribute(fontColor = Colors.BLACK))
+                    assertEquals(this?.cellAttributes?.get(CellTextStylesAttribute::class.java), CellTextStylesAttribute(fontColor = Colors.BLACK))
                 }
             }
             assertEquals(1, tableAttributes!!.size)
             assertEquals(TemplateFileAttribute(fileName = "some_template_file.ext"), tableAttributes
-                .first())
+                .get(TemplateFileAttribute::class.java))
         }
     }
 
@@ -303,10 +303,12 @@ class DslBuilderTest {
                 assertEquals("Code", header.cells[ColumnKey(property = Product::code.id())]!!.value)
                 assertEquals("Description", header.cells[ColumnKey(property = Product::description.id())]!!.value)
                 assertEquals(1, header.rowAttributes!!.size)
-                assertEquals(RowHeightAttribute(px = 100), header.rowAttributes.first())
+                assertEquals(RowHeightAttribute(px = 100), header.rowAttributes.get(RowHeightAttribute::class.java))
                 header.cells.let { cells ->
-                    assertEquals(CellTextStylesAttribute(fontColor = Colors.BLACK), cells[ColumnKey(property = Product::code.id())]!!.cellAttributes!!.first())
-                    assertEquals(CellTextStylesAttribute(fontColor = Colors.BLACK), cells[ColumnKey(property = Product::description.id())]!!.cellAttributes!!.first())
+                    assertEquals(CellTextStylesAttribute(fontColor = Colors.BLACK),
+                        cells[ColumnKey(property = Product::code.id())]!!.cellAttributes!![CellTextStylesAttribute::class.java]
+                    )
+                    assertEquals(CellTextStylesAttribute(fontColor = Colors.BLACK), cells[ColumnKey(property = Product::description.id())]!!.cellAttributes!![CellTextStylesAttribute::class.java])
                 }
             }
             rows.last().let { firstRow ->

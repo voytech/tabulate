@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.model
 
+import io.github.voytech.tabulate.model.attributes.Attributes
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 
@@ -31,12 +32,12 @@ internal class ColumnDef<T> internal constructor(
      * column attributes for controlling appearance of entire column, which are applicable column-wide not per cell. (e.g. width)
      */
     @get:JvmSynthetic
-    internal val columnAttributes: Set<ColumnAttribute>?,
+    internal val columnAttributes: Attributes<ColumnAttribute>?,
     /**
      * cell attributes for controlling appearance of all cells defined within particular column.
      */
     @get:JvmSynthetic
-    internal val cellAttributes: Set<CellAttribute>?
+    internal val cellAttributes: Attributes<CellAttribute>?
 ) {
     @JvmSynthetic
     internal fun resolveRawValue(value: T?): Any? = value?.let { id.property?.getPropertyValue(it) }

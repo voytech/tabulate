@@ -44,7 +44,7 @@ open class CsvRenderingContext: RenderingContext {
     }
 
     private fun AttributedCell.getSeparatorCharacter(): String =
-        attributes?.filterIsInstance<CellSeparatorCharacterAttribute>()?.firstOrNull()?.separator ?: ","
+        attributes?.get(CellSeparatorCharacterAttribute::class.java)?.separator ?: ","
 
     fun <T> endRow(context: AttributedRowWithCells<T>) {
         val lastIndex = context.rowCellValues.size - 1

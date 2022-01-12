@@ -2,24 +2,25 @@ package io.github.voytech.tabulate.template.operations
 
 import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.Attribute
+import io.github.voytech.tabulate.model.attributes.Attributes
 import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
-import io.github.voytech.tabulate.model.attributes.overrideAttributesLeftToRight
+import io.github.voytech.tabulate.model.attributes.orEmpty
 import io.github.voytech.tabulate.template.resolvers.SyntheticRow
 
-sealed class AttributedModel<A : Attribute<*>>(open val attributes: Set<A>?) : ContextData()
+sealed class AttributedModel<A : Attribute<*>>(open val attributes: Attributes<A>?) : ContextData()
 
 data class AttributedTable(
-    override val attributes: Set<TableAttribute>?,
+    override val attributes: Attributes<TableAttribute>?,
 ) : AttributedModel<TableAttribute>(attributes)
 
 internal fun <T> Table<T>.createContext(customAttributes: MutableMap<String, Any>): AttributedTable =
     AttributedTable(tableAttributes).apply { additionalAttributes = customAttributes }
 
 open class AttributedRow(
-    override val attributes: Set<RowAttribute>?,
+    override val attributes: Attributes<RowAttribute>?,
     open val rowIndex: Int
 ) : AttributedModel<RowAttribute>(attributes), RowCoordinate {
     override fun getRow(): Int = rowIndex
@@ -34,7 +35,7 @@ internal fun <T> SyntheticRow<T>.createAttributedRow(
 }
 
 data class AttributedRowWithCells<T>(
-    override val attributes: Set<RowAttribute>?,
+    override val attributes: Attributes<RowAttribute>?,
     val rowCellValues: Map<ColumnKey<T>, AttributedCell>,
     override val rowIndex: Int
 ) : AttributedRow(attributes, rowIndex)
@@ -42,12 +43,12 @@ data class AttributedRowWithCells<T>(
 fun <T> AttributedRow.withCells(rowCellValues: Map<ColumnKey<T>, AttributedCell>): AttributedRowWithCells<T> =
     AttributedRowWithCells(
         rowIndex = this@withCells.rowIndex,
-        attributes = this@withCells.attributes ?: emptySet(),
+        attributes = this@withCells.attributes ?: Attributes(),
         rowCellValues = rowCellValues
     ).apply { additionalAttributes = this@withCells.additionalAttributes }
 
 data class AttributedColumn(
-    override val attributes: Set<ColumnAttribute>? = null,
+    override val attributes: Attributes<ColumnAttribute>? = null,
     val columnIndex: Int,
     val currentPhase: ColumnRenderPhase? = ColumnRenderPhase.BEFORE_FIRST_ROW
 ) : AttributedModel<ColumnAttribute>(attributes), ColumnCoordinate {
@@ -61,14 +62,12 @@ internal fun <T> Table<T>.createAttributedColumn(
 ) = AttributedColumn(
         columnIndex = getColumnIndex(column.index),
         currentPhase = phase,
-        attributes = overrideAttributesLeftToRight(
-            columnAttributes.orEmpty() + column.columnAttributes.orEmpty()
-        ).toSet(),
+        attributes = columnAttributes.orEmpty() + column.columnAttributes.orEmpty()
     ).apply { additionalAttributes = customAttributes }
 
 data class AttributedCell(
     val value: CellValue,
-    override val attributes: Set<CellAttribute>?,
+    override val attributes: Attributes<CellAttribute>?,
     val rowIndex: Int,
     val columnIndex: Int,
 ) : AttributedModel<CellAttribute>(attributes), RowCellCoordinate {

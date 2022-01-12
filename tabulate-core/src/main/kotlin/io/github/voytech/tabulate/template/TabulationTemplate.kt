@@ -1,11 +1,10 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.api.builder.AttributeTransformerContainer
 import io.github.voytech.tabulate.api.builder.TableBuilderState
 import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
-import io.github.voytech.tabulate.api.builder.fluent.FluentTableBuilderApi
+import io.github.voytech.tabulate.api.builder.dsl.createTable
 import io.github.voytech.tabulate.model.ColumnDef
+import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.exception.ExportOperationsFactoryResolvingException
 import io.github.voytech.tabulate.template.exception.ResultProviderResolvingException
@@ -78,7 +77,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     ) : TabulationApi<T, O> {
 
         private val outputBinding: OutputBinding<RenderingContext, O> by lazy {
-            resolveResultProvider(output)
+            resolveOutputBinding(output)
         }
 
         init {
@@ -110,19 +109,9 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
     }
 
-    @Suppress("UNCHECKED_CAST")
-    private fun detectAttributeTransformers(): AttributeTransformerContainer? {
-        if (ops is AttributeDispatchingTableOperations<out RenderingContext>) {
-            return (ops as AttributeDispatchingTableOperations<out RenderingContext>).createAttributeTransformerContainer()
-        }
-        return null
-    }
-
-    private fun materialize(tableBuilderState: TableBuilderState<T>): TabulationState<T> {
-        return tableBuilderState.build(detectAttributeTransformers()).let { table ->
-            provider.createRenderingContext().let { renderingContext ->
-                TabulationState(renderingContext, table, RowCompletionListenerImpl(renderingContext))
-            }
+    private fun materialize(table: Table<T>): TabulationState<T> {
+        return provider.createRenderingContext().let { renderingContext ->
+            TabulationState(renderingContext, table, RowCompletionListenerImpl(renderingContext))
         }
     }
 
@@ -139,7 +128,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <O> resolveResultProvider(output: O): OutputBinding<RenderingContext, O> =
+    private fun <O> resolveOutputBinding(output: O): OutputBinding<RenderingContext, O> =
         outputBindings.filter {
             it.outputClass().isAssignableFrom(output!!::class.java)
         }.map { it as OutputBinding<RenderingContext, O> }
@@ -150,33 +139,14 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
      *
      * @param source iterable collection of objects
      * @param output an output binding.
-     * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.
+     * @param table [Table] a top level table model which defines table appearance.
      */
     fun <O> export(
         source: Iterable<T>,
         output: O,
-        block: TableBuilderApi<T>.() -> Unit,
+        table: Table<T>,
     ) {
-        create(output, block).let { api ->
-            source.forEach { api.nextRow(it) }
-                .also { api.finish() }
-                .also { api.flush() }
-        }
-    }
-
-    /**
-     * Performs actual export.
-     *
-     * @param source iterable collection of objects
-     * @param output an output binding.
-     * @param builder [FluentTableBuilderApi] a top level table fluent builder which defines table appearance.
-     */
-    fun <O> export(
-        source: Iterable<T>,
-        output: O,
-        builder: FluentTableBuilderApi<T>
-    ) {
-        create(output, builder).let { api ->
+        create(output, table).let { api ->
             source.forEach { api.nextRow(it) }
                 .also { api.finish() }
                 .also { api.flush() }
@@ -187,29 +157,14 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
      * Returns [TabulationApi] which enables 'interactive' export.
      *
      * @param output output binding.
-     * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.
+     * @param table a top level table model which defines table appearance.
      * @return [TabulationApi] which enables 'interactive' export.
      */
-    fun <O> create(output: O, block: TableBuilderApi<T>.() -> Unit): TabulationApi<T, O> {
-        return TabulationApiImpl(
-            materialize(createTableBuilder(block)),
-            output
-        )
+
+    fun <O> create(output: O, table: Table<T>): TabulationApi<T, O> {
+        return TabulationApiImpl(materialize(table), output)
     }
 
-    /**
-     * Returns [TabulationApi] which enables 'interactive' export.
-     *
-     * @param output output binding.
-     * @param builder [FluentTableBuilderApi] a top level table fluent builder which defines table appearance.
-     * @return [TabulationApi] which enables 'interactive' export.
-     */
-    fun <O> create(output: O, builder: FluentTableBuilderApi<T>): TabulationApi<T, O> {
-        return TabulationApiImpl(
-            materialize(builder.root()),
-            output
-        )
-    }
 
     private fun captureRecordAndRenderRow(state: TabulationState<T>, record: T) {
         state.capture(record)
@@ -237,6 +192,13 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
 }
 
+fun <T, O> TabulationTemplate<T>.export(source: Iterable<T>, output: O, block: TableBuilderApi<T>.() -> Unit) =
+    export(source, output, createTable(block))
+
+fun <T,O> Table<T>.export(format: TabulationFormat, output: O) {
+    TabulationTemplate<T>(format).export(emptyList(), output, this)
+}
+
 /**
  * Extension function invoked on a [TableBuilderState], which takes [TabulationFormat] and output handler
  *
@@ -245,7 +207,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
  * @receiver top level DSL table builder.
  */
 fun <T, O> (TableBuilderApi<T>.() -> Unit).export(format: TabulationFormat, output: O) {
-    TabulationTemplate<T>(format).export(emptyList(), output, this)
+    createTable(this).export(format, output)
 }
 
 fun File.tabulationFormat(provider: String? = null) =
@@ -262,7 +224,7 @@ fun File.tabulationFormat(provider: String? = null) =
 fun <T> (TableBuilderApi<T>.() -> Unit).export(file: File) {
     file.tabulationFormat().let { format ->
         FileOutputStream(file).use {
-            TabulationTemplate<T>(format).export(emptyList(), it, this)
+            TabulationTemplate<T>(format).export(emptyList(), it, createTable(this))
         }
     }
 }
@@ -284,7 +246,7 @@ fun <T> (TableBuilderApi<T>.() -> Unit).export(fileName: String) = export(File(f
  * @receiver collection of records to be rendered into file.
  */
 fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
-    TabulationTemplate<T>(format).export(this, output, block)
+    TabulationTemplate<T>(format).export(this, output, createTable(block))
 }
 
 /**
@@ -297,7 +259,7 @@ fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: Tabl
 fun <T> Iterable<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) {
     file.tabulationFormat().let { format ->
         FileOutputStream(file).use {
-            TabulationTemplate<T>(format).export(this, it, block)
+            TabulationTemplate<T>(format).export(this, it, createTable(block))
         }
     }
 }

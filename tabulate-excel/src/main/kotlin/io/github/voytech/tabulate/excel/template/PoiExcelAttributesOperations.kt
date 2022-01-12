@@ -20,6 +20,7 @@ import org.apache.poi.ss.util.CellReference
 import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import org.apache.poi.xssf.usermodel.XSSFFont
 import java.io.FileInputStream
+import java.util.*
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 
 class CellTextStylesAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellTextStylesAttribute> {
@@ -189,7 +190,7 @@ class ColumnWidthAttributeRenderOperation: ColumnAttributeRenderOperation<Apache
 
     override fun attributeType(): Class<ColumnWidthAttribute> = ColumnWidthAttribute::class.java
 
-    override fun applicableRenderingPhases(): List<ColumnRenderPhase> = listOf(ColumnRenderPhase.BEFORE_FIRST_ROW, ColumnRenderPhase.AFTER_LAST_ROW)
+    override fun applicableRenderingPhases(): EnumSet<ColumnRenderPhase> = EnumSet.of(ColumnRenderPhase.BEFORE_FIRST_ROW, ColumnRenderPhase.AFTER_LAST_ROW)
 
     override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: ColumnContext, attribute: ColumnWidthAttribute) {
         renderingContext.provideSheet(context.getTableId()).let {

@@ -1,36 +1,41 @@
 package io.github.voytech.tabulate.template.operations
 
-import io.github.voytech.tabulate.model.attributes.Attribute
-import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
-import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
-import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
-import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
+import io.github.voytech.tabulate.model.attributes.*
 import io.github.voytech.tabulate.template.context.RenderingContext
 import java.util.logging.Logger
 
 @Suppress("UNCHECKED_CAST")
 internal class AttributesOperationsContainer<CTX : RenderingContext> {
 
-    private val attributeRenderOperationsByClass: MutableMap<Class<out Attribute<*>>, AttributeOperation<CTX, *, *, *>> =
+    private val tableAttributeRenderOperationsByClass: MutableMap<Class<out Attribute<*>>, AttributeOperation<CTX, *, *, *>> =
         mutableMapOf()
 
-    fun getCellAttributeOperation(clazz: Class<out CellAttribute>): CellAttributeRenderOperation<CTX, CellAttribute>? =
-        (attributeRenderOperationsByClass[clazz] as CellAttributeRenderOperation<CTX, CellAttribute>?).also {
+    private val columnAttributeRenderOperationsByClass: MutableMap<Class<out Attribute<*>>, AttributeOperation<CTX, *, *, *>> =
+        mutableMapOf()
+
+    private val rowAttributeRenderOperationsByClass: MutableMap<Class<out Attribute<*>>, AttributeOperation<CTX, *, *, *>> =
+        mutableMapOf()
+
+    private val cellAttributeRenderOperationsByClass: MutableMap<Class<out Attribute<*>>, AttributeOperation<CTX, *, *, *>> =
+        mutableMapOf()
+
+    fun getCellAttributeOperation(clazz: Class<out CellAttribute<*>>): CellAttributeRenderOperation<CTX, CellAttribute<*>>? =
+        (cellAttributeRenderOperationsByClass[clazz] as CellAttributeRenderOperation<CTX, CellAttribute<*>>?).also {
             warnNoOperation(it, clazz)
         }
 
-    fun getRowAttributeOperation(clazz: Class<out RowAttribute>): RowAttributeRenderOperation<CTX, RowAttribute>? =
-        (attributeRenderOperationsByClass[clazz] as RowAttributeRenderOperation<CTX, RowAttribute>?).also {
+    fun getRowAttributeOperation(clazz: Class<out RowAttribute<*>>): RowAttributeRenderOperation<CTX, RowAttribute<*>>? =
+        (rowAttributeRenderOperationsByClass[clazz] as RowAttributeRenderOperation<CTX, RowAttribute<*>>?).also {
             warnNoOperation(it, clazz)
         }
 
-    fun getColumnAttributeOperation(clazz: Class<out ColumnAttribute>): ColumnAttributeRenderOperation<CTX, ColumnAttribute>? =
-        (attributeRenderOperationsByClass[clazz] as ColumnAttributeRenderOperation<CTX, ColumnAttribute>?).also {
+    fun getColumnAttributeOperation(clazz: Class<out ColumnAttribute<*>>): ColumnAttributeRenderOperation<CTX, ColumnAttribute<*>>? =
+        (columnAttributeRenderOperationsByClass[clazz] as ColumnAttributeRenderOperation<CTX, ColumnAttribute<*>>?).also {
             warnNoOperation(it, clazz)
         }
 
-    fun getTableAttributeOperation(clazz: Class<out  TableAttribute>): TableAttributeRenderOperation<CTX, TableAttribute>? =
-        (attributeRenderOperationsByClass[clazz] as TableAttributeRenderOperation<CTX, TableAttribute>?).also {
+    fun getTableAttributeOperation(clazz: Class<out TableAttribute<*>>): TableAttributeRenderOperation<CTX, TableAttribute<*>>? =
+        (tableAttributeRenderOperationsByClass[clazz] as TableAttributeRenderOperation<CTX, TableAttribute<*>>?).also {
             warnNoOperation(it, clazz)
         }
 
@@ -39,18 +44,46 @@ internal class AttributesOperationsContainer<CTX : RenderingContext> {
     }
 
     private fun register(operation: AttributeOperation<CTX, *, *, *>) {
-        attributeRenderOperationsByClass[operation.attributeType()] = operation
+        operation.attributeType().let { clazz ->
+            when {
+                TableAttribute::class.java.isAssignableFrom(clazz) ->
+                    tableAttributeRenderOperationsByClass[operation.attributeType()] = operation
+                ColumnAttribute::class.java.isAssignableFrom(clazz) ->
+                    columnAttributeRenderOperationsByClass[operation.attributeType()] = operation
+                RowAttribute::class.java.isAssignableFrom(clazz) ->
+                    rowAttributeRenderOperationsByClass[operation.attributeType()] = operation
+                CellAttribute::class.java.isAssignableFrom(clazz) ->
+                    cellAttributeRenderOperationsByClass[operation.attributeType()] = operation
+            }
+        }
     }
 
+    private fun Set<AttributeOperation<CTX, *, *, *>>.sortedByPriorities(): List<AttributeOperation<CTX, *, *, *>> =
+        sortedBy { it.priority() }
+
     internal fun registerAttributesOperations(factory: AttributeRenderOperationsFactory<CTX>): AttributesOperationsContainer<CTX> {
-        factory.createCellAttributeRenderOperations()?.forEach { register(it) }
-        factory.createTableAttributeRenderOperations()?.forEach { register(it) }
-        factory.createRowAttributeRenderOperations()?.forEach { register(it) }
-        factory.createColumnAttributeRenderOperations()?.forEach { register(it) }
+        factory.createCellAttributeRenderOperations()?.sortedByPriorities()?.forEach { register(it) }
+        factory.createTableAttributeRenderOperations()?.sortedByPriorities()?.forEach { register(it) }
+        factory.createRowAttributeRenderOperations()?.sortedByPriorities()?.forEach { register(it) }
+        factory.createColumnAttributeRenderOperations()?.sortedByPriorities()?.forEach { register(it) }
         return this
     }
 
-    fun isEmpty(): Boolean = attributeRenderOperationsByClass.isEmpty()
+    inline fun <reified A : Attribute<*>> getOperationsBy(): List<AttributeOperation<CTX, *, *, *>> {
+        return when {
+            TableAttribute::class.java == A::class.java -> tableAttributeRenderOperationsByClass.values.toList()
+            ColumnAttribute::class.java == A::class.java -> columnAttributeRenderOperationsByClass.values.toList()
+            RowAttribute::class.java == A::class.java -> rowAttributeRenderOperationsByClass.values.toList()
+            CellAttribute::class.java == A::class.java -> cellAttributeRenderOperationsByClass.values.toList()
+            else -> error("Requested attribute class (category) is not supported!")
+        }
+    }
+
+    fun isEmpty(): Boolean =
+        cellAttributeRenderOperationsByClass.isEmpty()
+            .and(rowAttributeRenderOperationsByClass.isEmpty())
+            .and(columnAttributeRenderOperationsByClass.isEmpty())
+            .and(tableAttributeRenderOperationsByClass.isEmpty())
 
     companion object {
         val logger: Logger = Logger.getLogger(AttributesOperationsContainer::class.java.name)
