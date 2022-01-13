@@ -1,33 +1,16 @@
 package io.github.voytech.tabulate.benchmarks
 
-import io.github.voytech.tabulate.api.builder.dsl.CustomTable
-import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.createTable
 import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.template.TabulationFormat
 import io.github.voytech.tabulate.template.export
 import org.openjdk.jmh.annotations.*
+import org.openjdk.jmh.infra.Blackhole
 import org.openjdk.jmh.runner.Runner
 import org.openjdk.jmh.runner.options.OptionsBuilder
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
-
-private fun createTableDefinition(count: Int): TableBuilderApi<Unit>.() -> Unit {
-    return CustomTable {
-        columns {
-            column("c-1")
-        }
-        rows {
-            for (i in 1..count) {
-                newRow {
-                    cell { value = "c-1" }
-                }
-            }
-        }
-    }
-}
-
 
 @BenchmarkMode(Mode.AverageTime)
 @Warmup(iterations = 3)
@@ -42,12 +25,23 @@ open class TableExportingBenchmark {
 
     @Setup
     fun setup() {
-        table = createTable { createTableDefinition(10000)  }
+        table = createTable {
+            columns {
+                column("c-1")
+            }
+            rows {
+                for (i in 1..100000) {
+                    newRow {
+                        cell { value = "c-1" }
+                    }
+                }
+            }
+        }
     }
 
     @Benchmark
-    fun testExporterInfrastructure() {
-        table.export(TabulationFormat.format("benchmark"), Unit)
+    fun testExporterInfrastructure(blackHole: Blackhole) {
+        blackHole.consume(table.export(TabulationFormat.format("benchmark"), Unit))
     }
 
 }
