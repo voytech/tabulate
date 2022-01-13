@@ -22,8 +22,8 @@ abstract class Attribute<T: Attribute<T>> {
 
 }
 
-open class Attributes<A: Attribute<*>>(private val attributeSet: Set<A> = emptySet()) {
-    private val attributeMap: HashMap<Class<out A>, A> = HashMap()
+class Attributes<A: Attribute<*>>(internal val attributeSet: Set<A> = emptySet()) {
+    private val attributeMap: MutableMap<Class<out A>, A> = LinkedHashMap()
 
     val size : Int by attributeSet::size
 
