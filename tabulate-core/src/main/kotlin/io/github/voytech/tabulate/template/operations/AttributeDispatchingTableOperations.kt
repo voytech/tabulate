@@ -26,6 +26,27 @@ internal class AttributeDispatchingTableOperations<CTX : RenderingContext>(
         if (enableAttributeSetBasedCaching) withAttributeSetBasedCache { block() } else block()
     }
 
+    private inline fun <reified OP: AttributeOperation<CTX, CAT, *, MAA>,
+            reified CAT : Attribute<*>, MAA> MAA.forEachOperation(
+        unfiltered: List<OP>,
+        consumer: (operation: OP) -> Boolean
+    ) where MAA : ModelAttributeAccessor<CAT>,
+            MAA : Context {
+        if (!hasCachedOnAttributeSet("__rememberedOperations")) {
+            val filtered = mutableListOf<AttributeOperation<CTX, CAT, *, MAA>>()
+            unfiltered.forEach {
+                if (consumer(it)) {
+                    filtered.add(it)
+                }
+            }
+            cacheOnAttributeSet("__rememberedOperations", filtered)
+        } else {
+            (getCachedOnAttributeSet("__rememberedOperations") as List<OP>).forEach {
+                consumer(it)
+            }
+        }
+    }
+
     override fun createTable(renderingContext: CTX, context: AttributedTable) {
         context.withAttributeSetCacheIfEnabled {
             context.skipAttributes().let { tableContext ->
@@ -45,14 +66,14 @@ internal class AttributeDispatchingTableOperations<CTX : RenderingContext>(
             context.skipAttributes().let { rowContext ->
                 var operationRendered = false
                 if (!context.attributes.isNullOrEmpty()) {
-                    sortedRowAttributeOperations.forEach { operation ->
+                    rowContext.forEachOperation(sortedRowAttributeOperations) { operation ->
                         if (operation.priority() >= 0 && !operationRendered) {
                             exposedExportOperations.beginRow(renderingContext, rowContext)
                             operationRendered = true
                         }
                         context.attributes?.get(operation.attributeType())?.let { attribute ->
-                            operation.renderAttribute(renderingContext, rowContext, attribute)
-                        }
+                            operation.renderAttribute(renderingContext, rowContext, attribute).let { true }
+                        } ?: false
                     }
                 }
                 if (!operationRendered) {
@@ -83,14 +104,14 @@ internal class AttributeDispatchingTableOperations<CTX : RenderingContext>(
             context.skipAttributes().let { rowCellContext ->
                 var operationRendered = false
                 if (!context.attributes.isNullOrEmpty()) {
-                    sortedCelAttributeOperations.forEach { operation ->
+                    rowCellContext.forEachOperation(sortedCelAttributeOperations) { operation ->
                         if (operation.priority() >= 0 && !operationRendered) {
                             exposedExportOperations.renderRowCell(renderingContext, rowCellContext)
                             operationRendered = true
                         }
                         context.attributes?.get(operation.attributeType())?.let { attribute ->
-                            operation.renderAttribute(renderingContext, rowCellContext, attribute)
-                        }
+                            operation.renderAttribute(renderingContext, rowCellContext, attribute).let { true }
+                        } ?: false
                     }
                 }
                 if (!operationRendered) {

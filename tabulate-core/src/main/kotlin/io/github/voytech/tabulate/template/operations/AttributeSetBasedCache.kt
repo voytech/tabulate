@@ -124,3 +124,15 @@ inline fun <reified M : Attribute<*>, T> T.getCachedOnAttributeSet(key: String):
               T : Context =
     (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as? MutableMap<String, Any>)
         ?.let { it[key] } ?: error("cannot resolve cached value in scope!")
+
+/**
+ * Given [ModelAttributeAccessor] (truncated, attribute-set-less [AttributedModel] view), checks if there is value stored under given key.
+ * Key-value pair is stored in internal cache valid for / accessed by [AttributedModel]'s attributes (attribute-set).
+ * @author Wojciech Mąka
+ */
+@Suppress("UNCHECKED_CAST")
+inline fun <reified M : Attribute<*>, T> T.hasCachedOnAttributeSet(key: String): Boolean
+        where T : ModelAttributeAccessor<M>,
+              T : Context =
+    (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as? MutableMap<String, Any>)
+        ?.containsKey(key) ?: false

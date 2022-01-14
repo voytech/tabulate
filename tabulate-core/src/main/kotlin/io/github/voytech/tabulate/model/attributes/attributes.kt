@@ -23,12 +23,12 @@ abstract class Attribute<T: Attribute<T>> {
 }
 
 class Attributes<A: Attribute<*>>(internal val attributeSet: Set<A> = emptySet()) {
-    private val attributeMap: MutableMap<Class<out A>, A> = LinkedHashMap()
+    private var attributeMap: MutableMap<Class<out A>, A> = LinkedHashMap()
 
     val size : Int by attributeSet::size
 
     private constructor(attributeSet: Set<A>, map: HashMap<Class<out A>,A>) : this(attributeSet) {
-        this.attributeMap.putAll(map)
+        this.attributeMap = map
     }
 
     init {
@@ -88,7 +88,7 @@ abstract class TableAttribute<T : TableAttribute<T>>  : Attribute<T>()
  * Takes a list of same class attributes and merges them into single attribute.
  * @author Wojciech Mąka
  */
-fun <A : Attribute<A>> List<A>.mergeAttributes(): A {
+internal fun <A : Attribute<A>> List<A>.mergeAttributes(): A {
     return this.takeLast(this.size - 1)
         .fold(this.first()) { acc: A, attribute: A ->
             acc.overrideWith(attribute)
@@ -100,7 +100,7 @@ fun <A : Attribute<A>> List<A>.mergeAttributes(): A {
  * Resulting set contains one attribute for given attribute class.
  * @author Wojciech Mąka
  */
-fun <C: Attribute<*>> Set<C>.mergeAttributes(): Set<C> {
+internal fun <C: Attribute<*>> Set<C>.mergeAttributes(): Set<C> {
     return groupBy { it.javaClass }
         .map { it.value.mergeAttributes() }
         .toSet()
