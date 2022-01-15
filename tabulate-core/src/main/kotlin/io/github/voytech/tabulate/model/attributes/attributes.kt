@@ -42,7 +42,6 @@ class Attributes<A: Attribute<*>>(internal val attributeSet: Set<A> = emptySet()
     @Suppress("UNCHECKED_CAST")
     private fun <I: Attribute<I>> A.overrideAttribute(other: A, clazz: Class<I>): I = (this as I) + (other as I)
 
-
     operator fun plus(other: Attributes<A>): Attributes<A> {
           val result = HashMap<Class<out A>,A>()
           val set = mutableSetOf<A>()
@@ -67,7 +66,12 @@ class Attributes<A: Attribute<*>>(internal val attributeSet: Set<A> = emptySet()
 
     fun isNotEmpty(): Boolean = size > 0
 
-    override fun equals(other: Any?): Boolean = attributeSet == other
+    override fun equals(other: Any?): Boolean {
+        if (other == null) return false
+        return if (other is Attributes<*>) {
+            other.attributeSet == attributeSet
+        } else false
+    }
 
     override fun hashCode(): Int = attributeSet.hashCode()
 }

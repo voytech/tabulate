@@ -3,19 +3,23 @@ package io.github.voytech.tabulate.template.operations
 import io.github.voytech.tabulate.model.attributes.*
 
 @JvmInline
-internal value class AttributeClassBasedCache<T : Attribute<*>>(
-    private val cache: MutableMap<Set<T>, MutableMap<String, Any>> = mutableMapOf()
+internal value class AttributeClassBasedCache<K : Attribute<*>, V>(
+    private val cache: MutableMap<Attributes<K>, V> = mutableMapOf()
 ) {
     @JvmSynthetic
-    operator fun get(key: Set<T>): MutableMap<String, Any> = cache[key] ?: kotlin.run {
-        cache[key] = mutableMapOf()
-        cache[key]!!
+    operator fun get(key: Attributes<K>): V? = cache[key]
+
+    @JvmSynthetic
+    operator fun set(key: Attributes<K>, value: V) {
+        cache[key] = value
     }
 
     @JvmSynthetic
-    operator fun set(key: Set<T>, value: MutableMap<String, Any>) {
-        cache[key] = value
-    }
+    fun compute(key: Attributes<K>, provider: () -> V): V =
+        cache.computeIfAbsent(key) {
+            provider()
+        }
+
 }
 
 /**
@@ -32,18 +36,22 @@ internal value class AttributeClassBasedCache<T : Attribute<*>>(
  */
 @Suppress("UNCHECKED_CAST")
 internal class AttributeSetBasedCache {
-    private val rowAttributesAsKeyCache: AttributeClassBasedCache<RowAttribute<*>> = AttributeClassBasedCache()
-    private val cellAttributesAsKeyCache: AttributeClassBasedCache<CellAttribute<*>> = AttributeClassBasedCache()
-    private val columnAttributesAsKeyCache: AttributeClassBasedCache<ColumnAttribute<*>> = AttributeClassBasedCache()
-    private val tableAttributesAsKeyCache: AttributeClassBasedCache<TableAttribute<*>> = AttributeClassBasedCache()
+    private val rowAttributesAsKeyCache: AttributeClassBasedCache<RowAttribute<*>, MutableMap<String, Any>> =
+        AttributeClassBasedCache()
+    private val cellAttributesAsKeyCache: AttributeClassBasedCache<CellAttribute<*>, MutableMap<String, Any>> =
+        AttributeClassBasedCache()
+    private val columnAttributesAsKeyCache: AttributeClassBasedCache<ColumnAttribute<*>, MutableMap<String, Any>> =
+        AttributeClassBasedCache()
+    private val tableAttributesAsKeyCache: AttributeClassBasedCache<TableAttribute<*>, MutableMap<String, Any>> =
+        AttributeClassBasedCache()
 
     @JvmSynthetic
     internal inline fun <reified T : Attribute<*>> getCache(attributes: Attributes<T>): MutableMap<String, Any> {
         return when {
-            TableAttribute::class.java == T::class.java -> tableAttributesAsKeyCache[attributes.attributeSet as Set<TableAttribute<*>>]
-            ColumnAttribute::class.java == T::class.java -> columnAttributesAsKeyCache[attributes.attributeSet as Set<ColumnAttribute<*>>]
-            RowAttribute::class.java == T::class.java -> rowAttributesAsKeyCache[attributes.attributeSet as Set<RowAttribute<*>>]
-            CellAttribute::class.java == T::class.java -> cellAttributesAsKeyCache[attributes.attributeSet as Set<CellAttribute<*>>]
+            TableAttribute::class.java == T::class.java -> tableAttributesAsKeyCache.compute(attributes as Attributes<TableAttribute<*>>) { mutableMapOf() }
+            ColumnAttribute::class.java == T::class.java -> columnAttributesAsKeyCache.compute(attributes as Attributes<ColumnAttribute<*>>) { mutableMapOf() }
+            RowAttribute::class.java == T::class.java -> rowAttributesAsKeyCache.compute(attributes as Attributes<RowAttribute<*>>) { mutableMapOf() }
+            CellAttribute::class.java == T::class.java -> cellAttributesAsKeyCache.compute(attributes as Attributes<CellAttribute<*>>) { mutableMapOf() }
             else -> error("Requested attribute class (category) is not supported!")
         }
     }

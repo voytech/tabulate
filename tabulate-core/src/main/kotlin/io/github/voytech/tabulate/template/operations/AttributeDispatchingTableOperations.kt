@@ -9,42 +9,51 @@ internal class AttributeDispatchingTableOperations<CTX : RenderingContext>(
     private val exposedExportOperations: TableExportOperations<CTX>,
     private val enableAttributeSetBasedCaching: Boolean = true
 ) : AttributedContextExportOperations<CTX> {
+
     private val sortedTableAttributeOperations: List<TableAttributeRenderOperation<CTX, TableAttribute<*>>> by lazy {
         attributeOperationsContainer.getOperationsBy<TableAttribute<*>>() as List<TableAttributeRenderOperation<CTX, TableAttribute<*>>>
     }
+
     private val sortedColumnAttributeOperations: List<ColumnAttributeRenderOperation<CTX, ColumnAttribute<*>>> by lazy {
         attributeOperationsContainer.getOperationsBy<ColumnAttribute<*>>() as List<ColumnAttributeRenderOperation<CTX, ColumnAttribute<*>>>
     }
+
     private val sortedRowAttributeOperations: List<RowAttributeRenderOperation<CTX, RowAttribute<*>>> by lazy {
         attributeOperationsContainer.getOperationsBy<RowAttribute<*>>() as List<RowAttributeRenderOperation<CTX, RowAttribute<*>>>
     }
+
     private val sortedCelAttributeOperations: List<CellAttributeRenderOperation<CTX, CellAttribute<*>>> by lazy {
         attributeOperationsContainer.getOperationsBy<CellAttribute<*>>() as List<CellAttributeRenderOperation<CTX, CellAttribute<*>>>
     }
 
-    private inline fun <reified T : Attribute<*>> AttributedModel<T>.withAttributeSetCacheIfEnabled(block: () -> Unit) {
-        if (enableAttributeSetBasedCaching) withAttributeSetBasedCache { block() } else block()
-    }
+    private val filteredOperationCache: AttributeClassBasedCache<Attribute<*>, List<AttributeOperation<CTX, *, *, *>>> =
+        AttributeClassBasedCache()
 
-    private inline fun <reified OP: AttributeOperation<CTX, CAT, *, MAA>,
-            reified CAT : Attribute<*>, MAA> MAA.forEachOperation(
+    private inline fun <reified OP : AttributeOperation<CTX, CAT, *, MAA>,
+            reified CAT : Attribute<*>, MAA> AttributedModel<CAT>.forEachOperation(
         unfiltered: List<OP>,
         consumer: (operation: OP) -> Boolean
     ) where MAA : ModelAttributeAccessor<CAT>,
             MAA : Context {
-        if (!hasCachedOnAttributeSet("__rememberedOperations")) {
-            val filtered = mutableListOf<AttributeOperation<CTX, CAT, *, MAA>>()
-            unfiltered.forEach {
-                if (consumer(it)) {
-                    filtered.add(it)
+        if (!attributes.isNullOrEmpty()) {
+            if (filteredOperationCache[attributes!! as Attributes<Attribute<*>>].isNullOrEmpty()) {
+                val filtered = mutableListOf<AttributeOperation<CTX, CAT, *, MAA>>()
+                unfiltered.forEach {
+                    if (consumer(it)) {
+                        filtered.add(it)
+                    }
+                }
+                filteredOperationCache[attributes!! as Attributes<Attribute<*>>] = filtered
+            } else {
+                filteredOperationCache[attributes!! as Attributes<Attribute<*>>]!!.forEach {
+                    consumer(it as OP)
                 }
             }
-            cacheOnAttributeSet("__rememberedOperations", filtered)
-        } else {
-            (getCachedOnAttributeSet("__rememberedOperations") as List<OP>).forEach {
-                consumer(it)
-            }
         }
+    }
+
+    private inline fun <reified T : Attribute<*>> AttributedModel<T>.withAttributeSetCacheIfEnabled(block: () -> Unit) {
+        if (enableAttributeSetBasedCaching) withAttributeSetBasedCache { block() } else block()
     }
 
     override fun createTable(renderingContext: CTX, context: AttributedTable) {
@@ -66,7 +75,7 @@ internal class AttributeDispatchingTableOperations<CTX : RenderingContext>(
             context.skipAttributes().let { rowContext ->
                 var operationRendered = false
                 if (!context.attributes.isNullOrEmpty()) {
-                    rowContext.forEachOperation(sortedRowAttributeOperations) { operation ->
+                    context.forEachOperation(sortedRowAttributeOperations) { operation ->
                         if (operation.priority() >= 0 && !operationRendered) {
                             exposedExportOperations.beginRow(renderingContext, rowContext)
                             operationRendered = true
@@ -104,7 +113,7 @@ internal class AttributeDispatchingTableOperations<CTX : RenderingContext>(
             context.skipAttributes().let { rowCellContext ->
                 var operationRendered = false
                 if (!context.attributes.isNullOrEmpty()) {
-                    rowCellContext.forEachOperation(sortedCelAttributeOperations) { operation ->
+                    context.forEachOperation(sortedCelAttributeOperations) { operation ->
                         if (operation.priority() >= 0 && !operationRendered) {
                             exposedExportOperations.renderRowCell(renderingContext, rowCellContext)
                             operationRendered = true

@@ -61,6 +61,7 @@ internal class AttributesOperationsContainer<CTX : RenderingContext> {
     private fun Set<AttributeOperation<CTX, *, *, *>>.sortedByPriorities(): List<AttributeOperation<CTX, *, *, *>> =
         sortedBy { it.priority() }
 
+    // TODO there is a bug because sorting is performed only on currently registered AttributeRenderOperationsFactory not entire operations collection.
     internal fun registerAttributesOperations(factory: AttributeRenderOperationsFactory<CTX>): AttributesOperationsContainer<CTX> {
         factory.createCellAttributeRenderOperations()?.sortedByPriorities()?.forEach { register(it) }
         factory.createTableAttributeRenderOperations()?.sortedByPriorities()?.forEach { register(it) }
