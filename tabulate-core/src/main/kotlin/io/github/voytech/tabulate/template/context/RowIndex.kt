@@ -2,11 +2,22 @@ package io.github.voytech.tabulate.template.context
 
 import io.github.voytech.tabulate.model.RowIndexDef
 
-
+/**
+ * AdditionalSteps enum represents default additional steps to be executed after regular collection elements are exported.
+ * Currently there is only single step supported - a TRAILING_ROWS step. This step is used when there is a need to
+ * specify row index relatively to the end of exported collection (e.g: footer row)
+ * @since 0.1.0
+ * @author Wojciech Mąka
+ */
 enum class AdditionalSteps {
     TRAILING_ROWS,
 }
 
+/**
+ * Relative index marker. Allows to define index as offset value relative to particular step.
+ * @since 0.1.0
+ * @author Wojciech Mąka
+ */
 data class Step(
     val step: String,
     val index: Int,
@@ -19,6 +30,11 @@ data class Step(
     operator fun inc(): Step = Step(step, index + 1, start)
 }
 
+/**
+ * Complex index. Allows to define index as absolute value, or relative to particular step.
+ * @since 0.1.0
+ * @author Wojciech Mąka
+ */
 data class RowIndex(
     val value: Int = 0,
     val step: Step? = null
@@ -57,6 +73,11 @@ data class RowIndex(
 
 }
 
+/**
+ * Mutable complex index. Its value is incremented by [RowContextIterator]
+ * @since 0.1.0
+ * @author Wojciech Mąka
+ */
 internal class MutableRowIndex {
     var rowIndex: Int = 0
     var step: Step? = null

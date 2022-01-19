@@ -9,6 +9,7 @@ import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
  * Column must contain mandatory column key - an identifier which is used on row cell to establish cell-to-column binding.
  * Column may contain column and cell attributes that enable table appearance customisation.
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 internal class ColumnDef<T> internal constructor(
     /**

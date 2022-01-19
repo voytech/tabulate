@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.template
 /**
  * Simple class representing the format of output file.
  * @property id - String value representing file type. e.g. xlsx, pdf, csv, txt
- * @property provider - String value representing export operations implementor.
+ * @property provider - String value representing export operations implementor. e.g. 'poi' for Apache POI
  * @author Wojciech Mąka
  */
 class TabulationFormat(

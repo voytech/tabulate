@@ -3,8 +3,15 @@ package io.github.voytech.tabulate.template.operations
 import io.github.voytech.tabulate.model.attributes.*
 import io.github.voytech.tabulate.template.context.RenderingContext
 
+/**
+ * [AttributedContextExportOperations] implementation dispatching attributes into corresponding renderers.
+ * Such separation of concerns allows to register attribute renderers working for the same [RenderingContext] in
+ * different compilation unit.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @Suppress("UNCHECKED_CAST")
-internal class AttributeDispatchingTableOperations<CTX : RenderingContext>(
+internal class TableOperationsWithAttributeSupport<CTX : RenderingContext>(
     private val attributeOperationsContainer: AttributesOperationsContainer<CTX>,
     private val exposedExportOperations: TableExportOperations<CTX>,
     private val enableAttributeSetBasedCaching: Boolean = true
@@ -29,25 +36,16 @@ internal class AttributeDispatchingTableOperations<CTX : RenderingContext>(
     private val filteredOperationCache: AttributeClassBasedCache<Attribute<*>, List<AttributeOperation<CTX, *, *, *>>> =
         AttributeClassBasedCache()
 
-    private inline fun <reified OP : AttributeOperation<CTX, CAT, *, MAA>,
-            reified CAT : Attribute<*>, MAA> AttributedModel<CAT>.forEachOperation(
-        unfiltered: List<OP>,
-        consumer: (operation: OP) -> Boolean
-    ) where MAA : ModelAttributeAccessor<CAT>,
-            MAA : Context {
+    private inline fun <reified OP : AttributeOperation<CTX, CAT, *, *>,
+            reified CAT : Attribute<*>> AttributedModel<CAT>.forEachOperation(
+        unfiltered: List<OP>, consumer: (operation: OP) -> Boolean
+    ) {
+        val attributes = attributes!! as Attributes<Attribute<*>> // TODO play with variance on Attributes - try with covariance at declaration site.
         if (!attributes.isNullOrEmpty()) {
-            if (filteredOperationCache[attributes!! as Attributes<Attribute<*>>].isNullOrEmpty()) {
-                val filtered = mutableListOf<AttributeOperation<CTX, CAT, *, MAA>>()
-                unfiltered.forEach {
-                    if (consumer(it)) {
-                        filtered.add(it)
-                    }
-                }
-                filteredOperationCache[attributes!! as Attributes<Attribute<*>>] = filtered
+            if (filteredOperationCache[attributes].isNullOrEmpty()) {
+                filteredOperationCache[attributes] = unfiltered.filterTo(mutableListOf()) { consumer(it) }
             } else {
-                filteredOperationCache[attributes!! as Attributes<Attribute<*>>]!!.forEach {
-                    consumer(it as OP)
-                }
+                filteredOperationCache[attributes]!!.forEach { consumer(it as OP) }
             }
         }
     }

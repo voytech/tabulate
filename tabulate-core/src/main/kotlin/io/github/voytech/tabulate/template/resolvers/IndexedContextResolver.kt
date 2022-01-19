@@ -6,6 +6,7 @@ import io.github.voytech.tabulate.template.operations.ContextData
 /**
  * Given requested index from upstream iterator, it resolves [ContextData]
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 internal interface IndexedContextResolver<T, CTX : ContextData> {
     fun resolve(requestedIndex: RowIndex): IndexedContext<CTX>?

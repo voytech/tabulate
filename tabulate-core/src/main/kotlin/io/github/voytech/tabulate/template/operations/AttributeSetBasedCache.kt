@@ -25,7 +25,7 @@ internal value class AttributeClassBasedCache<K : Attribute<*>, V>(
 /**
  * Multi-level cache that resides in dedicated [ContextData.additionalAttributes] state entry. This cache have following
  * properties:
- *  - it uses attribute-set as cache key which enables passing attribute-set bound context across different rows, cells and columns.
+ *  - it uses set of attributes as cache key which enables passing attribute set related context across different rows, cells and columns.
  *  - it consists of nested internal caches representing all attribute categories (row, cell, table, column)
  * Usage Scenario:
  * If we have the same set of cell attributes defined on column level then it is possible that some of cells
@@ -80,7 +80,7 @@ inline fun <reified T : Attribute<*>> getAttributeClassId(): String = when {
 }
 
 /**
- * Given [AttributedModel], resolves mutable map (internal cache). This internal cache is accessed by attribute-set
+ * Given [AttributedModel], resolves mutable map (internal cache). This internal cache is accessed by attribute set
  * (`attributes` property) of this particular [AttributedModel] receiver.
  * @author Wojciech Mąka
  */

@@ -4,12 +4,11 @@ import io.github.voytech.tabulate.model.Table
 import java.util.*
 
 /**
- * Given requested index, [Table] model, and global custom attributes, it resolves [AttributedRowWithCells] context data with
- * effective index (effective index may differ from requested one if there are no rows matching predicate
- * - in that case - row context with next matching index is returned).
- * It extends [AbstractRowContextResolver] by adding row buffering to support case when current record does not satisfy
- * row predicates, but will be rendered eventually.
+ * It extends [AbstractRowContextResolver] by adding collection elements buffering to support case when current record
+ * does not satisfy row predicates for current index and needs to be rendered eventually.
+ * @see AbstractRowContextResolver
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 internal class AccumulatingRowContextResolver<T>(
     tableModel: Table<T>,

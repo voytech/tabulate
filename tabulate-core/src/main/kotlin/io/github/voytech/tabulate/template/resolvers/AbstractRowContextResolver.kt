@@ -107,14 +107,16 @@ internal interface RowCompletionListener<T> {
 }
 
 /**
- * Given requested index, [Table] model, and global custom attributes, it resolves [AttributedRowWithCells] context data with
- * effective index (effective index may differ from requested one if there are no rows matching predicate
+ * Given requested index, [Table] model, and custom attributes, it resolves [AttributedRowWithCells] context data with
+ * effective index (effective index may differ from requested one if there are no rows matching current row predicate
  * - in that case - row context with next matching index is returned).
- * Additionally - while resolving - it notifies about:
- *  - computed row attributes on row,
- *  - each computed cell and its attributes,
- *  - entire row completion - that is completion of row with attributes and all row cells with its attributes.
+ *
+ * Additionally it notifies about following events:
+ *  - all row attributes on row has been resolved,
+ *  - cell and its attributes has been resolved,
+ *  - entire row has been completed (row with attributes and all row cells with its attributes).
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 internal abstract class AbstractRowContextResolver<T>(
     tableModel: Table<T>,
@@ -168,6 +170,7 @@ internal abstract class AbstractRowContextResolver<T>(
      * it may be next matching index or eventually null when no row can be resolved.
      * @param requestedIndex [RowIndex] - index requested by row iterator.
      * @author Wojciech Mąka
+     * @since 0.1.0
      */
     override fun resolve(requestedIndex: RowIndex): IndexedContext<AttributedRowWithCells<T>>? {
         return if (indexedTableRows.hasCustomRows(SourceRow(requestedIndex))) {
@@ -190,6 +193,7 @@ internal abstract class AbstractRowContextResolver<T>(
      * Provides next record from data source. Resolved [IndexedValue] may wrap a value or null if there is no more
      * records left.
      * @author Wojciech Mąka
+     * @since 0.1.0
      */
     protected abstract fun getNextRecord(): IndexedValue<T>?
 }

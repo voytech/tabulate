@@ -7,7 +7,7 @@ import io.github.voytech.tabulate.model.ColumnDef
 import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.template.context.*
 import io.github.voytech.tabulate.template.exception.ExportOperationsFactoryResolvingException
-import io.github.voytech.tabulate.template.exception.ResultProviderResolvingException
+import io.github.voytech.tabulate.template.exception.OutputBindingResolvingException
 import io.github.voytech.tabulate.template.exception.UnknownTabulationFormatException
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
@@ -30,7 +30,7 @@ interface TabulationApi<T, O> {
     /**
      * To be called explicitly in order to trigger next row rendering.
      * Notice that record used in parameter list is not always the record being currently rendered. It is
-     * first buffered and rendered eventually - according to row qualification rules defined trough table DSL api.
+     * first buffered and rendered eventually according to row qualification rules defined trough table DSL api.
      * @param record - a record from source collection to be buffered, and transformed into [RowContextWithCells] at some point of time.
      */
     fun nextRow(record: T)
@@ -57,7 +57,8 @@ interface TabulationApi<T, O> {
  * - [TabulationTemplate.export] - export collection of objects.
  * - [TabulationTemplate.create] - create [TabulationApi] to enable 'interactive' export. Removes restriction of exporting
  * only iterables. Gives full control on when to schedule next item for rendering.
- * And convenience extension methods:
+ *
+ * This class provides also convenience extension methods:
  * - [TableBuilderState.export] for exporting user defined table.
  * - [Iterable.tabulate] for tabulating collection of elements. Method is called 'tabulate' to emphasize
  * its sole role - constructing tables from from various objects.
@@ -132,7 +133,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         outputBindings.filter {
             it.outputClass().isAssignableFrom(output!!::class.java)
         }.map { it as OutputBinding<RenderingContext, O> }
-            .firstOrNull() ?: throw ResultProviderResolvingException()
+            .firstOrNull() ?: throw OutputBindingResolvingException()
 
     /**
      * Performs actual export.
@@ -250,7 +251,7 @@ fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: Tabl
 }
 
 /**
- * Extension function invoked on a collection of records, which takes [File] as argument and DSL table builder to define table appearance.
+ * Extension function invoked on a collection of records, which takes [File] and DSL table builder to define table appearance.
  *
  * @param file a file name to create.
  * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.
@@ -265,7 +266,7 @@ fun <T> Iterable<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) {
 }
 
 /**
- * Extension function invoked on a collection of records, which takes [fileName] as argument and DSL table builder to define table appearance.
+ * Extension function invoked on a collection of elements, which takes [fileName] and DSL table builder as arguments.
  *
  * @param fileName a file name to create.
  * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.

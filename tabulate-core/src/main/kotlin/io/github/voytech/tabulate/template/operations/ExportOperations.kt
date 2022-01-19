@@ -34,7 +34,7 @@ abstract class ExportOperationsConfiguringFactory<CTX : RenderingContext> : Expo
     protected open fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<CTX>? = null
 
     final override fun createExportOperations(): AttributedContextExportOperations<CTX> =
-        AttributeDispatchingTableOperations(attributeOperationsContainer, provideExportOperations())
+        TableOperationsWithAttributeSupport(attributeOperationsContainer, provideExportOperations())
 
     private fun registerAttributesOperations(
         attributeOperationsContainer: AttributesOperationsContainer<CTX>,

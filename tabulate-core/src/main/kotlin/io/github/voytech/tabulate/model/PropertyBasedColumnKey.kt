@@ -45,6 +45,7 @@ fun <T> KProperty1<T, Any?>.id() : PropertyReferenceColumnKey<T> {
 /**
  * Kotlin [KProperty1] based property reference literal
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 @JvmInline
 value class PropertyLiteralColumnKey<T>(private val propertyLiteral: KProperty1<T, Any?>) : PropertyReferenceColumnKey<T> {
@@ -55,6 +56,7 @@ value class PropertyLiteralColumnKey<T>(private val propertyLiteral: KProperty1<
  * Java [java.util.function.Function] based property literal. Should be used by passing getter method reference as function,
  * and unique id to make this key referencable from cell definition.
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 class NamedPropertyReferenceColumnKey<T>(
     private val key: String,

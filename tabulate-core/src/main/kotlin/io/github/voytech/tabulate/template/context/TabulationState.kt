@@ -7,15 +7,16 @@ import io.github.voytech.tabulate.template.resolvers.AccumulatingRowContextResol
 import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
 
 /**
- * [TabulationState] keeps state separated from [TabulationTemplate] so that tabulate method invoked on [TabulationTemplate]
- * always starts with clear state from the beginning.
- * TabulationState manages following properties:
- * @property rowContextResolver - strategy for transforming current index, table model, and current collection element
- * into [RowContextWithCells] which is used then by rendering operations and delegate rendering context (e.g. third party API like Apache POI)
+ * Represents entire state produced throughout exporting process. State itself is separated from [TabulationTemplate].
+ * [TabulationTemplate] creates [TabulationState] instance internally at every 'tabulate' method invocation so that
+ * no additional state needs to be stored by [TabulationTemplate].
+ * [TabulationState] manages following properties:
+ * @property rowContextResolver - a strategy for transforming requested row index, table model, and collection elements
+ * into [RowContextWithCells] which is used then by renderer.
  * @property rowContextIterator - iterates over elements and uses [RowContextResolver] in order to resolve [RowContextWithCells] for
  * requested index.
- * @property stateAttributes - generic map of attributes that may be shared globally within operation implementors.
- * It is a property shared across: [RowContextWithCells], [ColumnContext], [RowCellContext].
+ * @property stateAttributes - map of generic attributes that may be shared during exporting.
+ * @since 0.1.0
  * @author Wojciech Mąka
  */
 internal class TabulationState<T>(

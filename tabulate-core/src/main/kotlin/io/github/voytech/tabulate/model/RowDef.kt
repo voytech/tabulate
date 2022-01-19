@@ -9,6 +9,7 @@ import io.github.voytech.tabulate.template.operations.CellValue
  * Defines single row in table which represents single record from exported data-set.
  * May also contain custom cell values (e.g. to display table header or footer).
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 internal data class RowDef<T> internal constructor(
     /**
@@ -72,6 +73,7 @@ private operator fun <T> Map<ColumnKey<T>, CellDef<T>>.plus(map: Map<ColumnKey<T
  * to define row position when we cannot tell absolute index at definition time. Currently it only happens when we
  * want to insert footer row and do not know about size of exported collection, because it can vary at run-time.
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 data class RowIndexDef(
     val index: Int = 0,

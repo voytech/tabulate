@@ -10,6 +10,7 @@ import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
  * A top-level definition of tabular layout. Aggregates column as well as all row definitions. It can also contain
  * globally defined attributes for table, cells, columns and rows. Such attributes applies to each model level
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 class Table<T> internal constructor(
     /**

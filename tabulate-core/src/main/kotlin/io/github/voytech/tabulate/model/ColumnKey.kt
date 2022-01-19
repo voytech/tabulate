@@ -10,6 +10,8 @@ import kotlin.reflect.KProperty1
  * two problems at once:
  *  - identifies column which allows to locate row cell,
  *  - extracts value from collection element at given property to be later rendered as cell value.
+ *  @since 0.1.0
+ *  @author Wojciech Mąka
  */
 data class ColumnKey<T> internal constructor(
     /**

@@ -11,6 +11,7 @@ import io.github.voytech.tabulate.template.context.RowIndex
  *  Collection item and index information is then used by row predicates in order to match all table row definitions.
  *
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 data class SourceRow<T> (
     /**
