@@ -4,6 +4,14 @@ import io.github.voytech.tabulate.model.RowPredicate
 import io.github.voytech.tabulate.template.context.AdditionalSteps
 import io.github.voytech.tabulate.template.context.RowIndex
 
+/**
+ * Built-in row predicates.
+ * Collection of functions that can be used as predicates for table row definitions.
+ * Those predicates determines effective row index at which given row definition should be applied.
+ * @see [RowPredicate]
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 object RowPredicates {
 
     @JvmStatic

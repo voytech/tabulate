@@ -10,14 +10,16 @@ infix fun <T> RowPredicate<T>.and(other: RowPredicate<T>): RowPredicate<T> = Row
 infix fun <T> RowPredicate<T>.or(other: RowPredicate<T>): RowPredicate<T> = RowPredicate { test(it) || other.test(it)}
 
 /**
- * Predicate testing [SourceRow] instance
+ * A predicate that tests [SourceRow] instance
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 fun interface RowPredicate<T> : Predicate<SourceRow<T>>
 
 /**
- * Predicate testing [RowIndex] instance. A base class for predicate literals.
+ * A predicate that tests [RowIndex] instance. A base class for predicate literals.
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 fun interface IndexPredicate : Predicate<RowIndex>
 
