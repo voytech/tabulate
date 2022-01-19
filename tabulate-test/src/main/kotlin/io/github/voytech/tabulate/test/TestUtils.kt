@@ -39,6 +39,12 @@ data class CellDefinition(
     val cellValue: CellValue?
 )
 
+/**
+ * TableAssert test utility.
+ * After reading rendering context from test file, performs table assertions against expected attributes and cell values.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class TableAssert<T, E>(
     private val tableName: String,
     private val stateProvider: StateProvider<E>,
