@@ -33,7 +33,7 @@ interface TableExportOperations<CTX: RenderingContext> {
 
 /**
  * Export operations factory that can discover attribute operations.
- * It exposes [TableExportOperations] as public API which drops attribute-set from operation context instances.
+ * It exposes [TableExportOperations] as public API (an interface without attribute-set in operation context).
  * @author Wojciech Mąka
  * @since 0.1.0
  */

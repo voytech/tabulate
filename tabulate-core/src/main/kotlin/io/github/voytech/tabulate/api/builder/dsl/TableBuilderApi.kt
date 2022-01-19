@@ -13,6 +13,13 @@ import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellType 
 @DslMarker
 annotation class TabulateMarker
 
+/**
+ * Entry point function taking type-safe DSL table builder API as a parameter.
+ * Applies all table builder API instructions into managed [TableBuilderState].
+ * @return [TableBuilderState]
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @JvmSynthetic
 internal fun <T> createTableBuilder(block: TableBuilderApi<T>.() -> Unit): TableBuilderState<T> {
     return TableBuilderState<T>().also {
@@ -20,6 +27,13 @@ internal fun <T> createTableBuilder(block: TableBuilderApi<T>.() -> Unit): Table
     }
 }
 
+/**
+ * Entry point function taking type-safe DSL table builder API as a parameter.
+ * Materializes internal table builder state and returns read-only [io.github.voytech.tabulate.model.Table] model.
+ * @return [io.github.voytech.tabulate.model.Table]
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 fun <T> createTable(block: TableBuilderApi<T>.() -> Unit): io.github.voytech.tabulate.model.Table<T> =
     createTableBuilder(block).build()
 
@@ -43,6 +57,12 @@ operator fun <T> (TableBuilderApi<Unit>.() -> Unit).plus(block: TableBuilderApi<
     }
 }
 
+/**
+ * Kotlin type-safe DSL table attribute builder API for defining table level attributes.
+ * Internally operates on corresponding builder state that is eventually materialized to table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @TabulateMarker
 class TableLevelAttributesBuilderApi<T> internal constructor(private val builderState: TableBuilderState<T>) {
 
@@ -53,6 +73,12 @@ class TableLevelAttributesBuilderApi<T> internal constructor(private val builder
 
 }
 
+/**
+ * Kotlin type-safe DSL column attribute builder API for defining column level attributes.
+ * Internally operates on corresponding builder state that is eventually materialized to table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @TabulateMarker
 class ColumnLevelAttributesBuilderApi<T> internal constructor(private val builderState: ColumnBuilderState<T>) {
 
@@ -68,6 +94,12 @@ class ColumnLevelAttributesBuilderApi<T> internal constructor(private val builde
 
 }
 
+/**
+ * Kotlin type-safe DSL row attribute builder API for defining row level attributes.
+ * Internally operates on corresponding builder state that is eventually materialized to table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @TabulateMarker
 class RowLevelAttributesBuilderApi<T> internal constructor(private val builderState: RowBuilderState<T>) {
 
@@ -82,6 +114,12 @@ class RowLevelAttributesBuilderApi<T> internal constructor(private val builderSt
     }
 }
 
+/**
+ * Kotlin type-safe DSL cell attribute builder API for defining cell level attributes.
+ * Internally operates on corresponding builder state that is eventually materialized to table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @TabulateMarker
 class CellLevelAttributesBuilderApi<T> internal constructor(private val builderState: CellBuilderState<T>) {
     @JvmSynthetic
@@ -90,6 +128,12 @@ class CellLevelAttributesBuilderApi<T> internal constructor(private val builderS
     }
 }
 
+/**
+ * Kotlin type-safe DSL table builder API for defining entire table.
+ * Internally operates on corresponding builder state that is eventually materialized to table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @TabulateMarker
 class TableBuilderApi<T> internal constructor(private val builderState: TableBuilderState<T>) {
 
@@ -129,6 +173,12 @@ class TableBuilderApi<T> internal constructor(private val builderState: TableBui
     }
 }
 
+/**
+ * Kotlin type-safe DSL columns builder API for columns.
+ * Internally operates on corresponding builder state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @TabulateMarker
 class ColumnsBuilderApi<T> internal constructor(private val builderState: ColumnsBuilderState<T>) {
 
@@ -164,6 +214,12 @@ class ColumnsBuilderApi<T> internal constructor(private val builderState: Column
     }
 }
 
+/**
+ * Kotlin type-safe DSL column builder API for defining single column.
+ * Internally operates on corresponding builder state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @TabulateMarker
 class ColumnBuilderApi<T> internal constructor(private val builderState: ColumnBuilderState<T>) {
 
@@ -202,6 +258,8 @@ class ColumnBuilderApi<T> internal constructor(private val builderState: ColumnB
  * [RowPredicateBuilderApi] simplifies row predicate construction as it brings all default [RowPredicate] methods into scope of
  * lambda (lambda with receiver). Consumer of an API do not need to know [RowPredicate] methods and do not need to import
  * them explicitly. Goal here is to make using DSL builder API as intuitive as it only can be.
+ * @author Wojciech Mąka
+ * @since 0.1.0
  */
 class RowPredicateBuilderApi<T> {
     @JvmSynthetic
@@ -251,6 +309,8 @@ class RowPredicateBuilderApi<T> {
  * [RowIndexPredicateBuilderApi] simplifies row index literal predicate construction as it brings all default methods into scope of
  * lambda (lambda with receiver). Consumer of an API do not need to know predicate methods in advance and do not need to import
  * them explicitly. Goal here is to make using DSL builder API as intuitive as it only can be.
+ * @author Wojciech Mąka
+ * @since 0.1.0
  */
 class RowIndexPredicateBuilderApi {
 
@@ -288,6 +348,12 @@ class RowIndexPredicateBuilderApi {
 
 }
 
+/**
+ * Kotlin type-safe DSL rows builder API for defining rows.
+ * Internally operates on corresponding builder state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @TabulateMarker
 class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuilderState<T>) {
 
@@ -350,7 +416,12 @@ class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuild
     }
 }
 
-
+/**
+ * Kotlin type-safe DSL row builder API for defining single row.
+ * Internally operates on corresponding builder state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @TabulateMarker
 class RowBuilderApi<T> internal constructor(private val builderState: RowBuilderState<T>) {
 
@@ -394,6 +465,12 @@ class RowBuilderApi<T> internal constructor(private val builderState: RowBuilder
 
 }
 
+/**
+ * Kotlin type-safe DSL cells builder API for defining row cells.
+ * Internally operates on corresponding builder state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @TabulateMarker
 class CellsBuilderApi<T> internal constructor(private val builderState: CellsBuilderState<T>) {
 
@@ -427,6 +504,12 @@ class CellsBuilderApi<T> internal constructor(private val builderState: CellsBui
 
 }
 
+/**
+ * Kotlin type-safe DSL cell builder API for defining single row cell.
+ * Internally operates on corresponding builder state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @TabulateMarker
 class CellBuilderApi<T> internal constructor(private val builderState: CellBuilderState<T>) {
 

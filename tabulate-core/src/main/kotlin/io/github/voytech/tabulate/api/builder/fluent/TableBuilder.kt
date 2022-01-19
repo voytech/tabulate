@@ -11,6 +11,12 @@ import java.util.concurrent.Callable
 import java.util.function.Consumer
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellType as TypeHint
 
+/**
+ * Base class for all java fluent table builders.
+ * Provides methods for navigating builders hierarchy.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 sealed class FluentTableBuilderApi<T> {
 
     @JvmSynthetic
@@ -47,6 +53,12 @@ interface ColumnsBuilderMethods<T> {
     fun column(ref: NamedPropertyReferenceColumnKey<T>): ColumnBuilder<T>
 }
 
+/**
+ * Java fluent table builder API for defining entier table model.
+ * Internally operates on corresponding builder state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class TableBuilder<T> : FluentTableBuilderApi<T>() {
 
     @get:JvmSynthetic
@@ -87,6 +99,12 @@ class TableBuilder<T> : FluentTableBuilderApi<T>() {
     override fun up(): FluentTableBuilderApi<T> = this
 }
 
+/**
+ * Java fluent columns builder API for defining columns.
+ * Internally operates on corresponding builder state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class ColumnsBuilder<T> internal constructor(private val parent: TableBuilder<T>) :
     FluentTableBuilderApi<T>(), ColumnsBuilderMethods<T> {
 
@@ -101,6 +119,12 @@ class ColumnsBuilder<T> internal constructor(private val parent: TableBuilder<T>
 
 }
 
+/**
+ * Java fluent column builder API for defining single column.
+ * Internally operates on corresponding builder state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class ColumnBuilder<T> internal constructor(
     private val builderState: ColumnBuilderState<T>,
     private val parent: ColumnsBuilder<T>,
@@ -150,6 +174,12 @@ class ColumnBuilder<T> internal constructor(
     override fun up(): ColumnsBuilder<T> = parent
 }
 
+/**
+ * Java fluent rows builder API for defining rows.
+ * Internally operates on corresponding builder state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class RowsBuilder<T> internal constructor(
     private val parent: TableBuilder<T>,
 ) : FluentTableBuilderApi<T>(), RowBuilderMethods<T> {
@@ -170,6 +200,12 @@ class RowsBuilder<T> internal constructor(
 
 }
 
+/**
+ * Java fluent row builder API for defining single row.
+ * Internally operates on corresponding builder state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class RowBuilder<T> internal constructor(
     private val builderState: RowBuilderState<T>,
     private val parent: RowsBuilder<T>,
@@ -225,6 +261,12 @@ class RowBuilder<T> internal constructor(
     override fun up(): RowsBuilder<T> = parent
 }
 
+/**
+ * Java fluent cell builder API for defining single row cell.
+ * Internally operates on corresponding builder state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class CellBuilder<T> internal constructor(
     private val builderState: CellBuilderState<T>,
     private val parent: RowBuilder<T>,

@@ -11,6 +11,11 @@ import kotlin.reflect.KProperty
 
 typealias DslBlock<T> = (T) -> Unit
 
+/**
+ * Basic builder contract.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 abstract class Builder<T> {
     internal abstract fun build(): T
 }
@@ -19,6 +24,11 @@ abstract class InternalBuilder<T> {
     internal abstract fun build(): T
 }
 
+/**
+ * Base class for all table builders that allow creating attributes.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 sealed class AttributesAwareBuilder<T> : InternalBuilder<T>() {
 
     private var attributes: MutableMap<Class<out Attribute<*>>, Set<Attribute<*>>> = mutableMapOf()
@@ -56,6 +66,12 @@ sealed class AttributesAwareBuilder<T> : InternalBuilder<T>() {
 
 }
 
+/**
+ * Top level builder state for creating table model.
+ * Manages mutable state that is eventually materialized to table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 internal class TableBuilderState<T> : AttributesAwareBuilder<Table<T>>() {
 
     @get:JvmSynthetic
@@ -93,6 +109,12 @@ internal class TableBuilderState<T> : AttributesAwareBuilder<Table<T>>() {
 
 }
 
+/**
+ * Columns builder state for creating table columns.
+ * Manages mutable state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 internal class ColumnsBuilderState<T> : InternalBuilder<List<ColumnDef<T>>>() {
 
     @get:JvmSynthetic
@@ -215,6 +237,12 @@ internal fun <T, R> List<ColumnBuilderState<T>>.searchForwardStartingWith(
         if (it.index >= start.index) block(it) else null
     }
 
+/**
+ * Column builder state for creating single table column.
+ * Manages mutable state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 internal class ColumnBuilderState<T>(private val columnBuilderStates: List<ColumnBuilderState<T>>) :
     AttributesAwareBuilder<ColumnDef<T>>() {
 
@@ -251,6 +279,13 @@ internal class ColumnBuilderState<T>(private val columnBuilderStates: List<Colum
 
 }
 
+/**
+ * Build-time validation internal utility class.
+ * Tracks row spans values per columns to perform validations when new cell is about to be added into builder state.
+ * When existing row span constraints are violated - fails-fast during materialization of builder state.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 internal class RowSpans<T> {
 
     private val rowSpans: MutableMap<ColumnKey<T>, MutableMap<RowIndexDef, Int>> = mutableMapOf()
@@ -276,6 +311,12 @@ internal class RowSpans<T> {
     }
 }
 
+/**
+ * Rows builder state for creating table rows.
+ * Manages mutable state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuilderState<T>) :
     InternalBuilder<List<RowDef<T>>>() {
 
@@ -343,6 +384,12 @@ internal class RowsBuilderState<T>(private val columnsBuilderState: ColumnsBuild
 
 }
 
+/**
+ * Row builder state for creating single table row.
+ * Manages mutable state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 internal class RowBuilderState<T>(
     @get:JvmSynthetic internal val qualifier: RowQualifier<T>,
     @get:JvmSynthetic internal val columnsBuilderState: ColumnsBuilderState<T>,
@@ -391,6 +438,12 @@ internal class RowBuilderState<T>(
 
 }
 
+/**
+ * Cells builder state for creating table row cells.
+ * Manages mutable state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 internal class CellsBuilderState<T>(
     private val rowBuilderState: RowBuilderState<T>,
     private val cells: MutableMap<ColumnKey<T>, CellBuilderState<T>>,
@@ -514,6 +567,12 @@ internal class CellsBuilderState<T>(
 
 }
 
+/**
+ * Cell builder state for creating single row cell.
+ * Manages mutable state that is eventually materialized as part of table model.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 internal class CellBuilderState<T>(
     private val rowBuilderState: RowBuilderState<T>,
 ) : AttributesAwareBuilder<CellDef<T>>() {
@@ -559,6 +618,13 @@ internal class CellBuilderState<T>(
     fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
 }
 
+/**
+ * Base class for all attribute builders. Needs to be derived by all custom attribute builders in order to correctly
+ * merge two attributes. Internally it tracks property changes that are copied onto attribute instance when
+ * builder is materialized. This helps to choose only mutated property values as winners when attribute merging occurs.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 abstract class AttributeBuilder<T : Attribute<*>> : Builder<T>() {
     private val propertyChanges = mutableSetOf<KProperty<*>>()
     private val mappings = mutableMapOf<String, String>()
@@ -585,10 +651,34 @@ abstract class AttributeBuilder<T : Attribute<*>> : Builder<T>() {
     }
 }
 
+/**
+ * Base class for all table attribute builders.
+ * @see AttributeBuilder
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 abstract class TableAttributeBuilder<T : TableAttribute<T>> : AttributeBuilder<T>()
 
+/**
+ * Base class for all cell attribute builders.
+ * @see AttributeBuilder
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 abstract class CellAttributeBuilder<T : CellAttribute<T>> : AttributeBuilder<T>()
 
+/**
+ * Base class for all row attribute builders.
+ * @see AttributeBuilder
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 abstract class RowAttributeBuilder<T : RowAttribute<T>> : AttributeBuilder<T>()
 
+/**
+ * Base class for all column attribute builders.
+ * @see AttributeBuilder
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 abstract class ColumnAttributeBuilder<T : ColumnAttribute<T>> : AttributeBuilder<T>()
