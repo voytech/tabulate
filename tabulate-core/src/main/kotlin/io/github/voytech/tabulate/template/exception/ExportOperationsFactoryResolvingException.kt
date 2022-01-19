@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.template.exception
 
 /**
- * Exception thrown when there is no ExportOperationFactory registerd for given format.
+ * Exception thrown when there is no ExportOperationFactory registered for given format.
  * @since 0.1.0
  * @author Wojciech Mąka
  */

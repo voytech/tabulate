@@ -6,7 +6,7 @@ import io.github.voytech.tabulate.model.attributes.orEmpty
 import io.github.voytech.tabulate.template.operations.CellValue
 
 /**
- * Defines behaviour for situation when row-span causes row to collide with downstream rows at runtime.
+ * Defines behaviours for situation when row-span causes row to collide with downstream rows at runtime.
  * @since 0.1.0
  * @author Wojciech Mąka
  */
@@ -41,11 +41,11 @@ internal enum class CollidingRowSpanStrategy(private val priority: Int) {
 }
 
 /**
- * Defines single cell exposing specific property of exported collection element. Contains cell value which may be
- * evaluated in several ways:
- * - by evaluating property getter function on processed object (row)
- * - by evaluating expression [RowCellExpression]
- * - by injecting predefined value [value]
+ * Defines single cell that either represents value of collection element at particular property, or custom value
+ * for specified column. Encapsulates cell value which may be computed in several ways:
+ * - by computing property getter function on processed collection element (row),
+ * - by evaluating expression [RowCellExpression] on collection element,
+ * - by injecting constant value provided at table definition time. [value]
  * [CellDef] can also control [colSpan] and [rowSpan] attributes as well as customize [rowSpanMode]
  *
  * @author Wojciech Mąka

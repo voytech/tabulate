@@ -6,6 +6,11 @@ import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import java.util.*
 
+/**
+ * Export operations operating on attribute-set enabled versions of contexts.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 interface AttributedContextExportOperations<CTX: RenderingContext> {
     fun createTable(renderingContext: CTX, context: AttributedTable)
     fun renderColumn(renderingContext: CTX, context: AttributedColumn) {}
@@ -14,6 +19,11 @@ interface AttributedContextExportOperations<CTX: RenderingContext> {
     fun <T> endRow(renderingContext: CTX, context: AttributedRowWithCells<T>) {}
 }
 
+/**
+ * Export operations compatible with context classes without attribute-set property included.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 interface TableExportOperations<CTX: RenderingContext> {
     fun createTable(renderingContext: CTX, context: TableContext) {}
     fun beginRow(renderingContext: CTX, context: RowContext) {}
@@ -21,6 +31,12 @@ interface TableExportOperations<CTX: RenderingContext> {
     fun <T> endRow(renderingContext: CTX, context: RowContextWithCells<T>) {}
 }
 
+/**
+ * Export operations factory that can discover attribute operations.
+ * It exposes [TableExportOperations] as public API which drops attribute-set from operation context instances.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 abstract class ExportOperationsConfiguringFactory<CTX : RenderingContext> : ExportOperationsProvider<CTX> {
 
     private val attributeOperationsContainer: AttributesOperationsContainer<CTX> by lazy  {

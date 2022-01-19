@@ -10,8 +10,20 @@ import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
 import io.github.voytech.tabulate.model.attributes.orEmpty
 import io.github.voytech.tabulate.template.resolvers.SyntheticRow
 
+/**
+ * A base class for all operation context, where each includes additional model attributes for table appearance
+ * customisation.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 sealed class AttributedModel<A : Attribute<*>>(open val attributes: Attributes<A>?) : ContextData()
 
+/**
+ * Table operation context with additional model attributes applicable on table level.
+ * To be used by method `createTable` of [AttributedContextExportOperations]
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 data class AttributedTable(
     override val attributes: Attributes<TableAttribute>?,
 ) : AttributedModel<TableAttribute>(attributes)
@@ -19,6 +31,12 @@ data class AttributedTable(
 internal fun <T> Table<T>.createContext(customAttributes: MutableMap<String, Any>): AttributedTable =
     AttributedTable(tableAttributes).apply { additionalAttributes = customAttributes }
 
+/**
+ * Row operation context with additional model attributes applicable on row level.
+ * To be used by method `beginRow` of [AttributedContextExportOperations]
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 open class AttributedRow(
     override val attributes: Attributes<RowAttribute>?,
     open val rowIndex: Int
@@ -34,6 +52,13 @@ internal fun <T> SyntheticRow<T>.createAttributedRow(
         .apply { additionalAttributes = customAttributes }
 }
 
+/**
+ * Row operation context with additional model attributes applicable on row level.
+ * Additionally it contains also all resolved cell operation context for each contained cell.
+ * To be used by method `endRow` of [AttributedContextExportOperations]
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 data class AttributedRowWithCells<T>(
     override val attributes: Attributes<RowAttribute>?,
     val rowCellValues: Map<ColumnKey<T>, AttributedCell>,
@@ -47,6 +72,12 @@ fun <T> AttributedRow.withCells(rowCellValues: Map<ColumnKey<T>, AttributedCell>
         rowCellValues = rowCellValues
     ).apply { additionalAttributes = this@withCells.additionalAttributes }
 
+/**
+ * Column operation context with additional model attributes applicable on column level.
+ * To be used by method `renderColumn` of [AttributedContextExportOperations]
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 data class AttributedColumn(
     override val attributes: Attributes<ColumnAttribute>? = null,
     val columnIndex: Int,
@@ -65,6 +96,12 @@ internal fun <T> Table<T>.createAttributedColumn(
         attributes = columnAttributes.orEmpty() + column.columnAttributes.orEmpty()
     ).apply { additionalAttributes = customAttributes }
 
+/**
+ * Cell operation context with additional model attributes applicable on cell level.
+ * To be used by method `renderRowCell` of [AttributedContextExportOperations]
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 data class AttributedCell(
     val value: CellValue,
     override val attributes: Attributes<CellAttribute>?,

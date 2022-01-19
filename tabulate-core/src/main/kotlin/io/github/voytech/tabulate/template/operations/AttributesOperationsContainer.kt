@@ -4,6 +4,11 @@ import io.github.voytech.tabulate.model.attributes.*
 import io.github.voytech.tabulate.template.context.RenderingContext
 import java.util.logging.Logger
 
+/**
+ * Specialised container for all discovered attribute operations.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 @Suppress("UNCHECKED_CAST")
 internal class AttributesOperationsContainer<CTX : RenderingContext> {
 

@@ -17,6 +17,11 @@ import java.util.*
 
 private typealias AttributeCategory = Attribute<*>
 
+/**
+ * A base class for all exporting (rendering) attribute operations associated for specific rendering contexts.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 interface AttributeOperation<CTX: RenderingContext, ATTR_CAT : AttributeCategory, ATTR: ATTR_CAT, E: ModelAttributeAccessor<ATTR_CAT>> {
     fun attributeType(): Class<ATTR>
     fun priority(): Int = DEFAULT
@@ -29,21 +34,45 @@ interface AttributeOperation<CTX: RenderingContext, ATTR_CAT : AttributeCategory
     }
 }
 
+/**
+ * Table attribute operation associated with table rendering context
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 interface TableAttributeRenderOperation<CTX: RenderingContext, ATTR : TableAttribute>
     : AttributeOperation<CTX, TableAttribute, ATTR, TableContext>
 
+/**
+ * Row attribute operation associated with row rendering context
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 interface RowAttributeRenderOperation<CTX: RenderingContext, ATTR : RowAttribute>
     : AttributeOperation<CTX, RowAttribute, ATTR, RowContext>
 
+/**
+ * Cell attribute operation associated with cell rendering context
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 interface CellAttributeRenderOperation<CTX: RenderingContext, ATTR : CellAttribute>
     : AttributeOperation<CTX, CellAttribute, ATTR, RowCellContext>
 
+/**
+ * Column attribute operation associated with column rendering context
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 interface ColumnAttributeRenderOperation<CTX: RenderingContext, ATTR : ColumnAttribute>
     : AttributeOperation<CTX, ColumnAttribute, ATTR, ColumnContext> {
     fun applicableRenderingPhases(): EnumSet<ColumnRenderPhase> = EnumSet.of(ColumnRenderPhase.BEFORE_FIRST_ROW)
 }
 
-
+/**
+ * Factory for providing attribute operations for all supported context categories.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 interface AttributeRenderOperationsFactory<CTX: RenderingContext> {
     fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<CTX, out TableAttribute>>? = null
     fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<CTX, out RowAttribute>>? = null
@@ -51,6 +80,11 @@ interface AttributeRenderOperationsFactory<CTX: RenderingContext> {
     fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<CTX, out CellAttribute>>? = null
 }
 
+/**
+ * Factory for providing attribute operations for all built-in model attributes.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 interface StandardAttributeRenderOperationsProvider<CTX: RenderingContext> {
     fun createTemplateFileRenderer(): TableAttributeRenderOperation<CTX, TemplateFileAttribute>
     fun createColumnWidthRenderer(): ColumnAttributeRenderOperation<CTX, ColumnWidthAttribute>
@@ -61,6 +95,12 @@ interface StandardAttributeRenderOperationsProvider<CTX: RenderingContext> {
     fun createCellBackgroundRenderer(): CellAttributeRenderOperation<CTX, CellBackgroundAttribute>
 }
 
+/**
+ * Factory for providing attribute operations for all built-in model attributes as well as attribute operations for
+ * user defined attributes.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class StandardAttributeRenderOperationsFactory<CTX: RenderingContext>(
     private val standardAttributeRenderers: StandardAttributeRenderOperationsProvider<CTX>,
     private val additionalTableAttributeRenderers:  Set<TableAttributeRenderOperation<CTX, out TableAttribute>> = setOf(),

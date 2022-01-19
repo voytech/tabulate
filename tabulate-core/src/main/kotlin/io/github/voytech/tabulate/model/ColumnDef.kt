@@ -5,19 +5,18 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 
 /**
- * Defines single table column. Column groups cells that expose specific property of collection elements.
- * Column must contain mandatory column key - an identifier which is used on row cell to establish cell-to-column binding.
- * Column may contain column and cell attributes that enable table appearance customisation.
+ * Defines table column. Column groups cells where each cell represents single field or property of single collection element.
+ * Column must contain mandatory column key - an identifier which is used on row cell to establish cell-to-column relationship.
+ * Column may contain column and cell attributes for customising table appearance.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
 internal class ColumnDef<T> internal constructor(
     /**
-     * Column key is an unique identifier of an column within table structure.
+     * Column key is an unique identifier of a column within table structure.
      *
-     * Column may be addressed using simple string identifier - a column name,
-     * or by using [PropertyReferenceColumnKey] instance (for Kotlin DSL type-safe API an [PropertyLiteralColumnKey]
-     * instance will be used, while for java fluent builder API it will be an instance of [NamedPropertyReferenceColumnKey]).
+     * Column may be addressed either by using simple string identifier (a column name),
+     * or by using [PropertyReferenceColumnKey] instance.
      *
      * [PropertyReferenceColumnKey] addressing should be used if there is need to establish
      * binding between column and collection elements property (to use object property value as a cell value later on)

@@ -27,12 +27,15 @@ internal value class AttributeClassBasedCache<K : Attribute<*>, V>(
  * properties:
  *  - it uses set of attributes as cache key which enables passing attribute set related context across different rows, cells and columns.
  *  - it consists of nested internal caches representing all attribute categories (row, cell, table, column)
+ *
  * Usage Scenario:
- * If we have the same set of cell attributes defined on column level then it is possible that some of cells
+ *
+ * If we have the same set of cell attributes defined at column level then it is likely that some or most of cells
  * belonging to this particular column shares exactly the same attributes. This means that as long as third party rendering context
  * maintains its own internal state per given attribute set, then it can be simply cached and applied on all compatible cells,
  * without need of instantiating logically equal objects multiple times.
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 @Suppress("UNCHECKED_CAST")
 internal class AttributeSetBasedCache {
@@ -60,6 +63,7 @@ internal class AttributeSetBasedCache {
 /**
  * Obtains or creates (if does not exist) a cache instance. Cache resides in [ContextData.additionalAttributes]
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 @JvmSynthetic
 internal fun ContextData.ensureAttributeSetBasedCache(): AttributeSetBasedCache {
@@ -70,6 +74,7 @@ internal fun ContextData.ensureAttributeSetBasedCache(): AttributeSetBasedCache 
 /**
  * Given attribute, resolves attribute category identifier. One of: [table|column|row|cell].
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 inline fun <reified T : Attribute<*>> getAttributeClassId(): String = when {
     TableAttribute::class.java == T::class.java -> "table"
@@ -83,6 +88,7 @@ inline fun <reified T : Attribute<*>> getAttributeClassId(): String = when {
  * Given [AttributedModel], resolves mutable map (internal cache). This internal cache is accessed by attribute set
  * (`attributes` property) of this particular [AttributedModel] receiver.
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 @JvmSynthetic
 internal inline fun <reified T : Attribute<*>> AttributedModel<T>.setupCacheAndGet(): MutableMap<String, Any>? {
@@ -99,6 +105,7 @@ internal inline fun <reified T : Attribute<*>> AttributedModel<T>.setupCacheAndG
  * we can put value to, or query internal cache valid for attribute-set `attributeCell.attributes` from `cellContext` which
  * itself does not expose attributes to consumer.
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 @JvmSynthetic
 internal inline fun <reified T : Attribute<*>> AttributedModel<T>.withAttributeSetBasedCache(block: (cache: MutableMap<String, Any>?) -> Unit) {
@@ -113,6 +120,7 @@ internal inline fun <reified T : Attribute<*>> AttributedModel<T>.withAttributeS
  * Given [ModelAttributeAccessor] (truncated, attribute-set-less [AttributedModel] view), caches any value under specific key.
  * Key-value pair is stored in internal cache valid for / accessed by [AttributedModel]'s attributes (attribute-set).
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 @Suppress("UNCHECKED_CAST")
 inline fun <reified M : Attribute<*>, T> T.cacheOnAttributeSet(key: String, value: Any): Any
@@ -125,6 +133,7 @@ inline fun <reified M : Attribute<*>, T> T.cacheOnAttributeSet(key: String, valu
  * Given [ModelAttributeAccessor] (truncated, attribute-set-less [AttributedModel] view), gets cached value stored under given key.
  * Key-value pair is stored in internal cache valid for / accessed by [AttributedModel]'s attributes (attribute-set).
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 @Suppress("UNCHECKED_CAST")
 inline fun <reified M : Attribute<*>, T> T.getCachedOnAttributeSet(key: String): Any?
@@ -137,6 +146,7 @@ inline fun <reified M : Attribute<*>, T> T.getCachedOnAttributeSet(key: String):
  * Given [ModelAttributeAccessor] (truncated, attribute-set-less [AttributedModel] view), checks if there is value stored under given key.
  * Key-value pair is stored in internal cache valid for / accessed by [AttributedModel]'s attributes (attribute-set).
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 @Suppress("UNCHECKED_CAST")
 inline fun <reified M : Attribute<*>, T> T.hasCachedOnAttributeSet(key: String): Boolean

@@ -107,9 +107,8 @@ internal interface RowCompletionListener<T> {
 }
 
 /**
- * Given requested index, [Table] model, and custom attributes, it resolves [AttributedRowWithCells] context data with
- * effective index (effective index may differ from requested one if there are no rows matching current row predicate
- * - in that case - row context with next matching index is returned).
+ * Given requested index, [Table] model, and map of custom attributes, it resolves [AttributedRowWithCells] (row context) with
+ * associated effective index.
  *
  * Additionally it notifies about following events:
  *  - all row attributes on row has been resolved,

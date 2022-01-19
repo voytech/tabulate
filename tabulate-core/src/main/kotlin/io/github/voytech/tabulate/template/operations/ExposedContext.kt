@@ -5,10 +5,11 @@ import io.github.voytech.tabulate.model.attributes.*
 import io.github.voytech.tabulate.model.attributes.cell.TypeHintAttribute
 
 /**
- * Class encapsulates shared, generic logic for accessing attribute instance of selected attribute class.
- * Class is intended to be derived by all classes representing attribute-less contexts like:
+ * Class encapsulates shared logic for accessing attribute instance of selected attribute class.
+ * Class is intended to be derived by all non attribute-set context classes:
  * [RowCellContext], [ColumnContext], [RowContext], [RowContextWithCells], [TableContext]
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 sealed class ModelAttributeAccessor<A : Attribute<*>>(private val attributedContext: AttributedModel<A>) {
 
@@ -33,13 +34,22 @@ inline fun <reified T: RowAttribute<T>> ModelAttributeAccessor<RowAttribute<*>>.
 inline fun <reified T: TableAttribute<T>> ModelAttributeAccessor<TableAttribute<*>>.getModelAttributes(): T? =
         getModelAttributes(T::class.java)
 
-
+/**
+ * Table context exposed by operations that are not intended to expose table attributes in form of attribute set.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class TableContext(private val attributedContext: AttributedTable) :
         Context by attributedContext,
         ModelAttributeAccessor<TableAttribute<*>>(attributedContext)
 
 fun AttributedTable.skipAttributes(): TableContext = TableContext(this)
 
+/**
+ * Column context exposed by operations that are not intended to expose table attributes in form of attribute set.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class ColumnContext(private val attributedContext: AttributedColumn):
         Context by attributedContext,
         ColumnCoordinate by attributedContext,
@@ -54,6 +64,11 @@ enum class ColumnRenderPhase {
     AFTER_LAST_ROW
 }
 
+/**
+ * Row context exposed by operations that are not intended to expose table attributes in form of attribute set.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 open class RowContext(private val attributedContext: AttributedRow) :
         Context by attributedContext,
         RowCoordinate by attributedContext,
@@ -73,6 +88,11 @@ private fun <T> Map<ColumnKey<T>, AttributedCell>.skipAttributes(): Map<ColumnKe
     }
 }
 
+/**
+ * Row cell context exposed by operations that are not intended to expose table attributes in form of attribute set.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class RowCellContext(private val attributedContext: AttributedCell) :
         Context by attributedContext,
         RowCellCoordinate by attributedContext,
