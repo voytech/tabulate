@@ -34,15 +34,30 @@ internal class TabulationState<T>(
         stateAttributes["_tableId"] = tableModel.name
     }
 
+    /**
+     * Captures next element to be rendered at some point of time.
+     * @author Wojciech Mąka
+     * @since 0.1.0
+     */
     fun capture(record: T): AttributedRowWithCells<T>? {
         rowContextResolver.append(record)
         return next()
     }
 
+    /**
+     * Resolves next element.
+     * @author Wojciech Mąka
+     * @since 0.1.0
+     */
     fun next(): AttributedRowWithCells<T>? {
         return if (rowContextIterator.hasNext()) rowContextIterator.next() else null
     }
 
+    /**
+     * Returns custom attributes.
+     * @author Wojciech Mąka
+     * @since 0.1.0
+     */
     internal fun getCustomAttributes(): MutableMap<String, Any> = stateAttributes
 
 }
