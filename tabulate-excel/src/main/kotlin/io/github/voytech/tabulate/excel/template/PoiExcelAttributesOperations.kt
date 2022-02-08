@@ -23,6 +23,11 @@ import java.io.FileInputStream
 import java.util.*
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 
+/**
+ * Apache POI [CellTextStylesAttribute] renderer.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class CellTextStylesAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellTextStylesAttribute> {
 
     override fun attributeType(): Class<CellTextStylesAttribute> = CellTextStylesAttribute::class.java
@@ -50,6 +55,11 @@ class CellTextStylesAttributeRenderOperation: CellAttributeRenderOperation<Apach
     }
 }
 
+/**
+ * Apache POI [CellBackgroundAttribute] renderer.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class CellBackgroundAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellBackgroundAttribute> {
     override fun attributeType(): Class<CellBackgroundAttribute> = CellBackgroundAttribute::class.java
 
@@ -89,6 +99,11 @@ class CellBackgroundAttributeRenderOperation: CellAttributeRenderOperation<Apach
     }
 }
 
+/**
+ * Apache POI [CellBordersAttribute] renderer.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class CellBordersAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellBordersAttribute> {
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
@@ -131,6 +146,11 @@ class CellBordersAttributeRenderOperation: CellAttributeRenderOperation<ApachePo
     }
 }
 
+/**
+ * Apache POI [CellAlignmentAttribute] renderer.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class CellAlignmentAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellAlignmentAttribute> {
 
     override fun attributeType(): Class<CellAlignmentAttribute> = CellAlignmentAttribute::class.java
@@ -166,6 +186,11 @@ class CellAlignmentAttributeRenderOperation: CellAttributeRenderOperation<Apache
     }
 }
 
+/**
+ * Apache POI [CellExcelDataFormatAttribute] renderer.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class CellDataFormatAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellExcelDataFormatAttribute> {
 
     override fun attributeType(): Class<CellExcelDataFormatAttribute> = CellExcelDataFormatAttribute::class.java
@@ -186,6 +211,11 @@ class CellDataFormatAttributeRenderOperation: CellAttributeRenderOperation<Apach
     }
 }
 
+/**
+ * Apache POI [ColumnWidthAttribute] renderer.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class ColumnWidthAttributeRenderOperation: ColumnAttributeRenderOperation<ApachePoiRenderingContext, ColumnWidthAttribute> {
 
     override fun attributeType(): Class<ColumnWidthAttribute> = ColumnWidthAttribute::class.java
@@ -206,6 +236,11 @@ class ColumnWidthAttributeRenderOperation: ColumnAttributeRenderOperation<Apache
     }
 }
 
+/**
+ * Apache POI [RowHeightAttribute] renderer.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class RowHeightAttributeRenderOperation : RowAttributeRenderOperation<ApachePoiRenderingContext, RowHeightAttribute> {
     override fun attributeType(): Class<RowHeightAttribute> = RowHeightAttribute::class.java
     override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowContext, attribute: RowHeightAttribute) {
@@ -214,6 +249,11 @@ class RowHeightAttributeRenderOperation : RowAttributeRenderOperation<ApachePoiR
     }
 }
 
+/**
+ * Apache POI [FilterAndSortTableAttribute] renderer.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class FilterAndSortTableAttributeRenderOperation: TableAttributeRenderOperation<ApachePoiRenderingContext, FilterAndSortTableAttribute> {
     override fun attributeType(): Class<FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class.java
     override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: TableContext, attribute: FilterAndSortTableAttribute) {
@@ -232,6 +272,11 @@ class FilterAndSortTableAttributeRenderOperation: TableAttributeRenderOperation<
     }
 }
 
+/**
+ * Apache POI [TemplateFileAttribute] renderer.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 class TemplateFileAttributeRenderOperation: TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute> {
     override fun attributeType(): Class<TemplateFileAttribute> = TemplateFileAttribute::class.java
     override fun priority() = -1

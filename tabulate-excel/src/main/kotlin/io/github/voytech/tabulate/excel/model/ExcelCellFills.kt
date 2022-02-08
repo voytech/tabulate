@@ -2,6 +2,11 @@ package io.github.voytech.tabulate.excel.model
 
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellFill
 
+/**
+ * Excel format specific cell fill styles
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 enum class ExcelCellFills : CellFill {
     LEAST_DOTS,
     LESS_DOTS,

@@ -6,10 +6,26 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
+/**
+ * Convert [LocalDate] into [Date] used by Apache Poi
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 fun LocalDate.toDate(): Date = Date.from(this.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant())
 
+/**
+ * Convert [LocalDateTime] into [Date] used by Apache Poi
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 fun LocalDateTime.toDate(): Date = Date.from(this.atZone(ZoneId.systemDefault()).toInstant())
 
+/**
+ * Convert [String] into [Date] used by Apache Poi.
+ * Uses ISO_INSTANT [DateTimeFormatter] in order to parse date.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 fun String.toDate(): Date = Date.from(Instant.parse(this))
 
 object Utils {

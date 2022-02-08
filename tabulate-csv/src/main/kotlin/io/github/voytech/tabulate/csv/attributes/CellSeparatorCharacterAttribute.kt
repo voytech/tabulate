@@ -8,6 +8,7 @@ import io.github.voytech.tabulate.model.attributes.CellAttribute
 /**
  * Attribute that tells what cell separator will be used in CSV file.
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 data class CellSeparatorCharacterAttribute(val separator: String = ","):
     CellAttribute<CellSeparatorCharacterAttribute>() {
@@ -20,5 +21,11 @@ data class CellSeparatorCharacterAttribute(val separator: String = ","):
     override fun overrideWith(other: CellSeparatorCharacterAttribute): CellSeparatorCharacterAttribute = other
 }
 
+/**
+ * Extension method supplying 'separator' attribute builder.
+ * Can be installed only on global table level.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 fun <T> TableLevelAttributesBuilderApi<T>.separator(block: CellSeparatorCharacterAttribute.Builder.() -> Unit) =
     attribute(CellSeparatorCharacterAttribute.Builder().apply(block))

@@ -6,6 +6,11 @@ import io.github.voytech.tabulate.api.builder.dsl.*
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.TableAttribute
 
+/**
+ * Excel data format attribute.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 data class CellExcelDataFormatAttribute(
     val dataFormat: String
 ) : CellAttribute<CellExcelDataFormatAttribute>() {
@@ -35,6 +40,11 @@ fun <T> ColumnLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormat
 fun <T> ColumnLevelAttributesBuilderApi<T>.format(block: () -> String) =
     attribute(CellExcelDataFormatAttribute.Builder().apply { value = block() })
 
+/**
+ * Excel data table attribute. Enables sorting and filtering within specific column and row ranges.
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 data class FilterAndSortTableAttribute(
     val columnRange: IntRange,
     val rowRange: IntRange

@@ -24,6 +24,7 @@ import java.util.*
 /**
  * Apache POI based excel export operations provider implementation.
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<ApachePoiRenderingContext>() {
 

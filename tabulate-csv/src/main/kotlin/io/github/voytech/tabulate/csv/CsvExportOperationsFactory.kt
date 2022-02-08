@@ -14,6 +14,7 @@ import java.io.OutputStream
 /**
  * Default binding of [CsvRenderingContext] to [OutputStream]
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingContext>() {
 
@@ -30,6 +31,7 @@ class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingConte
 /**
  * CSV rendering context holding required state to be shared by all compatible renderers.
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 open class CsvRenderingContext: RenderingContext {
     private lateinit var bufferedWriter: BufferedWriter
@@ -64,6 +66,7 @@ open class CsvRenderingContext: RenderingContext {
 /**
  * Simple .csv export operations provider implementation.
  * @author Wojciech Mąka
+ * @since 0.1.0
  */
 class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> {
 

@@ -2,6 +2,11 @@ package io.github.voytech.tabulate.excel.model
 
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
 
+/**
+ * Excel format specific border styles
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
 enum class ExcelBorderStyle : BorderStyle {
     THIN,
     THICK,

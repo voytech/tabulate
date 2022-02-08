@@ -5,7 +5,7 @@ import io.github.voytech.tabulate.template.context.RenderingContext
 
 /**
  * [AttributedContextExportOperations] implementation dispatching attributes into corresponding attribute operations.
- * Such separation of concerns allows to register attribute renderers working for the same [RenderingContext] in
+ * Such separation of concerns allows to register attribute renderers applicable for the same [RenderingContext] but in
  * different compilation unit.
  * @author Wojciech Mąka
  * @since 0.1.0

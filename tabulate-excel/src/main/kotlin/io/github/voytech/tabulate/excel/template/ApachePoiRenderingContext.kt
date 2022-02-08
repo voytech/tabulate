@@ -30,6 +30,13 @@ class ApachePoiOutputStreamOutputBinding : OutputStreamOutputBinding<ApachePoiRe
     }
 }
 
+/**
+ * Apache POI rendering context.
+ * A set of methods wrapping Apache POI calls.
+ *
+ * @author Wojciech Maka
+ * @since 0.1.0
+ */
 class ApachePoiRenderingContext : RenderingContext  {
 
     private var adaptee: SXSSFWorkbook? = null

@@ -7,17 +7,21 @@ import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultWeightStyle
+import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.column.columnWidth
 import io.github.voytech.tabulate.model.attributes.column.width
+import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.row.height
 import io.github.voytech.tabulate.model.attributes.row.rowHeight
-import io.github.voytech.tabulate.support.TestExportOperationsFactory
 import io.github.voytech.tabulate.support.Spy
+import io.github.voytech.tabulate.support.TestExportOperationsFactory
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.operations.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 class TabulationTemplateTest {
 
@@ -326,6 +330,52 @@ class TabulationTemplateTest {
         val history = Spy.spy.readHistory()
         // Table
         history.next().run { assertEquals("Products table", (context as TableContext).getTableId()) }
+        // Column 0 attribute
+        history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        // Column 1 attribute
+        history.next().run { assertEquals(100, (attribute as ColumnWidthAttribute).px) }
+        // Row 0
+        history.next().run { assertEquals(0, (context as RowContext).getRow()) }
+        history.next().run { assertEquals(50, (attribute as RowHeightAttribute).px) }
+        // Row 0, cell 0
+        history.next().run { assertEquals("Black, strikeout, bold, italic cell", (context as RowCellContext).rawValue) }
+        history.next().run {
+            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(true, attribute.strikeout)
+            assertEquals(DefaultWeightStyle.BOLD, attribute.weight)
+            assertEquals(true, attribute.italic)
+        }
+        history.next().run { assertTrue(context is RowContextWithCells<*>) }
+        // Row 1, cell 0
+        history.next().run { assertEquals(1, (context as RowContext).getRow()) }
+        history.next().run { assertEquals(20, (attribute as RowHeightAttribute).px) }
+        history.next().run { assertEquals("Black, strikeout, bold cell", (context as RowCellContext).rawValue) }
+        history.next().run {
+            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(true, attribute.strikeout)
+            assertEquals(DefaultWeightStyle.BOLD, attribute.weight)
+            assertEquals(false, attribute.italic)
+        }
+        history.next().run { assertTrue(context is RowContextWithCells<*>) }
+        // Row 2, cell 0
+        history.next().run { assertEquals(2, (context as RowContext).getRow()) }
+        history.next().run { assertEquals(20, (attribute as RowHeightAttribute).px) }
+        history.next().run { assertEquals("Black, strikeout cell", (context as RowCellContext).rawValue) }
+        history.next().run {
+            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(true, attribute.strikeout)
+            assertEquals(DefaultWeightStyle.NORMAL, attribute.weight)
+            assertEquals(false, attribute.italic)
+        }
+        history.next().run { assertEquals("Black cell", (context as RowCellContext).rawValue) }
+        history.next().run {
+            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(false, attribute.strikeout)
+            assertEquals(DefaultWeightStyle.NORMAL, attribute.weight)
+            assertEquals(false, attribute.italic)
+        }
+        history.next().run { assertTrue(context is RowContextWithCells<*>) }
+        assertFalse(history.hasNext())
     }
 
 }
