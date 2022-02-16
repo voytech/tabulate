@@ -207,7 +207,7 @@ addressList.tabulate("address_list.xlsx",appBasicTemplate + {
 
 ## Docs
 
-link:https://github.com/voytech/tabulate/blob/master/docs/README.html[HTML] |
+link:https://voytech.github.io/tabulate[HTML] |
 link:https://github.com/voytech/tabulate/blob/master/docs/README.pdf[PDF]
 
 ## Roadmap
