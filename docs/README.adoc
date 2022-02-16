@@ -194,7 +194,7 @@ atIndex { gt(0) and lt(100) } newRow { // <1>
 <1> On first line we have a construct built mainly from infix functions. `atIndex { ... }` takes row index predicate `gt(0) and lt(100)` which literally says: 'Apply this row definition to all indices between index 0 and index 100'. Last 'keyword' sounds: `newRow` and delivers row definition from within curly braces.
 <2> This line represents definition of a row which is about to be created for each matching index. It contains single cell with runtime expression evaluated at context rendering time.
 
-There is also alternative notation which may be used to achieve the same result:
+There is also alternative notation used to achieve the same result:
 
 [source,kotlin]
 ----
@@ -202,6 +202,258 @@ newRow({ gt(0) and lt(100) }) {
     cell { expression = RowCellExpression { "index : ${it.rowIndex.getIndex()}" } }
 }
 ----
+
+
+<<<
+== Extension points.
+
+I have put lots of effort to make **Tabulate** extensible. Currently, it is possible to:
+
+- add user defined attributes,
+- add custom renderers for already defined attribute,
+- implement table export operations from scratch (e.g. html table, cli table, mock renderer for testing),
+- extend DSL type-safe builder APIS on all possible level.
+
+=== Implementing new table export operations.
+In order to support new tabular file format you have to extend `ExportOperationsConfiguringFactory<C, T, O>` where:
+
+- `C` stands for rendering context - which is usually wrapper around 3rd party api like Apache POI,
+- `T` stands for object class representing element of exported collection,
+- `O` stands for type of result of operation (e.g. `OutputStream` for Apache POI)
+
+As long as tabulate uses java ServiceLoader infrastructure, You need to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.ExportOperationsProvider`, and put fully qualified class name of your custom factory in the first line. **This step is required by a template in order to resolve your extension at run-time**.
+
+Basic CSV implementation looks like this:
+
+[source,kotlin]
+----
+// <1>
+open class CsvRenderingContext: RenderingContext {
+    private lateinit var bufferedWriter: BufferedWriter
+    private val line = StringBuilder()
+
+    fun doBind(output: OutputStream) {
+        bufferedWriter = output.bufferedWriter()
+    }
+
+    fun startRow() {
+        line.clear()
+    }
+
+    private fun AttributedCell.getSeparatorCharacter(): String =
+        attributes?.get(CellSeparatorCharacterAttribute::class.java)?.separator ?: ","
+
+    fun <T> endRow(context: AttributedRowWithCells<T>) {
+        val lastIndex = context.rowCellValues.size - 1
+        context.rowCellValues.values.forEachIndexed { index, cell ->
+            line.append(cell.value.value.toString())
+            if (index < lastIndex) line.append(cell.getSeparatorCharacter())
+        }
+        bufferedWriter.write(line.toString())
+        bufferedWriter.newLine()
+    }
+
+    fun finish() {
+        bufferedWriter.close()
+    }
+}
+----
+<1> `CsvRenderingContext` implements `RenderingContext` marker interface and provides logic and state responsible for generating table in selected format. It is a common denominator used as argument of all export operation methods in order to share rendering state and allow interaction with it.
+
+[source,kotlin]
+----
+class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingContext>() {
+
+    override fun onBind(renderingContext: CsvRenderingContext, output: OutputStream) { // <1>
+        renderingContext.doBind(output)
+    }
+
+    override fun flush(output: OutputStream) { // <2>
+        renderingContext.finish()
+        output.close()
+    }
+}
+----
+<1> The `.onBind` method wires particular rendering context instance with actual output representation (in this particular case it is an OutputStream). Method will be invoked internally by `TabulationTemplate` as soon as both: output and rendering context instances are available.
+<2> The `.flush` dumps in-memory rendering context representation into output.
+[source,kotlin]
+----
+class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> {
+
+    override fun getContextClass(): Class<CsvRenderingContext> = CsvRenderingContext::class.java // <1>
+
+    override fun createRenderingContext() = CsvRenderingContext()  // <2>
+
+    override fun supportsFormat(): TabulationFormat = format("csv") // <3>
+
+    // <4>
+    override fun createExportOperations(): AttributedContextExportOperations<CsvRenderingContext> = object :  AttributedContextExportOperations<CsvRenderingContext> {
+
+        override fun beginRow(renderingContext: CsvRenderingContext, context: AttributedRow) {
+            renderingContext.startRow()
+        }
+
+        override fun renderRowCell(renderingContext: CsvRenderingContext, context: AttributedCell) { }
+
+        override fun <T> endRow(renderingContext: CsvRenderingContext, context: AttributedRowWithCells<T>) {
+            renderingContext.endRow(context)
+        }
+    }
+
+    // <5>
+    override fun createOutputBindings(): List<OutputBinding<CsvRenderingContext, *>> = listOf(CsvOutputStreamOutputBinding())
+
+}
+----
+<1> 1
+<2> 2
+<3> 3
+<4> 4
+<5> 5
+
+If target tabular format supports styles, You may add support for rendering built-in attributes as follow:
+
+[source,kotlin]
+----
+class ExampleExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFactory<T, SomeRenderingContext>() {
+
+  ..
+  override fun getAttributeOperationsFactory(renderingContext: SomeRenderingContext): AttributeRenderOperationsFactory<T> =
+      StandardAttributeRenderOperationsFactory(renderingContext, object: StandardAttributeRenderOperationsProvider<ApachePoiExcelFacade,T>{
+          override fun createTemplateFileRenderer(renderingContext: ApachePoiExcelFacade): TableAttributeRenderOperation<TemplateFileAttribute> =
+            TemplateFileAttributeRenderOperation(renderingContext)
+
+          override fun createColumnWidthRenderer(renderingContext: ApachePoiExcelFacade): ColumnAttributeRenderOperation<ColumnWidthAttribute> =
+            ColumnWidthAttributeRenderOperation(renderingContext)
+
+          override fun createRowHeightRenderer(renderingContext: ApachePoiExcelFacade): RowAttributeRenderOperation<T, RowHeightAttribute> =
+            RowHeightAttributeRenderOperation(renderingContext)
+
+          override fun createCellTextStyleRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellTextStylesAttribute> =
+            CellTextStylesAttributeRenderOperation(renderingContext)
+
+          override fun createCellBordersRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellBordersAttribute> =
+            CellBordersAttributeRenderOperation(renderingContext)
+
+          override fun createCellAlignmentRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellAlignmentAttribute> =
+            CellAlignmentAttributeRenderOperation(renderingContext)
+
+          override fun createCellBackgroundRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellBackgroundAttribute> =
+            CellBackgroundAttributeRenderOperation(renderingContext)
+      })
+}
+----
+Factory class `StandardAttributeRenderOperationsFactory` exposes API which assumes specific standard library attributes.
+If your file format allow additional attributes which are not present in standard library (tabulate-core), you may use `AttributeRenderOperationsFactory` interface directly, or fill additional constructor properties on `StandardAttributeRenderOperationsFactory` as below:
+
+[source,kotlin]
+----
+class ExampleExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFactory<T,SomeRenderingContext>() {
+
+  ...
+  override fun getAttributeOperationsFactory(renderingContext: SomeRenderingContext): AttributeRenderOperationsFactory<T> =
+      StandardAttributeRenderOperationsFactory(renderingContext, object: StandardAttributeRenderOperationsProvider<SomeRenderingContext,T>{
+          override fun createTemplateFileRenderer(renderingContext: SomeRenderingContext): TableAttributeRenderOperation<TemplateFileAttribute> = TemplateFileAttributeRenderOperation(renderingContext)
+      },
+        additionalCellAttributeRenderers = setOf( .. )
+        additionalTableAttributeRenderers = setOf( .. )
+      )
+}
+----
+
+=== Registering new attribute types for existing export operations.
+It is possible that you have requirements which cannot be achieved with standard set of attributes, and your code is in different compilation unit than specific table export operation implementation. Assume You want to use existing Apache POI excel table exporter, but there is lack of certain attribute support. In such situation - You can still register attribute by implementing another service provider interface - `AttributeRenderOperationsProvider`:
+
+```kotlin
+class CustomAttributeRendersOperationsProvider<T> : AttributeRenderOperationsProvider<T,ApachePoiExcelFacade> {
+
+    override fun getContextClass() = ApachePoiExcelFacade::class.java
+
+    override fun getAttributeOperationsFactory(creationContext: ApachePoiExcelFacade): AttributeRenderOperationsFactory<T> {
+        return object : AttributeRenderOperationsFactory<T> {
+            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<out CellAttributeAlias>> =
+                setOf(MarkerCellAttributeRenderOperation(creationContext))
+        }
+    }
+}
+
+```
+After creating factory - You need to implement particular attribute together with DSL API extension function and attribute render operation to instruct 3rd party Apache Poi API on how to proceed.
+
+```kotlin
+data class MarkerCellAttribute(val text: String) : CellAttribute<MarkerCellAttribute>() {
+
+    class Builder(var text: String = "") : CellAttributeBuilder<MarkerCellAttribute> {
+        override fun build(): MarkerCellAttribute = MarkerCellAttribute(text)
+    }
+}
+
+class SimpleMarkerCellAttributeRenderOperation(poi: ApachePoiExcelFacade) :
+    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, SimpleTestCellAttribute>(poi) {
+
+    override fun attributeType(): Class<out MarkerCellAttribute> = MarkerCellAttribute::class.java
+
+    override fun renderAttribute(context: RowCellContext, attribute: MarkerCellAttribute) {
+        with(adaptee.assertCell(
+            context.getTableId(),
+            context.rowIndex,
+            context.columnIndex
+        )) {
+            this.setCellValue("${this.stringCellValue} [ ${attribute.label} ]")
+        }
+    }
+
+}
+
+fun <T> CellLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builder.() -> Unit) =
+    attribute(MarkerCellAttribute.Builder().apply(block))
+```
+Finally, You need to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider`, and put fully qualified class name of our factory in it.
+
+=== Extending Table DSL API
+
+In the last section You saw how to define custom user attributes. The last step involves creating extension function on specific DSL attribute API. As DSL builder class name suggests (`CellLevelAttributesBuilderApi<T>`) this builder is part of a Cell DSL API only , which means that it won't be possible to add this attribute on row, column and table. You can leverage this behaviour for restricting say 'mounting points' of specific attributes. In order to enable cell attribute on all levels You will need to add more extension functions:
+
+```kotlin
+fun <T> ColumnLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builder.() -> Unit) =
+    attribute(MarkerCellAttribute.Builder().apply(block).build())
+fun <T> RowLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builder.() -> Unit) =
+  attribute(MarkerCellAttribute.Builder().apply(block).build())
+fun <T> TableLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builder.() -> Unit) =
+  attribute(MarkerCellAttribute.Builder().apply(block).build())
+```
+Now You can call `label` on all DSL API levels in `attributes` scope like:
+
+```kotlin
+productList.tabulate("file.xlsx") {
+    name = "Table id"
+    attributes {
+      label { text = "TABLE" }
+    }
+    columns {
+        column("nr") {
+            attributes { label { text = "COLUMN" } }
+            ..
+        }
+    }
+    rows {
+        row {
+           attributes { label { text = "ROW" } }
+           cell("nr") {
+              value = "Nr.:"
+              attributes {
+                attributes { label { text = "CELL" } }
+              }
+           }
+            ..
+        }
+    }
+}
+```
+The result of above configuration will be as such:
+- In the first row, cell at a column with id "nr" will end with `[ CELL ]`, and rest of cells will end with `[ ROW ]`,
+- Remaining cells (starting from second row) in a column with id "nr" will end with `[ COLUMN ]`,
+- All remaining cells will end with `[ TABLE ]`.
 
 <<<
 == Other features
@@ -314,243 +566,6 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
     }
 }
 ```
-
-<<<
-== Extension points.
-
-I have put lots of effort to make **Tabulate** extensible. Currently, it is possible to:
-
-- add user defined attributes,
-- add custom renderers for already defined attribute,
-- implement table export operations from scratch (e.g. html table, cli table, mock renderer for testing),
-- extend DSL type-safe builder APIS on all possible level.
-
-=== Implementing new table export operations.
-In order to support new tabular file format you have to extend `ExportOperationsConfiguringFactory<C, T, O>` where:
-
-- `C` stands for rendering context - which is usually wrapper around 3rd party api like Apache POI,
-- `T` stands for object class representing element of exported collection,
-- `O` stands for type of result of operation (e.g. `OutputStream` for Apache POI)
-
-As long as tabulate uses java ServiceLoader infrastructure, You need to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.ExportOperationsProvider`, and put fully qualified class name of your custom factory in the first line. **This step is required by a template in order to resolve your extension at run-time**.
-
-Basic CSV implementation looks like this:
-
-[source,kotlin]
-----
-class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingContext>() {
-
-    override fun onBind(renderingContext: CsvRenderingContext, output: OutputStream) {
-        renderingContext.doBind(output)
-    }
-
-    override fun flush(output: OutputStream) {
-        renderingContext.finish()
-        output.close()
-    }
-}
-
-
-open class CsvRenderingContext: RenderingContext {
-    private lateinit var bufferedWriter: BufferedWriter
-    private val line = StringBuilder()
-
-    fun doBind(output: OutputStream) {
-        bufferedWriter = output.bufferedWriter()
-    }
-
-    fun startRow() {
-        line.clear()
-    }
-
-    private fun AttributedCell.getSeparatorCharacter(): String =
-        attributes?.get(CellSeparatorCharacterAttribute::class.java)?.separator ?: ","
-
-    fun <T> endRow(context: AttributedRowWithCells<T>) {
-        val lastIndex = context.rowCellValues.size - 1
-        context.rowCellValues.values.forEachIndexed { index, cell ->
-            line.append(cell.value.value.toString())
-            if (index < lastIndex) line.append(cell.getSeparatorCharacter())
-        }
-        bufferedWriter.write(line.toString())
-        bufferedWriter.newLine()
-    }
-
-    fun finish() {
-        bufferedWriter.close()
-    }
-}
-
-
-class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> {
-
-    override fun getContextClass(): Class<CsvRenderingContext> = CsvRenderingContext::class.java
-
-    override fun createRenderingContext() = CsvRenderingContext()
-
-    override fun supportsFormat(): TabulationFormat = format("csv")
-
-    override fun createExportOperations(): AttributedContextExportOperations<CsvRenderingContext> = object : AttributedContextExportOperations<CsvRenderingContext> {
-
-        override fun beginRow(renderingContext: CsvRenderingContext, context: AttributedRow) {
-            renderingContext.startRow()
-        }
-
-        override fun renderRowCell(renderingContext: CsvRenderingContext, context: AttributedCell) { }
-
-        override fun <T> endRow(renderingContext: CsvRenderingContext, context: AttributedRowWithCells<T>) {
-            renderingContext.endRow(context)
-        }
-    }
-
-    override fun createOutputBindings(): List<OutputBinding<CsvRenderingContext, *>> = listOf(CsvOutputStreamOutputBinding())
-
-}
-----
-
-If target tabular format supports styles, You may add support for rendering built-in attributes as follow:
-
-[source,kotlin]
-----
-class ExampleExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFactory<T, SomeRenderingContext>() {
-
-  ..
-  override fun getAttributeOperationsFactory(renderingContext: SomeRenderingContext): AttributeRenderOperationsFactory<T> =
-      StandardAttributeRenderOperationsFactory(renderingContext, object: StandardAttributeRenderOperationsProvider<ApachePoiExcelFacade,T>{
-          override fun createTemplateFileRenderer(renderingContext: ApachePoiExcelFacade): TableAttributeRenderOperation<TemplateFileAttribute> =
-            TemplateFileAttributeRenderOperation(renderingContext)
-
-          override fun createColumnWidthRenderer(renderingContext: ApachePoiExcelFacade): ColumnAttributeRenderOperation<ColumnWidthAttribute> =
-            ColumnWidthAttributeRenderOperation(renderingContext)
-
-          override fun createRowHeightRenderer(renderingContext: ApachePoiExcelFacade): RowAttributeRenderOperation<T, RowHeightAttribute> =
-            RowHeightAttributeRenderOperation(renderingContext)
-
-          override fun createCellTextStyleRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellTextStylesAttribute> =
-            CellTextStylesAttributeRenderOperation(renderingContext)
-
-          override fun createCellBordersRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellBordersAttribute> =
-            CellBordersAttributeRenderOperation(renderingContext)
-
-          override fun createCellAlignmentRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellAlignmentAttribute> =
-            CellAlignmentAttributeRenderOperation(renderingContext)
-
-          override fun createCellBackgroundRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellBackgroundAttribute> =
-            CellBackgroundAttributeRenderOperation(renderingContext)
-      })
-}
-----
-Factory class `StandardAttributeRenderOperationsFactory` exposes API which assumes specific standard library attributes.
-If your file format allow additional attributes which are not present in standard library (tabulate-core), you may use `AttributeRenderOperationsFactory` interface directly, or fill additional constructor properties on `StandardAttributeRenderOperationsFactory` as below:
-
-[source,kotlin]
-----
-class ExampleExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFactory<T,SomeRenderingContext>() {
-
-  ...
-  override fun getAttributeOperationsFactory(renderingContext: SomeRenderingContext): AttributeRenderOperationsFactory<T> =
-      StandardAttributeRenderOperationsFactory(renderingContext, object: StandardAttributeRenderOperationsProvider<SomeRenderingContext,T>{
-          override fun createTemplateFileRenderer(renderingContext: SomeRenderingContext): TableAttributeRenderOperation<TemplateFileAttribute> = TemplateFileAttributeRenderOperation(renderingContext)
-      },
-        additionalCellAttributeRenderers = setOf( .. )
-        additionalTableAttributeRenderers = setOf( .. )
-      )
-}
-----
-
-=== Registering new attribute types for existing export operations.
-It is possible that you have requirements which are not provided out of the box, and your code is in different compilation unit than specific table export operation implementation. Assume You want to use existing Apache POI excel table exporter, but there is lack of certain attribute support. In such situation - You can still register attribute by implementing another service provider interface - `AttributeRenderOperationsProvider`:
-
-```kotlin
-class CustomAttributeRendersOperationsProvider<T> : AttributeRenderOperationsProvider<T,ApachePoiExcelFacade> {
-
-    override fun getContextClass() = ApachePoiExcelFacade::class.java
-
-    override fun getAttributeOperationsFactory(creationContext: ApachePoiExcelFacade): AttributeRenderOperationsFactory<T> {
-        return object : AttributeRenderOperationsFactory<T> {
-            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<out CellAttributeAlias>> =
-                setOf(MarkerCellAttributeRenderOperation(creationContext))
-        }
-    }
-}
-
-```
-After creating factory - You need to implement particular attribute together with DSL API extension function and attribute render operation to instruct 3rd party Apache Poi API on how to proceed.
-
-```kotlin
-data class MarkerCellAttribute(val text: String) : CellAttribute<MarkerCellAttribute>() {
-
-    class Builder(var text: String = "") : CellAttributeBuilder<MarkerCellAttribute> {
-        override fun build(): MarkerCellAttribute = MarkerCellAttribute(text)
-    }
-}
-
-class SimpleMarkerCellAttributeRenderOperation(poi: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, SimpleTestCellAttribute>(poi) {
-
-    override fun attributeType(): Class<out MarkerCellAttribute> = MarkerCellAttribute::class.java
-
-    override fun renderAttribute(context: RowCellContext, attribute: MarkerCellAttribute) {
-        with(adaptee.assertCell(
-            context.getTableId(),
-            context.rowIndex,
-            context.columnIndex
-        )) {
-            this.setCellValue("${this.stringCellValue} [ ${attribute.label} ]")
-        }
-    }
-
-}
-
-fun <T> CellLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builder.() -> Unit) =
-    attribute(MarkerCellAttribute.Builder().apply(block))
-```
-Finally, You need to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider`, and put fully qualified class name of our factory in it.
-
-=== Extending Table DSL API
-
-In the last section You saw how to define custom user attributes. The last step involves creating extension function on specific DSL attribute API. As DSL builder class name suggests (`CellLevelAttributesBuilderApi<T>`) this builder is part of a Cell DSL API only , which means that it won't be possible to add this attribute on row, column and table. You can leverage this behaviour for restricting say 'mounting points' of specific attributes. In order to enable cell attribute on all levels You will need to add more extension functions:
-
-```kotlin
-fun <T> ColumnLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builder.() -> Unit) =
-    attribute(MarkerCellAttribute.Builder().apply(block).build())
-fun <T> RowLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builder.() -> Unit) =
-  attribute(MarkerCellAttribute.Builder().apply(block).build())
-fun <T> TableLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builder.() -> Unit) =
-  attribute(MarkerCellAttribute.Builder().apply(block).build())
-```
-Now You can call `label` on all DSL API levels in `attributes` scope like:
-
-```kotlin
-productList.tabulate("file.xlsx") {
-    name = "Table id"
-    attributes {
-      label { text = "TABLE" }
-    }
-    columns {
-        column("nr") {
-            attributes { label { text = "COLUMN" } }
-            ..
-        }
-    }
-    rows {
-        row {
-           attributes { label { text = "ROW" } }
-           cell("nr") {
-              value = "Nr.:"
-              attributes {
-                attributes { label { text = "CELL" } }
-              }
-           }
-            ..
-        }
-    }
-}
-```
-The result of above configuration will be as such:
-- In the first row, cell at a column with id "nr" will end with `[ CELL ]`, and rest of cells will end with `[ ROW ]`,
-- Remaining cells (starting from second row) in a column with id "nr" will end with `[ COLUMN ]`,
-- All remaining cells will end with `[ TABLE ]`.
 
 == Roadmap
 
