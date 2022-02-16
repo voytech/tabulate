@@ -12,7 +12,7 @@ Exporting data to external file formats can be tedious and cumbersome - especial
 
 `Tabulate` tries to mitigate above problems with the help of `Kotlin`, its `type-safe DSL builders` and `extension functions`.
 
-### You may want to consider using `tabulate` if:    
+### You may want to use `tabulate` if:    
 
 - You need to export data into following formats: 
     - excel (xlsx),
@@ -21,11 +21,11 @@ Exporting data to external file formats can be tedious and cumbersome - especial
     
 - Exported data needs to be in tabular format, 
 
-- You want to reuse table definition for many exports targeting multiple file formats,
+- You want to reuse table definition for exports targeting multiple file formats,
   
-- You need to preserve look&feel across different file formats,  
+- You need to preserve look & feel across different file formats,  
 
-- You want to customise table look&feel by your own-crafted attributes.
+- You want to customise table look & feel by your own-crafted attributes.
 
 ## Snapshot repository coordinates
 
@@ -43,7 +43,6 @@ dependencies {
     implementation(platform("io.github.voytech:tabulate-bom:0.1.0-SNAPSHOT"))
     implementation("io.github.voytech","tabulate-core")   // e.g. DSL,  
     implementation("io.github.voytech","tabulate-excel")  // streaming apache POI excel API.
-    implementation("io.github.voytech","tabulate-reactor")  // Support for tabulation on Flux
 }
 
 ```
@@ -205,6 +204,10 @@ addressList.tabulate("address_list.xlsx",appBasicTemplate + {
 })
  
 ```
+
+## Docs
+
+link:https://github.com/voytech/tabulate/blob/master/docs/README.adoc[See documentation]
 
 ## Roadmap
 
