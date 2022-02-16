@@ -4,7 +4,7 @@
 image:https://www.codefactor.io/repository/github/voytech/tabulate/badge?s=356351985a7dd58359040b23f6d896d28af928af[CodeFactor ,link=https://www.codefactor.io/repository/github/voytech/tabulate]
 image:https://github.com/voytech/tabulate/actions/workflows/gradle.yml/badge.svg?branch=master[Build Status ,link=https://github.com/voytech/tabulate/actions/workflows/gradle.yml]
 
-Tabulate helps you with exporting collections of elements into various tabular file formats.    
+Tabulate helps you with exporting collections into tabular file formats.
 
 ## Why ?
 
@@ -160,7 +160,7 @@ addressList.tabulate("address_list.xlsx", TableDefinitions.addressTable)
 ```
 and soon: 
 ```kotlin
-addressList.tabulate("address_list.pdf", TableDefinitions.addressTable) // PDFbox implementation
+addressList.tabulate("address_list.pdf", TableDefinitions.addressTable)
 addressList.tabulate("address_list.txt", TableDefinitions.addressTable) // CLI ASCII table - raw implementation
 ```
 Keeping table definition as a separate object is a first step into templating. It is best seen on example below:
@@ -208,7 +208,7 @@ addressList.tabulate("address_list.xlsx",appBasicTemplate + {
 ## Docs
 
 link:https://voytech.github.io/tabulate[HTML] |
-link:https://github.com/voytech/tabulate/blob/master/docs/README.pdf[PDF]
+link:https://github.com/voytech/tabulate/blob/master/docs/index.pdf[PDF]
 
 ## Roadmap
 
