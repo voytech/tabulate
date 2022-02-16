@@ -1,8 +1,6 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.api.builder.dsl.CustomTable
-import io.github.voytech.tabulate.api.builder.dsl.footer
-import io.github.voytech.tabulate.api.builder.dsl.header
+import io.github.voytech.tabulate.api.builder.dsl.*
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
 import io.github.voytech.tabulate.model.attributes.cell.*
@@ -280,6 +278,110 @@ class TabulationTemplateTest {
             assertEquals(2, context.getCells().keys.size)
         }
 
+    }
+
+    @Test
+    fun `should merge custom table with another custom table`() {
+        val customTable = CustomTable {
+            name = "Products table"
+            attributes {
+                text { fontColor = Colors.BLACK }
+            }
+            columns {
+                column(0) {
+                    attributes {
+                        width { px = 45 }
+                    }
+                }
+            }
+        }
+        val overrideTable = CustomTable {
+            name = "Name override"
+            rows {
+                newRow {
+                    cell {
+                        value = "I gave a value."
+                    }
+                }
+            }
+        }
+        (customTable + overrideTable).export(TabulationFormat("spy"), Unit)
+        val history = Spy.spy.readHistory()
+        // Table
+        history.next().run { assertEquals("Name override", (context as TableContext).getTableId()) }
+        // Column 0 attribute
+        history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        // Row 0
+        history.next().run { assertEquals(0, (context as RowContext).getRow()) }
+        // Row 0, cell 0
+        history.next().run { assertEquals("I gave a value.", (context as RowCellContext).rawValue) }
+        history.next().run {
+            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+        }
+        history.next().run { assertTrue(context is RowContextWithCells<*>) }
+        assertFalse(history.hasNext())
+    }
+
+    @Test
+    fun `should merge custom table with typed table`() {
+        val customTable = CustomTable {
+            name = "Products table"
+            attributes {
+                text { fontColor = Colors.BLACK }
+            }
+            columns {
+                column(0) {
+                    attributes {
+                        width { px = 45 }
+                    }
+                }
+            }
+        }
+        val overrideTable = Table<Product> {
+            name = "Name override"
+            columns {
+                column(Product::code)
+            }
+        }
+        Products.items(1).tabulate(TabulationFormat("spy"), Unit,customTable + overrideTable)
+        val history = Spy.spy.readHistory()
+        // Table
+        history.next().run { assertEquals("Name override", (context as TableContext).getTableId()) }
+        // Column 0 attribute
+        history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        // Row 0
+        history.next().run { assertEquals(0, (context as RowContext).getRow()) }
+        // Row 0, cell 0
+        history.next().run { assertEquals("code1", (context as RowCellContext).rawValue) }
+        history.next().run {
+            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+        }
+        history.next().run { assertTrue(context is RowContextWithCells<*>) }
+        assertFalse(history.hasNext())
+    }
+
+    @Test
+    fun `should merge typed table with another typed table`() {
+        val customTable = Table<Product> {
+            name = "Products table"
+            attributes {
+                text { fontColor = Colors.BLACK }
+            }
+            columns {
+                column(0) {
+                    attributes {
+                        width { px = 45 }
+                    }
+                }
+            }
+        }
+        val overrideTable = Table<Product> {
+            name = "Name override"
+            columns {
+                column(Product::code)
+            }
+        }
+        //Products.items(1).tabulate(TabulationFormat("spy"), Unit,customTable + overrideTable)
     }
 
     @Test
