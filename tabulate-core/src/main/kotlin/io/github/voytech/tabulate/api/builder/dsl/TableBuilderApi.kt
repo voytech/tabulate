@@ -57,6 +57,17 @@ operator fun <T> (TableBuilderApi<Unit>.() -> Unit).plus(block: TableBuilderApi<
     }
 }
 
+
+@Suppress("UNCHECKED_CAST")
+@JvmSynthetic
+infix fun <T> (TableBuilderApi<T>.() -> Unit).with(block: TableBuilderApi<T>.() -> Unit): (TableBuilderApi<T>.() -> Unit) {
+    val self: (TableBuilderApi<T>.() -> Unit) = this
+    return Table {
+        self.invoke(this)
+        block.invoke(this)
+    }
+}
+
 /**
  * Kotlin type-safe DSL table attribute builder API for defining table level attributes.
  * Internally operates on corresponding builder state that is eventually materialized to table model.
