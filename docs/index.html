@@ -452,9 +452,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_introduction">Introduction</a></li>
 <li><a href="#_key_concepts">Key concepts</a>
 <ul class="sectlevel2">
-<li><a href="#_table_model_with_attributes">Table model with attributes.</a></li>
-<li><a href="#_table_dsl_type_safe_builders_api">Table DSL type-safe builders API.</a></li>
-<li><a href="#_table_dsl_type_safe_builders_extension_functions">Table DSL type-safe builders extension functions.</a></li>
+<li><a href="#_table_model">Table model.</a></li>
+<li><a href="#_table_dsl_api_type_safe_builders">Table DSL API - type-safe builders.</a></li>
 <li><a href="#column_bound_cell_value_extractors">Column bound cell value extractors.</a></li>
 <li><a href="#row_predicates">Row predicates.</a></li>
 </ul>
@@ -510,9 +509,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_key_concepts">Key concepts</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_table_model_with_attributes">Table model with attributes.</h3>
+<h3 id="_table_model">Table model.</h3>
 <div class="paragraph">
-<p>Table model describes how table will look like after data exporting. Its building blocks are:</p>
+<p>Table model defines how table will look like after data exporting. Its building blocks are:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -641,13 +640,12 @@ Cell binds to column by column identifier which in our case is represented by si
 </div>
 </div>
 <div class="sect2">
-<h3 id="_table_dsl_type_safe_builders_api">Table DSL type-safe builders API.</h3>
+<h3 id="_table_dsl_api_type_safe_builders">Table DSL API - type-safe builders.</h3>
 <div class="paragraph">
-<p>Kotlin type-safe DSL builders API helps a lot with describing table structure.
-It makes source code look more concise and readable and makes maintenance tasks much easier due to DSL type-safety. At coding time, your IDE will make use of it by offering completion hints - this elevates developer experience, as almost zero documentation is required to start.</p>
+<p>Kotlin type-safe builders fits well into describing table structure. It makes source code look more concise and readable and makes dev tasks much easier. At coding time, your IDE makes use of type-safety offered by builders and shows completion hints which elevates developer experience. Almost zero documentation is required to start. You can start playing with the API right now.</p>
 </div>
 <div class="paragraph">
-<p>DSL functions take <code>lambda with receivers</code> as arguments which abstracts away internal API instantiation details from consumers. Within lambda, you can call API methods which can take downstream builders as arguments. We can end up having multi-level DSL API structure, where each level is extensible via Kotlin extension functions. On each DSL level You are allowed to invoke scope accessible methods and access variables which can lead to interesting results:</p>
+<p>DSL functions by convention take <code>lambda with receivers</code> as arguments which abstract away internal API instantiation details from consumers. Within lambda you can call other API methods which in turn, can take downstream builders as arguments. This way - we can end up having multi-level DSL API structure, where each level is extensible via Kotlin extension functions. On each DSL level You are allowed to invoke receiver scope methods and access lexical scope variables which can lead to interesting results:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -683,7 +681,7 @@ It makes source code look more concise and readable and makes maintenance tasks 
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Define header as long as we know that our template doesn&#8217;t mention it.</td>
+<td>After that, we define header as long as we know that our template doesn&#8217;t mention it.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
@@ -698,14 +696,11 @@ It makes source code look more concise and readable and makes maintenance tasks 
 <i class="fa icon-caution" title="Caution"></i>
 </td>
 <td class="content">
-Although it is possible to build row definitions by iterating on collection directly, you should always prefer to use <a href="#column_bound_cell_value_extractors">Column bound cell value extractors.</a>. They are much faster and consume much less memory than approach shown in point number <code>4</code>.
+Although it is possible to build row definitions by iterating over collection directly, you should always prefer to use <a href="#column_bound_cell_value_extractors">Column bound cell value extractors.</a>. They are much faster and consume much less memory than approach shown in point number <code>4</code>.
 </td>
 </tr>
 </table>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_table_dsl_type_safe_builders_extension_functions">Table DSL type-safe builders extension functions.</h3>
 <div class="paragraph">
 <p>As already said, it is possible to extend each DSL level by using extension functions on DSL API builder classes.</p>
 </div>
@@ -746,15 +741,14 @@ Although it is possible to build row definitions by iterating on collection dire
 </div>
 <div class="paragraph">
 <p>This way you can create various shortcuts and templates, making DSL vocabulary richer and more expressive.
-It is worth mentioning that by using extension functions on DSL builders - scope becomes restricted by DslMarker annotation,
-so it is not possible to break table definition by calling methods from upstream builders.</p>
+It is worth mentioning that by using extension functions on DSL builders - scope becomes restricted by <code>DslMarker</code> annotation, so it is not possible to break table definition by calling methods from upstream builders.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="column_bound_cell_value_extractors">Column bound cell value extractors.</h3>
 <div class="paragraph">
 <p>Column API makes it possible to pass property getter reference as a column key.
-This creates object to column binding that is applied later at run time for cell value evaluation.</p>
+This creates object property to column binding which is applied later at run time for cell value evaluation.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -785,8 +779,7 @@ This creates object to column binding that is applied later at run time for cell
 <div class="sect2">
 <h3 id="row_predicates">Row predicates.</h3>
 <div class="paragraph">
-<p>You have already seen how <code>.header</code> extension function is implemented. Internally it invokes <code>.newRow(0)</code> which requests
-rendering of a row at index <code>0</code>. What if You want to apply entire row definition for several indices ?
+<p>You have already seen how <code>.header</code> extension function is implemented. Internally it invokes <code>.newRow(0)</code> which requests rendering of a row at index <code>0</code>. What if You want to apply entire row definition for several indices ?
 You may repeat <code>.newRow()</code> invokation as many times as required, but there is better option.
 You can use row index predicate as follows:</p>
 </div>
@@ -801,7 +794,7 @@ You can use row index predicate as follows:</p>
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>On first line we have a construct built mainly from infix functions. <code>atIndex { &#8230;&#8203; }</code> takes row index predicate <code>gt(0) and lt(100)</code> which literally says: 'Apply this row definition to all indices between index 0 and index 100'. Last 'keyword' sounds: <code>newRow</code> and delivers row definition from within curly braces.</td>
+<td>We start the row line with method <code>atIndex { &#8230;&#8203; }</code> which takes row index predicate <code>gt(0) and lt(100)</code>. It literally says: 'Apply this row definition to all indices between index 0 and index 100'. Last 'keyword' sounds: <code>newRow</code> and delivers row definition from within curly braces.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -1430,7 +1423,7 @@ This is because of one person (me) who is currently in charge, and due to my int
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-02-16 20:13:36 +0100
+Last updated 2022-02-18 18:38:32 +0100
 </div>
 </div>
 </body>

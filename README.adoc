@@ -14,10 +14,10 @@ Exporting data to external file formats can be tedious and cumbersome - especial
 
 ### You may want to use `tabulate` if:    
 
-- You need to export data into following formats: 
-    - excel (xlsx),
-    - pdf (WIP),
-    - cli (WIP),
+- You need to export data into following formats:
+      * excel (xlsx),
+      * pdf (work in progress),
+      * cli (planned),
     
 - Exported data needs to be in tabular format, 
 
@@ -165,9 +165,9 @@ addressList.tabulate("address_list.txt", TableDefinitions.addressTable) // CLI A
 ```
 Keeping table definition as a separate object is a first step into composing tables. It is best seen on example below:
 ```kotlin
-addressList.tabulate("address_list.xlsx",TableDefinitions.addressTable + { name = "Dealers Addresses" })
+addressList.tabulate("address_list.xlsx",TableDefinitions.addressTable with { name = "Dealers Addresses" })
 ```
-Above syntax is very intuitive and shows some powers of Kotlin. We have used overridden `+` operator in order to merge two table definitions. Composing evaluates in the same way as normal method's arguments. Logic behind this feature is very simple - `+` operator takes two lambdas with receiver, then it returns another lambda with receiver which internally delegates invocations to original lambdas one by one. Effectively it is nothing more than receiver configuration and re-configuration (invocation of subsequent builders on the same receiver one by one). This is simple solution, yet imposes few restrictions on how to manage underlying builder state. (Explanation is out of the scope of this README file. I will try to cover this subject in more details in documentation)
+Above syntax is very intuitive and shows some powers of Kotlin. We have used `with` infix function in order to merge two table definitions. Composing evaluates in the same way as normal method's arguments. Logic behind this feature is very simple - `with` function takes two lambdas with receiver, then it returns another lambda with receiver which internally delegates invocations to original lambdas one by one. Effectively it is nothing more than receiver configuration and re-configuration (invocation of subsequent builders on the same receiver one by one). This is simple solution, yet imposes few restrictions on how to manage underlying builder state. (Explanation is out of the scope of this README file. I will try to cover this subject in more details in documentation)
 
 Far more real-life templating example:
 ```kotlin
@@ -210,6 +210,14 @@ addressList.tabulate("address_list.xlsx",appBasicTemplate + {
 link:https://voytech.github.io/tabulate[HTML] |
 link:https://github.com/voytech/tabulate/blob/master/docs/index.pdf[PDF]
 
+## Building
+Import project into IDE or:
+----
+gradlew clean build
+----
+## Contributing
+Just submit pull request.
+
 ## Roadmap
 
 Starting from version 0.1.0, minor version will advance relatively fast due to tiny milestones.
@@ -233,3 +241,6 @@ This is because of one person (me) who is currently in charge, and due to my int
 
 ### TBD ...
 
+## License
+
+The project license file is available https://github.com/voytech/tabulate/blob/917f602dfe7d5311da8b13ac607d7d8743034234/LICENSE[here].
