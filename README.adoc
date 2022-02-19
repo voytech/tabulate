@@ -89,8 +89,8 @@ Invoke `tabulate` extension function with table builder (lambda with receiver) a
 [source,kotlin]
 ----
 contracts.tabulate("contracts_list.xlsx") {
-    name = "Active Contracts"
-    columns {
+    name = "Active Contracts" // <1>
+    columns { // <2>
         column(Contract::client)
         column(Contract::contractCode)
         column(Contract::contractLength)
@@ -101,14 +101,14 @@ contracts.tabulate("contracts_list.xlsx") {
         column(Contract::monthlyGrossValue)
     }
     attributes {
-        columnWidth { auto = true }
+        columnWidth { auto = true } // <3>
     }
 }
 ----
+<1> xlsx file sheet name will be the same as table name,
+<2> sheet will consist of columns each containing object property values extracted by property literals.
+<3> column widths will be automatically adjusted to cell value lengths.
 
-That's it.
-This will create an .xlsx file with sheet named "Active Contracts".
-Sheet will contain rows with automatically adjusted column widths but without any additional features (like header row)
 
 <<<
 Let's add header now:
@@ -131,12 +131,14 @@ contracts.tabulate("contracts_list.xlsx") {
         column(Contract::monthlyGrossValue)
     }
     rows {
+        // <1>
         header("Client", "Code", "Contract Length",
                 "Date Signed", "Expiration Date", "First Payment",
                 "Last Payment","Monthly Gross Value")
     }
 }
 ----
+<1> In fact there are many ways to add header. This one is the simplest. It is built-in `RowBuilderApi` extension function which takes column names and creates row with custom cells at index 0.
 
 <<<
 Now let us add some style attributes. This should highlight header from remaining rows:
@@ -163,6 +165,7 @@ contracts.tabulate("contracts_list.xlsx") {
             columnTitles("Client", "Code", "Contract Length",
                 "Date Signed", "Expiration Date", "First Payment",
                 "Last Payment","Monthly Gross Value")
+            // <1>
             attributes {
                 text { fontColor = Colors.WHITE }
                 background {
@@ -173,6 +176,7 @@ contracts.tabulate("contracts_list.xlsx") {
     }
 }
 ----
+<1> To add attributes to header, we used overloaded `header` extension function.
 
 <<<
 So far, we were passing table definition directly to `tabulate` method.
@@ -250,7 +254,7 @@ Far more real-life templating example:
 [source,kotlin]
 ----
 object TableDefinitions {
-  val appBasicTemplate = CustomTable {
+  val headerStyles = CustomTable {
     rows {
       matching { header() } assign {
         attributes {
@@ -266,7 +270,7 @@ object TableDefinitions {
   }
 }
 
-contracts.tabulate("contracts_list.xlsx", TableDefinitions.appBasicTemplate + {
+contracts.tabulate("contracts_list.xlsx", TableDefinitions.headerStyles + {
     columns {
         column(Contract::client)
         column(Contract::contractCode)
@@ -284,7 +288,7 @@ contracts.tabulate("contracts_list.xlsx", TableDefinitions.appBasicTemplate + {
     }
 })
 ----
-In above example we can see that `appBasicTemplate` does not specify type of managed collection element. That means that you are no longer restricted to exporting contracts. This way you can achieve style consistency across applications.
+In above example we can see that `headerStyles` does not specify type of collection element. That means that you are no longer restricted to exporting contracts. This way you can achieve style consistency across applications.
 
 == Docs
 
