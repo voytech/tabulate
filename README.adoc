@@ -1,38 +1,40 @@
+= Tabulate
+:icons: font
 
-# Tabulate
-
-image:https://www.codefactor.io/repository/github/voytech/tabulate/badge?s=356351985a7dd58359040b23f6d896d28af928af[CodeFactor ,link=https://www.codefactor.io/repository/github/voytech/tabulate]
-image:https://github.com/voytech/tabulate/actions/workflows/gradle.yml/badge.svg?branch=master[Build Status ,link=https://github.com/voytech/tabulate/actions/workflows/gradle.yml]
+image:https://www.codefactor.io/repository/github/voytech/tabulate/badge?s=356351985a7dd58359040b23f6d896d28af928af[CodeFactor,link=https://www.codefactor.io/repository/github/voytech/tabulate]
+image:https://github.com/voytech/tabulate/actions/workflows/gradle.yml/badge.svg?branch=master[Build Status,link=https://github.com/voytech/tabulate/actions/workflows/gradle.yml]
 
 Tabulate helps you with exporting collections into tabular file formats.
 
-## Why ?
+== Why ?
 
-Exporting data to external file formats can be tedious and cumbersome - especially when business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. In such cases You want to hide implementation details using abstractions, but this is additional effort which is not desirable. 
+Exporting data to external file formats can be tedious and cumbersome - especially when business wants to have reports covering vast majority of system functionalities.
+Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain.
+In such cases You want to hide implementation details using abstractions, but this is additional effort which is not desirable.
 
 `Tabulate` tries to mitigate above problems with the help of `Kotlin`, its `type-safe DSL builders` and `extension functions`.
 
-### You may want to use `tabulate` if:    
+=== You may want to use `tabulate` if:
 
 - You need to export data into following formats:
-      * excel (xlsx),
-      * pdf (work in progress),
-      * cli (planned),
-    
-- Exported data needs to be in tabular format, 
+* excel (xlsx),
+* pdf (work in progress),
+* cli (planned),
+
+- Exported data needs to be in tabular format,
 
 - You want to reuse table definition for exports targeting multiple file formats,
-  
-- You need to preserve look & feel across different file formats,  
+
+- You need to preserve look & feel across different file formats,
 
 - You want to customise table look & feel by your own-crafted attributes.
 
-## Snapshot repository coordinates
+== Snapshot repository coordinates
 
 Library is not yet released into maven central.
 Currently, you can access its snapshot:
 
-```
+----
 repositories {
     maven {
         url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
@@ -45,137 +47,212 @@ dependencies {
     implementation("io.github.voytech","tabulate-excel")  // streaming apache POI excel API.
 }
 
-```
+----
 
 First 0.1.0 version will not differ much from current snapshot version and migration to release should be quick.
 
-## Basic usage
-Let's start simple. Given list of addresses as below:
-```kotlin
-    val listForGus = listOf(
-        Address("Jesse", "Pinkman","New Mexico", "9809 Margo Street","87104"),
-        Address("Walter", "White","New Mexico", "308 Negra Arroyo Lane","87045"),
-        Address("Saul", "Goodman","New Mexico", "9800 Montgomery Blvd NE","87111"),
-        Address("Mike", "Ehrmantraut","New Mexico", "204 Edith Blvd. NE","87102"),
-  )
-```
-Invoke `tabulate` extension function with basic table definition passed as a function argument:
-```kotlin
-    listForGus.tabulate("address_list.xlsx") {
-          name = "Associates"
-          columns { 
-              column(Address::firstName)
-              column(Address::lastName)
-              column(Address::street)
-              column(Address::postCode)
-          }
-          attributes {
-              columnWidth { auto = true }
-          }  
+== Basic usage
+
+Let's start simple.
+Given list of contracts as below:
+
+[source,kotlin]
+----
+    val contracts = listOf(
+        Contract(
+            client = "Apollo",
+            contractCode = "2011/12/AP",
+            contractType = ContractType.FIXED_PRICE,
+            contractLength = 12,
+            dateSigned = LocalDate.parse("2011-12-23"),
+            expirationDate = LocalDate.parse("2012-12-23"),
+            dateOfFirstPayment = LocalDate.parse("2011-12-31"),
+            lastPaymentDate = LocalDate.parse("2012-12-23"),
+            monthlyGrossValue = BigDecimal.valueOf(200)
+        ),
+        Contract(
+            client = "Columbia",
+            contractCode = "2021/12/CO",
+            contractType = ContractType.FIXED_PRICE,
+            contractLength = 12,
+            dateSigned = LocalDate.parse("2021-12-13"),
+            expirationDate = LocalDate.parse("2022-12-13"),
+            dateOfFirstPayment = LocalDate.parse("2021-12-31"),
+            lastPaymentDate = LocalDate.parse("2022-12-13"),
+            monthlyGrossValue = BigDecimal.valueOf(250)
+        )
+    )
+----
+<<<
+Invoke `tabulate` extension function with table builder (lambda with receiver) as argument:
+
+[source,kotlin]
+----
+contracts.tabulate("contracts_list.xlsx") {
+    name = "Active Contracts"
+    columns {
+        column(Contract::client)
+        column(Contract::contractCode)
+        column(Contract::contractLength)
+        column(Contract::dateSigned)
+        column(Contract::expirationDate)
+        column(Contract::dateOfFirstPayment)
+        column(Contract::lastPaymentDate)
+        column(Contract::monthlyGrossValue)
     }
-```
-That's it. 
-This will create an Excel file with sheet named "Associates". Sheet will contain 4 entries with automatically adjusted column widths but without any additional features (like header row) 
-
-Let's add header now: 
-
-```kotlin
-    addressList.tabulate("address_list.xlsx") {
-          name = "Associates"
-          attributes {
-            columnWidth { auto = true }
-          }
-          columns { 
-              column(Address::firstName)
-              column(Address::lastName)
-              column(Address::street)
-              column(Address::postCode)
-          }
-          rows {
-              header("First Name", "Last Name", "Street", "Post Code")
-          }  
-    }
-```
-We can make header look a bit differently:  
-
-```kotlin
-    addressList.tabulate("address_list.xlsx") {
-          name = "Associates"
-          attributes {
-            columnWidth { auto = true }
-          }
-          columns { 
-              column(Address::firstName)
-              column(Address::lastName)
-              column(Address::street)
-              column(Address::postCode)
-          }
-          rows {
-              header { 
-                columnTitles("First Name", "Last Name", "Street", "Post Code")
-                attributes { 
-                    text { fontColor = Colors.WHITE }
-                    background { 
-                      color = Colors.BLACK
-                      fill = DefaultCellFill.SOLID
-                    }
-                }
-              }
-          }  
-    }
-```
-Until now, we were passing table definition directly to `tabulate` method. In real life scenario we may want to keep table definition separated as below:
-
-```kotlin
-object TableDefinitions {
-  val addressTable = Table<Address> {
-    name = "Traitors address list"
     attributes {
-      columnWidth { auto = true }
+        columnWidth { auto = true }
+    }
+}
+----
+
+That's it.
+This will create an .xlsx file with sheet named "Active Contracts".
+Sheet will contain rows with automatically adjusted column widths but without any additional features (like header row)
+
+<<<
+Let's add header now:
+
+[source,kotlin]
+----
+contracts.tabulate("contracts_list.xlsx") {
+    name = "Active Contracts"
+    attributes {
+        columnWidth { auto = true }
     }
     columns {
-      column(Address::firstName)
-      column(Address::lastName)
-      column(Address::street)
-      column(Address::postCode)
+        column(Contract::client)
+        column(Contract::contractCode)
+        column(Contract::contractLength)
+        column(Contract::dateSigned)
+        column(Contract::expirationDate)
+        column(Contract::dateOfFirstPayment)
+        column(Contract::lastPaymentDate)
+        column(Contract::monthlyGrossValue)
     }
     rows {
-      header {
-        columnTitles("First Name", "Last Name", "Street", "Post Code")
-        attributes {
-          text { fontColor = Colors.WHITE }
-          background { 
-            color = Colors.BLACK
-            fill = DefaultCellFill.SOLID
-          }
-        }
-      }
+        header("Client", "Code", "Contract Length",
+                "Date Signed", "Expiration Date", "First Payment",
+                "Last Payment","Monthly Gross Value")
     }
-  }
 }
-```
-And now: 
-```kotlin
-addressList.tabulate("address_list.xlsx", TableDefinitions.addressTable)
-```
-and soon: 
-```kotlin
-addressList.tabulate("address_list.pdf", TableDefinitions.addressTable)
-addressList.tabulate("address_list.txt", TableDefinitions.addressTable) // CLI ASCII table - raw implementation
-```
-Keeping table definition as a separate object is a first step into composing tables. It is best seen on example below:
-```kotlin
-addressList.tabulate("address_list.xlsx",TableDefinitions.addressTable with { name = "Dealers Addresses" })
-```
-Above syntax is very intuitive and shows some powers of Kotlin. We have used `with` infix function in order to merge two table definitions. Composing evaluates in the same way as normal method's arguments. Logic behind this feature is very simple - `with` function takes two lambdas with receiver, then it returns another lambda with receiver which internally delegates invocations to original lambdas one by one. Effectively it is nothing more than receiver configuration and re-configuration (invocation of subsequent builders on the same receiver one by one). This is simple solution, yet imposes few restrictions on how to manage underlying builder state. (Explanation is out of the scope of this README file. I will try to cover this subject in more details in documentation)
+----
+
+<<<
+Now let us add some style attributes. This should highlight header from remaining rows:
+
+[source,kotlin]
+----
+contracts.tabulate("contracts_list.xlsx") {
+    name = "Active Contracts"
+    attributes {
+        columnWidth { auto = true }
+    }
+    columns {
+        column(Contract::client)
+        column(Contract::contractCode)
+        column(Contract::contractLength)
+        column(Contract::dateSigned)
+        column(Contract::expirationDate)
+        column(Contract::dateOfFirstPayment)
+        column(Contract::lastPaymentDate)
+        column(Contract::monthlyGrossValue)
+    }
+    rows {
+        header {
+            columnTitles("Client", "Code", "Contract Length",
+                "Date Signed", "Expiration Date", "First Payment",
+                "Last Payment","Monthly Gross Value")
+            attributes {
+                text { fontColor = Colors.WHITE }
+                background {
+                    color = Colors.BLACK
+                }
+            }
+        }
+    }
+}
+----
+
+<<<
+So far, we were passing table definition directly to `tabulate` method.
+In real life scenario we may want to keep table definition as separate variable:
+
+[source,kotlin]
+----
+object TableDefinitions {
+    val contractsTable = Table<Contract> {
+        name = "Active contracts"
+        attributes {
+            columnWidth { auto = true }
+        }
+        columns {
+            column(Contract::client)
+            column(Contract::contractCode)
+            column(Contract::contractLength)
+            column(Contract::dateSigned)
+            column(Contract::expirationDate)
+            column(Contract::dateOfFirstPayment)
+            column(Contract::lastPaymentDate)
+            column(Contract::monthlyGrossValue)
+        }
+        rows {
+            header {
+                columnTitles("Client", "Code", "Contract Length", "Date Signed", "Expiration Date", "First Payment", "Last Payment","Monthly Gross Value")
+                attributes {
+                    text { fontColor = Colors.WHITE }
+                    background { color = Colors.BLACK }
+                }
+            }
+        }
+    }
+}
+----
+
+<<<
+Now, we can reuse table definition each time we want to export contracts collection:
+
+[source,kotlin]
+----
+contracts.tabulate("address_list.xlsx", TableDefinitions.contractsTable)
+----
+
+If You require different file format, just specify file name with adequate extension (e.g: .pdf):
+
+[source,kotlin]
+----
+contracts.tabulate("address_list.pdf", TableDefinitions.contractsTable)
+----
+
+NOTE: Pdf format is not supported yet.
+
+Keeping table definition as a separate object is a first step into composing tables.
+Suppose we have `contractsTable` definition, and we want to reuse it to export past contracts. The only difference in here is the sheet name.
+
+We can achieve this by `overriding` existing definition:
+
+[source,kotlin]
+----
+contracts.tabulate("past_contracts.xlsx", contractsTable with { name = "Past Contracts" })
+----
+
+Above syntax is intuitive and shows some powers of Kotlin.
+We have used `with` infix function in order to merge two table definitions.
+Merging evaluates in the same order as normal method's arguments.
+Logic behind this feature is very simple - `with` function takes two lambdas with receiver, then it returns another lambda with receiver which internally delegates invocations to original lambdas one by one.
+Effectively it is nothing more than receiver configuration and re-configuration (invocation of subsequent builders on the same receiver one by one).
+This is simple solution, yet imposes few restrictions on how to manage underlying builder state.
+(Explanation is out of the scope of this README file.
+I will try to cover this subject in more details in documentation)
 
 Far more real-life templating example:
-```kotlin
+
+[source,kotlin]
+----
 object TableDefinitions {
   val appBasicTemplate = CustomTable {
-    name = "Basic template"
     rows {
-      atIndex { header() } newRow {
+      matching { header() } assign {
         attributes {
           background {
             color = Colors.BLACK
@@ -189,58 +266,69 @@ object TableDefinitions {
   }
 }
 
-addressList.tabulate("address_list.xlsx",appBasicTemplate + {
-  columns {
-    column(Address::firstName)
-    column(Address::lastName)
-    column(Address::street)
-    column(Address::postCode)
-  }
-  rows {
-    header {
-      columnTitles("First Name", "Last Name", "Street", "Post Code")
+contracts.tabulate("contracts_list.xlsx", TableDefinitions.appBasicTemplate + {
+    columns {
+        column(Contract::client)
+        column(Contract::contractCode)
+        column(Contract::contractLength)
+        column(Contract::dateSigned)
+        column(Contract::expirationDate)
+        column(Contract::dateOfFirstPayment)
+        column(Contract::lastPaymentDate)
+        column(Contract::monthlyGrossValue)
     }
-  }
+    rows {
+        header("Client", "Code", "Contract Length",
+            "Date Signed", "Expiration Date", "First Payment",
+            "Last Payment","Monthly Gross Value")
+    }
 })
- 
-```
+----
+In above example we can see that `appBasicTemplate` does not specify type of managed collection element. That means that you are no longer restricted to exporting contracts. This way you can achieve style consistency across applications.
 
-## Docs
+== Docs
 
 link:https://voytech.github.io/tabulate[HTML] |
 link:https://github.com/voytech/tabulate/blob/master/docs/index.pdf[PDF]
 
-## Building
-Import project into IDE or:
+== Building
+
+Import project into IDE as new gradle project.
+
+You can also build and execute tests from console:
+
 ----
 gradlew clean build
 ----
-## Contributing
-Just submit pull request.
 
-## Roadmap
+== Contributing
+
+Firstly, create an issue describing a bug, idea or enhancement You would like to deliver.
+After conversation thread concludes with approval, You can develop solution to problem and submit pull request.
+
+== Roadmap
 
 Starting from version 0.1.0, minor version will advance relatively fast due to tiny milestones.
 This is because of one person (me) who is currently in charge, and due to my intention of working within non-blocking release cycles.
 
-### v0.2.x
- 
+=== v0.2.x
+
 - PDF table export operations.
 
-### v0.3.x
+=== v0.3.x
 
 - CLI table export operations.
 
-### v0.4.x
+=== v0.4.x
 
 - Multi-part output files. (chunking large files)
 
-### v0.5.x
+=== v0.5.x
 
 - Codegen for user defined attributes.
 
-### TBD ...
+=== TBD ...
 
-## License
+== License
 
 The project license file is available https://github.com/voytech/tabulate/blob/917f602dfe7d5311da8b13ac607d7d8743034234/LICENSE[here].
