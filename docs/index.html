@@ -438,6 +438,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/github.min.css">
 </head>
 <body class="article">
 <div id="header">
@@ -456,23 +457,33 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_table_dsl_api_type_safe_builders">Table DSL API - type-safe builders.</a></li>
 <li><a href="#column_bound_cell_value_extractors">Column bound cell value extractors.</a></li>
 <li><a href="#row_predicates">Row predicates.</a></li>
+<li><a href="#_mixing_custom_rows_with_collection_elements">Mixing custom rows with collection elements.</a></li>
 </ul>
 </li>
 <li><a href="#_extension_points">Extension points.</a>
 <ul class="sectlevel2">
-<li><a href="#_implementing_new_table_export_operations">Implementing new table export operations.</a></li>
+<li><a href="#_implementing_table_export_operations_from_scratch">Implementing table export operations from scratch.</a></li>
 <li><a href="#_registering_new_attribute_types_for_existing_export_operations">Registering new attribute types for existing export operations.</a></li>
 <li><a href="#_extending_table_dsl_api">Extending Table DSL API</a></li>
 </ul>
 </li>
-<li><a href="#_other_features">Other features</a>
-<ul class="sectlevel2">
 <li><a href="#_java_interop_fluent_builders_java_api">Java interop - fluent builders Java API.</a></li>
-<li><a href="#_custom_rows">Custom rows.</a></li>
-<li><a href="#_merging_rows">Merging rows.</a></li>
-<li><a href="#_library_of_attributes">Library of attributes.</a></li>
+<li><a href="#_library_of_attributes">Library of attributes.</a>
+<ul class="sectlevel3">
+<li><a href="#_table_attributes">Table attributes</a></li>
+<li><a href="#_column_attributes">Column attributes</a></li>
+<li><a href="#_row_attributes">Row attributes</a></li>
+<li><a href="#_cell_attributes">Cell attributes</a></li>
 </ul>
 </li>
+<li><a href="#_advanced_concepts">Advanced concepts</a>
+<ul class="sectlevel2">
+<li><a href="#_custom_rows">Custom rows.</a></li>
+<li><a href="#_merging_rows">Merging rows.</a></li>
+<li><a href="#_builder_composition">Builder composition</a></li>
+</ul>
+</li>
+<li><a href="#_cookbook_recipes">Cookbook recipes.</a></li>
 </ul>
 </div>
 </div>
@@ -486,7 +497,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_introduction">Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Exporting data to external file formats can be tedious and cumbersome - especially when business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. In such cases You want to hide implementation details using abstractions, but this is additional effort which is not desirable.</p>
+<p>Exporting data to tabular file formats can be tedious and cumbersome - especially when business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. In such cases You want to hide implementation details using abstractions, but this is additional effort which is not desirable.</p>
 </div>
 <div class="paragraph">
 <p><code>Tabulate</code> tries to mitigate above problems with the help of <code>Kotlin</code>, its <code>type-safe DSL builders</code> and <code>extension functions</code>.</p>
@@ -518,18 +529,18 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </div>
 <div class="paragraph">
-<p>Table model is internal concept and is not exposed to API consumers (Only attribute model can be exposed as it is fully customisable). Table is always constructed using table builders as follows:</p>
+<p>Table model is internal concept and is not exposed to API consumers (only <code>attributes model</code> can be exposed as it is extensible and customizable). Table is always built using table builders as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">productList.tabulate(&quot;file.xlsx&quot;) {
-    name = &quot;Table id&quot; <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">productList.tabulate("file.xlsx") {
+    name = "Table id" <i class="conum" data-value="1"></i><b>(1)</b>
     columns {   <i class="conum" data-value="2"></i><b>(2)</b>
-        column(&quot;nr&quot;)
+        column("nr")
     }
     rows { <i class="conum" data-value="3"></i><b>(3)</b>
         row {  // first row when no index provided.
-            cell(&quot;nr&quot;) { value = &quot;Nr.:&quot; } <i class="conum" data-value="4"></i><b>(4)</b>
+            cell("nr") { value = "Nr.:" } <i class="conum" data-value="4"></i><b>(4)</b>
         }
     }
 }</code></pre>
@@ -539,7 +550,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Firstly we give the table name. It can be used by exporter e.g. to add metadata like sheet name.</td>
+<td>Firstly we give the table name. It can be used by exporter e.g., to add metadata like sheet name.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -551,7 +562,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Each row can contain as many cells as many columns exist. Similarily to <code>row</code>, <code>cell</code> may be used to associate cell attributes with selected cell within row. You can also create cell with custom predefined or computed value.</td>
+<td>Each row can contain as many cells as many columns exist. Similarly to <code>row</code> - <code>cell</code> may be used to assign cell attributes with selected cell within row. You can also create cell with custom predefined or computed value.</td>
 </tr>
 </table>
 </div>
@@ -570,13 +581,13 @@ Cell binds to column by column identifier which in our case is represented by si
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">productList.tabulate(&quot;file.xlsx&quot;) {
-    name = &quot;Table id&quot;
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">productList.tabulate("file.xlsx") {
+    name = "Table id"
     attributes {
       filterAndSort {} <i class="conum" data-value="1"></i><b>(1)</b>
     }
     columns {
-        column(&quot;nr&quot;) {
+        column("nr") {
             attributes { width { px = 40 }} <i class="conum" data-value="2"></i><b>(2)</b>
         }
         column(Product::code) {
@@ -590,11 +601,11 @@ Cell binds to column by column identifier which in our case is represented by si
     }
     rows {
         row {  // first row when no explicit index provided.
-              cell(&quot;nr&quot;) {
-                value = &quot;Nr.:&quot;
+              cell("nr") {
+                value = "Nr.:"
                 attributes {
                   text { <i class="conum" data-value="4"></i><b>(4)</b>
-                    fontFamily = &quot;Times New Roman&quot;
+                    fontFamily = "Times New Roman"
                     fontColor = Colors.BLACK
                     fontSize = 12
                   }
@@ -637,14 +648,14 @@ Cell binds to column by column identifier which in our case is represented by si
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">    val additionalProducts = ... <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">    val additionalProducts = ... <i class="conum" data-value="1"></i><b>(1)</b>
     tabulate {
-          name = &quot;Products table&quot;
+          name = "Products table"
           attributes {
-            template { fileName = &quot;src/test/resources/template.xlsx&quot; } <i class="conum" data-value="2"></i><b>(2)</b>
+            template { fileName = "src/test/resources/template.xlsx" } <i class="conum" data-value="2"></i><b>(2)</b>
           }
           rows {
-              header(&quot;Code&quot;, &quot;Name&quot;, &quot;Description&quot;, &quot;Manufacturer&quot;) <i class="conum" data-value="3"></i><b>(3)</b>
+              header("Code", "Name", "Description", "Manufacturer") <i class="conum" data-value="3"></i><b>(3)</b>
               additionalProducts.forEach { <i class="conum" data-value="4"></i><b>(4)</b>
                   row {
                       cell { value = it.code }
@@ -654,7 +665,7 @@ Cell binds to column by column identifier which in our case is represented by si
                   }
               }
           }
-    }.export(&quot;products.xlsx&quot;)</code></pre>
+    }.export("products.xlsx")</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -697,11 +708,11 @@ Although it is possible to build row definitions by iterating over collection di
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">    tabulate {
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">    tabulate {
           rows {
-              header(&quot;Code&quot;, &quot;Name&quot;, &quot;Description&quot;, &quot;Manufacturer&quot;)
+              header("Code", "Name", "Description", "Manufacturer")
           }
-    }.export(&quot;products.xlsx&quot;)</code></pre>
+    }.export("products.xlsx")</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -709,7 +720,7 @@ Although it is possible to build row definitions by iterating over collection di
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">fun &lt;T&gt; RowsBuilderApi&lt;T&gt;.header(vararg names: String) =
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">fun &lt;T&gt; RowsBuilderApi&lt;T&gt;.header(vararg names: String) =
     newRow(0) { <i class="conum" data-value="1"></i><b>(1)</b>
         cells {
             names.forEach {
@@ -740,8 +751,8 @@ This creates object property to column binding which is applied later at run tim
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">productsRepository.loadProductsByDate(now()).tabulate(&quot;file/path/products.xlsx&quot;) {
-            name = &quot;Products table&quot;
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx") {
+            name = "Products table"
             columns {
                 column(Product::code)
                 column(Product::name)
@@ -766,6 +777,8 @@ This creates object property to column binding which is applied later at run tim
 </div>
 <div class="sect2">
 <h3 id="row_predicates">Row predicates.</h3>
+<div class="sect3">
+<h4 id="_row_index_predicates">Row index predicates.</h4>
 <div class="paragraph">
 <p>You have already seen how <code>.header</code> extension function is implemented. Internally it invokes <code>.newRow(0)</code> which requests rendering of a row at index <code>0</code>. What if You want to apply entire row definition for several indices ?
 You may repeat <code>.newRow()</code> invokation as many times as required, but there is better option.
@@ -773,8 +786,8 @@ You can use row index predicate as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">atIndex { gt(0) and lt(100) } newRow { <i class="conum" data-value="1"></i><b>(1)</b>
-    cell { expression = RowCellExpression { &quot;index : ${it.rowIndex.getIndex()}&quot; } } <i class="conum" data-value="2"></i><b>(2)</b>
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">atIndex { gt(0) and lt(100) } newRow { <i class="conum" data-value="1"></i><b>(1)</b>
+    cell { expression = RowCellExpression { "index : ${it.rowIndex.getIndex()}" } } <i class="conum" data-value="2"></i><b>(2)</b>
 }</code></pre>
 </div>
 </div>
@@ -795,11 +808,63 @@ You can use row index predicate as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">newRow({ gt(0) and lt(100) }) {
-    cell { expression = RowCellExpression { &quot;index : ${it.rowIndex.getIndex()}&quot; } }
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">newRow({ gt(0) and lt(100) }) {
+    cell { expression = RowCellExpression { "index : ${it.rowIndex.getIndex()}" } }
 }</code></pre>
 </div>
 </div>
+</div>
+<div class="sect3">
+<h4 id="_record_row_predicates">Record row predicates</h4>
+<div class="paragraph">
+<p>Record predicates differs from <code>row index predicates</code> in that they cannot be used to insert new custom rows. They can only enrich <strong>existing</strong> row, that is:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>custom row that is created by <code>newRow</code> API method,</p>
+</li>
+<li>
+<p>or a row that is derived from collection element (it is always produced from <a href="#column_bound_cell_value_extractors">Column bound cell value extractors.</a> column binding).</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Record row predicates are always represented by a predicate function that checks if currently processed record or custom row meets specific conditions.</p>
+</div>
+<div style="page-break-after: always;"></div>
+<div class="paragraph">
+<p>On API level we can define <code>row predicate</code> in following ways:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin"><i class="conum" data-value="1"></i><b>(1)</b>
+matching { &lt;predicate&gt; } assign {
+  // row attributes, cells definition
+}
+
+<i class="conum" data-value="2"></i><b>(2)</b>
+row({ &lt;predicate&gt; }) {
+  // row attributes, cells definition
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>First method seems to be closer to natural language but takes more space. Also it does not mention <code>row</code> so it may be not intuitive for some users.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Second method uses DSL keyword <strong>row</strong> in first place which is desired, but as long as we associate predicate with row builder where both are lambdas, we are forced to use syntax like <code>({ &#8230;&#8203; })</code> which I personally do not like in Kotlin.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_mixing_custom_rows_with_collection_elements">Mixing custom rows with collection elements.</h3>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
@@ -816,43 +881,44 @@ You can use row index predicate as follows:</p>
 <p>add user defined attributes,</p>
 </li>
 <li>
-<p>add custom renderers for already defined attribute,</p>
+<p>add custom renderers for already defined attributes,</p>
 </li>
 <li>
-<p>implement table export operations from scratch (e.g. html table, cli table, mock renderer for testing),</p>
+<p>implement table export operations from scratch (e.g., html table, cli table, mock renderer for testing),</p>
 </li>
 <li>
-<p>extend DSL type-safe builder APIS on all possible level.</p>
+<p>extend DSL type-safe builder APIS on all possible levels.</p>
 </li>
 </ul>
 </div>
 <div class="sect2">
-<h3 id="_implementing_new_table_export_operations">Implementing new table export operations.</h3>
+<h3 id="_implementing_table_export_operations_from_scratch">Implementing table export operations from scratch.</h3>
 <div class="paragraph">
-<p>In order to support new tabular file format you have to extend <code>ExportOperationsConfiguringFactory&lt;C, T, O&gt;</code> where:</p>
+<p>In order to support new tabular file format you will have to:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>C</code> stands for rendering context - which is usually wrapper around 3rd party api like Apache POI,</p>
+<p>Create <code>RenderingContext</code> class. It represents internal state and low-level API to communicate with 3rd party library like Apache POI. Object of that class is passed to all table export operations as well as to all attribute rendering operations that are registered by <code>ServiceLoader</code> infrastructure. Such common denominator element is required to enable table modifications coming from within various render operations.</p>
 </li>
 <li>
-<p><code>T</code> stands for object class representing element of exported collection,</p>
+<p>Create <code>OutputBinding</code> class. It defines transformation of <code>RenderingContext</code> into different kind out outputs. By separating <code>OutputBinding</code> from <code>RenderingContext</code> we can enable multiple outputs for particular <code>RenderingContext</code> class dynamically.</p>
 </li>
 <li>
-<p><code>O</code> stands for type of result of operation (e.g. <code>OutputStream</code> for Apache POI)</p>
+<p>Define <code>ExportOperationsProvider</code> or <code>ExportOperationsConfiguringFactory</code> depending on your scenario. If You don&#8217;t need to decouple attribute operations from table export operations (e.g., because supported format does not assumes attributes at all) You can implement <code>ExportOperationsProvider</code> interface and define all rendering logic in single class. For cases, where attributes needs to be rendered independently (e.g., because You want to support user-defined attributes) it is advised to extend <code>ExportOperationsConfiguringFactory</code>. For both scenarios You will have to create file <code>resource/META-INF/io.github.voytech.tabulate.template.spi.ExportOperationsProvider</code>, and put fully qualified class name of your custom factory in the first line. <strong>This step is required by a template in order to resolve your extension at run-time</strong>.</p>
 </li>
 </ul>
 </div>
+<div style="page-break-after: always;"></div>
 <div class="paragraph">
-<p>As long as tabulate uses java ServiceLoader infrastructure, You need to create file <code>resource/META-INF/io.github.voytech.tabulate.template.spi.ExportOperationsProvider</code>, and put fully qualified class name of your custom factory in the first line. <strong>This step is required by a template in order to resolve your extension at run-time</strong>.</p>
+<p>Below, basic CSV export operations implementation:</p>
 </div>
 <div class="paragraph">
-<p>Basic CSV implementation looks like this:</p>
+<p>First step is to define <code>RenderingContext</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin"><i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin"><i class="conum" data-value="1"></i><b>(1)</b>
 open class CsvRenderingContext: RenderingContext {
     private lateinit var bufferedWriter: BufferedWriter
     private val line = StringBuilder()
@@ -866,7 +932,7 @@ open class CsvRenderingContext: RenderingContext {
     }
 
     private fun AttributedCell.getSeparatorCharacter(): String =
-        attributes?.get(CellSeparatorCharacterAttribute::class.java)?.separator ?: &quot;,&quot;
+        attributes?.get(CellSeparatorCharacterAttribute::class.java)?.separator ?: ","
 
     fun &lt;T&gt; endRow(context: AttributedRowWithCells&lt;T&gt;) {
         val lastIndex = context.rowCellValues.size - 1
@@ -892,9 +958,13 @@ open class CsvRenderingContext: RenderingContext {
 </tr>
 </table>
 </div>
+<div style="page-break-after: always;"></div>
+<div class="paragraph">
+<p>Then we need to create at least one <code>OutputBinding</code> in order to be able to flush results int output:</p>
+</div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">class CsvOutputStreamOutputBinding : OutputStreamOutputBinding&lt;CsvRenderingContext&gt;() {
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class CsvOutputStreamOutputBinding : OutputStreamOutputBinding&lt;CsvRenderingContext&gt;() {
 
     override fun onBind(renderingContext: CsvRenderingContext, output: OutputStream) { <i class="conum" data-value="1"></i><b>(1)</b>
         renderingContext.doBind(output)
@@ -911,17 +981,21 @@ open class CsvRenderingContext: RenderingContext {
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The <code>.onBind</code> method wires particular rendering context instance with actual output representation (in this particular case it is an OutputStream). Method will be invoked internally by <code>TabulationTemplate</code> as soon as both: output and rendering context instances are available.</td>
+<td>The <code>.onBind</code> method is called internally by <code>TabulationTemplate</code> as soon as both: output and rendering context instances are available. It connects rendering context with particular output and allows implementing flush logic.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>The <code>.flush</code> dumps in-memory rendering context representation into output.</td>
+<td>The <code>.flush</code> dumps in-memory rendering context into given output.</td>
 </tr>
 </table>
 </div>
+<div style="page-break-after: always;"></div>
+<div class="paragraph">
+<p>Finally, we are implementing <code>ExportOperationsProvider</code> compatible with <code>RenderingCotnext</code> of choice:</p>
+</div>
 <div class="listingblock">
 <div class="content">
-<pre>class CsvExportOperationsFactory: ExportOperationsProvider&lt;CsvRenderingContext&gt; {
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class CsvExportOperationsFactory: ExportOperationsProvider&lt;CsvRenderingContext&gt; {
 
     override fun getContextClass(): Class&lt;CsvRenderingContext&gt; = CsvRenderingContext::class.java <i class="conum" data-value="1"></i><b>(1)</b>
 
@@ -936,8 +1010,6 @@ open class CsvRenderingContext: RenderingContext {
             renderingContext.startRow()
         }
 
-        override fun renderRowCell(renderingContext: CsvRenderingContext, context: AttributedCell) { }
-
         override fun &lt;T&gt; endRow(renderingContext: CsvRenderingContext, context: AttributedRowWithCells&lt;T&gt;) {
             renderingContext.endRow(context)
         }
@@ -946,62 +1018,63 @@ open class CsvRenderingContext: RenderingContext {
     <i class="conum" data-value="5"></i><b>(5)</b>
     override fun createOutputBindings(): List&lt;OutputBinding&lt;CsvRenderingContext, *&gt;&gt; = listOf(CsvOutputStreamOutputBinding())
 
-}</pre>
+}</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>1</td>
+<td>Define the <code>RenderingContext</code> compatible with export operation provider,</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>2</td>
+<td>Instantiate new <code>RenderingContext</code> instance. This instantiation always occurs at the very beginning,</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>3</td>
+<td>Declare <code>TabulationFormat</code>. It consists of file extension and provider identifier,</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>4</td>
+<td>This is the most important step. <strong>Here we implement actual table rendering logic</strong>,</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>5</td>
+<td>Finally - we need to provide list of supported outputs. Bare minimum should be at least <code>OutputStreamOutputBinding</code>.</td>
 </tr>
 </table>
 </div>
+<div style="page-break-after: always;"></div>
 <div class="paragraph">
-<p>If target tabular format supports styles, You may add support for rendering built-in attributes as follow:</p>
+<p>If target tabular format supports styles, You may add support for rendering built-in attributes as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">class ExampleExportOperationsConfiguringFactory&lt;T&gt; : ExportOperationsConfiguringFactory&lt;T, SomeRenderingContext&gt;() {
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class ExampleExportOperationsConfiguringFactory : ExportOperationsConfiguringFactory&lt;SomeRenderingContext&gt;() {
 
   ..
-  override fun getAttributeOperationsFactory(renderingContext: SomeRenderingContext): AttributeRenderOperationsFactory&lt;T&gt; =
-      StandardAttributeRenderOperationsFactory(renderingContext, object: StandardAttributeRenderOperationsProvider&lt;ApachePoiExcelFacade,T&gt;{
-          override fun createTemplateFileRenderer(renderingContext: ApachePoiExcelFacade): TableAttributeRenderOperation&lt;TemplateFileAttribute&gt; =
+  override fun getAttributeOperationsFactory(renderingContext: SomeRenderingContext): AttributeRenderOperationsFactory&lt;SomeRenderingContext&gt; =
+      object: StandardAttributeRenderOperationsProvider&lt;SomeRenderingContext&gt;{
+          override fun createTemplateFileRenderer(renderingContext: SomeRenderingContext): TableAttributeRenderOperation&lt;TemplateFileAttribute&gt; =
             TemplateFileAttributeRenderOperation(renderingContext)
 
-          override fun createColumnWidthRenderer(renderingContext: ApachePoiExcelFacade): ColumnAttributeRenderOperation&lt;ColumnWidthAttribute&gt; =
+          override fun createColumnWidthRenderer(renderingContext: SomeRenderingContext): ColumnAttributeRenderOperation&lt;ColumnWidthAttribute&gt; =
             ColumnWidthAttributeRenderOperation(renderingContext)
 
-          override fun createRowHeightRenderer(renderingContext: ApachePoiExcelFacade): RowAttributeRenderOperation&lt;T, RowHeightAttribute&gt; =
+          override fun createRowHeightRenderer(renderingContext: SomeRenderingContext): RowAttributeRenderOperation&lt;T, RowHeightAttribute&gt; =
             RowHeightAttributeRenderOperation(renderingContext)
 
-          override fun createCellTextStyleRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation&lt;CellTextStylesAttribute&gt; =
+          override fun createCellTextStyleRenderer(renderingContext: SomeRenderingContext): CellAttributeRenderOperation&lt;CellTextStylesAttribute&gt; =
             CellTextStylesAttributeRenderOperation(renderingContext)
 
-          override fun createCellBordersRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation&lt;CellBordersAttribute&gt; =
+          override fun createCellBordersRenderer(renderingContext: SomeRenderingContext): CellAttributeRenderOperation&lt;CellBordersAttribute&gt; =
             CellBordersAttributeRenderOperation(renderingContext)
 
-          override fun createCellAlignmentRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation&lt;CellAlignmentAttribute&gt; =
+          override fun createCellAlignmentRenderer(renderingContext: SomeRenderingContext): CellAttributeRenderOperation&lt;CellAlignmentAttribute&gt; =
             CellAlignmentAttributeRenderOperation(renderingContext)
 
-          override fun createCellBackgroundRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation&lt;CellBackgroundAttribute&gt; =
+          override fun createCellBackgroundRenderer(renderingContext: SomeRenderingContext): CellAttributeRenderOperation&lt;CellBackgroundAttribute&gt; =
             CellBackgroundAttributeRenderOperation(renderingContext)
       })
 }</code></pre>
@@ -1013,7 +1086,7 @@ If your file format allow additional attributes which are not present in standar
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">class ExampleExportOperationsConfiguringFactory&lt;T&gt; : ExportOperationsConfiguringFactory&lt;T,SomeRenderingContext&gt;() {
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class ExampleExportOperationsConfiguringFactory&lt;T&gt; : ExportOperationsConfiguringFactory&lt;T,SomeRenderingContext&gt;() {
 
   ...
   override fun getAttributeOperationsFactory(renderingContext: SomeRenderingContext): AttributeRenderOperationsFactory&lt;T&gt; =
@@ -1034,14 +1107,14 @@ If your file format allow additional attributes which are not present in standar
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">class CustomAttributeRendersOperationsProvider&lt;T&gt; : AttributeRenderOperationsProvider&lt;T,ApachePoiExcelFacade&gt; {
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class CustomAttributeRendersOperationsProvider : AttributeRenderOperationsProvider&lt;ApachePoiRenderingContext&gt; {
 
-    override fun getContextClass() = ApachePoiExcelFacade::class.java
+    override fun getContextClass() = ApachePoiRenderingContext::class.java
 
-    override fun getAttributeOperationsFactory(creationContext: ApachePoiExcelFacade): AttributeRenderOperationsFactory&lt;T&gt; {
-        return object : AttributeRenderOperationsFactory&lt;T&gt; {
+    override fun getAttributeOperationsFactory(renderingContext: ApachePoiRenderingContext): AttributeRenderOperationsFactory&lt;ApachePoiRenderingContext&gt; {
+        return object : AttributeRenderOperationsFactory&lt;ApachePoiRenderingContext&gt; {
             override fun createCellAttributeRenderOperations(): Set&lt;CellAttributeRenderOperation&lt;out CellAttributeAlias&gt;&gt; =
-                setOf(MarkerCellAttributeRenderOperation(creationContext))
+                setOf(MarkerCellAttributeRenderOperation(renderingContext))
         }
     }
 }</code></pre>
@@ -1052,28 +1125,22 @@ If your file format allow additional attributes which are not present in standar
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">data class MarkerCellAttribute(val text: String) : CellAttribute&lt;MarkerCellAttribute&gt;() {
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">data class MarkerCellAttribute(val text: String) : CellAttribute&lt;MarkerCellAttribute&gt;() {
 
-    class Builder(var text: String = &quot;&quot;) : CellAttributeBuilder&lt;MarkerCellAttribute&gt; {
+    class Builder(var text: String = "") : CellAttributeBuilder&lt;MarkerCellAttribute&gt; {
         override fun build(): MarkerCellAttribute = MarkerCellAttribute(text)
     }
 }
 
-class SimpleMarkerCellAttributeRenderOperation(poi: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation&lt;ApachePoiExcelFacade, SimpleTestCellAttribute&gt;(poi) {
+class SimpleMarkerCellAttributeRenderOperation  : CellAttributeRenderOperation&lt;ApachePoiRenderingContext, SimpleTestCellAttribute&gt;  {
 
-    override fun attributeType(): Class&lt;out MarkerCellAttribute&gt; = MarkerCellAttribute::class.java
+    override fun attributeType(): Class&lt;MarkerCellAttribute&gt; = MarkerCellAttribute::class.java
 
-    override fun renderAttribute(context: RowCellContext, attribute: MarkerCellAttribute) {
-        with(adaptee.assertCell(
-            context.getTableId(),
-            context.rowIndex,
-            context.columnIndex
-        )) {
-            this.setCellValue(&quot;${this.stringCellValue} [ ${attribute.label} ]&quot;)
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowCellContext, attribute: MarkerCellAttribute) {
+        with(renderingContext.assertCell(context.getTableId(), context.rowIndex, context.columnIndex)) {
+            this.setCellValue("${this.stringCellValue} [ ${attribute.label} ]")
         }
     }
-
 }
 
 fun &lt;T&gt; CellLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAttribute.Builder.() -&gt; Unit) =
@@ -1091,7 +1158,7 @@ fun &lt;T&gt; CellLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAttr
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">fun &lt;T&gt; ColumnLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAttribute.Builder.() -&gt; Unit) =
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">fun &lt;T&gt; ColumnLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAttribute.Builder.() -&gt; Unit) =
     attribute(MarkerCellAttribute.Builder().apply(block).build())
 fun &lt;T&gt; RowLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAttribute.Builder.() -&gt; Unit) =
   attribute(MarkerCellAttribute.Builder().apply(block).build())
@@ -1104,24 +1171,24 @@ fun &lt;T&gt; TableLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAtt
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">productList.tabulate(&quot;file.xlsx&quot;) {
-    name = &quot;Table id&quot;
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">productList.tabulate("file.xlsx") {
+    name = "Table id"
     attributes {
-      label { text = &quot;TABLE&quot; }
+      label { text = "TABLE" }
     }
     columns {
-        column(&quot;nr&quot;) {
-            attributes { label { text = &quot;COLUMN&quot; } }
+        column("nr") {
+            attributes { label { text = "COLUMN" } }
             ..
         }
     }
     rows {
         row {
-           attributes { label { text = &quot;ROW&quot; } }
-           cell(&quot;nr&quot;) {
-              value = &quot;Nr.:&quot;
+           attributes { label { text = "ROW" } }
+           cell("nr") {
+              value = "Nr.:"
               attributes {
-                attributes { label { text = &quot;CELL&quot; } }
+                attributes { label { text = "CELL" } }
               }
            }
             ..
@@ -1141,80 +1208,37 @@ fun &lt;T&gt; TableLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAtt
 </div>
 </div>
 <div class="sect1">
-<h2 id="_other_features">Other features</h2>
+<h2 id="_java_interop_fluent_builders_java_api">Java interop - fluent builders Java API.</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_java_interop_fluent_builders_java_api">Java interop - fluent builders Java API.</h3>
 <div class="paragraph">
 <p>Old-fashioned Java fluent builder API is also supported. It is needless to say it looks much less attractive:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">Table&lt;Employee&gt; employeeTable = Table.&lt;Employee&gt;builder()
-                .attribute(TemplateFileAttribute::builder, builder -&gt; builder.setFileName(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">file.xlsx</span><span style="color:#710">&quot;</span></span>))
-                .columns()
-                    .column(Employee::getId)
-                        .columnType(CellType.NUMERIC)
-                        .attribute(ColumnWidthAttribute::builder)
-                    .column(Employee::getFirstName)
-                        .columnType(CellType.STRING)
-                        .attribute(ColumnWidthAttribute::builder)
-                    .column(Employee::getLastName)
-                        .columnType(CellType.STRING)
-                        .attribute(ColumnWidthAttribute::builder)
-                .rows()
-                    .row()
-                        .attribute(RowHeightAttribute::builder, builder -&gt; builder.setPx(<span style="color:#00D">100</span>))
-                .build();</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Table&lt;Employee&gt; employeeTable = Table.&lt;Employee&gt;builder()
+		.attribute(TemplateFileAttribute::builder, builder -&gt; builder.setFileName("file.xlsx"))
+		.columns()
+		    .column(Employee::getId)
+		        .columnType(CellType.NUMERIC)
+		        .attribute(ColumnWidthAttribute::builder)
+		    .column(Employee::getFirstName)
+		        .columnType(CellType.STRING)
+		        .attribute(ColumnWidthAttribute::builder)
+		    .column(Employee::getLastName)
+		        .columnType(CellType.STRING)
+		        .attribute(ColumnWidthAttribute::builder)
+		.rows()
+		    .row()
+		        .attribute(RowHeightAttribute::builder, builder -&gt; builder.setPx(100))
+		.build();</code></pre>
 </div>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_custom_rows">Custom rows.</h3>
-<div class="paragraph">
-<p>Sometimes, in addition to records from collection - You need to add user defined rows.
-Table usually contains a header row or summary footer row.
-It is also possible to define interleaving custom rows at specified index or rows that match specific predicate.</p>
-</div>
-<div class="paragraph">
-<p>Row model allows to define custom cell values as well as cell styles and attributes only.
-It acts as glue for additional features for existing external source derived rows, or as a factory for standalone custom rows that can be hooked at definition time.</p>
-</div>
-<div class="paragraph">
-<p>Things You can achieve with row model in terms of custom rows includes:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>setting custom cell styles,</p>
-</li>
-<li>
-<p>setting row-level attributes (e.g., row height),</p>
-</li>
-<li>
-<p>defining row and col spans,</p>
-</li>
-<li>
-<p>inserting images,</p>
-</li>
-<li>
-<p>setting cell values of different types.</p>
-</li>
-</ul>
+<div style="page-break-after: always;"></div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_merging_rows">Merging rows.</h3>
-<div class="paragraph">
-<p>When multiple <code>Row</code> model definitions are qualified by a predicate, they form a single synthetic row. Following rules regarding row merge applies:
-- Row level attributes will be concatenated or merged if are of same type.
-- Cell values will be concatenated, or overriden by last cell occurence at given column.
-- Cell level attributes will be concatenated, or merged if of same type.
-- Two attributes of same type are merged by overriding clashing attribute properties from left to right where on left side stands attribute from higher level (e.g. row level), and on right site stands attribute from lower level (e.g. cell level).</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_library_of_attributes">Library of attributes.</h3>
+<div class="sect1">
+<h2 id="_library_of_attributes">Library of attributes.</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>You may need attributes for various reasons - for styling, for formatting or other custom hooks.</p>
 </div>
@@ -1277,14 +1301,14 @@ It acts as glue for additional features for existing external source derived row
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="kotlin">productsRepository.loadProductsByDate(now()).tabulate(&quot;product_with_styles.xlsx&quot;) {
-    name = &quot;Products table&quot;
+<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx") {
+    name = "Products table"
     columns {
         column(Product::code) {
             attributes(
                 width { auto = true },
                 text {
-                    fontFamily = &quot;Times New Roman&quot;
+                    fontFamily = "Times New Roman"
                     fontColor = Colors.BLACK
                     fontSize = 12
                 },
@@ -1294,7 +1318,7 @@ It acts as glue for additional features for existing external source derived row
         column(Product::distributionDate) {
             attributes(
                 width { auto = true },
-                dataFormat { value = &quot;dd.mm.YYYY&quot; }
+                dataFormat { value = "dd.mm.YYYY" }
             )
         }
     }
@@ -1302,7 +1326,7 @@ It acts as glue for additional features for existing external source derived row
         row {
             attributes(
                 text {
-                    fontFamily = &quot;Times New Roman&quot;
+                    fontFamily = "Times New Roman"
                     fontColor = Colors.BLACK
                     fontSize = 12
                 },
@@ -1313,15 +1337,94 @@ It acts as glue for additional features for existing external source derived row
 }</code></pre>
 </div>
 </div>
+<div style="page-break-after: always;"></div>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_advanced_concepts">Advanced concepts</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_custom_rows">Custom rows.</h3>
+<div class="paragraph">
+<p>Sometimes, in addition to records from collection - You need to add user defined rows.
+Table usually contains a header row or summary footer row.
+It is also possible to define interleaving custom rows at specified index or rows that match specific predicate.</p>
+</div>
+<div class="paragraph">
+<p>Row model allows to define custom cell values as well as cell styles and attributes only.
+It acts as glue for additional features for existing external source derived rows, or as a factory for standalone custom rows that can be hooked at definition time.</p>
+</div>
+<div class="paragraph">
+<p>Things You can achieve with row model in terms of custom rows includes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>setting custom cell styles,</p>
+</li>
+<li>
+<p>setting row-level attributes (e.g., row height),</p>
+</li>
+<li>
+<p>defining row and col spans,</p>
+</li>
+<li>
+<p>inserting images,</p>
+</li>
+<li>
+<p>setting cell values of different types.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>TBD.</p>
+</div>
+<div style="page-break-after: always;"></div>
+</div>
+<div class="sect2">
+<h3 id="_merging_rows">Merging rows.</h3>
+<div class="paragraph">
+<p>When multiple <code>Row</code> model definitions are qualified by a predicate, they form a single synthetic row. Following rules regarding row merge applies:
+- Row level attributes will be concatenated or merged if are of same type.
+- Cell values will be concatenated, or overriden by last cell occurence at given column.
+- Cell level attributes will be concatenated, or merged if of same type.
+- Two attributes of same type are merged by overriding clashing attribute properties from left to right where on left side stands attribute from higher level (e.g. row level), and on right site stands attribute from lower level (e.g. cell level).</p>
+</div>
+<div class="paragraph">
+<p>TBD.</p>
+</div>
+<div style="page-break-after: always;"></div>
+</div>
+<div class="sect2">
+<h3 id="_builder_composition">Builder composition</h3>
+<div class="paragraph">
+<p>TBD.</p>
+</div>
+<div style="page-break-after: always;"></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_cookbook_recipes">Cookbook recipes.</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>TBD.</p>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-02-18 18:42:29 +0100
+Last updated 2022-02-20 20:39:44 +0100
 </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+  hljs.initHighlighting.called = true
+  ;[].slice.call(document.querySelectorAll('pre.highlight > code')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
 </body>
 </html>

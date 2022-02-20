@@ -1,5 +1,6 @@
 = Tabulate
 :icons: font
+:source-highlighter: highlight.js
 by <wojmak@gmail.com>
 :toc:
 
@@ -230,10 +231,6 @@ row({ <predicate> }) {
 === Mixing custom rows with collection elements.
 
 <<<
-== Cookbook recipes.
-TBD.
-
-<<<
 == Extension points.
 
 I have put lots of effort to make **Tabulate** extensible. Currently, it is possible to:
@@ -305,8 +302,8 @@ class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingConte
     }
 }
 ----
-<1> The `.onBind` method wires particular rendering context instance with actual output representation (in this particular case it is an OutputStream). Method will be invoked internally by `TabulationTemplate` as soon as both: output and rendering context instances are available.
-<2> The `.flush` dumps in-memory rendering context representation into output.
+<1> The `.onBind` method is called internally by `TabulationTemplate` as soon as both: output and rendering context instances are available. It connects rendering context with particular output and allows implementing flush logic.
+<2> The `.flush` dumps in-memory rendering context into given output.
 
 <<<
 Finally, we are implementing `ExportOperationsProvider` compatible with `RenderingCotnext` of choice:
@@ -337,10 +334,10 @@ class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> 
 
 }
 ----
-<1> Define the `RenderingContext` class this export operation provider is compatible with,
-<2> Instantiate new `RenderingContext` instance. This instantiation occurs always at the very beginning.
-<3> Declare compatible `TabulationFormat`. It is a descriptor consisting from file extension string, and from export operation provider identifier.
-<4> This is the most important step. Here we can implement actual table rendering logic.
+<1> Define the `RenderingContext` compatible with export operation provider,
+<2> Instantiate new `RenderingContext` instance. This instantiation always occurs at the very beginning,
+<3> Declare `TabulationFormat`. It consists of file extension and provider identifier,
+<4> This is the most important step. *Here we implement actual table rendering logic*,
 <5> Finally - we need to provide list of supported outputs. Bare minimum should be at least `OutputStreamOutputBinding`.
 
 <<<
@@ -348,30 +345,30 @@ If target tabular format supports styles, You may add support for rendering buil
 
 [source,kotlin]
 ----
-class ExampleExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFactory<T, SomeRenderingContext>() {
+class ExampleExportOperationsConfiguringFactory : ExportOperationsConfiguringFactory<SomeRenderingContext>() {
 
   ..
-  override fun getAttributeOperationsFactory(renderingContext: SomeRenderingContext): AttributeRenderOperationsFactory<T> =
-      StandardAttributeRenderOperationsFactory(renderingContext, object: StandardAttributeRenderOperationsProvider<ApachePoiExcelFacade,T>{
-          override fun createTemplateFileRenderer(renderingContext: ApachePoiExcelFacade): TableAttributeRenderOperation<TemplateFileAttribute> =
+  override fun getAttributeOperationsFactory(renderingContext: SomeRenderingContext): AttributeRenderOperationsFactory<SomeRenderingContext> =
+      object: StandardAttributeRenderOperationsProvider<SomeRenderingContext>{
+          override fun createTemplateFileRenderer(renderingContext: SomeRenderingContext): TableAttributeRenderOperation<TemplateFileAttribute> =
             TemplateFileAttributeRenderOperation(renderingContext)
 
-          override fun createColumnWidthRenderer(renderingContext: ApachePoiExcelFacade): ColumnAttributeRenderOperation<ColumnWidthAttribute> =
+          override fun createColumnWidthRenderer(renderingContext: SomeRenderingContext): ColumnAttributeRenderOperation<ColumnWidthAttribute> =
             ColumnWidthAttributeRenderOperation(renderingContext)
 
-          override fun createRowHeightRenderer(renderingContext: ApachePoiExcelFacade): RowAttributeRenderOperation<T, RowHeightAttribute> =
+          override fun createRowHeightRenderer(renderingContext: SomeRenderingContext): RowAttributeRenderOperation<T, RowHeightAttribute> =
             RowHeightAttributeRenderOperation(renderingContext)
 
-          override fun createCellTextStyleRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellTextStylesAttribute> =
+          override fun createCellTextStyleRenderer(renderingContext: SomeRenderingContext): CellAttributeRenderOperation<CellTextStylesAttribute> =
             CellTextStylesAttributeRenderOperation(renderingContext)
 
-          override fun createCellBordersRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellBordersAttribute> =
+          override fun createCellBordersRenderer(renderingContext: SomeRenderingContext): CellAttributeRenderOperation<CellBordersAttribute> =
             CellBordersAttributeRenderOperation(renderingContext)
 
-          override fun createCellAlignmentRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellAlignmentAttribute> =
+          override fun createCellAlignmentRenderer(renderingContext: SomeRenderingContext): CellAttributeRenderOperation<CellAlignmentAttribute> =
             CellAlignmentAttributeRenderOperation(renderingContext)
 
-          override fun createCellBackgroundRenderer(renderingContext: ApachePoiExcelFacade): CellAttributeRenderOperation<CellBackgroundAttribute> =
+          override fun createCellBackgroundRenderer(renderingContext: SomeRenderingContext): CellAttributeRenderOperation<CellBackgroundAttribute> =
             CellBackgroundAttributeRenderOperation(renderingContext)
       })
 }
@@ -444,17 +441,20 @@ Finally, You need to create file `resource/META-INF/io.github.voytech.tabulate.t
 
 In the last section You saw how to define custom user attributes. The last step involves creating extension function on specific DSL attribute API. As DSL builder class name suggests (`CellLevelAttributesBuilderApi<T>`) this builder is part of a Cell DSL API only , which means that it won't be possible to add this attribute on row, column and table. You can leverage this behaviour for restricting say 'mounting points' of specific attributes. In order to enable cell attribute on all levels You will need to add more extension functions:
 
-```kotlin
+[source,kotlin]
+----
 fun <T> ColumnLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builder.() -> Unit) =
     attribute(MarkerCellAttribute.Builder().apply(block).build())
 fun <T> RowLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builder.() -> Unit) =
   attribute(MarkerCellAttribute.Builder().apply(block).build())
 fun <T> TableLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builder.() -> Unit) =
   attribute(MarkerCellAttribute.Builder().apply(block).build())
-```
+----
+
 Now You can call `label` on all DSL API levels in `attributes` scope like:
 
-```kotlin
+[source,kotlin]
+----
 productList.tabulate("file.xlsx") {
     name = "Table id"
     attributes {
@@ -479,17 +479,14 @@ productList.tabulate("file.xlsx") {
         }
     }
 }
-```
+----
 The result of above configuration will be as such:
 - In the first row, cell at a column with id "nr" will end with `[ CELL ]`, and rest of cells will end with `[ ROW ]`,
 - Remaining cells (starting from second row) in a column with id "nr" will end with `[ COLUMN ]`,
 - All remaining cells will end with `[ TABLE ]`.
 
 <<<
-== Other features
-
-
-=== Java interop - fluent builders Java API.
+== Java interop - fluent builders Java API.
 Old-fashioned Java fluent builder API is also supported. It is needless to say it looks much less attractive:
 
 [source,java]
@@ -512,32 +509,8 @@ Table<Employee> employeeTable = Table.<Employee>builder()
 		.build();
 ----
 
-=== Custom rows.
-
-Sometimes, in addition to records from collection - You need to add user defined rows.
-Table usually contains a header row or summary footer row.
-It is also possible to define interleaving custom rows at specified index or rows that match specific predicate.
-
-Row model allows to define custom cell values as well as cell styles and attributes only.
-It acts as glue for additional features for existing external source derived rows, or as a factory for standalone custom rows that can be hooked at definition time.
-
-Things You can achieve with row model in terms of custom rows includes:
-
-- setting custom cell styles,
-- setting row-level attributes (e.g., row height),
-- defining row and col spans,
-- inserting images,
-- setting cell values of different types.
-
-=== Merging rows.
-
-When multiple `Row` model definitions are qualified by a predicate, they form a single synthetic row. Following rules regarding row merge applies:
-- Row level attributes will be concatenated or merged if are of same type.
-- Cell values will be concatenated, or overriden by last cell occurence at given column.
-- Cell level attributes will be concatenated, or merged if of same type.
-- Two attributes of same type are merged by overriding clashing attribute properties from left to right where on left side stands attribute from higher level (e.g. row level), and on right site stands attribute from lower level (e.g. cell level).
-
-=== Library of attributes.
+<<<
+== Library of attributes.
 
 You may need attributes for various reasons - for styling, for formatting or other custom hooks.
 
@@ -560,7 +533,8 @@ Currently, with `tabulate-core` and `tabulate-excel` modules, you will get follo
 - `CellAlignmentAttribute` - sets text vertical and horizontal alignment
 
 Typical usage scenario for attributes:
-```kotlin
+[source,kotlin]
+----
 productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx") {
     name = "Products table"
     columns {
@@ -595,5 +569,46 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
         }
     }
 }
-```
+----
 
+<<<
+== Advanced concepts
+
+=== Custom rows.
+
+Sometimes, in addition to records from collection - You need to add user defined rows.
+Table usually contains a header row or summary footer row.
+It is also possible to define interleaving custom rows at specified index or rows that match specific predicate.
+
+Row model allows to define custom cell values as well as cell styles and attributes only.
+It acts as glue for additional features for existing external source derived rows, or as a factory for standalone custom rows that can be hooked at definition time.
+
+Things You can achieve with row model in terms of custom rows includes:
+
+- setting custom cell styles,
+- setting row-level attributes (e.g., row height),
+- defining row and col spans,
+- inserting images,
+- setting cell values of different types.
+
+TBD.
+
+<<<
+=== Merging rows.
+
+When multiple `Row` model definitions are qualified by a predicate, they form a single synthetic row. Following rules regarding row merge applies:
+- Row level attributes will be concatenated or merged if are of same type.
+- Cell values will be concatenated, or overriden by last cell occurence at given column.
+- Cell level attributes will be concatenated, or merged if of same type.
+- Two attributes of same type are merged by overriding clashing attribute properties from left to right where on left side stands attribute from higher level (e.g. row level), and on right site stands attribute from lower level (e.g. cell level).
+
+TBD.
+
+<<<
+=== Builder composition
+TBD.
+
+<<<
+== Cookbook recipes.
+
+TBD.
