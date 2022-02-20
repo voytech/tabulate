@@ -12,10 +12,10 @@ import java.util.*
  * @since 0.1.0
  */
 interface AttributedContextExportOperations<CTX: RenderingContext> {
-    fun createTable(renderingContext: CTX, context: AttributedTable)
+    fun createTable(renderingContext: CTX, context: AttributedTable) {}
     fun renderColumn(renderingContext: CTX, context: AttributedColumn) {}
     fun beginRow(renderingContext: CTX, context: AttributedRow) {}
-    fun renderRowCell(renderingContext: CTX, context: AttributedCell)
+    fun renderRowCell(renderingContext: CTX, context: AttributedCell) {}
     fun <T> endRow(renderingContext: CTX, context: AttributedRowWithCells<T>) {}
 }
 

@@ -209,6 +209,7 @@ Record predicates differs from `row index predicates` in that they cannot be use
 
 Record row predicates are always represented by a predicate function that checks if currently processed record or custom row meets specific conditions.
 
+<<<
 On API level we can define `row predicate` in following ways:
 
 [source,kotlin]
@@ -238,27 +239,21 @@ TBD.
 I have put lots of effort to make **Tabulate** extensible. Currently, it is possible to:
 
 - add user defined attributes,
-- add custom renderers for already defined attribute,
+- add custom renderers for already defined attributes,
 - implement table export operations from scratch (e.g., html table, cli table, mock renderer for testing),
 - extend DSL type-safe builder APIS on all possible levels.
 
 === Implementing table export operations from scratch.
-In order to support new tabular file format you have to extend `ExportOperationsConfiguringFactory<C, T, O>` where:
+In order to support new tabular file format you will have to:
 
-- `C` stands for rendering context - which is usually wrapper around 3rd party api like Apache POI,
-- `T` stands for object class representing element of exported collection,
-- `O` stands for type of result of operation (e.g. `OutputStream` for Apache POI)
+- Create `RenderingContext` class. It represents internal state and low-level API to communicate with 3rd party library like Apache POI. Object of that class is passed to all table export operations as well as to all attribute rendering operations that are registered by `ServiceLoader` infrastructure. Such common denominator element is required to enable table modifications coming from within various render operations.
+- Create `OutputBinding` class. It defines transformation of `RenderingContext` into different kind out outputs. By separating `OutputBinding` from `RenderingContext` we can enable multiple outputs for particular `RenderingContext` class dynamically.
+- Define `ExportOperationsProvider` or `ExportOperationsConfiguringFactory` depending on your scenario. If You don't need to decouple attribute operations from table export operations (e.g., because supported format does not assumes attributes at all) You can implement `ExportOperationsProvider` interface and define all rendering logic in single class. For cases, where attributes needs to be rendered independently (e.g., because You want to support user-defined attributes) it is advised to extend `ExportOperationsConfiguringFactory`. For both scenarios You will have to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.ExportOperationsProvider`, and put fully qualified class name of your custom factory in the first line. **This step is required by a template in order to resolve your extension at run-time**.
 
-As long as tabulate uses java `ServiceLoader` infrastructure, You need to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.ExportOperationsProvider`, and put fully qualified class name of your custom factory in the first line. **This step is required by a template in order to resolve your extension at run-time**.
-
-Implementing table export operations from scratch will require few steps:
-
- - Creating `RenderingContext` class. It represents internal state and low-level API to communicate with 3rd party library like Apache POI. Object of that class is passed to all table export operations as well as to all attribute rendering operations in order to enable resulting table modifications.
- - Creating `OutputBinding` class. It defines transformation of `RenderingContext` into different kind out outputs.
- - Defining `ExportOperationsProvider` or `ExportOperationsConfiguringFactory` depending on your scenario.
-
+<<<
 Below, basic CSV export operations implementation:
 
+First step is to define `RenderingContext`:
 [source,kotlin]
 ----
 // <1>
@@ -294,6 +289,8 @@ open class CsvRenderingContext: RenderingContext {
 ----
 <1> `CsvRenderingContext` implements `RenderingContext` marker interface and provides logic and state responsible for generating table in selected format. It is a common denominator used as argument of all export operation methods in order to share rendering state and allow interaction with it.
 
+<<<
+Then we need to create at least one `OutputBinding` in order to be able to flush results int output:
 [source,kotlin]
 ----
 class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingContext>() {
@@ -310,6 +307,9 @@ class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingConte
 ----
 <1> The `.onBind` method wires particular rendering context instance with actual output representation (in this particular case it is an OutputStream). Method will be invoked internally by `TabulationTemplate` as soon as both: output and rendering context instances are available.
 <2> The `.flush` dumps in-memory rendering context representation into output.
+
+<<<
+Finally, we are implementing `ExportOperationsProvider` compatible with `RenderingCotnext` of choice:
 [source,kotlin]
 ----
 class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> {
@@ -327,8 +327,6 @@ class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> 
             renderingContext.startRow()
         }
 
-        override fun renderRowCell(renderingContext: CsvRenderingContext, context: AttributedCell) { }
-
         override fun <T> endRow(renderingContext: CsvRenderingContext, context: AttributedRowWithCells<T>) {
             renderingContext.endRow(context)
         }
@@ -339,13 +337,14 @@ class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> 
 
 }
 ----
-<1> 1
-<2> 2
-<3> 3
-<4> 4
-<5> 5
+<1> Define the `RenderingContext` class this export operation provider is compatible with,
+<2> Instantiate new `RenderingContext` instance. This instantiation occurs always at the very beginning.
+<3> Declare compatible `TabulationFormat`. It is a descriptor consisting from file extension string, and from export operation provider identifier.
+<4> This is the most important step. Here we can implement actual table rendering logic.
+<5> Finally - we need to provide list of supported outputs. Bare minimum should be at least `OutputStreamOutputBinding`.
 
-If target tabular format supports styles, You may add support for rendering built-in attributes as follow:
+<<<
+If target tabular format supports styles, You may add support for rendering built-in attributes as follows:
 
 [source,kotlin]
 ----

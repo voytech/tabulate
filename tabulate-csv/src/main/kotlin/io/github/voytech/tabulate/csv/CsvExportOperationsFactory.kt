@@ -4,7 +4,10 @@ import io.github.voytech.tabulate.csv.attributes.CellSeparatorCharacterAttribute
 import io.github.voytech.tabulate.template.TabulationFormat
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.context.RenderingContext
-import io.github.voytech.tabulate.template.operations.*
+import io.github.voytech.tabulate.template.operations.AttributedCell
+import io.github.voytech.tabulate.template.operations.AttributedContextExportOperations
+import io.github.voytech.tabulate.template.operations.AttributedRow
+import io.github.voytech.tabulate.template.operations.AttributedRowWithCells
 import io.github.voytech.tabulate.template.result.OutputBinding
 import io.github.voytech.tabulate.template.result.OutputStreamOutputBinding
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
@@ -78,16 +81,8 @@ class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> 
 
     override fun createExportOperations(): AttributedContextExportOperations<CsvRenderingContext> = object : AttributedContextExportOperations<CsvRenderingContext> {
 
-        override fun createTable(renderingContext: CsvRenderingContext, context: AttributedTable) {
-
-        }
-
         override fun beginRow(renderingContext: CsvRenderingContext, context: AttributedRow) {
             renderingContext.startRow()
-        }
-
-        override fun renderRowCell(renderingContext: CsvRenderingContext, context: AttributedCell) {
-
         }
 
         override fun <T> endRow(renderingContext: CsvRenderingContext, context: AttributedRowWithCells<T>) {
