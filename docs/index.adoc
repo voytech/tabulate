@@ -6,7 +6,7 @@ by <wojmak@gmail.com>
 <<<
 == Introduction
 
-Exporting data to external file formats can be tedious and cumbersome - especially when business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. In such cases You want to hide implementation details using abstractions, but this is additional effort which is not desirable.
+Exporting data to tabular file formats can be tedious and cumbersome - especially when business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. In such cases You want to hide implementation details using abstractions, but this is additional effort which is not desirable.
 
 `Tabulate` tries to mitigate above problems with the help of `Kotlin`, its `type-safe DSL builders` and `extension functions`.
 
@@ -21,7 +21,7 @@ Table model defines how table will look like after data exporting. Its building 
 - `row cell` - defines cell within row. Cell is bound to a column via column id,
 - `attribute` - introduces extensions to basic presentation capabilities.
 
-Table model is internal concept and is not exposed to API consumers (Only attribute model can be exposed as it is fully customisable). Table is always constructed using table builders as follows:
+Table model is internal concept and is not exposed to API consumers (only `attributes model` can be exposed as it is extensible and customizable). Table is always built using table builders as follows:
 
 [source,kotlin]
 ----
@@ -37,10 +37,10 @@ productList.tabulate("file.xlsx") {
     }
 }
 ----
-<1> Firstly we give the table name. It can be used by exporter e.g. to add metadata like sheet name.
+<1> Firstly we give the table name. It can be used by exporter e.g., to add metadata like sheet name.
 <2> Secondly we can provide column definitions. Column definition can be used to aggregate `ColumnAttributes` as well as `CellAttributes`. All attributes associated with particular column will apply to each cell in that column. Specifying column can also help to make table layout more readable.
 <3> Next step is to define table rows. Here we can create additional custom rows (like header or footer) or enhance table look and feel with attributes associated with particular row.
-<4> Each row can contain as many cells as many columns exist. Similarily to `row`, `cell` may be used to associate cell attributes with selected cell within row. You can also create cell with custom predefined or computed value.
+<4> Each row can contain as many cells as many columns exist. Similarly to `row` - `cell` may be used to assign cell attributes with selected cell within row. You can also create cell with custom predefined or computed value.
 
 Above, we have created table definition with single column and one row with single cell.
 Cell binds to column by column identifier which in our case is represented by simple text id "nr".
@@ -176,6 +176,8 @@ Property getter as column key kills two birds with one stone:
 
 === Row predicates. [[row_predicates]]
 
+==== Row index predicates.
+
 You have already seen how `.header` extension function is implemented. Internally it invokes `.newRow(0)` which requests rendering of a row at index `0`. What if You want to apply entire row definition for several indices ?
 You may repeat `.newRow()` invokation as many times as required, but there is better option.
 You can use row index predicate as follows:
@@ -198,6 +200,37 @@ newRow({ gt(0) and lt(100) }) {
 }
 ----
 
+==== Record row predicates
+
+Record predicates differs from `row index predicates` in that they cannot be used to insert new custom rows. They can only enrich *existing* row, that is:
+
+ - custom row that is created by `newRow` API method,
+ - or a row that is derived from collection element (it is always produced from <<column_bound_cell_value_extractors>> column binding).
+
+Record row predicates are always represented by a predicate function that checks if currently processed record or custom row meets specific conditions.
+
+On API level we can define `row predicate` in following ways:
+
+[source,kotlin]
+----
+// <1>
+matching { <predicate> } assign {
+  // row attributes, cells definition
+}
+
+// <2>
+row({ <predicate> }) {
+  // row attributes, cells definition
+}
+----
+<1> First method seems to be closer to natural language but takes more space. Also it does not mention `row` so it may be not intuitive for some users.
+<2> Second method uses DSL keyword **row** in first place which is desired, but as long as we associate predicate with row builder where both are lambdas, we are forced to use syntax like `({ ... })` which I personally do not like in Kotlin.
+
+=== Mixing custom rows with collection elements.
+
+<<<
+== Cookbook recipes.
+TBD.
 
 <<<
 == Extension points.
@@ -206,19 +239,25 @@ I have put lots of effort to make **Tabulate** extensible. Currently, it is poss
 
 - add user defined attributes,
 - add custom renderers for already defined attribute,
-- implement table export operations from scratch (e.g. html table, cli table, mock renderer for testing),
-- extend DSL type-safe builder APIS on all possible level.
+- implement table export operations from scratch (e.g., html table, cli table, mock renderer for testing),
+- extend DSL type-safe builder APIS on all possible levels.
 
-=== Implementing new table export operations.
+=== Implementing table export operations from scratch.
 In order to support new tabular file format you have to extend `ExportOperationsConfiguringFactory<C, T, O>` where:
 
 - `C` stands for rendering context - which is usually wrapper around 3rd party api like Apache POI,
 - `T` stands for object class representing element of exported collection,
 - `O` stands for type of result of operation (e.g. `OutputStream` for Apache POI)
 
-As long as tabulate uses java ServiceLoader infrastructure, You need to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.ExportOperationsProvider`, and put fully qualified class name of your custom factory in the first line. **This step is required by a template in order to resolve your extension at run-time**.
+As long as tabulate uses java `ServiceLoader` infrastructure, You need to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.ExportOperationsProvider`, and put fully qualified class name of your custom factory in the first line. **This step is required by a template in order to resolve your extension at run-time**.
 
-Basic CSV implementation looks like this:
+Implementing table export operations from scratch will require few steps:
+
+ - Creating `RenderingContext` class. It represents internal state and low-level API to communicate with 3rd party library like Apache POI. Object of that class is passed to all table export operations as well as to all attribute rendering operations in order to enable resulting table modifications.
+ - Creating `OutputBinding` class. It defines transformation of `RenderingContext` into different kind out outputs.
+ - Defining `ExportOperationsProvider` or `ExportOperationsConfiguringFactory` depending on your scenario.
+
+Below, basic CSV export operations implementation:
 
 [source,kotlin]
 ----
@@ -359,23 +398,25 @@ class ExampleExportOperationsConfiguringFactory<T> : ExportOperationsConfiguring
 === Registering new attribute types for existing export operations.
 It is possible that you have requirements which cannot be achieved with standard set of attributes, and your code is in different compilation unit than specific table export operation implementation. Assume You want to use existing Apache POI excel table exporter, but there is lack of certain attribute support. In such situation - You can still register attribute by implementing another service provider interface - `AttributeRenderOperationsProvider`:
 
-```kotlin
-class CustomAttributeRendersOperationsProvider<T> : AttributeRenderOperationsProvider<T,ApachePoiExcelFacade> {
+[source,kotlin]
+----
+class CustomAttributeRendersOperationsProvider : AttributeRenderOperationsProvider<ApachePoiRenderingContext> {
 
-    override fun getContextClass() = ApachePoiExcelFacade::class.java
+    override fun getContextClass() = ApachePoiRenderingContext::class.java
 
-    override fun getAttributeOperationsFactory(creationContext: ApachePoiExcelFacade): AttributeRenderOperationsFactory<T> {
-        return object : AttributeRenderOperationsFactory<T> {
+    override fun getAttributeOperationsFactory(renderingContext: ApachePoiRenderingContext): AttributeRenderOperationsFactory<ApachePoiRenderingContext> {
+        return object : AttributeRenderOperationsFactory<ApachePoiRenderingContext> {
             override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<out CellAttributeAlias>> =
-                setOf(MarkerCellAttributeRenderOperation(creationContext))
+                setOf(MarkerCellAttributeRenderOperation(renderingContext))
         }
     }
 }
+----
 
-```
 After creating factory - You need to implement particular attribute together with DSL API extension function and attribute render operation to instruct 3rd party Apache Poi API on how to proceed.
 
-```kotlin
+[source,kotlin]
+----
 data class MarkerCellAttribute(val text: String) : CellAttribute<MarkerCellAttribute>() {
 
     class Builder(var text: String = "") : CellAttributeBuilder<MarkerCellAttribute> {
@@ -383,26 +424,21 @@ data class MarkerCellAttribute(val text: String) : CellAttribute<MarkerCellAttri
     }
 }
 
-class SimpleMarkerCellAttributeRenderOperation(poi: ApachePoiExcelFacade) :
-    AdaptingCellAttributeRenderOperation<ApachePoiExcelFacade, SimpleTestCellAttribute>(poi) {
+class SimpleMarkerCellAttributeRenderOperation  : CellAttributeRenderOperation<ApachePoiRenderingContext, SimpleTestCellAttribute>  {
 
-    override fun attributeType(): Class<out MarkerCellAttribute> = MarkerCellAttribute::class.java
+    override fun attributeType(): Class<MarkerCellAttribute> = MarkerCellAttribute::class.java
 
-    override fun renderAttribute(context: RowCellContext, attribute: MarkerCellAttribute) {
-        with(adaptee.assertCell(
-            context.getTableId(),
-            context.rowIndex,
-            context.columnIndex
-        )) {
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowCellContext, attribute: MarkerCellAttribute) {
+        with(renderingContext.assertCell(context.getTableId(), context.rowIndex, context.columnIndex)) {
             this.setCellValue("${this.stringCellValue} [ ${attribute.label} ]")
         }
     }
-
 }
 
 fun <T> CellLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builder.() -> Unit) =
     attribute(MarkerCellAttribute.Builder().apply(block))
-```
+----
+
 Finally, You need to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider`, and put fully qualified class name of our factory in it.
 
 === Extending Table DSL API
