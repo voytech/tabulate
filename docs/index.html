@@ -478,9 +478,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#_advanced_concepts">Advanced concepts</a>
 <ul class="sectlevel2">
-<li><a href="#_custom_rows">Custom rows.</a></li>
 <li><a href="#_merging_rows">Merging rows.</a></li>
-<li><a href="#_builder_composition">Builder composition</a></li>
+<li><a href="#_builder_composition">Builder composition.</a></li>
 </ul>
 </li>
 <li><a href="#_cookbook_recipes">Cookbook recipes.</a></li>
@@ -568,7 +567,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="paragraph">
 <p>Above, we have created table definition with single column and one row with single cell.
-Cell binds to column by column identifier which in our case is represented by simple text id "nr".</p>
+Cell binds to column by column identifier which in our case is simple text identifier.</p>
 </div>
 <div class="paragraph">
 <p>This is very basic example. In order to gain more powers You will need to start using <code>attributes</code>.</p>
@@ -621,7 +620,7 @@ Cell binds to column by column identifier which in our case is represented by si
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Top level table attribute <code>TableAttribute</code> applicable only for excel file format</td>
+<td>Top level table attribute <code>TableAttribute</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -641,7 +640,7 @@ Cell binds to column by column identifier which in our case is represented by si
 <div class="sect2">
 <h3 id="_table_dsl_api_type_safe_builders">Table DSL API - type-safe builders.</h3>
 <div class="paragraph">
-<p>Kotlin type-safe builders fits well into describing table structure. It makes source code look more concise and readable and makes dev tasks much easier. At coding time, your IDE makes use of type-safety offered by builders and shows completion hints which elevates developer experience. Almost zero documentation is required to start. You can start playing with the API right now.</p>
+<p>Kotlin type-safe builders fit well into describing table structure. They make source code look more concise and readable and developement becomes easier. At coding time, your IDE makes use of type-safety offered by builders and shows completion hints which elevates developer experience. Almost zero documentation is required to start. You can start playing with the API right now.</p>
 </div>
 <div class="paragraph">
 <p>DSL functions by convention take <code>lambda with receivers</code> as arguments which abstract away internal API instantiation details from consumers. Within lambda you can call other API methods which in turn, can take downstream builders as arguments. This way - we can end up having multi-level DSL API structure, where each level is extensible via Kotlin extension functions. On each DSL level You are allowed to invoke receiver scope methods and access lexical scope variables which can lead to interesting results:</p>
@@ -781,7 +780,7 @@ This creates object property to column binding which is applied later at run tim
 <h4 id="_row_index_predicates">Row index predicates.</h4>
 <div class="paragraph">
 <p>You have already seen how <code>.header</code> extension function is implemented. Internally it invokes <code>.newRow(0)</code> which requests rendering of a row at index <code>0</code>. What if You want to apply entire row definition for several indices ?
-You may repeat <code>.newRow()</code> invokation as many times as required, but there is better option.
+You may repeat <code>.newRow()</code> invocation as many times as required, but there is better option.
 You can use row index predicate as follows:</p>
 </div>
 <div class="listingblock">
@@ -834,7 +833,7 @@ You can use row index predicate as follows:</p>
 </div>
 <div style="page-break-after: always;"></div>
 <div class="paragraph">
-<p>On API level we can define <code>row predicate</code> in following ways:</p>
+<p>On API level we can define <code>row predicate</code> in two ways:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -865,6 +864,52 @@ row({ &lt;predicate&gt; }) {
 </div>
 <div class="sect2">
 <h3 id="_mixing_custom_rows_with_collection_elements">Mixing custom rows with collection elements.</h3>
+<div class="paragraph">
+<p><code>Tabulate</code> makes it possible to define static table consisting only from custom rows that are all known at build time.
+It also allows You to generate table where each row is dynamically computed from collection of any type.
+What is more, there is nothing that stops You from using both techniques for single table export:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">contracts.tabulate("contracts.xlsx") {
+    name = "Active Contracts"
+    <i class="conum" data-value="1"></i><b>(1)</b>
+    columns {
+        column(Contract::client)
+        column(Contract::contractCode)
+        column(Contract::contractLength)
+        column(Contract::dateSigned)
+    }
+    rows {
+        <i class="conum" data-value="2"></i><b>(2)</b>
+        header {
+            columnTitles(
+                "Client",
+                "Code",
+                "Contract Length",
+                "Date Signed",
+            )
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>In order to export collection of elements, all we need to do is do define column bindings with getter property references as identifiers. As long as there are no custom row defined in 'row' section, all rows
+in table will be the rows originating from collection of elements.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>If You declare custom row at specific index (or matching index predicate), then it will take precedence over dynamic rows generated from collection. So if You declare <code>header</code> row it will be the very first row in exported table, but when You write <code>newRow(2)</code> - this will insert custom row at third index and rows 0 and 1 will be reserved for collection elements.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>There are still cases where this flexibility is not enough. How can we define custom row that will be inserted after all collection elements ?</p>
+</div>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
@@ -1345,44 +1390,6 @@ fun &lt;T&gt; TableLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAtt
 <h2 id="_advanced_concepts">Advanced concepts</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_custom_rows">Custom rows.</h3>
-<div class="paragraph">
-<p>Sometimes, in addition to records from collection - You need to add user defined rows.
-Table usually contains a header row or summary footer row.
-It is also possible to define interleaving custom rows at specified index or rows that match specific predicate.</p>
-</div>
-<div class="paragraph">
-<p>Row model allows to define custom cell values as well as cell styles and attributes only.
-It acts as glue for additional features for existing external source derived rows, or as a factory for standalone custom rows that can be hooked at definition time.</p>
-</div>
-<div class="paragraph">
-<p>Things You can achieve with row model in terms of custom rows includes:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>setting custom cell styles,</p>
-</li>
-<li>
-<p>setting row-level attributes (e.g., row height),</p>
-</li>
-<li>
-<p>defining row and col spans,</p>
-</li>
-<li>
-<p>inserting images,</p>
-</li>
-<li>
-<p>setting cell values of different types.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>TBD.</p>
-</div>
-<div style="page-break-after: always;"></div>
-</div>
-<div class="sect2">
 <h3 id="_merging_rows">Merging rows.</h3>
 <div class="paragraph">
 <p>When multiple <code>Row</code> model definitions are qualified by a predicate, they form a single synthetic row. Following rules regarding row merge applies:
@@ -1397,7 +1404,7 @@ It acts as glue for additional features for existing external source derived row
 <div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
-<h3 id="_builder_composition">Builder composition</h3>
+<h3 id="_builder_composition">Builder composition.</h3>
 <div class="paragraph">
 <p>TBD.</p>
 </div>
@@ -1416,7 +1423,7 @@ It acts as glue for additional features for existing external source derived row
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-02-23 21:10:25 +0100
+Last updated 2022-02-23 22:08:04 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

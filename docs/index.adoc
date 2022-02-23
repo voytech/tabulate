@@ -44,7 +44,7 @@ productList.tabulate("file.xlsx") {
 <4> Each row can contain as many cells as many columns exist. Similarly to `row` - `cell` may be used to assign cell attributes with selected cell within row. You can also create cell with custom predefined or computed value.
 
 Above, we have created table definition with single column and one row with single cell.
-Cell binds to column by column identifier which in our case is represented by simple text id "nr".
+Cell binds to column by column identifier which in our case is simple text identifier.
 
 This is very basic example. In order to gain more powers You will need to start using `attributes`.
 
@@ -88,14 +88,14 @@ productList.tabulate("file.xlsx") {
     }
 }
 ----
-<1> Top level table attribute `TableAttribute` applicable only for excel file format
+<1> Top level table attribute `TableAttribute`.
 <2> Column level `ColumnAttribute` that defines width of entire column
 <3> Column level `CellAttribute` - an attribute applicable for every cell in particular column.
 <4> Cell level attribute. This is the lowest possible level where we can mount custom attributes. Only `CellAttribute` can be used on that level.
 
 === Table DSL API - type-safe builders.
 
-Kotlin type-safe builders fits well into describing table structure. It makes source code look more concise and readable and makes dev tasks much easier. At coding time, your IDE makes use of type-safety offered by builders and shows completion hints which elevates developer experience. Almost zero documentation is required to start. You can start playing with the API right now.
+Kotlin type-safe builders fit well into describing table structure. They make source code look more concise and readable and developement becomes easier. At coding time, your IDE makes use of type-safety offered by builders and shows completion hints which elevates developer experience. Almost zero documentation is required to start. You can start playing with the API right now.
 
 DSL functions by convention take `lambda with receivers` as arguments which abstract away internal API instantiation details from consumers. Within lambda you can call other API methods which in turn, can take downstream builders as arguments. This way - we can end up having multi-level DSL API structure, where each level is extensible via Kotlin extension functions. On each DSL level You are allowed to invoke receiver scope methods and access lexical scope variables which can lead to interesting results:
 [source,kotlin,options="nowrap"]
@@ -180,7 +180,7 @@ Property getter as column key kills two birds with one stone:
 ==== Row index predicates.
 
 You have already seen how `.header` extension function is implemented. Internally it invokes `.newRow(0)` which requests rendering of a row at index `0`. What if You want to apply entire row definition for several indices ?
-You may repeat `.newRow()` invokation as many times as required, but there is better option.
+You may repeat `.newRow()` invocation as many times as required, but there is better option.
 You can use row index predicate as follows:
 
 [source,kotlin,options="nowrap"]
@@ -211,7 +211,7 @@ Record predicates differs from `row index predicates` in that they cannot be use
 Record row predicates are always represented by a predicate function that checks if currently processed record or custom row meets specific conditions.
 
 <<<
-On API level we can define `row predicate` in following ways:
+On API level we can define `row predicate` in two ways:
 
 [source,kotlin]
 ----
@@ -229,6 +229,40 @@ row({ <predicate> }) {
 <2> Second method uses DSL keyword **row** in first place which is desired, but as long as we associate predicate with row builder where both are lambdas, we are forced to use syntax like `({ ... })` which I personally do not like in Kotlin.
 
 === Mixing custom rows with collection elements.
+
+`Tabulate` makes it possible to define static table consisting only from custom rows that are all known at build time.
+It also allows You to generate table where each row is dynamically computed from collection of any type.
+What is more, there is nothing that stops You from using both techniques for single table export:
+
+[source,kotlin,options="nowrap"]
+----
+contracts.tabulate("contracts.xlsx") {
+    name = "Active Contracts"
+    // <1>
+    columns {
+        column(Contract::client)
+        column(Contract::contractCode)
+        column(Contract::contractLength)
+        column(Contract::dateSigned)
+    }
+    rows {
+        // <2>
+        header {
+            columnTitles(
+                "Client",
+                "Code",
+                "Contract Length",
+                "Date Signed",
+            )
+        }
+    }
+}
+----
+<1> In order to export collection of elements, all we need to do is do define column bindings with getter property references as identifiers. As long as there are no custom row defined in 'row' section, all rows
+in table will be the rows originating from collection of elements.
+<2> If You declare custom row at specific index (or matching index predicate), then it will take precedence over dynamic rows generated from collection. So if You declare `header` row it will be the very first row in exported table, but when You write `newRow(2)` - this will insert custom row at third index and rows 0 and 1 will be reserved for collection elements.
+
+There are still cases where this flexibility is not enough. How can we define custom row that will be inserted after all collection elements ?
 
 <<<
 == Extension points.
@@ -574,26 +608,6 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
 <<<
 == Advanced concepts
 
-=== Custom rows.
-
-Sometimes, in addition to records from collection - You need to add user defined rows.
-Table usually contains a header row or summary footer row.
-It is also possible to define interleaving custom rows at specified index or rows that match specific predicate.
-
-Row model allows to define custom cell values as well as cell styles and attributes only.
-It acts as glue for additional features for existing external source derived rows, or as a factory for standalone custom rows that can be hooked at definition time.
-
-Things You can achieve with row model in terms of custom rows includes:
-
-- setting custom cell styles,
-- setting row-level attributes (e.g., row height),
-- defining row and col spans,
-- inserting images,
-- setting cell values of different types.
-
-TBD.
-
-<<<
 === Merging rows.
 
 When multiple `Row` model definitions are qualified by a predicate, they form a single synthetic row. Following rules regarding row merge applies:
@@ -605,7 +619,8 @@ When multiple `Row` model definitions are qualified by a predicate, they form a 
 TBD.
 
 <<<
-=== Builder composition
+=== Builder composition.
+
 TBD.
 
 <<<
