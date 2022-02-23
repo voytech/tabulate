@@ -58,7 +58,7 @@ First 0.1.0 version will not differ much from current snapshot version and migra
 Let's start simple.
 Given list of contracts as below:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
     val contracts = listOf(
         Contract(
@@ -88,7 +88,7 @@ Given list of contracts as below:
 <<<
 Invoke `tabulate` extension function with table builder (lambda with receiver) as argument:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 contracts.tabulate("contracts_list.xlsx") {
     name = "Active Contracts" // <1>
@@ -116,7 +116,7 @@ Running above code produces xlsx file with data, but without any additional feat
 <<<
 Let's add header now:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 contracts.tabulate("contracts_list.xlsx") {
     name = "Active Contracts"
@@ -146,7 +146,7 @@ contracts.tabulate("contracts_list.xlsx") {
 <<<
 Now let's add some style attributes. This should highlight header from remaining rows:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 contracts.tabulate("contracts_list.xlsx") {
     name = "Active Contracts"
@@ -185,7 +185,7 @@ contracts.tabulate("contracts_list.xlsx") {
 So far, we were passing table definition directly to `tabulate` method.
 In real life scenario we may want to keep table definition as separate variable:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 object TableDefinitions {
     val contractsTable = Table<Contract> {
@@ -219,19 +219,19 @@ object TableDefinitions {
 <<<
 Now, we can reuse table definition each time we want to export contracts collection:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 contracts.tabulate("contracts.xlsx", TableDefinitions.contractsTable)
 ----
 
 If You require different file format, just specify file name with adequate extension (e.g: .csv or .pdf):
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 contracts.tabulate("contracts.csv", TableDefinitions.contractsTable)
 ----
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 contracts.tabulate("contracts.pdf", TableDefinitions.contractsTable)
 ----
@@ -243,7 +243,7 @@ Suppose we have `contractsTable` definition, and we want to reuse it to export p
 
 We can achieve this by `overriding` existing definition:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 contracts.tabulate("past_contracts.xlsx", contractsTable with { name = "Past Contracts" })
 ----
@@ -259,7 +259,7 @@ I will try to cover this subject in more details in documentation)
 
 Far more real-life templating example:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 object TableDefinitions {
   val headerStyles = CustomTable {

@@ -20,11 +20,11 @@ Table model defines how table will look like after data exporting. Its building 
 - `column` - defines a single column in table,
 - `row`  - may be user defined custom row or row that carries attributes for enriching existing record,
 - `row cell` - defines cell within row. Cell is bound to a column via column id,
-- `attribute` - introduces extensions to basic presentation capabilities.
+- `attribute` - introduces extensions to model.
 
-Table model is internal concept and is not exposed to API consumers (only `attributes model` can be exposed as it is extensible and customizable). Table is always built using table builders as follows:
+Table model is internal concept and is not exposed to API consumers (only `attribute model` can be exposed as it is extensible and customizable). Table is always built using table builders as follows:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 productList.tabulate("file.xlsx") {
     name = "Table id" // <1>
@@ -51,7 +51,7 @@ This is very basic example. In order to gain more powers You will need to start 
 `Attributes` are plain objects with inner properties that extends base model. Attributes can be mounted on multiple levels: _table_, _column_, _row_ and single _cell_ levels.
 
 Example with attributes included:
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 productList.tabulate("file.xlsx") {
     name = "Table id"
@@ -91,14 +91,14 @@ productList.tabulate("file.xlsx") {
 <1> Top level table attribute `TableAttribute` applicable only for excel file format
 <2> Column level `ColumnAttribute` that defines width of entire column
 <3> Column level `CellAttribute` - an attribute applicable for every cell in particular column.
-<4> Cell level attribute. This is the lowest level. Only `CellAttribute` can be used on that level.
+<4> Cell level attribute. This is the lowest possible level where we can mount custom attributes. Only `CellAttribute` can be used on that level.
 
 === Table DSL API - type-safe builders.
 
 Kotlin type-safe builders fits well into describing table structure. It makes source code look more concise and readable and makes dev tasks much easier. At coding time, your IDE makes use of type-safety offered by builders and shows completion hints which elevates developer experience. Almost zero documentation is required to start. You can start playing with the API right now.
 
 DSL functions by convention take `lambda with receivers` as arguments which abstract away internal API instantiation details from consumers. Within lambda you can call other API methods which in turn, can take downstream builders as arguments. This way - we can end up having multi-level DSL API structure, where each level is extensible via Kotlin extension functions. On each DSL level You are allowed to invoke receiver scope methods and access lexical scope variables which can lead to interesting results:
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
     val additionalProducts = ... // <1>
     tabulate {
@@ -129,7 +129,7 @@ CAUTION: Although it is possible to build row definitions by iterating over coll
 As already said, it is possible to extend each DSL level by using extension functions on DSL API builder classes.
 
 Take the example from previous section:
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
     tabulate {
           rows {
@@ -139,7 +139,7 @@ Take the example from previous section:
 ----
 Function `.header` is implemented as follows:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 fun <T> RowsBuilderApi<T>.header(vararg names: String) =
     newRow(0) { // <1>
@@ -159,7 +159,7 @@ It is worth mentioning that by using extension functions on DSL builders - scope
 
 Column API makes it possible to pass property getter reference as a column key.
 This creates object property to column binding which is applied later at run time for cell value evaluation.
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx") {
             name = "Products table"
@@ -183,7 +183,7 @@ You have already seen how `.header` extension function is implemented. Internall
 You may repeat `.newRow()` invokation as many times as required, but there is better option.
 You can use row index predicate as follows:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 atIndex { gt(0) and lt(100) } newRow { // <1>
     cell { expression = RowCellExpression { "index : ${it.rowIndex.getIndex()}" } } // <2>
@@ -194,7 +194,7 @@ atIndex { gt(0) and lt(100) } newRow { // <1>
 
 There is also alternative notation used to achieve the same result:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 newRow({ gt(0) and lt(100) }) {
     cell { expression = RowCellExpression { "index : ${it.rowIndex.getIndex()}" } }
@@ -251,7 +251,7 @@ In order to support new tabular file format you will have to:
 Below, basic CSV export operations implementation:
 
 First step is to define `RenderingContext`:
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 // <1>
 open class CsvRenderingContext: RenderingContext {
@@ -288,7 +288,7 @@ open class CsvRenderingContext: RenderingContext {
 
 <<<
 Then we need to create at least one `OutputBinding` in order to be able to flush results int output:
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingContext>() {
 
@@ -307,7 +307,7 @@ class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingConte
 
 <<<
 Finally, we are implementing `ExportOperationsProvider` compatible with `RenderingCotnext` of choice:
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> {
 
@@ -343,7 +343,7 @@ class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> 
 <<<
 If target tabular format supports styles, You may add support for rendering built-in attributes as follows:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 class ExampleExportOperationsConfiguringFactory : ExportOperationsConfiguringFactory<SomeRenderingContext>() {
 
@@ -376,7 +376,7 @@ class ExampleExportOperationsConfiguringFactory : ExportOperationsConfiguringFac
 Factory class `StandardAttributeRenderOperationsFactory` exposes API which assumes specific standard library attributes.
 If your file format allow additional attributes which are not present in standard library (tabulate-core), you may use `AttributeRenderOperationsFactory` interface directly, or fill additional constructor properties on `StandardAttributeRenderOperationsFactory` as below:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 class ExampleExportOperationsConfiguringFactory<T> : ExportOperationsConfiguringFactory<T,SomeRenderingContext>() {
 
@@ -394,7 +394,7 @@ class ExampleExportOperationsConfiguringFactory<T> : ExportOperationsConfiguring
 === Registering new attribute types for existing export operations.
 It is possible that you have requirements which cannot be achieved with standard set of attributes, and your code is in different compilation unit than specific table export operation implementation. Assume You want to use existing Apache POI excel table exporter, but there is lack of certain attribute support. In such situation - You can still register attribute by implementing another service provider interface - `AttributeRenderOperationsProvider`:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 class CustomAttributeRendersOperationsProvider : AttributeRenderOperationsProvider<ApachePoiRenderingContext> {
 
@@ -411,7 +411,7 @@ class CustomAttributeRendersOperationsProvider : AttributeRenderOperationsProvid
 
 After creating factory - You need to implement particular attribute together with DSL API extension function and attribute render operation to instruct 3rd party Apache Poi API on how to proceed.
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 data class MarkerCellAttribute(val text: String) : CellAttribute<MarkerCellAttribute>() {
 
@@ -441,7 +441,7 @@ Finally, You need to create file `resource/META-INF/io.github.voytech.tabulate.t
 
 In the last section You saw how to define custom user attributes. The last step involves creating extension function on specific DSL attribute API. As DSL builder class name suggests (`CellLevelAttributesBuilderApi<T>`) this builder is part of a Cell DSL API only , which means that it won't be possible to add this attribute on row, column and table. You can leverage this behaviour for restricting say 'mounting points' of specific attributes. In order to enable cell attribute on all levels You will need to add more extension functions:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 fun <T> ColumnLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builder.() -> Unit) =
     attribute(MarkerCellAttribute.Builder().apply(block).build())
@@ -453,7 +453,7 @@ fun <T> TableLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Build
 
 Now You can call `label` on all DSL API levels in `attributes` scope like:
 
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 productList.tabulate("file.xlsx") {
     name = "Table id"
@@ -489,7 +489,7 @@ The result of above configuration will be as such:
 == Java interop - fluent builders Java API.
 Old-fashioned Java fluent builder API is also supported. It is needless to say it looks much less attractive:
 
-[source,java]
+[source,java,options="nowrap"]
 ----
 Table<Employee> employeeTable = Table.<Employee>builder()
 		.attribute(TemplateFileAttribute::builder, builder -> builder.setFileName("file.xlsx"))
@@ -533,7 +533,7 @@ Currently, with `tabulate-core` and `tabulate-excel` modules, you will get follo
 - `CellAlignmentAttribute` - sets text vertical and horizontal alignment
 
 Typical usage scenario for attributes:
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx") {
     name = "Products table"

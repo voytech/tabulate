@@ -524,16 +524,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p><code>row cell</code> - defines cell within row. Cell is bound to a column via column id,</p>
 </li>
 <li>
-<p><code>attribute</code> - introduces extensions to basic presentation capabilities.</p>
+<p><code>attribute</code> - introduces extensions to model.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>Table model is internal concept and is not exposed to API consumers (only <code>attributes model</code> can be exposed as it is extensible and customizable). Table is always built using table builders as follows:</p>
+<p>Table model is internal concept and is not exposed to API consumers (only <code>attribute model</code> can be exposed as it is extensible and customizable). Table is always built using table builders as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">productList.tabulate("file.xlsx") {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">productList.tabulate("file.xlsx") {
     name = "Table id" <i class="conum" data-value="1"></i><b>(1)</b>
     columns {   <i class="conum" data-value="2"></i><b>(2)</b>
         column("nr")
@@ -581,7 +581,7 @@ Cell binds to column by column identifier which in our case is represented by si
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">productList.tabulate("file.xlsx") {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">productList.tabulate("file.xlsx") {
     name = "Table id"
     attributes {
       filterAndSort {} <i class="conum" data-value="1"></i><b>(1)</b>
@@ -633,7 +633,7 @@ Cell binds to column by column identifier which in our case is represented by si
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Cell level attribute. This is the lowest level. Only <code>CellAttribute</code> can be used on that level.</td>
+<td>Cell level attribute. This is the lowest possible level where we can mount custom attributes. Only <code>CellAttribute</code> can be used on that level.</td>
 </tr>
 </table>
 </div>
@@ -648,7 +648,7 @@ Cell binds to column by column identifier which in our case is represented by si
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">    val additionalProducts = ... <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">    val additionalProducts = ... <i class="conum" data-value="1"></i><b>(1)</b>
     tabulate {
           name = "Products table"
           attributes {
@@ -708,7 +708,7 @@ Although it is possible to build row definitions by iterating over collection di
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">    tabulate {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">    tabulate {
           rows {
               header("Code", "Name", "Description", "Manufacturer")
           }
@@ -720,7 +720,7 @@ Although it is possible to build row definitions by iterating over collection di
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">fun &lt;T&gt; RowsBuilderApi&lt;T&gt;.header(vararg names: String) =
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">fun &lt;T&gt; RowsBuilderApi&lt;T&gt;.header(vararg names: String) =
     newRow(0) { <i class="conum" data-value="1"></i><b>(1)</b>
         cells {
             names.forEach {
@@ -751,7 +751,7 @@ This creates object property to column binding which is applied later at run tim
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx") {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx") {
             name = "Products table"
             columns {
                 column(Product::code)
@@ -786,7 +786,7 @@ You can use row index predicate as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">atIndex { gt(0) and lt(100) } newRow { <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">atIndex { gt(0) and lt(100) } newRow { <i class="conum" data-value="1"></i><b>(1)</b>
     cell { expression = RowCellExpression { "index : ${it.rowIndex.getIndex()}" } } <i class="conum" data-value="2"></i><b>(2)</b>
 }</code></pre>
 </div>
@@ -808,7 +808,7 @@ You can use row index predicate as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">newRow({ gt(0) and lt(100) }) {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">newRow({ gt(0) and lt(100) }) {
     cell { expression = RowCellExpression { "index : ${it.rowIndex.getIndex()}" } }
 }</code></pre>
 </div>
@@ -918,7 +918,7 @@ row({ &lt;predicate&gt; }) {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin"><i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin"><i class="conum" data-value="1"></i><b>(1)</b>
 open class CsvRenderingContext: RenderingContext {
     private lateinit var bufferedWriter: BufferedWriter
     private val line = StringBuilder()
@@ -964,7 +964,7 @@ open class CsvRenderingContext: RenderingContext {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class CsvOutputStreamOutputBinding : OutputStreamOutputBinding&lt;CsvRenderingContext&gt;() {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">class CsvOutputStreamOutputBinding : OutputStreamOutputBinding&lt;CsvRenderingContext&gt;() {
 
     override fun onBind(renderingContext: CsvRenderingContext, output: OutputStream) { <i class="conum" data-value="1"></i><b>(1)</b>
         renderingContext.doBind(output)
@@ -995,7 +995,7 @@ open class CsvRenderingContext: RenderingContext {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class CsvExportOperationsFactory: ExportOperationsProvider&lt;CsvRenderingContext&gt; {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">class CsvExportOperationsFactory: ExportOperationsProvider&lt;CsvRenderingContext&gt; {
 
     override fun getContextClass(): Class&lt;CsvRenderingContext&gt; = CsvRenderingContext::class.java <i class="conum" data-value="1"></i><b>(1)</b>
 
@@ -1051,7 +1051,7 @@ open class CsvRenderingContext: RenderingContext {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class ExampleExportOperationsConfiguringFactory : ExportOperationsConfiguringFactory&lt;SomeRenderingContext&gt;() {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">class ExampleExportOperationsConfiguringFactory : ExportOperationsConfiguringFactory&lt;SomeRenderingContext&gt;() {
 
   ..
   override fun getAttributeOperationsFactory(renderingContext: SomeRenderingContext): AttributeRenderOperationsFactory&lt;SomeRenderingContext&gt; =
@@ -1086,7 +1086,7 @@ If your file format allow additional attributes which are not present in standar
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class ExampleExportOperationsConfiguringFactory&lt;T&gt; : ExportOperationsConfiguringFactory&lt;T,SomeRenderingContext&gt;() {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">class ExampleExportOperationsConfiguringFactory&lt;T&gt; : ExportOperationsConfiguringFactory&lt;T,SomeRenderingContext&gt;() {
 
   ...
   override fun getAttributeOperationsFactory(renderingContext: SomeRenderingContext): AttributeRenderOperationsFactory&lt;T&gt; =
@@ -1107,7 +1107,7 @@ If your file format allow additional attributes which are not present in standar
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">class CustomAttributeRendersOperationsProvider : AttributeRenderOperationsProvider&lt;ApachePoiRenderingContext&gt; {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">class CustomAttributeRendersOperationsProvider : AttributeRenderOperationsProvider&lt;ApachePoiRenderingContext&gt; {
 
     override fun getContextClass() = ApachePoiRenderingContext::class.java
 
@@ -1125,7 +1125,7 @@ If your file format allow additional attributes which are not present in standar
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">data class MarkerCellAttribute(val text: String) : CellAttribute&lt;MarkerCellAttribute&gt;() {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">data class MarkerCellAttribute(val text: String) : CellAttribute&lt;MarkerCellAttribute&gt;() {
 
     class Builder(var text: String = "") : CellAttributeBuilder&lt;MarkerCellAttribute&gt; {
         override fun build(): MarkerCellAttribute = MarkerCellAttribute(text)
@@ -1158,7 +1158,7 @@ fun &lt;T&gt; CellLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAttr
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">fun &lt;T&gt; ColumnLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAttribute.Builder.() -&gt; Unit) =
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">fun &lt;T&gt; ColumnLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAttribute.Builder.() -&gt; Unit) =
     attribute(MarkerCellAttribute.Builder().apply(block).build())
 fun &lt;T&gt; RowLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAttribute.Builder.() -&gt; Unit) =
   attribute(MarkerCellAttribute.Builder().apply(block).build())
@@ -1171,7 +1171,7 @@ fun &lt;T&gt; TableLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAtt
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">productList.tabulate("file.xlsx") {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">productList.tabulate("file.xlsx") {
     name = "Table id"
     attributes {
       label { text = "TABLE" }
@@ -1215,7 +1215,7 @@ fun &lt;T&gt; TableLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAtt
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Table&lt;Employee&gt; employeeTable = Table.&lt;Employee&gt;builder()
+<pre class="highlightjs highlight nowrap"><code class="language-java hljs" data-lang="java">Table&lt;Employee&gt; employeeTable = Table.&lt;Employee&gt;builder()
 		.attribute(TemplateFileAttribute::builder, builder -&gt; builder.setFileName("file.xlsx"))
 		.columns()
 		    .column(Employee::getId)
@@ -1301,7 +1301,7 @@ fun &lt;T&gt; TableLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAtt
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-kotlin hljs" data-lang="kotlin">productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx") {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx") {
     name = "Products table"
     columns {
         column(Product::code) {
@@ -1416,7 +1416,7 @@ It acts as glue for additional features for existing external source derived row
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-02-20 20:39:44 +0100
+Last updated 2022-02-23 21:10:25 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
