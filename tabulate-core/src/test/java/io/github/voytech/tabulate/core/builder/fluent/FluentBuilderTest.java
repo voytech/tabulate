@@ -80,7 +80,7 @@ public class FluentBuilderTest {
 								.cell(0)
 									.value("Nr")
 									.cellAttribute(CellTextStylesAttribute::builder, builder -> {
-										builder.setFontColor(Colors.INSTANCE.getBLUE());
+										builder.setFontColor(Colors.BLUE);
 										builder.setFontFamily("Times News Roman");
 									})
 								.cell(NamedPropertyReferenceColumnKey.of("id"))

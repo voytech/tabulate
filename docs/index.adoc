@@ -103,12 +103,9 @@ DSL functions by convention take `lambda with receivers` as arguments which abst
     val additionalProducts = ... // <1>
     tabulate {
           name = "Products table"
-          attributes {
-            template { fileName = "src/test/resources/template.xlsx" } // <2>
-          }
           rows {
-              header("Code", "Name", "Description", "Manufacturer") // <3>
-              additionalProducts.forEach { // <4>
+              header("Code", "Name", "Description", "Manufacturer") // <2>
+              additionalProducts.forEach { // <3>
                   row {
                       cell { value = it.code }
                       cell { value = it.name }
@@ -120,11 +117,10 @@ DSL functions by convention take `lambda with receivers` as arguments which abst
     }.export("products.xlsx")
 ----
 <1> Here we are using `additionalProducts` val which is collection of elements to be exported.
-<2> Then we are specifying a template file on which interpolation should take place.
-<3> After that, we define header as long as we know that our template doesn't mention it.
-<4> Finally, we are iterating over collection elements to build static table model.
+<2> After that, we define header as long as we know that our template doesn't mention it.
+<3> Finally, we are iterating over collection elements to build static table model.
 
-CAUTION: Although it is possible to build row definitions by iterating over collection directly, you should always prefer to use <<column_bound_cell_value_extractors>>. They are much faster and consume much less memory than approach shown in point number `4`.
+CAUTION: Although it is possible to build row definitions by iterating over collection directly, you should always prefer to use <<column_scoped_cell_value_providers>>. They are much faster and consume much less memory than approach shown in point number `3`.
 
 As already said, it is possible to extend each DSL level by using extension functions on DSL API builder classes.
 
@@ -155,7 +151,7 @@ fun <T> RowsBuilderApi<T>.header(vararg names: String) =
 This way you can create various shortcuts and templates, making DSL vocabulary richer and more expressive.
 It is worth mentioning that by using extension functions on DSL builders - scope becomes restricted by `DslMarker` annotation, so it is not possible to break table definition by calling methods from upstream builders.
 
-=== Column bound cell value extractors. [[column_bound_cell_value_extractors]]
+=== Column-scoped cell value providers. [[column_scoped_cell_value_providers]]
 
 Column API makes it possible to pass property getter reference as a column key.
 This creates object property to column binding which is applied later at run time for cell value evaluation.
@@ -175,9 +171,14 @@ Property getter as column key kills two birds with one stone:
  - It allows to reference column later in cell builder,
  - it allows to extract collection element property value when row context is built for rendering.
 
+Presence of <<column_scoped_cell_value_providers>> in table definition removes the requirement of explicit row definition.
+It is enough to use `Product::code` getter reference as column key to determine value of each consecutive row cell.
+You are still allowed to define new rows explicitly (through call `newRow([index value or <<row_index_predicates>>])`) or to
+provide extensions to existing rows (through call `matching {  <<record_row_predicates>> } assign { ... }`).
+
 === Row predicates. [[row_predicates]]
 
-==== Row index predicates.
+==== Row index predicates. [[row_index_predicates]]
 
 You have already seen how `.header` extension function is implemented. Internally it invokes `.newRow(0)` which requests rendering of a row at index `0`. What if You want to apply entire row definition for several indices ?
 You may repeat `.newRow()` invocation as many times as required, but there is better option.
@@ -201,12 +202,12 @@ newRow({ gt(0) and lt(100) }) {
 }
 ----
 
-==== Record row predicates
+==== Record row predicates [[record_row_predicates]]
 
 Record predicates differs from `row index predicates` in that they cannot be used to insert new custom rows. They can only enrich *existing* row, that is:
 
  - custom row that is created by `newRow` API method,
- - or a row that is derived from collection element (it is always produced from <<column_bound_cell_value_extractors>> column binding).
+ - or a row that is derived from collection element (it is always produced from <<column_scoped_cell_value_providers>> column binding).
 
 Record row predicates are always represented by a predicate function that checks if currently processed record or custom row meets specific conditions.
 
@@ -527,18 +528,13 @@ Old-fashioned Java fluent builder API is also supported. It is needless to say i
 ----
 Table<Employee> employeeTable = Table.<Employee>builder()
 		.attribute(TemplateFileAttribute::builder, builder -> builder.setFileName("file.xlsx"))
+        .attribute(ColumnWidthAttribute::builder, builder -> builder.setAuto(true))
 		.columns()
-		    .column(Employee::getId)
-		        .columnType(CellType.NUMERIC)
-		        .attribute(ColumnWidthAttribute::builder)
-		    .column(Employee::getFirstName)
-		        .columnType(CellType.STRING)
-		        .attribute(ColumnWidthAttribute::builder)
-		    .column(Employee::getLastName)
-		        .columnType(CellType.STRING)
-		        .attribute(ColumnWidthAttribute::builder)
+            .column(of("id"),Employee::getId)
+		    .column(of("firstName"),Employee::getFirstName)
+		    .column(of("lastName"),Employee::getLastName)
 		.rows()
-		    .row()
+		    .row(0)
 		        .attribute(RowHeightAttribute::builder, builder -> builder.setPx(100))
 		.build();
 ----

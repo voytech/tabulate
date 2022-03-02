@@ -455,7 +455,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#_table_model">Table model.</a></li>
 <li><a href="#_table_dsl_api_type_safe_builders">Table DSL API - type-safe builders.</a></li>
-<li><a href="#column_bound_cell_value_extractors">Column bound cell value extractors.</a></li>
+<li><a href="#column_scoped_cell_value_providers">Column-scoped cell value providers.</a></li>
 <li><a href="#row_predicates">Row predicates.</a></li>
 <li><a href="#_mixing_custom_rows_with_collection_elements">Mixing custom rows with collection elements.</a></li>
 </ul>
@@ -650,12 +650,9 @@ Cell binds to column by column identifier which in our case is simple text ident
 <pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">    val additionalProducts = ... <i class="conum" data-value="1"></i><b>(1)</b>
     tabulate {
           name = "Products table"
-          attributes {
-            template { fileName = "src/test/resources/template.xlsx" } <i class="conum" data-value="2"></i><b>(2)</b>
-          }
           rows {
-              header("Code", "Name", "Description", "Manufacturer") <i class="conum" data-value="3"></i><b>(3)</b>
-              additionalProducts.forEach { <i class="conum" data-value="4"></i><b>(4)</b>
+              header("Code", "Name", "Description", "Manufacturer") <i class="conum" data-value="2"></i><b>(2)</b>
+              additionalProducts.forEach { <i class="conum" data-value="3"></i><b>(3)</b>
                   row {
                       cell { value = it.code }
                       cell { value = it.name }
@@ -675,14 +672,10 @@ Cell binds to column by column identifier which in our case is simple text ident
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Then we are specifying a template file on which interpolation should take place.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
 <td>After that, we define header as long as we know that our template doesn&#8217;t mention it.</td>
 </tr>
 <tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
 <td>Finally, we are iterating over collection elements to build static table model.</td>
 </tr>
 </table>
@@ -694,7 +687,7 @@ Cell binds to column by column identifier which in our case is simple text ident
 <i class="fa icon-caution" title="Caution"></i>
 </td>
 <td class="content">
-Although it is possible to build row definitions by iterating over collection directly, you should always prefer to use <a href="#column_bound_cell_value_extractors">Column bound cell value extractors.</a>. They are much faster and consume much less memory than approach shown in point number <code>4</code>.
+Although it is possible to build row definitions by iterating over collection directly, you should always prefer to use <a href="#column_scoped_cell_value_providers">Column-scoped cell value providers.</a>. They are much faster and consume much less memory than approach shown in point number <code>3</code>.
 </td>
 </tr>
 </table>
@@ -743,7 +736,7 @@ It is worth mentioning that by using extension functions on DSL builders - scope
 </div>
 </div>
 <div class="sect2">
-<h3 id="column_bound_cell_value_extractors">Column bound cell value extractors.</h3>
+<h3 id="column_scoped_cell_value_providers">Column-scoped cell value providers.</h3>
 <div class="paragraph">
 <p>Column API makes it possible to pass property getter reference as a column key.
 This creates object property to column binding which is applied later at run time for cell value evaluation.</p>
@@ -773,11 +766,17 @@ This creates object property to column binding which is applied later at run tim
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p>Presence of <a href="#column_scoped_cell_value_providers">Column-scoped cell value providers.</a> in table definition removes the requirement of explicit row definition.
+It is enough to use <code>Product::code</code> getter reference as column key to determine value of each consecutive row cell.
+You are still allowed to define new rows explicitly (through call <code>newRow([index value or <a href="#row_index_predicates">Row index predicates.</a>])</code>) or to
+provide extensions to existing rows (through call <code>matching {  <a href="#record_row_predicates">Record row predicates</a> } assign { &#8230;&#8203; }</code>).</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="row_predicates">Row predicates.</h3>
 <div class="sect3">
-<h4 id="_row_index_predicates">Row index predicates.</h4>
+<h4 id="row_index_predicates">Row index predicates.</h4>
 <div class="paragraph">
 <p>You have already seen how <code>.header</code> extension function is implemented. Internally it invokes <code>.newRow(0)</code> which requests rendering of a row at index <code>0</code>. What if You want to apply entire row definition for several indices ?
 You may repeat <code>.newRow()</code> invocation as many times as required, but there is better option.
@@ -814,7 +813,7 @@ You can use row index predicate as follows:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_record_row_predicates">Record row predicates</h4>
+<h4 id="record_row_predicates">Record row predicates</h4>
 <div class="paragraph">
 <p>Record predicates differs from <code>row index predicates</code> in that they cannot be used to insert new custom rows. They can only enrich <strong>existing</strong> row, that is:</p>
 </div>
@@ -824,7 +823,7 @@ You can use row index predicate as follows:</p>
 <p>custom row that is created by <code>newRow</code> API method,</p>
 </li>
 <li>
-<p>or a row that is derived from collection element (it is always produced from <a href="#column_bound_cell_value_extractors">Column bound cell value extractors.</a> column binding).</p>
+<p>or a row that is derived from collection element (it is always produced from <a href="#column_scoped_cell_value_providers">Column-scoped cell value providers.</a> column binding).</p>
 </li>
 </ul>
 </div>
@@ -1262,18 +1261,13 @@ fun &lt;T&gt; TableLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAtt
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-java hljs" data-lang="java">Table&lt;Employee&gt; employeeTable = Table.&lt;Employee&gt;builder()
 		.attribute(TemplateFileAttribute::builder, builder -&gt; builder.setFileName("file.xlsx"))
+        .attribute(ColumnWidthAttribute::builder, builder -&gt; builder.setAuto(true))
 		.columns()
-		    .column(Employee::getId)
-		        .columnType(CellType.NUMERIC)
-		        .attribute(ColumnWidthAttribute::builder)
-		    .column(Employee::getFirstName)
-		        .columnType(CellType.STRING)
-		        .attribute(ColumnWidthAttribute::builder)
-		    .column(Employee::getLastName)
-		        .columnType(CellType.STRING)
-		        .attribute(ColumnWidthAttribute::builder)
+            .column(of("id"),Employee::getId)
+		    .column(of("firstName"),Employee::getFirstName)
+		    .column(of("lastName"),Employee::getLastName)
 		.rows()
-		    .row()
+		    .row(0)
 		        .attribute(RowHeightAttribute::builder, builder -&gt; builder.setPx(100))
 		.build();</code></pre>
 </div>
@@ -1423,7 +1417,7 @@ fun &lt;T&gt; TableLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAtt
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-02-23 22:08:04 +0100
+Last updated 2022-03-02 15:23:06 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

@@ -26,6 +26,11 @@ data class CellExcelDataFormatAttribute(
             dataFormat = takeIfChanged(other, CellExcelDataFormatAttribute::dataFormat)
         )
 
+    companion object {
+        @JvmStatic
+        fun builder() : Builder = Builder()
+    }
+
 }
 
 fun <T> CellLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
