@@ -1,4 +1,4 @@
-= Tabulate
+= Tabulate - Reference Manual
 :icons: font
 :source-highlighter: highlight.js
 by <wojmak@gmail.com>
@@ -231,7 +231,7 @@ row({ <predicate> }) {
 
 === Mixing custom rows with collection elements.
 
-`Tabulate` makes it possible to define static table consisting only from custom rows that are all known at build time.
+`Tabulate` makes it possible to define table consisting only of custom rows that are known at build time.
 It also allows You to generate table where each row is dynamically computed from collection of any type.
 What is more, there is nothing that stops You from using both techniques for single table export:
 
@@ -259,11 +259,39 @@ contracts.tabulate("contracts.xlsx") {
     }
 }
 ----
-<1> In order to export collection of elements, all we need to do is do define column bindings with getter property references as identifiers. As long as there are no custom row defined in 'row' section, all rows
-in table will be the rows originating from collection of elements.
-<2> If You declare custom row at specific index (or matching index predicate), then it will take precedence over dynamic rows generated from collection. So if You declare `header` row it will be the very first row in exported table, but when You write `newRow(2)` - this will insert custom row at third index and rows 0 and 1 will be reserved for collection elements.
+<1> In order to export collection of elements, all we need to do is do define column bindings with getter property references as identifiers. As long as there are no custom row defined in 'rows' section, all rows
+in table will be rows originating from collection elements.
+<2> If You declare custom row at specific index (or matching index predicate), then it will take precedence over dynamic rows generated from collection. So if You declare `header` row it will be the very first row in exported table, but when You write `newRow(2)` - this will create new custom row as third. Rows: 0 and 1 will be then reserved for dynamic data (collection elements) as long as there are no other custom rows declarations matching previous indices.
 
-There are still cases where this flexibility is not enough. How can we define custom row that will be inserted after all collection elements ?
+There are still cases where this flexibility is not enough. How can we define custom row that will be rendered after all dynamic data ? For that purpose we cannot just use index based predicate as long as we cannot tell the size of collection in advance. The solution for above is __multi-pass enabled `RowIndex` cursor__ used by context iterator. This `RowIndex` contains additional 'step' component which increments after there are no row index definitions for current pass. After 'step' is advanced, its local step-scope index is set to zero (this counter will increment per each row matching current pass). Global-scope row index is still maintained to support predicates using it.
+
+Here is how You can add footer row:
+[source,kotlin,options="nowrap"]
+----
+contracts.tabulate("contracts.xlsx") {
+    name = "Active Contracts"
+    columns {
+        column(Contract::client)
+        column(Contract::contractValue)
+    }
+    rows {
+        header("Client","Contract Value")
+        //<1>
+        footer {
+            cell { value = "Summary:"}
+            cell { value = "=SUM" }
+        }
+    }
+}
+----
+<1> In above example, `footer` is an extension function as `header`, but with one small difference:
+[source,kotlin,options="nowrap"]
+----
+fun <T> RowsBuilderApi<T>.footer(block: RowBuilderApi<T>.() -> Unit) {
+    newRow(0, AdditionalSteps.TRAILING_ROWS, block) //<1>
+}
+----
+<1> In its implementation, it uses additional method argument: `AdditionalSteps.TRAILING_ROWS`. Internally this will create row index definition with index value / predicate, which is relative to TRAILING_ROWS pass. The sequence of additional passes is determined by enum ordinal values.
 
 <<<
 == Extension points.
@@ -341,7 +369,7 @@ class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingConte
 <2> The `.flush` dumps in-memory rendering context into given output.
 
 <<<
-Finally, we are implementing `ExportOperationsProvider` compatible with `RenderingCotnext` of choice:
+Finally, we are implementing `ExportOperationsProvider` compatible with `RenderingContext` of choice:
 [source,kotlin,options="nowrap"]
 ----
 class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> {
@@ -370,7 +398,7 @@ class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> 
 }
 ----
 <1> Define the `RenderingContext` compatible with export operation provider,
-<2> Instantiate new `RenderingContext` instance. This instantiation always occurs at the very beginning,
+<2> Create new `RenderingContext` instance. This instantiation always occurs at the very beginning,
 <3> Declare `TabulationFormat`. It consists of file extension and provider identifier,
 <4> This is the most important step. *Here we implement actual table rendering logic*,
 <5> Finally - we need to provide list of supported outputs. Bare minimum should be at least `OutputStreamOutputBinding`.
@@ -526,7 +554,8 @@ Old-fashioned Java fluent builder API is also supported. It is needless to say i
 
 [source,java,options="nowrap"]
 ----
-Table<Employee> employeeTable = Table.<Employee>builder()
+//<1>
+FluentTableBuilderApi<Employee> employeeTable = TableBuilder<Employee>()
 		.attribute(TemplateFileAttribute::builder, builder -> builder.setFileName("file.xlsx"))
         .attribute(ColumnWidthAttribute::builder, builder -> builder.setAuto(true))
 		.columns()
@@ -537,17 +566,22 @@ Table<Employee> employeeTable = Table.<Employee>builder()
 		    .row(0)
 		        .attribute(RowHeightAttribute::builder, builder -> builder.setPx(100))
 		.build();
+//<2>
+List<Employee> employeeList = Collections.singletonList(new Employee("#00010", "Joshua", "Novak"));
+new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream("employees.xlsx"), employeeTable);
 ----
+<1> As a first step, You have to declare table definition using Java `FluentTableBuilderApi`
+<2> Now You have to pass table definition into `TabulationTemplate` in order to export data with declared tabular layout.
 
 <<<
 == Library of attributes.
 
-You may need attributes for various reasons - for styling, for formatting or other custom hooks.
+You may need attributes for various reasons - for styling, for formatting etc.
 
 Currently, with `tabulate-core` and `tabulate-excel` modules, you will get following attributes included:
 
 ==== Table attributes
-- `FilterAndSortAttribute` - enables filtering and sorting of excel table,
+- `FilterAndSortAttribute` - enables filtering and sorting of Excel table,
 - `TemplateFileAttribute` - allows performing template file interpolation with source data collection of items,
 
 ==== Column attributes

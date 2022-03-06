@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.16">
 <meta name="author" content="by">
-<title>Tabulate</title>
+<title>Tabulate - Reference Manual</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -442,7 +442,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article">
 <div id="header">
-<h1>Tabulate</h1>
+<h1>Tabulate - Reference Manual</h1>
 <div class="details">
 <span id="author" class="author">by</span><br>
 <span id="email" class="email"><a href="mailto:wojmak@gmail.com">wojmak@gmail.com</a></span><br>
@@ -864,7 +864,7 @@ row({ &lt;predicate&gt; }) {
 <div class="sect2">
 <h3 id="_mixing_custom_rows_with_collection_elements">Mixing custom rows with collection elements.</h3>
 <div class="paragraph">
-<p><code>Tabulate</code> makes it possible to define static table consisting only from custom rows that are all known at build time.
+<p><code>Tabulate</code> makes it possible to define table consisting only of custom rows that are known at build time.
 It also allows You to generate table where each row is dynamically computed from collection of any type.
 What is more, there is nothing that stops You from using both techniques for single table export:</p>
 </div>
@@ -897,17 +897,62 @@ What is more, there is nothing that stops You from using both techniques for sin
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>In order to export collection of elements, all we need to do is do define column bindings with getter property references as identifiers. As long as there are no custom row defined in 'row' section, all rows
-in table will be the rows originating from collection of elements.</td>
+<td>In order to export collection of elements, all we need to do is do define column bindings with getter property references as identifiers. As long as there are no custom row defined in 'rows' section, all rows
+in table will be rows originating from collection elements.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>If You declare custom row at specific index (or matching index predicate), then it will take precedence over dynamic rows generated from collection. So if You declare <code>header</code> row it will be the very first row in exported table, but when You write <code>newRow(2)</code> - this will insert custom row at third index and rows 0 and 1 will be reserved for collection elements.</td>
+<td>If You declare custom row at specific index (or matching index predicate), then it will take precedence over dynamic rows generated from collection. So if You declare <code>header</code> row it will be the very first row in exported table, but when You write <code>newRow(2)</code> - this will create new custom row as third. Rows: 0 and 1 will be then reserved for dynamic data (collection elements) as long as there are no other custom rows declarations matching previous indices.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>There are still cases where this flexibility is not enough. How can we define custom row that will be inserted after all collection elements ?</p>
+<p>There are still cases where this flexibility is not enough. How can we define custom row that will be rendered after all dynamic data ? For that purpose we cannot just use index based predicate as long as we cannot tell the size of collection in advance. The solution for above is <em>multi-pass enabled <code>RowIndex</code> cursor</em> used by context iterator. This <code>RowIndex</code> contains additional 'step' component which increments after there are no row index definitions for current pass. After 'step' is advanced, its local step-scope index is set to zero (this counter will increment per each row matching current pass). Global-scope row index is still maintained to support predicates using it.</p>
+</div>
+<div class="paragraph">
+<p>Here is how You can add footer row:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">contracts.tabulate("contracts.xlsx") {
+    name = "Active Contracts"
+    columns {
+        column(Contract::client)
+        column(Contract::contractValue)
+    }
+    rows {
+        header("Client","Contract Value")
+        <i class="conum" data-value="1"></i><b>(1)</b>
+        footer {
+            cell { value = "Summary:"}
+            cell { value = "=SUM" }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>In above example, <code>footer</code> is an extension function as <code>header</code>, but with one small difference:</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>fun &lt;T&gt; RowsBuilderApi&lt;T&gt;.footer(block: RowBuilderApi&lt;T&gt;.() -&gt; Unit) {
+    newRow(0, AdditionalSteps.TRAILING_ROWS, block) <i class="conum" data-value="1"></i><b>(1)</b>
+}</pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>In its implementation, it uses additional method argument: <code>AdditionalSteps.TRAILING_ROWS</code>. Internally this will create row index definition with index value / predicate, which is relative to TRAILING_ROWS pass. The sequence of additional passes is determined by enum ordinal values.</td>
+</tr>
+</table>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
@@ -1035,7 +1080,7 @@ open class CsvRenderingContext: RenderingContext {
 </div>
 <div style="page-break-after: always;"></div>
 <div class="paragraph">
-<p>Finally, we are implementing <code>ExportOperationsProvider</code> compatible with <code>RenderingCotnext</code> of choice:</p>
+<p>Finally, we are implementing <code>ExportOperationsProvider</code> compatible with <code>RenderingContext</code> of choice:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1073,7 +1118,7 @@ open class CsvRenderingContext: RenderingContext {
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Instantiate new <code>RenderingContext</code> instance. This instantiation always occurs at the very beginning,</td>
+<td>Create new <code>RenderingContext</code> instance. This instantiation always occurs at the very beginning,</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
@@ -1259,7 +1304,8 @@ fun &lt;T&gt; TableLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAtt
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight nowrap"><code class="language-java hljs" data-lang="java">Table&lt;Employee&gt; employeeTable = Table.&lt;Employee&gt;builder()
+<pre class="highlightjs highlight nowrap"><code class="language-java hljs" data-lang="java"><i class="conum" data-value="1"></i><b>(1)</b>
+FluentTableBuilderApi&lt;Employee&gt; employeeTable = TableBuilder&lt;Employee&gt;()
 		.attribute(TemplateFileAttribute::builder, builder -&gt; builder.setFileName("file.xlsx"))
         .attribute(ColumnWidthAttribute::builder, builder -&gt; builder.setAuto(true))
 		.columns()
@@ -1269,8 +1315,23 @@ fun &lt;T&gt; TableLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAtt
 		.rows()
 		    .row(0)
 		        .attribute(RowHeightAttribute::builder, builder -&gt; builder.setPx(100))
-		.build();</code></pre>
+		.build();
+<i class="conum" data-value="2"></i><b>(2)</b>
+List&lt;Employee&gt; employeeList = Collections.singletonList(new Employee("#00010", "Joshua", "Novak"));
+new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream("employees.xlsx"), employeeTable);</code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>As a first step, You have to declare table definition using Java <code>FluentTableBuilderApi</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Now You have to pass table definition into <code>TabulationTemplate</code> in order to export data with declared tabular layout.</td>
+</tr>
+</table>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
@@ -1279,7 +1340,7 @@ fun &lt;T&gt; TableLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAtt
 <h2 id="_library_of_attributes">Library of attributes.</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>You may need attributes for various reasons - for styling, for formatting or other custom hooks.</p>
+<p>You may need attributes for various reasons - for styling, for formatting etc.</p>
 </div>
 <div class="paragraph">
 <p>Currently, with <code>tabulate-core</code> and <code>tabulate-excel</code> modules, you will get following attributes included:</p>
@@ -1289,7 +1350,7 @@ fun &lt;T&gt; TableLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAtt
 <div class="ulist">
 <ul>
 <li>
-<p><code>FilterAndSortAttribute</code> - enables filtering and sorting of excel table,</p>
+<p><code>FilterAndSortAttribute</code> - enables filtering and sorting of Excel table,</p>
 </li>
 <li>
 <p><code>TemplateFileAttribute</code> - allows performing template file interpolation with source data collection of items,</p>
@@ -1417,7 +1478,7 @@ fun &lt;T&gt; TableLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAtt
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-03-02 15:23:06 +0100
+Last updated 2022-03-06 21:02:33 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
