@@ -1,6 +1,8 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.api.builder.dsl.*
+import io.github.voytech.tabulate.api.builder.dsl.CustomTable
+import io.github.voytech.tabulate.api.builder.dsl.footer
+import io.github.voytech.tabulate.api.builder.dsl.header
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
 import io.github.voytech.tabulate.model.attributes.cell.*
@@ -64,7 +66,7 @@ class TabulationTemplateTest {
 
     @Test
     fun `should perform subsequent exports on the same TabulationTemplate`() {
-        TabulationTemplate<Product>(format("spy")).let { tabulation ->
+        TabulationTemplate(format("spy")).let { tabulation ->
             tabulation.export(Products.ITEMS, Unit) {
                 name = "Products table"
                 columns {

@@ -64,7 +64,7 @@ interface TabulationApi<T, O> {
  * its sole role - constructing tables from from various objects.
  * @author Wojciech Mąka
  */
-class TabulationTemplate<T>(private val format: TabulationFormat) {
+class TabulationTemplate(private val format: TabulationFormat) {
 
     private val provider: ExportOperationsProvider<RenderingContext> by lazy { resolveExportOperationsFactory(format) }
 
@@ -72,7 +72,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
     private val outputBindings: List<OutputBinding<RenderingContext, *>> by lazy { provider.createOutputBindings() }
 
-    private inner class TabulationApiImpl<O>(
+    private inner class TabulationApiImpl<T,O>(
         private val state: TabulationState<T>,
         private val output: O
     ) : TabulationApi<T, O> {
@@ -99,7 +99,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
         }
     }
 
-    private inner class RowCompletionListenerImpl(private val renderingContext: RenderingContext) :
+    private inner class RowCompletionListenerImpl<T>(private val renderingContext: RenderingContext) :
         RowCompletionListener<T> {
 
         override fun onAttributedRowResolved(row: AttributedRow) = ops.beginRow(renderingContext, row)
@@ -110,7 +110,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
     }
 
-    private fun materialize(table: Table<T>): TabulationState<T> {
+    private fun <T> materialize(table: Table<T>): TabulationState<T> {
         return provider.createRenderingContext().let { renderingContext ->
             TabulationState(renderingContext, table, RowCompletionListenerImpl(renderingContext))
         }
@@ -142,7 +142,7 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
      * @param output an output binding.
      * @param table [Table] a top level table model which defines table appearance.
      */
-    fun <O> export(
+    fun <T,O> export(
         source: Iterable<T>,
         output: O,
         table: Table<T>,
@@ -162,21 +162,21 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
      * @return [TabulationApi] which enables 'interactive' export.
      */
 
-    fun <O> create(output: O, table: Table<T>): TabulationApi<T, O> {
+    fun <T,O> create(output: O, table: Table<T>): TabulationApi<T, O> {
         return TabulationApiImpl(materialize(table), output)
     }
 
 
-    private fun captureRecordAndRenderRow(state: TabulationState<T>, record: T) {
+    private fun <T> captureRecordAndRenderRow(state: TabulationState<T>, record: T) {
         state.capture(record)
     }
 
-    private fun renderRemainingBufferedRows(state: TabulationState<T>) {
+    private fun <T> renderRemainingBufferedRows(state: TabulationState<T>) {
         @Suppress("ControlFlowWithEmptyBody")
         while (state.next() != null);
     }
 
-    private fun renderColumns(state: TabulationState<T>, renderPhase: ColumnRenderPhase) {
+    private fun <T> renderColumns(state: TabulationState<T>, renderPhase: ColumnRenderPhase) {
         with(state) {
             tableModel.columns.forEach { column: ColumnDef<T> ->
                 ops.renderColumn(
@@ -193,11 +193,11 @@ class TabulationTemplate<T>(private val format: TabulationFormat) {
 
 }
 
-fun <T, O> TabulationTemplate<T>.export(source: Iterable<T>, output: O, block: TableBuilderApi<T>.() -> Unit) =
+fun <T, O> TabulationTemplate.export(source: Iterable<T>, output: O, block: TableBuilderApi<T>.() -> Unit) =
     export(source, output, createTable(block))
 
 fun <T,O> Table<T>.export(format: TabulationFormat, output: O) {
-    TabulationTemplate<T>(format).export(emptyList(), output, this)
+    TabulationTemplate(format).export(emptyList(), output, this)
 }
 
 /**
@@ -225,7 +225,7 @@ fun File.tabulationFormat(provider: String? = null) =
 fun <T> (TableBuilderApi<T>.() -> Unit).export(file: File) {
     file.tabulationFormat().let { format ->
         FileOutputStream(file).use {
-            TabulationTemplate<T>(format).export(emptyList(), it, createTable(this))
+            TabulationTemplate(format).export(emptyList(), it, createTable(this))
         }
     }
 }
@@ -247,7 +247,7 @@ fun <T> (TableBuilderApi<T>.() -> Unit).export(fileName: String) = export(File(f
  * @receiver collection of records to be rendered into file.
  */
 fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
-    TabulationTemplate<T>(format).export(this, output, createTable(block))
+    TabulationTemplate(format).export(this, output, createTable(block))
 }
 
 /**
@@ -260,7 +260,7 @@ fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: Tabl
 fun <T> Iterable<T>.tabulate(file: File, block: TableBuilderApi<T>.() -> Unit) {
     file.tabulationFormat().let { format ->
         FileOutputStream(file).use {
-            TabulationTemplate<T>(format).export(this, it, createTable(block))
+            TabulationTemplate(format).export(this, it, createTable(block))
         }
     }
 }
