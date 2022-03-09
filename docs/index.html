@@ -1309,9 +1309,9 @@ FluentTableBuilderApi&lt;Employee&gt; employeeTable = TableBuilder&lt;Employee&g
 		.attribute(TemplateFileAttribute::builder, builder -&gt; builder.setFileName("file.xlsx"))
         .attribute(ColumnWidthAttribute::builder, builder -&gt; builder.setAuto(true))
 		.columns()
-            .column(of("id"),Employee::getId)
-		    .column(of("firstName"),Employee::getFirstName)
-		    .column(of("lastName"),Employee::getLastName)
+            .column("id",Employee::getId)
+		    .column("firstName",Employee::getFirstName)
+		    .column("lastName",Employee::getLastName)
 		.rows()
 		    .row(0)
 		        .attribute(RowHeightAttribute::builder, builder -&gt; builder.setPx(100))
@@ -1478,7 +1478,7 @@ new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-03-06 21:02:33 +0100
+Last updated 2022-03-09 16:54:33 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
