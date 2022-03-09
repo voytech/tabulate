@@ -22,16 +22,15 @@ sealed class FluentTableBuilderApi<T> {
     @JvmSynthetic
     internal abstract fun up(): FluentTableBuilderApi<T>
 
-    @JvmSynthetic
-    internal fun root(): TableBuilderState<T> {
+    fun root(): TableBuilder<T> {
         var upper: FluentTableBuilderApi<T> = this
         while (upper.javaClass != TableBuilder::class.java) {
             upper = upper.up()
         }
-        return (upper as TableBuilder<T>).builderState
+        return (upper as TableBuilder<T>)
     }
 
-    fun build() :Table<T> = root().build()
+    fun build() :Table<T> = root().builderState.build()
 }
 
 interface RowBuilderMethods<T> {
@@ -44,13 +43,13 @@ interface RowBuilderMethods<T> {
 interface CellBuilderMethods<T> {
     fun cell(): CellBuilder<T>
     fun cell(id: String): CellBuilder<T>
-    fun cell(ref: NamedPropertyReferenceColumnKey<T>): CellBuilder<T>
+    fun cell(key: String, reference: java.util.function.Function<T, Any?>): CellBuilder<T>
     fun cell(index: Int): CellBuilder<T>
 }
 
 interface ColumnsBuilderMethods<T> {
     fun column(id: String): ColumnBuilder<T>
-    fun column(ref: NamedPropertyReferenceColumnKey<T>): ColumnBuilder<T>
+    fun column(key: String, reference: java.util.function.Function<T, Any?>): ColumnBuilder<T>
 }
 
 /**
@@ -63,6 +62,9 @@ class TableBuilder<T> : FluentTableBuilderApi<T>() {
 
     @get:JvmSynthetic
     internal val builderState: TableBuilderState<T> = TableBuilderState()
+
+    @get:JvmSynthetic
+    internal val cache: PropertyReferencesCache = PropertyReferencesCache()
 
     fun name(name: String) = apply {
         this.builderState.name = name
@@ -111,8 +113,10 @@ class ColumnsBuilder<T> internal constructor(private val parent: TableBuilder<T>
     override fun column(id: String) =
         ColumnBuilder(parent.builderState.columnsBuilderState.ensureColumnBuilder(id) {}, this)
 
-    override fun column(ref: NamedPropertyReferenceColumnKey<T>) =
-        ColumnBuilder(parent.builderState.columnsBuilderState.ensureColumnBuilder(ref) {}, this)
+    override fun column(key: String, reference: java.util.function.Function<T, Any?>) =
+        ColumnBuilder(parent.builderState.columnsBuilderState.ensureColumnBuilder(
+            parent.cache.cached(NamedPropertyReferenceColumnKey(key,reference))
+        ) {}, this)
 
     @JvmSynthetic
     override fun up(): TableBuilder<T> = parent
@@ -215,10 +219,17 @@ class RowBuilder<T> internal constructor(
 
     override fun cell() = CellBuilder(builderState.cellsBuilderState.addCellBuilder { }, this)
 
-    override fun cell(id: String) = CellBuilder(builderState.cellsBuilderState.addCellBuilder(id) {}, this)
+    override fun cell(id: String) = CellBuilder(
+        root().cache.cached<T>(id)?.let {
+            builderState.cellsBuilderState.addCellBuilder(it) {}
+        } ?: builderState.cellsBuilderState.addCellBuilder(id) {},
+        this
+    )
 
-    override fun cell(ref: NamedPropertyReferenceColumnKey<T>) =
-        CellBuilder(builderState.cellsBuilderState.addCellBuilder(ref) {}, this)
+    override fun cell(key: String, reference: java.util.function.Function<T, Any?>) =
+        CellBuilder(builderState.cellsBuilderState.addCellBuilder(
+            root().cache.cached(NamedPropertyReferenceColumnKey(key,reference))
+        ) {}, this)
 
     override fun cell(index: Int): CellBuilder<T> =
         CellBuilder(builderState.cellsBuilderState.addCellBuilder(index) {}, this)
