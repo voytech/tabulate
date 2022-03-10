@@ -2,7 +2,6 @@ package io.github.voytech.tabulate.core.builder.fluent;
 
 import io.github.voytech.tabulate.api.builder.fluent.FluentTableBuilderApi;
 import io.github.voytech.tabulate.api.builder.fluent.TableBuilder;
-import io.github.voytech.tabulate.model.NamedPropertyReferenceColumnKey;
 import io.github.voytech.tabulate.model.SourceRow;
 import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute;
 import io.github.voytech.tabulate.model.attributes.cell.Colors;
