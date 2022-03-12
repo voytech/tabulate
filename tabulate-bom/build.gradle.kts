@@ -4,6 +4,7 @@ val commonsMathVersion: String by project
 plugins {
     id("java-platform")
     id("maven-publish")
+    id("signing")
 }
 
 repositories {
@@ -49,5 +50,12 @@ publishing {
                 }
             }
         }
+    }
+}
+
+if (System.getenv("GPG_KEY_ID") != null) {
+    signing {
+        useGpgCmd()
+        sign(publishing.publications)
     }
 }

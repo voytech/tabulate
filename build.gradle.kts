@@ -43,6 +43,7 @@ configure(
     apply(plugin = "java-library")
     apply(plugin = "org.jetbrains.dokka")
     apply(plugin = "jacoco")
+    apply(plugin = "signing")
     dependencies {
         implementation(kotlin("stdlib", kotlinVersion))
         testImplementation("org.jetbrains.kotlin","kotlin-test", kotlinVersion)
@@ -122,6 +123,14 @@ configure(
             }
         }
     }
+
+    if (System.getenv("GPG_KEY_ID") != null) {
+        signing {
+            useGpgCmd()
+            sign(publishing.publications)
+        }
+    }
+
 }
 
 nexusPublishing {
@@ -132,19 +141,5 @@ nexusPublishing {
             nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
             snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
         }
-    }
-}
-
-if (System.getenv("GPG_KEY_ID") != null) {
-    println(System.getenv("GPG_KEY_ID"))
-    signing {
-        useInMemoryPgpKeys(
-            System.getenv("GPG_KEY_ID"),
-            System.getenv("GPG_PRIVATE_KEY"),
-            System.getenv("GPG_PRIVATE_KEY_PASSWORD")
-        )
-        println("Signing")
-        sign(publishing.publications)
-        println("Signed")
     }
 }

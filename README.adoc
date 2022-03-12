@@ -31,24 +31,15 @@ In such cases You want to hide implementation details using abstractions, but th
 
 - You want to customise table look & feel by your own-crafted attributes.
 
-== Snapshot repository coordinates
+== Current version
 
-Library is not yet released into maven central.
-Currently, you can access its snapshot:
-
+Current version of library is 0.1.0:
 ----
-repositories {
-    maven {
-        url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-    }
-}
-
 dependencies {
-    implementation(platform("io.github.voytech:tabulate-bom:0.1.0-SNAPSHOT"))
-    implementation("io.github.voytech","tabulate-core")   // e.g. DSL,  
+    implementation(platform("io.github.voytech:tabulate-bom:0.1.0"))
+    implementation("io.github.voytech","tabulate-core")   // e.g. DSL,
     implementation("io.github.voytech","tabulate-excel")  // streaming apache POI excel API.
 }
-
 ----
 
 First 0.1.0 version will not differ much from current snapshot version and migration to release should be quick.
