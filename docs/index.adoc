@@ -178,6 +178,11 @@ provide extensions to existing rows (through call `matching {  <<record_row_pred
 
 === Row predicates. [[row_predicates]]
 
+Row predicates allow choosing row definitions matching only specific conditions. This way you can insert custom rows at specific index or index range, or enrich dynamic data row with custom attributes. There are two kinds of predicates:
+
+- Row index predicates, that are used to define only custom rows (like header or footer)
+- Row record predicates, that are used to enrich existing row (custom or dynamic data) with additional attributes.
+
 ==== Row index predicates. [[row_index_predicates]]
 
 You have already seen how `.header` extension function is implemented. Internally it invokes `.newRow(0)` which requests rendering of a row at index `0`. What if You want to apply entire row definition for several indices ?
@@ -202,6 +207,8 @@ newRow({ gt(0) and lt(100) }) {
 }
 ----
 
+CAUTION: One important thing to remember about row index predicate is that it is _always defined as data structure not as a predicate function_. This is because data structure can be materialized into internal map with indices as keys which enables fast lookup. This approach makes it much faster than iterating over available predicate functions and evaluating them each time next row is requested (that would be required in order to synthesize applicable row definition). Additionally, we can't get more flexibility for custom rows, as long as their indices should be known at definition time and dynamic data context can't be value added.
+
 ==== Record row predicates [[record_row_predicates]]
 
 Record predicates differs from `row index predicates` in that they cannot be used to insert new custom rows. They can only enrich *existing* row, that is:
@@ -209,7 +216,7 @@ Record predicates differs from `row index predicates` in that they cannot be use
  - custom row that is created by `newRow` API method,
  - or a row that is derived from collection element (it is always produced from <<column_scoped_cell_value_providers>> column binding).
 
-Record row predicates are always represented by a predicate function that checks if currently processed record or custom row meets specific conditions.
+CAUTION: Record row predicates _are always represented by a predicate function_ that checks if currently processed record or custom row meets specific conditions.
 
 <<<
 On API level we can define `row predicate` in two ways:
@@ -259,11 +266,10 @@ contracts.tabulate("contracts.xlsx") {
     }
 }
 ----
-<1> In order to export collection of elements, all we need to do is do define column bindings with getter property references as identifiers. As long as there are no custom row defined in 'rows' section, all rows
-in table will be rows originating from collection elements.
+<1> In order to export collection of elements, all we need to do is do define column bindings with getter property references as identifiers. As long as there are no custom row defined in 'rows' section, all rows in table will be rows originating from collection elements.
 <2> If You declare custom row at specific index (or matching index predicate), then it will take precedence over dynamic rows generated from collection. So if You declare `header` row it will be the very first row in exported table, but when You write `newRow(2)` - this will create new custom row as third. Rows: 0 and 1 will be then reserved for dynamic data (collection elements) as long as there are no other custom rows declarations matching previous indices.
 
-There are still cases where this flexibility is not enough. How can we define custom row that will be rendered after all dynamic data ? For that purpose we cannot just use index based predicate as long as we cannot tell the size of collection in advance. The solution for above is __multi-pass enabled `RowIndex` cursor__ used by context iterator. This `RowIndex` contains additional 'step' component which increments after there are no row index definitions for current pass. After 'step' is advanced, its local step-scope index is set to zero (this counter will increment per each row matching current pass). Global-scope row index is still maintained to support predicates using it.
+There are still cases where this flexibility is not enough. How can we define custom row that will be rendered after all dynamic data ? We cannot just use index based predicate as long as we cannot tell the size of collection in advance. The solution for above is __multi-pass enabled `RowIndex` cursor__ used by context iterator. This `RowIndex` contains additional 'step' component which increments after there are no row index definitions for current pass. After 'step' is advanced, its local step-scope index is set to zero (this counter will increment per each row matching current pass). Global-scope row index is still maintained to support predicates using it.
 
 Here is how You can add footer row:
 [source,kotlin,options="nowrap"]
@@ -291,7 +297,7 @@ fun <T> RowsBuilderApi<T>.footer(block: RowBuilderApi<T>.() -> Unit) {
     newRow(0, AdditionalSteps.TRAILING_ROWS, block) //<1>
 }
 ----
-<1> In its implementation, it uses additional method argument: `AdditionalSteps.TRAILING_ROWS`. Internally this will create row index definition with index value / predicate, which is relative to TRAILING_ROWS pass. The sequence of additional passes is determined by enum ordinal values.
+<1> As you can see above, it uses additional method argument: `AdditionalSteps.TRAILING_ROWS`. Internally this will create row index definition with index value / predicate, which is relative to `TRAILING_ROWS` step. The order of additional steps is calculated by using enum ordinal values.
 
 <<<
 == Extension points.

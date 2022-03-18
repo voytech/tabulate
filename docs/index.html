@@ -775,6 +775,19 @@ provide extensions to existing rows (through call <code>matching {  <a href="#re
 </div>
 <div class="sect2">
 <h3 id="row_predicates">Row predicates.</h3>
+<div class="paragraph">
+<p>Row predicates allow choosing row definitions matching only specific conditions. This way you can insert custom rows at specific index or index range, or enrich dynamic data row with custom attributes. There are two kinds of predicates:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Row index predicates, that are used to define only custom rows (like header or footer)</p>
+</li>
+<li>
+<p>Row record predicates, that are used to enrich existing row (custom or dynamic data) with additional attributes.</p>
+</li>
+</ul>
+</div>
 <div class="sect3">
 <h4 id="row_index_predicates">Row index predicates.</h4>
 <div class="paragraph">
@@ -811,6 +824,18 @@ You can use row index predicate as follows:</p>
 }</code></pre>
 </div>
 </div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+One important thing to remember about row index predicate is that it is <em>always defined as data structure not as a predicate function</em>. This is because data structure can be materialized into internal map with indices as keys which enables fast lookup. This approach makes it much faster than iterating over available predicate functions and evaluating them each time next row is requested (that would be required in order to synthesize applicable row definition). Additionally, we can&#8217;t get more flexibility for custom rows, as long as their indices should be known at definition time and dynamic data context can&#8217;t be value added.
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect3">
 <h4 id="record_row_predicates">Record row predicates</h4>
@@ -827,8 +852,17 @@ You can use row index predicate as follows:</p>
 </li>
 </ul>
 </div>
-<div class="paragraph">
-<p>Record row predicates are always represented by a predicate function that checks if currently processed record or custom row meets specific conditions.</p>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+Record row predicates <em>are always represented by a predicate function</em> that checks if currently processed record or custom row meets specific conditions.
+</td>
+</tr>
+</table>
 </div>
 <div style="page-break-after: always;"></div>
 <div class="paragraph">
@@ -897,8 +931,7 @@ What is more, there is nothing that stops You from using both techniques for sin
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>In order to export collection of elements, all we need to do is do define column bindings with getter property references as identifiers. As long as there are no custom row defined in 'rows' section, all rows
-in table will be rows originating from collection elements.</td>
+<td>In order to export collection of elements, all we need to do is do define column bindings with getter property references as identifiers. As long as there are no custom row defined in 'rows' section, all rows in table will be rows originating from collection elements.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -907,7 +940,7 @@ in table will be rows originating from collection elements.</td>
 </table>
 </div>
 <div class="paragraph">
-<p>There are still cases where this flexibility is not enough. How can we define custom row that will be rendered after all dynamic data ? For that purpose we cannot just use index based predicate as long as we cannot tell the size of collection in advance. The solution for above is <em>multi-pass enabled <code>RowIndex</code> cursor</em> used by context iterator. This <code>RowIndex</code> contains additional 'step' component which increments after there are no row index definitions for current pass. After 'step' is advanced, its local step-scope index is set to zero (this counter will increment per each row matching current pass). Global-scope row index is still maintained to support predicates using it.</p>
+<p>There are still cases where this flexibility is not enough. How can we define custom row that will be rendered after all dynamic data ? We cannot just use index based predicate as long as we cannot tell the size of collection in advance. The solution for above is <em>multi-pass enabled <code>RowIndex</code> cursor</em> used by context iterator. This <code>RowIndex</code> contains additional 'step' component which increments after there are no row index definitions for current pass. After 'step' is advanced, its local step-scope index is set to zero (this counter will increment per each row matching current pass). Global-scope row index is still maintained to support predicates using it.</p>
 </div>
 <div class="paragraph">
 <p>Here is how You can add footer row:</p>
@@ -950,7 +983,7 @@ in table will be rows originating from collection elements.</td>
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>In its implementation, it uses additional method argument: <code>AdditionalSteps.TRAILING_ROWS</code>. Internally this will create row index definition with index value / predicate, which is relative to TRAILING_ROWS pass. The sequence of additional passes is determined by enum ordinal values.</td>
+<td>As you can see above, it uses additional method argument: <code>AdditionalSteps.TRAILING_ROWS</code>. Internally this will create row index definition with index value / predicate, which is relative to <code>TRAILING_ROWS</code> step. The order of additional steps is calculated by using enum ordinal values.</td>
 </tr>
 </table>
 </div>
@@ -1478,7 +1511,7 @@ new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-03-09 16:54:33 +0100
+Last updated 2022-03-18 18:54:59 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
