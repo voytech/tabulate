@@ -42,8 +42,6 @@ dependencies {
 }
 ----
 
-First 0.1.0 version will not differ much from current snapshot version and migration to release should be quick.
-
 == Basic usage
 
 Let's start simple.

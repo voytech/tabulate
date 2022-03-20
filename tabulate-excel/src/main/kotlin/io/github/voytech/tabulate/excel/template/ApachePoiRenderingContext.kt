@@ -39,13 +39,13 @@ class ApachePoiOutputStreamOutputBinding : OutputStreamOutputBinding<ApachePoiRe
  */
 class ApachePoiRenderingContext : RenderingContext  {
 
-    private var adaptee: SXSSFWorkbook? = null
+    private var workbook: SXSSFWorkbook? = null
 
     fun createWorkbook(templateFile: InputStream? = null, forceRecreate: Boolean = false): SXSSFWorkbook {
-        if (adaptee == null || forceRecreate) {
-            adaptee = createWorkbookInternal(templateFile)
+        if (workbook == null || forceRecreate) {
+            workbook = createWorkbookInternal(templateFile)
         }
-        return adaptee!!
+        return workbook!!
     }
 
     fun xssfWorkbook(): XSSFWorkbook = workbook().xssfWorkbook
@@ -56,7 +56,7 @@ class ApachePoiRenderingContext : RenderingContext  {
             .getRow(coordinates.rowIndex)
             .getCell(coordinates.columnIndex)
 
-    fun workbook(): SXSSFWorkbook = adaptee!!
+    fun workbook(): SXSSFWorkbook = workbook!!
 
     fun provideSheet(sheetName: String): SXSSFSheet = getSheet(sheetName) ?: workbook().createSheet(sheetName)
 

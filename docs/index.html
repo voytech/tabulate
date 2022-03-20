@@ -831,7 +831,7 @@ You can use row index predicate as follows:</p>
 <i class="fa icon-caution" title="Caution"></i>
 </td>
 <td class="content">
-One important thing to remember about row index predicate is that it is <em>always defined as data structure not as a predicate function</em>. This is because data structure can be materialized into internal map with indices as keys which enables fast lookup. This approach makes it much faster than iterating over available predicate functions and evaluating them each time next row is requested (that would be required in order to synthesize applicable row definition). Additionally, we can&#8217;t get more flexibility for custom rows, as long as their indices should be known at definition time and dynamic data context can&#8217;t be value added.
+One important thing to remember about row index predicate is that it is <em>always defined as data structure not as a predicate function</em>. This is because data structure can be materialized into internal map with row indices as keys which enables fast lookup. This approach makes it much faster than iterating over available predicate functions and evaluating them each time next row is requested (that would be required in order to synthesize applicable row definition). Additionally, we can&#8217;t get more flexibility for custom rows, as long as their indices should be known at definition time and dynamic data context can&#8217;t be value added.
 </td>
 </tr>
 </table>
@@ -1511,7 +1511,7 @@ new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-03-18 18:54:59 +0100
+Last updated 2022-03-20 16:49:42 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

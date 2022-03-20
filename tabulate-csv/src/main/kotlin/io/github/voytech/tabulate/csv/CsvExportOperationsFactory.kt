@@ -22,7 +22,7 @@ import java.io.OutputStream
 class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingContext>() {
 
     override fun onBind(renderingContext: CsvRenderingContext, output: OutputStream) {
-        renderingContext.doBind(output)
+        renderingContext.setOutput(output)
     }
 
     override fun flush(output: OutputStream) {
@@ -40,7 +40,7 @@ open class CsvRenderingContext: RenderingContext {
     private lateinit var bufferedWriter: BufferedWriter
     private val line = StringBuilder()
 
-    fun doBind(output: OutputStream) {
+    fun setOutput(output: OutputStream) {
         bufferedWriter = output.bufferedWriter()
     }
 

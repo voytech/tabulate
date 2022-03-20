@@ -24,7 +24,7 @@ import java.io.File
 import java.util.stream.Stream
 
 @DisplayName("Tests for model attributes")
-class ExcelAttributesTests {
+class CellExcelAttributesTests {
 
     @Test
     fun `should instantiate attributes model set to defaults`() {

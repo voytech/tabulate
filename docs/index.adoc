@@ -207,7 +207,7 @@ newRow({ gt(0) and lt(100) }) {
 }
 ----
 
-CAUTION: One important thing to remember about row index predicate is that it is _always defined as data structure not as a predicate function_. This is because data structure can be materialized into internal map with indices as keys which enables fast lookup. This approach makes it much faster than iterating over available predicate functions and evaluating them each time next row is requested (that would be required in order to synthesize applicable row definition). Additionally, we can't get more flexibility for custom rows, as long as their indices should be known at definition time and dynamic data context can't be value added.
+CAUTION: One important thing to remember about row index predicate is that it is _always defined as data structure not as a predicate function_. This is because data structure can be materialized into internal map with row indices as keys which enables fast lookup. This approach makes it much faster than iterating over available predicate functions and evaluating them each time next row is requested (that would be required in order to synthesize applicable row definition). Additionally, we can't get more flexibility for custom rows, as long as their indices should be known at definition time and dynamic data context can't be value added.
 
 ==== Record row predicates [[record_row_predicates]]
 
