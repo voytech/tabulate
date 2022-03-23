@@ -24,7 +24,7 @@ data class CellTextStylesAttribute(
         var weight: DefaultWeightStyle? by observable(DefaultWeightStyle.NORMAL)
         var italic: Boolean? by observable(false)
         var strikeout: Boolean? by observable(false)
-        var underline: Boolean?by observable(false)
+        var underline: Boolean? by observable(false)
         var fontColor: Color? by observable(null)
         var ident: Short by observable(0)
         var wrapText: Boolean by observable(false)

@@ -22,7 +22,7 @@ data class CellBordersAttribute(
         var leftBorderColor: Color? by observable(null)
         var rightBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
         var rightBorderColor: Color? by observable(null)
-        var topBorderStyle: BorderStyle? = DefaultBorderStyle.NONE
+        var topBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
         var topBorderColor: Color? by observable(null)
         var bottomBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
         var bottomBorderColor: Color? by observable(null)
@@ -40,6 +40,7 @@ data class CellBordersAttribute(
     }
 
     override fun overrideWith(other: CellBordersAttribute): CellBordersAttribute = CellBordersAttribute(
+        leftBorderStyle = takeIfChanged(other, CellBordersAttribute::leftBorderStyle),
         leftBorderColor = takeIfChanged(other, CellBordersAttribute::leftBorderColor),
         rightBorderStyle = takeIfChanged(other, CellBordersAttribute::rightBorderStyle),
         rightBorderColor = takeIfChanged(other, CellBordersAttribute::rightBorderColor),

@@ -2,6 +2,7 @@ package io.github.voytech.tabulate
 
 import io.github.voytech.tabulate.api.builder.RowPredicates.all
 import io.github.voytech.tabulate.api.builder.dsl.*
+import io.github.voytech.tabulate.excel.model.ExcelBorderStyle
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
 import io.github.voytech.tabulate.excel.model.attributes.dataFormat
 import io.github.voytech.tabulate.excel.model.attributes.filterAndSort
@@ -30,6 +31,105 @@ import kotlin.system.measureTimeMillis
 
 @DisplayName("Testing various excel exports")
 class ApachePoiTabulateTests {
+
+    @Test
+    fun `should correctly override cell borders defined on various levels`() {
+        val productList = SampleProduct.create(1)
+        productList.tabulate("test.xlsx") {
+            name = "Products table"
+            attributes {
+                columnWidth { auto = true }
+                borders {
+                    leftBorderStyle = ExcelBorderStyle.HAIR
+                    leftBorderColor = Colors.BLACK
+                    rightBorderStyle = ExcelBorderStyle.HAIR
+                    rightBorderColor = Colors.BLACK
+                    topBorderStyle = ExcelBorderStyle.HAIR
+                    topBorderColor = Colors.BLACK
+                    bottomBorderStyle = ExcelBorderStyle.HAIR
+                    bottomBorderColor = Colors.BLACK
+                }
+            }
+            columns {
+                column(SampleProduct::code)
+                column(SampleProduct::name)
+                column(SampleProduct::description)
+                column(SampleProduct::manufacturer)
+                column(SampleProduct::price)
+            }
+            rows {
+                newRow {
+                    cell {
+                        value = "Header column 1"
+                        attributes {
+                            borders {
+                                leftBorderStyle = ExcelBorderStyle.THICK
+                                leftBorderColor = Colors.BLACK
+                            }
+                        }
+                    }
+                    cell { value = "Header column 2" }
+                    cell { value = "Header column 3" }
+                    cell { value = "Header column 4" }
+                    cell {
+                        value = "Header column 5"
+                        attributes {
+                            borders {
+                                rightBorderStyle = ExcelBorderStyle.THICK
+                                rightBorderColor = Colors.BLACK
+                            }
+                        }
+                    }
+                    attributes {
+                        borders {
+                            bottomBorderStyle = ExcelBorderStyle.THICK
+                            bottomBorderColor = Colors.BLACK
+                            topBorderStyle = ExcelBorderStyle.THICK
+                            topBorderColor = Colors.BLACK
+                        }
+                    }
+                }
+                footer {
+                    attributes {
+                        borders {
+                            bottomBorderStyle = ExcelBorderStyle.THICK
+                            bottomBorderColor = Colors.BLACK
+                            topBorderStyle = ExcelBorderStyle.THICK
+                            topBorderColor = Colors.BLACK
+                        }
+                    }
+                    cell {
+                        value = "Footer column 1"
+                        attributes {
+                            borders {
+                                leftBorderStyle = ExcelBorderStyle.THICK
+                                leftBorderColor = Colors.BLACK
+                            }
+                        }
+                    }
+                    cell { value = "Footer column 2" }
+                    cell { value = "Footer column 3" }
+                    cell { value = "Footer column 4" }
+                    cell {
+                        value = "Footer column 5"
+                        attributes {
+                            borders {
+                                rightBorderStyle = ExcelBorderStyle.THICK
+                                rightBorderColor = Colors.BLACK
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        PoiTableAssert<SampleProduct>(
+            tableName = "Products table",
+            file = File("test.xlsx"),
+            cellTests = mapOf()
+        ).perform().also {
+            it.cleanup()
+        }
+    }
 
     @Test
     fun `should export products to excel file with various style attributes`() {

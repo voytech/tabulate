@@ -40,7 +40,7 @@ internal class TableOperationsWithAttributeSupport<CTX : RenderingContext>(
             reified CAT : Attribute<*>> AttributedModel<CAT>.forEachOperation(
         unfiltered: List<OP>, consumer: (operation: OP) -> Boolean
     ) {
-        val attributes = attributes!! as Attributes<Attribute<*>> // TODO play with variance on Attributes - try with covariance at declaration site.
+        val attributes = attributes!! as Attributes<Attribute<*>>
         if (!attributes.isNullOrEmpty()) {
             if (filteredOperationCache[attributes].isNullOrEmpty()) {
                 filteredOperationCache[attributes] = unfiltered.filterTo(mutableListOf()) { consumer(it) }
