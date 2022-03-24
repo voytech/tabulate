@@ -379,14 +379,11 @@ Finally, we are implementing `ExportOperationsProvider` compatible with `Renderi
 [source,kotlin,options="nowrap"]
 ----
 class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> {
+    // <1>
+    override fun getTabulationFormat(): TabulationFormat<CsvRenderingContext> =
+        format("csv", CsvRenderingContext::class.java)
 
-    override fun getContextClass(): Class<CsvRenderingContext> = CsvRenderingContext::class.java // <1>
-
-    override fun createRenderingContext() = CsvRenderingContext()  // <2>
-
-    override fun supportsFormat(): TabulationFormat = format("csv") // <3>
-
-    // <4>
+    // <2>
     override fun createExportOperations(): AttributedContextExportOperations<CsvRenderingContext> = object :  AttributedContextExportOperations<CsvRenderingContext> {
 
         override fun beginRow(renderingContext: CsvRenderingContext, context: AttributedRow) {
@@ -398,16 +395,14 @@ class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> 
         }
     }
 
-    // <5>
+    // <3>
     override fun createOutputBindings(): List<OutputBinding<CsvRenderingContext, *>> = listOf(CsvOutputStreamOutputBinding())
 
 }
 ----
 <1> Define the `RenderingContext` compatible with export operation provider,
-<2> Create new `RenderingContext` instance. This instantiation always occurs at the very beginning,
-<3> Declare `TabulationFormat`. It consists of file extension and provider identifier,
-<4> This is the most important step. *Here we implement actual table rendering logic*,
-<5> Finally - we need to provide list of supported outputs. Bare minimum should be at least `OutputStreamOutputBinding`.
+<2> This is the most important step. *Here we implement actual table rendering logic*,
+<3> Finally - we need to provide list of supported outputs. Bare minimum should be at least `OutputStreamOutputBinding`.
 
 <<<
 If target tabular format supports styles, You may add support for rendering built-in attributes as follows:

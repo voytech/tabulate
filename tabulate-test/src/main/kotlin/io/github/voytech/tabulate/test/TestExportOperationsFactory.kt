@@ -1,10 +1,10 @@
 package io.github.voytech.tabulate.test
 
-import io.github.voytech.tabulate.template.TabulationFormat
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.result.OutputBinding
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
+import io.github.voytech.tabulate.template.spi.TabulationFormat
 import java.io.OutputStream
 import java.util.logging.Logger
 
@@ -54,10 +54,9 @@ class OutputStreamTestOutputBinding: OutputBinding<TestRenderingContext, OutputS
     }
 }
 
-class TestExportOperationsFactory:
-    ExportOperationsProvider<TestRenderingContext> {
+class TestExportOperationsFactory: ExportOperationsProvider<TestRenderingContext> {
 
-    override fun supportsFormat() = TabulationFormat.format("test")
+    override fun getTabulationFormat() = TabulationFormat.format("test", TestRenderingContext::class.java)
 
     override fun createExportOperations(): AttributedContextExportOperations<TestRenderingContext> = object:
         AttributedContextExportOperations<TestRenderingContext> {
@@ -102,10 +101,5 @@ class TestExportOperationsFactory:
             columnTest = null
         }
     }
-
-    override fun getContextClass(): Class<TestRenderingContext> = TestRenderingContext::class.java
-
-    override fun createRenderingContext(): TestRenderingContext =
-        TestRenderingContext()
 
 }

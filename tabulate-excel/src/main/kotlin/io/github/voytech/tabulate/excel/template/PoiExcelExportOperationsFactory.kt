@@ -9,10 +9,10 @@ import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
-import io.github.voytech.tabulate.template.TabulationFormat
-import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.result.OutputBinding
+import io.github.voytech.tabulate.template.spi.TabulationFormat
+import io.github.voytech.tabulate.template.spi.TabulationFormat.Companion.format
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.xssf.streaming.SXSSFCell
 import java.math.BigDecimal
@@ -28,11 +28,8 @@ import java.util.*
  */
 class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<ApachePoiRenderingContext>() {
 
-    override fun supportsFormat(): TabulationFormat = format("xlsx", "poi")
-
-    override fun getContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
-
-    override fun createRenderingContext(): ApachePoiRenderingContext = ApachePoiRenderingContext()
+    override fun getTabulationFormat(): TabulationFormat<ApachePoiRenderingContext> =
+        format("xlsx", ApachePoiRenderingContext::class.java,"poi")
 
     override fun provideExportOperations(): TableExportOperations<ApachePoiRenderingContext> =
         object : TableExportOperations<ApachePoiRenderingContext> {

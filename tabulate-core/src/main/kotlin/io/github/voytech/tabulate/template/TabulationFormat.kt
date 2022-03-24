@@ -10,7 +10,6 @@ package io.github.voytech.tabulate.template
 class TabulationFormat(
     val id: String,
     val provider: String? = null,
-    // val enablesCustomAttributeOperations
 ) {
     companion object {
         /**

@@ -4,6 +4,7 @@ import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.result.OutputBinding
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
+import io.github.voytech.tabulate.template.spi.getRenderingContextClass
 import java.util.*
 
 /**
@@ -66,7 +67,7 @@ abstract class ExportOperationsConfiguringFactory<CTX : RenderingContext> : Expo
         attributeOperationsContainer: AttributesOperationsContainer<CTX>,
     ): AttributesOperationsContainer<CTX> {
         ServiceLoader.load(AttributeRenderOperationsProvider::class.java)
-            .filter { getContextClass().isAssignableFrom(it.getContextClass()) }
+            .filter { getRenderingContextClass().isAssignableFrom(it.getContextClass()) }
             .map { it as AttributeRenderOperationsProvider<CTX> }
             .forEach {
                 registerAttributesOperations(attributeOperationsContainer, it.getAttributeOperationsFactory())

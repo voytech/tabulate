@@ -4,11 +4,11 @@ import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
 import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
 import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
-import io.github.voytech.tabulate.template.TabulationFormat
-import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.result.OutputBinding
+import io.github.voytech.tabulate.template.spi.TabulationFormat
+import io.github.voytech.tabulate.template.spi.TabulationFormat.Companion.format
 
 class TestAttributeOperations : AttributeRenderOperationsFactory<TestRenderingContext> {
     override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttribute>> =
@@ -39,13 +39,12 @@ class TestExportOperationsFactory : ExportOperationsConfiguringFactory<TestRende
         TestOutputBinding(), OutputStreamTestOutputBinding()
     )
 
-    override fun getContextClass(): Class<TestRenderingContext> = TestRenderingContext::class.java
-
     override fun createRenderingContext(): TestRenderingContext = TestRenderingContext().also {
         CURRENT_RENDERING_CONTEXT_INSTANCE = it
     }
 
-    override fun supportsFormat(): TabulationFormat = format("spy")
+    override fun getTabulationFormat(): TabulationFormat<TestRenderingContext> =
+        format("spy", TestRenderingContext::class.java)
 
     override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<TestRenderingContext> =
         TestAttributeOperations()
@@ -64,17 +63,13 @@ class AnotherTestExportOperationsFactory : ExportOperationsConfiguringFactory<Al
     /**
      * atf - Alternative Test Format ;)
      */
-    override fun supportsFormat() = format("atf")
+    override fun getTabulationFormat() = format("atf", AlternativeTestRenderingContext::class.java)
 
     override fun provideExportOperations(): TableExportOperations<AlternativeTestRenderingContext> =
         object : TableExportOperations<AlternativeTestRenderingContext> {
             override fun renderRowCell(renderingContext: AlternativeTestRenderingContext, context: RowCellContext) {}
             override fun createTable(renderingContext: AlternativeTestRenderingContext, context: TableContext) {}
         }
-
-    override fun createRenderingContext(): AlternativeTestRenderingContext = AlternativeTestRenderingContext()
-
-    override fun getContextClass(): Class<AlternativeTestRenderingContext> = AlternativeTestRenderingContext::class.java
 
     override fun createOutputBindings(): List<OutputBinding<AlternativeTestRenderingContext, *>> = listOf(AlternativeTestOutputBinding())
 

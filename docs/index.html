@@ -1118,14 +1118,11 @@ open class CsvRenderingContext: RenderingContext {
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">class CsvExportOperationsFactory: ExportOperationsProvider&lt;CsvRenderingContext&gt; {
+    <i class="conum" data-value="1"></i><b>(1)</b>
+    override fun getTabulationFormat(): TabulationFormat&lt;CsvRenderingContext&gt; =
+        format("csv", CsvRenderingContext::class.java)
 
-    override fun getContextClass(): Class&lt;CsvRenderingContext&gt; = CsvRenderingContext::class.java <i class="conum" data-value="1"></i><b>(1)</b>
-
-    override fun createRenderingContext() = CsvRenderingContext()  <i class="conum" data-value="2"></i><b>(2)</b>
-
-    override fun supportsFormat(): TabulationFormat = format("csv") <i class="conum" data-value="3"></i><b>(3)</b>
-
-    <i class="conum" data-value="4"></i><b>(4)</b>
+    <i class="conum" data-value="2"></i><b>(2)</b>
     override fun createExportOperations(): AttributedContextExportOperations&lt;CsvRenderingContext&gt; = object :  AttributedContextExportOperations&lt;CsvRenderingContext&gt; {
 
         override fun beginRow(renderingContext: CsvRenderingContext, context: AttributedRow) {
@@ -1137,7 +1134,7 @@ open class CsvRenderingContext: RenderingContext {
         }
     }
 
-    <i class="conum" data-value="5"></i><b>(5)</b>
+    <i class="conum" data-value="3"></i><b>(3)</b>
     override fun createOutputBindings(): List&lt;OutputBinding&lt;CsvRenderingContext, *&gt;&gt; = listOf(CsvOutputStreamOutputBinding())
 
 }</code></pre>
@@ -1151,18 +1148,10 @@ open class CsvRenderingContext: RenderingContext {
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Create new <code>RenderingContext</code> instance. This instantiation always occurs at the very beginning,</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Declare <code>TabulationFormat</code>. It consists of file extension and provider identifier,</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
 <td>This is the most important step. <strong>Here we implement actual table rendering logic</strong>,</td>
 </tr>
 <tr>
-<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
 <td>Finally - we need to provide list of supported outputs. Bare minimum should be at least <code>OutputStreamOutputBinding</code>.</td>
 </tr>
 </table>
@@ -1511,7 +1500,7 @@ new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-03-20 16:49:42 +0100
+Last updated 2022-03-24 20:08:37 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

@@ -1,8 +1,6 @@
 package io.github.voytech.tabulate.csv
 
 import io.github.voytech.tabulate.csv.attributes.CellSeparatorCharacterAttribute
-import io.github.voytech.tabulate.template.TabulationFormat
-import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.AttributedCell
 import io.github.voytech.tabulate.template.operations.AttributedContextExportOperations
@@ -11,6 +9,8 @@ import io.github.voytech.tabulate.template.operations.AttributedRowWithCells
 import io.github.voytech.tabulate.template.result.OutputBinding
 import io.github.voytech.tabulate.template.result.OutputStreamOutputBinding
 import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
+import io.github.voytech.tabulate.template.spi.TabulationFormat
+import io.github.voytech.tabulate.template.spi.TabulationFormat.Companion.format
 import java.io.BufferedWriter
 import java.io.OutputStream
 
@@ -73,11 +73,8 @@ open class CsvRenderingContext: RenderingContext {
  */
 class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> {
 
-    override fun getContextClass(): Class<CsvRenderingContext> = CsvRenderingContext::class.java
-
-    override fun createRenderingContext() = CsvRenderingContext()
-
-    override fun supportsFormat(): TabulationFormat = format("csv")
+    override fun getTabulationFormat(): TabulationFormat<CsvRenderingContext> =
+        format("csv", CsvRenderingContext::class.java)
 
     override fun createExportOperations(): AttributedContextExportOperations<CsvRenderingContext> = object : AttributedContextExportOperations<CsvRenderingContext> {
 

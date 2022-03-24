@@ -11,10 +11,10 @@ import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
-import io.github.voytech.tabulate.template.TabulationFormat
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.result.OutputBinding
+import io.github.voytech.tabulate.template.spi.TabulationFormat
 
 class BenchmarkRenderingContext : RenderingContext
 
@@ -28,23 +28,18 @@ class BenchmarkOutputBinding: OutputBinding<BenchmarkRenderingContext,Unit> {
 
 class BenchmarkExportOperationsFactory: ExportOperationsConfiguringFactory<BenchmarkRenderingContext>() {
     override fun provideExportOperations(): TableExportOperations<BenchmarkRenderingContext> = object: TableExportOperations<BenchmarkRenderingContext> {
-        override fun renderRowCell(renderingContext: BenchmarkRenderingContext, context: RowCellContext) {
-
-        }
+        override fun renderRowCell(renderingContext: BenchmarkRenderingContext, context: RowCellContext) { /* NOOP */}
     }
 
     override fun createOutputBindings(): List<OutputBinding<BenchmarkRenderingContext, *>>  = listOf(
         BenchmarkOutputBinding()
     )
 
-    override fun getContextClass(): Class<BenchmarkRenderingContext> = BenchmarkRenderingContext::class.java
-
-    override fun createRenderingContext(): BenchmarkRenderingContext = BenchmarkRenderingContext()
-
     override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<BenchmarkRenderingContext> =
         TestAttributeOperations()
 
-    override fun supportsFormat(): TabulationFormat = TabulationFormat.format("benchmark")
+    override fun getTabulationFormat(): TabulationFormat<BenchmarkRenderingContext> =
+        TabulationFormat.format("benchmark", BenchmarkRenderingContext::class.java)
 
 }
 

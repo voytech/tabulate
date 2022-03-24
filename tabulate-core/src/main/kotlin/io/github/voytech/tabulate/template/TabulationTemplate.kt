@@ -121,9 +121,9 @@ class TabulationTemplate(private val format: TabulationFormat) {
         return ServiceLoader.load(ExportOperationsProvider::class.java)
             .filterIsInstance<ExportOperationsProvider<RenderingContext>>().find {
                 if (format.provider.isNullOrBlank()) {
-                    format.id == it.supportsFormat().id
+                    format.id == it.getTabulationFormat().id
                 } else {
-                    format == it.supportsFormat()
+                    format.provider == it.getTabulationFormat().provider.providerId
                 }
             } ?: throw ExportOperationsFactoryResolvingException()
     }
@@ -165,7 +165,6 @@ class TabulationTemplate(private val format: TabulationFormat) {
     fun <T,O> create(output: O, table: Table<T>): TabulationApi<T, O> {
         return TabulationApiImpl(materialize(table), output)
     }
-
 
     private fun <T> captureRecordAndRenderRow(state: TabulationState<T>, record: T) {
         state.capture(record)

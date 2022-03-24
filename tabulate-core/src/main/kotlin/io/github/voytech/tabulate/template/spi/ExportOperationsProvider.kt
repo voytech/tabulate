@@ -9,21 +9,14 @@ import io.github.voytech.tabulate.template.result.OutputBinding
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-interface ExportOperationsProvider<CTX: RenderingContext> : Identifiable {
-
-    /**
-     * @return third party API aware class to transform current context into third party tabular representation.
-     * @author Wojciech Mąka
-     * @since 0.1.0
-     */
-    fun getContextClass(): Class<CTX>
+interface ExportOperationsProvider<CTX: RenderingContext> : Identifiable<CTX> {
 
     /**
      * Creates new instance of rendering context. Must be called before every export in order to create clean state to work on.
      * @author Wojciech Mąka
      * @since 0.1.0
      */
-    fun createRenderingContext(): CTX
+    fun createRenderingContext(): CTX = getTabulationFormat().provider.renderingContextClass.newInstance()
 
     /**
      * Creates export operations working on attributed contexts (table, row, column, cell).
@@ -42,3 +35,6 @@ interface ExportOperationsProvider<CTX: RenderingContext> : Identifiable {
      */
     fun createOutputBindings(): List<OutputBinding<CTX,*>>
 }
+
+fun <CTX: RenderingContext> ExportOperationsProvider<CTX>.getRenderingContextClass() : Class<CTX> =
+    getTabulationFormat().provider.renderingContextClass
