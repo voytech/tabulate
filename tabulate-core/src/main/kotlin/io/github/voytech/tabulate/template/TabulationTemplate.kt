@@ -70,9 +70,7 @@ class TabulationTemplate(private val format: TabulationFormat) {
 
     private val ops: AttributedContextExportOperations<RenderingContext> by lazy { provider.createExportOperations() }
 
-    private val outputBindings: List<OutputBinding<RenderingContext, *>> by lazy { provider.createOutputBindings() }
-
-    private inner class TabulationApiImpl<T,O>(
+    private inner class TabulationApiImpl<T,O: Any>(
         private val state: TabulationState<T>,
         private val output: O
     ) : TabulationApi<T, O> {
@@ -129,9 +127,9 @@ class TabulationTemplate(private val format: TabulationFormat) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <O> resolveOutputBinding(output: O): OutputBinding<RenderingContext, O> =
-        outputBindings.filter {
-            it.outputClass().isAssignableFrom(output!!::class.java)
+    private fun <O :Any> resolveOutputBinding(output: O): OutputBinding<RenderingContext, O> =
+        provider.createOutputBindings().filter {
+            it.outputClass().isAssignableFrom(output::class.java)
         }.map { it as OutputBinding<RenderingContext, O> }
             .firstOrNull() ?: throw OutputBindingResolvingException()
 
@@ -142,7 +140,7 @@ class TabulationTemplate(private val format: TabulationFormat) {
      * @param output an output binding.
      * @param table [Table] a top level table model which defines table appearance.
      */
-    fun <T,O> export(
+    fun <T,O: Any> export(
         source: Iterable<T>,
         output: O,
         table: Table<T>,
@@ -162,7 +160,7 @@ class TabulationTemplate(private val format: TabulationFormat) {
      * @return [TabulationApi] which enables 'interactive' export.
      */
 
-    fun <T,O> create(output: O, table: Table<T>): TabulationApi<T, O> {
+    fun <T,O: Any> create(output: O, table: Table<T>): TabulationApi<T, O> {
         return TabulationApiImpl(materialize(table), output)
     }
 
@@ -180,11 +178,7 @@ class TabulationTemplate(private val format: TabulationFormat) {
             tableModel.columns.forEach { column: ColumnDef<T> ->
                 ops.renderColumn(
                     renderingContext,
-                    tableModel.createAttributedColumn(
-                        column,
-                        renderPhase,
-                        state.getCustomAttributes()
-                    )
+                    tableModel.createAttributedColumn(column, renderPhase, state.getCustomAttributes())
                 )
             }
         }
@@ -192,10 +186,10 @@ class TabulationTemplate(private val format: TabulationFormat) {
 
 }
 
-fun <T, O> TabulationTemplate.export(source: Iterable<T>, output: O, block: TableBuilderApi<T>.() -> Unit) =
+fun <T, O: Any> TabulationTemplate.export(source: Iterable<T>, output: O, block: TableBuilderApi<T>.() -> Unit) =
     export(source, output, createTable(block))
 
-fun <T,O> Table<T>.export(format: TabulationFormat, output: O) {
+fun <T,O: Any> Table<T>.export(format: TabulationFormat, output: O) {
     TabulationTemplate(format).export(emptyList(), output, this)
 }
 
@@ -206,7 +200,7 @@ fun <T,O> Table<T>.export(format: TabulationFormat, output: O) {
  * @param output output binding - may be e.g. OutputStream.
  * @receiver top level DSL table builder.
  */
-fun <T, O> (TableBuilderApi<T>.() -> Unit).export(format: TabulationFormat, output: O) {
+fun <T, O: Any> (TableBuilderApi<T>.() -> Unit).export(format: TabulationFormat, output: O) {
     createTable(this).export(format, output)
 }
 
@@ -245,7 +239,7 @@ fun <T> (TableBuilderApi<T>.() -> Unit).export(fileName: String) = export(File(f
  * @param block [TableBuilderApi] a top level table DSL builder which defines table appearance.
  * @receiver collection of records to be rendered into file.
  */
-fun <T, O> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
+fun <T, O: Any> Iterable<T>.tabulate(format: TabulationFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
     TabulationTemplate(format).export(this, output, createTable(block))
 }
 
