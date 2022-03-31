@@ -15,11 +15,11 @@ jobs:
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
+    - name: Import GPG
+      run: ./import_key.sh ${{ secrets.GPG_PRIVATE_KEY }} ${{ secrets.GPG_PUBLIC_KEY }} ${{ secrets.GPG_PRIVATE_KEY_PASSWORD }}
+
     - name: Publish to staging
-      run: gradle publishToSonatype
+      run: gradle -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }} -Psigning.gnupg.passphrase=${{ secrets.GPG_PRIVATE_KEY_PASSWORD }} publishToSonatype
       env:
         SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
         SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-        GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-        GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-        GPG_PRIVATE_KEY_PASSWORD: ${{ secrets.GPG_PRIVATE_KEY_PASSWORD }}
