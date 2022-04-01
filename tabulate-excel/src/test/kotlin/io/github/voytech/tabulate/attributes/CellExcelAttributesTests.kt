@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
 import io.github.voytech.tabulate.api.builder.dsl.Table
 import io.github.voytech.tabulate.excel.model.ExcelCellFills
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
-import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
+import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
@@ -45,7 +45,7 @@ class CellExcelAttributesTests {
 
     @ParameterizedTest
     @MethodSource("cellAttributesProvider")
-    fun `should export with cell attribute`(attr: CellAttributeBuilder<*>, expectedAttribute: CellAttribute) {
+    fun `should export with cell attribute`(attr: CellAttributeBuilder<*>, expectedAttribute: CellAttribute<*>) {
         // when
         Table<Any> {
             name = "test"

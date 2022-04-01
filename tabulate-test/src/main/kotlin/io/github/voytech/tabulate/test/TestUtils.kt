@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.test
 
-import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
+import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.template.operations.CellValue
 import io.github.voytech.tabulate.template.operations.Coordinates
 import java.io.File
@@ -22,7 +22,7 @@ interface StateProvider<E> {
 }
 
 interface AttributeResolver<E> {
-    fun resolve(api: E, coordinates: Coordinates): CellAttribute
+    fun resolve(api: E, coordinates: Coordinates): CellAttribute<*>
 }
 
 interface ValueResolver<E> {
@@ -35,7 +35,7 @@ interface CellTest {
 
 
 data class CellDefinition(
-    val cellAttributes: Set<CellAttribute>?,
+    val cellAttributes: Set<CellAttribute<*>>?,
     val cellValue: CellValue?
 )
 

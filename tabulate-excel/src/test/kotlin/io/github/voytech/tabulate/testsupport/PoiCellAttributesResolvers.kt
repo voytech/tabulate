@@ -6,7 +6,7 @@ import io.github.voytech.tabulate.excel.model.ExcelTypeHints
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
 import io.github.voytech.tabulate.excel.template.ApachePoiRenderingContext
 import io.github.voytech.tabulate.excel.template.poi.ApachePoiUtils
-import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
+import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
@@ -29,7 +29,7 @@ private fun parseColor(xssfColor: XSSFColor) =
     )
 
 class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
-    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute {
+    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
         return api.xssfCell(coordinates).let { cell ->
             CellTextStylesAttribute(
                 fontFamily = cell?.cellStyle?.font?.fontName,
@@ -50,7 +50,7 @@ class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiRenderingContext
 }
 
 class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
-    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute {
+    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
         return with(api.xssfCell(coordinates)?.cellStyle) {
             if (this != null) {
                 CellBackgroundAttribute(
@@ -82,7 +82,7 @@ class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiRenderingC
 }
 
 class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
-    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute {
+    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
 
         return api.xssfCell(coordinates).let { cell ->
             CellBordersAttribute(
@@ -115,7 +115,7 @@ class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiRenderingCont
 }
 
 class PoiCellDataFormatAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
-    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute {
+    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
         return api.xssfCell(coordinates).let {
             it?.cellStyle?.dataFormatString?.let { dataFormat ->
                 CellExcelDataFormatAttribute(
@@ -127,7 +127,7 @@ class PoiCellDataFormatAttributeResolver : AttributeResolver<ApachePoiRenderingC
 }
 
 class PoiCellTypeHintAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
-    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute {
+    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
         return api.xssfCell(coordinates).let {
             it?.cellType?.let { type ->
                 TypeHintAttribute(
@@ -146,7 +146,7 @@ class PoiCellTypeHintAttributeResolver : AttributeResolver<ApachePoiRenderingCon
 }
 
 class PoiCellAlignmentAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
-    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute {
+    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
         return api.xssfCell(coordinates).let {
             CellAlignmentAttribute(
                 vertical = when (it?.cellStyle?.verticalAlignment) {

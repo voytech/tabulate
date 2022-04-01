@@ -31,7 +31,7 @@ interface TabulationApi<T, O> {
      * To be called explicitly in order to trigger next row rendering.
      * Notice that record used in parameter list is not always the record being currently rendered. It is
      * first buffered and rendered eventually according to row qualification rules defined trough table DSL api.
-     * @param record - a record from source collection to be buffered, and transformed into [RowContextWithCells] at some point of time.
+     * @param record - a record from source collection to be buffered, and transformed into [RowClosingContext] at some point of time.
      */
     fun nextRow(record: T)
 
@@ -68,7 +68,7 @@ class TabulationTemplate(private val format: TabulationFormat) {
 
     private val provider: ExportOperationsProvider<RenderingContext> by lazy { resolveExportOperationsFactory(format) }
 
-    private val ops: AttributedContextExportOperations<RenderingContext> by lazy { provider.createExportOperations() }
+    private val ops: Operations<RenderingContext> by lazy { provider.createExportOperations() }
 
     private inner class TabulationApiImpl<T,O: Any>(
         private val state: TabulationState<T>,
@@ -81,7 +81,7 @@ class TabulationTemplate(private val format: TabulationFormat) {
 
         init {
             outputBinding.setOutput(state.renderingContext, output)
-            ops.createTable(state.renderingContext, state.tableModel.createContext(state.getCustomAttributes()))
+            ops.render(state.renderingContext, state.tableModel.createContext(state.getCustomAttributes()))
             renderColumns(state, ColumnRenderPhase.BEFORE_FIRST_ROW)
         }
 
@@ -90,6 +90,7 @@ class TabulationTemplate(private val format: TabulationFormat) {
         override fun finish() {
             renderRemainingBufferedRows(state)
             renderColumns(state, ColumnRenderPhase.AFTER_LAST_ROW)
+            ops.render(state.renderingContext, state.tableModel.createClosingContext(state.getCustomAttributes()))
         }
 
         override fun flush() {
@@ -100,11 +101,17 @@ class TabulationTemplate(private val format: TabulationFormat) {
     private inner class RowCompletionListenerImpl<T>(private val renderingContext: RenderingContext) :
         RowCompletionListener<T> {
 
-        override fun onAttributedRowResolved(row: AttributedRow) = ops.beginRow(renderingContext, row)
+        override fun onAttributedRowResolved(row: RowOpeningContext) {
+            ops.render(renderingContext, row)
+        }
 
-        override fun onAttributedCellResolved(cell: AttributedCell) = ops.renderRowCell(renderingContext, cell)
+        override fun onAttributedCellResolved(cell: CellContext) {
+            ops.render(renderingContext, cell)
+        }
 
-        override fun onAttributedRowResolved(row: AttributedRowWithCells<T>) = ops.endRow(renderingContext, row)
+        override fun onAttributedRowResolved(row: RowClosingContext<T>) {
+            ops.render(renderingContext, row)
+        }
 
     }
 
@@ -176,9 +183,12 @@ class TabulationTemplate(private val format: TabulationFormat) {
     private fun <T> renderColumns(state: TabulationState<T>, renderPhase: ColumnRenderPhase) {
         with(state) {
             tableModel.columns.forEach { column: ColumnDef<T> ->
-                ops.renderColumn(
+                ops.render(
                     renderingContext,
-                    tableModel.createAttributedColumn(column, renderPhase, state.getCustomAttributes())
+                    when (renderPhase) {
+                        ColumnRenderPhase.BEFORE_FIRST_ROW -> tableModel.openAttributedColumn(column, state.getCustomAttributes())
+                        ColumnRenderPhase.AFTER_LAST_ROW -> tableModel.closeAttributedColumn(column, state.getCustomAttributes())
+                    }
                 )
             }
         }

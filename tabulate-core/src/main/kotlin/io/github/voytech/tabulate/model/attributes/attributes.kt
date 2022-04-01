@@ -22,14 +22,20 @@ abstract class Attribute<T: Attribute<T>> {
 
 }
 
-class Attributes<A: Attribute<*>>(internal val attributeSet: Set<A> = emptySet()) {
+fun interface AttributeCategoryAware<A: Attribute<*>> {
+    fun getAttributeCategoryClass(): Class<A>
+}
+
+class Attributes<A: Attribute<*>>(
+    internal val attributeSet: Set<A> = emptySet(), private val attributeCategory: Class<A>
+) : AttributeCategoryAware<A> {
     private var attributeMap: MutableMap<Class<out A>, A> = LinkedHashMap()
 
     private val attributeSetHashCode by lazy { attributeSet.hashCode() }
 
     val size : Int by attributeSet::size
 
-    private constructor(attributeSet: Set<A>, map: HashMap<Class<out A>,A>) : this(attributeSet) {
+    private constructor(attributeSet: Set<A>, map: HashMap<Class<out A>,A>, attributeCategory: Class<A>) : this(attributeSet,attributeCategory) {
         this.attributeMap = map
     }
 
@@ -40,6 +46,8 @@ class Attributes<A: Attribute<*>>(internal val attributeSet: Set<A> = emptySet()
           }
       }
     }
+
+    override fun getAttributeCategoryClass(): Class<A> = attributeCategory
 
     @Suppress("UNCHECKED_CAST")
     private fun <I: Attribute<I>> A.overrideAttribute(other: A, clazz: Class<I>): I = (this as I) + (other as I)
@@ -60,7 +68,7 @@ class Attributes<A: Attribute<*>>(internal val attributeSet: Set<A> = emptySet()
               }
               set.add(result[clazz]!!)
           }
-          return Attributes(set, result)
+          return Attributes(set, result, attributeCategory)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -78,7 +86,7 @@ class Attributes<A: Attribute<*>>(internal val attributeSet: Set<A> = emptySet()
     override fun hashCode(): Int = attributeSetHashCode
 }
 
-fun <A: Attribute<*>> Attributes<A>?.orEmpty() = this ?: Attributes<A>(emptySet())
+inline fun <reified A: Attribute<*>> Attributes<A>?.orEmpty() = this ?: Attributes(emptySet(), A::class.java)
 
 fun <A: Attribute<*>> Attributes<A>?.isNullOrEmpty(): Boolean = this?.size == 0
 

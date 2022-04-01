@@ -49,13 +49,13 @@ class AttributeSetCacheTest {
         val customAttributes = mutableMapOf<String, Any>()
 
         val firstTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val firstAttributedTable: AttributedTable = firstTable.createContext(customAttributes)
+        val firstTableContext: TableCreationContext = firstTable.createContext(customAttributes)
 
         val secondTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val secondAttributedTable: AttributedTable = secondTable.createContext(customAttributes)
+        val secondTableContext: TableCreationContext = secondTable.createContext(customAttributes)
 
-        val cache = firstAttributedTable.setupCacheAndGet().also { it!!["someKey"] = "someValue" }
-        val secondCache = secondAttributedTable.setupCacheAndGet()
+        val cache = firstTableContext.setupCacheAndGet().also { it!!["someKey"] = "someValue" }
+        val secondCache = secondTableContext.setupCacheAndGet()
 
         assertEquals(secondCache, cache)
         assertTrue(cache!!.containsKey("someKey"))
@@ -83,16 +83,16 @@ class AttributeSetCacheTest {
         val iterator = RowContextIterator(AccumulatingRowContextResolver(firstTable, customAttributes))
         val attributedCell = iterator.next().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
-            attributedCell.skipAttributes().cacheOnAttributeSet("key", "value")
+            attributedCell.cacheOnAttributeSet("key", "value")
         }
         attributedCell.withAttributeSetBasedCache {
-            assertEquals("value",attributedCell.skipAttributes().getCachedOnAttributeSet("key"))
+            assertEquals("value",attributedCell.getCachedOnAttributeSet("key"))
         }
 
         val secondIterator = RowContextIterator(AccumulatingRowContextResolver(secondTable, customAttributes))
         val secondAttributedCell = secondIterator.next().rowCellValues.firstNotNullOf { it.value }
         secondAttributedCell.withAttributeSetBasedCache {
-            assertEquals("value",secondAttributedCell.skipAttributes().getCachedOnAttributeSet("key"))
+            assertEquals("value",secondAttributedCell.getCachedOnAttributeSet("key"))
         }
     }
 
@@ -101,13 +101,13 @@ class AttributeSetCacheTest {
         val customAttributes = mutableMapOf<String, Any>()
 
         val firstTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val firstAttributedTable: AttributedTable = firstTable.createContext(customAttributes)
+        val firstTableContext: TableCreationContext = firstTable.createContext(customAttributes)
 
         val secondTable = createTableModel { attributes { template { fileName = "second_filename" } } }
-        val secondAttributedTable: AttributedTable = secondTable.createContext(customAttributes)
+        val secondTableContext: TableCreationContext = secondTable.createContext(customAttributes)
 
-        val cache = firstAttributedTable.setupCacheAndGet().also { it!!["someKey"] = "someValue" }
-        val secondCache = secondAttributedTable.setupCacheAndGet()
+        val cache = firstTableContext.setupCacheAndGet().also { it!!["someKey"] = "someValue" }
+        val secondCache = secondTableContext.setupCacheAndGet()
 
         assertNotEquals(secondCache, cache)
         assertTrue(cache!!.containsKey("someKey"))
@@ -126,10 +126,10 @@ class AttributeSetCacheTest {
         val iterator = RowContextIterator(AccumulatingRowContextResolver(firstTable, customAttributes))
         val attributedCell = iterator.next().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
-            attributedCell.skipAttributes().cacheOnAttributeSet("key", "value")
+            attributedCell.cacheOnAttributeSet("key", "value")
         }
         attributedCell.withAttributeSetBasedCache {
-            assertEquals("value",attributedCell.skipAttributes().getCachedOnAttributeSet("key"))
+            assertEquals("value",attributedCell.getCachedOnAttributeSet("key"))
         }
 
         val secondTable = createTableModelWithCellAttributes {
@@ -140,7 +140,7 @@ class AttributeSetCacheTest {
         val secondIterator = RowContextIterator(AccumulatingRowContextResolver(secondTable, customAttributes))
         val secondAttributedCell = secondIterator.next().rowCellValues.firstNotNullOf { it.value }
         secondAttributedCell.withAttributeSetBasedCache {
-            assertThrows<IllegalStateException> { secondAttributedCell.skipAttributes().getCachedOnAttributeSet("key") }
+            assertThrows<IllegalStateException> { secondAttributedCell.getCachedOnAttributeSet("key") }
         }
     }
 
@@ -149,32 +149,32 @@ class AttributeSetCacheTest {
         val customAttributes = mutableMapOf<String, Any>()
 
         val firstTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val firstAttributedTable: AttributedTable = firstTable.createContext(customAttributes)
+        val firstTableContext: TableCreationContext = firstTable.createContext(customAttributes)
 
         val secondTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val secondAttributedTable: AttributedTable = secondTable.createContext(customAttributes)
+        val secondTableContext: TableCreationContext = secondTable.createContext(customAttributes)
 
         val thirdTable = createTableModel { attributes { template { fileName = "third_table_filename_differs" } } }
-        val thirdAttributedTable: AttributedTable = thirdTable.createContext(customAttributes)
+        val thirdTableContext: TableCreationContext = thirdTable.createContext(customAttributes)
 
-        firstAttributedTable.withAttributeSetBasedCache {
-            firstAttributedTable.skipAttributes().cacheOnAttributeSet("someKey", "someValue")
+        firstTableContext.withAttributeSetBasedCache {
+            firstTableContext.cacheOnAttributeSet("someKey", "someValue")
         }
         val error = assertThrows<IllegalStateException> {
-            firstAttributedTable.skipAttributes().getCachedOnAttributeSet("someKey")
+            firstTableContext.getCachedOnAttributeSet("someKey")
         }
         assertEquals("cannot resolve cached value in scope!", error.message)
 
 
-        secondAttributedTable.withAttributeSetBasedCache {
-            secondAttributedTable.skipAttributes().let { tableContext ->
+        secondTableContext.withAttributeSetBasedCache {
+            secondTableContext.let { tableContext ->
                 tableContext.cacheOnAttributeSet("someKey", "tryOverride")
                 assertEquals("someValue", tableContext.getCachedOnAttributeSet("someKey"))
             }
         }
 
-        thirdAttributedTable.withAttributeSetBasedCache {
-            thirdAttributedTable.skipAttributes().let { tableContext ->
+        thirdTableContext.withAttributeSetBasedCache {
+            thirdTableContext.let { tableContext ->
                 tableContext.cacheOnAttributeSet(
                     "someKey",
                     "thisIsNewValueInNewInternalCacheCosAttributesDiffers"

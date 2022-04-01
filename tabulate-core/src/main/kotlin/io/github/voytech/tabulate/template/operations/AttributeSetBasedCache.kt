@@ -19,7 +19,6 @@ internal value class AttributeClassBasedCache<K : Attribute<*>, V>(
         cache.computeIfAbsent(key) {
             provider()
         }
-
 }
 
 /**
@@ -49,12 +48,16 @@ internal class AttributeSetBasedCache {
         AttributeClassBasedCache()
 
     @JvmSynthetic
-    internal inline fun <reified T : Attribute<*>> getCache(attributes: Attributes<T>): MutableMap<String, Any> {
+    internal fun <T : Attribute<*>> getCache(attributes: Attributes<T>): MutableMap<String, Any> {
         return when {
-            TableAttribute::class.java == T::class.java -> tableAttributesAsKeyCache.compute(attributes as Attributes<TableAttribute<*>>) { mutableMapOf() }
-            ColumnAttribute::class.java == T::class.java -> columnAttributesAsKeyCache.compute(attributes as Attributes<ColumnAttribute<*>>) { mutableMapOf() }
-            RowAttribute::class.java == T::class.java -> rowAttributesAsKeyCache.compute(attributes as Attributes<RowAttribute<*>>) { mutableMapOf() }
-            CellAttribute::class.java == T::class.java -> cellAttributesAsKeyCache.compute(attributes as Attributes<CellAttribute<*>>) { mutableMapOf() }
+            TableAttribute::class.java == attributes.getAttributeCategoryClass() ->
+                tableAttributesAsKeyCache.compute(attributes as Attributes<TableAttribute<*>>) { mutableMapOf() }
+            ColumnAttribute::class.java == attributes.getAttributeCategoryClass() ->
+                columnAttributesAsKeyCache.compute(attributes as Attributes<ColumnAttribute<*>>) { mutableMapOf() }
+            RowAttribute::class.java == attributes.getAttributeCategoryClass() ->
+                rowAttributesAsKeyCache.compute(attributes as Attributes<RowAttribute<*>>) { mutableMapOf() }
+            CellAttribute::class.java == attributes.getAttributeCategoryClass() ->
+                cellAttributesAsKeyCache.compute(attributes as Attributes<CellAttribute<*>>) { mutableMapOf() }
             else -> error("Requested attribute class (category) is not supported!")
         }
     }
@@ -76,11 +79,11 @@ internal fun ContextData.ensureAttributeSetBasedCache(): AttributeSetBasedCache 
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-inline fun <reified T : Attribute<*>> getAttributeClassId(): String = when {
-    TableAttribute::class.java == T::class.java -> "table"
-    ColumnAttribute::class.java == T::class.java -> "column"
-    RowAttribute::class.java == T::class.java -> "row"
-    CellAttribute::class.java == T::class.java -> "cell"
+fun <T : Attribute<*>> AttributeCategoryAware<T>.getAttributeClassId(): String = when {
+    TableAttribute::class.java == getAttributeCategoryClass() -> "table"
+    ColumnAttribute::class.java == getAttributeCategoryClass() -> "column"
+    RowAttribute::class.java == getAttributeCategoryClass() -> "row"
+    CellAttribute::class.java == getAttributeCategoryClass() -> "cell"
     else -> error("Requested attribute class is not supported!")
 }
 
@@ -91,7 +94,7 @@ inline fun <reified T : Attribute<*>> getAttributeClassId(): String = when {
  * @since 0.1.0
  */
 @JvmSynthetic
-internal inline fun <reified T : Attribute<*>> AttributedModel<T>.setupCacheAndGet(): MutableMap<String, Any>? {
+internal fun <T : Attribute<*>> AttributedModel<T>.setupCacheAndGet(): MutableMap<String, Any>? {
     return this.attributes?.takeIf { it.isNotEmpty() }?.let {
         ensureAttributeSetBasedCache().getCache(it)
     }
@@ -108,11 +111,11 @@ internal inline fun <reified T : Attribute<*>> AttributedModel<T>.setupCacheAndG
  * @since 0.1.0
  */
 @JvmSynthetic
-internal inline fun <reified T : Attribute<*>> AttributedModel<T>.withAttributeSetBasedCache(block: (cache: MutableMap<String, Any>?) -> Unit) {
+internal fun <T : Attribute<*>> AttributedModel<T>.withAttributeSetBasedCache(block: (cache: MutableMap<String, Any>?) -> Unit) {
     return setupCacheAndGet()?.also {
-        additionalAttributes?.put("_current_${getAttributeClassId<T>()}_attributes_cache", it)
+        additionalAttributes?.put("_current_${attributes?.getAttributeClassId()}_attributes_cache", it)
     }.run(block).also {
-        additionalAttributes?.remove("_current_${getAttributeClassId<T>()}_attributes_cache")
+        additionalAttributes?.remove("_current_${attributes?.getAttributeClassId()}_attributes_cache")
     }
 }
 
@@ -123,10 +126,10 @@ internal inline fun <reified T : Attribute<*>> AttributedModel<T>.withAttributeS
  * @since 0.1.0
  */
 @Suppress("UNCHECKED_CAST")
-inline fun <reified M : Attribute<*>, T> T.cacheOnAttributeSet(key: String, value: Any): Any
-        where T : ModelAttributeAccessor<M>,
+fun <M : Attribute<*>, T> T.cacheOnAttributeSet(key: String, value: Any): Any
+        where T : AttributedModel<M>,
               T : Context =
-    (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as? MutableMap<String, Any>)
+    (getContextAttributes()?.get("_current_${getAttributeClassId()}_attributes_cache") as? MutableMap<String, Any>)
         ?.let { it.computeIfAbsent(key) { value } } ?: error("cannot resolve cached value in scope!")
 
 /**
@@ -136,10 +139,10 @@ inline fun <reified M : Attribute<*>, T> T.cacheOnAttributeSet(key: String, valu
  * @since 0.1.0
  */
 @Suppress("UNCHECKED_CAST")
-inline fun <reified M : Attribute<*>, T> T.getCachedOnAttributeSet(key: String): Any?
-        where T : ModelAttributeAccessor<M>,
+fun <M : Attribute<*>, T> T.getCachedOnAttributeSet(key: String): Any
+        where T : AttributedModel<M>,
               T : Context =
-    (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as? MutableMap<String, Any>)
+    (getContextAttributes()?.get("_current_${getAttributeClassId()}_attributes_cache") as? MutableMap<String, Any>)
         ?.let { it[key] } ?: error("cannot resolve cached value in scope!")
 
 /**
@@ -149,8 +152,8 @@ inline fun <reified M : Attribute<*>, T> T.getCachedOnAttributeSet(key: String):
  * @since 0.1.0
  */
 @Suppress("UNCHECKED_CAST")
-inline fun <reified M : Attribute<*>, T> T.hasCachedOnAttributeSet(key: String): Boolean
-        where T : ModelAttributeAccessor<M>,
+fun <M : Attribute<*>, T> T.hasCachedOnAttributeSet(key: String): Boolean
+        where T : AttributedModel<M>,
               T : Context =
-    (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as? MutableMap<String, Any>)
+    (getContextAttributes()?.get("_current_${getAttributeClassId()}_attributes_cache") as? MutableMap<String, Any>)
         ?.containsKey(key) ?: false

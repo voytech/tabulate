@@ -26,24 +26,22 @@ import java.util.*
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<ApachePoiRenderingContext>() {
+class PoiExcelExportOperationsFactory : ExportOperationsFactory<ApachePoiRenderingContext>() {
 
     override fun getTabulationFormat(): TabulationFormat<ApachePoiRenderingContext> =
-        format("xlsx", ApachePoiRenderingContext::class.java,"poi")
+        format("xlsx", ApachePoiRenderingContext::class.java, "poi")
 
-    override fun provideExportOperations(): TableExportOperations<ApachePoiRenderingContext> =
-        object : TableExportOperations<ApachePoiRenderingContext> {
-
-            override fun createTable(renderingContext: ApachePoiRenderingContext, context: TableContext) {
-                renderingContext.createWorkbook()
-                renderingContext.provideSheet(context.getTableId())
-            }
-
-            override fun beginRow(renderingContext: ApachePoiRenderingContext, context: RowContext) {
-                renderingContext.provideRow(context.getTableId(), context.getRow())
-            }
-
-            override fun renderRowCell(renderingContext: ApachePoiRenderingContext, context: RowCellContext) {
+    override fun provideExportOperations(): OperationsBuilder<ApachePoiRenderingContext>.() -> Unit = {
+        createTable = CreateTableOperation { renderingContext, context ->
+            renderingContext.createWorkbook()
+            renderingContext.provideSheet(context.getTableId())
+        }
+        openRow = OpenRowOperation { renderingContext, context ->
+            renderingContext.provideRow(context.getTableId(), context.getRow())
+        }
+        openColumn = OpenColumnOperation { _, _ -> }
+        renderRowCell = object : RenderRowCellOperation<ApachePoiRenderingContext> {
+            override fun render(renderingContext: ApachePoiRenderingContext, context: CellContext) {
                 (context.getTypeHint()?.let {
                     when (it.type.getCellTypeId()) {
                         ExcelTypeHints.IMAGE_DATA.getCellTypeId(),
@@ -66,7 +64,7 @@ class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<Apach
                     }
             }
 
-            private fun RowCellContext.renderBasicTypeCellValue(renderingContext: ApachePoiRenderingContext) {
+            private fun CellContext.renderBasicTypeCellValue(renderingContext: ApachePoiRenderingContext) {
                 provideCell(renderingContext, this) {
                     when (rawValue) {
                         is String -> setCellValue(rawValue as? String)
@@ -87,25 +85,25 @@ class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<Apach
                 }
             }
 
-            private fun RowCellContext.renderDefaultTypeCellValue(renderingContext: ApachePoiRenderingContext) {
+            private fun CellContext.renderDefaultTypeCellValue(renderingContext: ApachePoiRenderingContext) {
                 provideCell(renderingContext, this) {
                     setCellValue(rawValue as? String)
                 }
             }
 
-            private fun RowCellContext.renderFormulaCell(renderingContext: ApachePoiRenderingContext) {
+            private fun CellContext.renderFormulaCell(renderingContext: ApachePoiRenderingContext) {
                 provideCell(renderingContext, this) {
                     cellFormula = rawValue as? String
                 }
             }
 
-            private fun RowCellContext.renderErrorCell(renderingContext: ApachePoiRenderingContext) {
+            private fun CellContext.renderErrorCell(renderingContext: ApachePoiRenderingContext) {
                 provideCell(renderingContext, this) {
                     setCellErrorValue(rawValue as Byte)
                 }
             }
 
-            private fun RowCellContext.renderImageCell(renderingContext: ApachePoiRenderingContext) {
+            private fun CellContext.renderImageCell(renderingContext: ApachePoiRenderingContext) {
                 if (getTypeHint()?.type?.getCellTypeId() == ExcelTypeHints.IMAGE_DATA.getCellTypeId()) {
                     renderingContext.createImageCell(
                         getTableId(), getRow(), getColumn(), value.rowSpan, value.colSpan, rawValue as ByteArray
@@ -119,18 +117,18 @@ class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<Apach
 
             private fun provideCell(
                 renderingContext: ApachePoiRenderingContext,
-                context: RowCellContext,
+                context: CellContext,
                 block: (SXSSFCell.() -> Unit)
             ) {
                 renderingContext.provideCell(context.getTableId(), context.getRow(), context.getColumn()) {
                     it.apply(block)
                 }
             }
-
         }
+    }
 
-    override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<ApachePoiRenderingContext> =
-        StandardAttributeRenderOperationsFactory(
+    override fun getAttributeOperationsFactory(): AttributeOperationsFactory<ApachePoiRenderingContext> =
+        StandardAttributeOperationsFactory(
             object : StandardAttributeRenderOperationsProvider<ApachePoiRenderingContext> {
                 override fun createTemplateFileRenderer(): TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute> =
                     TemplateFileAttributeRenderOperation()
@@ -165,7 +163,7 @@ class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<Apach
 
         private const val CELL_STYLE_CACHE_KEY: String = "cellStyle"
 
-        fun getCachedStyle(poi: ApachePoiRenderingContext, context: RowCellContext): CellStyle {
+        fun getCachedStyle(poi: ApachePoiRenderingContext, context: CellContext): CellStyle {
             return context.cacheOnAttributeSet(
                 CELL_STYLE_CACHE_KEY,
                 poi.workbook().createCellStyle()

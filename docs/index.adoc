@@ -314,7 +314,7 @@ In order to support new tabular file format you will have to:
 
 - Create `RenderingContext` class. It represents internal state and low-level API to communicate with 3rd party library like Apache POI. Object of that class is passed to all table export operations as well as to all attribute rendering operations that are registered by `ServiceLoader` infrastructure. Such common denominator element is required to enable table modifications coming from within various render operations.
 - Create `OutputBinding` class. It defines transformation of `RenderingContext` into different kind out outputs. By separating `OutputBinding` from `RenderingContext` we can enable multiple outputs for particular `RenderingContext` class dynamically.
-- Define `ExportOperationsProvider` or `ExportOperationsConfiguringFactory` depending on your scenario. If You don't need to decouple attribute operations from table export operations (e.g., because supported format does not assumes attributes at all) You can implement `ExportOperationsProvider` interface and define all rendering logic in single class. For cases, where attributes needs to be rendered independently (e.g., because You want to support user-defined attributes) it is advised to extend `ExportOperationsConfiguringFactory`. For both scenarios You will have to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.ExportOperationsProvider`, and put fully qualified class name of your custom factory in the first line. **This step is required by a template in order to resolve your extension at run-time**.
+- Define `ExportOperationsProvider` or `ExportOperationsFactory` depending on your scenario. If You don't need to decouple attribute operations from table export operations (e.g., because supported format does not assumes attributes at all) You can implement `ExportOperationsProvider` interface and define all rendering logic in single class. For cases, where attributes needs to be rendered independently (e.g., because You want to support user-defined attributes) it is advised to extend `ExportOperationsFactory`. For both scenarios You will have to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.ExportOperationsProvider`, and put fully qualified class name of your custom factory in the first line. **This step is required by a template in order to resolve your extension at run-time**.
 
 <<<
 Below, basic CSV export operations implementation:
@@ -437,8 +437,8 @@ class ExampleExportOperationsConfiguringFactory : ExportOperationsConfiguringFac
       })
 }
 ----
-Factory class `StandardAttributeRenderOperationsFactory` exposes API which assumes specific standard library attributes.
-If your file format allow additional attributes which are not present in standard library (tabulate-core), you may use `AttributeRenderOperationsFactory` interface directly, or fill additional constructor properties on `StandardAttributeRenderOperationsFactory` as below:
+Factory class `StandardAttributeOperationsFactory` exposes API which assumes specific standard library attributes.
+If your file format allow additional attributes which are not present in standard library (tabulate-core), you may use `AttributeOperationsFactory` interface directly, or fill additional constructor properties on `StandardAttributeOperationsFactory` as below:
 
 [source,kotlin,options="nowrap"]
 ----

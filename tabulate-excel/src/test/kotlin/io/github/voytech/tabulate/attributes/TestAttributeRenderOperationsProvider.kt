@@ -4,20 +4,19 @@ import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
 import io.github.voytech.tabulate.api.builder.dsl.CellLevelAttributesBuilderApi
 import io.github.voytech.tabulate.excel.template.ApachePoiRenderingContext
 import io.github.voytech.tabulate.model.attributes.CellAttribute
-import io.github.voytech.tabulate.template.operations.AttributeRenderOperationsFactory
+import io.github.voytech.tabulate.template.operations.AttributeOperationsFactory
 import io.github.voytech.tabulate.template.operations.CellAttributeRenderOperation
-import io.github.voytech.tabulate.template.operations.RowCellContext
+import io.github.voytech.tabulate.template.operations.CellContext
 import io.github.voytech.tabulate.template.operations.getTableId
 import io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider
 import io.github.voytech.tabulate.testsupport.TestRenderingContext
-import io.github.voytech.tabulate.model.attributes.alias.CellAttribute as CellAttributeAlias
 
 
 class NoopTestAttributeRenderOperationsProvider : AttributeRenderOperationsProvider<TestRenderingContext> {
 
-    override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<TestRenderingContext> {
-        return object : AttributeRenderOperationsFactory<TestRenderingContext> {
-            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttributeAlias>> =
+    override fun getAttributeOperationsFactory(): AttributeOperationsFactory<TestRenderingContext> {
+        return object : AttributeOperationsFactory<TestRenderingContext> {
+            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttribute<*>>> =
                 setOf(NoopSimpleTestCellAttributeRenderOperation())
         }
     }
@@ -27,9 +26,9 @@ class NoopTestAttributeRenderOperationsProvider : AttributeRenderOperationsProvi
 
 class TestAttributeRenderOperationsProvider : AttributeRenderOperationsProvider<ApachePoiRenderingContext> {
 
-    override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<ApachePoiRenderingContext> {
-        return object : AttributeRenderOperationsFactory<ApachePoiRenderingContext> {
-            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<ApachePoiRenderingContext, out CellAttributeAlias>> =
+    override fun getAttributeOperationsFactory(): AttributeOperationsFactory<ApachePoiRenderingContext> {
+        return object : AttributeOperationsFactory<ApachePoiRenderingContext> {
+            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<ApachePoiRenderingContext, out CellAttribute<*>>> =
                 setOf(SimpleTestCellAttributeRenderOperation())
         }
     }
@@ -45,12 +44,11 @@ data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<Simp
 }
 
 class SimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<ApachePoiRenderingContext, SimpleTestCellAttribute> {
-
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
     override fun attributeType(): Class<SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
-
     override fun renderAttribute(
         renderingContext: ApachePoiRenderingContext,
-        context: RowCellContext,
+        context: CellContext,
         attribute: SimpleTestCellAttribute
     ) {
         with(renderingContext.provideCell(context.getTableId(), context.getRow(), context.getColumn())) {
@@ -60,11 +58,11 @@ class SimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<Apac
 }
 
 class NoopSimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<TestRenderingContext, SimpleTestCellAttribute> {
-
+    override fun renderingContextClass(): Class<TestRenderingContext> = TestRenderingContext::class.java
     override fun attributeType(): Class<SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
     override fun renderAttribute(
         renderingContext: TestRenderingContext,
-        context: RowCellContext,
+        context: CellContext,
         attribute: SimpleTestCellAttribute
     ) {}
 }

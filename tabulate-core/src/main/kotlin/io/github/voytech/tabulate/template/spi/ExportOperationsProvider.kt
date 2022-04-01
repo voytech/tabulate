@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.template.spi
 
 import io.github.voytech.tabulate.template.context.RenderingContext
-import io.github.voytech.tabulate.template.operations.AttributedContextExportOperations
+import io.github.voytech.tabulate.template.operations.Operations
 import io.github.voytech.tabulate.template.result.OutputBinding
 
 /**
@@ -24,7 +24,7 @@ interface ExportOperationsProvider<CTX: RenderingContext> : Identifiable<CTX> {
      * @author Wojciech Mąka
      * @since 0.1.0
      */
-    fun createExportOperations(): AttributedContextExportOperations<CTX>
+    fun createExportOperations(): Operations<CTX>
 
     /**
      * Creates rendering context aware output binding. Output binding instance takes responsibility of conveying

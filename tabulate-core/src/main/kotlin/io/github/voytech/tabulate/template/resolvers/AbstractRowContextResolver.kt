@@ -2,8 +2,8 @@ package io.github.voytech.tabulate.template.resolvers
 
 import io.github.voytech.tabulate.model.*
 import io.github.voytech.tabulate.model.attributes.Attributes
-import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
-import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
+import io.github.voytech.tabulate.model.attributes.CellAttribute
+import io.github.voytech.tabulate.model.attributes.RowAttribute
 import io.github.voytech.tabulate.model.attributes.orEmpty
 import io.github.voytech.tabulate.template.context.AdditionalSteps
 import io.github.voytech.tabulate.template.context.RowIndex
@@ -60,10 +60,10 @@ internal class SyntheticRow<T>(
     internal val table: Table<T>,
     private val rowDefinitions: Set<RowDef<T>>,
     internal val cellDefinitions: Map<ColumnKey<T>, CellDef<T>> = rowDefinitions.mergeCells(),
-    private val rowCellAttributes: Attributes<CellAttribute> = rowDefinitions.flattenCellAttributes(),
-    internal val rowAttributes: Attributes<RowAttribute> =
+    private val rowCellAttributes: Attributes<CellAttribute<*>> = rowDefinitions.flattenCellAttributes(),
+    internal val rowAttributes: Attributes<RowAttribute<*>> =
         table.rowAttributes.orEmpty() + rowDefinitions.flattenRowAttributes(),
-    internal val cellAttributes: MutableMap<ColumnDef<T>, Attributes<CellAttribute>> = mutableMapOf()
+    internal val cellAttributes: MutableMap<ColumnDef<T>, Attributes<CellAttribute<*>>> = mutableMapOf()
 ) {
 
     @Suppress("NOTHING_TO_INLINE")
@@ -75,8 +75,8 @@ internal class SyntheticRow<T>(
 
 
     internal fun mapEachCell(
-        block: (syntheticRow: SyntheticRow<T>, column: ColumnDef<T>) -> AttributedCell?
-    ): Map<ColumnKey<T>, AttributedCell> =
+        block: (syntheticRow: SyntheticRow<T>, column: ColumnDef<T>) -> CellContext?
+    ): Map<ColumnKey<T>, CellContext> =
         if (cellAttributes.isEmpty()) {
             table.columns.mapNotNull { column ->
                 cellAttributes[column] = mergeCellAttributes(column)
@@ -101,13 +101,13 @@ internal class QualifiedRows<T>(private val indexedTableRows: IndexedTableRows<T
 }
 
 internal interface RowCompletionListener<T> {
-    fun onAttributedCellResolved(cell: AttributedCell)
-    fun onAttributedRowResolved(row: AttributedRow)
-    fun onAttributedRowResolved(row: AttributedRowWithCells<T>)
+    fun onAttributedCellResolved(cell: CellContext)
+    fun onAttributedRowResolved(row: RowOpeningContext)
+    fun onAttributedRowResolved(row: RowClosingContext<T>)
 }
 
 /**
- * Given requested index, [Table] model, and map of custom attributes, it resolves [AttributedRowWithCells] (row context) with
+ * Given requested index, [Table] model, and map of custom attributes, it resolves [RowClosingContext] (row context) with
  * associated effective index.
  *
  * Additionally it notifies about following events:
@@ -121,33 +121,33 @@ internal abstract class AbstractRowContextResolver<T>(
     tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
     private val listener: RowCompletionListener<T>? = null,
-) : IndexedContextResolver<T, AttributedRowWithCells<T>> {
+) : IndexedContextResolver<T, RowClosingContext<T>> {
 
     private val indexedTableRows: IndexedTableRows<T> = tableModel.indexRows()
     private val rows = QualifiedRows(indexedTableRows)
 
     @Suppress("NOTHING_TO_INLINE")
-    protected inline fun AttributedRow.notify(): AttributedRow =
+    protected inline fun RowOpeningContext.notify(): RowOpeningContext =
         also { listener?.onAttributedRowResolved(it) }
 
     @Suppress("NOTHING_TO_INLINE")
-    protected inline fun AttributedRowWithCells<T>.notify(): AttributedRowWithCells<T> =
+    protected inline fun RowClosingContext<T>.notify(): RowClosingContext<T> =
         also { listener?.onAttributedRowResolved(it) }
 
     @Suppress("NOTHING_TO_INLINE")
-    protected inline fun AttributedCell.notify(): AttributedCell =
+    protected inline fun CellContext.notify(): CellContext =
         also { listener?.onAttributedCellResolved(it) }
 
 
     private fun resolveAttributedRow(
         tableRowIndex: RowIndex,
         record: IndexedValue<T>? = null
-    ): AttributedRowWithCells<T> {
+    ): RowClosingContext<T> {
         return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
             with(rows.findQualifying(sourceRow)) {
-                createAttributedRow(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
+                openAttributedRow(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
                     .let {
-                        it.withCells(
+                        it.close(
                             mapEachCell { row, column ->
                                 row.createAttributedCell(row = sourceRow, column = column, customAttributes)?.notify()
                             }
@@ -160,18 +160,18 @@ internal abstract class AbstractRowContextResolver<T>(
     private fun resolveRowContext(
         tableRowIndex: RowIndex,
         indexedRecord: IndexedValue<T>? = null,
-    ): IndexedContext<AttributedRowWithCells<T>> {
+    ): IndexedContext<RowClosingContext<T>> {
         return IndexedContext(tableRowIndex, resolveAttributedRow(tableRowIndex, indexedRecord))
     }
 
     /**
-     * Resolves indexed [AttributedRowWithCells]. Index may be equal to parameter index value, or if there are no matching predicates,
+     * Resolves indexed [RowClosingContext]. Index may be equal to parameter index value, or if there are no matching predicates,
      * it may be next matching index or eventually null when no row can be resolved.
      * @param requestedIndex [RowIndex] - index requested by row iterator.
      * @author Wojciech Mąka
      * @since 0.1.0
      */
-    override fun resolve(requestedIndex: RowIndex): IndexedContext<AttributedRowWithCells<T>>? {
+    override fun resolve(requestedIndex: RowIndex): IndexedContext<RowClosingContext<T>>? {
         return if (indexedTableRows.hasCustomRows(SourceRow(requestedIndex))) {
             resolveRowContext(requestedIndex)
         } else {

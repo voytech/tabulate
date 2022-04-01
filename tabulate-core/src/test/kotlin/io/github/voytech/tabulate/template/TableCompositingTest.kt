@@ -16,6 +16,7 @@ import io.github.voytech.tabulate.template.operations.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class TableCompositingTest {
@@ -48,17 +49,22 @@ class TableCompositingTest {
         (customTable + overrideTable).export(TabulationFormat("spy"), Unit)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableCreationContext).getTableId()) }
+        // Column 0
+        history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         // Column 0 attribute
         history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowContext).getRow()) }
+        history.next().run { assertEquals(0, (context as RowOpeningContext).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("I gave a value.", (context as RowCellContext).rawValue) }
+        history.next().run { assertEquals("I gave a value.", (context as CellContext).rawValue) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
         }
-        history.next().run { assertTrue(context is RowContextWithCells<*>) }
+        history.next().run { assertTrue(context is RowClosingContext<*>) }
+        // Column 0
+        history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
+        history.next().run { assertIs<TableClosingContext>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -86,17 +92,26 @@ class TableCompositingTest {
         Products.items(1).tabulate(TabulationFormat("spy"), Unit,customTable + overrideTable)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableCreationContext).getTableId()) }
+        // Column 0
+        history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         // Column 0 attribute
         history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        // Column 1
+        history.next().run { assertEquals(1, (context as ColumnOpeningContext).columnIndex) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowContext).getRow()) }
+        history.next().run { assertEquals(0, (context as RowOpeningContext).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("code1", (context as RowCellContext).rawValue) }
+        history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
         }
-        history.next().run { assertTrue(context is RowContextWithCells<*>) }
+        history.next().run { assertTrue(context is RowClosingContext<*>) }
+        // Column 0
+        history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
+        // Column 1
+        history.next().run { assertEquals(1, (context as ColumnClosingContext).columnIndex) }
+        history.next().run { assertIs<TableClosingContext>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -124,22 +139,31 @@ class TableCompositingTest {
         Products.items(1).tabulate(TabulationFormat("spy"), Unit,baseTable with overrideTable)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableCreationContext).getTableId()) }
+        // Column 0
+        history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         // Column 0 attribute
         history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        // Column 1
+        history.next().run { assertEquals(1, (context as ColumnOpeningContext).columnIndex) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowContext).getRow()) }
+        history.next().run { assertEquals(0, (context as RowOpeningContext).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("code1", (context as RowCellContext).rawValue) }
+        history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
         }
         // Row 0, cell 1
-        history.next().run { assertEquals("name1", (context as RowCellContext).rawValue) }
+        history.next().run { assertEquals("name1", (context as CellContext).rawValue) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
         }
-        history.next().run { assertTrue(context is RowContextWithCells<*>) }
+        history.next().run { assertTrue(context is RowClosingContext<*>) }
+        // Column 0
+        history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
+        // Column 1
+        history.next().run { assertEquals(1, (context as ColumnClosingContext).columnIndex) }
+        history.next().run { assertIs<TableClosingContext>(context) }
         assertFalse(history.hasNext())
     }
 

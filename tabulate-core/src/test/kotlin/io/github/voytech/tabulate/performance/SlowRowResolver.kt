@@ -4,10 +4,10 @@ import io.github.voytech.tabulate.model.RowDef
 import io.github.voytech.tabulate.model.SourceRow
 import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.template.context.RowIndex
-import io.github.voytech.tabulate.template.operations.AttributedRowWithCells
+import io.github.voytech.tabulate.template.operations.RowClosingContext
 import io.github.voytech.tabulate.template.operations.createAttributedCell
-import io.github.voytech.tabulate.template.operations.createAttributedRow
-import io.github.voytech.tabulate.template.operations.withCells
+import io.github.voytech.tabulate.template.operations.openAttributedRow
+import io.github.voytech.tabulate.template.operations.close
 import io.github.voytech.tabulate.template.resolvers.AbstractRowContextResolver
 import io.github.voytech.tabulate.template.resolvers.IndexedContext
 import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
@@ -42,13 +42,13 @@ internal class SlowRowResolver<T>(
     private fun resolveAttributedRow(
         tableRowIndex: RowIndex,
         record: IndexedValue<T>? = null
-    ): AttributedRowWithCells<T> {
+    ): RowClosingContext<T> {
         return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
             val rowDefinitions = getRows(sourceRow)
             with(SyntheticRow(tableModel, rowDefinitions)) {
-                createAttributedRow(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
+                openAttributedRow(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
                     .let {
-                        it.withCells(
+                        it.close(
                             mapEachCell { row, column ->
                                 row.createAttributedCell(row = sourceRow, column = column, customAttributes)?.notify()
                             }
@@ -58,7 +58,7 @@ internal class SlowRowResolver<T>(
         }
     }
 
-    override fun resolve(requestedIndex: RowIndex): IndexedContext<AttributedRowWithCells<T>>? {
+    override fun resolve(requestedIndex: RowIndex): IndexedContext<RowClosingContext<T>>? {
         return if (hasCustomRows(SourceRow(requestedIndex))) {
             IndexedContext(requestedIndex, resolveAttributedRow(requestedIndex))
         } else null
