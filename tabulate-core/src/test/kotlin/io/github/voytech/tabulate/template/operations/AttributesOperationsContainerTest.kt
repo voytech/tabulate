@@ -30,7 +30,7 @@ class AttributesOperationsContainerTest {
         })
         assertFalse(container.isEmpty())
         assertTrue(container.getOperationsBy(OperationTypeInfo(TestRenderingContext::class.java,CellContext::class.java,CellAttribute::class.java)).isNotEmpty())
-        assertTrue(container.getOperationsBy(OperationTypeInfo(TestRenderingContext::class.java,TableCreationContext::class.java,TableAttribute::class.java)).isNotEmpty())
+        assertTrue(container.getOperationsBy(OperationTypeInfo(TestRenderingContext::class.java,TableOpeningContext::class.java,TableAttribute::class.java)).isNotEmpty())
         assertTrue(container.getOperationsBy(OperationTypeInfo(TestRenderingContext::class.java,RowOpeningContext::class.java,RowAttribute::class.java)).isNotEmpty())
         assertTrue(container.getOperationsBy(OperationTypeInfo(TestRenderingContext::class.java,ColumnOpeningContext::class.java,ColumnAttribute::class.java)).isNotEmpty())
 

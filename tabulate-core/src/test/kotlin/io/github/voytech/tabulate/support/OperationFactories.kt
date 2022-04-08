@@ -10,7 +10,7 @@ import io.github.voytech.tabulate.template.result.OutputBinding
 import io.github.voytech.tabulate.template.spi.TabulationFormat
 import io.github.voytech.tabulate.template.spi.TabulationFormat.Companion.format
 
-class TestAttributeOperations : AttributeOperationsFactory<TestRenderingContext> {
+class TestAttributeOperationsFactory : AttributeOperationsFactory<TestRenderingContext> {
     override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttribute<*>>> =
         setOf(
             CellTextStylesAttributeTestRenderOperation(Spy.spy),
@@ -33,7 +33,7 @@ class TestAttributeOperations : AttributeOperationsFactory<TestRenderingContext>
 class TestExportOperationsFactory : ExportOperationsFactory<TestRenderingContext>() {
 
     override fun provideExportOperations(): OperationsBuilder<TestRenderingContext>.() -> Unit = {
-        createTable = CreateTableTestOperation(Spy.spy)
+        openTable = OpenTableTestOperation(Spy.spy)
         openColumn = OpenColumnTestOperation(Spy.spy)
         openRow = OpenRowTestOperation(Spy.spy)
         renderRowCell = RenderRowCellTestOperation(Spy.spy)
@@ -54,7 +54,7 @@ class TestExportOperationsFactory : ExportOperationsFactory<TestRenderingContext
         format("spy", TestRenderingContext::class.java)
 
     override fun getAttributeOperationsFactory(): AttributeOperationsFactory<TestRenderingContext> =
-        TestAttributeOperations()
+        TestAttributeOperationsFactory()
 
     companion object {
         @JvmStatic

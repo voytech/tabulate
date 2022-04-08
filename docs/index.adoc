@@ -312,7 +312,7 @@ I have put lots of effort to make **Tabulate** extensible. Currently, it is poss
 === Implementing table export operations from scratch.
 In order to support new tabular file format you will have to:
 
-- Create `RenderingContext` class. It represents internal state and low-level API to communicate with 3rd party library like Apache POI. Object of that class is passed to all table export operations as well as to all attribute rendering operations that are registered by `ServiceLoader` infrastructure. Such common denominator element is required to enable table modifications coming from within various render operations.
+- Create `RenderingContext` class. It represents internal state and low-level API to communicate with 3rd party library like Apache POI. Object of that class is passed to all table export operations as well as to all attribute rendering operations that are registered by `ServiceLoader` infrastructure. Such common denominator element is required in order to enable table modifications coming from within various render operations.
 - Create `OutputBinding` class. It defines transformation of `RenderingContext` into different kind out outputs. By separating `OutputBinding` from `RenderingContext` we can enable multiple outputs for particular `RenderingContext` class dynamically.
 - Define `ExportOperationsProvider` or `ExportOperationsFactory` depending on your scenario. If You don't need to decouple attribute operations from table export operations (e.g., because supported format does not assumes attributes at all) You can implement `ExportOperationsProvider` interface and define all rendering logic in single class. For cases, where attributes needs to be rendered independently (e.g., because You want to support user-defined attributes) it is advised to extend `ExportOperationsFactory`. For both scenarios You will have to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.ExportOperationsProvider`, and put fully qualified class name of your custom factory in the first line. **This step is required by a template in order to resolve your extension at run-time**.
 
@@ -324,36 +324,11 @@ First step is to define `RenderingContext`:
 ----
 // <1>
 open class CsvRenderingContext: RenderingContext {
-    private lateinit var bufferedWriter: BufferedWriter
-    private val line = StringBuilder()
-
-    fun doBind(output: OutputStream) {
-        bufferedWriter = output.bufferedWriter()
-    }
-
-    fun startRow() {
-        line.clear()
-    }
-
-    private fun AttributedCell.getSeparatorCharacter(): String =
-        attributes?.get(CellSeparatorCharacterAttribute::class.java)?.separator ?: ","
-
-    fun <T> endRow(context: AttributedRowWithCells<T>) {
-        val lastIndex = context.rowCellValues.size - 1
-        context.rowCellValues.values.forEachIndexed { index, cell ->
-            line.append(cell.value.value.toString())
-            if (index < lastIndex) line.append(cell.getSeparatorCharacter())
-        }
-        bufferedWriter.write(line.toString())
-        bufferedWriter.newLine()
-    }
-
-    fun finish() {
-        bufferedWriter.close()
-    }
+    internal lateinit var bufferedWriter: BufferedWriter
+    internal val line = StringBuilder()
 }
 ----
-<1> `CsvRenderingContext` implements `RenderingContext` marker interface and provides logic and state responsible for generating table in selected format. It is a common denominator used as argument of all export operation methods in order to share rendering state and allow interaction with it.
+<1> `CsvRenderingContext` implements `RenderingContext` marker interface and provides state responsible for generating table in selected format. It is a common denominator used as argument of all export operation methods in order to share rendering state and allow interaction with it.
 
 <<<
 Then we need to create at least one `OutputBinding` in order to be able to flush results int output:
@@ -361,12 +336,12 @@ Then we need to create at least one `OutputBinding` in order to be able to flush
 ----
 class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingContext>() {
 
-    override fun onBind(renderingContext: CsvRenderingContext, output: OutputStream) { // <1>
-        renderingContext.doBind(output)
+    override fun onBind(renderingContext: CsvRenderingContext, output: OutputStream) {
+        renderingContext.bufferedWriter = output.bufferedWriter()
     }
 
-    override fun flush(output: OutputStream) { // <2>
-        renderingContext.finish()
+    override fun flush(output: OutputStream) {
+        renderingContext.bufferedWriter.close()
         output.close()
     }
 }
@@ -375,33 +350,42 @@ class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingConte
 <2> The `.flush` dumps in-memory rendering context into given output.
 
 <<<
-Finally, we are implementing `ExportOperationsProvider` compatible with `RenderingContext` of choice:
+Finally, we are implementing `ExportOperationsFactory` compatible with `RenderingContext` of choice:
 [source,kotlin,options="nowrap"]
 ----
-class CsvExportOperationsFactory: ExportOperationsProvider<CsvRenderingContext> {
+class CsvExportOperationsFactory: ExportOperationsFactory<CsvRenderingContext>() {
     // <1>
     override fun getTabulationFormat(): TabulationFormat<CsvRenderingContext> =
         format("csv", CsvRenderingContext::class.java)
-
     // <2>
-    override fun createExportOperations(): AttributedContextExportOperations<CsvRenderingContext> = object :  AttributedContextExportOperations<CsvRenderingContext> {
+    override fun provideExportOperations(): OperationsBuilder<CsvRenderingContext>.() -> Unit = {
 
-        override fun beginRow(renderingContext: CsvRenderingContext, context: AttributedRow) {
-            renderingContext.startRow()
+        openRow = OpenRowOperation { renderingContext, _ ->
+            renderingContext.line.clear()
         }
 
-        override fun <T> endRow(renderingContext: CsvRenderingContext, context: AttributedRowWithCells<T>) {
-            renderingContext.endRow(context)
+        closeRow = CloseRowOperation { renderingContext, context ->
+            val lastIndex = context.rowCellValues.size - 1
+            with(renderingContext) {
+                context.rowCellValues.values.forEachIndexed { index, cell ->
+                    line.append(cell.rawValue.toString())
+                    if (index < lastIndex) line.append(cell.getSeparatorCharacter())
+                }
+                bufferedWriter.write(line.toString())
+                bufferedWriter.newLine()
+            }
         }
+
     }
 
+    private fun CellContext.getSeparatorCharacter(): String =
+        getModelAttribute(CellSeparatorCharacterAttribute::class.java)?.separator ?: ","
     // <3>
     override fun createOutputBindings(): List<OutputBinding<CsvRenderingContext, *>> = listOf(CsvOutputStreamOutputBinding())
-
 }
 ----
-<1> Define the `RenderingContext` compatible with export operation provider,
-<2> This is the most important step. *Here we implement actual table rendering logic*,
+<1> Define `TabulationFormat` first. It consists from `RenderingContext` class and provider id string,
+<2> This is the most important step. *Here we implement actual table rendering logic*. We need to provide operations that transform captured context models using `RenderingContext`. We can use only those operation classes that are required by our provider. We can also use all of them: `openTable`, `openColumn`, `openRow`, `renderRowCell`, `closeRow`, `closeColumn`, `closeTable`.
 <3> Finally - we need to provide list of supported outputs. Bare minimum should be at least `OutputStreamOutputBinding`.
 
 <<<
@@ -456,24 +440,7 @@ class ExampleExportOperationsConfiguringFactory<T> : ExportOperationsConfiguring
 ----
 
 === Registering new attribute types for existing export operations.
-It is possible that you have requirements which cannot be achieved with standard set of attributes, and your code is in different compilation unit than specific table export operation implementation. Assume You want to use existing Apache POI excel table exporter, but there is lack of certain attribute support. In such situation - You can still register attribute by implementing another service provider interface - `AttributeRenderOperationsProvider`:
-
-[source,kotlin,options="nowrap"]
-----
-class CustomAttributeRendersOperationsProvider : AttributeRenderOperationsProvider<ApachePoiRenderingContext> {
-
-    override fun getContextClass() = ApachePoiRenderingContext::class.java
-
-    override fun getAttributeOperationsFactory(renderingContext: ApachePoiRenderingContext): AttributeRenderOperationsFactory<ApachePoiRenderingContext> {
-        return object : AttributeRenderOperationsFactory<ApachePoiRenderingContext> {
-            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<out CellAttributeAlias>> =
-                setOf(MarkerCellAttributeRenderOperation(renderingContext))
-        }
-    }
-}
-----
-
-After creating factory - You need to implement particular attribute together with DSL API extension function and attribute render operation to instruct 3rd party Apache Poi API on how to proceed.
+It is possible that you have requirements which cannot be achieved with standard set of attributes, and your code is in different compilation unit than specific table export operation implementation. Assume You want to use existing Apache POI excel table exporter, but there is lack of certain attribute support. In such situation - You can still register attribute by implementing dedicated `AttributeOperation`:
 
 [source,kotlin,options="nowrap"]
 ----
@@ -485,6 +452,8 @@ data class MarkerCellAttribute(val text: String) : CellAttribute<MarkerCellAttri
 }
 
 class SimpleMarkerCellAttributeRenderOperation  : CellAttributeRenderOperation<ApachePoiRenderingContext, SimpleTestCellAttribute>  {
+
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
     override fun attributeType(): Class<MarkerCellAttribute> = MarkerCellAttribute::class.java
 
@@ -499,7 +468,7 @@ fun <T> CellLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builde
     attribute(MarkerCellAttribute.Builder().apply(block))
 ----
 
-Finally, You need to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.AttributeRenderOperationsProvider`, and put fully qualified class name of our factory in it.
+Finally, You need to create file `resource/META-INF/io.github.voytech.tabulate.template.operations.AttributeOperation`, and put fully qualified class name of your `AttributeOperation` into it.
 
 === Extending Table DSL API
 
@@ -637,15 +606,13 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
 ----
 
 <<<
-== Advanced concepts
+== Architecture
 
-=== Merging rows.
+=== High-level view.
 
-When multiple `Row` model definitions are qualified by a predicate, they form a single synthetic row. Following rules regarding row merge applies:
-- Row level attributes will be concatenated or merged if are of same type.
-- Cell values will be concatenated, or overriden by last cell occurence at given column.
-- Cell level attributes will be concatenated, or merged if of same type.
-- Two attributes of same type are merged by overriding clashing attribute properties from left to right where on left side stands attribute from higher level (e.g. row level), and on right site stands attribute from lower level (e.g. cell level).
+TBD.
+
+=== Internal rules.
 
 TBD.
 

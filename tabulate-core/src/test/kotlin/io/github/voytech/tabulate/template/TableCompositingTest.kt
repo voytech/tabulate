@@ -49,7 +49,7 @@ class TableCompositingTest {
         (customTable + overrideTable).export(TabulationFormat("spy"), Unit)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableCreationContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }
         // Column 0
         history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         // Column 0 attribute
@@ -92,7 +92,7 @@ class TableCompositingTest {
         Products.items(1).tabulate(TabulationFormat("spy"), Unit,customTable + overrideTable)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableCreationContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }
         // Column 0
         history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         // Column 0 attribute
@@ -139,7 +139,7 @@ class TableCompositingTest {
         Products.items(1).tabulate(TabulationFormat("spy"), Unit,baseTable with overrideTable)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableCreationContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }
         // Column 0
         history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         // Column 0 attribute

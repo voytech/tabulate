@@ -11,59 +11,54 @@ import io.github.voytech.tabulate.template.context.RenderingContext
 @Suppress("UNCHECKED_CAST")
 internal class AttributesOperationsContainer<CTX : RenderingContext> {
 
-    private val tableAttributeRenderOperations: MutableList<AttributeOperation<CTX, *, *, *>> =
-        mutableListOf()
+    private val tableAttributeRenderOperations: MutableMap<Class<out Attribute<*>>, AttributeOperation<CTX, *, *, *>> =
+        mutableMapOf()
 
-    private val columnAttributeRenderOperations: MutableList<AttributeOperation<CTX, *, *, *>> =
-        mutableListOf()
+    private val columnAttributeRenderOperations: MutableMap<Class<out Attribute<*>>, AttributeOperation<CTX, *, *, *>> =
+        mutableMapOf()
 
-    private val rowAttributeRenderOperations: MutableList<AttributeOperation<CTX, *, *, *>> =
-        mutableListOf()
+    private val rowAttributeRenderOperations: MutableMap<Class<out Attribute<*>>, AttributeOperation<CTX, *, *, *>> =
+        mutableMapOf()
 
-    private val cellAttributeRenderOperations: MutableList<AttributeOperation<CTX, *, *, *>> =
-        mutableListOf()
+    private val cellAttributeRenderOperations: MutableMap<Class<out Attribute<*>>, AttributeOperation<CTX, *, *, *>> =
+        mutableMapOf()
 
-    private fun register(operation: AttributeOperation<CTX, *, *, *>) {
+    internal fun register(operation: AttributeOperation<CTX, *, *, *>) {
         operation.attributeClass().let { clazz ->
             when {
                 TableAttribute::class.java.isAssignableFrom(clazz) ->
-                    tableAttributeRenderOperations.add(operation)
+                    tableAttributeRenderOperations.put(clazz, operation)
                 ColumnAttribute::class.java.isAssignableFrom(clazz) ->
-                    columnAttributeRenderOperations.add(operation)
+                    columnAttributeRenderOperations.put(clazz, operation)
                 RowAttribute::class.java.isAssignableFrom(clazz) ->
-                    rowAttributeRenderOperations.add(operation)
+                    rowAttributeRenderOperations.put(clazz, operation)
                 CellAttribute::class.java.isAssignableFrom(clazz) ->
-                    cellAttributeRenderOperations.add(operation)
+                    cellAttributeRenderOperations.put(clazz, operation)
                 else -> error("Unrecognised attribute level")
             }
         }
     }
 
-    private fun Set<AttributeOperation<CTX, *, *, *>>.sortedByPriorities(): List<AttributeOperation<CTX, *, *, *>> =
-        sortedBy { it.priority() }
-
-    // TODO there is a bug because sorting is performed only on currently registered AttributeRenderOperationsFactory not entire operations collection.
-    internal fun registerAttributesOperations(factory: AttributeOperationsFactory<CTX>): AttributesOperationsContainer<CTX> {
-        factory.createCellAttributeRenderOperations()?.sortedByPriorities()?.forEach { register(it) }
-        factory.createTableAttributeRenderOperations()?.sortedByPriorities()?.forEach { register(it) }
-        factory.createRowAttributeRenderOperations()?.sortedByPriorities()?.forEach { register(it) }
-        factory.createColumnAttributeRenderOperations()?.sortedByPriorities()?.forEach { register(it) }
-        return this
+    internal fun registerAttributesOperations(factory: AttributeOperationsFactory<CTX>): AttributesOperationsContainer<CTX> = apply {
+        factory.createCellAttributeRenderOperations()?.forEach { register(it) }
+        factory.createTableAttributeRenderOperations()?.forEach { register(it) }
+        factory.createRowAttributeRenderOperations()?.forEach { register(it) }
+        factory.createColumnAttributeRenderOperations()?.forEach { register(it) }
     }
 
-    fun <A : Attribute<*>> getOperationsBy(typeInfo: OperationTypeInfo<CTX,A,*>): List<AttributeOperation<CTX, A, *, AttributedModel<A>>>  {
+    internal fun <A : Attribute<*>, E: AttributedModel<A>> getOperationsBy(typeInfo: OperationTypeInfo<CTX,A,*>): List<AttributeOperation<CTX, A, *, E>>  {
         return when (typeInfo.attributeLevelType){
-            TableAttribute::class.java -> tableAttributeRenderOperations
-            ColumnAttribute::class.java -> columnAttributeRenderOperations
-            RowAttribute::class.java -> rowAttributeRenderOperations
-            CellAttribute::class.java -> cellAttributeRenderOperations
+            TableAttribute::class.java -> tableAttributeRenderOperations.values
+            ColumnAttribute::class.java -> columnAttributeRenderOperations.values
+            RowAttribute::class.java -> rowAttributeRenderOperations.values
+            CellAttribute::class.java -> cellAttributeRenderOperations.values
             else -> error("Requested attribute class (category) is not supported!")
         }.filter {
             it.typeInfo().operationContextClass == typeInfo.operationContextType
-        }.sortedBy { it.priority() }.map { it as AttributeOperation<CTX, A, *, AttributedModel<A>> }
+        }.sortedBy { it.priority() }.map { it as AttributeOperation<CTX, A, *, E> }
     }
 
-    fun isEmpty(): Boolean =
+    internal fun isEmpty(): Boolean =
         cellAttributeRenderOperations.isEmpty()
             .and(rowAttributeRenderOperations.isEmpty())
             .and(columnAttributeRenderOperations.isEmpty())

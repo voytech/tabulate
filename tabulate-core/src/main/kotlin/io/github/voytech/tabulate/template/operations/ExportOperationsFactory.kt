@@ -25,11 +25,12 @@ abstract class ExportOperationsFactory<CTX : RenderingContext> : ExportOperation
 
     protected open fun getAttributeOperationsFactory(): AttributeOperationsFactory<CTX>? = null
 
-    final override fun createExportOperations(): Operations<CTX> = OperationsBuilder<CTX>()
-        .apply(provideExportOperations()).build(
-            getTabulationFormat().provider.renderingContextClass,
-            attributeOperationsContainer
-        )
+    final override fun createExportOperations(): Operations<CTX> = OperationsBuilder<CTX>().apply(
+        provideExportOperations()
+    ).build(
+        getTabulationFormat().provider.renderingContextClass,
+        attributeOperationsContainer
+    )
 
     private fun registerAttributesOperations(
         attributeOperationsContainer: AttributesOperationsContainer<CTX>,
@@ -41,21 +42,31 @@ abstract class ExportOperationsFactory<CTX : RenderingContext> : ExportOperation
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun registerClientDefinedAttributesOperations(
+    private fun registerClientDefinedAttributesOperationsFromProvider(
         attributeOperationsContainer: AttributesOperationsContainer<CTX>,
-    ): AttributesOperationsContainer<CTX> {
+    ): AttributesOperationsContainer<CTX> = attributeOperationsContainer.apply {
         ServiceLoader.load(AttributeRenderOperationsProvider::class.java)
             .filter { getRenderingContextClass().isAssignableFrom(it.getContextClass()) }
             .map { it as AttributeRenderOperationsProvider<CTX> }
             .forEach {
                 registerAttributesOperations(attributeOperationsContainer, it.getAttributeOperationsFactory())
             }
-        return attributeOperationsContainer
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun registerClientDefinedAttributesOperations(
+        attributeOperationsContainer: AttributesOperationsContainer<CTX>
+    ): AttributesOperationsContainer<CTX> = attributeOperationsContainer.apply {
+        ServiceLoader.load(AttributeOperation::class.java)
+            .filter { getRenderingContextClass().isAssignableFrom(it.typeInfo().renderingContextClass) }
+            .map { it as AttributeOperation<CTX, *, *, *> }
+            .forEach { attributeOperationsContainer.register(it) }
     }
 
     private fun registerAttributesOperations(): AttributesOperationsContainer<CTX> {
         return AttributesOperationsContainer<CTX>().let {
             registerAttributesOperations(it, getAttributeOperationsFactory())
+            registerClientDefinedAttributesOperationsFromProvider(it)
             registerClientDefinedAttributesOperations(it)
         }
     }

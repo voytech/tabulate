@@ -49,10 +49,10 @@ class AttributeSetCacheTest {
         val customAttributes = mutableMapOf<String, Any>()
 
         val firstTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val firstTableContext: TableCreationContext = firstTable.createContext(customAttributes)
+        val firstTableContext: TableOpeningContext = firstTable.createContext(customAttributes)
 
         val secondTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val secondTableContext: TableCreationContext = secondTable.createContext(customAttributes)
+        val secondTableContext: TableOpeningContext = secondTable.createContext(customAttributes)
 
         val cache = firstTableContext.setupCacheAndGet().also { it!!["someKey"] = "someValue" }
         val secondCache = secondTableContext.setupCacheAndGet()
@@ -101,10 +101,10 @@ class AttributeSetCacheTest {
         val customAttributes = mutableMapOf<String, Any>()
 
         val firstTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val firstTableContext: TableCreationContext = firstTable.createContext(customAttributes)
+        val firstTableContext: TableOpeningContext = firstTable.createContext(customAttributes)
 
         val secondTable = createTableModel { attributes { template { fileName = "second_filename" } } }
-        val secondTableContext: TableCreationContext = secondTable.createContext(customAttributes)
+        val secondTableContext: TableOpeningContext = secondTable.createContext(customAttributes)
 
         val cache = firstTableContext.setupCacheAndGet().also { it!!["someKey"] = "someValue" }
         val secondCache = secondTableContext.setupCacheAndGet()
@@ -149,13 +149,13 @@ class AttributeSetCacheTest {
         val customAttributes = mutableMapOf<String, Any>()
 
         val firstTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val firstTableContext: TableCreationContext = firstTable.createContext(customAttributes)
+        val firstTableContext: TableOpeningContext = firstTable.createContext(customAttributes)
 
         val secondTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val secondTableContext: TableCreationContext = secondTable.createContext(customAttributes)
+        val secondTableContext: TableOpeningContext = secondTable.createContext(customAttributes)
 
         val thirdTable = createTableModel { attributes { template { fileName = "third_table_filename_differs" } } }
-        val thirdTableContext: TableCreationContext = thirdTable.createContext(customAttributes)
+        val thirdTableContext: TableOpeningContext = thirdTable.createContext(customAttributes)
 
         firstTableContext.withAttributeSetBasedCache {
             firstTableContext.cacheOnAttributeSet("someKey", "someValue")

@@ -42,7 +42,7 @@ class Spy private constructor() {
 interface InterceptedOperation
 
 abstract class InterceptedRenderOperation<T : Attribute<*>, G : T, E : AttributedModel<T>>(
-    private val spy: Spy? = null, protected val clazz: Class<G>
+    protected var spy: Spy? = null, protected val clazz: Class<G>
 ) : AttributeOperation<TestRenderingContext, T, G, E>, InterceptedOperation {
     override fun priority(): Int = operationPriorities[clazz] ?: 1
     override fun renderAttribute(renderingContext: TestRenderingContext, context: E, attribute: G) {
@@ -50,8 +50,8 @@ abstract class InterceptedRenderOperation<T : Attribute<*>, G : T, E : Attribute
     }
 }
 
-class CreateTableTestOperation(private val spy: Spy? = null): CreateTableOperation<TestRenderingContext>, InterceptedOperation {
-    override fun render(renderingContext: TestRenderingContext, context: TableCreationContext) {
+class OpenTableTestOperation(private val spy: Spy? = null): OpenTableOperation<TestRenderingContext>, InterceptedOperation {
+    override fun render(renderingContext: TestRenderingContext, context: TableOpeningContext) {
         spy?.track(this, context)
     }
 }
@@ -122,15 +122,14 @@ abstract class InterceptedColumnAttributeRenderOperation<T : ColumnAttribute<*>>
 abstract class InterceptedTableAttributeRenderOperation<T : TableAttribute<*>>(
     spy: Spy? = null,
     clazz: Class<T>
-) : InterceptedRenderOperation<TableAttribute<*>, T, TableCreationContext>(spy, clazz),
+) : InterceptedRenderOperation<TableAttribute<*>, T, TableOpeningContext>(spy, clazz),
     TableAttributeRenderOperation<TestRenderingContext,T> {
     override fun renderingContextClass(): Class<TestRenderingContext> = TestRenderingContext::class.java
     override fun attributeType(): Class<T> = clazz
 }
 
 class CellTextStylesAttributeTestRenderOperation(spy: Spy? = null) :
-    InterceptedCellAttributeRenderOperation<CellTextStylesAttribute>(spy, CellTextStylesAttribute::class.java) {
-}
+    InterceptedCellAttributeRenderOperation<CellTextStylesAttribute>(spy, CellTextStylesAttribute::class.java)
 
 class CellBordersAttributeTestRenderOperation(spy: Spy? = null) :
     InterceptedCellAttributeRenderOperation<CellBordersAttribute>(spy, CellBordersAttribute::class.java)
@@ -149,3 +148,9 @@ class RowHeightAttributeTestRenderOperation(spy: Spy? = null) :
 
 class TemplateFileAttributeTestRenderOperation(spy: Spy? = null) :
     InterceptedTableAttributeRenderOperation<TemplateFileAttribute>(spy, TemplateFileAttribute::class.java)
+
+class ShadowingCellTextStylesAttributeTestRenderOperation :
+    InterceptedCellAttributeRenderOperation<CellTextStylesAttribute>(null, CellTextStylesAttribute::class.java) {
+        init { this.spy = Spy.spy } // It is loaded by service loader. Cannot have constructor context.
+    }
+

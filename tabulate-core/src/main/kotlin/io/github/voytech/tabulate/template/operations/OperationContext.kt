@@ -40,12 +40,12 @@ inline fun <reified T: TableAttribute<T>> AttributedModel<TableAttribute<*>>.get
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-data class TableCreationContext(
+data class TableOpeningContext(
     override val attributes: Attributes<TableAttribute<*>>?,
 ) : AttributedModel<TableAttribute<*>>(attributes)
 
-internal fun <T> Table<T>.createContext(customAttributes: MutableMap<String, Any>): TableCreationContext =
-    TableCreationContext(tableAttributes).apply { additionalAttributes = customAttributes }
+internal fun <T> Table<T>.createContext(customAttributes: MutableMap<String, Any>): TableOpeningContext =
+    TableOpeningContext(tableAttributes).apply { additionalAttributes = customAttributes }
 
 /**
  * Table operation context with additional model attributes applicable on table level.

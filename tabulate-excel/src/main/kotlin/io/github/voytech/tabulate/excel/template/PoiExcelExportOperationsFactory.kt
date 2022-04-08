@@ -32,7 +32,7 @@ class PoiExcelExportOperationsFactory : ExportOperationsFactory<ApachePoiRenderi
         format("xlsx", ApachePoiRenderingContext::class.java, "poi")
 
     override fun provideExportOperations(): OperationsBuilder<ApachePoiRenderingContext>.() -> Unit = {
-        createTable = CreateTableOperation { renderingContext, context ->
+        openTable = OpenTableOperation { renderingContext, context ->
             renderingContext.createWorkbook()
             renderingContext.provideSheet(context.getTableId())
         }

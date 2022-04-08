@@ -133,7 +133,7 @@ class TemplateFileAttributeTestRenderOperation :
     override fun attributeType(): Class<TemplateFileAttribute> = TemplateFileAttribute::class.java
     override fun renderAttribute(
         renderingContext: BenchmarkRenderingContext,
-        context: TableCreationContext,
+        context: TableOpeningContext,
         attribute: TemplateFileAttribute
     ) {}
 }

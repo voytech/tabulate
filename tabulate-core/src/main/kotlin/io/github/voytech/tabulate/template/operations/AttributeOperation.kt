@@ -42,9 +42,9 @@ fun <CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : Attri
  * @since 0.1.0
  */
 interface TableAttributeRenderOperation<CTX : RenderingContext, ATTR : TableAttribute<*>>
-    : AttributeOperation<CTX, TableAttribute<*>, ATTR, TableCreationContext> {
-    override fun typeInfo(): AttributeOperationTypeInfo<CTX, TableAttribute<*>, ATTR, TableCreationContext> =
-        AttributeOperationTypeInfo(renderingContextClass(), TableCreationContext::class.java, attributeType())
+    : AttributeOperation<CTX, TableAttribute<*>, ATTR, TableOpeningContext> {
+    override fun typeInfo(): AttributeOperationTypeInfo<CTX, TableAttribute<*>, ATTR, TableOpeningContext> =
+        AttributeOperationTypeInfo(renderingContextClass(), TableOpeningContext::class.java, attributeType())
     fun attributeType(): Class<ATTR>
     fun renderingContextClass(): Class<CTX>
 }

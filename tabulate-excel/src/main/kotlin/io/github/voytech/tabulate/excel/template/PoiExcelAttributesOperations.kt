@@ -263,7 +263,7 @@ class RowHeightAttributeRenderOperation : RowAttributeRenderOperation<ApachePoiR
 class FilterAndSortTableAttributeRenderOperation: TableAttributeRenderOperation<ApachePoiRenderingContext, FilterAndSortTableAttribute> {
     override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
     override fun attributeType(): Class<FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class.java
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: TableCreationContext, attribute: FilterAndSortTableAttribute) {
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: TableOpeningContext, attribute: FilterAndSortTableAttribute) {
         renderingContext.workbook().creationHelper.createAreaReference(
             CellReference(attribute.rowRange.first, attribute.columnRange.first),
             CellReference(attribute.rowRange.last, attribute.columnRange.last)
@@ -288,7 +288,7 @@ class TemplateFileAttributeRenderOperation: TableAttributeRenderOperation<Apache
     override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
     override fun attributeType(): Class<TemplateFileAttribute> = TemplateFileAttribute::class.java
     override fun priority() = -1
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: TableCreationContext, attribute: TemplateFileAttribute) {
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: TableOpeningContext, attribute: TemplateFileAttribute) {
         renderingContext.createWorkbook(FileInputStream(attribute.fileName), true).let {
             renderingContext.provideSheet(context.getTableId())
         }

@@ -4,6 +4,7 @@ import io.github.voytech.tabulate.api.builder.dsl.CustomTable
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.column.width
+import io.github.voytech.tabulate.support.ShadowingCellTextStylesAttributeTestRenderOperation
 import io.github.voytech.tabulate.support.Spy
 import io.github.voytech.tabulate.support.Spy.Companion.operationPriorities
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
@@ -40,7 +41,7 @@ class TableOperationsWithAttributeSupportTest {
 
         val history = Spy.spy.readHistory()
         history.next().run {
-            assertTrue { TableCreationContext::class.java == context.javaClass }
+            assertTrue { TableOpeningContext::class.java == context.javaClass }
         }
         history.next().run {
             assertTrue { ColumnOpeningContext::class.java == context.javaClass }
@@ -63,6 +64,50 @@ class TableOperationsWithAttributeSupportTest {
         history.next().run {
             assertTrue { CellContext::class.java == context.javaClass }
             assertTrue { attribute is CellTextStylesAttribute }
+        }
+        history.next().run {
+            assertTrue { RowClosingContext::class.java == context.javaClass }
+        }
+        history.next().run {
+            assertTrue { ColumnClosingContext::class.java == context.javaClass }
+        }
+        history.next().run { assertIs<TableClosingContext>(context) }
+        assertFalse(history.hasNext())
+    }
+
+    @Test
+    fun `should use user defined attribute operation instead of factory provided`() {
+
+        CustomTable {
+            rows {
+                newRow {
+                    cell { value = "cell" }
+                    attributes {
+                        text { fontColor = Colors.BLACK }
+                    }
+                }
+            }
+        }.export(format("spy"), Unit)
+
+        val history = Spy.spy.readHistory()
+        history.next().run {
+            assertTrue { TableOpeningContext::class.java == context.javaClass }
+        }
+        history.next().run {
+            assertTrue { ColumnOpeningContext::class.java == context.javaClass }
+        }
+        history.next().run {
+            assertTrue { RowOpeningContext::class.java == context.javaClass }
+        }
+        history.next().run {
+            assertTrue { CellContext::class.java == context.javaClass }
+            assertNull(attribute)
+        }
+        history.next().run {
+            assertTrue { CellContext::class.java == context.javaClass }
+            assertTrue { attribute is CellTextStylesAttribute }
+            // Below operation is loaded by ServiceLoader as standalone operation (not from factory)
+            assertTrue { operation is ShadowingCellTextStylesAttributeTestRenderOperation }
         }
         history.next().run {
             assertTrue { RowClosingContext::class.java == context.javaClass }

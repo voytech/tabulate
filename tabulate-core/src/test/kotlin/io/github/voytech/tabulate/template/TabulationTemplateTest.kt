@@ -41,7 +41,7 @@ class TabulationTemplateTest {
 
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableCreationContext).getTableId()) }
+        history.next().run { assertEquals("Products table", (context as TableOpeningContext).getTableId()) }
         // Columns
         history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         history.next().run { assertEquals(1, (context as ColumnOpeningContext).columnIndex) }
@@ -118,7 +118,7 @@ class TabulationTemplateTest {
 
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableCreationContext).getTableId()) }
+        history.next().run { assertEquals("Products table", (context as TableOpeningContext).getTableId()) }
         // Columns - Opening
         history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         history.next().run { assertEquals(1, (context as ColumnOpeningContext).columnIndex) }
@@ -191,7 +191,7 @@ class TabulationTemplateTest {
 
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableCreationContext).getTableId()) }
+        history.next().run { assertEquals("Products table", (context as TableOpeningContext).getTableId()) }
         // Columns - Opening
         history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         history.next().run { assertEquals(1, (context as ColumnOpeningContext).columnIndex) }
@@ -277,7 +277,7 @@ class TabulationTemplateTest {
 
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableCreationContext).getTableId()) }
+        history.next().run { assertEquals("Products table", (context as TableOpeningContext).getTableId()) }
         // Columns - Opening
         history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         history.next().run { assertEquals(1, (context as ColumnOpeningContext).columnIndex) }
@@ -369,7 +369,7 @@ class TabulationTemplateTest {
         }.export(TabulationFormat("spy"), Unit)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableCreationContext).getTableId()) }
+        history.next().run { assertEquals("Products table", (context as TableOpeningContext).getTableId()) }
         // Columns - Opening 0
         history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         // Column 0 attribute
