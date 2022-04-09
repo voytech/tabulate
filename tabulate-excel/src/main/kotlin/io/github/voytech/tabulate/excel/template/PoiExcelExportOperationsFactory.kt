@@ -15,8 +15,6 @@ import io.github.voytech.tabulate.template.spi.TabulationFormat
 import io.github.voytech.tabulate.template.spi.TabulationFormat.Companion.format
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.xssf.streaming.SXSSFCell
-import java.math.BigDecimal
-import java.math.BigInteger
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -32,99 +30,42 @@ class PoiExcelExportOperationsFactory : ExportOperationsFactory<ApachePoiRenderi
         format("xlsx", ApachePoiRenderingContext::class.java, "poi")
 
     override fun provideExportOperations(): OperationsBuilder<ApachePoiRenderingContext>.() -> Unit = {
+
         openTable = OpenTableOperation { renderingContext, context ->
             renderingContext.createWorkbook()
             renderingContext.provideSheet(context.getTableId())
         }
+
         openRow = OpenRowOperation { renderingContext, context ->
             renderingContext.provideRow(context.getTableId(), context.getRow())
         }
-        openColumn = OpenColumnOperation { _, _ -> }
-        renderRowCell = object : RenderRowCellOperation<ApachePoiRenderingContext> {
-            override fun render(renderingContext: ApachePoiRenderingContext, context: CellContext) {
-                (context.getTypeHint()?.let {
+
+        renderRowCell = RenderRowCellOperation { renderingContext, context ->
+            with(renderingContext) {
+                context.getTypeHint()?.let {
                     when (it.type.getCellTypeId()) {
-                        ExcelTypeHints.IMAGE_DATA.getCellTypeId(),
-                        ExcelTypeHints.IMAGE_URL.getCellTypeId() -> context.renderImageCell(renderingContext)
-                        ExcelTypeHints.FORMULA.getCellTypeId() -> context.renderFormulaCell(renderingContext)
-                        ExcelTypeHints.ERROR.getCellTypeId() -> context.renderErrorCell(renderingContext)
-                        else -> context.renderDefaultTypeCellValue(renderingContext)
+                        ExcelTypeHints.IMAGE_DATA.getCellTypeId() -> renderImageDataCell(context)
+                        ExcelTypeHints.IMAGE_URL.getCellTypeId() -> renderImageUrlCell(context)
+                        ExcelTypeHints.FORMULA.getCellTypeId() -> renderFormulaCell(context)
+                        ExcelTypeHints.NUMERIC.getCellTypeId() -> renderNumericCellValue(context)
+                        ExcelTypeHints.DATE.getCellTypeId() -> renderDateCellValue(context)
+                        ExcelTypeHints.BOOLEAN.getCellTypeId() -> renderBooleanCellValue(context)
+                        ExcelTypeHints.ERROR.getCellTypeId() -> renderErrorCell(context)
+                        else -> renderStringCellValue(context)
                     }
-                } ?: context.renderBasicTypeCellValue(renderingContext))
-                    .also { _ ->
-                        context.takeIf { it.value.colSpan > 1 || it.value.rowSpan > 1 }?.let {
-                            renderingContext.mergeCells(
-                                context.getTableId(),
-                                context.getRow(),
-                                context.getColumn(),
-                                context.value.rowSpan,
-                                context.value.colSpan
-                            )
-                        }
-                    }
-            }
-
-            private fun CellContext.renderBasicTypeCellValue(renderingContext: ApachePoiRenderingContext) {
-                provideCell(renderingContext, this) {
-                    when (rawValue) {
-                        is String -> setCellValue(rawValue as? String)
-                        is Boolean -> setCellValue(rawValue as Boolean)
-                        is LocalDate,
-                        is LocalDateTime,
-                        is Date -> setCellValue(toDate(rawValue))
-                        is Int,
-                        is Long,
-                        is Float,
-                        is Double,
-                        is Byte,
-                        is Short,
-                        is BigDecimal,
-                        is BigInteger -> setCellValue((rawValue as Number).toDouble())
-                        else -> renderDefaultTypeCellValue(renderingContext)
-                    }
-                }
-            }
-
-            private fun CellContext.renderDefaultTypeCellValue(renderingContext: ApachePoiRenderingContext) {
-                provideCell(renderingContext, this) {
-                    setCellValue(rawValue as? String)
-                }
-            }
-
-            private fun CellContext.renderFormulaCell(renderingContext: ApachePoiRenderingContext) {
-                provideCell(renderingContext, this) {
-                    cellFormula = rawValue as? String
-                }
-            }
-
-            private fun CellContext.renderErrorCell(renderingContext: ApachePoiRenderingContext) {
-                provideCell(renderingContext, this) {
-                    setCellErrorValue(rawValue as Byte)
-                }
-            }
-
-            private fun CellContext.renderImageCell(renderingContext: ApachePoiRenderingContext) {
-                if (getTypeHint()?.type?.getCellTypeId() == ExcelTypeHints.IMAGE_DATA.getCellTypeId()) {
-                    renderingContext.createImageCell(
-                        getTableId(), getRow(), getColumn(), value.rowSpan, value.colSpan, rawValue as ByteArray
+                } ?: castAndRenderCellValue(context)
+                if (context.hasSpans()) {
+                    mergeCells(
+                        context.getTableId(),
+                        context.getRow(),
+                        context.getColumn(),
+                        context.value.rowSpan,
+                        context.value.colSpan
                     )
-                } else {
-                    renderingContext.createImageCell(
-                        getTableId(), getRow(), getColumn(), value.rowSpan, value.colSpan, rawValue as String
-                    )
-                }
-            }
-
-            private fun provideCell(
-                renderingContext: ApachePoiRenderingContext,
-                context: CellContext,
-                block: (SXSSFCell.() -> Unit)
-            ) {
-                renderingContext.provideCell(context.getTableId(), context.getRow(), context.getColumn()) {
-                    it.apply(block)
                 }
             }
         }
+
     }
 
     override fun getAttributeOperationsFactory(): AttributeOperationsFactory<ApachePoiRenderingContext> =
@@ -158,6 +99,60 @@ class PoiExcelExportOperationsFactory : ExportOperationsFactory<ApachePoiRenderi
     override fun createOutputBindings(): List<OutputBinding<ApachePoiRenderingContext, *>> = listOf(
         ApachePoiOutputStreamOutputBinding()
     )
+
+    private fun CellContext.hasSpans(): Boolean = value.colSpan > 1 || value.rowSpan > 1
+
+    private fun ApachePoiRenderingContext.provideCell(context: CellContext, block: (SXSSFCell.() -> Unit)) =
+        provideCell(context.getTableId(), context.getRow(), context.getColumn()) { it.apply(block) }
+
+    private fun ApachePoiRenderingContext.renderImageDataCell(context: CellContext) {
+        createImageCell(
+            context.getTableId(), context.getRow(), context.getColumn(),
+            context.value.rowSpan, context.value.colSpan, context.rawValue as ByteArray
+        )
+    }
+
+    private fun ApachePoiRenderingContext.renderImageUrlCell(context: CellContext) {
+        createImageCell(
+            context.getTableId(), context.getRow(), context.getColumn(),
+            context.value.rowSpan, context.value.colSpan, context.rawValue as String
+        )
+    }
+
+    private fun ApachePoiRenderingContext.renderFormulaCell(context: CellContext) = provideCell(context) {
+        cellFormula = context.rawValue as? String
+    }
+
+    private fun ApachePoiRenderingContext.renderErrorCell(context: CellContext) = provideCell(context) {
+        setCellErrorValue(context.rawValue as Byte)
+    }
+
+    private fun ApachePoiRenderingContext.renderStringCellValue(context: CellContext) = provideCell(context) {
+        setCellValue(context.rawValue.toString())
+    }
+
+    private fun ApachePoiRenderingContext.renderNumericCellValue(context: CellContext) = provideCell(context) {
+        setCellValue((context.rawValue as Number).toDouble())
+    }
+
+    private fun ApachePoiRenderingContext.renderBooleanCellValue(context: CellContext) = provideCell(context) {
+        setCellValue(context.rawValue as Boolean)
+    }
+
+    private fun ApachePoiRenderingContext.renderDateCellValue(context: CellContext) = provideCell(context) {
+        setCellValue(toDate(context.rawValue))
+    }
+
+    private fun ApachePoiRenderingContext.castAndRenderCellValue(context: CellContext) =
+        when (context.rawValue) {
+            is String -> renderStringCellValue(context)
+            is Boolean -> renderBooleanCellValue(context)
+            is LocalDate,
+            is LocalDateTime,
+            is Date -> renderDateCellValue(context)
+            is Number -> renderNumericCellValue(context)
+            else -> renderStringCellValue(context)
+        }
 
     companion object {
 
