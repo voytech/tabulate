@@ -1,0 +1,32 @@
+= Tabulate - Change log.
+
+== 0.2.0
+
+=== New features:
+
+-
+
+=== Improvements:
+
+-  Rework Operations API. link:https://github.com/voytech/tabulate/issues/153[#153]
+
+=== Bug fixes:
+
+-
+
+== 0.1.1
+
+=== New features:
+
+-
+
+=== Improvements:
+
+-
+
+=== Bug fixes:
+
+- Fix thread-safety related bug (when TabulationTemplate is shared) link:https://github.com/voytech/tabulate/commit/8e7abad8adbf90a98261b4945c23b5195d4b2939[(see commit)]
+- Fix bug with CellBordersAttribute merging. link:https://github.com/voytech/tabulate/commit/7854cb44d594dfce09584471152cdc1b5e7bd48d[(see commit)]
+
+== 0.1.0
