@@ -8,9 +8,11 @@ import io.github.voytech.tabulate.model.attributes.cell.Colors;
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute;
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute;
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute;
+import io.github.voytech.tabulate.support.Spy;
 import io.github.voytech.tabulate.template.TabulationFormat;
 import io.github.voytech.tabulate.template.TabulationTemplate;
 import kotlin.Unit;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -22,6 +24,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class FluentBuilderTest {
+
+	@AfterEach
+	public void cleanup() {
+		Spy.Companion.getSpy().readHistory();
+	}
 
 	@Test
 	public void createCustomTableDefinitionTest() {

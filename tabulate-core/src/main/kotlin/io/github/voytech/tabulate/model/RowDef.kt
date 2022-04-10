@@ -1,8 +1,8 @@
 package io.github.voytech.tabulate.model
 
 import io.github.voytech.tabulate.model.attributes.Attributes
-import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
-import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
+import io.github.voytech.tabulate.model.attributes.CellAttribute
+import io.github.voytech.tabulate.model.attributes.RowAttribute
 import io.github.voytech.tabulate.template.operations.CellValue
 
 /**
@@ -25,12 +25,12 @@ internal data class RowDef<T> internal constructor(
      * Row level attributes to be used in row context while rendering row.
      */
     @get:JvmSynthetic
-    internal val rowAttributes: Attributes<RowAttribute>?,
+    internal val rowAttributes: Attributes<RowAttribute<*>>?,
     /**
      * Cell level attributes to be used in row cell context while rendering cell.
      */
     @get:JvmSynthetic
-    internal val cellAttributes: Attributes<CellAttribute>?,
+    internal val cellAttributes: Attributes<CellAttribute<*>>?,
     /**
      * All custom cell definitions. Each cell definition may contain custom value and/or cell attributes to be applied on
      * value resolved from data-set record.
@@ -49,12 +49,12 @@ internal data class RowDef<T> internal constructor(
 }
 
 @JvmSynthetic
-internal fun <T> Collection<RowDef<T>>.flattenRowAttributes(): Attributes<RowAttribute> =
-    mapNotNull { it.rowAttributes }.fold(Attributes()) { acc, r -> acc + r }
+internal fun <T> Collection<RowDef<T>>.flattenRowAttributes(): Attributes<RowAttribute<*>> =
+    mapNotNull { it.rowAttributes }.fold(Attributes(attributeCategory = RowAttribute::class.java)) { acc, r -> acc + r }
 
 @JvmSynthetic
-internal fun <T> Collection<RowDef<T>>.flattenCellAttributes(): Attributes<CellAttribute> =
-    mapNotNull { it.cellAttributes }.fold(Attributes()) { acc, r -> acc + r }
+internal fun <T> Collection<RowDef<T>>.flattenCellAttributes(): Attributes<CellAttribute<*>> =
+    mapNotNull { it.cellAttributes }.fold(Attributes(attributeCategory = CellAttribute::class.java)) { acc, r -> acc + r }
 
 @JvmSynthetic
 internal fun <T> Collection<RowDef<T>>.mergeCells(): Map<ColumnKey<T>, CellDef<T>> =

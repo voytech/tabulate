@@ -1,10 +1,6 @@
 package io.github.voytech.tabulate.model
 
-import io.github.voytech.tabulate.model.attributes.Attributes
-import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
-import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
-import io.github.voytech.tabulate.model.attributes.alias.RowAttribute
-import io.github.voytech.tabulate.model.attributes.alias.TableAttribute
+import io.github.voytech.tabulate.model.attributes.*
 
 /**
  * A top-level definition of tabular layout. Aggregates column as well as all row definitions. It can also contain
@@ -42,20 +38,20 @@ class Table<T> internal constructor(
      * Table attributes.
      */
     @get:JvmSynthetic
-    internal val tableAttributes: Attributes<TableAttribute>?,
+    internal val tableAttributes: Attributes<TableAttribute<*>>?,
     /**
      * Cell attributes. To be applied on each cell within entire table.
      */
     @get:JvmSynthetic
-    internal val cellAttributes: Attributes<CellAttribute>?,
+    internal val cellAttributes: Attributes<CellAttribute<*>>?,
     /**
      * Column attributes. To be applied on each column within entire table.
      */
     @get:JvmSynthetic
-    internal val columnAttributes: Attributes<ColumnAttribute>?,
+    internal val columnAttributes: Attributes<ColumnAttribute<*>>?,
     /**
      * Row attributes. To be applied on each row within entire table.
      */
     @get:JvmSynthetic
-    internal val rowAttributes: Attributes<RowAttribute>?
+    internal val rowAttributes: Attributes<RowAttribute<*>>?
 )

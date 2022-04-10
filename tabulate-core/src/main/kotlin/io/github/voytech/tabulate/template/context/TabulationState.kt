@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.template.context
 
 import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
-import io.github.voytech.tabulate.template.operations.AttributedRowWithCells
+import io.github.voytech.tabulate.template.operations.RowClosingContext
 import io.github.voytech.tabulate.template.resolvers.AccumulatingRowContextResolver
 import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
 
@@ -39,7 +39,7 @@ internal class TabulationState<T>(
      * @author Wojciech Mąka
      * @since 0.1.0
      */
-    fun capture(record: T): AttributedRowWithCells<T>? {
+    fun capture(record: T): RowClosingContext<T>? {
         rowContextResolver.append(record)
         return next()
     }
@@ -49,7 +49,7 @@ internal class TabulationState<T>(
      * @author Wojciech Mąka
      * @since 0.1.0
      */
-    fun next(): AttributedRowWithCells<T>? {
+    fun next(): RowClosingContext<T>? {
         return if (rowContextIterator.hasNext()) rowContextIterator.next() else null
     }
 

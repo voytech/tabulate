@@ -26,16 +26,15 @@ class BenchmarkOutputBinding: OutputBinding<BenchmarkRenderingContext,Unit> {
     override fun flush() { }
 }
 
-class BenchmarkExportOperationsFactory: ExportOperationsConfiguringFactory<BenchmarkRenderingContext>() {
-    override fun provideExportOperations(): TableExportOperations<BenchmarkRenderingContext> = object: TableExportOperations<BenchmarkRenderingContext> {
-        override fun renderRowCell(renderingContext: BenchmarkRenderingContext, context: RowCellContext) { /* NOOP */}
-    }
+class BenchmarkExportOperationsFactory: ExportOperationsFactory<BenchmarkRenderingContext>() {
+
+    override fun provideExportOperations(): OperationsBuilder<BenchmarkRenderingContext>.() -> Unit = {}
 
     override fun createOutputBindings(): List<OutputBinding<BenchmarkRenderingContext, *>>  = listOf(
         BenchmarkOutputBinding()
     )
 
-    override fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<BenchmarkRenderingContext> =
+    override fun getAttributeOperationsFactory(): AttributeOperationsFactory<BenchmarkRenderingContext> =
         TestAttributeOperations()
 
     override fun getTabulationFormat(): TabulationFormat<BenchmarkRenderingContext> =
@@ -43,7 +42,7 @@ class BenchmarkExportOperationsFactory: ExportOperationsConfiguringFactory<Bench
 
 }
 
-class TestAttributeOperations : AttributeRenderOperationsFactory<BenchmarkRenderingContext> {
+class TestAttributeOperations : AttributeOperationsFactory<BenchmarkRenderingContext> {
     override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<BenchmarkRenderingContext, out CellAttribute<*>>> =
         setOf(
             CellTextStylesAttributeTestRenderOperation(),
@@ -65,69 +64,76 @@ class TestAttributeOperations : AttributeRenderOperationsFactory<BenchmarkRender
 
 class CellTextStylesAttributeTestRenderOperation :
     CellAttributeRenderOperation<BenchmarkRenderingContext, CellTextStylesAttribute> {
+    override fun renderingContextClass(): Class<BenchmarkRenderingContext> = BenchmarkRenderingContext::class.java
     override fun attributeType(): Class<CellTextStylesAttribute> = CellTextStylesAttribute::class.java
     override fun renderAttribute(
         renderingContext: BenchmarkRenderingContext,
-        context: RowCellContext,
+        context: CellContext,
         attribute: CellTextStylesAttribute
     ) {}
 }
 
 class CellBordersAttributeTestRenderOperation : CellAttributeRenderOperation<BenchmarkRenderingContext, CellBordersAttribute>{
+    override fun renderingContextClass(): Class<BenchmarkRenderingContext> = BenchmarkRenderingContext::class.java
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
     override fun renderAttribute(
         renderingContext: BenchmarkRenderingContext,
-        context: RowCellContext,
+        context: CellContext,
         attribute: CellBordersAttribute
     ) {}
 }
 
 class CellBackgroundAttributeTestRenderOperation :
     CellAttributeRenderOperation<BenchmarkRenderingContext, CellBackgroundAttribute> {
+    override fun renderingContextClass(): Class<BenchmarkRenderingContext> = BenchmarkRenderingContext::class.java
     override fun attributeType(): Class<CellBackgroundAttribute> = CellBackgroundAttribute::class.java
     override fun renderAttribute(
         renderingContext: BenchmarkRenderingContext,
-        context: RowCellContext,
+        context: CellContext,
         attribute: CellBackgroundAttribute
     ) {}
 }
 
 class CellAlignmentAttributeTestRenderOperation :
     CellAttributeRenderOperation<BenchmarkRenderingContext, CellAlignmentAttribute> {
+    override fun renderingContextClass(): Class<BenchmarkRenderingContext> = BenchmarkRenderingContext::class.java
     override fun attributeType(): Class<CellAlignmentAttribute> = CellAlignmentAttribute::class.java
     override fun renderAttribute(
         renderingContext: BenchmarkRenderingContext,
-        context: RowCellContext,
+        context: CellContext,
         attribute: CellAlignmentAttribute
     ) {}
 }
 
 class ColumnWidthAttributeTestRenderOperation:
     ColumnAttributeRenderOperation<BenchmarkRenderingContext, ColumnWidthAttribute> {
+    override fun renderingContextClass(): Class<BenchmarkRenderingContext> = BenchmarkRenderingContext::class.java
     override fun attributeType(): Class<ColumnWidthAttribute> = ColumnWidthAttribute::class.java
     override fun renderAttribute(
         renderingContext: BenchmarkRenderingContext,
-        context: ColumnContext,
+        context: ColumnOpeningContext,
         attribute: ColumnWidthAttribute
     ) {}
 }
 
 class RowHeightAttributeTestRenderOperation :
     RowAttributeRenderOperation<BenchmarkRenderingContext, RowHeightAttribute> {
+    override fun renderingContextClass(): Class<BenchmarkRenderingContext> = BenchmarkRenderingContext::class.java
     override fun attributeType(): Class<RowHeightAttribute> = RowHeightAttribute::class.java
     override fun renderAttribute(
         renderingContext: BenchmarkRenderingContext,
-        context: RowContext,
+        context: RowOpeningContext,
         attribute: RowHeightAttribute
     ) {}
 }
 
 class TemplateFileAttributeTestRenderOperation :
     TableAttributeRenderOperation<BenchmarkRenderingContext, TemplateFileAttribute> {
+    override fun renderingContextClass(): Class<BenchmarkRenderingContext> = BenchmarkRenderingContext::class.java
     override fun attributeType(): Class<TemplateFileAttribute> = TemplateFileAttribute::class.java
     override fun renderAttribute(
         renderingContext: BenchmarkRenderingContext,
-        context: TableContext,
+        context: TableOpeningContext,
         attribute: TemplateFileAttribute
     ) {}
 }

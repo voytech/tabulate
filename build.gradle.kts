@@ -124,7 +124,7 @@ configure(
         }
     }
 
-    if (System.getenv("GPG_KEY_ID") != null) {
+    if (System.getenv("ENABLE_GPG") != null) {
         signing {
             useGpgCmd()
             sign(publishing.publications)

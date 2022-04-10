@@ -1,8 +1,8 @@
 package io.github.voytech.tabulate.model
 
 import io.github.voytech.tabulate.model.attributes.Attributes
-import io.github.voytech.tabulate.model.attributes.alias.CellAttribute
-import io.github.voytech.tabulate.model.attributes.alias.ColumnAttribute
+import io.github.voytech.tabulate.model.attributes.CellAttribute
+import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 
 /**
  * Defines table column. Column groups cells where each cell represents single field or property of single collection element.
@@ -32,12 +32,12 @@ internal class ColumnDef<T> internal constructor(
      * column attributes for controlling appearance of entire column, which are applicable column-wide not per cell. (e.g. width)
      */
     @get:JvmSynthetic
-    internal val columnAttributes: Attributes<ColumnAttribute>?,
+    internal val columnAttributes: Attributes<ColumnAttribute<*>>?,
     /**
      * cell attributes for controlling appearance of all cells defined within particular column.
      */
     @get:JvmSynthetic
-    internal val cellAttributes: Attributes<CellAttribute>?
+    internal val cellAttributes: Attributes<CellAttribute<*>>?
 ) {
     @JvmSynthetic
     internal fun resolveRawValue(value: T?): Any? = value?.let { id.property?.getPropertyValue(it) }

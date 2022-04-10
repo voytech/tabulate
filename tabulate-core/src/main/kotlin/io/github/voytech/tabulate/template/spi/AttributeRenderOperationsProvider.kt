@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.template.spi
 
 import io.github.voytech.tabulate.template.context.RenderingContext
-import io.github.voytech.tabulate.template.operations.AttributeRenderOperationsFactory
+import io.github.voytech.tabulate.template.operations.AttributeOperationsFactory
 
 /**
  * Service provider interface for extending existing third party exporter with additional custom attributes.
@@ -15,7 +15,7 @@ interface AttributeRenderOperationsProvider<CTX: RenderingContext> {
      * @since 0.1.0
      * @author Wojciech Mąka
      */
-    fun getAttributeOperationsFactory(): AttributeRenderOperationsFactory<CTX>
+    fun getAttributeOperationsFactory(): AttributeOperationsFactory<CTX>
 
     /**
      * @return Compatible [RenderingContext] class.

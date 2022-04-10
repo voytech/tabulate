@@ -20,7 +20,6 @@ import org.apache.poi.ss.util.CellReference
 import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import org.apache.poi.xssf.usermodel.XSSFFont
 import java.io.FileInputStream
-import java.util.*
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 
 /**
@@ -29,10 +28,11 @@ import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
  * @since 0.1.0
  */
 class CellTextStylesAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellTextStylesAttribute> {
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
     override fun attributeType(): Class<CellTextStylesAttribute> = CellTextStylesAttribute::class.java
 
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowCellContext, attribute: CellTextStylesAttribute) {
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: CellContext, attribute: CellTextStylesAttribute) {
         renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.getRow(),
@@ -61,11 +61,13 @@ class CellTextStylesAttributeRenderOperation: CellAttributeRenderOperation<Apach
  * @since 0.1.0
  */
 class CellBackgroundAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellBackgroundAttribute> {
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
+
     override fun attributeType(): Class<CellBackgroundAttribute> = CellBackgroundAttribute::class.java
 
     override fun renderAttribute(
         renderingContext: ApachePoiRenderingContext,
-        context: RowCellContext,
+        context: CellContext,
         attribute: CellBackgroundAttribute,
     ) {
         renderingContext.provideCellStyle(
@@ -105,9 +107,11 @@ class CellBackgroundAttributeRenderOperation: CellAttributeRenderOperation<Apach
  * @since 0.1.0
  */
 class CellBordersAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellBordersAttribute> {
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
+
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowCellContext, attribute: CellBordersAttribute) {
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: CellContext, attribute: CellBordersAttribute) {
         renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.getRow(),
@@ -152,10 +156,11 @@ class CellBordersAttributeRenderOperation: CellAttributeRenderOperation<ApachePo
  * @since 0.1.0
  */
 class CellAlignmentAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellAlignmentAttribute> {
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
     override fun attributeType(): Class<CellAlignmentAttribute> = CellAlignmentAttribute::class.java
 
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowCellContext, attribute: CellAlignmentAttribute) {
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: CellContext, attribute: CellAlignmentAttribute) {
         renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.getRow(),
@@ -192,12 +197,13 @@ class CellAlignmentAttributeRenderOperation: CellAttributeRenderOperation<Apache
  * @since 0.1.0
  */
 class CellDataFormatAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellExcelDataFormatAttribute> {
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
     override fun attributeType(): Class<CellExcelDataFormatAttribute> = CellExcelDataFormatAttribute::class.java
 
     override fun renderAttribute(
         renderingContext: ApachePoiRenderingContext,
-        context: RowCellContext,
+        context: CellContext,
         attribute: CellExcelDataFormatAttribute,
     ) {
         renderingContext.provideCellStyle(
@@ -217,12 +223,11 @@ class CellDataFormatAttributeRenderOperation: CellAttributeRenderOperation<Apach
  * @since 0.1.0
  */
 class ColumnWidthAttributeRenderOperation: ColumnAttributeRenderOperation<ApachePoiRenderingContext, ColumnWidthAttribute> {
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
     override fun attributeType(): Class<ColumnWidthAttribute> = ColumnWidthAttribute::class.java
 
-    override fun applicableRenderingPhases(): EnumSet<ColumnRenderPhase> = EnumSet.of(ColumnRenderPhase.BEFORE_FIRST_ROW, ColumnRenderPhase.AFTER_LAST_ROW)
-
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: ColumnContext, attribute: ColumnWidthAttribute) {
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: ColumnOpeningContext, attribute: ColumnWidthAttribute) {
         renderingContext.provideSheet(context.getTableId()).let {
             if (attribute.auto == true || attribute.px <= 0) {
                 if (!it.isColumnTrackedForAutoSizing(context.getColumn())) {
@@ -242,8 +247,9 @@ class ColumnWidthAttributeRenderOperation: ColumnAttributeRenderOperation<Apache
  * @since 0.1.0
  */
 class RowHeightAttributeRenderOperation : RowAttributeRenderOperation<ApachePoiRenderingContext, RowHeightAttribute> {
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
     override fun attributeType(): Class<RowHeightAttribute> = RowHeightAttribute::class.java
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowContext, attribute: RowHeightAttribute) {
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowOpeningContext, attribute: RowHeightAttribute) {
         renderingContext.provideRow(context.getTableId(), context.getRow()).height =
             ApachePoiUtils.heightFromPixels(attribute.px)
     }
@@ -255,8 +261,9 @@ class RowHeightAttributeRenderOperation : RowAttributeRenderOperation<ApachePoiR
  * @since 0.1.0
  */
 class FilterAndSortTableAttributeRenderOperation: TableAttributeRenderOperation<ApachePoiRenderingContext, FilterAndSortTableAttribute> {
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
     override fun attributeType(): Class<FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class.java
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: TableContext, attribute: FilterAndSortTableAttribute) {
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: TableOpeningContext, attribute: FilterAndSortTableAttribute) {
         renderingContext.workbook().creationHelper.createAreaReference(
             CellReference(attribute.rowRange.first, attribute.columnRange.first),
             CellReference(attribute.rowRange.last, attribute.columnRange.last)
@@ -278,9 +285,10 @@ class FilterAndSortTableAttributeRenderOperation: TableAttributeRenderOperation<
  * @since 0.1.0
  */
 class TemplateFileAttributeRenderOperation: TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute> {
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
     override fun attributeType(): Class<TemplateFileAttribute> = TemplateFileAttribute::class.java
     override fun priority() = -1
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: TableContext, attribute: TemplateFileAttribute) {
+    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: TableOpeningContext, attribute: TemplateFileAttribute) {
         renderingContext.createWorkbook(FileInputStream(attribute.fileName), true).let {
             renderingContext.provideSheet(context.getTableId())
         }

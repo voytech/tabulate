@@ -41,7 +41,7 @@ sealed class AttributesAwareBuilder<T> : InternalBuilder<T>() {
     @Suppress("UNCHECKED_CAST")
     @JvmSynthetic
     internal fun <C : Attribute<*>> getAttributesByClass(clazz: Class<C>): Attributes<C> {
-        return Attributes(if (attributes.containsKey(clazz)) attributes[clazz] as Set<C> else emptySet())
+        return Attributes(if (attributes.containsKey(clazz)) attributes[clazz] as Set<C> else emptySet(),clazz)
     }
 
     private fun applyAttribute(attribute: Attribute<*>) {

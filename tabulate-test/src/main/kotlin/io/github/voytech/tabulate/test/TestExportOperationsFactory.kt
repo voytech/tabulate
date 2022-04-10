@@ -3,23 +3,22 @@ package io.github.voytech.tabulate.test
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.*
 import io.github.voytech.tabulate.template.result.OutputBinding
-import io.github.voytech.tabulate.template.spi.ExportOperationsProvider
 import io.github.voytech.tabulate.template.spi.TabulationFormat
 import java.io.OutputStream
 import java.util.logging.Logger
 
 class TestRenderingContext: RenderingContext
 
-fun interface AttributedCellTest {
-    fun test(context: AttributedCell)
+fun interface RowCellTest {
+    fun test(context: CellContext)
 }
 
-interface AttributedRowTest {
-    fun <T> test(context: AttributedRowWithCells<T>) { }
+interface CloseRowTest {
+    fun <T> test(context: RowClosingContext<T>) { }
 }
 
-fun interface AttributedColumnTest {
-    fun test(context: AttributedColumn)
+fun interface OpenRowTest {
+    fun test(context: ColumnOpeningContext)
 }
 
 class TestOutputBinding: OutputBinding<TestRenderingContext, Unit> {
@@ -54,33 +53,14 @@ class OutputStreamTestOutputBinding: OutputBinding<TestRenderingContext, OutputS
     }
 }
 
-class TestExportOperationsFactory: ExportOperationsProvider<TestRenderingContext> {
+class TestExportOperationsFactory: ExportOperationsFactory<TestRenderingContext>() {
 
     override fun getTabulationFormat() = TabulationFormat.format("test", TestRenderingContext::class.java)
-
-    override fun createExportOperations(): AttributedContextExportOperations<TestRenderingContext> = object:
-        AttributedContextExportOperations<TestRenderingContext> {
-
-        override fun renderColumn(renderingContext: TestRenderingContext, context: AttributedColumn) {
-            columnTest?.test(context)
-        }
-
-        override fun renderRowCell(renderingContext: TestRenderingContext, context: AttributedCell) {
-            cellTest?.test(context)
-        }
-
-        override fun beginRow(renderingContext: TestRenderingContext, context: AttributedRow) {
-            println("begin row: $context")
-        }
-
-        override fun <T> endRow(renderingContext: TestRenderingContext, context: AttributedRowWithCells<T>) {
-            rowTest?.test(context)
-        }
-
-        override fun createTable(renderingContext: TestRenderingContext, context: AttributedTable) {
-            println("table context: $context")
-        }
-
+    
+    override fun provideExportOperations(): OperationsBuilder<TestRenderingContext>.() -> Unit = {
+        openColumn = OpenColumnOperation { _, context ->  columnTest?.test(context) }
+        closeRow = CloseRowOperation { _, context -> rowTest?.test(context)  }
+        renderRowCell = RenderRowCellOperation { _, context -> cellTest?.test(context)  }
     }
 
     override fun createOutputBindings(): List<OutputBinding<TestRenderingContext, *>> = listOf(
@@ -89,11 +69,11 @@ class TestExportOperationsFactory: ExportOperationsProvider<TestRenderingContext
 
     companion object {
         @JvmStatic
-        var cellTest: AttributedCellTest? = null
+        var cellTest: RowCellTest? = null
         @JvmStatic
-        var rowTest: AttributedRowTest? = null
+        var rowTest: CloseRowTest? = null
         @JvmStatic
-        var columnTest: AttributedColumnTest? = null
+        var columnTest: OpenRowTest? = null
 
         fun clear() {
             cellTest = null
