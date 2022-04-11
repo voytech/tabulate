@@ -9,7 +9,7 @@ object ApachePoiUtils {
     private val UNIT_OFFSET_MAP = intArrayOf(0, 36, 73, 109, 146, 182, 219)
 
     fun widthFromPixels(pxs: Int): Int {
-        var widthUnits = (EXCEL_COLUMN_WIDTH_FACTOR * (pxs / UNIT_OFFSET_LENGTH))
+        var widthUnits = EXCEL_COLUMN_WIDTH_FACTOR * (pxs / UNIT_OFFSET_LENGTH)
         widthUnits += UNIT_OFFSET_MAP[pxs % UNIT_OFFSET_LENGTH]
         return widthUnits
     }
@@ -31,7 +31,7 @@ object ApachePoiUtils {
     }
 
     fun heightFromPixels(pxs: Int): Short {
-        var heightUnits = (EXCEL_ROW_HEIGHT_FACTOR * (pxs / UNIT_OFFSET_LENGTH))
+        var heightUnits = EXCEL_ROW_HEIGHT_FACTOR * (pxs / UNIT_OFFSET_LENGTH)
         heightUnits += UNIT_OFFSET_MAP[pxs % UNIT_OFFSET_LENGTH]
         return heightUnits.toShort()
     }

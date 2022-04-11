@@ -71,7 +71,7 @@ internal class SyntheticRow<T>(
             table.cellAttributes.orEmpty() +
             column.cellAttributes.orEmpty() +
             rowCellAttributes +
-            (cellDefinitions[column.id]?.cellAttributes).orEmpty()
+            cellDefinitions[column.id]?.cellAttributes.orEmpty()
 
 
     internal fun mapEachCell(

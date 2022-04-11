@@ -41,8 +41,8 @@ class PoiTableAssert<T>(
                             api.workbook().getSheet(coordinates.tableName).mergedRegions.filter { region ->
                                 region.containsColumn(coordinates.columnIndex) && region.containsRow(coordinates.rowIndex)
                             }.let { if (it.isNotEmpty()) it[0] else null }
-                    val colSpan = address?.let { (it.lastColumn - it.firstColumn) + 1 } ?: 1
-                    val rowSpan = address?.let { (it.lastRow - it.firstRow) + 1 } ?: 1
+                    val colSpan = address?.let { it.lastColumn - it.firstColumn + 1 } ?: 1
+                    val rowSpan = address?.let { it.lastRow - it.firstRow + 1 } ?: 1
                     return api.getImageAsCellValue(coordinates) ?: api.xssfCell(coordinates)
                             .let {
                                 return when (it?.cellType) {

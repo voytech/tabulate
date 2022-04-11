@@ -50,7 +50,7 @@ class Attributes<A: Attribute<*>>(
     override fun getAttributeCategoryClass(): Class<A> = attributeCategory
 
     @Suppress("UNCHECKED_CAST")
-    private fun <I: Attribute<I>> A.overrideAttribute(other: A, clazz: Class<I>): I = (this as I) + (other as I)
+    private fun <I: Attribute<I>> A.overrideAttribute(other: A, clazz: Class<I>): I = this as I + other as I
 
     operator fun plus(other: Attributes<A>): Attributes<A> {
           val result = HashMap<Class<out A>,A>()

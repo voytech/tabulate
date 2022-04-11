@@ -257,8 +257,8 @@ sealed class LogicalOperation(
         return if (other.javaClass == this.javaClass) {
             (other as LogicalOperation).let {
                 operator == it.operator &&
-                        ((operandA == it.operandA && operandB == it.operandB) ||
-                                (operandA == it.operandB && operandB == it.operandA))
+                        (operandA == it.operandA && operandB == it.operandB ||
+                                operandA == it.operandB && operandB == it.operandA)
             }
         } else false
     }
@@ -321,7 +321,7 @@ infix fun PredicateLiteral.or(other: PredicateLiteral): Or = Or(this, other)
  * @since 0.1.0
  */
 infix fun ClosedRange<RowIndexDef>.intersects(other: ClosedRange<RowIndexDef>): Boolean =
-    (endInclusive >= other.start && other.endInclusive >= start)
+    endInclusive >= other.start && other.endInclusive >= start
 
 /**
  * Produces [ClosedRange] which is an alternative of two other instances [ClosedRange].

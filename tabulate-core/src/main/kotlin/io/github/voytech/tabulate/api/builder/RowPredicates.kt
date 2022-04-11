@@ -18,14 +18,14 @@ object RowPredicates {
     fun <T> all(): RowPredicate<T> = RowPredicate { true }
 
     @JvmStatic
-    fun <T> even(): RowPredicate<T> = RowPredicate { row -> (row.rowIndex.value % 2) == 0 }
+    fun <T> even(): RowPredicate<T> = RowPredicate { row -> row.rowIndex.value % 2 == 0 }
 
     @JvmName("evenUnit")
     @JvmStatic
     fun even(): RowPredicate<Unit> = even<Unit>()
 
     @JvmStatic
-    fun <T> odd(): RowPredicate<T> = RowPredicate { row -> (row.rowIndex.value % 2) != 0 }
+    fun <T> odd(): RowPredicate<T> = RowPredicate { row -> row.rowIndex.value % 2 != 0 }
 
     @JvmName("oddUnit")
     @JvmStatic

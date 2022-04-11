@@ -122,7 +122,7 @@ class DslBuilderTest {
                 assertEquals(Product::code.id(), column.id.property, "nr 1 should have id ref 'Product::code'")
                 assertNotNull(column.cellAttributes)
                 assertEquals(1, column.cellAttributes!!.size)
-                (column.cellAttributes[CellTextStylesAttribute::class.java]).let { attribute ->
+                column.cellAttributes[CellTextStylesAttribute::class.java].let { attribute ->
                     assertEquals(Colors.AERO, attribute?.fontColor)
                     assertEquals(12, attribute?.fontSize)
                     assertEquals("Times New Roman", attribute?.fontFamily)

@@ -295,7 +295,7 @@ internal class RowSpans<T> {
     private fun Map.Entry<RowIndexDef, Int>.rowSpan(): Int = value - 1
 
     private fun Map.Entry<RowIndexDef, Int>.materializeRowSpan(): Set<RowIndexDef> =
-        (rowIndex()..(rowIndex() + rowSpan())).materialize()
+        (rowIndex()..rowIndex() + rowSpan()).materialize()
 
     internal operator fun plusAssign(spansByColumn: Pair<ColumnKey<T>, Map<RowIndexDef, Int>>) {
         rowSpans.getOrPut(spansByColumn.first) { mutableMapOf() } += spansByColumn.second
@@ -413,7 +413,7 @@ internal class RowBuilderState<T>(
                     }
                 }
             }.also {
-                rowsBuilderState.rowSpans += (cellsBuilderState.currentColumn!!.id to it)
+                rowsBuilderState.rowSpans += cellsBuilderState.currentColumn!!.id to it
             }
         }
     }

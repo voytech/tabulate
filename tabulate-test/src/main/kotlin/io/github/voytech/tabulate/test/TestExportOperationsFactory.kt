@@ -56,7 +56,7 @@ class OutputStreamTestOutputBinding: OutputBinding<TestRenderingContext, OutputS
 class TestExportOperationsFactory: ExportOperationsFactory<TestRenderingContext>() {
 
     override fun getTabulationFormat() = TabulationFormat.format("test", TestRenderingContext::class.java)
-    
+
     override fun provideExportOperations(): OperationsBuilder<TestRenderingContext>.() -> Unit = {
         openColumn = OpenColumnOperation { _, context ->  columnTest?.test(context) }
         closeRow = CloseRowOperation { _, context -> rowTest?.test(context)  }

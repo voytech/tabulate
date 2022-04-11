@@ -370,12 +370,6 @@ class RowIteratorTest {
         }
     }
 
-    @Test
-    @Disabled("Functionality not exists yet")
-    fun `should resolve footer AttributedRow when summarizing is enabled on column`() {
-
-    }
-
     @Disabled("Consider such usage with not throwing errors.")
     @Test
     fun `should resolve AttributedRow from custom items with columns at various indices`() {

@@ -534,10 +534,10 @@ class ApachePoiTabulateTests {
                 CellPosition(0, 3) to AssertMany(
                     AssertCellValue(expectedValue = "Price"), headerAttributes
                 ),
-                CellRange((1..1), (0..3)) to AssertNoAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
-                CellRange((2..2), (0..3)) to AssertEqualsAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
-                CellRange((3..3), (0..3)) to AssertNoAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
-                CellRange((4..4), (0..3)) to AssertEqualsAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
+                CellRange(1..1, 0..3) to AssertNoAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
+                CellRange(2..2, 0..3) to AssertEqualsAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
+                CellRange(3..3, 0..3) to AssertNoAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
+                CellRange(4..4, 0..3) to AssertEqualsAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
             )
         ).perform().also {
             it.cleanup()

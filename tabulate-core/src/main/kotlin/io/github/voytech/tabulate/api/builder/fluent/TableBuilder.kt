@@ -27,7 +27,7 @@ sealed class FluentTableBuilderApi<T> {
         while (upper.javaClass != TableBuilder::class.java) {
             upper = upper.up()
         }
-        return (upper as TableBuilder<T>)
+        return upper as TableBuilder<T>
     }
 
     fun build() :Table<T> = root().builderState.build()
