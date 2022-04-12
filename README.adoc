@@ -33,10 +33,10 @@ In such cases You want to hide implementation details using abstractions, but th
 
 == Current version
 
-Current version of library is 0.1.0:
+Current version of library is 0.1.1:
 ----
 dependencies {
-    implementation(platform("io.github.voytech:tabulate-bom:0.1.0"))
+    implementation(platform("io.github.voytech:tabulate-bom:0.1.1"))
     implementation("io.github.voytech","tabulate-core")   // e.g. DSL,
     implementation("io.github.voytech","tabulate-excel")  // streaming apache POI excel API.
 }

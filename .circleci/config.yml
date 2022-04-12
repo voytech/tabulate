@@ -1,7 +1,19 @@
 # Java Gradle CircleCI 2.0 configuration file
 # See: https://circleci.com/docs/2.0/language-java/
-version: 2
-
+version: 2.1
+parameters:
+  GHA_Actor:
+    type: string
+    default: ""
+  GHA_Action:
+    type: string
+    default: ""
+  GHA_Event:
+    type: string
+    default: ""
+  GHA_Meta:
+    type: string
+    default: ""
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
@@ -47,43 +59,56 @@ jobs:
       - store_test_results:
           path: test-results
 
-  publishToSonatype:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+  publishSnapshot:
+    parameters:
+      mname:
+        description: "Project module name"
+        default: "tabulate-core"
+        type: string
     docker:
-      # specify the version you desire here
       - image: circleci/openjdk:8-jdk
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
-
     working_directory: ~/repo
 
     environment:
       # Customize the JVM maximum heap limit
-      JVM_OPTS: -Xmx3200m
+      JVM_OPTS: -Xmx6200m
       TERM: dumb
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       - checkout
+      - run: ./import_key.sh $GPG_PRIVATE_KEY $GPG_PUBLIC_KEY $GPG_PRIVATE_KEY_PASSWORD
+      - run: gradle -Psigning.gnupg.keyName=$GPG_KEY_ID -Psigning.gnupg.passphrase=$GPG_PRIVATE_KEY_PASSWORD << parameters.mname >>:publishToSonatype
 
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "build.gradle.kts" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+  publishMavenVersion:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    working_directory: ~/repo
 
-      - run: gradle build
+    environment:
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx6200m
+      TERM: dumb
+    steps:
+      - checkout
+      - run: ./import_key.sh $GPG_PRIVATE_KEY $GPG_PUBLIC_KEY $GPG_PRIVATE_KEY_PASSWORD
+      - run: gradle -Psigning.gnupg.keyName=$GPG_KEY_ID -Psigning.gnupg.passphrase=$GPG_PRIVATE_KEY_PASSWORD publishToSonatype closeAndReleaseSonatypeStagingRepository
 
-      - save_cache:
-          paths:
-            - ~/.gradle
-          key: v1-dependencies-{{ checksum "build.gradle.kts" }}
-
-      - run: ~./import_key.sh $GPG_PRIVATE_KEY $GPG_PUBLIC_KEY $GPG_PRIVATE_KEY_PASSWORD
-      - run: gradle -Psigning.gnupg.keyName=$GPG_KEY_ID -Psigning.gnupg.passphrase=$GPG_PRIVATE_KEY_PASSWORD publishToSonatype
-
+workflows:
+  publishSnapshots:
+    when:
+      equal: [ "publish_snapshot", << pipeline.parameters.GHA_Meta >> ]
+    jobs:
+      - publishSnapshot:
+          mname: tabulate-core
+      - publishSnapshot:
+          mname: tabulate-csv
+      - publishSnapshot:
+          mname: tabulate-excel
+  publishMavenVersion:
+    when:
+      equal: [ "publish_release", << pipeline.parameters.GHA_Meta >> ]
+    jobs:
+      - hold:
+          type: approval
+      - publishMavenVersion:
+          requires:
+            - hold

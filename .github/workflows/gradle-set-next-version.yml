@@ -1,16 +1,14 @@
-name: Release
+name: Set Next Version
 
 on:
-  release:
-    types: [ published ]
   workflow_dispatch:
     inputs:
-      forceVersion:
-        description: 'Force version'
+      nextVersion:
+        description: 'Set next version'
         required: false
         default: ''
 jobs:
-  release:
+  setNextVersion:
     runs-on: ubuntu-latest
     environment: ci
     steps:
@@ -22,14 +20,14 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: Release
-        run: gradle release -Prelease.customPassword=${GITHUB_TOKEN} -Prelease.customUsername=${GITHUB_ACTOR} -Prelease.forceVersion=${FORCE_VERSION}
+      - name: Set Next Version
+        run: gradle markNextVersion -Prelease.customPassword=${GITHUB_TOKEN} -Prelease.customUsername=${GITHUB_ACTOR} -Prelease.version=${NEXT_VERSION}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FORCE_VERSION: ${{ github.event.inputs.forceVersion }}
-      - name: Publish
+          NEXT_VERSION: ${{ github.event.inputs.nextVersion }}
+      - name: Publish Snapshot
         uses: CircleCI-Public/trigger-circleci-pipeline-action@v1.0.4
         with:
-          GHA_Meta: "publish_release"
+          GHA_Meta: "publish_snapshot"
         env:
           CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
