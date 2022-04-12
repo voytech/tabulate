@@ -11,14 +11,14 @@ import java.util.*
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-fun LocalDate.toDate(): Date = Date.from(this.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant())
+fun LocalDate.toDate(): Date = Date.from(atStartOfDay().atZone(ZoneId.systemDefault()).toInstant())
 
 /**
  * Convert [LocalDateTime] into [Date] used by Apache Poi
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-fun LocalDateTime.toDate(): Date = Date.from(this.atZone(ZoneId.systemDefault()).toInstant())
+fun LocalDateTime.toDate(): Date = Date.from(atZone(ZoneId.systemDefault()).toInstant())
 
 /**
  * Convert [String] into [Date] used by Apache Poi.

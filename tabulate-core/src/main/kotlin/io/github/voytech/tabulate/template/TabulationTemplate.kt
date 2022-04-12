@@ -186,8 +186,8 @@ class TabulationTemplate(private val format: TabulationFormat) {
                 ops.render(
                     renderingContext,
                     when (renderPhase) {
-                        ColumnRenderPhase.BEFORE_FIRST_ROW -> tableModel.openAttributedColumn(column, state.getCustomAttributes())
-                        ColumnRenderPhase.AFTER_LAST_ROW -> tableModel.closeAttributedColumn(column, state.getCustomAttributes())
+                        ColumnRenderPhase.BEFORE_FIRST_ROW -> tableModel.createColumnOpening(column, state.getCustomAttributes())
+                        ColumnRenderPhase.AFTER_LAST_ROW -> tableModel.createColumnClosing(column, state.getCustomAttributes())
                     }
                 )
             }

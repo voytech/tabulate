@@ -71,7 +71,7 @@ open class RowOpeningContext(
     override fun getRow(): Int = rowIndex
 }
 
-internal fun <T> SyntheticRow<T>.openAttributedRow(
+internal fun <T> SyntheticRow<T>.createRowOpening(
     rowIndex: Int,
     customAttributes: MutableMap<String, Any>
 ): RowOpeningContext {
@@ -93,12 +93,12 @@ data class RowClosingContext<T>(
     fun getCells(): Map<ColumnKey<T>, CellContext> = rowCellValues
 }
 
-fun <T> RowOpeningContext.close(rowCellValues: Map<ColumnKey<T>, CellContext>): RowClosingContext<T> =
+fun <T> RowOpeningContext.asRowClosing(rowCellValues: Map<ColumnKey<T>, CellContext>): RowClosingContext<T> =
     RowClosingContext(
-        rowIndex = this@close.rowIndex,
-        attributes = this@close.attributes ?: Attributes(attributeCategory = RowAttribute::class.java),
+        rowIndex = this@asRowClosing.rowIndex,
+        attributes = this@asRowClosing.attributes ?: Attributes(attributeCategory = RowAttribute::class.java),
         rowCellValues = rowCellValues
-    ).apply { additionalAttributes = this@close.additionalAttributes }
+    ).apply { additionalAttributes = this@asRowClosing.additionalAttributes }
 
 /**
  * Column operation context with additional model attributes applicable on column level.
@@ -113,7 +113,7 @@ data class ColumnOpeningContext(
     override fun getColumn(): Int = columnIndex
 }
 
-internal fun <T> Table<T>.openAttributedColumn(
+internal fun <T> Table<T>.createColumnOpening(
     column: ColumnDef<T>,
     customAttributes: MutableMap<String, Any>
 ) = ColumnOpeningContext(
@@ -140,7 +140,7 @@ data class ColumnClosingContext(
     override fun getColumn(): Int = columnIndex
 }
 
-internal fun <T> Table<T>.closeAttributedColumn(
+internal fun <T> Table<T>.createColumnClosing(
     column: ColumnDef<T>,
     customAttributes: MutableMap<String, Any>
 ) = ColumnClosingContext(
@@ -164,7 +164,7 @@ data class CellContext(
     override fun getColumn(): Int = columnIndex
 }
 
-internal fun <T> SyntheticRow<T>.createAttributedCell(
+internal fun <T> SyntheticRow<T>.createCellContext(
     row: SourceRow<T>,
     column: ColumnDef<T>,
     customAttributes: MutableMap<String, Any>

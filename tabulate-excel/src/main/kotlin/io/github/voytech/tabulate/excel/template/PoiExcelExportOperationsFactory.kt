@@ -92,8 +92,14 @@ class PoiExcelExportOperationsFactory : ExportOperationsFactory<ApachePoiRenderi
                 override fun createCellBackgroundRenderer(): CellAttributeRenderOperation<ApachePoiRenderingContext, CellBackgroundAttribute> =
                     CellBackgroundAttributeRenderOperation()
             },
-            additionalCellAttributeRenderers = setOf(CellDataFormatAttributeRenderOperation()),
-            additionalTableAttributeRenderers = setOf(FilterAndSortTableAttributeRenderOperation())
+            additionalCellAttributeRenderers = setOf(
+                CellDataFormatAttributeRenderOperation(),
+                CellCommentAttributeRenderOperation(),
+            ),
+            additionalTableAttributeRenderers = setOf(
+                FilterAndSortTableAttributeRenderOperation(),
+                PrintingAttributeRenderOperation()
+            )
         )
 
     override fun createOutputBindings(): List<OutputBinding<ApachePoiRenderingContext, *>> = listOf(

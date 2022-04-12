@@ -145,11 +145,11 @@ internal abstract class AbstractRowContextResolver<T>(
     ): RowClosingContext<T> {
         return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
             with(rows.findQualifying(sourceRow)) {
-                openAttributedRow(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
+                createRowOpening(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
                     .let {
-                        it.close(
+                        it.asRowClosing(
                             mapEachCell { row, column ->
-                                row.createAttributedCell(row = sourceRow, column = column, customAttributes)?.notify()
+                                row.createCellContext(row = sourceRow, column = column, customAttributes)?.notify()
                             }
                         )
                     }.notify()

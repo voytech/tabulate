@@ -5,9 +5,9 @@ import io.github.voytech.tabulate.model.SourceRow
 import io.github.voytech.tabulate.model.Table
 import io.github.voytech.tabulate.template.context.RowIndex
 import io.github.voytech.tabulate.template.operations.RowClosingContext
-import io.github.voytech.tabulate.template.operations.createAttributedCell
-import io.github.voytech.tabulate.template.operations.openAttributedRow
-import io.github.voytech.tabulate.template.operations.close
+import io.github.voytech.tabulate.template.operations.createCellContext
+import io.github.voytech.tabulate.template.operations.createRowOpening
+import io.github.voytech.tabulate.template.operations.asRowClosing
 import io.github.voytech.tabulate.template.resolvers.AbstractRowContextResolver
 import io.github.voytech.tabulate.template.resolvers.IndexedContext
 import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
@@ -46,11 +46,11 @@ internal class SlowRowResolver<T>(
         return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
             val rowDefinitions = getRows(sourceRow)
             with(SyntheticRow(tableModel, rowDefinitions)) {
-                openAttributedRow(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
+                createRowOpening(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
                     .let {
-                        it.close(
+                        it.asRowClosing(
                             mapEachCell { row, column ->
-                                row.createAttributedCell(row = sourceRow, column = column, customAttributes)?.notify()
+                                row.createCellContext(row = sourceRow, column = column, customAttributes)?.notify()
                             }
                         )
                     }.notify()

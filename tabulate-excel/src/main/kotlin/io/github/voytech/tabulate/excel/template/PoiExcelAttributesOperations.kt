@@ -1,7 +1,9 @@
 package io.github.voytech.tabulate.excel.template
 
+import io.github.voytech.tabulate.excel.model.attributes.CellCommentAttribute
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
 import io.github.voytech.tabulate.excel.model.attributes.FilterAndSortTableAttribute
+import io.github.voytech.tabulate.excel.model.attributes.PrintingAttribute
 import io.github.voytech.tabulate.excel.template.PoiExcelExportOperationsFactory.Companion.getCachedStyle
 import io.github.voytech.tabulate.excel.template.poi.ApachePoiUtils
 import io.github.voytech.tabulate.model.attributes.cell.CellAlignmentAttribute
@@ -22,17 +24,23 @@ import org.apache.poi.xssf.usermodel.XSSFFont
 import java.io.FileInputStream
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 
+
 /**
  * Apache POI [CellTextStylesAttribute] renderer.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class CellTextStylesAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellTextStylesAttribute> {
+class CellTextStylesAttributeRenderOperation :
+    CellAttributeRenderOperation<ApachePoiRenderingContext, CellTextStylesAttribute> {
     override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
     override fun attributeType(): Class<CellTextStylesAttribute> = CellTextStylesAttribute::class.java
 
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: CellContext, attribute: CellTextStylesAttribute) {
+    override fun renderAttribute(
+        renderingContext: ApachePoiRenderingContext,
+        context: CellContext,
+        attribute: CellTextStylesAttribute
+    ) {
         renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.getRow(),
@@ -60,7 +68,8 @@ class CellTextStylesAttributeRenderOperation: CellAttributeRenderOperation<Apach
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class CellBackgroundAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellBackgroundAttribute> {
+class CellBackgroundAttributeRenderOperation :
+    CellAttributeRenderOperation<ApachePoiRenderingContext, CellBackgroundAttribute> {
     override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
     override fun attributeType(): Class<CellBackgroundAttribute> = CellBackgroundAttribute::class.java
@@ -106,20 +115,37 @@ class CellBackgroundAttributeRenderOperation: CellAttributeRenderOperation<Apach
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class CellBordersAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellBordersAttribute> {
+class CellBordersAttributeRenderOperation :
+    CellAttributeRenderOperation<ApachePoiRenderingContext, CellBordersAttribute> {
     override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
 
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: CellContext, attribute: CellBordersAttribute) {
+    override fun renderAttribute(
+        renderingContext: ApachePoiRenderingContext,
+        context: CellContext,
+        attribute: CellBordersAttribute
+    ) {
         renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.getRow(),
             columnIndex = context.getColumn(),
             provideCellStyle = { getCachedStyle(renderingContext, context) }
         ).let {
-            attribute.leftBorderColor?.run { (it as XSSFCellStyle).setLeftBorderColor(ApachePoiRenderingContext.color(this)) }
-            attribute.rightBorderColor?.run { (it as XSSFCellStyle).setRightBorderColor(ApachePoiRenderingContext.color(this)) }
+            attribute.leftBorderColor?.run {
+                (it as XSSFCellStyle).setLeftBorderColor(
+                    ApachePoiRenderingContext.color(
+                        this
+                    )
+                )
+            }
+            attribute.rightBorderColor?.run {
+                (it as XSSFCellStyle).setRightBorderColor(
+                    ApachePoiRenderingContext.color(
+                        this
+                    )
+                )
+            }
             attribute.topBorderColor?.run { (it as XSSFCellStyle).setTopBorderColor(ApachePoiRenderingContext.color(this)) }
             attribute.bottomBorderColor?.run {
                 (it as XSSFCellStyle).setBottomBorderColor(
@@ -155,12 +181,17 @@ class CellBordersAttributeRenderOperation: CellAttributeRenderOperation<ApachePo
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class CellAlignmentAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellAlignmentAttribute> {
+class CellAlignmentAttributeRenderOperation :
+    CellAttributeRenderOperation<ApachePoiRenderingContext, CellAlignmentAttribute> {
     override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
     override fun attributeType(): Class<CellAlignmentAttribute> = CellAlignmentAttribute::class.java
 
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: CellContext, attribute: CellAlignmentAttribute) {
+    override fun renderAttribute(
+        renderingContext: ApachePoiRenderingContext,
+        context: CellContext,
+        attribute: CellAlignmentAttribute
+    ) {
         renderingContext.provideCellStyle(
             sheetName = context.getTableId(),
             rowIndex = context.getRow(),
@@ -196,7 +227,8 @@ class CellAlignmentAttributeRenderOperation: CellAttributeRenderOperation<Apache
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class CellDataFormatAttributeRenderOperation: CellAttributeRenderOperation<ApachePoiRenderingContext, CellExcelDataFormatAttribute> {
+class CellDataFormatAttributeRenderOperation :
+    CellAttributeRenderOperation<ApachePoiRenderingContext, CellExcelDataFormatAttribute> {
     override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
     override fun attributeType(): Class<CellExcelDataFormatAttribute> = CellExcelDataFormatAttribute::class.java
@@ -222,12 +254,17 @@ class CellDataFormatAttributeRenderOperation: CellAttributeRenderOperation<Apach
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class ColumnWidthAttributeRenderOperation: ColumnAttributeRenderOperation<ApachePoiRenderingContext, ColumnWidthAttribute> {
+class ColumnWidthAttributeRenderOperation :
+    ColumnAttributeRenderOperation<ApachePoiRenderingContext, ColumnWidthAttribute> {
     override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
     override fun attributeType(): Class<ColumnWidthAttribute> = ColumnWidthAttribute::class.java
 
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: ColumnOpeningContext, attribute: ColumnWidthAttribute) {
+    override fun renderAttribute(
+        renderingContext: ApachePoiRenderingContext,
+        context: ColumnOpeningContext,
+        attribute: ColumnWidthAttribute
+    ) {
         renderingContext.provideSheet(context.getTableId()).let {
             if (attribute.auto == true || attribute.px <= 0) {
                 if (!it.isColumnTrackedForAutoSizing(context.getColumn())) {
@@ -249,7 +286,11 @@ class ColumnWidthAttributeRenderOperation: ColumnAttributeRenderOperation<Apache
 class RowHeightAttributeRenderOperation : RowAttributeRenderOperation<ApachePoiRenderingContext, RowHeightAttribute> {
     override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
     override fun attributeType(): Class<RowHeightAttribute> = RowHeightAttribute::class.java
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowOpeningContext, attribute: RowHeightAttribute) {
+    override fun renderAttribute(
+        renderingContext: ApachePoiRenderingContext,
+        context: RowOpeningContext,
+        attribute: RowHeightAttribute
+    ) {
         renderingContext.provideRow(context.getTableId(), context.getRow()).height =
             ApachePoiUtils.heightFromPixels(attribute.px)
     }
@@ -260,10 +301,15 @@ class RowHeightAttributeRenderOperation : RowAttributeRenderOperation<ApachePoiR
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class FilterAndSortTableAttributeRenderOperation: TableAttributeRenderOperation<ApachePoiRenderingContext, FilterAndSortTableAttribute> {
+class FilterAndSortTableAttributeRenderOperation :
+    TableAttributeRenderOperation<ApachePoiRenderingContext, FilterAndSortTableAttribute> {
     override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
     override fun attributeType(): Class<FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class.java
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: TableOpeningContext, attribute: FilterAndSortTableAttribute) {
+    override fun renderAttribute(
+        renderingContext: ApachePoiRenderingContext,
+        context: TableOpeningContext,
+        attribute: FilterAndSortTableAttribute
+    ) {
         renderingContext.workbook().creationHelper.createAreaReference(
             CellReference(attribute.rowRange.first, attribute.columnRange.first),
             CellReference(attribute.rowRange.last, attribute.columnRange.last)
@@ -284,14 +330,81 @@ class FilterAndSortTableAttributeRenderOperation: TableAttributeRenderOperation<
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class TemplateFileAttributeRenderOperation: TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute> {
+class TemplateFileAttributeRenderOperation :
+    TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute> {
     override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
     override fun attributeType(): Class<TemplateFileAttribute> = TemplateFileAttribute::class.java
     override fun priority() = -1
-    override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: TableOpeningContext, attribute: TemplateFileAttribute) {
+    override fun renderAttribute(
+        renderingContext: ApachePoiRenderingContext,
+        context: TableOpeningContext,
+        attribute: TemplateFileAttribute
+    ) {
         renderingContext.createWorkbook(FileInputStream(attribute.fileName), true).let {
             renderingContext.provideSheet(context.getTableId())
         }
     }
 }
 
+/**
+ * Apache POI [CellCommentAttribute] renderer.
+ * @author Wojciech Mąka
+ * @since 0.2.0
+ */
+class CellCommentAttributeRenderOperation :
+    CellAttributeRenderOperation<ApachePoiRenderingContext, CellCommentAttribute> {
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
+    override fun attributeType(): Class<CellCommentAttribute> = CellCommentAttribute::class.java
+    override fun renderAttribute(
+        renderingContext: ApachePoiRenderingContext,
+        context: CellContext,
+        attribute: CellCommentAttribute
+    ) {
+        renderingContext.provideCell(
+            sheetName = context.getTableId(),
+            rowIndex = context.getRow(),
+            columnIndex = context.getColumn(),
+        ).let {
+            it.cellComment = renderingContext.getDrawing(context.getTableId())
+                .createCellComment(renderingContext.createClientAnchor())
+                .apply {
+                    author = attribute.author
+                    string = renderingContext.getCreationHelper().createRichTextString(attribute.comment)
+                }
+        }
+    }
+}
+
+/**
+ * Apache POI [TablePrintAttribute] renderer.
+ * @author Wojciech Mąka
+ * @since 0.2.0
+ */
+class PrintingAttributeRenderOperation :
+    TableAttributeRenderOperation<ApachePoiRenderingContext, PrintingAttribute> {
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
+    override fun attributeType(): Class<PrintingAttribute> = PrintingAttribute::class.java
+    override fun renderAttribute(
+        renderingContext: ApachePoiRenderingContext,
+        context: TableOpeningContext,
+        attribute: PrintingAttribute
+    ) {
+        renderingContext.provideSheet(sheetName = context.getTableId()).let {
+            it.printSetup.apply {
+                copies = attribute.numberOfCopies
+                fitHeight = attribute.fitHeight
+                fitWidth = attribute.fitWidth
+                draft = attribute.isDraft
+                noColor = attribute.blackAndWhite
+                noOrientation = attribute.noOrientation
+                leftToRight = attribute.leftToRight
+                pageStart = attribute.firstPageNumber
+                usePage = attribute.printPageNumber
+                landscape = attribute.landscape
+                paperSize = attribute.paperSize
+                footerMargin = attribute.footerMargin
+                headerMargin = attribute.headerMargin
+            }
+        }
+    }
+}

@@ -3,10 +3,7 @@ package io.github.voytech.tabulate
 import io.github.voytech.tabulate.api.builder.RowPredicates.all
 import io.github.voytech.tabulate.api.builder.dsl.*
 import io.github.voytech.tabulate.excel.model.ExcelBorderStyle
-import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
-import io.github.voytech.tabulate.excel.model.attributes.dataFormat
-import io.github.voytech.tabulate.excel.model.attributes.filterAndSort
-import io.github.voytech.tabulate.excel.model.attributes.format
+import io.github.voytech.tabulate.excel.model.attributes.*
 import io.github.voytech.tabulate.model.RowCellExpression
 import io.github.voytech.tabulate.model.and
 import io.github.voytech.tabulate.model.attributes.cell.*
@@ -346,7 +343,7 @@ class ApachePoiTabulateTests {
     }
 
     @Test
-    fun `should export to excel file with "excel table" feature`() {
+    fun `should export to excel file with excel table feature`() {
         val productList = SampleProduct.create(1000)
         productList.tabulate("test.xlsx") {
             name = "Products table"
@@ -367,6 +364,71 @@ class ApachePoiTabulateTests {
 
         PoiTableAssert<SampleProduct>(
             tableName = "Products table",
+            file = File("test.xlsx"),
+            cellTests = mapOf()
+        ).perform().also {
+            it.cleanup()
+        }
+    }
+
+    @Test
+    fun `should export table with cell comment`() {
+        CustomTable {
+            name = "Test table"
+            rows {
+                newRow {
+                    cell {
+                        value = "Has comment"
+                        attributes {
+                            comment {
+                                author = "Voytech"
+                                comment = " A Comment"
+                            }
+                        }
+                    }
+                }
+            }
+        }.export(File("test.xlsx"))
+        PoiTableAssert<SampleProduct>(
+            tableName = "Test table",
+            file = File("test.xlsx"),
+            cellTests = mapOf()
+        ).perform().also {
+            it.cleanup()
+        }
+    }
+
+    @Test
+    fun `should setup printing attributes`() {
+        CustomTable {
+            name = "Test table"
+            attributes {
+                printing {
+                    blackAndWhite = true
+                    firstPageNumber = 2
+                    isDraft = true
+                    leftToRight = true
+                    landscape = true
+                    printPageNumber = true
+                    numberOfCopies = 10
+                }
+            }
+            rows {
+                newRow {
+                    cell {
+                        value = "Has comment"
+                        attributes {
+                            comment {
+                                author = "Voytech"
+                                comment = " A Comment"
+                            }
+                        }
+                    }
+                }
+            }
+        }.export(File("test.xlsx"))
+        PoiTableAssert<SampleProduct>(
+            tableName = "Test table",
             file = File("test.xlsx"),
             cellTests = mapOf()
         ).perform().also {

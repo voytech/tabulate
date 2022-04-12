@@ -8,10 +8,7 @@ import io.github.voytech.tabulate.template.result.OutputStreamOutputBinding
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.util.IOUtils
-import org.apache.poi.xssf.streaming.SXSSFCell
-import org.apache.poi.xssf.streaming.SXSSFRow
-import org.apache.poi.xssf.streaming.SXSSFSheet
-import org.apache.poi.xssf.streaming.SXSSFWorkbook
+import org.apache.poi.xssf.streaming.*
 import org.apache.poi.xssf.usermodel.XSSFCell
 import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -124,7 +121,7 @@ class ApachePoiRenderingContext : RenderingContext  {
     }
 
     fun getImageAsCellValue(context: Coordinates): CellValue? {
-        return provideSheet(context.tableName).createDrawingPatriarch().find {
+        return getDrawing(context.tableName).find {
             if (it?.drawing?.shapes?.size == 1 && it.drawing?.shapes?.get(0) is Picture) {
                 (it.drawing.shapes[0] as Picture).let { picture ->
                     picture.clientAnchor.col1.toInt() == context.columnIndex &&
@@ -140,6 +137,12 @@ class ApachePoiRenderingContext : RenderingContext  {
                 )
             }
     }
+
+    fun getDrawing(sheetName: String): SXSSFDrawing = provideSheet(sheetName).createDrawingPatriarch()
+
+    fun getCreationHelper(): CreationHelper = workbook().creationHelper
+
+    fun createClientAnchor(): ClientAnchor  = getCreationHelper().createClientAnchor()
 
     fun mergeCells(
         sheetName: String,
