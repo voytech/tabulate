@@ -15,16 +15,16 @@ class AttributesOperationsContainerTest {
     fun `should register attributes operations`() {
         val container = AttributesOperationsContainer<TestRenderingContext>()
         container.registerAttributesOperations(object: AttributeOperationsFactory<TestRenderingContext> {
-            override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttribute<*>>>
+            override fun createCellAttributeRenderOperations(): Set<AttributeOperation<TestRenderingContext,CellAttribute<*>,*,*>>
                 = setOf(CellTextStylesAttributeTestRenderOperation(), CellBordersAttributeTestRenderOperation())
 
-            override fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<TestRenderingContext, out ColumnAttribute<*>>>
+            override fun createColumnAttributeRenderOperations(): Set<AttributeOperation<TestRenderingContext,ColumnAttribute<*>,*,*>>
                 = setOf(ColumnWidthAttributeTestRenderOperation())
 
-            override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<TestRenderingContext, out RowAttribute<*>>>
+            override fun createRowAttributeRenderOperations(): Set<AttributeOperation<TestRenderingContext,RowAttribute<*>,*,*>>
                = setOf(RowHeightAttributeTestRenderOperation())
 
-            override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<TestRenderingContext, out TableAttribute<*>>>
+            override fun createTableAttributeRenderOperations(): Set<AttributeOperation<TestRenderingContext,TableAttribute<*>,*,*>>
                = setOf(TemplateFileAttributeTestRenderOperation())
 
         })

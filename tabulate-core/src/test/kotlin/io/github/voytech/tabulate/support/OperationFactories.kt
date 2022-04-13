@@ -5,13 +5,16 @@ import io.github.voytech.tabulate.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.model.attributes.RowAttribute
 import io.github.voytech.tabulate.model.attributes.TableAttribute
 import io.github.voytech.tabulate.template.context.RenderingContext
-import io.github.voytech.tabulate.template.operations.*
+import io.github.voytech.tabulate.template.operations.AttributeOperation
+import io.github.voytech.tabulate.template.operations.AttributeOperationsFactory
+import io.github.voytech.tabulate.template.operations.ExportOperationsFactory
+import io.github.voytech.tabulate.template.operations.OperationsBuilder
 import io.github.voytech.tabulate.template.result.OutputBinding
 import io.github.voytech.tabulate.template.spi.TabulationFormat
 import io.github.voytech.tabulate.template.spi.TabulationFormat.Companion.format
 
 class TestAttributeOperationsFactory : AttributeOperationsFactory<TestRenderingContext> {
-    override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<TestRenderingContext, out CellAttribute<*>>> =
+    override fun createCellAttributeRenderOperations(): Set<AttributeOperation<TestRenderingContext,CellAttribute<*>,*, *>> =
         setOf(
             CellTextStylesAttributeTestRenderOperation(Spy.spy),
             CellBordersAttributeTestRenderOperation(Spy.spy),
@@ -19,13 +22,13 @@ class TestAttributeOperationsFactory : AttributeOperationsFactory<TestRenderingC
             CellAlignmentAttributeTestRenderOperation(Spy.spy)
         )
 
-    override fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<TestRenderingContext, out ColumnAttribute<*>>> =
+    override fun createColumnAttributeRenderOperations(): Set<AttributeOperation<TestRenderingContext,ColumnAttribute<*>,*, *>> =
         setOf(ColumnWidthAttributeTestRenderOperation(Spy.spy))
 
-    override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<TestRenderingContext, out RowAttribute<*>>> =
+    override fun createRowAttributeRenderOperations(): Set<AttributeOperation<TestRenderingContext,RowAttribute<*>,*, *>> =
         setOf(RowHeightAttributeTestRenderOperation(Spy.spy))
 
-    override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<TestRenderingContext, out TableAttribute<*>>> =
+    override fun createTableAttributeRenderOperations(): Set<AttributeOperation<TestRenderingContext,TableAttribute<*>,*, *>> =
         setOf(TemplateFileAttributeTestRenderOperation(Spy.spy))
 
 }

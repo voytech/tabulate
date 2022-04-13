@@ -71,13 +71,13 @@ class PoiExcelExportOperationsFactory : ExportOperationsFactory<ApachePoiRenderi
     override fun getAttributeOperationsFactory(): AttributeOperationsFactory<ApachePoiRenderingContext> =
         StandardAttributeOperationsFactory(
             object : StandardAttributeRenderOperationsProvider<ApachePoiRenderingContext> {
-                override fun createTemplateFileRenderer(): TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute> =
+                override fun createTemplateFileRenderer(): TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute,*> =
                     TemplateFileAttributeRenderOperation()
 
-                override fun createColumnWidthRenderer(): ColumnAttributeRenderOperation<ApachePoiRenderingContext, ColumnWidthAttribute> =
+                override fun createColumnWidthRenderer(): ColumnAttributeRenderOperation<ApachePoiRenderingContext, ColumnWidthAttribute,*> =
                     ColumnWidthAttributeRenderOperation()
 
-                override fun createRowHeightRenderer(): RowAttributeRenderOperation<ApachePoiRenderingContext, RowHeightAttribute> =
+                override fun createRowHeightRenderer(): RowAttributeRenderOperation<ApachePoiRenderingContext, RowHeightAttribute,*> =
                     RowHeightAttributeRenderOperation()
 
                 override fun createCellTextStyleRenderer(): CellAttributeRenderOperation<ApachePoiRenderingContext, CellTextStylesAttribute> =
@@ -98,8 +98,12 @@ class PoiExcelExportOperationsFactory : ExportOperationsFactory<ApachePoiRenderi
             ),
             additionalTableAttributeRenderers = setOf(
                 FilterAndSortTableAttributeRenderOperation(),
-                PrintingAttributeRenderOperation()
+                PrintingAttributeRenderOperation(),
+            ),
+            additionalRowAttributeRenderers = setOf(
+                RowBordersAttributeRenderOperation(),
             )
+
         )
 
     override fun createOutputBindings(): List<OutputBinding<ApachePoiRenderingContext, *>> = listOf(

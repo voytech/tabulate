@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.model.attributes.cell
 
 import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
 import io.github.voytech.tabulate.api.builder.dsl.*
+import io.github.voytech.tabulate.model.attributes.Color
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultWeightStyle
 
 data class CellTextStylesAttribute(

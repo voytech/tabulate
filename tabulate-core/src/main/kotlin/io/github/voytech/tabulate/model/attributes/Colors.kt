@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.model.attributes.cell
+package io.github.voytech.tabulate.model.attributes
 
 object Colors {
     @JvmField

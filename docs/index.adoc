@@ -550,21 +550,100 @@ You may need attributes for various reasons - for styling, for formatting etc.
 
 Currently, with `tabulate-core` and `tabulate-excel` modules, you will get following attributes included:
 
-==== Table attributes
-- `FilterAndSortAttribute` - enables filtering and sorting of Excel table,
-- `TemplateFileAttribute` - allows performing template file interpolation with source data collection of items,
+[cols="1,1,1,1,1,1"]
+|===
+|Name
+|Description
+|Attribute type
+|Context
+|Provider
+|Applicable levels
 
-==== Column attributes
-- `ColumnWidthAttribute` - sets the width of column (meaning all cells gathered under particular column will have same width),
+| `filterAndSort()`
+| Enables excel table feature that allows filtering and sorting
+| Table
+| Table opening
+| poi (Apache POI)
+| table
 
-==== Row attributes
-- `RowHeightAttribute` - sets the height of row (meaning all cells gathered within particular row will have same height),
+| `template`
+| Exports data into source template file. (Interpolates excel file)
+| Table
+| Table opening
+| poi (Apache POI)
+| table
 
-==== Cell attributes
-- `CellTextStylesAttribute` - allows controlling general, text related style attributes,
-- `CellBordersAttribute` - sets borders on selected cells,
-- `CellBackgroundAttribute` - sets background color and fill,
-- `CellAlignmentAttribute` - sets text vertical and horizontal alignment
+| `printing`
+| Exports data into source template file. (Interpolates excel file)
+| Table
+| Table opening
+| poi (Apache POI)
+| table
+
+| `width`
+| Sets width of column. All cells gathered under column will have same width
+| Column
+| Column opening
+| any
+| column
+
+| `height`
+| Sets the height of row.
+| Row
+| Row opening
+| any
+| row
+
+| `rowBorders`
+| Sets border properties of entire row.
+| Row
+| Row closing
+| any
+| row
+
+| `text`
+| Sets text styles like: font, font size, font weight, italic, strikeout, underline, text wrap, orientation.
+| Cell
+| Cell
+| any
+| table, column, row, cell
+
+| `borders`
+| Sets border properties of cell.
+| Cell
+| Cell
+| any
+| table, column, row, cell
+
+| `background`
+| Sets the background color for cell.
+| Cell
+| Cell
+| any
+| table, column, row, cell
+
+| `alignment`
+| Aligns text within cell (vertically/ horizontally).
+| Cell
+| Cell
+| any
+| table, column, row, cell
+
+| `comment`
+| Associates comment (and comment author) with cell.
+| Cell
+| Cell
+| poi (Apache POI)
+| cell
+
+| `separator`
+| Sets delimiter for CSV.
+| Cell
+| Cell
+| csv
+| table
+|===
+
 
 Typical usage scenario for attributes:
 [source,kotlin,options="nowrap"]

@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.api.builder.fluent.FluentTableBuilderApi;
 import io.github.voytech.tabulate.api.builder.fluent.TableBuilder;
 import io.github.voytech.tabulate.model.SourceRow;
 import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute;
-import io.github.voytech.tabulate.model.attributes.cell.Colors;
+import io.github.voytech.tabulate.model.attributes.Colors;
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute;
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute;
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute;

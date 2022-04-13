@@ -5,7 +5,7 @@ import io.github.voytech.tabulate.api.builder.dsl.header
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.model.ColumnKey
 import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
-import io.github.voytech.tabulate.model.attributes.cell.Colors
+import io.github.voytech.tabulate.model.attributes.Colors
 import io.github.voytech.tabulate.model.attributes.cell.text
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.column.width

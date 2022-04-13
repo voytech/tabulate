@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.benchmarks
 
 import io.github.voytech.tabulate.api.builder.dsl.createTable
 import io.github.voytech.tabulate.model.Table
-import io.github.voytech.tabulate.model.attributes.cell.Colors
+import io.github.voytech.tabulate.model.attributes.Colors
 import io.github.voytech.tabulate.model.attributes.cell.alignment
 import io.github.voytech.tabulate.model.attributes.cell.background
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultHorizontalAlignment

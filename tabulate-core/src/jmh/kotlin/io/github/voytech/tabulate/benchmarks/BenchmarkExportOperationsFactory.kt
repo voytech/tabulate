@@ -18,19 +18,19 @@ import io.github.voytech.tabulate.template.spi.TabulationFormat
 
 class BenchmarkRenderingContext : RenderingContext
 
-class BenchmarkOutputBinding: OutputBinding<BenchmarkRenderingContext,Unit> {
+class BenchmarkOutputBinding : OutputBinding<BenchmarkRenderingContext, Unit> {
     override fun outputClass(): Class<Unit> = Unit::class.java
 
-    override fun setOutput(renderingContext: BenchmarkRenderingContext, output: Unit) { }
+    override fun setOutput(renderingContext: BenchmarkRenderingContext, output: Unit) {}
 
-    override fun flush() { }
+    override fun flush() {}
 }
 
-class BenchmarkExportOperationsFactory: ExportOperationsFactory<BenchmarkRenderingContext>() {
+class BenchmarkExportOperationsFactory : ExportOperationsFactory<BenchmarkRenderingContext>() {
 
     override fun provideExportOperations(): OperationsBuilder<BenchmarkRenderingContext>.() -> Unit = {}
 
-    override fun createOutputBindings(): List<OutputBinding<BenchmarkRenderingContext, *>>  = listOf(
+    override fun createOutputBindings(): List<OutputBinding<BenchmarkRenderingContext, *>> = listOf(
         BenchmarkOutputBinding()
     )
 
@@ -51,13 +51,13 @@ class TestAttributeOperations : AttributeOperationsFactory<BenchmarkRenderingCon
             CellAlignmentAttributeTestRenderOperation()
         )
 
-    override fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<BenchmarkRenderingContext, out ColumnAttribute<*>>> =
+    override fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<BenchmarkRenderingContext, out ColumnAttribute<*>, *>> =
         setOf(ColumnWidthAttributeTestRenderOperation())
 
-    override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<BenchmarkRenderingContext, out RowAttribute<*>>> =
+    override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<BenchmarkRenderingContext, out RowAttribute<*>, *>> =
         setOf(RowHeightAttributeTestRenderOperation())
 
-    override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<BenchmarkRenderingContext, out TableAttribute<*>>> =
+    override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<BenchmarkRenderingContext, out TableAttribute<*>, *>> =
         setOf(TemplateFileAttributeTestRenderOperation())
 
 }
@@ -70,17 +70,20 @@ class CellTextStylesAttributeTestRenderOperation :
         renderingContext: BenchmarkRenderingContext,
         context: CellContext,
         attribute: CellTextStylesAttribute
-    ) {}
+    ) {
+    }
 }
 
-class CellBordersAttributeTestRenderOperation : CellAttributeRenderOperation<BenchmarkRenderingContext, CellBordersAttribute>{
+class CellBordersAttributeTestRenderOperation :
+    CellAttributeRenderOperation<BenchmarkRenderingContext, CellBordersAttribute> {
     override fun renderingContextClass(): Class<BenchmarkRenderingContext> = BenchmarkRenderingContext::class.java
     override fun attributeType(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
     override fun renderAttribute(
         renderingContext: BenchmarkRenderingContext,
         context: CellContext,
         attribute: CellBordersAttribute
-    ) {}
+    ) {
+    }
 }
 
 class CellBackgroundAttributeTestRenderOperation :
@@ -91,7 +94,8 @@ class CellBackgroundAttributeTestRenderOperation :
         renderingContext: BenchmarkRenderingContext,
         context: CellContext,
         attribute: CellBackgroundAttribute
-    ) {}
+    ) {
+    }
 }
 
 class CellAlignmentAttributeTestRenderOperation :
@@ -102,38 +106,46 @@ class CellAlignmentAttributeTestRenderOperation :
         renderingContext: BenchmarkRenderingContext,
         context: CellContext,
         attribute: CellAlignmentAttribute
-    ) {}
+    ) {
+    }
 }
 
-class ColumnWidthAttributeTestRenderOperation:
-    ColumnAttributeRenderOperation<BenchmarkRenderingContext, ColumnWidthAttribute> {
+class ColumnWidthAttributeTestRenderOperation :
+    ColumnAttributeRenderOperation<BenchmarkRenderingContext, ColumnWidthAttribute, ColumnOpeningContext>(
+        ColumnOpeningContext::class.java
+    ) {
     override fun renderingContextClass(): Class<BenchmarkRenderingContext> = BenchmarkRenderingContext::class.java
     override fun attributeType(): Class<ColumnWidthAttribute> = ColumnWidthAttribute::class.java
     override fun renderAttribute(
         renderingContext: BenchmarkRenderingContext,
         context: ColumnOpeningContext,
         attribute: ColumnWidthAttribute
-    ) {}
+    ) {
+    }
 }
 
 class RowHeightAttributeTestRenderOperation :
-    RowAttributeRenderOperation<BenchmarkRenderingContext, RowHeightAttribute> {
+    RowAttributeRenderOperation<BenchmarkRenderingContext, RowHeightAttribute, RowOpeningContext>(RowOpeningContext::class.java) {
     override fun renderingContextClass(): Class<BenchmarkRenderingContext> = BenchmarkRenderingContext::class.java
     override fun attributeType(): Class<RowHeightAttribute> = RowHeightAttribute::class.java
     override fun renderAttribute(
         renderingContext: BenchmarkRenderingContext,
         context: RowOpeningContext,
         attribute: RowHeightAttribute
-    ) {}
+    ) {
+    }
 }
 
 class TemplateFileAttributeTestRenderOperation :
-    TableAttributeRenderOperation<BenchmarkRenderingContext, TemplateFileAttribute> {
+    TableAttributeRenderOperation<BenchmarkRenderingContext, TemplateFileAttribute, TableOpeningContext>(
+        TableOpeningContext::class.java
+    ) {
     override fun renderingContextClass(): Class<BenchmarkRenderingContext> = BenchmarkRenderingContext::class.java
     override fun attributeType(): Class<TemplateFileAttribute> = TemplateFileAttribute::class.java
     override fun renderAttribute(
         renderingContext: BenchmarkRenderingContext,
         context: TableOpeningContext,
         attribute: TemplateFileAttribute
-    ) {}
+    ) {
+    }
 }

@@ -38,11 +38,38 @@ inline fun <reified T: TableAttribute<T>> AttributedModel<TableAttribute<*>>.get
 /**
  * Table operation context with additional model attributes applicable on table level.
  * @author Wojciech Mąka
+ * @since 0.2.0
+ */
+sealed class TableContext(
+    override val attributes: Attributes<TableAttribute<*>>?,
+) : AttributedModel<TableAttribute<*>>(attributes)
+
+/**
+ * Column operation context with additional model attributes applicable on table level.
+ * @author Wojciech Mąka
+ * @since 0.2.0
+ */
+sealed class ColumnContext(
+    override val attributes: Attributes<ColumnAttribute<*>>?,
+) : AttributedModel<ColumnAttribute<*>>(attributes)
+
+/**
+ * Row operation context with additional model attributes applicable on table level.
+ * @author Wojciech Mąka
+ * @since 0.2.0
+ */
+sealed class RowContext(
+    override val attributes: Attributes<RowAttribute<*>>?,
+) : AttributedModel<RowAttribute<*>>(attributes)
+
+/**
+ * Table operation context with additional model attributes applicable on table level.
+ * @author Wojciech Mąka
  * @since 0.1.0
  */
 data class TableOpeningContext(
     override val attributes: Attributes<TableAttribute<*>>?,
-) : AttributedModel<TableAttribute<*>>(attributes)
+) : TableContext(attributes)
 
 internal fun <T> Table<T>.createContext(customAttributes: MutableMap<String, Any>): TableOpeningContext =
     TableOpeningContext(tableAttributes).apply { additionalAttributes = customAttributes }
@@ -54,7 +81,7 @@ internal fun <T> Table<T>.createContext(customAttributes: MutableMap<String, Any
  */
 data class TableClosingContext(
     override val attributes: Attributes<TableAttribute<*>>?,
-) : AttributedModel<TableAttribute<*>>(attributes)
+) : TableContext(attributes)
 
 internal fun <T> Table<T>.createClosingContext(customAttributes: MutableMap<String, Any>): TableClosingContext =
     TableClosingContext(tableAttributes).apply { additionalAttributes = customAttributes }
@@ -67,7 +94,7 @@ internal fun <T> Table<T>.createClosingContext(customAttributes: MutableMap<Stri
 open class RowOpeningContext(
     override val attributes: Attributes<RowAttribute<*>>?,
     open val rowIndex: Int
-) : AttributedModel<RowAttribute<*>>(attributes), RowCoordinate {
+) : RowContext(attributes), RowCoordinate {
     override fun getRow(): Int = rowIndex
 }
 
@@ -108,7 +135,7 @@ fun <T> RowOpeningContext.asRowClosing(rowCellValues: Map<ColumnKey<T>, CellCont
 data class ColumnOpeningContext(
     override val attributes: Attributes<ColumnAttribute<*>>? = null,
     val columnIndex: Int
-) : AttributedModel<ColumnAttribute<*>>(attributes), ColumnCoordinate {
+) : ColumnContext(attributes), ColumnCoordinate {
     val currentPhase: ColumnRenderPhase = ColumnRenderPhase.BEFORE_FIRST_ROW
     override fun getColumn(): Int = columnIndex
 }
@@ -135,7 +162,7 @@ enum class ColumnRenderPhase {
 data class ColumnClosingContext(
     override val attributes: Attributes<ColumnAttribute<*>>? = null,
     val columnIndex: Int,
-) : AttributedModel<ColumnAttribute<*>>(attributes), ColumnCoordinate {
+) : ColumnContext(attributes), ColumnCoordinate {
     val currentPhase: ColumnRenderPhase = ColumnRenderPhase.AFTER_LAST_ROW
     override fun getColumn(): Int = columnIndex
 }

@@ -41,25 +41,27 @@ fun <CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : Attri
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-interface TableAttributeRenderOperation<CTX : RenderingContext, ATTR : TableAttribute<*>>
-    : AttributeOperation<CTX, TableAttribute<*>, ATTR, TableOpeningContext> {
-    override fun typeInfo(): AttributeOperationTypeInfo<CTX, TableAttribute<*>, ATTR, TableOpeningContext> =
-        AttributeOperationTypeInfo(renderingContextClass(), TableOpeningContext::class.java, attributeType())
-    fun attributeType(): Class<ATTR>
-    fun renderingContextClass(): Class<CTX>
+abstract class TableAttributeRenderOperation<CTX : RenderingContext, ATTR : TableAttribute<*>, AC: TableContext>
+    (private val attributedContext: Class<AC>) : AttributeOperation<CTX, TableAttribute<*>, ATTR, AC> {
+    override fun typeInfo(): AttributeOperationTypeInfo<CTX, TableAttribute<*>, ATTR, AC> =
+        AttributeOperationTypeInfo(renderingContextClass(), attributedContext, attributeType())
+    abstract fun attributeType(): Class<ATTR>
+    abstract fun renderingContextClass(): Class<CTX>
 }
-    /**
+
+/**
  * Row attribute operation associated with row rendering context
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-interface RowAttributeRenderOperation<CTX : RenderingContext, ATTR : RowAttribute<*>>
-    : AttributeOperation<CTX, RowAttribute<*>, ATTR, RowOpeningContext> {
-        override fun typeInfo(): AttributeOperationTypeInfo<CTX, RowAttribute<*>, ATTR, RowOpeningContext> =
-            AttributeOperationTypeInfo(renderingContextClass(), RowOpeningContext::class.java, attributeType())
-        fun attributeType(): Class<ATTR>
-        fun renderingContextClass(): Class<CTX>
+abstract class RowAttributeRenderOperation<CTX : RenderingContext, ATTR : RowAttribute<*>, AC: RowContext>
+    (private val attributedContext: Class<AC>) : AttributeOperation<CTX, RowAttribute<*>, ATTR, AC> {
+        override fun typeInfo(): AttributeOperationTypeInfo<CTX, RowAttribute<*>, ATTR, AC> =
+            AttributeOperationTypeInfo(renderingContextClass(), attributedContext, attributeType())
+       abstract fun attributeType(): Class<ATTR>
+       abstract fun renderingContextClass(): Class<CTX>
 }
+
 
 /**
  * Cell attribute operation associated with cell rendering context
@@ -79,12 +81,12 @@ interface CellAttributeRenderOperation<CTX : RenderingContext, ATTR : CellAttrib
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-interface ColumnAttributeRenderOperation<CTX : RenderingContext, ATTR : ColumnAttribute<*>>
-    : AttributeOperation<CTX, ColumnAttribute<*>, ATTR, ColumnOpeningContext> {
-    override fun typeInfo(): AttributeOperationTypeInfo<CTX, ColumnAttribute<*>, ATTR, ColumnOpeningContext> =
-        AttributeOperationTypeInfo(renderingContextClass(), ColumnOpeningContext::class.java, attributeType())
-    fun attributeType(): Class<ATTR>
-    fun renderingContextClass(): Class<CTX>
+abstract class ColumnAttributeRenderOperation<CTX : RenderingContext, ATTR : ColumnAttribute<*>, AC: ColumnContext>
+    (private val attributedContext: Class<AC>) : AttributeOperation<CTX, ColumnAttribute<*>, ATTR, AC> {
+    override fun typeInfo(): AttributeOperationTypeInfo<CTX, ColumnAttribute<*>, ATTR, AC> =
+        AttributeOperationTypeInfo(renderingContextClass(), attributedContext, attributeType())
+    abstract fun attributeType(): Class<ATTR>
+    abstract fun renderingContextClass(): Class<CTX>
 }
 
 /**
@@ -93,10 +95,10 @@ interface ColumnAttributeRenderOperation<CTX : RenderingContext, ATTR : ColumnAt
  * @since 0.1.0
  */
 interface AttributeOperationsFactory<CTX : RenderingContext> {
-    fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<CTX, out TableAttribute<*>>>? = null
-    fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<CTX, out RowAttribute<*>>>? = null
-    fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<CTX, out ColumnAttribute<*>>>? = null
-    fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<CTX, out CellAttribute<*>>>? = null
+    fun createTableAttributeRenderOperations(): Set<AttributeOperation<CTX,TableAttribute<*>, *,*>>? = null
+    fun createRowAttributeRenderOperations(): Set<AttributeOperation<CTX,RowAttribute<*>, *,*>>? = null
+    fun createColumnAttributeRenderOperations(): Set<AttributeOperation<CTX,ColumnAttribute<*>, *,*>>? = null
+    fun createCellAttributeRenderOperations(): Set<AttributeOperation<CTX,CellAttribute<*>,*, *>>? = null
 }
 
 /**
@@ -105,9 +107,9 @@ interface AttributeOperationsFactory<CTX : RenderingContext> {
  * @since 0.1.0
  */
 interface StandardAttributeRenderOperationsProvider<CTX : RenderingContext> {
-    fun createTemplateFileRenderer(): TableAttributeRenderOperation<CTX, TemplateFileAttribute>
-    fun createColumnWidthRenderer(): ColumnAttributeRenderOperation<CTX, ColumnWidthAttribute>
-    fun createRowHeightRenderer(): RowAttributeRenderOperation<CTX, RowHeightAttribute>
+    fun createTemplateFileRenderer(): TableAttributeRenderOperation<CTX, TemplateFileAttribute,*>
+    fun createColumnWidthRenderer(): ColumnAttributeRenderOperation<CTX, ColumnWidthAttribute,*>
+    fun createRowHeightRenderer(): RowAttributeRenderOperation<CTX, RowHeightAttribute,*>
     fun createCellTextStyleRenderer(): CellAttributeRenderOperation<CTX, CellTextStylesAttribute>
     fun createCellBordersRenderer(): CellAttributeRenderOperation<CTX, CellBordersAttribute>
     fun createCellAlignmentRenderer(): CellAttributeRenderOperation<CTX, CellAlignmentAttribute>
@@ -122,27 +124,27 @@ interface StandardAttributeRenderOperationsProvider<CTX : RenderingContext> {
  */
 class StandardAttributeOperationsFactory<CTX : RenderingContext>(
     private val standardAttributeRenderers: StandardAttributeRenderOperationsProvider<CTX>,
-    private val additionalTableAttributeRenderers: Set<TableAttributeRenderOperation<CTX, out TableAttribute<*>>> = setOf(),
-    private val additionalColumnAttributeRenderers: Set<ColumnAttributeRenderOperation<CTX, out ColumnAttribute<*>>> = setOf(),
-    private val additionalRowAttributeRenderers: Set<RowAttributeRenderOperation<CTX, out RowAttribute<*>>> = setOf(),
-    private val additionalCellAttributeRenderers: Set<CellAttributeRenderOperation<CTX, out CellAttribute<*>>> = setOf()
+    private val additionalTableAttributeRenderers: Set<TableAttributeRenderOperation<CTX, *,*>> = setOf(),
+    private val additionalColumnAttributeRenderers: Set<ColumnAttributeRenderOperation<CTX, *,*>> = setOf(),
+    private val additionalRowAttributeRenderers: Set<RowAttributeRenderOperation<CTX, *,*>> = setOf(),
+    private val additionalCellAttributeRenderers: Set<CellAttributeRenderOperation<CTX, *>> = setOf()
 ) : AttributeOperationsFactory<CTX> {
 
-    override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<CTX, out TableAttribute<*>>> =
+    override fun createTableAttributeRenderOperations(): Set<TableAttributeRenderOperation<CTX, *,*>> =
         setOf(
             standardAttributeRenderers.createTemplateFileRenderer()
         ) union additionalTableAttributeRenderers
 
-    override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<CTX, out RowAttribute<*>>> = setOf(
+    override fun createRowAttributeRenderOperations(): Set<RowAttributeRenderOperation<CTX, *,*>> = setOf(
         standardAttributeRenderers.createRowHeightRenderer()
     ) union additionalRowAttributeRenderers
 
-    override fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<CTX, out ColumnAttribute<*>>> =
+    override fun createColumnAttributeRenderOperations(): Set<ColumnAttributeRenderOperation<CTX, *,*>> =
         setOf(
             standardAttributeRenderers.createColumnWidthRenderer()
         ) union additionalColumnAttributeRenderers
 
-    override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<CTX, out CellAttribute<*>>> =
+    override fun createCellAttributeRenderOperations(): Set<CellAttributeRenderOperation<CTX, *>> =
         setOf(
             standardAttributeRenderers.createCellTextStyleRenderer(),
             standardAttributeRenderers.createCellBordersRenderer(),

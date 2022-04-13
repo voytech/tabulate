@@ -34,6 +34,7 @@ class PoiTableAssert<T>(
                     PoiCellAlignmentAttributeResolver(),
                     PoiCellDataFormatAttributeResolver(),
                     PoiCellTypeHintAttributeResolver(),
+                    PoiCellCommentAttributeResolver()
             ),
             cellValueResolver = object : ValueResolver<ApachePoiRenderingContext> {
                 override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellValue {

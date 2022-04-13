@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.excel.template
 
-import io.github.voytech.tabulate.model.attributes.cell.Color
+import io.github.voytech.tabulate.model.attributes.Color
 import io.github.voytech.tabulate.template.context.RenderingContext
 import io.github.voytech.tabulate.template.operations.CellValue
 import io.github.voytech.tabulate.template.operations.Coordinates

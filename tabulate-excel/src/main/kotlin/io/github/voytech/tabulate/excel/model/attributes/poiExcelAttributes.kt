@@ -28,7 +28,7 @@ data class CellExcelDataFormatAttribute(
 
     companion object {
         @JvmStatic
-        fun builder() : Builder = Builder()
+        fun builder(): Builder = Builder()
     }
 
 }
@@ -57,15 +57,16 @@ data class FilterAndSortTableAttribute(
 
     @TabulateMarker
     class Builder : TableAttributeBuilder<FilterAndSortTableAttribute>() {
-        var columnRange: IntRange by observable(0 .. 100)
+        var columnRange: IntRange by observable(0..100)
         var rowRange: IntRange by observable(0..65000)
         override fun provide(): FilterAndSortTableAttribute = FilterAndSortTableAttribute(columnRange, rowRange)
     }
 
-    override fun overrideWith(other: FilterAndSortTableAttribute): FilterAndSortTableAttribute = FilterAndSortTableAttribute(
-        columnRange = takeIfChanged(other, FilterAndSortTableAttribute::columnRange),
-        rowRange = takeIfChanged(other, FilterAndSortTableAttribute::rowRange),
-    )
+    override fun overrideWith(other: FilterAndSortTableAttribute): FilterAndSortTableAttribute =
+        FilterAndSortTableAttribute(
+            columnRange = takeIfChanged(other, FilterAndSortTableAttribute::columnRange),
+            rowRange = takeIfChanged(other, FilterAndSortTableAttribute::rowRange),
+        )
 
 }
 
@@ -79,8 +80,8 @@ fun <T> TableLevelAttributesBuilderApi<T>.filterAndSort(block: FilterAndSortTabl
  * @since 0.2.0
  */
 data class CellCommentAttribute(
-    val author: String,
-    val comment: String
+    val author: String = "anonymous",
+    val comment: String = "Please provide a commentary!"
 ) : CellAttribute<CellCommentAttribute>() {
 
     @TabulateMarker
@@ -107,7 +108,6 @@ fun <T> CellLevelAttributesBuilderApi<T>.comment(block: CellCommentAttribute.Bui
  * @since 0.2.0
  */
 data class PrintingAttribute(
-
     val numberOfCopies: Short,
     val isDraft: Boolean,
     val blackAndWhite: Boolean,
@@ -120,8 +120,17 @@ data class PrintingAttribute(
     val headerMargin: Double,
     val footerMargin: Double,
     val fitHeight: Short,
-    val fitWidth: Short
-
+    val fitWidth: Short,
+    val firstPrintableColumn: Int,
+    val lastPrintableColumn: Int,
+    val firstPrintableRow: Int,
+    val lastPrintableRow: Int,
+    val footerCenter: String,
+    val footerLeft: String,
+    val footerRight: String,
+    val headerCenter: String,
+    val headerLeft: String,
+    val headerRight: String,
 ) : TableAttribute<PrintingAttribute>() {
 
     @TabulateMarker
@@ -139,9 +148,22 @@ data class PrintingAttribute(
         var footerMargin: Double by observable(1.0)
         var fitHeight: Short by observable(1)
         var fitWidth: Short by observable(1)
+        var firstPrintableColumn: Int by observable(0)
+        var lastPrintableColumn: Int by observable(0)
+        var firstPrintableRow: Int by observable(0)
+        var lastPrintableRow: Int by observable(0)
+        var footerLeft: String by observable("")
+        var footerCenter: String by observable("")
+        var footerRight: String by observable("")
+        var headerLeft: String by observable("")
+        var headerCenter: String by observable("")
+        var headerRight: String by observable("")
+
         override fun provide(): PrintingAttribute = PrintingAttribute(
             numberOfCopies, isDraft, blackAndWhite, noOrientation, leftToRight, printPageNumber,
-            firstPageNumber, paperSize, landscape, headerMargin, footerMargin, fitHeight, fitWidth
+            firstPageNumber, paperSize, landscape, headerMargin, footerMargin, fitHeight, fitWidth,
+            firstPrintableColumn, lastPrintableColumn, firstPrintableRow, lastPrintableRow, footerLeft,
+            footerCenter, footerRight, headerLeft, headerCenter, headerRight
         )
     }
 
@@ -158,7 +180,17 @@ data class PrintingAttribute(
         headerMargin = takeIfChanged(other, PrintingAttribute::headerMargin),
         footerMargin = takeIfChanged(other, PrintingAttribute::footerMargin),
         fitHeight = takeIfChanged(other, PrintingAttribute::fitHeight),
-        fitWidth = takeIfChanged(other, PrintingAttribute::fitWidth)
+        fitWidth = takeIfChanged(other, PrintingAttribute::fitWidth),
+        firstPrintableColumn = takeIfChanged(other, PrintingAttribute::firstPrintableColumn),
+        lastPrintableColumn = takeIfChanged(other, PrintingAttribute::lastPrintableColumn),
+        firstPrintableRow = takeIfChanged(other, PrintingAttribute::firstPrintableRow),
+        lastPrintableRow = takeIfChanged(other, PrintingAttribute::lastPrintableRow),
+        footerLeft = takeIfChanged(other, PrintingAttribute::footerLeft),
+        footerCenter = takeIfChanged(other, PrintingAttribute::footerCenter),
+        footerRight = takeIfChanged(other, PrintingAttribute::footerRight),
+        headerLeft = takeIfChanged(other, PrintingAttribute::headerLeft),
+        headerCenter = takeIfChanged(other, PrintingAttribute::headerCenter),
+        headerRight = takeIfChanged(other, PrintingAttribute::headerRight),
     )
 
 }

@@ -3,10 +3,12 @@ package io.github.voytech.tabulate.testsupport
 import io.github.voytech.tabulate.excel.model.ExcelBorderStyle
 import io.github.voytech.tabulate.excel.model.ExcelCellFills
 import io.github.voytech.tabulate.excel.model.ExcelTypeHints
+import io.github.voytech.tabulate.excel.model.attributes.CellCommentAttribute
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
 import io.github.voytech.tabulate.excel.template.ApachePoiRenderingContext
 import io.github.voytech.tabulate.excel.template.poi.ApachePoiUtils
 import io.github.voytech.tabulate.model.attributes.CellAttribute
+import io.github.voytech.tabulate.model.attributes.Color
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
@@ -144,6 +146,15 @@ class PoiCellTypeHintAttributeResolver : AttributeResolver<ApachePoiRenderingCon
         }
     }
 }
+
+class PoiCellCommentAttributeResolver: AttributeResolver<ApachePoiRenderingContext> {
+    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
+        return api.xssfCell(coordinates)?.cellComment?.let {
+            CellCommentAttribute(it.author, it.string.string)
+        } ?: CellCommentAttribute()
+    }
+}
+
 
 class PoiCellAlignmentAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
     override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {

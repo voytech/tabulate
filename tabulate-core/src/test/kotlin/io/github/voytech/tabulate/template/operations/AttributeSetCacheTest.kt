@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderAp
 import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
 import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
 import io.github.voytech.tabulate.model.Table
-import io.github.voytech.tabulate.model.attributes.cell.Colors
+import io.github.voytech.tabulate.model.attributes.Colors
 import io.github.voytech.tabulate.model.attributes.cell.background
 import io.github.voytech.tabulate.model.attributes.cell.borders
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultBorderStyle

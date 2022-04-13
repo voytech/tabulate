@@ -7,7 +7,7 @@ import io.github.voytech.tabulate.model.PredicateLiteral
 import io.github.voytech.tabulate.model.RowCellExpression
 import io.github.voytech.tabulate.model.and
 import io.github.voytech.tabulate.model.attributes.cell.CellBackgroundAttribute
-import io.github.voytech.tabulate.model.attributes.cell.Colors
+import io.github.voytech.tabulate.model.attributes.Colors
 import io.github.voytech.tabulate.model.attributes.cell.background
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultCellFill
 import io.github.voytech.tabulate.model.attributes.cell.text

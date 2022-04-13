@@ -1,7 +1,11 @@
 package io.github.voytech.tabulate.template.operations
 
 import io.github.voytech.tabulate.api.builder.dsl.CustomTable
-import io.github.voytech.tabulate.model.attributes.cell.*
+import io.github.voytech.tabulate.model.attributes.Colors
+import io.github.voytech.tabulate.model.attributes.cell.CellBordersAttribute
+import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
+import io.github.voytech.tabulate.model.attributes.cell.borders
+import io.github.voytech.tabulate.model.attributes.cell.text
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.column.width
 import io.github.voytech.tabulate.support.ShadowingCellTextStylesAttributeTestRenderOperation

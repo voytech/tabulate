@@ -468,14 +468,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </li>
 <li><a href="#_java_interop_fluent_builders_java_api">Java interop - fluent builders Java API.</a></li>
-<li><a href="#_library_of_attributes">Library of attributes.</a>
-<ul class="sectlevel3">
-<li><a href="#_table_attributes">Table attributes</a></li>
-<li><a href="#_column_attributes">Column attributes</a></li>
-<li><a href="#_row_attributes">Row attributes</a></li>
-<li><a href="#_cell_attributes">Cell attributes</a></li>
-</ul>
-</li>
+<li><a href="#_library_of_attributes">Library of attributes.</a></li>
 <li><a href="#_architecture">Architecture</a>
 <ul class="sectlevel2">
 <li><a href="#_high_level_view">High-level view.</a></li>
@@ -1336,57 +1329,122 @@ new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream
 <div class="paragraph">
 <p>Currently, with <code>tabulate-core</code> and <code>tabulate-excel</code> modules, you will get following attributes included:</p>
 </div>
-<div class="sect3">
-<h4 id="_table_attributes">Table attributes</h4>
-<div class="ulist">
-<ul>
-<li>
-<p><code>FilterAndSortAttribute</code> - enables filtering and sorting of Excel table,</p>
-</li>
-<li>
-<p><code>TemplateFileAttribute</code> - allows performing template file interpolation with source data collection of items,</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_column_attributes">Column attributes</h4>
-<div class="ulist">
-<ul>
-<li>
-<p><code>ColumnWidthAttribute</code> - sets the width of column (meaning all cells gathered under particular column will have same width),</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_row_attributes">Row attributes</h4>
-<div class="ulist">
-<ul>
-<li>
-<p><code>RowHeightAttribute</code> - sets the height of row (meaning all cells gathered within particular row will have same height),</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_cell_attributes">Cell attributes</h4>
-<div class="ulist">
-<ul>
-<li>
-<p><code>CellTextStylesAttribute</code> - allows controlling general, text related style attributes,</p>
-</li>
-<li>
-<p><code>CellBordersAttribute</code> - sets borders on selected cells,</p>
-</li>
-<li>
-<p><code>CellBackgroundAttribute</code> - sets background color and fill,</p>
-</li>
-<li>
-<p><code>CellAlignmentAttribute</code> - sets text vertical and horizontal alignment</p>
-</li>
-</ul>
-</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.667%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Description</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Attribute type</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Context</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Provider</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Applicable levels</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>filterAndSort()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enables excel table feature that allows filtering and sorting</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Table</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Table opening</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">poi (Apache POI)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">table</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>template</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Exports data into source template file. (Interpolates excel file)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Table</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Table opening</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">poi (Apache POI)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">table</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>printing</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Exports data into source template file. (Interpolates excel file)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Table</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Table opening</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">poi (Apache POI)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">table</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>width</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets width of column. All cells gathered under column will have same width</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Column</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Column opening</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">any</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">column</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>height</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets the height of row.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Row</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Row opening</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">any</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">row</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>rowBorders</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets border properties of entire row.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Row</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Row closing</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">any</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">row</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>text</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets text styles like: font, font size, font weight, italic, strikeout, underline, text wrap, orientation.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">any</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">table, column, row, cell</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>borders</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets border properties of cell.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">any</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">table, column, row, cell</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>background</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets the background color for cell.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">any</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">table, column, row, cell</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>alignment</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Aligns text within cell (vertically/ horizontally).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">any</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">table, column, row, cell</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>comment</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Associates comment (and comment author) with cell.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">poi (Apache POI)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cell</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>separator</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets delimiter for CSV.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cell</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">csv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">table</p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>Typical usage scenario for attributes:</p>
 </div>
@@ -1431,7 +1489,6 @@ new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream
 <div style="page-break-after: always;"></div>
 </div>
 </div>
-</div>
 <div class="sect1">
 <h2 id="_architecture">Architecture</h2>
 <div class="sectionbody">
@@ -1468,7 +1525,7 @@ new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-04-09 18:40:53 +0200
+Last updated 2022-04-13 16:11:59 +0200
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

@@ -6,11 +6,14 @@ import io.github.voytech.tabulate.excel.model.ExcelBorderStyle
 import io.github.voytech.tabulate.excel.model.attributes.*
 import io.github.voytech.tabulate.model.RowCellExpression
 import io.github.voytech.tabulate.model.and
+import io.github.voytech.tabulate.model.attributes.Color
+import io.github.voytech.tabulate.model.attributes.Colors
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.column.columnWidth
 import io.github.voytech.tabulate.model.attributes.column.width
 import io.github.voytech.tabulate.model.attributes.row.height
+import io.github.voytech.tabulate.model.attributes.row.rowBorders
 import io.github.voytech.tabulate.model.attributes.table.template
 import io.github.voytech.tabulate.template.export
 import io.github.voytech.tabulate.template.tabulate
@@ -382,7 +385,7 @@ class ApachePoiTabulateTests {
                         attributes {
                             comment {
                                 author = "Voytech"
-                                comment = " A Comment"
+                                comment = "A Comment"
                             }
                         }
                     }
@@ -392,7 +395,15 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
-            cellTests = mapOf()
+            cellTests = mapOf(
+                CellPosition(0, 0) to AssertCellValue(
+                    expectedValue = "Has comment"
+                ),
+                CellPosition(0, 0) to AssertContainsCellAttributes(
+                    CellCommentAttribute("Voytech", "A Comment")
+                )
+
+            )
         ).perform().also {
             it.cleanup()
         }
@@ -411,17 +422,55 @@ class ApachePoiTabulateTests {
                     landscape = true
                     printPageNumber = true
                     numberOfCopies = 10
+                    firstPrintableColumn = 0
+                    lastPrintableColumn = 10
+                    footerCenter = "Footer Center"
+                    footerLeft = "Footer Left"
+                    footerRight = "Footer Right"
+                    headerCenter = "Header Center"
+                    headerLeft = "Header Left"
+                    headerRight = "Header Right"
                 }
             }
             rows {
+                repeat((0..100).count()) {
+                    newRow {
+                        repeat((0..100).count()) { cell { value = "Value" } }
+                    }
+                }
+            }
+        }.export(File("test.xlsx"))
+        PoiTableAssert<SampleProduct>(
+            tableName = "Test table",
+            file = File("test.xlsx"),
+            cellTests = mapOf()
+        ).perform().also {
+            it.cleanup()
+        }
+    }
+
+    @Test
+    fun `should define borders for entire row using row attribute`() {
+        CustomTable {
+            firstRow = 1
+            firstColumn = 1
+            name = "Test table"
+            rows {
                 newRow {
-                    cell {
-                        value = "Has comment"
-                        attributes {
-                            comment {
-                                author = "Voytech"
-                                comment = " A Comment"
-                            }
+                    repeat((0..5).count()) { cell { value = "Value" } }
+                    attributes {
+                        rowBorders {
+                            leftBorderColor = Colors.BLACK
+                            leftBorderStyle = ExcelBorderStyle.THICK
+
+                            rightBorderColor = Colors.BLACK
+                            rightBorderStyle = ExcelBorderStyle.THICK
+
+                            topBorderColor = Colors.BLACK
+                            topBorderStyle = ExcelBorderStyle.THICK
+
+                            bottomBorderColor = Colors.BLACK
+                            bottomBorderStyle = ExcelBorderStyle.THICK
                         }
                     }
                 }

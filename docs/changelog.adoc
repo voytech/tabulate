@@ -4,12 +4,13 @@
 
 === New features:
 
-- Added `CellCommentAttribute` support (Apache POI)
-- Added `PrintingAttribute` support (Apache POI)
+- Added `RowBordersAttribute` (general)
+- Added `CellCommentAttribute` (Apache POI)
+- Added `PrintingAttribute` (Apache POI)
 
 === Improvements:
 
--  Rework Operations API. link:https://github.com/voytech/tabulate/issues/153[#153].
+-  Rework Operations API [*Breaking change*]. link:https://github.com/voytech/tabulate/issues/153[#153].
 
 === Bug fixes:
 
