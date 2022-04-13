@@ -94,12 +94,20 @@ workflows:
     when:
       equal: [ "publish_snapshot", << pipeline.parameters.GHA_Meta >> ]
     jobs:
+      - hold:
+          type: approval
       - publishSnapshot:
           mname: tabulate-core
+          requires:
+            - hold
       - publishSnapshot:
           mname: tabulate-csv
+          requires:
+            - hold
       - publishSnapshot:
           mname: tabulate-excel
+          requires:
+            - hold
   publishMavenVersion:
     when:
       equal: [ "publish_release", << pipeline.parameters.GHA_Meta >> ]
