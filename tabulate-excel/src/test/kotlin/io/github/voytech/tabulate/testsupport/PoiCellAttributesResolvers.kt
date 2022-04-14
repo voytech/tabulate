@@ -5,19 +5,24 @@ import io.github.voytech.tabulate.excel.model.ExcelCellFills
 import io.github.voytech.tabulate.excel.model.ExcelTypeHints
 import io.github.voytech.tabulate.excel.model.attributes.CellCommentAttribute
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
+import io.github.voytech.tabulate.excel.model.attributes.PrintingAttribute
 import io.github.voytech.tabulate.excel.template.ApachePoiRenderingContext
 import io.github.voytech.tabulate.excel.template.poi.ApachePoiUtils
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.Color
+import io.github.voytech.tabulate.model.attributes.TableAttribute
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellFill
 import io.github.voytech.tabulate.template.operations.Coordinates
 import io.github.voytech.tabulate.test.AttributeResolver
+import io.github.voytech.tabulate.test.CellPosition
+import io.github.voytech.tabulate.test.SelectAll
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.Font
+import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 import org.apache.poi.ss.usermodel.HorizontalAlignment as PoiHorizontalAlignment
@@ -30,9 +35,10 @@ private fun parseColor(xssfColor: XSSFColor) =
         xssfColor.rgb[2].toInt().and(0xFF)
     )
 
-class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
-    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
-        return api.xssfCell(coordinates).let { cell ->
+class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiRenderingContext,CellAttribute<*>, CellPosition> {
+
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
+        return api.xssfCell(Coordinates(tableId, select.rowIndex, select.columnIndex)).let { cell ->
             CellTextStylesAttribute(
                 fontFamily = cell?.cellStyle?.font?.fontName,
                 fontSize = cell?.cellStyle?.font?.fontHeight?.toInt()?.let { ApachePoiUtils.pixelsFromHeight(it) },
@@ -51,9 +57,9 @@ class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiRenderingContext
     }
 }
 
-class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
-    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
-        return with(api.xssfCell(coordinates)?.cellStyle) {
+class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiRenderingContext, CellAttribute<*>, CellPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
+        return with(api.xssfCell(Coordinates(tableId,select.rowIndex,select.columnIndex))?.cellStyle) {
             if (this != null) {
                 CellBackgroundAttribute(
                     color = fillForegroundXSSFColor?.let { parseColor(it) },
@@ -83,10 +89,10 @@ class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiRenderingC
     }
 }
 
-class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
-    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
+class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiRenderingContext, CellAttribute<*>, CellPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
 
-        return api.xssfCell(coordinates).let { cell ->
+        return api.xssfCell(Coordinates(tableId,select.rowIndex,select.columnIndex)).let { cell ->
             CellBordersAttribute(
                 leftBorderStyle = cell?.cellStyle?.borderLeft?.let { resolveBorderStyle(it) },
                 leftBorderColor = cell?.cellStyle?.leftBorderXSSFColor?.let { parseColor(it) },
@@ -114,11 +120,13 @@ class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiRenderingCont
             }
         }
     }
+
+
 }
 
-class PoiCellDataFormatAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
-    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
-        return api.xssfCell(coordinates).let {
+class PoiCellDataFormatAttributeResolver : AttributeResolver<ApachePoiRenderingContext, CellAttribute<*>, CellPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
+        return api.xssfCell(Coordinates(tableId,select.rowIndex,select.columnIndex)).let {
             it?.cellStyle?.dataFormatString?.let { dataFormat ->
                 CellExcelDataFormatAttribute(
                     dataFormat = dataFormat
@@ -128,9 +136,9 @@ class PoiCellDataFormatAttributeResolver : AttributeResolver<ApachePoiRenderingC
     }
 }
 
-class PoiCellTypeHintAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
-    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
-        return api.xssfCell(coordinates).let {
+class PoiCellTypeHintAttributeResolver : AttributeResolver<ApachePoiRenderingContext, CellAttribute<*>, CellPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
+        return api.xssfCell(Coordinates(tableId, select.rowIndex, select.columnIndex)).let {
             it?.cellType?.let { type ->
                 TypeHintAttribute(
                         type = when (type) {
@@ -147,18 +155,18 @@ class PoiCellTypeHintAttributeResolver : AttributeResolver<ApachePoiRenderingCon
     }
 }
 
-class PoiCellCommentAttributeResolver: AttributeResolver<ApachePoiRenderingContext> {
-    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
-        return api.xssfCell(coordinates)?.cellComment?.let {
+class PoiCellCommentAttributeResolver : AttributeResolver<ApachePoiRenderingContext, CellAttribute<*>, CellPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
+        return api.xssfCell(Coordinates(tableId, select.rowIndex, select.columnIndex))?.cellComment?.let {
             CellCommentAttribute(it.author, it.string.string)
         } ?: CellCommentAttribute()
     }
 }
 
 
-class PoiCellAlignmentAttributeResolver : AttributeResolver<ApachePoiRenderingContext> {
-    override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellAttribute<*> {
-        return api.xssfCell(coordinates).let {
+class PoiCellAlignmentAttributeResolver : AttributeResolver<ApachePoiRenderingContext, CellAttribute<*>, CellPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
+        return api.xssfCell(Coordinates(tableId, select.rowIndex, select.columnIndex)).let {
             CellAlignmentAttribute(
                 vertical = when (it?.cellStyle?.verticalAlignment) {
                     PoiVerticalAlignment.TOP -> DefaultVerticalAlignment.TOP
@@ -174,6 +182,42 @@ class PoiCellAlignmentAttributeResolver : AttributeResolver<ApachePoiRenderingCo
                     PoiHorizontalAlignment.FILL -> DefaultHorizontalAlignment.FILL
                     else -> DefaultHorizontalAlignment.LEFT
                 }
+            )
+        }
+    }
+}
+
+class PoiPrintingAttributeResolver : AttributeResolver<ApachePoiRenderingContext, TableAttribute<*>, SelectAll<TableAttribute<*>>>  {
+
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: SelectAll<TableAttribute<*>>): TableAttribute<*> {
+        api.workbook().let { wb ->
+            val index = wb.getSheetIndex(tableId)
+            val sheet = wb.getSheetAt(index)
+            val address = wb.getPrintArea(index).let { CellRangeAddress.valueOf(it) }
+            return PrintingAttribute(
+                numberOfCopies = sheet.printSetup.copies,
+                isDraft = sheet.printSetup.draft,
+                blackAndWhite = sheet.printSetup.noColor,
+                noOrientation=  sheet.printSetup.noOrientation,
+                leftToRight = sheet.printSetup.leftToRight,
+                printPageNumber = sheet.printSetup.usePage,
+                firstPageNumber = sheet.printSetup.pageStart,
+                paperSize = sheet.printSetup.paperSize,
+                landscape = sheet.printSetup.landscape,
+                headerMargin = sheet.printSetup.headerMargin,
+                footerMargin = sheet.printSetup.footerMargin,
+                fitHeight = sheet.printSetup.fitHeight,
+                fitWidth = sheet.printSetup.fitWidth,
+                firstPrintableColumn = address.firstColumn,
+                lastPrintableColumn = address.lastColumn,
+                firstPrintableRow = address.firstRow,
+                lastPrintableRow = address.lastRow,
+                footerCenter = sheet.footer.center,
+                footerLeft = sheet.footer.left,
+                footerRight = sheet.footer.right,
+                headerCenter = sheet.header.center,
+                headerLeft = sheet.header.left,
+                headerRight = sheet.header.right,
             )
         }
     }

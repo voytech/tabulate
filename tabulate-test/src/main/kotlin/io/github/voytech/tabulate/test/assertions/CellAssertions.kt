@@ -1,15 +1,11 @@
-package io.github.voytech.tabulate.test.cellassertions
+package io.github.voytech.tabulate.test.assertions
 
 import io.github.voytech.tabulate.model.attributes.CellAttribute
-import io.github.voytech.tabulate.template.operations.CellValue
-import io.github.voytech.tabulate.template.operations.Coordinates
-import io.github.voytech.tabulate.test.CellDefinition
-import io.github.voytech.tabulate.test.CellTest
+import io.github.voytech.tabulate.test.AttributeTest
 import java.util.zip.CRC32
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
@@ -17,9 +13,9 @@ class AssertCellValue(
     private val expectedValue: Any,
     private val expectedColspan: Int? = null,
     private val expectedRowspan: Int? = null
-) : CellTest {
-    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
-        assertNotNull(def?.cellValue, "Expected cell value to be present")
+) : AttributeTest<CellAttribute<*>> {
+    override fun performTest(sheetName: String, def: Set<CellAttribute<*>>?) {
+        /*assertNotNull(def?.cellValue, "Expected cell value to be present")
         assertValueEquals(expectedValue, def?.cellValue?.value, "Expected cell value to be $expectedValue")
         expectedColspan?.let {
             assertNotNull(def?.cellValue?.colSpan, "Expected cell collSpan to be present")
@@ -28,8 +24,10 @@ class AssertCellValue(
         expectedRowspan?.let {
             assertNotNull(def?.cellValue?.rowSpan, "Expected cell rowSpan to be present")
             assertEquals(expectedRowspan, def?.cellValue?.rowSpan, "Expected cell rowSpan to be $it")
-        }
+        }*/
+        TODO("Not yet implemented")
     }
+
 
     private fun assertValueEquals(expected: Any?, found: Any?, description: String) {
         if (expected?.javaClass == found?.javaClass) {
@@ -49,35 +47,30 @@ class AssertCellValue(
     }
 }
 
-class AssertCellValueExpr(private val invoke: (CellValue) -> Unit) : CellTest {
-    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
-        assertNotNull(def?.cellValue, "Expected cell value to be present")
-        def?.cellValue?.let { invoke.invoke(it) }
-    }
-}
 
 interface AssertCellAttribute {
     fun testCellAttribute(cellAttribute: CellAttribute<*>)
     fun attributeClass(): KClass<out CellAttribute<*>>
 }
 
-class CellAttributesAssertions(private vararg val cellAttributesTests: AssertCellAttribute) : CellTest {
-    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
-        val cellExtensionByClass = def?.cellAttributes?.groupBy { it::class }
+class CellAttributesAssertions(private vararg val cellAttributesTests: AssertCellAttribute) : AttributeTest<CellAttribute<*>> {
+    override fun performTest(sheetName: String, def: Set<CellAttribute<*>>?) {
+        val cellExtensionByClass = def?.groupBy { it::class }
         cellAttributesTests.forEach {
             if (cellExtensionByClass?.containsKey(it.attributeClass()) == false) {
-                fail("cell extension for class ${it.attributeClass().simpleName} not found for cell at $coordinates")
+                fail("cell extension for class ${it.attributeClass().simpleName} not found for cell at $sheetName")
             }
             cellExtensionByClass?.get(it.attributeClass())?.forEach { extension ->
                 it.testCellAttribute(extension)
             }
         }
     }
+
 }
 
-class AssertContainsCellAttributes(private vararg val targets: CellAttribute<*>) : CellTest {
-    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
-        val existingAttributes = def?.cellAttributes?.asIterable() ?: emptyList()
+class AssertContainsCellAttributes(private vararg val targets: CellAttribute<*>) : AttributeTest<CellAttribute<*>> {
+    override fun performTest(sheetName: String, def: Set<CellAttribute<*>>?) {
+        val existingAttributes = def?.asIterable() ?: emptyList()
         assertEquals(
             targets.toSet(),
             targets.toSet().intersect(existingAttributes),
@@ -86,41 +79,41 @@ class AssertContainsCellAttributes(private vararg val targets: CellAttribute<*>)
     }
 }
 
-class AssertMany(private vararg val cellTests: CellTest) : CellTest {
-    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
-        cellTests.forEach { it.performCellTest(coordinates, def) }
+class AssertMany(private vararg val cellTests: AttributeTest<CellAttribute<*>>) : AttributeTest<CellAttribute<*>> {
+    override fun performTest(sheetName: String, def: Set<CellAttribute<*>>?) {
+        cellTests.forEach { it.performTest(sheetName, def) }
     }
 }
 
 class AssertEqualsAttribute(
     private val expectedAttribute: CellAttribute<*>,
     private val onlyProperties: Set<KProperty1<out CellAttribute<*>, Any?>>? = null
-) : CellTest {
+) : AttributeTest<CellAttribute<*>> {
 
     @Suppress("UNCHECKED_CAST")
     private fun <A: CellAttribute<*>> A.matchProperties(expected: A) =
         onlyProperties!!.map { it as KProperty1<A, Any?>  }.all { it(this) ==  it(expected)}
 
-    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
+    override fun performTest(sheetName: String, def: Set<CellAttribute<*>>?) {
         if (onlyProperties?.isNotEmpty() == true) {
             assertTrue(
-                def?.cellAttributes?.any { it.matchProperties(expectedAttribute) } ?: false,
+                def?.any { it.matchProperties(expectedAttribute) } ?: false,
                 "CellAttribute $expectedAttribute with matching properties ${onlyProperties.joinToString(",") { it.name }} not found"
             )
         } else {
             assertTrue(
-                def?.cellAttributes?.contains(expectedAttribute) ?: false,
+                def?.contains(expectedAttribute) ?: false,
                 "CellAttribute $expectedAttribute not found"
             )
         }
     }
 }
 
-class AssertNoAttribute(private val expectedAttribute: CellAttribute<*>) : CellTest {
+class AssertNoAttribute(private val expectedAttribute: CellAttribute<*>) : AttributeTest<CellAttribute<*>> {
 
-    override fun performCellTest(coordinates: Coordinates, def: CellDefinition?) {
+    override fun performTest(sheetName: String, def: Set<CellAttribute<*>>?) {
         assertTrue(
-            def?.cellAttributes?.contains(expectedAttribute) == false,
+            def?.contains(expectedAttribute) == false,
             "CellAttribute $expectedAttribute found but not expected!"
         )
     }

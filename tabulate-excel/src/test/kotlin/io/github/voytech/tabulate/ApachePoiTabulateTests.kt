@@ -8,6 +8,7 @@ import io.github.voytech.tabulate.model.RowCellExpression
 import io.github.voytech.tabulate.model.and
 import io.github.voytech.tabulate.model.attributes.Color
 import io.github.voytech.tabulate.model.attributes.Colors
+import io.github.voytech.tabulate.model.attributes.TableAttribute
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.column.columnWidth
@@ -19,7 +20,8 @@ import io.github.voytech.tabulate.template.export
 import io.github.voytech.tabulate.template.tabulate
 import io.github.voytech.tabulate.test.CellPosition
 import io.github.voytech.tabulate.test.CellRange
-import io.github.voytech.tabulate.test.cellassertions.*
+import io.github.voytech.tabulate.test.EntireTable
+import io.github.voytech.tabulate.test.assertions.*
 import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import io.github.voytech.tabulate.testsupport.PoiTableAssert
 import org.apache.poi.openxml4j.util.ZipSecureFile
@@ -125,7 +127,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Products table",
             file = File("test.xlsx"),
-            cellTests = mapOf()
+            tests = mapOf()
         ).perform().also {
             it.cleanup()
         }
@@ -219,7 +221,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Products table",
             file = File("test.xlsx"),
-            cellTests = mapOf(
+            tests = mapOf(
                 CellPosition(2, 2) to AssertContainsCellAttributes(
                     CellTextStylesAttribute(
                         fontFamily = "Times New Roman",
@@ -323,7 +325,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Products table",
             file = File("test.xlsx"),
-            cellTests = mapOf(
+            tests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(expectedValue = "Nr.:"),
                 CellPosition(0, 1) to AssertCellValue(expectedValue = "Code"),
                 CellPosition(0, 2) to AssertCellValue(expectedValue = "Name"),
@@ -368,7 +370,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Products table",
             file = File("test.xlsx"),
-            cellTests = mapOf()
+            tests = mapOf()
         ).perform().also {
             it.cleanup()
         }
@@ -395,7 +397,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
-            cellTests = mapOf(
+            tests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(
                     expectedValue = "Has comment"
                 ),
@@ -443,7 +445,32 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
-            cellTests = mapOf()
+            tests = mapOf(EntireTable() to AssertContainsAttributes<TableAttribute<*>>(
+                PrintingAttribute(
+                    numberOfCopies = 10,
+                    isDraft = true,
+                    blackAndWhite = true,
+                    noOrientation = false,
+                    leftToRight = true,
+                    printPageNumber = true,
+                    firstPageNumber = 2,
+                    paperSize = 1,
+                    landscape = true,
+                    headerMargin = 1.0,
+                    footerMargin = 1.0,
+                    fitHeight = 1,
+                    fitWidth = 1,
+                    firstPrintableColumn = 0,
+                    lastPrintableColumn = 10,
+                    firstPrintableRow = 0,
+                    lastPrintableRow = 0,
+                    footerCenter = "Footer Center",
+                    footerLeft = "Footer Left",
+                    footerRight = "Footer Right",
+                    headerCenter = "Header Center",
+                    headerLeft = "Header Left",
+                    headerRight = "Header Right",
+                )))
         ).perform().also {
             it.cleanup()
         }
@@ -479,7 +506,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
-            cellTests = mapOf()
+            tests = mapOf()
         ).perform().also {
             it.cleanup()
         }
@@ -505,7 +532,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
-            cellTests = mapOf(
+            tests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(
                     expectedValue = "Row span",
                     expectedRowspan = 2
@@ -555,7 +582,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
-            cellTests = mapOf(
+            tests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(expectedValue = "It is : "),
                 CellPosition(0, 1) to AssertCellValue(
                     expectedValue = FileInputStream("src/test/resources/kotlin.jpeg").readBytes()
@@ -632,7 +659,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Products",
             file = File("test.xlsx"),
-            cellTests = mapOf(
+            tests = mapOf(
                 CellPosition(0, 0) to AssertMany(
                     AssertCellValue(expectedValue = "Id"), headerAttributes
                 ),
