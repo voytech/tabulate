@@ -552,12 +552,12 @@ Currently, with `tabulate-core` and `tabulate-excel` modules, you will get follo
 
 [cols="1,1,1,1,1,1"]
 |===
-|Name
-|Description
-|Attribute type
-|Context
-|Provider
-|Applicable levels
+|*Name*
+|*Description*
+|*Attribute type*
+|*Context*
+|*Provider*
+|*Applicable levels*
 
 | `filterAndSort()`
 | Enables excel table feature that allows filtering and sorting
@@ -566,77 +566,77 @@ Currently, with `tabulate-core` and `tabulate-excel` modules, you will get follo
 | poi (Apache POI)
 | table
 
-| `template`
+| `template()`
 | Exports data into source template file. (Interpolates excel file)
 | Table
 | Table opening
 | poi (Apache POI)
 | table
 
-| `printing`
-| Exports data into source template file. (Interpolates excel file)
+| `printing()`
+| Sets printing attributes on file.
 | Table
 | Table opening
 | poi (Apache POI)
 | table
 
-| `width`
-| Sets width of column. All cells gathered under column will have same width
+| `width()`
+| Sets width of column. Applies to column or all cells within column (depending on rendering context capabilities).
 | Column
 | Column opening
 | any
 | column
 
-| `height`
-| Sets the height of row.
+| `height()`
+| Sets the height of row. Applies to row or to all cells within row (depending on rendering context capabilities).
 | Row
 | Row opening
 | any
 | row
 
-| `rowBorders`
+| `rowBorders()`
 | Sets border properties of entire row.
 | Row
 | Row closing
 | any
 | row
 
-| `text`
-| Sets text styles like: font, font size, font weight, italic, strikeout, underline, text wrap, orientation.
+| `text()`
+| Sets text styles like: `font`, `font size`, `font weight`, `italic`, `strikeout`, `underline`, `text wrap`, `orientation`.
 | Cell
 | Cell
 | any
 | table, column, row, cell
 
-| `borders`
+| `borders()`
 | Sets border properties of cell.
 | Cell
 | Cell
 | any
 | table, column, row, cell
 
-| `background`
+| `background()`
 | Sets the background color for cell.
 | Cell
 | Cell
 | any
 | table, column, row, cell
 
-| `alignment`
+| `alignment()`
 | Aligns text within cell (vertically/ horizontally).
 | Cell
 | Cell
 | any
 | table, column, row, cell
 
-| `comment`
+| `comment()`
 | Associates comment (and comment author) with cell.
 | Cell
 | Cell
 | poi (Apache POI)
 | cell
 
-| `separator`
+| `separator()`
 | Sets delimiter for CSV.
 | Cell
 | Cell
@@ -685,15 +685,15 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
 ----
 
 <<<
-== Architecture
+== Internal algorithms.
 
-=== High-level view.
+This section does not cover consumer API, but focuses only on internal algorithms implemented in tabulate-core module. You won't find information needed to start using library. Refer to below information only If you are curious about how things work under the hood.
 
-TBD.
+=== `Template and operations` pattern.
 
-=== Internal rules.
+=== Synthetic row resolution algorithm.
 
-TBD.
+=== Row context resolution algorithm.
 
 <<<
 === Builder composition.
@@ -703,4 +703,12 @@ TBD.
 <<<
 == Cookbook recipes.
 
-TBD.
+=== Export collection with header and summary.
+
+=== Add Excel formula for summing column values.
+
+=== Maintain and bind reusable styles.
+
+=== Fill monthly revenue template with trend chart.
+
+=== Create invoice.

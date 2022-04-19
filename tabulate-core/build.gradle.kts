@@ -17,5 +17,4 @@ dependencies {
     "jmhImplementation"(project)
     "jmhImplementation"("org.openjdk.jmh:jmh-core:1.21")
     "kaptJmh"("org.openjdk.jmh:jmh-generator-annprocess:1.21")
-    implementation(kotlin("reflect"))
 }

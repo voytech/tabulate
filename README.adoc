@@ -4,6 +4,7 @@
 
 image:https://www.codefactor.io/repository/github/voytech/tabulate/badge?s=356351985a7dd58359040b23f6d896d28af928af[CodeFactor,link=https://www.codefactor.io/repository/github/voytech/tabulate]
 image:https://github.com/voytech/tabulate/actions/workflows/gradle.yml/badge.svg?branch=master[Build Status,link=https://github.com/voytech/tabulate/actions/workflows/gradle.yml]
+image:https://maven-badges.herokuapp.com/maven-central/io.github.voytech/tabulate-core/badge.svg[Maven Central,link=https://maven-badges.herokuapp.com/maven-central/io.github.voytech/tabulate-core]
 
 Tabulate helps you with exporting collections into tabular file formats.
 
@@ -33,11 +34,14 @@ In such cases You want to hide implementation details using abstractions, but th
 
 == Current version
 
-Current version of library is 0.1.1:
+Current version of library:
+image:https://maven-badges.herokuapp.com/maven-central/io.github.voytech/tabulate-core/badge.svg[Maven Central,link=https://maven-badges.herokuapp.com/maven-central/io.github.voytech/tabulate-core]
+
+Gradle script dependency setup:
 ----
 dependencies {
     implementation(platform("io.github.voytech:tabulate-bom:0.1.1"))
-    implementation("io.github.voytech","tabulate-core")   // e.g. DSL,
+    implementation("io.github.voytech","tabulate-core")   // DSL, model, attributes, core logic.
     implementation("io.github.voytech","tabulate-excel")  // streaming apache POI excel API.
 }
 ----
