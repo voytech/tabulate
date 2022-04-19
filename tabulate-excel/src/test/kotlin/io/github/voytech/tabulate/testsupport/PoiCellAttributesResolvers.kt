@@ -7,22 +7,20 @@ import io.github.voytech.tabulate.excel.model.attributes.CellCommentAttribute
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
 import io.github.voytech.tabulate.excel.model.attributes.PrintingAttribute
 import io.github.voytech.tabulate.excel.template.ApachePoiRenderingContext
-import io.github.voytech.tabulate.excel.template.poi.ApachePoiUtils
-import io.github.voytech.tabulate.model.attributes.CellAttribute
-import io.github.voytech.tabulate.model.attributes.Color
-import io.github.voytech.tabulate.model.attributes.TableAttribute
+import io.github.voytech.tabulate.model.attributes.*
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.CellFill
+import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
+import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.template.operations.Coordinates
-import io.github.voytech.tabulate.test.AttributeResolver
-import io.github.voytech.tabulate.test.CellPosition
-import io.github.voytech.tabulate.test.SelectAll
+import io.github.voytech.tabulate.test.*
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.ss.util.CellRangeAddress
+import org.apache.poi.util.Units
 import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 import org.apache.poi.ss.usermodel.HorizontalAlignment as PoiHorizontalAlignment
@@ -41,7 +39,7 @@ class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiRenderingContext
         return api.xssfCell(Coordinates(tableId, select.rowIndex, select.columnIndex)).let { cell ->
             CellTextStylesAttribute(
                 fontFamily = cell?.cellStyle?.font?.fontName,
-                fontSize = cell?.cellStyle?.font?.fontHeight?.toInt()?.let { ApachePoiUtils.pixelsFromHeight(it) },
+                fontSize = cell?.cellStyle?.font?.fontHeightInPoints?.toInt(),
                 fontColor = cell?.cellStyle?.font?.xssfColor?.let { parseColor(it) },
                 weight = cell?.cellStyle?.font?.bold?.let {
                     if (it) DefaultWeightStyle.BOLD else DefaultWeightStyle.NORMAL
@@ -222,3 +220,26 @@ class PoiPrintingAttributeResolver : AttributeResolver<ApachePoiRenderingContext
         }
     }
 }
+
+class PoiColumnWidthAttributeResolver : AttributeResolver<ApachePoiRenderingContext, ColumnAttribute<*>, ColumnPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: ColumnPosition): ColumnAttribute<*> {
+        return api.workbook().getSheet(tableId)?.let {
+            val autoSizing = it.isColumnTrackedForAutoSizing(select.columnIndex)
+            val pxWidth = it.getColumnWidthInPixels(select.columnIndex)
+            return if (autoSizing) {
+                ColumnWidthAttribute(auto = true)
+            } else {
+                ColumnWidthAttribute(px = pxWidth.toInt())
+            }
+        } ?: ColumnWidthAttribute()
+    }
+}
+
+class PoiRowHeightAttributeResolver : AttributeResolver<ApachePoiRenderingContext, RowAttribute<*>, RowPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: RowPosition): RowAttribute<*>? {
+        return api.workbook().xssfWorkbook.getSheet(tableId)?.getRow(select.rowIndex)?.let {
+          RowHeightAttribute(Units.pointsToPixel(it.heightInPoints.toDouble()))
+        }
+    }
+}
+

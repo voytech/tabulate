@@ -22,7 +22,8 @@ class PoiStateProvider : StateProvider<ApachePoiRenderingContext> {
 
 class PoiTableAssert<T>(
     tableName: String,
-    tests: Map<Select<*>, AttributeTest<*>>,
+    valueTests: Map<CellPosition, ValueTest>? = null,
+    attributeTests: Map<Select<*>, AttributeTest<*>>? = null,
     file: File
 ) {
     private val assert = TableAssert<T, ApachePoiRenderingContext>(
@@ -35,51 +36,54 @@ class PoiTableAssert<T>(
                 PoiCellBordersAttributeResolver(),
                 PoiCellAlignmentAttributeResolver(),
                 PoiCellTypeHintAttributeResolver(),
-                PoiCellCommentAttributeResolver()
+                PoiCellCommentAttributeResolver(),
+                PoiCellDataFormatAttributeResolver()
             ),
+            ColumnPosition::class.java to listOf(PoiColumnWidthAttributeResolver()),
+            RowPosition::class.java to listOf(PoiRowHeightAttributeResolver()),
             EntireTable::class.java to listOf(PoiPrintingAttributeResolver())
         ),
-        cellValueResolver = object : ValueResolver<ApachePoiRenderingContext> {
-            override fun resolve(api: ApachePoiRenderingContext, coordinates: Coordinates): CellValue {
-                val address: CellRangeAddress? =
-                        api.workbook().getSheet(coordinates.tableName).mergedRegions.filter { region ->
-                            region.containsColumn(coordinates.columnIndex) && region.containsRow(coordinates.rowIndex)
-                        }.let { if (it.isNotEmpty()) it[0] else null }
-                val colSpan = address?.let { it.lastColumn - it.firstColumn + 1 } ?: 1
-                val rowSpan = address?.let { it.lastRow - it.firstRow + 1 } ?: 1
-                return api.getImageAsCellValue(coordinates) ?: api.xssfCell(coordinates)
-                        .let {
-                            return when (it?.cellType) {
-                                PoiCellType.STRING -> CellValue(
-                                        value = it.stringCellValue,
-                                        colSpan = colSpan,
-                                        rowSpan = rowSpan
-                                )
-                                PoiCellType.BOOLEAN -> CellValue(
-                                        value = it.booleanCellValue,
-                                        colSpan = colSpan,
-                                        rowSpan = rowSpan
-                                )
-                                PoiCellType.FORMULA -> CellValue(
-                                        value = it.cellFormula,
-                                        colSpan = colSpan,
-                                        rowSpan = rowSpan
-                                )
-                                PoiCellType.NUMERIC -> CellValue(
-                                        value = it.numericCellValue,
-                                        colSpan = colSpan,
-                                        rowSpan = rowSpan
-                                )
-                                else -> CellValue(value = "null", colSpan = colSpan, rowSpan = rowSpan)
-                            }
-                        }
-            }
+        cellValueResolver = { api: ApachePoiRenderingContext, coordinates: Coordinates ->
+            val address: CellRangeAddress? =
+                api.workbook().getSheet(coordinates.tableName).mergedRegions.filter { region ->
+                    region.containsColumn(coordinates.columnIndex) && region.containsRow(coordinates.rowIndex)
+                }.let { if (it.isNotEmpty()) it[0] else null }
+            val colSpan = address?.let { it.lastColumn - it.firstColumn + 1 } ?: 1
+            val rowSpan = address?.let { it.lastRow - it.firstRow + 1 } ?: 1
+            api.getImageAsCellValue(coordinates) ?: api.xssfCell(coordinates)
+                .let {
+                    when (it?.cellType) {
+                        PoiCellType.STRING -> CellValue(
+                            value = it.stringCellValue,
+                            colSpan = colSpan,
+                            rowSpan = rowSpan
+                        )
+                        PoiCellType.BOOLEAN -> CellValue(
+                            value = it.booleanCellValue,
+                            colSpan = colSpan,
+                            rowSpan = rowSpan
+                        )
+                        PoiCellType.FORMULA -> CellValue(
+                            value = it.cellFormula,
+                            colSpan = colSpan,
+                            rowSpan = rowSpan
+                        )
+                        PoiCellType.NUMERIC -> CellValue(
+                            value = it.numericCellValue,
+                            colSpan = colSpan,
+                            rowSpan = rowSpan
+                        )
+                        else -> CellValue(value = "null", colSpan = colSpan, rowSpan = rowSpan)
+                    }
+                }
+
         },
-        tests = tests,
+        attributeTests = attributeTests ?: emptyMap(),
+        valueTests = valueTests ?: emptyMap(),
         file = file
     )
 
-    fun perform(): TableAssert<T,ApachePoiRenderingContext> = assert.perform()
+    fun perform(): TableAssert<T, ApachePoiRenderingContext> = assert.perform()
 }
 
 

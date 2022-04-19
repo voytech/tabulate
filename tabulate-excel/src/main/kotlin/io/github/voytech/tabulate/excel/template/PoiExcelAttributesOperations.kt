@@ -6,7 +6,6 @@ import io.github.voytech.tabulate.excel.model.attributes.FilterAndSortTableAttri
 import io.github.voytech.tabulate.excel.model.attributes.PrintingAttribute
 import io.github.voytech.tabulate.excel.model.resolveBorderStyle
 import io.github.voytech.tabulate.excel.template.PoiExcelExportOperationsFactory.Companion.getCachedStyle
-import io.github.voytech.tabulate.excel.template.poi.ApachePoiUtils
 import io.github.voytech.tabulate.model.attributes.cell.CellAlignmentAttribute
 import io.github.voytech.tabulate.model.attributes.cell.CellBackgroundAttribute
 import io.github.voytech.tabulate.model.attributes.cell.CellBordersAttribute
@@ -22,6 +21,7 @@ import org.apache.poi.ss.usermodel.FontUnderline
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.ss.util.CellReference
 import org.apache.poi.ss.util.RegionUtil
+import org.apache.poi.util.Units
 import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import org.apache.poi.xssf.usermodel.XSSFFont
 import java.io.FileInputStream
@@ -303,14 +303,26 @@ class ColumnWidthAttributeRenderOperation :
         attribute: ColumnWidthAttribute
     ) {
         renderingContext.provideSheet(context.getTableId()).let {
-            if (attribute.auto == true || attribute.px <= 0) {
+            if (attribute.auto) {
                 if (!it.isColumnTrackedForAutoSizing(context.getColumn())) {
                     it.trackColumnForAutoSizing(context.getColumn())
                 }
                 it.autoSizeColumn(context.getColumn())
-            } else {
-                it.setColumnWidth(context.getColumn(), ApachePoiUtils.widthFromPixels(attribute.px))
+            } else if (attribute.px > 0){
+                it.setColumnWidth(context.getColumn(), widthFromPixels(attribute.px))
             }
+        }
+    }
+
+    companion object {
+        private const val EXCEL_COLUMN_WIDTH_FACTOR: Short = 256
+        private const val UNIT_OFFSET_LENGTH = 7
+        private val UNIT_OFFSET_MAP = intArrayOf(0, 36, 73, 109, 146, 182, 219)
+
+        fun widthFromPixels(pxs: Int): Int {
+            var widthUnits = EXCEL_COLUMN_WIDTH_FACTOR * (pxs / UNIT_OFFSET_LENGTH)
+            widthUnits += UNIT_OFFSET_MAP[pxs % UNIT_OFFSET_LENGTH]
+            return widthUnits
         }
     }
 }
@@ -329,8 +341,8 @@ class RowHeightAttributeRenderOperation :
         context: RowOpeningContext,
         attribute: RowHeightAttribute
     ) {
-        renderingContext.provideRow(context.getTableId(), context.getRow()).height =
-            ApachePoiUtils.heightFromPixels(attribute.px)
+        renderingContext.provideRow(context.getTableId(), context.getRow()).heightInPoints =
+            Units.pixelToPoints(attribute.px.toDouble()).toFloat()
     }
 }
 

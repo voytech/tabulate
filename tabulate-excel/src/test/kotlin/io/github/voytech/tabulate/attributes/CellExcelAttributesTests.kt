@@ -16,7 +16,7 @@ import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderSty
 import io.github.voytech.tabulate.template.export
 import io.github.voytech.tabulate.test.CellPosition
 import io.github.voytech.tabulate.test.assertions.AssertCellValue
-import io.github.voytech.tabulate.test.assertions.AssertContainsCellAttributes
+import io.github.voytech.tabulate.test.assertions.AssertContainsAttributes
 import io.github.voytech.tabulate.test.assertions.AssertEqualsAttribute
 import io.github.voytech.tabulate.testsupport.PoiTableAssert
 import org.junit.jupiter.api.Disabled
@@ -36,8 +36,8 @@ class CellExcelAttributesTests {
         PoiTableAssert<Any>(
             tableName = "test",
             file = File("src/test/resources/default.xlsx"),
-            tests = mapOf(
-                CellPosition(0, 0) to AssertContainsCellAttributes(
+            attributeTests = mapOf(
+                CellPosition(0, 0) to AssertContainsAttributes(
                     CellTextStylesAttribute(fontFamily = "Arial"),
                     CellBackgroundAttribute(),
                     CellAlignmentAttribute(),
@@ -72,10 +72,12 @@ class CellExcelAttributesTests {
         PoiTableAssert<Any>(
             tableName = "test",
             file = File("test.xlsx"),
-            tests = mapOf(
+            valueTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(
                     expectedValue = "Value"
-                ),
+                )
+            ),
+            attributeTests = mapOf(
                 CellPosition(0, 0) to AssertEqualsAttribute(expectedAttribute)
             )
         ).perform().also {
@@ -109,11 +111,15 @@ class CellExcelAttributesTests {
         PoiTableAssert<Any>(
             tableName = "test",
             file = File("test1.xlsx"),
-            tests = mapOf(
+            valueTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(
                     expectedValue = "Value"
-                ),
-                CellPosition(0, 0) to AssertEqualsAttribute(SimpleTestCellAttribute(valueSuffix = "AdditionalAttribute"))
+                )
+            ),
+            attributeTests = mapOf(
+                CellPosition(0, 0) to AssertEqualsAttribute(
+                    SimpleTestCellAttribute(valueSuffix = "AdditionalAttribute")
+                )
             )
         ).perform().also {
             it.cleanup()

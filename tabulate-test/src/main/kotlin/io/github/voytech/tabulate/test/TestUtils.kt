@@ -38,26 +38,26 @@ data class CellRange(val rowIndices: IntRange, val columnIndices: IntRange) : Se
 
 class EntireTable : SelectAll<TableAttribute<*>>
 
-interface StateProvider<E> {
+fun interface StateProvider<E> {
     fun createState(file: File): E
 }
 
-interface AttributeResolver<E, CAT: Attribute<*>, S: Select<CAT>> {
-    fun resolve(api: E, tableId: String, select: S): CAT
+fun interface AttributeResolver<E, CAT: Attribute<*>, S: Select<CAT>> {
+    fun resolve(api: E, tableId: String, select: S): CAT?
 }
 
-interface ValueResolver<E> {
+fun interface ValueResolver<E> {
     fun resolve(api: E, coordinates: Coordinates): CellValue
 }
 
-interface AttributeTest<CAT: Attribute<*>> {
-    fun performTest(sheetName: String, def: Set<CAT>? = null)
+fun interface AttributeTest<CAT: Attribute<*>> {
+    fun performTest(def: Set<CAT>)
 }
 
-data class CellDefinition(
-    val cellAttributes: Set<CellAttribute<*>>?,
-    val cellValue: CellValue?
-)
+fun interface ValueTest {
+    fun performTest(value: CellValue?)
+}
+
 
 /**
  * TableAssert test utility.
@@ -71,7 +71,8 @@ class TableAssert<T, E>(
     private val stateProvider: StateProvider<E>,
     private val attributeResolvers: Map<Class<out Select<*>>,List<AttributeResolver<E, *, out Select<*>>>>? = emptyMap(),
     private val cellValueResolver: ValueResolver<E>? = null,
-    private val tests: Map<Select<*>, AttributeTest<*>> = emptyMap(),
+    private val attributeTests: Map<Select<*>, AttributeTest<*>> = emptyMap(),
+    private val valueTests: Map<CellPosition, ValueTest> = emptyMap(),
     private val file: File
 ) {
     var state: E? = null
@@ -82,24 +83,17 @@ class TableAssert<T, E>(
             ?.map { resolver ->
             (resolver as? AttributeResolver<E,CAT,Select<CAT>>)?.resolve(state!!, tableName, select)
         }?.toSet()
-        (tests[select] as? AttributeTest<CAT>)?.performTest(tableName, attributeSet as Set<CAT>?)
-        /*
-        if (cellAttributeResolvers?.isEmpty() == true && cellValueResolver == null) {
-            cellTests[select]?.performCellTest(coordinates = coordinates)
-        } else {
-            cellTests[select]?.performCellTest(
-                coordinates = coordinates,
-                def = CellDefinition(
-                    cellAttributes = cellAttributeResolvers?.map { it.resolve(state!!, coordinates) }?.toSet(),
-                    cellValue = cellValueResolver?.resolve(state!!, coordinates)
-                )
-            )
-        }*/
+        (attributeTests[select] as? AttributeTest<CAT>)?.performTest(attributeSet as Set<CAT>)
+        if (select is CellPosition) {
+            cellValueResolver?.resolve(state!!, Coordinates(tableName, select.rowIndex, select.columnIndex)).run {
+                valueTests[select]?.performTest(this)
+            }
+        }
     }
 
     fun perform(): TableAssert<T, E> {
         state = stateProvider.createState(file)
-        tests.keys.forEach { select ->
+        attributeTests.keys.forEach { select ->
             when (select) {
                 is SelectRange<*,*> -> select.onSelect { performTests(it) }
                 else -> performTests(select)

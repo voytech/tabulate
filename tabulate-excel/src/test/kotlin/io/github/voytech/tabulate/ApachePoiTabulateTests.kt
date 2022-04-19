@@ -11,16 +11,16 @@ import io.github.voytech.tabulate.model.attributes.Colors
 import io.github.voytech.tabulate.model.attributes.TableAttribute
 import io.github.voytech.tabulate.model.attributes.cell.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
+import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.column.columnWidth
 import io.github.voytech.tabulate.model.attributes.column.width
+import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.row.height
 import io.github.voytech.tabulate.model.attributes.row.rowBorders
 import io.github.voytech.tabulate.model.attributes.table.template
 import io.github.voytech.tabulate.template.export
 import io.github.voytech.tabulate.template.tabulate
-import io.github.voytech.tabulate.test.CellPosition
-import io.github.voytech.tabulate.test.CellRange
-import io.github.voytech.tabulate.test.EntireTable
+import io.github.voytech.tabulate.test.*
 import io.github.voytech.tabulate.test.assertions.*
 import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import io.github.voytech.tabulate.testsupport.PoiTableAssert
@@ -53,7 +53,7 @@ class ApachePoiTabulateTests {
                 }
             }
             columns {
-                column(SampleProduct::code)
+                column(SampleProduct::code) { attributes { width { px = 222 } }}
                 column(SampleProduct::name)
                 column(SampleProduct::description)
                 column(SampleProduct::manufacturer)
@@ -127,7 +127,9 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Products table",
             file = File("test.xlsx"),
-            tests = mapOf()
+            attributeTests = mapOf(
+                ColumnPosition(0) to AssertEqualsAttribute(ColumnWidthAttribute(px = 222)),
+            )
         ).perform().also {
             it.cleanup()
         }
@@ -221,8 +223,17 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Products table",
             file = File("test.xlsx"),
-            tests = mapOf(
-                CellPosition(2, 2) to AssertContainsCellAttributes(
+            valueTests = mapOf(
+                CellPosition(2, 2) to AssertCellValue(expectedValue = "Nr.:"),
+                CellPosition(2, 3) to AssertCellValue(expectedValue = "Code"),
+                CellPosition(2, 4) to AssertCellValue(expectedValue = "Name"),
+                CellPosition(2, 5) to AssertCellValue(expectedValue = "Description"),
+                CellPosition(2, 6) to AssertCellValue(expectedValue = "Manufacturer"),
+                CellPosition(2, 7) to AssertCellValue(expectedValue = "Price"),
+                CellPosition(2, 8) to AssertCellValue(expectedValue = "Distribution"),
+            ),
+            attributeTests = mapOf(
+                CellPosition(2, 2) to AssertContainsAttributes(
                     CellTextStylesAttribute(
                         fontFamily = "Times New Roman",
                         fontColor = Color(90, 100, 100),
@@ -233,7 +244,7 @@ class ApachePoiTabulateTests {
                         weight = DefaultWeightStyle.BOLD,
                     )
                 ),
-                CellRange((2..2), (3..8)) to AssertContainsCellAttributes(
+                CellRange((2..2), (3..8)) to AssertContainsAttributes(
                     CellBordersAttribute(
                         leftBorderStyle = DefaultBorderStyle.SOLID,
                         leftBorderColor = Colors.BLACK,
@@ -256,12 +267,7 @@ class ApachePoiTabulateTests {
                         weight = DefaultWeightStyle.BOLD,
                     )
                 ),
-                CellPosition(2, 2) to AssertMany(
-                    AssertCellValue(expectedValue = "Nr.:"),
-                ),
-                CellPosition(2, 3) to AssertMany(
-                    AssertCellValue(expectedValue = "Code"),
-                    AssertContainsCellAttributes(
+                CellPosition(2, 3) to AssertContainsAttributes(
                         CellTextStylesAttribute(
                             fontFamily = "Times New Roman",
                             fontColor = Color(90, 100, 100),
@@ -270,20 +276,13 @@ class ApachePoiTabulateTests {
                             weight = DefaultWeightStyle.BOLD
                         ),
                         CellBackgroundAttribute(color = Colors.BLUE)
-                    )
                 ),
-                CellPosition(2, 4) to AssertCellValue(expectedValue = "Name"),
-                CellPosition(2, 5) to AssertCellValue(
-                    expectedValue = "Description"
+                CellPosition(3, 8) to AssertEqualsAttribute(
+                    CellExcelDataFormatAttribute("dd.mm.YYYY")
                 ),
-                CellPosition(2, 6) to AssertCellValue(
-                    expectedValue = "Manufacturer"
-                ),
-                CellPosition(2, 7) to AssertCellValue(expectedValue = "Price"),
-                CellPosition(2, 8) to AssertCellValue(
-                    expectedValue = "Distribution"
-                ),
-                CellPosition(3, 8) to AssertContainsCellAttributes(CellExcelDataFormatAttribute("dd.mm.YYYY"))
+                RowPosition(2) to AssertEqualsAttribute(
+                    RowHeightAttribute(px = 120)
+                )
             )
         ).perform().also {
             it.cleanup()
@@ -325,20 +324,16 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Products table",
             file = File("test.xlsx"),
-            tests = mapOf(
+            valueTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(expectedValue = "Nr.:"),
                 CellPosition(0, 1) to AssertCellValue(expectedValue = "Code"),
                 CellPosition(0, 2) to AssertCellValue(expectedValue = "Name"),
-                CellPosition(0, 3) to AssertCellValue(
-                    expectedValue = "Description"
-                ),
-                CellPosition(0, 4) to AssertCellValue(
-                    expectedValue = "Manufacturer"
-                ),
-                CellPosition(0, 5) to AssertCellValue(
-                    expectedValue = "Distribution"
-                ),
-                CellPosition(1, 5) to AssertContainsCellAttributes(
+                CellPosition(0, 3) to AssertCellValue(expectedValue = "Description"),
+                CellPosition(0, 4) to AssertCellValue(expectedValue = "Manufacturer"),
+                CellPosition(0, 5) to AssertCellValue(expectedValue = "Distribution")
+            ),
+            attributeTests = mapOf(
+                CellPosition(1, 5) to AssertContainsAttributes(
                     CellExcelDataFormatAttribute("dd.mm.YYYY")
                 )
             )
@@ -370,7 +365,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Products table",
             file = File("test.xlsx"),
-            tests = mapOf()
+            attributeTests = mapOf()
         ).perform().also {
             it.cleanup()
         }
@@ -397,14 +392,15 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
-            tests = mapOf(
+            valueTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(
                     expectedValue = "Has comment"
                 ),
-                CellPosition(0, 0) to AssertContainsCellAttributes(
+            ),
+            attributeTests = mapOf(
+                CellPosition(0, 0) to AssertContainsAttributes(
                     CellCommentAttribute("Voytech", "A Comment")
-                )
-
+                ),
             )
         ).perform().also {
             it.cleanup()
@@ -445,7 +441,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
-            tests = mapOf(EntireTable() to AssertContainsAttributes<TableAttribute<*>>(
+            attributeTests = mapOf(EntireTable() to AssertContainsAttributes<TableAttribute<*>>(
                 PrintingAttribute(
                     numberOfCopies = 10,
                     isDraft = true,
@@ -506,7 +502,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
-            tests = mapOf()
+            attributeTests = mapOf()
         ).perform().also {
             it.cleanup()
         }
@@ -532,7 +528,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
-            tests = mapOf(
+            valueTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(
                     expectedValue = "Row span",
                     expectedRowspan = 2
@@ -582,7 +578,7 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
-            tests = mapOf(
+            valueTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(expectedValue = "It is : "),
                 CellPosition(0, 1) to AssertCellValue(
                     expectedValue = FileInputStream("src/test/resources/kotlin.jpeg").readBytes()
@@ -659,19 +655,17 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Products",
             file = File("test.xlsx"),
-            tests = mapOf(
-                CellPosition(0, 0) to AssertMany(
-                    AssertCellValue(expectedValue = "Id"), headerAttributes
-                ),
-                CellPosition(0, 1) to AssertMany(
-                    AssertCellValue(expectedValue = "Name"), headerAttributes
-                ),
-                CellPosition(0, 2) to AssertMany(
-                    AssertCellValue(expectedValue = "Description"), headerAttributes
-                ),
-                CellPosition(0, 3) to AssertMany(
-                    AssertCellValue(expectedValue = "Price"), headerAttributes
-                ),
+            valueTests = mapOf(
+                CellPosition(0, 0) to AssertCellValue(expectedValue = "Id"),
+                CellPosition(0, 1) to AssertCellValue(expectedValue = "Name"),
+                CellPosition(0, 2) to AssertCellValue(expectedValue = "Description"),
+                CellPosition(0, 3) to AssertCellValue(expectedValue = "Price"),
+            ),
+            attributeTests = mapOf(
+                CellPosition(0, 0) to headerAttributes,
+                CellPosition(0, 1) to headerAttributes,
+                CellPosition(0, 2) to headerAttributes,
+                CellPosition(0, 3) to headerAttributes,
                 CellRange(1..1, 0..3) to AssertNoAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
                 CellRange(2..2, 0..3) to AssertEqualsAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
                 CellRange(3..3, 0..3) to AssertNoAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
