@@ -7,14 +7,17 @@ import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttr
 import io.github.voytech.tabulate.model.attributes.CellAttribute
 import io.github.voytech.tabulate.model.attributes.Color
 import io.github.voytech.tabulate.model.attributes.Colors
-import io.github.voytech.tabulate.model.attributes.cell.*
+import io.github.voytech.tabulate.model.attributes.cell.CellAlignmentAttribute
+import io.github.voytech.tabulate.model.attributes.cell.CellBackgroundAttribute
+import io.github.voytech.tabulate.model.attributes.cell.CellBordersAttribute
+import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
 import io.github.voytech.tabulate.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.model.attributes.cell.enums.contract.BorderStyle
 import io.github.voytech.tabulate.template.export
 import io.github.voytech.tabulate.test.CellPosition
-import io.github.voytech.tabulate.test.cellassertions.AssertCellValue
-import io.github.voytech.tabulate.test.cellassertions.AssertContainsCellAttributes
-import io.github.voytech.tabulate.test.cellassertions.AssertEqualsAttribute
+import io.github.voytech.tabulate.test.assertions.AssertCellValue
+import io.github.voytech.tabulate.test.assertions.AssertContainsAttributes
+import io.github.voytech.tabulate.test.assertions.AssertEqualsAttribute
 import io.github.voytech.tabulate.testsupport.PoiTableAssert
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
@@ -33,8 +36,8 @@ class CellExcelAttributesTests {
         PoiTableAssert<Any>(
             tableName = "test",
             file = File("src/test/resources/default.xlsx"),
-            cellTests = mapOf(
-                CellPosition(0, 0) to AssertContainsCellAttributes(
+            attributeTests = mapOf(
+                CellPosition(0, 0) to AssertContainsAttributes(
                     CellTextStylesAttribute(fontFamily = "Arial"),
                     CellBackgroundAttribute(),
                     CellAlignmentAttribute(),
@@ -69,10 +72,12 @@ class CellExcelAttributesTests {
         PoiTableAssert<Any>(
             tableName = "test",
             file = File("test.xlsx"),
-            cellTests = mapOf(
+            valueTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(
                     expectedValue = "Value"
-                ),
+                )
+            ),
+            attributeTests = mapOf(
                 CellPosition(0, 0) to AssertEqualsAttribute(expectedAttribute)
             )
         ).perform().also {
@@ -106,11 +111,15 @@ class CellExcelAttributesTests {
         PoiTableAssert<Any>(
             tableName = "test",
             file = File("test1.xlsx"),
-            cellTests = mapOf(
+            valueTests = mapOf(
                 CellPosition(0, 0) to AssertCellValue(
                     expectedValue = "Value"
-                ),
-                CellPosition(0, 0) to AssertEqualsAttribute(SimpleTestCellAttribute(valueSuffix = "AdditionalAttribute"))
+                )
+            ),
+            attributeTests = mapOf(
+                CellPosition(0, 0) to AssertEqualsAttribute(
+                    SimpleTestCellAttribute(valueSuffix = "AdditionalAttribute")
+                )
             )
         ).perform().also {
             it.cleanup()

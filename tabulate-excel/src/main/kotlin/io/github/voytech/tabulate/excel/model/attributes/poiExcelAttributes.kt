@@ -162,8 +162,8 @@ data class PrintingAttribute(
         override fun provide(): PrintingAttribute = PrintingAttribute(
             numberOfCopies, isDraft, blackAndWhite, noOrientation, leftToRight, printPageNumber,
             firstPageNumber, paperSize, landscape, headerMargin, footerMargin, fitHeight, fitWidth,
-            firstPrintableColumn, lastPrintableColumn, firstPrintableRow, lastPrintableRow, footerLeft,
-            footerCenter, footerRight, headerLeft, headerCenter, headerRight
+            firstPrintableColumn, lastPrintableColumn, firstPrintableRow, lastPrintableRow,
+            footerCenter, footerLeft, footerRight, headerCenter, headerLeft, headerRight
         )
     }
 

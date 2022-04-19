@@ -5,7 +5,7 @@ import io.github.voytech.tabulate.csv.attributes.separator
 import io.github.voytech.tabulate.csv.testsupport.CsvTableAssert
 import io.github.voytech.tabulate.template.tabulate
 import io.github.voytech.tabulate.test.CellPosition
-import io.github.voytech.tabulate.test.cellassertions.AssertCellValue
+import io.github.voytech.tabulate.test.assertions.AssertCellValue
 import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test

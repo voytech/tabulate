@@ -45,7 +45,7 @@ class ColumnExcelAttributesTests {
         PoiTableAssert<Any>(
             tableName = "test",
             file = File("test.xlsx"),
-            cellTests = mapOf()
+            attributeTests = mapOf()
         ).perform().also {
             it.cleanup()
         }

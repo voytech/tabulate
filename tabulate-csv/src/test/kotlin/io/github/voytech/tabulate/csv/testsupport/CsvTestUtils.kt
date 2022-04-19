@@ -2,9 +2,10 @@ package io.github.voytech.tabulate.csv.testsupport
 
 import io.github.voytech.tabulate.csv.CsvRenderingContext
 import io.github.voytech.tabulate.template.operations.CellValue
-import io.github.voytech.tabulate.template.operations.Coordinates
-import io.github.voytech.tabulate.test.*
-
+import io.github.voytech.tabulate.test.CellPosition
+import io.github.voytech.tabulate.test.StateProvider
+import io.github.voytech.tabulate.test.TableAssert
+import io.github.voytech.tabulate.test.ValueTest
 import java.io.File
 
 class CsvReadRenderingContext(file: File): CsvRenderingContext() {
@@ -17,22 +18,18 @@ class CsvStateProvider : StateProvider<CsvReadRenderingContext> {
 }
 
 class CsvTableAssert<T>(
-    cellTests: Map<CellSelect, CellTest>,
+    cellTests: Map<CellPosition, ValueTest>,
     file: File,
     separator: String = ","
 ) {
     private val assert = TableAssert<T, CsvReadRenderingContext>(
             stateProvider = CsvStateProvider(),
-            cellAttributeResolvers = listOf(),
-            cellValueResolver = object : ValueResolver<CsvReadRenderingContext> {
-
-                override fun resolve(api: CsvReadRenderingContext, coordinates: Coordinates): CellValue {
-                    val line = api.lines[coordinates.rowIndex]
-                    val cells = line.split(separator)
-                    return CellValue(cells[coordinates.columnIndex])
-                }
+            cellValueResolver = { api, coordinates ->
+                val line = api.lines[coordinates.rowIndex]
+                val cells = line.split(separator)
+                CellValue(cells[coordinates.columnIndex])
             },
-            cellTests = cellTests,
+            valueTests = cellTests,
             file = file,
             tableName = "omitted"
     )
