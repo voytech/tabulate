@@ -685,36 +685,58 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
 ----
 
 <<<
-== Internal algorithms.
+== Internal algorithms and rules.
 
 This section does not cover consumer API, instead it focuses only on internal algorithms implemented in tabulate-core module. You won't find information needed to start using library. Refer to below information only If you are curious about how things work under the hood.
 
 <<<
 === `Template and operations` pattern.
 
-Library sole purpose is to provide means for data sets exporting. This job is realised through simple, intuitive pattern of a template class dispatching workloads to managed, pluggable operations.
-A template which is referred to as `TabulationTemplate` iterates through lazy `RowContextResolver` as row index requests are issued by `TabulationApi` exposed to consumers.
-Consumer interaction with library may go through `TabulationApi` and then it looks like this:
+Library sole purpose is to provide means for data exporting. This goal is achieved through simple, intuitive pattern of a template class dispatching workloads to managed, pluggable operations.
+A template which is referred to as `TabulationTemplate` iterates lazily through `RowContextResolver` on demand progressing each time next row context is requested by `TabulationApi`.
+
+Consumer interaction with library may go through `TabulationApi` and then it looks as follows:
 
  - *declare table model* through DSL (or java fluent) builder,
- - *enqueue a collection element* (or enqueue nothing as one is exporting only custom rows). Adding new collection element will enable it for row context resolution. `RowContext` is centric operational entity which is passed to third party operation implementations in order to supply information required by rendering context.
+ - *enqueue a collection element* (or enqueue nothing when exporting only custom rows). Adding new collection element enables derived row context resolution. `RowContext` exposes all required row related properties to third party operation implementor. Operation implementor uses `RowContext` to participate in table rendering into target format.
 
- - *request next row rendering*,
+ - *request next row rendering*. As mentioned above, each time next row is requested, `RowContextResolver` takes row coordinates as well as additional properties and attributes, then it computes `RowContext` that is immediately rendered by specific operation implementation. There are certain rules regarding `RowContext` computation that forms unique algorithm which will be explained in following sections in more details.
 
 Consumer interaction may be also simplified by using extension method on exported collection or custom table builder.
 In fact this should be leading usage scenario. In this scenario `TabulationApi` calls are wrapped by extension method on `TabulationTemplate`.
 
-
+<<<
+=== Builder materialization.
+Before row context can be computed, a table definition must be build. Effective table definition is always the result of `TableBuilder` materialisation (or freezing). After materialising table builder state, it can be no longer mutated, and as long as there is no use for builder instance, it is marked for GC. At the same time, `Table` definition becomes a final builder snapshot and cannot be modified by any means. Since then, it can be only used as an input for exporting job.
 
 <<<
-=== Synthetic row resolution algorithm.
+=== Table postprocessing.
+Next step after building table definition is postprocessing phase. It consists of:
+
+- *Table rows indexing* - building *index row predicate* to *row definitions* associations that enables efficient lookup.
+- *Table rows partitioning*. The result of partitioning are two groups of rows - custom indexed rows addressed by index predicate literals (This is the map produced by *table row indexing*), and *enriching* row definitions addressed by predicate functions.
+- *Initializing synthetic rows cache*. As long as row context computation request may qualify multiple table row definitions for single effective row - they are bundled together and forms intermediate entity called `SyntheticRow`. The same row definitions can be qualified multiple times that is why *synthetic rows cache* exists. The cache consists of associations of row definitions as keys with `SyntheticRow` as a values.
+
+One can even say that *table rows indexing* produces first level cache, while *synthetic rows cache* can be referred as second level cache:
+
+When requesting row definition by index predicate literal, algorithm is first computing all applicable indices, then for each index it is performing lookup to retrieve all applicable table row definitions (this is the first level cache). Next, having say multiple table row definitions it uses them as a key to find postprocessed bundle - a `SyntheticRow` instance (this is the second level cache).
+
+At this point we have table definition with *indexed rows*, and yet cold *cache holding synthetic row definitions*.
 
 <<<
-=== Row context resolution algorithm.
+=== Synthetic row resolution.
+TBD.
 
 <<<
-=== Builder composition.
+=== Row context resolution.
+TBD.
 
+<<<
+=== Rendering operations dispatching.
+TBD.
+
+<<<
+=== Output binding.
 TBD.
 
 <<<
