@@ -5,11 +5,11 @@ import io.github.voytech.tabulate.template.operations.CellValue
 import io.github.voytech.tabulate.template.operations.Coordinates
 import java.io.File
 
-interface Select<CAT: Attribute<*>>
-interface SelectRange<CAT: Attribute<*>, E: Select<CAT>> : Select<CAT> {
+sealed interface Select<CAT: Attribute<*>>
+sealed interface SelectRange<CAT: Attribute<*>, E: Select<CAT>> : Select<CAT> {
     fun  onSelect(select: (E) -> Unit)
 }
-interface SelectAll<CAT: Attribute<*>>: Select<CAT>
+sealed interface SelectAll<CAT: Attribute<*>>: Select<CAT>
 
 data class ColumnPosition(val columnIndex: Int) : Select<ColumnAttribute<*>>
 data class ColumnRange(val columnIndices: IntRange) : SelectRange<ColumnAttribute<*>, ColumnPosition> {
@@ -36,7 +36,7 @@ data class CellRange(val rowIndices: IntRange, val columnIndices: IntRange) : Se
     }
 }
 
-class EntireTable : SelectAll<TableAttribute<*>>
+object EntireTable : SelectAll<TableAttribute<*>>
 
 fun interface StateProvider<E> {
     fun createState(file: File): E

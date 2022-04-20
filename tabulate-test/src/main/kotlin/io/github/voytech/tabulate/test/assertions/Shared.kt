@@ -71,15 +71,3 @@ class AssertNoAttribute<CAT: Attribute<*>>(private val expectedAttribute: CAT) :
         )
     }
 }
-
-/*
-class AssertAttributeExpression<CAT: Attribute<*>>(
-    private val attributeClass: KClass<out CAT>,
-    private val invoke: (CAT) -> Unit
-) :
-
-    override fun performTest(sheetName: String,cellAttribute: Set<CAT>) {
-        invoke.invoke(cellAttribute)
-    }
-}
-*/

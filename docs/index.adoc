@@ -687,12 +687,29 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
 <<<
 == Internal algorithms.
 
-This section does not cover consumer API, but focuses only on internal algorithms implemented in tabulate-core module. You won't find information needed to start using library. Refer to below information only If you are curious about how things work under the hood.
+This section does not cover consumer API, instead it focuses only on internal algorithms implemented in tabulate-core module. You won't find information needed to start using library. Refer to below information only If you are curious about how things work under the hood.
 
+<<<
 === `Template and operations` pattern.
 
+Library sole purpose is to provide means for data sets exporting. This job is realised through simple, intuitive pattern of a template class dispatching workloads to managed, pluggable operations.
+A template which is referred to as `TabulationTemplate` iterates through lazy `RowContextResolver` as row index requests are issued by `TabulationApi` exposed to consumers.
+Consumer interaction with library may go through `TabulationApi` and then it looks like this:
+
+ - *declare table model* through DSL (or java fluent) builder,
+ - *enqueue a collection element* (or enqueue nothing as one is exporting only custom rows). Adding new collection element will enable it for row context resolution. `RowContext` is centric operational entity which is passed to third party operation implementations in order to supply information required by rendering context.
+
+ - *request next row rendering*,
+
+Consumer interaction may be also simplified by using extension method on exported collection or custom table builder.
+In fact this should be leading usage scenario. In this scenario `TabulationApi` calls are wrapped by extension method on `TabulationTemplate`.
+
+
+
+<<<
 === Synthetic row resolution algorithm.
 
+<<<
 === Row context resolution algorithm.
 
 <<<

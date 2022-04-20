@@ -33,7 +33,6 @@ import kotlin.system.measureTimeMillis
 
 @DisplayName("Testing various excel exports")
 class ApachePoiTabulateTests {
-
     @Test
     fun `should correctly override cell borders defined on various levels`() {
         val productList = SampleProduct.create(1)
@@ -441,7 +440,8 @@ class ApachePoiTabulateTests {
         PoiTableAssert<SampleProduct>(
             tableName = "Test table",
             file = File("test.xlsx"),
-            attributeTests = mapOf(EntireTable() to AssertContainsAttributes<TableAttribute<*>>(
+            attributeTests = mapOf(
+                EntireTable to AssertContainsAttributes<TableAttribute<*>>(
                 PrintingAttribute(
                     numberOfCopies = 10,
                     isDraft = true,

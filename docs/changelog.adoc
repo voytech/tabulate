@@ -11,6 +11,8 @@
 === Improvements:
 
 -  Rework Operations API [*Breaking change*]. link:https://github.com/voytech/tabulate/issues/153[#153].
+-  Refactor tabulate-test TestUtils and assertions (generalization)
+-  Refine docs
 
 === Bug fixes:
 
