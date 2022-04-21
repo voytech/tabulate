@@ -1504,14 +1504,14 @@ new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream
 <h2 id="_internal_algorithms_and_rules">Internal algorithms and rules.</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This section does not cover consumer API, instead it focuses only on internal algorithms implemented in tabulate-core module. You won&#8217;t find information needed to start using library. Refer to below information only If you are curious about how things work under the hood.</p>
+<p>This section does not cover consumer API, but instead focuses entirely on internal algorithms implemented in <code>tabulate-core</code> module. You won&#8217;t find here any information needed to start using this library. You may refer to below information if you are curious about how things work under the hood. <strong>It can be also good starting point before you deep-dive into source code</strong></p>
 </div>
 <div style="page-break-after: always;"></div>
 <div class="sect2">
 <h3 id="_template_and_operations_pattern"><code>Template and operations</code> pattern.</h3>
 <div class="paragraph">
-<p>Library sole purpose is to provide means for data exporting. This goal is achieved through simple, intuitive pattern of a template class dispatching workloads to managed, pluggable operations.
-A template which is referred to as <code>TabulationTemplate</code> iterates lazily through <code>RowContextResolver</code> on demand progressing each time next row context is requested by <code>TabulationApi</code>.</p>
+<p>Library sole purpose is to provide means for data exporting. This goal is achieved through simple, intuitive pattern of a template class dispatching workload to managed, pluggable operations.
+A template which is referred to as <code>TabulationTemplate</code> iterates lazily through <code>RowContextResolver</code> progressing each time, when next row context is requested by <code>TabulationApi</code>.</p>
 </div>
 <div class="paragraph">
 <p>Consumer interaction with library may go through <code>TabulationApi</code> and then it looks as follows:</p>
@@ -1522,10 +1522,10 @@ A template which is referred to as <code>TabulationTemplate</code> iterates lazi
 <p><strong>declare table model</strong> through DSL (or java fluent) builder,</p>
 </li>
 <li>
-<p><strong>enqueue a collection element</strong> (or enqueue nothing when exporting only custom rows). Adding new collection element enables derived row context resolution. <code>RowContext</code> exposes all required row related properties to third party operation implementor. Operation implementor uses <code>RowContext</code> to participate in table rendering into target format.</p>
+<p><strong>enqueue a collection element</strong> (or enqueue nothing when exporting only custom rows). Adding new collection element enables derived row context resolution. <code>RowContext</code> exposes all required row related properties to third party operation implementor. Operation implementation uses <strong>row context</strong> to participate in table rendering into target format.</p>
 </li>
 <li>
-<p><strong>request next row rendering</strong>. As mentioned above, each time next row is requested, <code>RowContextResolver</code> takes row coordinates as well as additional properties and attributes, then it computes <code>RowContext</code> that is immediately rendered by specific operation implementation. There are certain rules regarding <code>RowContext</code> computation that forms unique algorithm which will be explained in following sections in more details.</p>
+<p><strong>request next row rendering</strong>. As mentioned above, each time next row is requested, <code>RowContextResolver</code> takes row coordinates as well as additional properties and attributes, then it computes <strong>row context</strong> that is immediately rendered by specific operation implementation. There are certain rules regarding <strong>row context</strong> computation that forms unique algorithm which will be explained in following sections in more details.</p>
 </li>
 </ul>
 </div>
@@ -1538,7 +1538,7 @@ In fact this should be leading usage scenario. In this scenario <code>Tabulation
 <div class="sect2">
 <h3 id="_builder_materialization">Builder materialization.</h3>
 <div class="paragraph">
-<p>Before row context can be computed, a table definition must be build. Effective table definition is always the result of <code>TableBuilder</code> materialisation (or freezing). After materialising table builder state, it can be no longer mutated, and as long as there is no use for builder instance, it is marked for GC. At the same time, <code>Table</code> definition becomes a final builder snapshot and cannot be modified by any means. Since then, it can be only used as an input for exporting job.</p>
+<p>Before rows can be rendered, a table definition must be built. Effective table definition is always the result of <code>TableBuilder</code> materialisation (or freezing). After materialising table builder state, it can be no longer mutated, and as long as there is no use for builder instance, it is marked for GC. At the same time, <code>Table</code> definition becomes a final builder snapshot and cannot be modified by any means. Since then, it can be only used as an input for exporting job. During this step attributes are merged together for the first time. This can be done here because we can define multiple attributes of the same type on separate builder APIs.</p>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
@@ -1550,13 +1550,13 @@ In fact this should be leading usage scenario. In this scenario <code>Tabulation
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Table rows indexing</strong> - building <strong>index row predicate</strong> to <strong>row definitions</strong> associations that enables efficient lookup.</p>
+<p><strong>Table rows indexing</strong> - building <strong>row index</strong> to <strong>row definitions</strong> associations that enables efficient lookup.</p>
 </li>
 <li>
-<p><strong>Table rows partitioning</strong>. The result of partitioning are two groups of rows - custom indexed rows addressed by index predicate literals (This is the map produced by <strong>table row indexing</strong>), and <strong>enriching</strong> row definitions addressed by predicate functions.</p>
+<p><strong>Table rows partitioning</strong>. The result of partitioning are two groups of rows - previously mentioned custom rows addressed by row indices, and <strong>enriching</strong> row definitions addressed by predicate functions.</p>
 </li>
 <li>
-<p><strong>Initializing synthetic rows cache</strong>. As long as row context computation request may qualify multiple table row definitions for single effective row - they are bundled together and forms intermediate entity called <code>SyntheticRow</code>. The same row definitions can be qualified multiple times that is why <strong>synthetic rows cache</strong> exists. The cache consists of associations of row definitions as keys with <code>SyntheticRow</code> as a values.</p>
+<p><strong>Initializing synthetic rows cache</strong>. As long as row context computation request may qualify multiple table row definitions - they are bundled together and forms intermediate entity called <code>SyntheticRow</code>. The same row definitions can be qualified multiple times that is why <strong>synthetic rows cache</strong> exists. The cache consists of associations of row definitions as keys with <code>SyntheticRow</code> as a values.</p>
 </li>
 </ul>
 </div>
@@ -1564,17 +1564,33 @@ In fact this should be leading usage scenario. In this scenario <code>Tabulation
 <p>One can even say that <strong>table rows indexing</strong> produces first level cache, while <strong>synthetic rows cache</strong> can be referred as second level cache:</p>
 </div>
 <div class="paragraph">
-<p>When requesting row definition by index predicate literal, algorithm is first computing all applicable indices, then for each index it is performing lookup to retrieve all applicable table row definitions (this is the first level cache). Next, having say multiple table row definitions it uses them as a key to find postprocessed bundle - a <code>SyntheticRow</code> instance (this is the second level cache).</p>
+<p>When requesting row definition by row index, algorithm is performing lookup to retrieve all applicable table row definitions (this is the first level cache). Next, having say multiple table row definitions it uses them as a key to find a <code>SyntheticRow</code> instance (this is the second level cache).</p>
 </div>
 <div class="paragraph">
-<p>At this point we have table definition with <strong>indexed rows</strong>, and yet cold <strong>cache holding synthetic row definitions</strong>.</p>
+<p>At this point we have table definition with <strong>indexed rows</strong>, and yet cold <strong>cache for keeping synthetic row definitions</strong>.</p>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
 <h3 id="_synthetic_row_resolution">Synthetic row resolution.</h3>
 <div class="paragraph">
-<p>TBD.</p>
+<p><code>SyntheticRow</code> keeps bundled row definitions matching specific row index. During object initialization following actions take place:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>all <strong>cell values</strong> for all qualified table rows are merged so that all values from pair on the right overrides values on the left,</p>
+</li>
+<li>
+<p>all <strong>cell attributes</strong> from table and row levels are merged similarly from left to right so that only <strong>explicitly changed</strong> properties of attributes of the same class are overridden,</p>
+</li>
+<li>
+<p>all <strong>row attributes</strong> from table and row levels are merged similarly from left to right so that only <strong>explicitly changed</strong> properties of attributes of same class are overridden,</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>It is crucial to mention that <strong>explicitly changed</strong> cited above means that only attribute properties changed by explicit builder method cat are considered.</p>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
@@ -1629,7 +1645,7 @@ In fact this should be leading usage scenario. In this scenario <code>Tabulation
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-04-20 19:24:45 +0200
+Last updated 2022-04-21 14:57:15 +0200
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

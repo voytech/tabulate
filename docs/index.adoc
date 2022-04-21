@@ -687,45 +687,51 @@ productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx"
 <<<
 == Internal algorithms and rules.
 
-This section does not cover consumer API, instead it focuses only on internal algorithms implemented in tabulate-core module. You won't find information needed to start using library. Refer to below information only If you are curious about how things work under the hood.
+This section does not cover consumer API, but instead focuses entirely on internal algorithms implemented in `tabulate-core` module. You won't find here any information needed to start using this library. You may refer to below information if you are curious about how things work under the hood. *It can be also good starting point before you deep-dive into source code*
 
 <<<
 === `Template and operations` pattern.
 
-Library sole purpose is to provide means for data exporting. This goal is achieved through simple, intuitive pattern of a template class dispatching workloads to managed, pluggable operations.
-A template which is referred to as `TabulationTemplate` iterates lazily through `RowContextResolver` on demand progressing each time next row context is requested by `TabulationApi`.
+Library sole purpose is to provide means for data exporting. This goal is achieved through simple, intuitive pattern of a template class dispatching workload to managed, pluggable operations.
+A template which is referred to as `TabulationTemplate` iterates lazily through `RowContextResolver` progressing each time, when next row context is requested by `TabulationApi`.
 
 Consumer interaction with library may go through `TabulationApi` and then it looks as follows:
 
  - *declare table model* through DSL (or java fluent) builder,
- - *enqueue a collection element* (or enqueue nothing when exporting only custom rows). Adding new collection element enables derived row context resolution. `RowContext` exposes all required row related properties to third party operation implementor. Operation implementor uses `RowContext` to participate in table rendering into target format.
+ - *enqueue a collection element* (or enqueue nothing when exporting only custom rows). Adding new collection element enables derived row context resolution. `RowContext` exposes all required row related properties to third party operation implementor. Operation implementation uses *row context* to participate in table rendering into target format.
 
- - *request next row rendering*. As mentioned above, each time next row is requested, `RowContextResolver` takes row coordinates as well as additional properties and attributes, then it computes `RowContext` that is immediately rendered by specific operation implementation. There are certain rules regarding `RowContext` computation that forms unique algorithm which will be explained in following sections in more details.
+ - *request next row rendering*. As mentioned above, each time next row is requested, `RowContextResolver` takes row coordinates as well as additional properties and attributes, then it computes *row context* that is immediately rendered by specific operation implementation. There are certain rules regarding *row context* computation that forms unique algorithm which will be explained in following sections in more details.
 
 Consumer interaction may be also simplified by using extension method on exported collection or custom table builder.
 In fact this should be leading usage scenario. In this scenario `TabulationApi` calls are wrapped by extension method on `TabulationTemplate`.
 
 <<<
 === Builder materialization.
-Before row context can be computed, a table definition must be build. Effective table definition is always the result of `TableBuilder` materialisation (or freezing). After materialising table builder state, it can be no longer mutated, and as long as there is no use for builder instance, it is marked for GC. At the same time, `Table` definition becomes a final builder snapshot and cannot be modified by any means. Since then, it can be only used as an input for exporting job.
+Before rows can be rendered, a table definition must be built. Effective table definition is always the result of `TableBuilder` materialisation (or freezing). After materialising table builder state, it can be no longer mutated, and as long as there is no use for builder instance, it is marked for GC. At the same time, `Table` definition becomes a final builder snapshot and cannot be modified by any means. Since then, it can be only used as an input for exporting job. During this step attributes are merged together for the first time. This can be done here because we can define multiple attributes of the same type on separate builder APIs.
 
 <<<
 === Table postprocessing.
 Next step after building table definition is postprocessing phase. It consists of:
 
-- *Table rows indexing* - building *index row predicate* to *row definitions* associations that enables efficient lookup.
-- *Table rows partitioning*. The result of partitioning are two groups of rows - custom indexed rows addressed by index predicate literals (This is the map produced by *table row indexing*), and *enriching* row definitions addressed by predicate functions.
-- *Initializing synthetic rows cache*. As long as row context computation request may qualify multiple table row definitions for single effective row - they are bundled together and forms intermediate entity called `SyntheticRow`. The same row definitions can be qualified multiple times that is why *synthetic rows cache* exists. The cache consists of associations of row definitions as keys with `SyntheticRow` as a values.
+- *Table rows indexing* - building *row index* to *row definitions* associations that enables efficient lookup.
+- *Table rows partitioning*. The result of partitioning are two groups of rows - previously mentioned custom rows addressed by row indices, and *enriching* row definitions addressed by predicate functions.
+- *Initializing synthetic rows cache*. As long as row context computation request may qualify multiple table row definitions - they are bundled together and forms intermediate entity called `SyntheticRow`. The same row definitions can be qualified multiple times that is why *synthetic rows cache* exists. The cache consists of associations of row definitions as keys with `SyntheticRow` as a values.
 
 One can even say that *table rows indexing* produces first level cache, while *synthetic rows cache* can be referred as second level cache:
 
-When requesting row definition by index predicate literal, algorithm is first computing all applicable indices, then for each index it is performing lookup to retrieve all applicable table row definitions (this is the first level cache). Next, having say multiple table row definitions it uses them as a key to find postprocessed bundle - a `SyntheticRow` instance (this is the second level cache).
+When requesting row definition by row index, algorithm is performing lookup to retrieve all applicable table row definitions (this is the first level cache). Next, having say multiple table row definitions it uses them as a key to find a `SyntheticRow` instance (this is the second level cache).
 
-At this point we have table definition with *indexed rows*, and yet cold *cache holding synthetic row definitions*.
+At this point we have table definition with *indexed rows*, and yet cold *cache for keeping synthetic row definitions*.
 
 <<<
 === Synthetic row resolution.
-TBD.
+`SyntheticRow` keeps bundled row definitions matching specific row index. During object initialization following actions take place:
+
+ - all *cell values* for all qualified table rows are merged so that all values from pair on the right overrides values on the left,
+ - all *cell attributes* from table and row levels are merged similarly from left to right so that only *explicitly changed* properties of attributes of the same class are overridden,
+ - all *row attributes* from table and row levels are merged similarly from left to right so that only *explicitly changed* properties of attributes of same class are overridden,
+
+It is crucial to mention that *explicitly changed* cited above means that only attribute properties changed by explicit builder method cat are considered.
 
 <<<
 === Row context resolution.
