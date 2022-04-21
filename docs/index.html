@@ -473,10 +473,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_template_and_operations_pattern"><code>Template and operations</code> pattern.</a></li>
 <li><a href="#_builder_materialization">Builder materialization.</a></li>
 <li><a href="#_table_postprocessing">Table postprocessing.</a></li>
-<li><a href="#_synthetic_row_resolution">Synthetic row resolution.</a></li>
-<li><a href="#_row_context_resolution">Row context resolution.</a></li>
+<li><a href="#_syntheticrow_resolution"><code>SyntheticRow</code> resolution.</a></li>
+<li><a href="#row_context_resolution">Row context resolution. </a></li>
 <li><a href="#_rendering_operations_dispatching">Rendering operations dispatching.</a></li>
-<li><a href="#_output_binding">Output binding.</a></li>
 </ul>
 </li>
 <li><a href="#_cookbook_recipes">Cookbook recipes.</a>
@@ -1456,47 +1455,6 @@ new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>Typical usage scenario for attributes:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx") {
-    name = "Products table"
-    columns {
-        column(Product::code) {
-            attributes(
-                width { auto = true },
-                text {
-                    fontFamily = "Times New Roman"
-                    fontColor = Colors.BLACK
-                    fontSize = 12
-                },
-                background { color = Colors.BLUE }
-            )
-        }
-        column(Product::distributionDate) {
-            attributes(
-                width { auto = true },
-                dataFormat { value = "dd.mm.YYYY" }
-            )
-        }
-    }
-    rows {
-        row {
-            attributes(
-                text {
-                    fontFamily = "Times New Roman"
-                    fontColor = Colors.BLACK
-                    fontSize = 12
-                },
-                background { color = Colors.BLUE }
-            )
-        }
-    }
-}</code></pre>
-</div>
-</div>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
@@ -1572,7 +1530,7 @@ In fact this should be leading usage scenario. In this scenario <code>Tabulation
 <div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
-<h3 id="_synthetic_row_resolution">Synthetic row resolution.</h3>
+<h3 id="_syntheticrow_resolution"><code>SyntheticRow</code> resolution.</h3>
 <div class="paragraph">
 <p><code>SyntheticRow</code> keeps bundled row definitions matching specific row index. During object initialization following actions take place:</p>
 </div>
@@ -1590,28 +1548,159 @@ In fact this should be leading usage scenario. In this scenario <code>Tabulation
 </ul>
 </div>
 <div class="paragraph">
-<p>It is crucial to mention that <strong>explicitly changed</strong> cited above means that only attribute properties changed by explicit builder method cat are considered.</p>
+<p>Phrase <strong>explicitly changed</strong> mentioned above means: <strong>choose only attribute property changes made by explicit DSL/fluent builder method calls</strong>.
+Builders track all attribute property changes (to determine which change - left or right - should be applied) because they can have defaults on the right-hand side that would in other case override explicitly changed left-hand side attribute properties.</p>
+</div>
+<div class="paragraph">
+<p>Please note that during <code>SyntheticRow</code> resolution only row level cell and row attributes are merged. Cell level cell attributes are merged-in later when resolving <code>CellContext</code> values. They are deferred in time because to merge attributes from all levels - column level attributes are required. Column level attributes can be only accessed while resolving specific <code>CellContext</code> and <code>CellContext</code> responsibility is to resolve cell value which can be done only when value for particular row and column can be obtained. This is always the very last step in completing row operation context.</p>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
-<h3 id="_row_context_resolution">Row context resolution.</h3>
+<h3 id="row_context_resolution">Row context resolution. </h3>
 <div class="paragraph">
-<p>TBD.</p>
+<p>Row context resolution is the final step of completing row data before dispatching to third party operation code. During this step, couple of intermediate contexts are produced:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>RowOpeningContext</code> - a context containing row coordinate (only row index) plus associated row attributes. 'AbstractRowContextResolver' notifies <code>TabulationTemplate</code> about completing <code>RowOpeningContext</code> using <code>RowCompletionListener</code>. Specific operation implementation associated with this type of context (<code>RowOpeningContext</code>) can be invoked even before having all row associated data.</p>
+</li>
+<li>
+<p><code>CellContext</code> - a context holding <code>CellValue</code> with all associated cell attributes (merged all level attributes: table, column, row and cell). Similarly to <code>RowOpeningContext</code> - <code>AbstractRowContextResolver</code> uses <code>RowCompletionListener</code> in order to notify <code>TabulationTemplate</code> about each <code>CellContext</code> when it is ready for rendering by corresponding operation implementation.</p>
+</li>
+<li>
+<p><code>RowClosingContext</code> - a context with complete row data. It contains all row attributes together with all cell values (also with attributes). As long as <code>RowClosingContext</code> is the last step it is also the value returned from <code>AbstractRowContextResolver.resolve(&#8230;&#8203;)</code> method.</p>
+</li>
+</ul>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
 <h3 id="_rendering_operations_dispatching">Rendering operations dispatching.</h3>
 <div class="paragraph">
-<p>TBD.</p>
+<p>Rendering operations are operations executing rendering logic that is specific to particular <code>TabulationFormat</code>. There are two main interfaces that establish contract to be used by implementations:</p>
 </div>
-<div style="page-break-after: always;"></div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>Operation</code></p>
+</li>
+</ul>
 </div>
-<div class="sect2">
-<h3 id="_output_binding">Output binding.</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">fun interface Operation&lt;CTX : RenderingContext, ATTR_CAT : Attribute&lt;*&gt;, E : AttributedModel&lt;ATTR_CAT&gt;&gt; {
+    fun render(renderingContext: CTX, operationContext: E)
+}</code></pre>
+</div>
+</div>
 <div class="paragraph">
-<p>TBD.</p>
+<p>This is the most basic interface. It expresses an intent to render <code>operationContext</code> associated data by using <code>renderingContext</code> low-level API.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>AttributeOperation</code></p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">interface AttributeOperation&lt;CTX : RenderingContext, ATTR_CAT : Attribute&lt;*&gt;, ATTR : ATTR_CAT, E : AttributedModel&lt;ATTR_CAT&gt;&gt; {
+    fun typeInfo(): AttributeOperationTypeInfo&lt;CTX, ATTR_CAT, ATTR, E&gt;
+    fun priority(): Int = DEFAULT
+    fun renderAttribute(renderingContext: CTX, operationContext: E, attribute: ATTR)
+
+    companion object {
+        const val LOWEST = Int.MIN_VALUE
+        const val LOWER = -1
+        const val DEFAULT = 1
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>AttributeOperation</code> is next level abstraction. It is used to render each attribute from <code>AttributedModel</code> context. The <code>AttributeOperation</code> dispatching can be achieved by <code>AttributesHandlingOperation</code> wrapper that is responsible for resolving all <code>AttributeOperations</code> and matching them with corresponding attributes.</p>
+</div>
+<div class="paragraph">
+<p>Now some more words on <code>operation contexts</code>.</p>
+</div>
+<div class="paragraph">
+<p>As can be seen on above code snippets, operation context instance is an object that is passed to operation for rendering purposes. Operation context class determines specific operation applicability, because operation can be invoked only when context is present in scope. In <a href="#row_context_resolution">Row context resolution. </a> You saw that there are three different context classes around row rendering, but in fact there are more context classes present alongside the process.</p>
+</div>
+<div class="paragraph">
+<p>Have a look at the contract of <code>OperationsBuilder</code>. Here we can see all available operation interfaces. Each interface extends base <code>Operation</code> interface by filling in corresponding <code>AttributedModel</code> context class:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">class OperationsBuilder&lt;CTX : RenderingContext&gt; {
+    var openTable: OpenTableOperation&lt;CTX&gt;? = OpenTableOperation { _, _ -&gt; } <i class="conum" data-value="1"></i><b>(1)</b>
+    var closeTable: CloseTableOperation&lt;CTX&gt;? = CloseTableOperation { _, _ -&gt; } <i class="conum" data-value="2"></i><b>(2)</b>
+    var openColumn: OpenColumnOperation&lt;CTX&gt;? = OpenColumnOperation { _, _ -&gt; } <i class="conum" data-value="3"></i><b>(3)</b>
+    var closeColumn: CloseColumnOperation&lt;CTX&gt;? = CloseColumnOperation { _, _ -&gt; } <i class="conum" data-value="4"></i><b>(4)</b>
+    var openRow: OpenRowOperation&lt;CTX&gt;? = OpenRowOperation { _, _ -&gt; } <i class="conum" data-value="5"></i><b>(5)</b>
+    var closeRow: CloseRowOperation&lt;CTX&gt;? = CloseRowOperation { _, _ -&gt; } <i class="conum" data-value="6"></i><b>(6)</b>
+    var renderRowCell: RenderRowCellOperation&lt;CTX&gt;? = RenderRowCellOperation { _, _ -&gt; } <i class="conum" data-value="7"></i><b>(7)</b>
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>OpenTableOperation</code> is defined as: <code>fun interface OpenTableOperation&lt;CTX : RenderingContext&gt; : Operation&lt;CTX, TableAttribute&lt;*&gt;, TableOpeningContext&gt;</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>CloseTableOperation</code> is defined as: <code>fun interface CloseTableOperation&lt;CTX : RenderingContext&gt; : Operation&lt;CTX, TableAttribute&lt;*&gt;, TableClosingContext&gt;</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><code>OpenColumnOperation</code> is defined as: <code>fun interface OpenColumnOperation&lt;CTX : RenderingContext&gt; : Operation&lt;CTX, ColumnAttribute&lt;*&gt;, ColumnOpeningContext&gt;</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><code>CloseColumnOperation</code> is defined as: <code>fun interface CloseColumnOperation&lt;CTX : RenderingContext&gt; : Operation&lt;CTX, ColumnAttribute&lt;*&gt;, ColumnClosingContext&gt;</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td><code>OpenRowOperation</code> is defined as: <code>fun interface OpenRowOperation&lt;CTX : RenderingContext&gt; : Operation&lt;CTX, RowAttribute&lt;*&gt;, RowOpeningContext&gt;</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td><code>CloseRowOperation</code> is defined as: <code>fun interface CloseRowOperation&lt;CTX : RenderingContext&gt; : Operation&lt;CTX, RowAttribute&lt;*&gt;, RowClosingContext&lt;*&gt;&gt;</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td><code>RenderRowCellOperation</code> is defined as: <code>fun interface RenderRowCellOperation&lt;CTX : RenderingContext&gt; : Operation&lt;CTX, CellAttribute&lt;*&gt;, CellContext&gt;</code></td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Order of appearance:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>TableOpeningContext</code> and <code>OpenTableOperation</code>,</p>
+</li>
+<li>
+<p><code>ColumnOpeningContext</code> and <code>OpenColumnOperation</code>,</p>
+</li>
+<li>
+<p><code>RowOpeningContext</code> and <code>OpenRowOperation</code>,</p>
+</li>
+<li>
+<p><code>CellContext</code> and <code>RenderRowCellOperation</code>,</p>
+</li>
+<li>
+<p><code>RowClosingContext</code> and <code>CloseRowOperation</code>,</p>
+</li>
+<li>
+<p><code>TableClosingContext</code> and <code>CloseTableOperation</code>.</p>
+</li>
+</ul>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
@@ -1620,32 +1709,205 @@ In fact this should be leading usage scenario. In this scenario <code>Tabulation
 <div class="sect1">
 <h2 id="_cookbook_recipes">Cookbook recipes.</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>In this section You can find some ready to use usage scenarios.</p>
+</div>
 <div class="sect2">
 <h3 id="_export_collection_with_header_and_summary">Export collection with header and summary.</h3>
-
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">productsRepository.loadProducts().tabulate("product_with_styles.xlsx") {
+    name = "Products table"
+    attribtues { width { auto = true }}
+    columns {
+        column(Product::code) {
+            attributes(
+                text {
+                    weight = DefaultWeightStyle.BOLD
+                    fontColor = Colors.WHITE
+                },
+                background { color = Colors.GRAY }
+            )
+        }
+        column(Product::name)
+        column(Product::releaseDate) {
+            attributes(
+                dataFormat { value = "dd.mm.YYYY" }
+            )
+        }
+        column(Product::mgQty)
+    }
+    rows {
+        header("Product Node", "Product Name", "Release Date", "Available")
+        footer {
+            cell {
+                value = "."
+                colSpan = 4
+                attributes {
+                    alignment {
+                        horizontal = DefaultHorizontalAlignment.CENTER
+                    }
+                }
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
 <h3 id="_add_excel_formula_for_summing_column_values">Add Excel formula for summing column values.</h3>
-
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">agreementRepository.loadAgreements().run {
+    tabulate("agreements.xlsx") {
+        name = "Customer Agreements"
+        attribtues { width { auto = true }}
+        columns {
+            column(Agreement::agreementNumber) {
+                attributes(
+                    text {
+                        weight = DefaultWeightStyle.BOLD
+                        fontColor = Colors.WHITE
+                    },
+                    background { color = Colors.GRAY }
+                )
+            }
+            column(Agreement::serviceCode)
+            column(Agreement::netCostValue)
+            column(Agreement::grossCostValue)
+            column(Agreement::signDate) {
+                attributes(
+                    dataFormat { value = "dd.mm.YYYY" }
+                )
+            }
+        }
+        rows {
+            header("Agreement Number", "Code", "Net Cost", "Gross Cost","Sign Date")
+            footer {
+                cell(Agreement::netCostValue) {
+                    value = "=SUM(C1:C${size() + 1})"
+                    type = ExcelTypeHints.FORMULA
+                }
+                cell(Agreement::grossCostValue) {
+                    value = "=SUM(D1:D${size() + 1})"
+                    type = ExcelTypeHints.FORMULA
+                }
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
 <h3 id="_maintain_and_bind_reusable_styles">Maintain and bind reusable styles.</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">object TableDefinitions {
+  val headerStyles = CustomTable {
+    rows {
+      matching { header() } assign {
+        attributes {
+          background {
+            color = Colors.BLACK
+          }
+          text {
+            fontColor = Colors.WHITE
+          }
+        }
+      }
+    }
+  }
+}
 
+contracts.tabulate("contracts_list.xlsx", TableDefinitions.headerStyles + {
+    columns {
+        column(Contract::client)
+        column(Contract::contractCode)
+        column(Contract::contractLength)
+        column(Contract::dateSigned)
+        column(Contract::expirationDate)
+        column(Contract::dateOfFirstPayment)
+        column(Contract::lastPaymentDate)
+        column(Contract::monthlyGrossValue)
+    }
+    rows {
+        header("Client", "Code", "Contract Length",
+            "Date Signed", "Expiration Date", "First Payment",
+            "Last Payment","Monthly Gross Value")
+    }
+})</code></pre>
+</div>
+</div>
+<div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
 <h3 id="_fill_monthly_revenue_template_with_trend_chart">Fill monthly revenue template with trend chart.</h3>
-
+<div class="paragraph">
+<p>TBD.</p>
+</div>
+<div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
 <h3 id="_create_invoice">Create invoice.</h3>
-
+<div class="paragraph">
+<p>Please refer to project <code>tabulate-examples</code> on github in order to inspect invoice DSL vocabulary.
+Search for classes: <code>InvoiceDsl.kt</code>, <code>InvoiceData.kt</code>, <code>Layouts.kt</code> and <code>sections</code> package (contains invoice layout section extensions).</p>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+Please note that <code>Layouts.kt</code> in <code>tabulate-examples</code> project contains API extensions which are currently incubating and may be dropped in future ;)
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">    listOf(
+        InvoiceLineItem("Laptop: Acer", 1,BigDecimal.valueOf(2333.33),BigDecimal.valueOf(0.23)),
+        InvoiceLineItem("Monitor: Lenovo", 1,BigDecimal.valueOf(1333.33),BigDecimal.valueOf(0.23)),
+        InvoiceLineItem("Keyboard: Genesys 110", 1,BigDecimal.valueOf(233.99),BigDecimal.valueOf(0.23)),
+        InvoiceLineItem("Headset: Syperlux HD330", 1,BigDecimal.valueOf(134.99),BigDecimal.valueOf(0.23)),
+        InvoiceLineItem("Mouse: Logitech M185", 1,BigDecimal.valueOf(34.99),BigDecimal.valueOf(0.23)),
+        InvoiceLineItem("IPhone 11", 1,BigDecimal.valueOf(3004.99),BigDecimal.valueOf(0.23)),
+        InvoiceLineItem("DynaDesk", 1,BigDecimal.valueOf(1234.99),BigDecimal.valueOf(0.23)),
+    ).printInvoice(
+        fileName = "invoice.csv",
+        invoiceNumber = "#00001",
+        invoiceIssueDate = LocalDate.now(),
+        invoiceDueDate = LocalDate.now(),
+        issuerDetails =  CompanyAddress(
+            contactName = "Brad Kovalsky",
+            companyName = "Best Computers",
+            address = "Macintosh Square St. 1/22",
+            address2 = "brad@bestcomputers.com",
+            phone = "988-324-342"
+        ),
+        clientDetails = CompanyAddress(
+            contactName = "Jeremy Cooper",
+            companyName = "JerCo.",
+            address = "Genuine St. 22/202",
+            address2 = "jerco@gmail.com",
+            phone = "435-324-555"
+        )
+    )</code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-04-21 14:57:15 +0200
+Last updated 2022-04-21 18:56:44 +0200
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

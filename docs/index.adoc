@@ -644,46 +644,6 @@ Currently, with `tabulate-core` and `tabulate-excel` modules, you will get follo
 | table
 |===
 
-
-Typical usage scenario for attributes:
-[source,kotlin,options="nowrap"]
-----
-productsRepository.loadProductsByDate(now()).tabulate("product_with_styles.xlsx") {
-    name = "Products table"
-    columns {
-        column(Product::code) {
-            attributes(
-                width { auto = true },
-                text {
-                    fontFamily = "Times New Roman"
-                    fontColor = Colors.BLACK
-                    fontSize = 12
-                },
-                background { color = Colors.BLUE }
-            )
-        }
-        column(Product::distributionDate) {
-            attributes(
-                width { auto = true },
-                dataFormat { value = "dd.mm.YYYY" }
-            )
-        }
-    }
-    rows {
-        row {
-            attributes(
-                text {
-                    fontFamily = "Times New Roman"
-                    fontColor = Colors.BLACK
-                    fontSize = 12
-                },
-                background { color = Colors.BLUE }
-            )
-        }
-    }
-}
-----
-
 <<<
 == Internal algorithms and rules.
 
@@ -724,36 +684,261 @@ When requesting row definition by row index, algorithm is performing lookup to r
 At this point we have table definition with *indexed rows*, and yet cold *cache for keeping synthetic row definitions*.
 
 <<<
-=== Synthetic row resolution.
+=== `SyntheticRow` resolution.
 `SyntheticRow` keeps bundled row definitions matching specific row index. During object initialization following actions take place:
 
  - all *cell values* for all qualified table rows are merged so that all values from pair on the right overrides values on the left,
  - all *cell attributes* from table and row levels are merged similarly from left to right so that only *explicitly changed* properties of attributes of the same class are overridden,
  - all *row attributes* from table and row levels are merged similarly from left to right so that only *explicitly changed* properties of attributes of same class are overridden,
 
-It is crucial to mention that *explicitly changed* cited above means that only attribute properties changed by explicit builder method cat are considered.
+Phrase *explicitly changed* mentioned above means: *choose only attribute property changes made by explicit DSL/fluent builder method calls*.
+Builders track all attribute property changes (to determine which change - left or right - should be applied) because they can have defaults on the right-hand side that would in other case override explicitly changed left-hand side attribute properties.
+
+Please note that during `SyntheticRow` resolution only row level cell and row attributes are merged. Cell level cell attributes are merged-in later when resolving `CellContext` values. They are deferred in time because to merge attributes from all levels - column level attributes are required. Column level attributes can be only accessed while resolving specific `CellContext` and `CellContext` responsibility is to resolve cell value which can be done only when value for particular row and column can be obtained. This is always the very last step in completing row operation context.
 
 <<<
-=== Row context resolution.
-TBD.
+=== Row context resolution.  [[row_context_resolution]]
+Row context resolution is the final step of completing row data before dispatching to third party operation code. During this step, couple of intermediate contexts are produced:
+
+ - `RowOpeningContext` - a context containing row coordinate (only row index) plus associated row attributes. 'AbstractRowContextResolver' notifies `TabulationTemplate` about completing `RowOpeningContext` using `RowCompletionListener`. Specific operation implementation associated with this type of context (`RowOpeningContext`) can be invoked even before having all row associated data.
+ - `CellContext` - a context holding `CellValue` with all associated cell attributes (merged all level attributes: table, column, row and cell). Similarly to `RowOpeningContext` - `AbstractRowContextResolver` uses `RowCompletionListener` in order to notify `TabulationTemplate` about each `CellContext` when it is ready for rendering by corresponding operation implementation.
+ - `RowClosingContext` - a context with complete row data. It contains all row attributes together with all cell values (also with attributes). As long as `RowClosingContext` is the last step it is also the value returned from `AbstractRowContextResolver.resolve(...)` method.
 
 <<<
 === Rendering operations dispatching.
-TBD.
+Rendering operations are operations executing rendering logic that is specific to particular `TabulationFormat`. There are two main interfaces that establish contract to be used by implementations:
 
-<<<
-=== Output binding.
-TBD.
+ - `Operation`
+
+[source,kotlin,options="nowrap"]
+----
+fun interface Operation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, E : AttributedModel<ATTR_CAT>> {
+    fun render(renderingContext: CTX, operationContext: E)
+}
+----
+This is the most basic interface. It expresses an intent to render `operationContext` associated data by using `renderingContext` low-level API.
+
+ - `AttributeOperation`
+
+[source,kotlin,options="nowrap"]
+----
+interface AttributeOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : AttributedModel<ATTR_CAT>> {
+    fun typeInfo(): AttributeOperationTypeInfo<CTX, ATTR_CAT, ATTR, E>
+    fun priority(): Int = DEFAULT
+    fun renderAttribute(renderingContext: CTX, operationContext: E, attribute: ATTR)
+
+    companion object {
+        const val LOWEST = Int.MIN_VALUE
+        const val LOWER = -1
+        const val DEFAULT = 1
+    }
+}
+----
+`AttributeOperation` is next level abstraction. It is used to render each attribute from `AttributedModel` context. The `AttributeOperation` dispatching can be achieved by `AttributesHandlingOperation` wrapper that is responsible for resolving all `AttributeOperations` and matching them with corresponding attributes.
+
+Now some more words on `operation contexts`.
+
+As can be seen on above code snippets, operation context instance is an object that is passed to operation for rendering purposes. Operation context class determines specific operation applicability, because operation can be invoked only when context is present in scope. In <<row_context_resolution>> You saw that there are three different context classes around row rendering, but in fact there are more context classes present alongside the process.
+
+Have a look at the contract of `OperationsBuilder`. Here we can see all available operation interfaces. Each interface extends base `Operation` interface by filling in corresponding `AttributedModel` context class:
+
+[source,kotlin, options="nowrap"]
+----
+class OperationsBuilder<CTX : RenderingContext> {
+    var openTable: OpenTableOperation<CTX>? = OpenTableOperation { _, _ -> } // <1>
+    var closeTable: CloseTableOperation<CTX>? = CloseTableOperation { _, _ -> } // <2>
+    var openColumn: OpenColumnOperation<CTX>? = OpenColumnOperation { _, _ -> } // <3>
+    var closeColumn: CloseColumnOperation<CTX>? = CloseColumnOperation { _, _ -> } // <4>
+    var openRow: OpenRowOperation<CTX>? = OpenRowOperation { _, _ -> } // <5>
+    var closeRow: CloseRowOperation<CTX>? = CloseRowOperation { _, _ -> } // <6>
+    var renderRowCell: RenderRowCellOperation<CTX>? = RenderRowCellOperation { _, _ -> } // <7>
+}
+----
+<1> `OpenTableOperation` is defined as: `fun interface OpenTableOperation<CTX : RenderingContext> : Operation<CTX, TableAttribute<*>, TableOpeningContext>`
+<2> `CloseTableOperation` is defined as: `fun interface CloseTableOperation<CTX : RenderingContext> : Operation<CTX, TableAttribute<*>, TableClosingContext>`
+<3> `OpenColumnOperation` is defined as: `fun interface OpenColumnOperation<CTX : RenderingContext> : Operation<CTX, ColumnAttribute<*>, ColumnOpeningContext>`
+<4> `CloseColumnOperation` is defined as: `fun interface CloseColumnOperation<CTX : RenderingContext> : Operation<CTX, ColumnAttribute<*>, ColumnClosingContext>`
+<5> `OpenRowOperation` is defined as: `fun interface OpenRowOperation<CTX : RenderingContext> : Operation<CTX, RowAttribute<*>, RowOpeningContext>`
+<6> `CloseRowOperation` is defined as: `fun interface CloseRowOperation<CTX : RenderingContext> : Operation<CTX, RowAttribute<*>, RowClosingContext<*>>`
+<7> `RenderRowCellOperation` is defined as: `fun interface RenderRowCellOperation<CTX : RenderingContext> : Operation<CTX, CellAttribute<*>, CellContext>`
+
+Order of appearance:
+
+ - `TableOpeningContext` and `OpenTableOperation`,
+ - `ColumnOpeningContext` and `OpenColumnOperation`,
+ - `RowOpeningContext` and `OpenRowOperation`,
+ - `CellContext` and `RenderRowCellOperation`,
+ - `RowClosingContext` and `CloseRowOperation`,
+ - `TableClosingContext` and `CloseTableOperation`.
 
 <<<
 == Cookbook recipes.
+In this section You can find some ready to use usage scenarios.
 
 === Export collection with header and summary.
 
+[source,kotlin,options="nowrap"]
+----
+productsRepository.loadProducts().tabulate("product_with_styles.xlsx") {
+    name = "Products table"
+    attribtues { width { auto = true }}
+    columns {
+        column(Product::code) {
+            attributes(
+                text {
+                    weight = DefaultWeightStyle.BOLD
+                    fontColor = Colors.WHITE
+                },
+                background { color = Colors.GRAY }
+            )
+        }
+        column(Product::name)
+        column(Product::releaseDate) {
+            attributes(
+                dataFormat { value = "dd.mm.YYYY" }
+            )
+        }
+        column(Product::mgQty)
+    }
+    rows {
+        header("Product Node", "Product Name", "Release Date", "Available")
+        footer {
+            cell {
+                value = "."
+                colSpan = 4
+                attributes {
+                    alignment {
+                        horizontal = DefaultHorizontalAlignment.CENTER
+                    }
+                }
+            }
+        }
+    }
+}
+
+----
+<<<
 === Add Excel formula for summing column values.
 
+[source,kotlin,options="nowrap"]
+----
+agreementRepository.loadAgreements().run {
+    tabulate("agreements.xlsx") {
+        name = "Customer Agreements"
+        attribtues { width { auto = true }}
+        columns {
+            column(Agreement::agreementNumber) {
+                attributes(
+                    text {
+                        weight = DefaultWeightStyle.BOLD
+                        fontColor = Colors.WHITE
+                    },
+                    background { color = Colors.GRAY }
+                )
+            }
+            column(Agreement::serviceCode)
+            column(Agreement::netCostValue)
+            column(Agreement::grossCostValue)
+            column(Agreement::signDate) {
+                attributes(
+                    dataFormat { value = "dd.mm.YYYY" }
+                )
+            }
+        }
+        rows {
+            header("Agreement Number", "Code", "Net Cost", "Gross Cost","Sign Date")
+            footer {
+                cell(Agreement::netCostValue) {
+                    value = "=SUM(C1:C${size() + 1})"
+                    type = ExcelTypeHints.FORMULA
+                }
+                cell(Agreement::grossCostValue) {
+                    value = "=SUM(D1:D${size() + 1})"
+                    type = ExcelTypeHints.FORMULA
+                }
+            }
+        }
+    }
+}
+
+----
+<<<
 === Maintain and bind reusable styles.
+[source,kotlin,options="nowrap"]
+----
+object TableDefinitions {
+  val headerStyles = CustomTable {
+    rows {
+      matching { header() } assign {
+        attributes {
+          background {
+            color = Colors.BLACK
+          }
+          text {
+            fontColor = Colors.WHITE
+          }
+        }
+      }
+    }
+  }
+}
 
+contracts.tabulate("contracts_list.xlsx", TableDefinitions.headerStyles + {
+    columns {
+        column(Contract::client)
+        column(Contract::contractCode)
+        column(Contract::contractLength)
+        column(Contract::dateSigned)
+        column(Contract::expirationDate)
+        column(Contract::dateOfFirstPayment)
+        column(Contract::lastPaymentDate)
+        column(Contract::monthlyGrossValue)
+    }
+    rows {
+        header("Client", "Code", "Contract Length",
+            "Date Signed", "Expiration Date", "First Payment",
+            "Last Payment","Monthly Gross Value")
+    }
+})
+----
+<<<
 === Fill monthly revenue template with trend chart.
+TBD.
 
+<<<
 === Create invoice.
+Please refer to project `tabulate-examples` on github in order to inspect invoice DSL vocabulary.
+Search for classes: `InvoiceDsl.kt`, `InvoiceData.kt`, `Layouts.kt` and `sections` package (contains invoice layout section extensions).
+
+CAUTION: Please note that `Layouts.kt` in `tabulate-examples` project contains API extensions which are currently incubating and may be dropped in future ;)
+[source,kotlin,options="nowrap"]
+----
+    listOf(
+        InvoiceLineItem("Laptop: Acer", 1,BigDecimal.valueOf(2333.33),BigDecimal.valueOf(0.23)),
+        InvoiceLineItem("Monitor: Lenovo", 1,BigDecimal.valueOf(1333.33),BigDecimal.valueOf(0.23)),
+        InvoiceLineItem("Keyboard: Genesys 110", 1,BigDecimal.valueOf(233.99),BigDecimal.valueOf(0.23)),
+        InvoiceLineItem("Headset: Syperlux HD330", 1,BigDecimal.valueOf(134.99),BigDecimal.valueOf(0.23)),
+        InvoiceLineItem("Mouse: Logitech M185", 1,BigDecimal.valueOf(34.99),BigDecimal.valueOf(0.23)),
+        InvoiceLineItem("IPhone 11", 1,BigDecimal.valueOf(3004.99),BigDecimal.valueOf(0.23)),
+        InvoiceLineItem("DynaDesk", 1,BigDecimal.valueOf(1234.99),BigDecimal.valueOf(0.23)),
+    ).printInvoice(
+        fileName = "invoice.csv",
+        invoiceNumber = "#00001",
+        invoiceIssueDate = LocalDate.now(),
+        invoiceDueDate = LocalDate.now(),
+        issuerDetails =  CompanyAddress(
+            contactName = "Brad Kovalsky",
+            companyName = "Best Computers",
+            address = "Macintosh Square St. 1/22",
+            address2 = "brad@bestcomputers.com",
+            phone = "988-324-342"
+        ),
+        clientDetails = CompanyAddress(
+            contactName = "Jeremy Cooper",
+            companyName = "JerCo.",
+            address = "Genuine St. 22/202",
+            address2 = "jerco@gmail.com",
+            phone = "435-324-555"
+        )
+    )
+----
