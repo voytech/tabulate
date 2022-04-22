@@ -91,6 +91,13 @@ workflows:
       - hold:
           type: approval
       - publishSnapshot:
+          mname: tabulate-bom
+          filters:
+            tags:
+              only: /^tabulate\.bom-[0-9]+.[0-9]+.[0-9]+-alpha/
+          requires:
+            - hold
+      - publishSnapshot:
           mname: tabulate-core
           filters:
             tags:

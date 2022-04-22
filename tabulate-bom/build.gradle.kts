@@ -2,9 +2,15 @@ val apachePoiVersion: String by project
 val commonsMathVersion: String by project
 
 plugins {
+    id("pl.allegro.tech.build.axion-release")
     id("java-platform")
     id("maven-publish")
     id("signing")
+}
+
+scmVersion {
+    tag.prefix = "tabulate.bom"
+    tag.versionSeparator = "-"
 }
 
 repositories {
