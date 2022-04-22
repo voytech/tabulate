@@ -42,9 +42,9 @@
      inkscape:window-height="1052"
      id="namedview140"
      showgrid="false"
-     inkscape:zoom="0.85644533"
-     inkscape:cx="309.64976"
-     inkscape:cy="19.249867"
+     inkscape:zoom="0.6055983"
+     inkscape:cx="102.47858"
+     inkscape:cy="394.56858"
      inkscape:window-x="1920"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -542,15 +542,6 @@
        x2="256"
        y2="128"
        gradientUnits="userSpaceOnUse" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-2-6"
-       id="linearGradient3738"
-       x1="112.75406"
-       y1="58.379623"
-       x2="728.23413"
-       y2="134.59192"
-       gradientUnits="userSpaceOnUse" />
   </defs>
   <g
      id="g136"
@@ -820,38 +811,38 @@
      aria-label="Tabulate"
      transform="matrix(0.96145928,0,0,0.99013768,-1.9991626,4.6700016)"
      id="text4135"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;line-height:1.25;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;opacity:0.999;fill:url(#linearGradient3738);fill-opacity:1;stroke:none;stroke-width:3.4003;stroke-opacity:1;">
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;line-height:1.25;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;opacity:0.999;fill:#000000;fill-opacity:1;stroke:none;stroke-width:3.4003;stroke-opacity:1">
     <path
        d="M 243.53018,80.744476 H 221.98944 V 154.32491 H 207.62895 V 80.744476 H 185.95144 V 66.52075 h 57.57874 z"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient3738);fill-opacity:1.0;stroke:none;stroke-width:3.4003;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:3.4003;stroke-opacity:1"
        id="path995" />
     <path
        d="m 251.59941,94.010836 q 8.27438,-3.008865 15.93331,-3.008865 14.49726,0 21.33559,5.81258 6.90671,5.744199 6.90671,19.215709 v 38.77333 h -13.06121 l -0.27353,-5.47067 q -4.17138,6.35965 -14.70241,6.35965 -14.29211,0 -18.94218,-10.39426 -1.77796,-3.82946 -1.77796,-9.98396 0,-20.24146 27.28494,-20.17307 4.78683,0 8.13761,0.47868 v -2.32503 q 0,-10.2575 -14.97594,-10.2575 -6.08612,0 -15.86493,3.82947 z m 24.82314,31.046014 q -16.68553,0 -16.68553,10.2575 0,6.83833 6.1545,7.93246 2.11988,0.4103 4.99198,0.34192 8.82145,0 11.55678,-5.53905 v -12.58253 q -2.59857,-0.4103 -6.01773,-0.4103 z"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient3738);fill-opacity:1.0;stroke:none;stroke-width:3.4003;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:3.4003;stroke-opacity:1"
        id="path997" />
     <path
        d="m 312.52893,99.4815 q 4.30815,-8.753063 16.13846,-8.753063 17.91642,0 23.25032,17.506123 1.77796,5.88097 1.77796,13.40313 0,15.18109 -6.83833,24.61799 -6.76994,9.43689 -19.42085,9.43689 -10.32588,0 -15.31786,-6.35965 l -0.4103,5.47067 H 299.67287 V 66.657516 h 12.85606 z m 11.89869,42.39765 q 15.59139,0 15.59139,-19.2841 0,-9.23174 -3.35078,-13.95019 -3.2824,-4.78683 -11.83031,-4.78683 -8.54791,0 -11.35163,7.7957 -0.95736,2.73533 -0.95736,6.49641 v 19.28409 q 4.44491,4.44492 11.89869,4.44492 z"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient3738);fill-opacity:1.0;stroke:none;stroke-width:3.4003;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:3.4003;stroke-opacity:1"
        id="path999" />
     <path
        d="m 382.62181,143.72549 q 12.17223,0 12.17223,-14.70241 V 92.096103 h 12.99283 v 62.228807 h -12.85606 v -9.8472 q -3.2824,11.21486 -18.18996,11.21486 -14.97594,0 -18.12158,-14.08696 -1.09413,-4.65006 -1.02575,-11.00971 V 92.096103 h 12.99283 v 36.926977 q 0,7.52217 2.8721,11.14648 2.8721,3.55593 9.16336,3.55593 z"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient3738);fill-opacity:1.0;stroke:none;stroke-width:3.4003;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:3.4003;stroke-opacity:1"
        id="path1001" />
     <path
        d="M 425.49813,154.32491 H 411.88986 V 66.52075 h 13.60827 z"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient3738);fill-opacity:1.0;stroke:none;stroke-width:3.4003;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:3.4003;stroke-opacity:1"
        id="path1003" />
     <path
        d="m 433.77251,94.010836 q 8.27438,-3.008865 15.93331,-3.008865 14.49726,0 21.33559,5.81258 6.90671,5.744199 6.90671,19.215709 v 38.77333 h -13.06121 l -0.27353,-5.47067 q -4.17138,6.35965 -14.70241,6.35965 -14.29211,0 -18.94217,-10.39426 -1.77797,-3.82946 -1.77797,-9.98396 0,-20.24146 27.28494,-20.17307 4.78683,0 8.13761,0.47868 v -2.32503 q 0,-10.2575 -14.97594,-10.2575 -6.08611,0 -15.86493,3.82947 z m 24.82314,31.046014 q -16.68552,0 -16.68552,10.2575 0,6.83833 6.15449,7.93246 2.11989,0.4103 4.99198,0.34192 8.82145,0 11.55678,-5.53905 v -12.58253 q -2.59856,-0.4103 -6.01773,-0.4103 z"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient3738);fill-opacity:1.0;stroke:none;stroke-width:3.4003;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:3.4003;stroke-opacity:1"
        id="path1005" />
     <path
        d="m 517.20014,143.24681 q 2.73533,0 5.33389,-0.8206 v 12.44576 q -3.89784,0.8206 -8.41114,0.8206 -9.64205,0 -15.65978,-6.22288 -6.01773,-6.29126 -6.01773,-17.50612 V 104.19995 H 482.1195 V 92.369637 h 10.32588 V 66.52075 h 12.65091 v 25.848887 h 14.63403 v 11.830313 h -14.63403 v 27.35332 q 0,11.69354 12.10385,11.69354 z"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient3738);fill-opacity:1.0;stroke:none;stroke-width:3.4003;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:3.4003;stroke-opacity:1"
        id="path1007" />
     <path
        d="m 576.28331,152.47856 q -8.68468,3.21401 -18.18996,3.21401 -17.02744,0 -24.5496,-8.54791 -7.52216,-8.6163 -7.52216,-23.45547 0,-14.83918 7.45378,-23.79739 7.45378,-9.026596 20.0363,-9.026596 12.65091,0 19.55763,8.274379 6.90671,8.274377 6.90671,21.198827 0,4.92359 -0.4103,7.52216 h -40.00423 q 0,12.85606 12.30899,14.97594 3.55593,0.61545 7.24863,0.61545 8.82145,0 17.16421,-3.55593 z m -8.88983,-35.14902 q 0,-6.5648 -3.89785,-10.32588 -3.89784,-3.82946 -9.91557,-3.82946 -5.94935,0 -9.98397,3.6927 -4.03461,3.69269 -4.03461,10.46264 z"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient3738);fill-opacity:1.0;stroke:none;stroke-width:3.4003;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:3.4003;stroke-opacity:1"
        id="path1009" />
   </g>
 </svg>
