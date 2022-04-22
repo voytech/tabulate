@@ -86,10 +86,6 @@ jobs:
       - run: gradle -Psigning.gnupg.keyName=$GPG_KEY_ID -Psigning.gnupg.passphrase=$GPG_PRIVATE_KEY_PASSWORD publishToSonatype closeAndReleaseSonatypeStagingRepository
 
 workflows:
-#  test:
-#    jobs:
-#      - test:
-#          mname: tabulate-core
   publishSnapshots:
     when:
       equal: [ "publish_snapshot", << pipeline.parameters.GHA_Meta >> ]
@@ -98,14 +94,23 @@ workflows:
           type: approval
       - publishSnapshot:
           mname: tabulate-core
+          filters:
+            tags:
+              only: /^tabulate\.core-[0-9]+.[0-9]+.[0-9]+-alpha/
           requires:
             - hold
       - publishSnapshot:
           mname: tabulate-csv
+          filters:
+            tags:
+              only: /^tabulate\.csv-[0-9]+.[0-9]+.[0-9]+-alpha/
           requires:
             - hold
       - publishSnapshot:
           mname: tabulate-excel
+          filters:
+            tags:
+              only: /^tabulate\.excel-[0-9]+.[0-9]+.[0-9]+-alpha/
           requires:
             - hold
   publishMavenVersion:
