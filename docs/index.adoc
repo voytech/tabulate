@@ -1,10 +1,16 @@
-= Tabulate - Reference Manual
+= Reference Manual
+:title-logo-image: image::../logo/tabulate_logo.svg[Tabulate logo]
 :icons: font
+:doctype: book
 :source-highlighter: highlight.js
-by <wojmak@gmail.com>
+:author: Wojciech Mąka
+:email: voytech.m@gmail.com
+:title: Tabulate Reference Manual
 :toc:
-
 <<<
+
+image:../logo/tabulate_logo.svg[Tabulate logo]
+
 == Introduction
 
 Exporting data to tabular file formats can be tedious and cumbersome - especially when business wants to have reports covering vast majority of system functionalities. Writing every exporting method using imperative API directly will soon make code verbose, error prone, hard to read and maintain. In such cases You want to hide implementation details using abstractions, but this is additional effort which is not desirable.
@@ -127,11 +133,11 @@ As already said, it is possible to extend each DSL level by using extension func
 Take the example from previous section:
 [source,kotlin,options="nowrap"]
 ----
-    tabulate {
-          rows {
-              header("Code", "Name", "Description", "Manufacturer")
-          }
-    }.export("products.xlsx")
+tabulate {
+      rows {
+          header("Code", "Name", "Description", "Manufacturer")
+      }
+}.export("products.xlsx")
 ----
 Function `.header` is implemented as follows:
 
@@ -158,13 +164,13 @@ This creates object property to column binding which is applied later at run tim
 [source,kotlin,options="nowrap"]
 ----
 productsRepository.loadProductsByDate(now()).tabulate("file/path/products.xlsx") {
-            name = "Products table"
-            columns {
-                column(Product::code)
-                column(Product::name)
-                column(Product::description)
-            }
-        }
+    name = "Products table"
+    columns {
+        column(Product::code)
+        column(Product::name)
+        column(Product::description)
+    }
+}
 ----
 Property getter as column key kills two birds with one stone:
 
@@ -828,21 +834,21 @@ agreementRepository.loadAgreements().run {
         attribtues { width { auto = true }}
         columns {
             column(Agreement::agreementNumber) {
-                attributes(
+                attributes{
                     text {
                         weight = DefaultWeightStyle.BOLD
                         fontColor = Colors.WHITE
                     },
                     background { color = Colors.GRAY }
-                )
+                }
             }
             column(Agreement::serviceCode)
             column(Agreement::netCostValue)
             column(Agreement::grossCostValue)
             column(Agreement::signDate) {
-                attributes(
+                attributes {
                     dataFormat { value = "dd.mm.YYYY" }
-                )
+                }
             }
         }
         rows {
@@ -868,7 +874,7 @@ agreementRepository.loadAgreements().run {
 === Reusable, composable table builder declarations.
 [source,kotlin,options="nowrap"]
 ----
-val whiteOnBlackHeader = CustomTable {
+val whiteOnBlackHeader = table {
     rows {
       matching { header() } assign {
         attributes {
@@ -883,7 +889,7 @@ val whiteOnBlackHeader = CustomTable {
     }
 }
 
-val printingDetails = CustomTable {
+val printingDetails = table {
   attributes {
       printing {
         blackAndWhite = true
@@ -892,7 +898,7 @@ val printingDetails = CustomTable {
   }
 }
 
-contracts.tabulate("contracts_list.xlsx", printingDetails + whiteOnBlackHeader + {
+contracts.tabulate("contracts_list.xlsx", printingDetails + whiteOnBlackHeader + typedTable {
     columns {
         column(Contract::client)
         column(Contract::contractCode)

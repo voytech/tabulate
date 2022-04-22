@@ -1,8 +1,8 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.api.builder.dsl.customTable
-import io.github.voytech.tabulate.api.builder.dsl.plus
 import io.github.voytech.tabulate.api.builder.dsl.table
+import io.github.voytech.tabulate.api.builder.dsl.plus
+import io.github.voytech.tabulate.api.builder.dsl.typedTable
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
 import io.github.voytech.tabulate.model.attributes.Colors
@@ -22,7 +22,7 @@ class TableCompositingTest {
 
     @Test
     fun `should merge custom table with another custom table`() {
-        val customTable = customTable {
+        val customTable = table {
             name = "Products table"
             attributes {
                 text { fontColor = Colors.BLACK }
@@ -35,7 +35,7 @@ class TableCompositingTest {
                 }
             }
         }
-        val overrideTable = customTable {
+        val overrideTable = table {
             name = "Name override"
             rows {
                 newRow {
@@ -69,7 +69,7 @@ class TableCompositingTest {
 
     @Test
     fun `should merge custom table with typed table`() {
-        val customTable = customTable {
+        val customTable = table {
             name = "Products table"
             attributes {
                 text { fontColor = Colors.BLACK }
@@ -82,7 +82,7 @@ class TableCompositingTest {
                 }
             }
         }
-        val overrideTable = table<Product> {
+        val overrideTable = typedTable<Product> {
             name = "Name override"
             columns {
                 column(Product::code)
@@ -116,7 +116,7 @@ class TableCompositingTest {
 
     @Test
     fun `should merge typed table with another typed table`() {
-        val baseTable = table<Product> {
+        val baseTable = typedTable<Product> {
             name = "Products table"
             attributes {
                 text { fontColor = Colors.BLACK }
@@ -129,7 +129,7 @@ class TableCompositingTest {
                 }
             }
         }
-        val overrideTable = table<Product> {
+        val overrideTable = typedTable<Product> {
             name = "Name override"
             columns {
                 column(Product::name)
@@ -168,7 +168,7 @@ class TableCompositingTest {
 
     @Test
     fun `should merge typed table with inferred type table`() {
-        val baseTable = table<Product> {
+        val baseTable = typedTable<Product> {
             name = "Products table"
             attributes {
                 text { fontColor = Colors.BLACK }
@@ -181,7 +181,7 @@ class TableCompositingTest {
                 }
             }
         }
-        Products.items(1).tabulate(TabulationFormat("spy"), Unit,baseTable + table { name = "Name override" })
+        Products.items(1).tabulate(TabulationFormat("spy"), Unit,baseTable + typedTable { name = "Name override" })
         val history = Spy.spy.readHistory()
         // Table
         history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }

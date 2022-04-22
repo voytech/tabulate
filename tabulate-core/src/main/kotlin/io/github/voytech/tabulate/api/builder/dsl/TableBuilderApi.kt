@@ -45,7 +45,7 @@ fun <T> createTable(block: TableBuilderApi<T>.() -> Unit): Table<T> =
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-fun <T> table(block: TableBuilderApi<T>.() -> Unit): TableBuilderApi<T>.() -> Unit = block
+fun <T> typedTable(block: TableBuilderApi<T>.() -> Unit): TableBuilderApi<T>.() -> Unit = block
 
 /**
  * Entry point function taking type-safe DSL table builder API as a parameter.
@@ -54,7 +54,7 @@ fun <T> table(block: TableBuilderApi<T>.() -> Unit): TableBuilderApi<T>.() -> Un
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-fun customTable(block: TableBuilderApi<Unit>.() -> Unit): TableBuilderApi<Unit>.() -> Unit = block
+fun table(block: TableBuilderApi<Unit>.() -> Unit): TableBuilderApi<Unit>.() -> Unit = block
 
 /**
  * Plus operator for merging multiple table DSL builders.
@@ -66,7 +66,7 @@ fun customTable(block: TableBuilderApi<Unit>.() -> Unit): TableBuilderApi<Unit>.
 @JvmSynthetic
 operator fun <T,E> (TableBuilderApi<E>.() -> Unit).plus(block: TableBuilderApi<T>.() -> Unit): (TableBuilderApi<T>.() -> Unit) {
     val self: (TableBuilderApi<E>.() -> Unit) = this
-    return table {
+    return typedTable {
         self.invoke(this as TableBuilderApi<E>)
         block.invoke(this)
     }

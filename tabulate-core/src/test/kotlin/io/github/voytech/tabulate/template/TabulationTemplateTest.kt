@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.api.builder.dsl.customTable
+import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.api.builder.dsl.footer
 import io.github.voytech.tabulate.api.builder.dsl.header
 import io.github.voytech.tabulate.data.Product
@@ -239,7 +239,7 @@ class TabulationTemplateTest {
 
     @Test
     fun `should correctly resolve attributes on cell level`() {
-        customTable {
+        table {
             name = "Products table"
             attributes {
                 text { fontColor = Colors.BLACK }
@@ -328,7 +328,7 @@ class TabulationTemplateTest {
 
     @Test
     fun `should merge complex attributes from multiple levels`() {
-        customTable {
+        table {
             name = "Products table"
             attributes {
                 text { fontColor = Colors.BLACK }

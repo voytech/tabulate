@@ -206,7 +206,7 @@ class RowIteratorTest {
 
     @Test
     fun `should resolve AttributedRow containing cell attribute re-defined at column builder with same index`() {
-        val template = customTable {
+        val template = table {
             columns {
                 column(0) {
                     attributes {
@@ -254,7 +254,7 @@ class RowIteratorTest {
         firstLiteral: RowIndexPredicateBuilderApi.() -> PredicateLiteral,
         secondLiteral: RowIndexPredicateBuilderApi.() -> PredicateLiteral
     ) {
-        val template = customTable {
+        val template = table {
             rows {
                 atIndex(firstLiteral) newRow {
                     cell { value = "?" }
@@ -294,7 +294,7 @@ class RowIteratorTest {
 
     @Test
     fun `should resolve AttributedRow containing cell attribute merged from different row definitions`() {
-        val template = customTable {
+        val template = table {
             rows {
                 atIndex { gte(0) and lte(3) } newRow {
                     cell { value = "?" }

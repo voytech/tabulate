@@ -182,29 +182,27 @@ In real life scenario we may want to keep table definition as separate variable:
 
 [source,kotlin,options="nowrap"]
 ----
-object TableDefinitions {
-    val contractsTable = Table<Contract> {
-        name = "Active contracts"
-        attributes {
-            columnWidth { auto = true }
-        }
-        columns {
-            column(Contract::client)
-            column(Contract::contractCode)
-            column(Contract::contractLength)
-            column(Contract::dateSigned)
-            column(Contract::expirationDate)
-            column(Contract::dateOfFirstPayment)
-            column(Contract::lastPaymentDate)
-            column(Contract::monthlyGrossValue)
-        }
-        rows {
-            header {
-                columnTitles("Client", "Code", "Contract Length", "Date Signed", "Expiration Date", "First Payment", "Last Payment","Monthly Gross Value")
-                attributes {
-                    text { fontColor = Colors.WHITE }
-                    background { color = Colors.BLACK }
-                }
+val contractsTable = typedTable<Contract> {
+    name = "Active contracts"
+    attributes {
+        columnWidth { auto = true }
+    }
+    columns {
+        column(Contract::client)
+        column(Contract::contractCode)
+        column(Contract::contractLength)
+        column(Contract::dateSigned)
+        column(Contract::expirationDate)
+        column(Contract::dateOfFirstPayment)
+        column(Contract::lastPaymentDate)
+        column(Contract::monthlyGrossValue)
+    }
+    rows {
+        header {
+            columnTitles("Client", "Code", "Contract Length", "Date Signed", "Expiration Date", "First Payment", "Last Payment","Monthly Gross Value")
+            attributes {
+                text { fontColor = Colors.WHITE }
+                background { color = Colors.BLACK }
             }
         }
     }
@@ -216,19 +214,19 @@ Now, we can reuse table definition each time we want to export contracts collect
 
 [source,kotlin,options="nowrap"]
 ----
-contracts.tabulate("contracts.xlsx", TableDefinitions.contractsTable)
+contracts.tabulate("contracts.xlsx", contractsTable)
 ----
 
 If You require different file format, just specify file name with adequate extension (e.g: .csv or .pdf):
 
 [source,kotlin,options="nowrap"]
 ----
-contracts.tabulate("contracts.csv", TableDefinitions.contractsTable)
+contracts.tabulate("contracts.csv", contractsTable)
 ----
 
 [source,kotlin,options="nowrap"]
 ----
-contracts.tabulate("contracts.pdf", TableDefinitions.contractsTable)
+contracts.tabulate("contracts.pdf", contractsTable)
 ----
 
 NOTE: Pdf format is not supported yet.
@@ -240,13 +238,13 @@ We can achieve this by `overriding` existing definition:
 
 [source,kotlin,options="nowrap"]
 ----
-contracts.tabulate("past_contracts.xlsx", contractsTable with { name = "Past Contracts" })
+contracts.tabulate("past_contracts.xlsx", contractsTable + { name = "Past Contracts" })
 ----
 
 Above syntax is intuitive and shows some powers of Kotlin.
-We have used `with` infix function in order to merge two table definitions.
+We have used `+` operator in order to merge two table definitions.
 Merging evaluates in the same order as normal method's arguments.
-Logic behind this feature is very simple - `with` function takes two lambdas with receiver, then it returns another lambda with receiver which internally delegates invocations to original lambdas one by one.
+Logic behind this feature is very simple - `+` operator takes two lambdas with receiver, then it returns another lambda with receiver which internally delegates invocations to original lambdas one by one.
 Effectively it is nothing more than receiver configuration and re-configuration (invocation of subsequent builders on the same receiver one by one).
 This is simple solution, yet imposes few restrictions on how to manage underlying builder state.
 (Explanation is out of the scope of this README file.
@@ -256,8 +254,7 @@ Far more real-life templating example:
 
 [source,kotlin,options="nowrap"]
 ----
-object TableDefinitions {
-  val headerStyles = CustomTable {
+val headerStyles = table {
     rows {
       matching { header() } assign {
         attributes {
@@ -270,10 +267,9 @@ object TableDefinitions {
         }
       }
     }
-  }
 }
 
-contracts.tabulate("contracts_list.xlsx", TableDefinitions.headerStyles + {
+contracts.tabulate("contracts_list.xlsx", headerStyles + {
     columns {
         column(Contract::client)
         column(Contract::contractCode)
@@ -318,13 +314,9 @@ After conversation thread concludes with approval, You can develop solution to p
 Starting from version 0.1.0, minor version will advance relatively fast due to tiny milestones.
 This is because of one person (me) who is currently in charge, and due to my intention of working within non-blocking release cycles.
 
-=== v0.2.x
-
-- PDF table export operations.
-
 === v0.3.x
 
-- CLI table export operations.
+- PDF table export operations.
 
 === v0.4.x
 

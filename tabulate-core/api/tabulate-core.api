@@ -227,9 +227,9 @@ public final class io/github/voytech/tabulate/api/builder/dsl/TableBuilderApiExt
 
 public final class io/github/voytech/tabulate/api/builder/dsl/TableBuilderApiKt {
 	public static final fun createTable (Lkotlin/jvm/functions/Function1;)Lio/github/voytech/tabulate/model/Table;
-	public static final fun customTable (Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function1;
 	public static final synthetic fun plus (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function1;
 	public static final fun table (Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function1;
+	public static final fun typedTable (Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function1;
 }
 
 public final class io/github/voytech/tabulate/api/builder/dsl/TableLevelAttributesBuilderApi {

@@ -25,7 +25,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -38,15 +38,15 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1920"
-     inkscape:window-height="1052"
+     inkscape:window-width="1853"
+     inkscape:window-height="1025"
      id="namedview140"
      showgrid="false"
-     inkscape:zoom="0.6055983"
-     inkscape:cx="102.47858"
-     inkscape:cy="394.56858"
-     inkscape:window-x="1920"
-     inkscape:window-y="0"
+     inkscape:zoom="1.2111966"
+     inkscape:cx="224.24684"
+     inkscape:cy="35.209728"
+     inkscape:window-x="67"
+     inkscape:window-y="27"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg138"
      inkscape:document-rotation="0" />
@@ -496,26 +496,6 @@
     <radialGradient
        inkscape:collect="always"
        xlink:href="#linearGradient1214"
-       id="radialGradient1200"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128"
-       gradientUnits="userSpaceOnUse" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient1214"
-       id="radialGradient1222"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128"
-       gradientUnits="userSpaceOnUse" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient1214"
        id="radialGradient1356"
        cx="128"
        cy="128"
@@ -542,6 +522,42 @@
        x2="256"
        y2="128"
        gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1214"
+       id="linearGradient973"
+       gradientUnits="userSpaceOnUse"
+       x1="0"
+       y1="128"
+       x2="256"
+       y2="128" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1214"
+       id="linearGradient977"
+       gradientUnits="userSpaceOnUse"
+       x1="0"
+       y1="128"
+       x2="256"
+       y2="128" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1214"
+       id="linearGradient981"
+       gradientUnits="userSpaceOnUse"
+       x1="0"
+       y1="128"
+       x2="256"
+       y2="128" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient-3-5"
+       id="linearGradient985"
+       x1="-1.2023278"
+       y1="128.35216"
+       x2="257.20233"
+       y2="128.35216"
+       gradientUnits="userSpaceOnUse" />
   </defs>
   <g
      id="g136"
@@ -565,23 +581,23 @@
   </g>
   <g
      id="g136-3"
-     style="opacity:0.8;fill:url(#radialGradient1200);fill-opacity:1;stroke-width:0.99604143;stroke-miterlimit:4;stroke-dasharray:none;paint-order:stroke fill markers;stroke:url(#linearGradient3673);stroke-opacity:1;fill-rule:nonzero"
-     transform="matrix(0.28772849,0,0,0.34474149,91.474655,70.374979)">
+     style="opacity:0.8;fill:url(#linearGradient985);fill-opacity:1.0;fill-rule:nonzero;stroke:url(#linearGradient3673);stroke-width:0.996041;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+     transform="matrix(0.28772849,0,0,0.34474149,91.474657,70.374979)">
     <polygon
        fill="url(#linearGradient-1)"
-       points="0,256 128.42667,127.57333 256,256 "
+       points="256,256 0,256 128.42667,127.57333 "
        id="polygon130-0"
-       style="fill:url(#radialGradient1200);fill-opacity:1;stroke-width:0.99604143;stroke-miterlimit:4;stroke-dasharray:none;paint-order:stroke fill markers;stroke:url(#linearGradient3673);stroke-opacity:1;fill-rule:nonzero" />
+       style="fill:url(#linearGradient985);fill-opacity:1.0;fill-rule:nonzero;stroke:url(#linearGradient973);stroke-width:0.996041;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers" />
     <polygon
        fill="url(#linearGradient-2)"
-       points="0,0 128.42667,0 0,138.66667 "
+       points="0,138.66667 0,0 128.42667,0 "
        id="polygon132-7"
-       style="fill:url(#radialGradient1200);fill-opacity:1;stroke-width:0.99604143;stroke-miterlimit:4;stroke-dasharray:none;paint-order:stroke fill markers;stroke:url(#linearGradient3673);stroke-opacity:1;fill-rule:nonzero" />
+       style="fill:url(#linearGradient985);fill-opacity:1.0;fill-rule:nonzero;stroke:url(#linearGradient977);stroke-width:0.996041;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers" />
     <polygon
        fill="url(#linearGradient-3)"
-       points="128.42667,127.57333 256,0 128.42667,0 0,135.25333 0,256 "
+       points="128.42667,0 0,135.25333 0,256 128.42667,127.57333 256,0 "
        id="polygon134-8"
-       style="fill:url(#radialGradient1222);fill-opacity:1;stroke-width:0.99604143;stroke-miterlimit:4;stroke-dasharray:none;paint-order:stroke fill markers;stroke:url(#linearGradient3673);stroke-opacity:1;fill-rule:nonzero" />
+       style="fill:url(#linearGradient985);fill-opacity:1.0;fill-rule:nonzero;stroke:url(#linearGradient981);stroke-width:0.996041;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers" />
   </g>
   <rect
      style="opacity:0.529166;fill:#ffb372;fill-opacity:0.603922;stroke-width:0.915221"

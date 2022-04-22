@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.template.operations
 
-import io.github.voytech.tabulate.api.builder.dsl.customTable
+import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.model.attributes.Colors
 import io.github.voytech.tabulate.model.attributes.cell.CellBordersAttribute
 import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
@@ -26,7 +26,7 @@ class TableOperationsWithAttributeSupportTest {
         operationPriorities[CellBordersAttribute::class.java] = -1   // should be rendered first,
         operationPriorities[CellTextStylesAttribute::class.java] = 1 // should be rendered next.
 
-        customTable {
+        table {
             columns {
                 column(0) {
                     attributes { width { px = 100 } }
@@ -82,7 +82,7 @@ class TableOperationsWithAttributeSupportTest {
     @Test
     fun `should use user defined attribute operation instead of factory provided`() {
 
-        customTable {
+        table {
             rows {
                 newRow {
                     cell { value = "cell" }
