@@ -87,8 +87,6 @@ jobs:
 
 workflows:
   publishSnapshots:
-#    when:
-#      equal: [ "publish_snapshot", << pipeline.parameters.GHA_Meta >> ]
     jobs:
       - hold:
           type: approval
