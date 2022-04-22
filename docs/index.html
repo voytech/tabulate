@@ -482,7 +482,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#_export_collection_with_header_and_summary">Export collection with header and summary.</a></li>
 <li><a href="#_add_excel_formula_for_summing_column_values">Add Excel formula for summing column values.</a></li>
-<li><a href="#_maintain_and_bind_reusable_styles">Maintain and bind reusable styles.</a></li>
+<li><a href="#_reusable_composable_table_builder_declarations">Reusable, composable table builder declarations.</a></li>
 <li><a href="#_fill_monthly_revenue_template_with_trend_chart">Fill monthly revenue template with trend chart.</a></li>
 <li><a href="#_create_invoice">Create invoice.</a></li>
 </ul>
@@ -1787,11 +1787,11 @@ Builders track all attribute property changes (to determine which change - left 
             header("Agreement Number", "Code", "Net Cost", "Gross Cost","Sign Date")
             footer {
                 cell(Agreement::netCostValue) {
-                    value = "=SUM(C1:C${size() + 1})"
+                    value = "=SUM(C1:C${size() + 1})" <i class="conum" data-value="1"></i><b>(1)</b>
                     type = ExcelTypeHints.FORMULA
                 }
                 cell(Agreement::grossCostValue) {
-                    value = "=SUM(D1:D${size() + 1})"
+                    value = "=SUM(D1:D${size() + 1})" <i class="conum" data-value="2"></i><b>(2)</b>
                     type = ExcelTypeHints.FORMULA
                 }
             }
@@ -1800,14 +1800,25 @@ Builders track all attribute property changes (to determine which change - left 
 }</code></pre>
 </div>
 </div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This looks ugly and will change.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The same.</td>
+</tr>
+</table>
+</div>
 <div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
-<h3 id="_maintain_and_bind_reusable_styles">Maintain and bind reusable styles.</h3>
+<h3 id="_reusable_composable_table_builder_declarations">Reusable, composable table builder declarations.</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">object TableDefinitions {
-  val headerStyles = CustomTable {
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">val whiteOnBlackHeader = CustomTable {
     rows {
       matching { header() } assign {
         attributes {
@@ -1820,10 +1831,18 @@ Builders track all attribute property changes (to determine which change - left 
         }
       }
     }
+}
+
+val printingDetails = CustomTable {
+  attributes {
+      printing {
+        blackAndWhite = true
+        footerCenter = "Page ${HeaderFooter.page()} of  ${HeaderFooter.numPages()}" <i class="conum" data-value="1"></i><b>(1)</b>
+      }
   }
 }
 
-contracts.tabulate("contracts_list.xlsx", TableDefinitions.headerStyles + {
+contracts.tabulate("contracts_list.xlsx", printingDetails + whiteOnBlackHeader + {
     columns {
         column(Contract::client)
         column(Contract::contractCode)
@@ -1842,6 +1861,14 @@ contracts.tabulate("contracts_list.xlsx", TableDefinitions.headerStyles + {
 })</code></pre>
 </div>
 </div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>HeaderFooter.page()</code> and <code>HeaderFooter.numPages()</code> are <strong>Apache POI</strong> utilities.</td>
+</tr>
+</table>
+</div>
 <div style="page-break-after: always;"></div>
 </div>
 <div class="sect2">
@@ -1854,7 +1881,7 @@ contracts.tabulate("contracts_list.xlsx", TableDefinitions.headerStyles + {
 <div class="sect2">
 <h3 id="_create_invoice">Create invoice.</h3>
 <div class="paragraph">
-<p>Please refer to project <code>tabulate-examples</code> on github in order to inspect invoice DSL vocabulary.
+<p>Please refer to project <a href="https://github.com/voytech/tabulate-examples"><strong>tabulate-examples</strong></a> in order to see complete <strong>invoice DSL</strong> vocabulary.
 Search for classes: <code>InvoiceDsl.kt</code>, <code>InvoiceData.kt</code>, <code>Layouts.kt</code> and <code>sections</code> package (contains invoice layout section extensions).</p>
 </div>
 <div class="admonitionblock caution">
@@ -1868,6 +1895,9 @@ Please note that <code>Layouts.kt</code> in <code>tabulate-examples</code> proje
 </td>
 </tr>
 </table>
+</div>
+<div class="paragraph">
+<p>Invoice DSL is rather too much to put it in here so I am presenting only top level consumer facing constructs:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1901,13 +1931,104 @@ Please note that <code>Layouts.kt</code> in <code>tabulate-examples</code> proje
     )</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>And below, well known 'tabulate' call:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">fun Iterable&lt;InvoiceLineItem&gt;.printInvoice(
+    fileName: String,
+    issuerDetails: CompanyAddress,
+    clientDetails: CompanyAddress,
+    invoiceNumber: String = "#00001",
+    invoiceIssueDate: LocalDate = LocalDate.now(),
+    invoiceDueDate: LocalDate = LocalDate.now(),
+) {
+    val items = this
+    tabulate(fileName) {
+        attributes { columnWidth { auto = true } }
+        columns {
+            column(InvoiceLineItem::description)
+            column(InvoiceLineItem::qty)
+            column(InvoiceLineItem::unitPrice)
+            column(InvoiceLineItem::vat)
+            column(InvoiceLineItem::total)
+        }
+        rows {
+            layout {  <i class="conum" data-value="1"></i><b>(1)</b>
+                horizontal { titleSection() } <i class="conum" data-value="2"></i><b>(2)</b>
+                horizontal {
+                    issuerSection {
+                        issuer = issuerDetails
+                        imageUrl = "src/main/resources/logo.png"
+                    }
+                }
+                horizontal {
+                    section { separator(1,5) }
+                }
+                horizontal {
+                    addressDetailsSection {
+                        addressTitle = "BILL TO"
+                        address = issuerDetails
+                    }
+                    addressDetailsSection {
+                        addressTitle = "SHIP TO"
+                        address = clientDetails
+                    }
+                    invoiceDetailsSection {
+                        number = invoiceNumber
+                        issueDate = invoiceIssueDate
+                        dueDate = invoiceDueDate
+                    }
+                }
+                horizontal {
+                    section { separator(1,5) }
+                }
+                horizontal {
+                    lineItemsHeaderSection()
+                }
+                horizontal(AdditionalSteps.TRAILING_ROWS) {
+                    section { separator(1,5) }
+                }
+                horizontal(AdditionalSteps.TRAILING_ROWS) {
+                    invoiceSummarySection(column = 3) {
+                        subtotal = items.sumOf { it.unitPrice.multiply(it.qty.toBigDecimal()) }
+                        discounts = BigDecimal.ZERO
+                        taxes = items.sumOf { it.vat.multiply(it.unitPrice.multiply(it.qty.toBigDecimal())) }
+                        total = items.sumOf { it.total }
+                    }
+                }
+                horizontal(AdditionalSteps.TRAILING_ROWS) {
+                    section { separator(1,5) }
+                }
+                horizontal(AdditionalSteps.TRAILING_ROWS) {
+                    thankYou(span = 5)
+                }
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>layout</code> is an extension method on <code>RowBuilderApi</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>horizontal</code> is also the same type of extension method. It allows to place <code>sections</code> that contains multiple <code>newRow</code> calls next to each other horizontally. This is something You cannot achieve using standard DSL API, but this is something which is done using pure extension functions with additional builder state on top of core API state. It does not require any modifications to core API exposed by <code>tabulate-core</code>.</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-04-21 18:56:44 +0200
+Last updated 2022-04-22 08:10:08 +0200
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

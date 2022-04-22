@@ -16,6 +16,7 @@ import io.github.voytech.tabulate.model.attributes.row.RowBordersAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.template.operations.*
+import org.apache.poi.hssf.usermodel.HSSFHeader
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.FontUnderline
 import org.apache.poi.ss.util.CellRangeAddress
@@ -434,7 +435,8 @@ class CellCommentAttributeRenderOperation :
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-class PrintingAttributeRenderOperation :
+class
+PrintingAttributeRenderOperation :
     TableAttributeRenderOperation<ApachePoiRenderingContext, PrintingAttribute, TableOpeningContext>(TableOpeningContext::class.java) {
     override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
     override fun attributeType(): Class<PrintingAttribute> = PrintingAttribute::class.java
@@ -474,6 +476,15 @@ class PrintingAttributeRenderOperation :
             it.footer.left = attribute.footerLeft
             it.footer.center = attribute.footerCenter
             it.footer.right = attribute.footerRight
+
+            //TODO below
+
+            /*
+            HSSFHeader header = sheet.getHeader();
+eader.setCenter(HSSFHeader.font("Calibri", "regular") +
+       HSSFHeader.fontSize((short) 14) + "My " + HSSFHeader.startBold() + "Styled" +
+       HSSFHeader.endBold() + " Text with page number " + HSSFHeader.page());
+             */
         }
     }
 }

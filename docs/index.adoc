@@ -849,25 +849,26 @@ agreementRepository.loadAgreements().run {
             header("Agreement Number", "Code", "Net Cost", "Gross Cost","Sign Date")
             footer {
                 cell(Agreement::netCostValue) {
-                    value = "=SUM(C1:C${size() + 1})"
+                    value = "=SUM(C1:C${size() + 1})" // <1>
                     type = ExcelTypeHints.FORMULA
                 }
                 cell(Agreement::grossCostValue) {
-                    value = "=SUM(D1:D${size() + 1})"
+                    value = "=SUM(D1:D${size() + 1})" // <2>
                     type = ExcelTypeHints.FORMULA
                 }
             }
         }
     }
 }
-
 ----
+<1> This looks ugly and will change.
+<2> The same.
+
 <<<
-=== Maintain and bind reusable styles.
+=== Reusable, composable table builder declarations.
 [source,kotlin,options="nowrap"]
 ----
-object TableDefinitions {
-  val headerStyles = CustomTable {
+val whiteOnBlackHeader = CustomTable {
     rows {
       matching { header() } assign {
         attributes {
@@ -880,10 +881,18 @@ object TableDefinitions {
         }
       }
     }
+}
+
+val printingDetails = CustomTable {
+  attributes {
+      printing {
+        blackAndWhite = true
+        footerCenter = "Page ${HeaderFooter.page()} of  ${HeaderFooter.numPages()}" // <1>
+      }
   }
 }
 
-contracts.tabulate("contracts_list.xlsx", TableDefinitions.headerStyles + {
+contracts.tabulate("contracts_list.xlsx", printingDetails + whiteOnBlackHeader + {
     columns {
         column(Contract::client)
         column(Contract::contractCode)
@@ -901,16 +910,20 @@ contracts.tabulate("contracts_list.xlsx", TableDefinitions.headerStyles + {
     }
 })
 ----
+<1> `HeaderFooter.page()` and `HeaderFooter.numPages()` are *Apache POI* utilities.
+
 <<<
 === Fill monthly revenue template with trend chart.
 TBD.
 
 <<<
 === Create invoice.
-Please refer to project `tabulate-examples` on github in order to inspect invoice DSL vocabulary.
+Please refer to project link:https://github.com/voytech/tabulate-examples[*tabulate-examples*] in order to see complete *invoice DSL* vocabulary.
 Search for classes: `InvoiceDsl.kt`, `InvoiceData.kt`, `Layouts.kt` and `sections` package (contains invoice layout section extensions).
 
 CAUTION: Please note that `Layouts.kt` in `tabulate-examples` project contains API extensions which are currently incubating and may be dropped in future ;)
+
+Invoice DSL is rather too much to put it in here so I am presenting only top level consumer facing constructs:
 [source,kotlin,options="nowrap"]
 ----
     listOf(
@@ -942,3 +955,83 @@ CAUTION: Please note that `Layouts.kt` in `tabulate-examples` project contains A
         )
     )
 ----
+
+And below, well known 'tabulate' call:
+
+[source,kotlin,options="nowrap"]
+----
+fun Iterable<InvoiceLineItem>.printInvoice(
+    fileName: String,
+    issuerDetails: CompanyAddress,
+    clientDetails: CompanyAddress,
+    invoiceNumber: String = "#00001",
+    invoiceIssueDate: LocalDate = LocalDate.now(),
+    invoiceDueDate: LocalDate = LocalDate.now(),
+) {
+    val items = this
+    tabulate(fileName) {
+        attributes { columnWidth { auto = true } }
+        columns {
+            column(InvoiceLineItem::description)
+            column(InvoiceLineItem::qty)
+            column(InvoiceLineItem::unitPrice)
+            column(InvoiceLineItem::vat)
+            column(InvoiceLineItem::total)
+        }
+        rows {
+            layout {  // <1>
+                horizontal { titleSection() } // <2>
+                horizontal {
+                    issuerSection {
+                        issuer = issuerDetails
+                        imageUrl = "src/main/resources/logo.png"
+                    }
+                }
+                horizontal {
+                    section { separator(1,5) }
+                }
+                horizontal {
+                    addressDetailsSection {
+                        addressTitle = "BILL TO"
+                        address = issuerDetails
+                    }
+                    addressDetailsSection {
+                        addressTitle = "SHIP TO"
+                        address = clientDetails
+                    }
+                    invoiceDetailsSection {
+                        number = invoiceNumber
+                        issueDate = invoiceIssueDate
+                        dueDate = invoiceDueDate
+                    }
+                }
+                horizontal {
+                    section { separator(1,5) }
+                }
+                horizontal {
+                    lineItemsHeaderSection()
+                }
+                horizontal(AdditionalSteps.TRAILING_ROWS) {
+                    section { separator(1,5) }
+                }
+                horizontal(AdditionalSteps.TRAILING_ROWS) {
+                    invoiceSummarySection(column = 3) {
+                        subtotal = items.sumOf { it.unitPrice.multiply(it.qty.toBigDecimal()) }
+                        discounts = BigDecimal.ZERO
+                        taxes = items.sumOf { it.vat.multiply(it.unitPrice.multiply(it.qty.toBigDecimal())) }
+                        total = items.sumOf { it.total }
+                    }
+                }
+                horizontal(AdditionalSteps.TRAILING_ROWS) {
+                    section { separator(1,5) }
+                }
+                horizontal(AdditionalSteps.TRAILING_ROWS) {
+                    thankYou(span = 5)
+                }
+            }
+        }
+    }
+}
+----
+<1> `layout` is an extension method on `RowBuilderApi`.
+<2> `horizontal` is also the same type of extension method. It allows to place `sections` that contains multiple `newRow` calls next to each other horizontally. This is something You cannot achieve using standard DSL API, but this is something which is done using pure extension functions with additional builder state on top of core API state. It does not require any modifications to core API exposed by `tabulate-core`.
