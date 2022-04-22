@@ -1,13 +1,16 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.api.builder.dsl.CustomTable
+import io.github.voytech.tabulate.api.builder.dsl.customTable
 import io.github.voytech.tabulate.api.builder.dsl.footer
 import io.github.voytech.tabulate.api.builder.dsl.header
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
 import io.github.voytech.tabulate.model.attributes.Colors
-import io.github.voytech.tabulate.model.attributes.cell.*
+import io.github.voytech.tabulate.model.attributes.cell.CellBackgroundAttribute
+import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
+import io.github.voytech.tabulate.model.attributes.cell.background
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultWeightStyle
+import io.github.voytech.tabulate.model.attributes.cell.text
 import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.column.columnWidth
 import io.github.voytech.tabulate.model.attributes.column.width
@@ -236,7 +239,7 @@ class TabulationTemplateTest {
 
     @Test
     fun `should correctly resolve attributes on cell level`() {
-        CustomTable {
+        customTable {
             name = "Products table"
             attributes {
                 text { fontColor = Colors.BLACK }
@@ -325,7 +328,7 @@ class TabulationTemplateTest {
 
     @Test
     fun `should merge complex attributes from multiple levels`() {
-        CustomTable {
+        customTable {
             name = "Products table"
             attributes {
                 text { fontColor = Colors.BLACK }

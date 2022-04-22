@@ -1,9 +1,8 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.api.builder.dsl.CustomTable
-import io.github.voytech.tabulate.api.builder.dsl.Table
+import io.github.voytech.tabulate.api.builder.dsl.customTable
 import io.github.voytech.tabulate.api.builder.dsl.plus
-import io.github.voytech.tabulate.api.builder.dsl.with
+import io.github.voytech.tabulate.api.builder.dsl.table
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
 import io.github.voytech.tabulate.model.attributes.Colors
@@ -23,7 +22,7 @@ class TableCompositingTest {
 
     @Test
     fun `should merge custom table with another custom table`() {
-        val customTable = CustomTable {
+        val customTable = customTable {
             name = "Products table"
             attributes {
                 text { fontColor = Colors.BLACK }
@@ -36,7 +35,7 @@ class TableCompositingTest {
                 }
             }
         }
-        val overrideTable = CustomTable {
+        val overrideTable = customTable {
             name = "Name override"
             rows {
                 newRow {
@@ -70,7 +69,7 @@ class TableCompositingTest {
 
     @Test
     fun `should merge custom table with typed table`() {
-        val customTable = CustomTable {
+        val customTable = customTable {
             name = "Products table"
             attributes {
                 text { fontColor = Colors.BLACK }
@@ -83,7 +82,7 @@ class TableCompositingTest {
                 }
             }
         }
-        val overrideTable = Table<Product> {
+        val overrideTable = table<Product> {
             name = "Name override"
             columns {
                 column(Product::code)
@@ -117,7 +116,7 @@ class TableCompositingTest {
 
     @Test
     fun `should merge typed table with another typed table`() {
-        val baseTable = Table<Product> {
+        val baseTable = table<Product> {
             name = "Products table"
             attributes {
                 text { fontColor = Colors.BLACK }
@@ -130,13 +129,13 @@ class TableCompositingTest {
                 }
             }
         }
-        val overrideTable = Table<Product> {
+        val overrideTable = table<Product> {
             name = "Name override"
             columns {
                 column(Product::name)
             }
         }
-        Products.items(1).tabulate(TabulationFormat("spy"), Unit,baseTable with overrideTable)
+        Products.items(1).tabulate(TabulationFormat("spy"), Unit,baseTable + overrideTable)
         val history = Spy.spy.readHistory()
         // Table
         history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }
@@ -163,6 +162,43 @@ class TableCompositingTest {
         history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
         // Column 1
         history.next().run { assertEquals(1, (context as ColumnClosingContext).columnIndex) }
+        history.next().run { assertIs<TableClosingContext>(context) }
+        assertFalse(history.hasNext())
+    }
+
+    @Test
+    fun `should merge typed table with inferred type table`() {
+        val baseTable = table<Product> {
+            name = "Products table"
+            attributes {
+                text { fontColor = Colors.BLACK }
+            }
+            columns {
+                column(Product::code) {
+                    attributes {
+                        width { px = 45 }
+                    }
+                }
+            }
+        }
+        Products.items(1).tabulate(TabulationFormat("spy"), Unit,baseTable + table { name = "Name override" })
+        val history = Spy.spy.readHistory()
+        // Table
+        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }
+        // Column 0
+        history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
+        // Column 0 attribute
+        history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        // Row 0
+        history.next().run { assertEquals(0, (context as RowOpeningContext).getRow()) }
+        // Row 0, cell 0
+        history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
+        history.next().run {
+            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+        }
+        history.next().run { assertTrue(context is RowClosingContext<*>) }
+        // Column 0
+        history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
         history.next().run { assertIs<TableClosingContext>(context) }
         assertFalse(history.hasNext())
     }

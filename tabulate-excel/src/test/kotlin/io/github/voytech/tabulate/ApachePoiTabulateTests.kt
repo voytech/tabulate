@@ -372,7 +372,7 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export table with cell comment`() {
-        CustomTable {
+        customTable {
             name = "Test table"
             rows {
                 newRow {
@@ -408,7 +408,7 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should setup printing attributes`() {
-        CustomTable {
+        customTable {
             name = "Test table"
             attributes {
                 printing {
@@ -474,7 +474,7 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should define borders for entire row using row attribute`() {
-        CustomTable {
+        customTable {
             firstRow = 1
             firstColumn = 1
             name = "Test table"
@@ -510,7 +510,7 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export table with custom rows and cell and row spans`() {
-        CustomTable {
+        customTable {
             name = "Test table"
             rows {
                 newRow {
@@ -555,7 +555,7 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export table with custom row with image`() {
-        CustomTable {
+        customTable {
             name = "Test table"
             columns {
                 column("description")
@@ -591,7 +591,7 @@ class ApachePoiTabulateTests {
 
     @Test
     fun `should export table using shared table template`() {
-        val sharedStyleTemplate = CustomTable {
+        val sharedStyleTemplate = customTable {
             attributes {
                 columnWidth { auto = true }
             }
@@ -624,7 +624,7 @@ class ApachePoiTabulateTests {
             }
         }
 
-        SampleProduct.create(4).tabulate("test.xlsx", sharedStyleTemplate + Table {
+        SampleProduct.create(4).tabulate("test.xlsx", sharedStyleTemplate + table {
             name = "Products"
             columns {
                 column(SampleProduct::code)

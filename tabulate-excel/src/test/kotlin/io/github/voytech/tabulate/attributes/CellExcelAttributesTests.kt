@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.attributes
 
 import io.github.voytech.tabulate.api.builder.CellAttributeBuilder
-import io.github.voytech.tabulate.api.builder.dsl.Table
+import io.github.voytech.tabulate.api.builder.dsl.customTable
 import io.github.voytech.tabulate.excel.model.ExcelCellFills
 import io.github.voytech.tabulate.excel.model.attributes.CellExcelDataFormatAttribute
 import io.github.voytech.tabulate.model.attributes.CellAttribute
@@ -52,7 +52,7 @@ class CellExcelAttributesTests {
     @MethodSource("cellAttributesProvider")
     fun `should export with cell attribute`(attr: CellAttributeBuilder<*>, expectedAttribute: CellAttribute<*>) {
         // when
-        Table<Any> {
+        customTable {
             name = "test"
             rows {
                 newRow {
@@ -89,7 +89,7 @@ class CellExcelAttributesTests {
     @Disabled("Needs resolver for attribute.")
     fun `should install client defined attribute`() {
         // when
-        Table<Any> {
+        customTable {
             name = "test"
             rows {
                 newRow {

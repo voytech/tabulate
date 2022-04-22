@@ -34,36 +34,40 @@ internal fun <T> createTableBuilder(block: TableBuilderApi<T>.() -> Unit): Table
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-fun <T> createTable(block: TableBuilderApi<T>.() -> Unit): io.github.voytech.tabulate.model.Table<T> =
+fun <T> createTable(block: TableBuilderApi<T>.() -> Unit): Table<T> =
     createTableBuilder(block).build()
 
-object Table {
-    @JvmSynthetic
-    operator fun <T> invoke(block: TableBuilderApi<T>.() -> Unit) = block
-}
+/**
+ * Entry point function taking type-safe DSL table builder API as a parameter.
+ * Function goals - wrapping DSL builder and providing lambda receiver type, inferring type of right-hand side table
+ * declaration for inline table merging.
+ * @return lambda receiver block
+ * @author Wojciech Mąka
+ * @since 0.2.0
+ */
+fun <T> table(block: TableBuilderApi<T>.() -> Unit): TableBuilderApi<T>.() -> Unit = block
 
-object CustomTable {
-    @JvmSynthetic
-    operator fun invoke(block: TableBuilderApi<Unit>.() -> Unit) = block
-}
+/**
+ * Entry point function taking type-safe DSL table builder API as a parameter.
+ * Main goal of this function is to wrap DSL builder and provide lambda receiver type.
+ * @return lambda receiver block
+ * @author Wojciech Mąka
+ * @since 0.2.0
+ */
+fun customTable(block: TableBuilderApi<Unit>.() -> Unit): TableBuilderApi<Unit>.() -> Unit = block
 
+/**
+ * Plus operator for merging multiple table DSL builders.
+ * @return lambda receiver block
+ * @author Wojciech Mąka
+ * @since 0.2.0
+ */
 @Suppress("UNCHECKED_CAST")
 @JvmSynthetic
-operator fun <T> (TableBuilderApi<Unit>.() -> Unit).plus(block: TableBuilderApi<T>.() -> Unit): (TableBuilderApi<T>.() -> Unit) {
-    val self: (TableBuilderApi<Unit>.() -> Unit) = this
-    return Table {
-        self.invoke(this as TableBuilderApi<Unit>)
-        block.invoke(this)
-    }
-}
-
-
-@Suppress("UNCHECKED_CAST")
-@JvmSynthetic
-infix fun <T> (TableBuilderApi<T>.() -> Unit).with(block: TableBuilderApi<T>.() -> Unit): (TableBuilderApi<T>.() -> Unit) {
-    val self: (TableBuilderApi<T>.() -> Unit) = this
-    return Table {
-        self.invoke(this)
+operator fun <T,E> (TableBuilderApi<E>.() -> Unit).plus(block: TableBuilderApi<T>.() -> Unit): (TableBuilderApi<T>.() -> Unit) {
+    val self: (TableBuilderApi<E>.() -> Unit) = this
+    return table {
+        self.invoke(this as TableBuilderApi<E>)
         block.invoke(this)
     }
 }

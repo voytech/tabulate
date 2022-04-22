@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.attributes
 
-import io.github.voytech.tabulate.api.builder.dsl.Table
+import io.github.voytech.tabulate.api.builder.dsl.customTable
 import io.github.voytech.tabulate.model.attributes.column.columnWidth
 import io.github.voytech.tabulate.model.attributes.column.width
 import io.github.voytech.tabulate.template.export
@@ -15,7 +15,7 @@ class ColumnExcelAttributesTests {
     @Test
     fun `should export with column attribute`() {
         // when
-        Table<Any> {
+        customTable {
             name = "test"
             attributes {
                 columnWidth { px = 500 }

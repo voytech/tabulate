@@ -111,11 +111,6 @@ public final class io/github/voytech/tabulate/api/builder/dsl/ColumnsBuilderApi 
 	public final synthetic fun column (Lkotlin/reflect/KProperty1;Lkotlin/jvm/functions/Function1;)V
 }
 
-public final class io/github/voytech/tabulate/api/builder/dsl/CustomTable {
-	public static final field INSTANCE Lio/github/voytech/tabulate/api/builder/dsl/CustomTable;
-	public final synthetic fun invoke (Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function1;
-}
-
 public final class io/github/voytech/tabulate/api/builder/dsl/HeaderBuilderApi {
 	public static final field Companion Lio/github/voytech/tabulate/api/builder/dsl/HeaderBuilderApi$Companion;
 	public static final field HEADER_ROW_INDEX I
@@ -193,11 +188,6 @@ public final class io/github/voytech/tabulate/api/builder/dsl/RowsBuilderApi {
 	public final synthetic fun row (Lio/github/voytech/tabulate/model/RowPredicate;Lkotlin/jvm/functions/Function1;)V
 }
 
-public final class io/github/voytech/tabulate/api/builder/dsl/Table {
-	public static final field INSTANCE Lio/github/voytech/tabulate/api/builder/dsl/Table;
-	public final synthetic fun invoke (Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function1;
-}
-
 public final class io/github/voytech/tabulate/api/builder/dsl/TableBuilderApi {
 	public final synthetic fun attributes (Lkotlin/jvm/functions/Function1;)V
 	public final synthetic fun columns (Lkotlin/jvm/functions/Function1;)V
@@ -237,8 +227,9 @@ public final class io/github/voytech/tabulate/api/builder/dsl/TableBuilderApiExt
 
 public final class io/github/voytech/tabulate/api/builder/dsl/TableBuilderApiKt {
 	public static final fun createTable (Lkotlin/jvm/functions/Function1;)Lio/github/voytech/tabulate/model/Table;
+	public static final fun customTable (Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function1;
 	public static final synthetic fun plus (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function1;
-	public static final synthetic fun with (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function1;
+	public static final fun table (Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function1;
 }
 
 public final class io/github/voytech/tabulate/api/builder/dsl/TableLevelAttributesBuilderApi {
