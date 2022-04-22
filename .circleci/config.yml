@@ -87,43 +87,25 @@ jobs:
 
 workflows:
   publishSnapshots:
+    when:
+      equal: [ "publish_snapshot", << pipeline.parameters.GHA_Meta >> ]
     jobs:
       - hold:
           type: approval
       - publishSnapshot:
           mname: tabulate-bom
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^tabulate\.bom-[0-9]+.[0-9]+.[0-9]+-alpha/
           requires:
             - hold
       - publishSnapshot:
           mname: tabulate-core
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^tabulate\.core-[0-9]+.[0-9]+.[0-9]+-alpha/
           requires:
             - hold
       - publishSnapshot:
           mname: tabulate-csv
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^tabulate\.csv-[0-9]+.[0-9]+.[0-9]+-alpha/
           requires:
             - hold
       - publishSnapshot:
           mname: tabulate-excel
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^tabulate\.excel-[0-9]+.[0-9]+.[0-9]+-alpha/
           requires:
             - hold
   publishMavenVersion:
