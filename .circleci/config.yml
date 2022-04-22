@@ -93,6 +93,8 @@ workflows:
       - publishSnapshot:
           mname: tabulate-bom
           filters:
+            branches:
+              ignore: /.*/
             tags:
               only: /^tabulate\.bom-[0-9]+.[0-9]+.[0-9]+-alpha/
           requires:
@@ -100,6 +102,8 @@ workflows:
       - publishSnapshot:
           mname: tabulate-core
           filters:
+            branches:
+              ignore: /.*/
             tags:
               only: /^tabulate\.core-[0-9]+.[0-9]+.[0-9]+-alpha/
           requires:
@@ -107,6 +111,8 @@ workflows:
       - publishSnapshot:
           mname: tabulate-csv
           filters:
+            branches:
+              ignore: /.*/
             tags:
               only: /^tabulate\.csv-[0-9]+.[0-9]+.[0-9]+-alpha/
           requires:
@@ -114,6 +120,8 @@ workflows:
       - publishSnapshot:
           mname: tabulate-excel
           filters:
+            branches:
+              ignore: /.*/
             tags:
               only: /^tabulate\.excel-[0-9]+.[0-9]+.[0-9]+-alpha/
           requires:
