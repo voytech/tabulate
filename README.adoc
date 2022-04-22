@@ -1,6 +1,8 @@
-= Tabulate
 :icons: font
 :source-highlighter: highlight.js
+
+image::logo/tabulate_3.svg[Tabulate logo,600,200]
+
 
 image:https://www.codefactor.io/repository/github/voytech/tabulate/badge?s=356351985a7dd58359040b23f6d896d28af928af[CodeFactor,link=https://www.codefactor.io/repository/github/voytech/tabulate]
 image:https://github.com/voytech/tabulate/actions/workflows/gradle.yml/badge.svg?branch=master[Build Status,link=https://github.com/voytech/tabulate/actions/workflows/gradle.yml]
