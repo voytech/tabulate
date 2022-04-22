@@ -42,15 +42,39 @@
      inkscape:window-height="1052"
      id="namedview140"
      showgrid="false"
-     inkscape:zoom="0.42822266"
-     inkscape:cx="364.6087"
-     inkscape:cy="-527.47123"
+     inkscape:zoom="1.2111966"
+     inkscape:cx="443.99941"
+     inkscape:cy="-8.3250105"
      inkscape:window-x="1920"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg138" />
   <defs
      id="defs128">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient4868">
+      <stop
+         style="stop-color:#6171ca;stop-opacity:1;"
+         offset="0"
+         id="stop4864" />
+      <stop
+         style="stop-color:#6171ca;stop-opacity:0;"
+         offset="1"
+         id="stop4866" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient4858">
+      <stop
+         style="stop-color:#4d7fab;stop-opacity:1;"
+         offset="0"
+         id="stop4854" />
+      <stop
+         style="stop-color:#4d7fab;stop-opacity:0;"
+         offset="1"
+         id="stop4856" />
+    </linearGradient>
     <linearGradient
        id="linearGradient4528"
        osb:paint="solid">
@@ -277,36 +301,6 @@
          offset="82.32%"
          id="stop125-5" />
     </linearGradient>
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3-5"
-       id="radialGradient4103"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128"
-       gradientUnits="userSpaceOnUse" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3"
-       id="radialGradient4113"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128"
-       gradientUnits="userSpaceOnUse" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3-6"
-       id="radialGradient4113-3"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128"
-       gradientUnits="userSpaceOnUse" />
     <linearGradient
        x1="-43.100586"
        y1="235.36554"
@@ -372,16 +366,6 @@
     <radialGradient
        inkscape:collect="always"
        xlink:href="#linearGradient-3-6"
-       id="radialGradient4103-2"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128"
-       gradientUnits="userSpaceOnUse" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3-6"
        id="radialGradient4209"
        cx="128"
        cy="128"
@@ -409,126 +393,6 @@
        fy="128"
        r="128"
        gradientUnits="userSpaceOnUse" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3-6"
-       id="radialGradient4289"
-       gradientUnits="userSpaceOnUse"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3-6"
-       id="radialGradient4291"
-       gradientUnits="userSpaceOnUse"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3-6"
-       id="radialGradient4293"
-       gradientUnits="userSpaceOnUse"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3-6"
-       id="radialGradient4295"
-       gradientUnits="userSpaceOnUse"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3-6"
-       id="radialGradient4297"
-       gradientUnits="userSpaceOnUse"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3-6"
-       id="radialGradient4299"
-       gradientUnits="userSpaceOnUse"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3"
-       id="radialGradient4488"
-       gradientUnits="userSpaceOnUse"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3"
-       id="radialGradient4490"
-       gradientUnits="userSpaceOnUse"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3"
-       id="radialGradient4492"
-       gradientUnits="userSpaceOnUse"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3-5"
-       id="radialGradient4494"
-       gradientUnits="userSpaceOnUse"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3-5"
-       id="radialGradient4496"
-       gradientUnits="userSpaceOnUse"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128" />
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient-3-5"
-       id="radialGradient4498"
-       gradientUnits="userSpaceOnUse"
-       cx="128"
-       cy="128"
-       fx="128"
-       fy="128"
-       r="128" />
     <linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient4528"
@@ -538,63 +402,86 @@
        x2="421.6243"
        y2="125.70544"
        gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient-3-0"
+       id="linearGradient4836"
+       x1="0"
+       y1="128"
+       x2="256"
+       y2="128"
+       gradientUnits="userSpaceOnUse" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient-3-0"
+       id="radialGradient4852"
+       cx="128"
+       cy="128"
+       fx="128"
+       fy="128"
+       r="128"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4858"
+       id="linearGradient4862"
+       x1="-560.44751"
+       y1="40.120869"
+       x2="-14.171692"
+       y2="40.120869"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(574.6192)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4868"
+       id="linearGradient4870"
+       x1="-560.79785"
+       y1="189.36966"
+       x2="-13.927979"
+       y2="189.36966"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(574.72583)" />
   </defs>
   <g
      id="g136"
-     style="opacity:0.396879;fill:url(#radialGradient4113);fill-opacity:1;stroke-width:1.00034;stroke-miterlimit:4;stroke-dasharray:none"
+     style="opacity:0.396879;fill:url(#linearGradient4836);fill-opacity:1.0;stroke-width:1.00034;stroke-miterlimit:4;stroke-dasharray:none"
      transform="scale(1,0.8905216)">
     <polygon
        fill="url(#linearGradient-1)"
        points="128.42667,127.57333 256,256 0,256 "
        id="polygon130"
-       style="fill:url(#radialGradient4488);fill-opacity:1;stroke-width:1.00034;stroke-miterlimit:4;stroke-dasharray:none" />
+       style="fill:url(#linearGradient4836);fill-opacity:1.0;stroke-width:1.00034;stroke-miterlimit:4;stroke-dasharray:none" />
     <polygon
        fill="url(#linearGradient-2)"
        points="128.42667,0 0,138.66667 0,0 "
        id="polygon132"
-       style="fill:url(#radialGradient4490);fill-opacity:1;stroke-width:1.00034;stroke-miterlimit:4;stroke-dasharray:none" />
+       style="fill:url(#linearGradient4836);fill-opacity:1.0;stroke-width:1.00034;stroke-miterlimit:4;stroke-dasharray:none" />
     <polygon
        fill="url(#linearGradient-3)"
        points="128.42667,0 0,135.25333 0,256 128.42667,127.57333 256,0 "
        id="polygon134"
-       style="fill:url(#radialGradient4492);fill-opacity:1;stroke-width:1.00034;stroke-miterlimit:4;stroke-dasharray:none" />
+       style="fill:url(#linearGradient4836);fill-opacity:1.0;stroke-width:1.00034;stroke-miterlimit:4;stroke-dasharray:none" />
   </g>
   <g
      id="g136-3"
-     style="opacity:0.333293;fill:url(#radialGradient4103);fill-opacity:1"
+     style="opacity:0.65485192;fill:url(#radialGradient4852);fill-opacity:1.0"
      transform="matrix(0.28772849,0,0,0.35818062,91.474655,69.033852)">
     <polygon
        fill="url(#linearGradient-1)"
        points="128.42667,127.57333 256,256 0,256 "
        id="polygon130-0"
-       style="fill:url(#radialGradient4494);fill-opacity:1" />
+       style="fill:url(#radialGradient4852);fill-opacity:1.0" />
     <polygon
        fill="url(#linearGradient-2)"
        points="128.42667,0 0,138.66667 0,0 "
        id="polygon132-7"
-       style="fill:url(#radialGradient4496);fill-opacity:1" />
+       style="fill:url(#radialGradient4852);fill-opacity:1.0" />
     <polygon
        fill="url(#linearGradient-3)"
        points="0,135.25333 0,256 128.42667,127.57333 256,0 128.42667,0 "
        id="polygon134-8"
-       style="fill:url(#radialGradient4498);fill-opacity:1" />
+       style="fill:url(#radialGradient4852);fill-opacity:1.0" />
   </g>
-  <rect
-     style="opacity:0.531521;fill:#f67150;fill-opacity:0.605185"
-     id="rect1703-6-4-9"
-     width="73.546608"
-     height="41.150139"
-     x="91.474655"
-     y="119.65784"
-     ry="3.9189701" />
-  <rect
-     style="opacity:0.531521;fill:#f67150;fill-opacity:0.605185"
-     id="rect1703-6-4-6"
-     width="73.546608"
-     height="41.150139"
-     x="91.474655"
-     y="68.507698"
-     ry="3.9189701" />
   <rect
      style="opacity:0.529166;fill:#ffb372;fill-opacity:0.603922;stroke-width:0.915221"
      id="rect1703-8-9-6-4"
@@ -636,7 +523,7 @@
      y="21.357561"
      ry="3.5354733" />
   <rect
-     style="opacity:0.551905;fill:#e1be21;fill-opacity:0.726621;stroke-width:0.92189"
+     style="opacity:0.95777676;fill:#e1be21;fill-opacity:0.726621;stroke-width:0.92189"
      id="rect1703-6-4-1-8-9-8"
      width="69.285927"
      height="37.123329"
@@ -644,7 +531,7 @@
      y="70.507698"
      ry="3.5354733" />
   <rect
-     style="opacity:0.846605;fill:#e79ab2;fill-opacity:0.605185;stroke-width:0.92189"
+     style="opacity:1;fill:#e74ab2;fill-opacity:0.60518497;stroke-width:0.92189"
      id="rect1703-6-4-1-8-9-7"
      width="69.285927"
      height="37.123329"
@@ -677,164 +564,16 @@
      ry="3.4934502" />
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:103.005px;line-height:1.25;font-family:Uroob;-inkscape-font-specification:'Uroob, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;opacity:1;fill:#006e74;fill-opacity:1;stroke:none;stroke-width:1.84206;"
-     x="114.11266"
-     y="157.24066"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:130.335px;line-height:1.25;font-family:Uroob;-inkscape-font-specification:'Uroob, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;opacity:1;fill:#000003;fill-opacity:1;stroke:none;stroke-width:2.33081"
+     x="144.84027"
+     y="178.64091"
      id="text4135"
      transform="scale(1.1114491,0.89972632)"><tspan
        id="tspan4133"
-       x="114.11266"
-       y="157.24066"
+       x="144.84027"
+       y="178.64091"
        sodipodi:role="line"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:103.005px;font-family:Uroob;-inkscape-font-specification:'Uroob, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#006e74;fill-opacity:1;stroke-width:1.84206;">Tabulate</tspan></text>
-  <g
-     id="g136-0"
-     style="opacity:0.396879;fill:url(#radialGradient4113-3);fill-opacity:1;stroke-width:1.00034;stroke-miterlimit:4;stroke-dasharray:none"
-     transform="matrix(-1,0,0,0.8905216,574.72586,0)">
-    <polygon
-       fill="url(#linearGradient-1)"
-       points="0,256 128.42667,127.57333 256,256 "
-       id="polygon130-9"
-       style="fill:url(#radialGradient4289);fill-opacity:1;stroke-width:1.00034;stroke-miterlimit:4;stroke-dasharray:none" />
-    <polygon
-       fill="url(#linearGradient-2)"
-       points="0,0 128.42667,0 0,138.66667 "
-       id="polygon132-6"
-       style="fill:url(#radialGradient4291);fill-opacity:1;stroke-width:1.00034;stroke-miterlimit:4;stroke-dasharray:none" />
-    <polygon
-       fill="url(#linearGradient-3)"
-       points="256,0 128.42667,0 0,135.25333 0,256 128.42667,127.57333 "
-       id="polygon134-3"
-       style="fill:url(#radialGradient4293);fill-opacity:1;stroke-width:1.00034;stroke-miterlimit:4;stroke-dasharray:none" />
-  </g>
-  <g
-     id="g136-3-8"
-     style="opacity:0.333293;fill:url(#radialGradient4103-2);fill-opacity:1"
-     transform="matrix(-0.28772849,0,0,0.35818062,483.25121,69.033851)">
-    <polygon
-       fill="url(#linearGradient-1)"
-       points="0,256 128.42667,127.57333 256,256 "
-       id="polygon130-0-5"
-       style="fill:url(#radialGradient4295);fill-opacity:1" />
-    <polygon
-       fill="url(#linearGradient-2)"
-       points="0,0 128.42667,0 0,138.66667 "
-       id="polygon132-7-6"
-       style="fill:url(#radialGradient4297);fill-opacity:1" />
-    <polygon
-       fill="url(#linearGradient-3)"
-       points="128.42667,0 0,135.25333 0,256 128.42667,127.57333 256,0 "
-       id="polygon134-8-1"
-       style="fill:url(#radialGradient4299);fill-opacity:1" />
-  </g>
-  <rect
-     style="opacity:0.531521;fill:#f67150;fill-opacity:0.605185"
-     id="rect1703-6-4-9-4"
-     width="73.546608"
-     height="41.150139"
-     x="-483.25125"
-     y="119.65784"
-     ry="3.9189701"
-     transform="scale(-1,1)" />
-  <rect
-     style="opacity:0.531521;fill:#f67150;fill-opacity:0.605185"
-     id="rect1703-6-4-6-0"
-     width="73.546608"
-     height="41.150139"
-     x="-483.25125"
-     y="68.507698"
-     ry="3.9189701"
-     transform="scale(-1,1)" />
-  <rect
-     style="opacity:0.529166;fill:#ffb372;fill-opacity:0.603922;stroke-width:0.915221"
-     id="rect1703-8-9-6-4-4"
-     width="69.108711"
-     height="36.682076"
-     x="-401.70468"
-     y="21.357559"
-     ry="3.4934502"
-     transform="scale(-1,1)" />
-  <rect
-     style="opacity:0.589942;fill:#b55caa;fill-opacity:0.439216;stroke-width:0.92189"
-     id="rect1703-6-4-1-8-9-47"
-     width="69.285927"
-     height="37.123329"
-     x="-401.29184"
-     y="70.507698"
-     ry="3.5354733"
-     transform="scale(-1,1)" />
-  <rect
-     style="opacity:0.274294;fill:#f67150;fill-opacity:0.605185;stroke-width:0.92189"
-     id="rect1703-6-4-1-8-9-5-6"
-     width="69.285927"
-     height="37.123329"
-     x="-401.70468"
-     y="121.65784"
-     ry="3.5354733"
-     transform="scale(-1,1)" />
-  <rect
-     style="opacity:0.372181;fill:#6971ff;fill-opacity:0.605185;stroke-width:0.92189"
-     id="rect1703-6-4-1-8-9-0-3"
-     width="69.285927"
-     height="37.123329"
-     x="-401.70468"
-     y="170.808"
-     ry="3.5354733"
-     transform="scale(-1,1)" />
-  <rect
-     style="opacity:0.846605;fill:#ffb372;fill-opacity:0.605185;stroke-width:0.92189"
-     id="rect1703-6-4-1-8-9-4-1"
-     width="69.285927"
-     height="37.123329"
-     x="-481.25125"
-     y="21.357559"
-     ry="3.5354733"
-     transform="scale(-1,1)" />
-  <rect
-     style="opacity:0.551905;fill:#e1be21;fill-opacity:0.726621;stroke-width:0.92189"
-     id="rect1703-6-4-1-8-9-8-7"
-     width="69.285927"
-     height="37.123329"
-     x="-560.79785"
-     y="70.507698"
-     ry="3.5354733"
-     transform="scale(-1,1)" />
-  <rect
-     style="opacity:0.846605;fill:#e79ab2;fill-opacity:0.605185;stroke-width:0.92189"
-     id="rect1703-6-4-1-8-9-7-5"
-     width="69.285927"
-     height="37.123329"
-     x="-560.79785"
-     y="121.65784"
-     ry="3.5354733"
-     transform="scale(-1,1)" />
-  <rect
-     style="opacity:0.846605;fill:#6171ca;fill-opacity:0.603922;stroke-width:0.92189"
-     id="rect1703-6-4-1-8-9-1-9"
-     width="69.285927"
-     height="37.123329"
-     x="-560.79785"
-     y="170.808"
-     ry="3.5354733"
-     transform="scale(-1,1)" />
-  <rect
-     style="opacity:0.62747;fill:#6171ca;fill-opacity:0.605185;stroke-width:0.92189"
-     id="rect1703-6-4-1-8-9-72-6"
-     width="69.285927"
-     height="37.123329"
-     x="-481.25125"
-     y="170.808"
-     ry="3.5354733"
-     transform="scale(-1,1)" />
-  <rect
-     style="opacity:0.846605;fill:#4d7fab;fill-opacity:0.605185;stroke-width:0.915221"
-     id="rect1703-8-9-6-4-2-2"
-     width="69.108711"
-     height="36.682076"
-     x="-560.35999"
-     y="21.825623"
-     ry="3.4934502"
-     transform="scale(-1,1)" />
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:130.335px;font-family:Uroob;-inkscape-font-specification:'Uroob, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000003;fill-opacity:1;stroke-width:2.33081">Tabulate</tspan></text>
   <rect
      style="opacity:0.529166;fill:#ffb372;fill-opacity:0.603922;stroke-width:0.915221"
      id="rect1703-8-9-6-4-6"
@@ -868,21 +607,99 @@
      y="170.80801"
      ry="3.5354733" />
   <rect
-     style="opacity:0.846605;fill:#4d7fab;fill-opacity:0.605185;stroke-width:2.57315"
+     style="opacity:0.846605;fill:url(#linearGradient4862);fill-opacity:1;stroke-width:2.57315"
      id="rect1703-8-9-6-4-2-2-5"
      width="546.27582"
      height="36.682076"
-     x="-560.44751"
+     x="14.171692"
      y="21.779829"
-     ry="3.4934502"
-     transform="scale(-1,1)" />
+     ry="3.4934502" />
   <rect
-     style="opacity:0.846605;fill:#6171ca;fill-opacity:0.603922;stroke-width:2.58999"
+     style="opacity:0.733924;fill:url(#linearGradient4870);fill-opacity:1;stroke-width:2.58999"
      id="rect1703-6-4-1-8-9-1-9-7"
      width="546.86987"
      height="37.123329"
-     x="-560.79785"
+     x="13.927979"
      y="170.808"
-     ry="3.5354733"
-     transform="scale(-1,1)" />
+     ry="3.5354733" />
+  <rect
+     style="opacity:0.494458;fill:#b55caa;fill-opacity:0.191949;stroke-width:0.92189"
+     id="rect1703-6-4-1-8-9-6-0"
+     width="69.285927"
+     height="37.123329"
+     x="490.57776"
+     y="70.507698"
+     ry="3.5354733" />
+  <rect
+     style="opacity:0.551905;fill:#e1be21;fill-opacity:0.38126868;stroke-width:0.92189"
+     id="rect1703-6-4-1-8-9-8-1-2"
+     width="69.285927"
+     height="37.123329"
+     x="400.87903"
+     y="123.68468"
+     ry="3.5354733" />
+  <rect
+     style="opacity:0.589942;fill:#b55caa;fill-opacity:0.17074789;stroke-width:0.92189"
+     id="rect1703-6-4-1-8-9-6-00"
+     width="69.285927"
+     height="37.123329"
+     x="332.00592"
+     y="70.507698"
+     ry="3.5354733" />
+  <rect
+     style="opacity:0.589942;fill:#b55caa;fill-opacity:0.191949;stroke-width:0.92189"
+     id="rect1703-6-4-1-8-9-6-0-4"
+     width="69.285927"
+     height="37.123329"
+     x="411.29184"
+     y="70.507698"
+     ry="3.5354733" />
+  <rect
+     style="opacity:0.589942;fill:#b55caa;fill-opacity:0.191949;stroke-width:0.92189"
+     id="rect1703-6-4-1-8-9-6-0-4-2"
+     width="69.285927"
+     height="37.123329"
+     x="331.41589"
+     y="21.357563"
+     ry="3.5354733" />
+  <rect
+     style="opacity:0.51328963;fill:#b55caa;fill-opacity:0.191949;stroke-width:0.92189"
+     id="rect1703-6-4-1-8-9-6-0-4-2-0"
+     width="69.285927"
+     height="37.123329"
+     x="410.70181"
+     y="21.357563"
+     ry="3.5354733" />
+  <rect
+     style="opacity:0.45579091;fill:#b55caa;fill-opacity:0.191949;stroke-width:0.92189"
+     id="rect1703-6-4-1-8-9-6-0-4-2-0-6"
+     width="69.285927"
+     height="37.123329"
+     x="489.98773"
+     y="21.357563"
+     ry="3.5354733" />
+  <rect
+     style="opacity:0.2451401;fill:#6971ff;fill-opacity:0.605185;stroke-width:0.92189"
+     id="rect1703-6-4-1-8-9-0-9-5"
+     width="69.285927"
+     height="37.123329"
+     x="331.59311"
+     y="170.80801"
+     ry="3.5354733" />
+  <rect
+     style="opacity:0.20756273;fill:#6971ff;fill-opacity:0.605185;stroke-width:0.92189"
+     id="rect1703-6-4-1-8-9-0-9-5-9"
+     width="69.285927"
+     height="37.123329"
+     x="410.87903"
+     y="170.80801"
+     ry="3.5354733" />
+  <rect
+     style="opacity:0.1732613;fill:#6971ff;fill-opacity:0.605185;stroke-width:0.92189"
+     id="rect1703-6-4-1-8-9-0-9-5-5"
+     width="69.285927"
+     height="37.123329"
+     x="490.16495"
+     y="170.80801"
+     ry="3.5354733" />
 </svg>
