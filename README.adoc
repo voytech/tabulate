@@ -1,7 +1,7 @@
 :icons: font
 :source-highlighter: highlight.js
 
-image::logo/tabulate_3.svg[Tabulate logo]
+image::logo/tabulate_logo.svg[Tabulate logo]
 
 
 image:https://www.codefactor.io/repository/github/voytech/tabulate/badge?s=356351985a7dd58359040b23f6d896d28af928af[CodeFactor,link=https://www.codefactor.io/repository/github/voytech/tabulate]
