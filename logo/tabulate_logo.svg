@@ -542,19 +542,6 @@
        x2="256"
        y2="128"
        gradientUnits="userSpaceOnUse" />
-    <filter
-       inkscape:collect="always"
-       style="color-interpolation-filters:sRGB"
-       id="filter3698"
-       x="-0.00029161734"
-       width="1.0005832"
-       y="-0.001288573"
-       height="1.0025771">
-      <feGaussianBlur
-         inkscape:collect="always"
-         stdDeviation="0.047876832"
-         id="feGaussianBlur3700" />
-    </filter>
     <linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient-2-6"
@@ -833,7 +820,7 @@
      aria-label="Tabulate"
      transform="matrix(0.96145928,0,0,0.99013768,-1.9991626,4.6700016)"
      id="text4135"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;line-height:1.25;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;opacity:0.999;fill:url(#linearGradient3738);fill-opacity:1;stroke:none;stroke-width:3.4003;stroke-opacity:1;filter:url(#filter3698)">
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;line-height:1.25;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;opacity:0.999;fill:url(#linearGradient3738);fill-opacity:1;stroke:none;stroke-width:3.4003;stroke-opacity:1;">
     <path
        d="M 243.53018,80.744476 H 221.98944 V 154.32491 H 207.62895 V 80.744476 H 185.95144 V 66.52075 h 57.57874 z"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:140.049px;font-family:Keraleeyam;-inkscape-font-specification:'Keraleeyam, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:url(#linearGradient3738);fill-opacity:1.0;stroke:none;stroke-width:3.4003;stroke-opacity:1"
