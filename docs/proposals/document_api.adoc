@@ -1,0 +1,200 @@
+== Current state of model and APIS (only table domain currently)
+
+=== DSL, model and context processing.
+
+Currently only `table` context is maintained. That means we have table model (table is a root aggregate in here), table operation context, table aggregable attributes, and table `tabulation` state (state will eventually become `AggregateState` or `ScopedState`, `SubState` or something similar)
+
+Table multi-level aggregates:
+(Column) -> (Columns)  ->  ((*Table Model*)) <- (Rows) <- (Row) <- (Cell)
+
+[cols="1,1,1,1,1"]
+|===
+|*DSL*
+|*Model*
+|*Model Attribute Categories*
+|*Context*
+|*Context Attribute*
+
+| `table { ...`
+| Table
+| `TableAttribute`, `RowAttribute`, `ColumnAttribute`, `CellAttribute`
+| `TableOpeningContext`
+| `TableAttribute`
+
+| `columns { column { ...`
+| Column
+| `ColumnAttribute`, `CellAttribute`
+| `ColumnOpeningContext`
+| `ColumnAttribute`
+
+| `rows { row { ...`
+| Row
+| `RowAttribute`, `CellAttribute`
+| `RowOpeningContext`
+| `RowAttribute`
+
+| `row { ... }`
+| Row
+| `RowAttribute`, `CellAttribute`
+| `RowClosingContext`
+| `RowAttribute`
+
+| `column { ... }`
+| Column
+| `ColumnAttribute`, `CellAttribute`
+| `ColumnClosingContext`
+| `ColumnAttribute`
+
+| `table { ... }`
+| Table
+| `TableAttribute`, ,`ColumnAttribute`, `RowAttribute`, `CellAttribute`
+| `TableClosingContext`
+| `TableAttribute`
+|===
+
+How columns from above table are related to each other?
+
+1. `DSL` build `Model`
+2. `Model` can carry all compatible `Model Attribute Categories`
+3. `Context` represents model put into rendering operation domain. It differs from model in that it is exposed as public API and it contains attributes reduced by merging from upstream levels.
+4. `Context` carry all attributes matching category from `Context Attribute` column.
+
+When You read above table from left column to right You get all processing steps from build phase until operation invocation that happens later when `Context` (aka `AttributedModel`) is ready.
+
+=== Rendering State
+
+Rendering state is currently called `TabulationState` and holds:
+
+- row context iterator and resolver,
+- mutable row index
+- `RenderingContext` reference
+- `stateAttributes`
+
+== Proposed changes.
+
+Tabulate is currently restricted only to `Table root aggregate`. Sole purpose of the library is to export collection or custom rows into `table component` only.
+
+Next steps in development should
+
+=== Extending DSL
+
+currently:
+
+[source,kotlin,options="nowrap"]
+----
+productList.tabulate("file.xlsx") {
+    name = "Table id" // <1>
+    columns {   // <2>
+        column("nr")
+    }
+    rows { // <3>
+        row {  // first row when no index provided.
+            cell("nr") { value = "Nr.:" } // <4>
+        }
+    }
+}
+----
+
+proposition:
+
+[source,kotlin,options="nowrap"]
+----
+document("file.xlsx") {
+    container {
+       id = "Table Id"
+       productList.tabulate {
+            columns {
+                column("nr")
+                column(Product::code)
+            }
+            rows {
+                newRow {
+                    cell("nr") { value = "Nr.:" }
+                }
+            }
+       }
+    }
+}
+----
+
+or
+
+----
+document("file.xlsx") {
+    container {
+       id = "Table Id"
+       table(sourceList) {
+            columns {
+                column("nr")
+                column(Product::code)
+            }
+            rows {
+                newRow {
+                    cell("nr") { value = "Nr.:" }
+                }
+            }
+       }
+    }
+}
+----
+
+CAUTION: We still want current API to be supported: `products.tabulate("file") { ... }`. That would be property of all stand-alone (capability) *model aggregates* It will be value added for simple scenarios like rendering components like:
+- tables (currently implemented as pure tabulate)
+- lists (to be introduced in far away future ;)
+- grids (to be introduced in fat away future ;)
+- layouts (to be introduced in fat away future ;)
+That even may be property of all aggregate models.
+
+New version of table:
+
+[cols="1,1,1,1,1"]
+|===
+|*DSL*
+|*Model*
+|*Model Attribute Categories*
+|*Context*
+|*Context Attribute*
+
+| `document { ...`
+| `Document`
+| `DocumentAttribute`, `ContainerAttribute`, +All sub models attributes
+| `DocumentOpeningContext`
+| `DocumentAttribute`
+
+| `container {`
+| `Container`
+| `ContainerAttribute`, +All sub models attributes
+| `ContainerOpeningContext`
+| `ContainerAttribute`
+
+| `container { ... }`
+| `Container`
+| `ContainerAttribute`, +All sub models attributes
+| `ContainerClosingContext`
+| `ContainerAttribute`
+
+| `document { ... }`
+| `Document`
+| `DocumentAttribute`, `ContainerAttribute`, +All sub models attributes
+| `DocumentClosingContext`
+| `DocumentAttribute`
+|===
+
+=== Introducing attribute category hierarchy.
+
+=== Introducing new context classes
+
+=== Introducing new operations
+
+=== State hierarchy.
+Introducing `GlobalState` which wraps `TabulationState -> TableState` as `TableState` now binds only to `Table root aggregate`
+
+[source,options="nowrap"]
+----
+TableState: SubState
+
+GlobalState { <-- in fact like context.
+   pushSubState(SubState)
+   popState()
+}
+----

@@ -314,6 +314,9 @@ After conversation thread concludes with approval, You can develop solution to p
 Starting from version 0.1.0, minor version will advance relatively fast due to tiny milestones.
 This is because of one person (me) who is currently in charge, and due to my intention of working within non-blocking release cycles.
 
+=== v0.2.x
+- Introduce link:https://voytech.github.io/tabulate/proposals/document_api.html[documents]
+
 === v0.3.x
 
 - PDF table export operations.
