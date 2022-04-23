@@ -1,17 +1,20 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.api.builder.dsl.table
-import io.github.voytech.tabulate.api.builder.dsl.plus
-import io.github.voytech.tabulate.api.builder.dsl.typedTable
+import io.github.voytech.tabulate.components.table.api.builder.dsl.plus
+import io.github.voytech.tabulate.components.table.api.builder.dsl.table
+import io.github.voytech.tabulate.components.table.api.builder.dsl.typedTable
+import io.github.voytech.tabulate.core.template.DocumentFormat
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
-import io.github.voytech.tabulate.model.attributes.Colors
-import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
-import io.github.voytech.tabulate.model.attributes.cell.text
-import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
-import io.github.voytech.tabulate.model.attributes.column.width
+import io.github.voytech.tabulate.components.table.model.attributes.Colors
+import io.github.voytech.tabulate.components.table.model.attributes.cell.CellTextStylesAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.cell.text
+import io.github.voytech.tabulate.components.table.model.attributes.column.ColumnWidthAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.column.width
+import io.github.voytech.tabulate.components.table.operation.*
+import io.github.voytech.tabulate.components.table.template.export
+import io.github.voytech.tabulate.components.table.template.tabulate
 import io.github.voytech.tabulate.support.Spy
-import io.github.voytech.tabulate.template.operations.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
@@ -45,10 +48,10 @@ class TableCompositingTest {
                 }
             }
         }
-        (customTable + overrideTable).export(TabulationFormat("spy"), Unit)
+        (customTable + overrideTable).export(DocumentFormat("spy"), Unit)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getSheetName()) }
         // Column 0
         history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         // Column 0 attribute
@@ -88,10 +91,10 @@ class TableCompositingTest {
                 column(Product::code)
             }
         }
-        Products.items(1).tabulate(TabulationFormat("spy"), Unit,customTable + overrideTable)
+        Products.items(1).tabulate(DocumentFormat("spy"), Unit,customTable + overrideTable)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getSheetName()) }
         // Column 0
         history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         // Column 0 attribute
@@ -135,10 +138,10 @@ class TableCompositingTest {
                 column(Product::name)
             }
         }
-        Products.items(1).tabulate(TabulationFormat("spy"), Unit,baseTable + overrideTable)
+        Products.items(1).tabulate(DocumentFormat("spy"), Unit,baseTable + overrideTable)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getSheetName()) }
         // Column 0
         history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         // Column 0 attribute
@@ -181,10 +184,10 @@ class TableCompositingTest {
                 }
             }
         }
-        Products.items(1).tabulate(TabulationFormat("spy"), Unit,baseTable + typedTable { name = "Name override" })
+        Products.items(1).tabulate(DocumentFormat("spy"), Unit,baseTable + typedTable { name = "Name override" })
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getSheetName()) }
         // Column 0
         history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
         // Column 0 attribute

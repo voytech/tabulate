@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.rowpredicate
 
-import io.github.voytech.tabulate.model.*
+import io.github.voytech.tabulate.components.table.model.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

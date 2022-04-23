@@ -1,21 +1,23 @@
 package io.github.voytech.tabulate.builder
 
-import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
-import io.github.voytech.tabulate.api.builder.dsl.header
+import io.github.voytech.tabulate.components.document.api.builder.dsl.createDocument
+import io.github.voytech.tabulate.components.table.api.builder.dsl.createTableBuilder
+import io.github.voytech.tabulate.components.table.api.builder.dsl.header
+import io.github.voytech.tabulate.components.table.api.builder.dsl.table
+import io.github.voytech.tabulate.components.table.model.ColumnKey
+import io.github.voytech.tabulate.components.table.model.attributes.Colors
+import io.github.voytech.tabulate.components.table.model.attributes.cell.CellTextStylesAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.cell.text
+import io.github.voytech.tabulate.components.table.model.attributes.column.ColumnWidthAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.column.width
+import io.github.voytech.tabulate.components.table.model.attributes.row.RowHeightAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.row.height
+import io.github.voytech.tabulate.components.table.model.attributes.table.TemplateFileAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.table.template
+import io.github.voytech.tabulate.components.table.model.id
+import io.github.voytech.tabulate.components.table.template.IndexedTableRows
+import io.github.voytech.tabulate.components.table.template.RowIndex
 import io.github.voytech.tabulate.data.Product
-import io.github.voytech.tabulate.model.ColumnKey
-import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
-import io.github.voytech.tabulate.model.attributes.Colors
-import io.github.voytech.tabulate.model.attributes.cell.text
-import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
-import io.github.voytech.tabulate.model.attributes.column.width
-import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
-import io.github.voytech.tabulate.model.attributes.row.height
-import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
-import io.github.voytech.tabulate.model.attributes.table.template
-import io.github.voytech.tabulate.model.id
-import io.github.voytech.tabulate.template.context.RowIndex
-import io.github.voytech.tabulate.template.resolvers.IndexedTableRows
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
@@ -317,6 +319,29 @@ class DslBuilderTest {
                 assertEquals("First item", firstRow.cells[ColumnKey(property = Product::description.id())]!!.value)
             }
         }
+    }
+
+    @Test
+    fun `should describe table model as part of document`() {
+        val document = createDocument {
+            table<Product> {
+                name = "Products table"
+                columns {
+                    column("nr")
+                    column(Product::code)
+                    column(Product::name)
+                    column(Product::description)
+                    column(Product::manufacturer)
+                }
+            }
+            table<Unit> {
+                name = "Other table"
+                columns {
+                    column("nr")
+                }
+            }
+        }
+        assertNotNull(document)
     }
 }
 

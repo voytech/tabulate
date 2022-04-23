@@ -8,4 +8,10 @@ pluginManagement {
 }
 
 rootProject.name = "tabulate"
-include("tabulate-core", "tabulate-test", "tabulate-excel", "tabulate-csv", "tabulate-bom")
+include("tabulate-bom")
+include("tabulate-core")
+include(":tabulate-test")
+// Project component backends. Those projects provide rendering backend implementations for different DocumentFormats.
+include("tabulate-backends")
+include("tabulate-backends:tabulate-excel")
+include("tabulate-backends:tabulate-csv")

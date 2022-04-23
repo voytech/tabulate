@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.test.assertions
 
-import io.github.voytech.tabulate.model.attributes.Attribute
+import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.test.AttributeTest
 import kotlin.reflect.KProperty1
 import kotlin.test.assertEquals

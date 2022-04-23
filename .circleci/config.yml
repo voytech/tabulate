@@ -101,11 +101,11 @@ workflows:
           requires:
             - hold
       - publishSnapshot:
-          mname: tabulate-csv
+          mname: tabulate-backends:tabulate-csv
           requires:
             - hold
       - publishSnapshot:
-          mname: tabulate-excel
+          mname: tabulate-backends:tabulate-excel
           requires:
             - hold
   publishMavenVersion:

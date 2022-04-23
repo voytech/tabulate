@@ -1,17 +1,13 @@
 package io.github.voytech.tabulate.performance
 
-import io.github.voytech.tabulate.model.RowDef
-import io.github.voytech.tabulate.model.SourceRow
-import io.github.voytech.tabulate.model.Table
-import io.github.voytech.tabulate.template.context.RowIndex
-import io.github.voytech.tabulate.template.operations.RowClosingContext
-import io.github.voytech.tabulate.template.operations.createCellContext
-import io.github.voytech.tabulate.template.operations.createRowOpening
-import io.github.voytech.tabulate.template.operations.asRowClosing
-import io.github.voytech.tabulate.template.resolvers.AbstractRowContextResolver
-import io.github.voytech.tabulate.template.resolvers.IndexedContext
-import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
-import io.github.voytech.tabulate.template.resolvers.SyntheticRow
+import io.github.voytech.tabulate.components.table.model.RowDef
+import io.github.voytech.tabulate.components.table.model.SourceRow
+import io.github.voytech.tabulate.components.table.model.Table
+import io.github.voytech.tabulate.components.table.operation.RowClosingContext
+import io.github.voytech.tabulate.components.table.operation.asRowClosing
+import io.github.voytech.tabulate.components.table.operation.createCellContext
+import io.github.voytech.tabulate.components.table.operation.createRowOpening
+import io.github.voytech.tabulate.components.table.template.*
 
 internal class SlowRowResolver<T>(
     private val tableModel: Table<T>,

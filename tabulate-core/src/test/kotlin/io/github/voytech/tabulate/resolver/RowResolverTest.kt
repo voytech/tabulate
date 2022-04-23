@@ -1,13 +1,13 @@
 package io.github.voytech.tabulate.resolver
 
-import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
-import io.github.voytech.tabulate.api.builder.dsl.footer
-import io.github.voytech.tabulate.api.builder.dsl.header
+import io.github.voytech.tabulate.components.table.api.builder.dsl.createTableBuilder
+import io.github.voytech.tabulate.components.table.api.builder.dsl.footer
+import io.github.voytech.tabulate.components.table.api.builder.dsl.header
 import io.github.voytech.tabulate.data.Product
-import io.github.voytech.tabulate.model.ColumnKey
-import io.github.voytech.tabulate.template.context.RowIndex
-import io.github.voytech.tabulate.template.context.Step
-import io.github.voytech.tabulate.template.resolvers.AccumulatingRowContextResolver
+import io.github.voytech.tabulate.components.table.model.ColumnKey
+import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
+import io.github.voytech.tabulate.components.table.template.RowIndex
+import io.github.voytech.tabulate.components.table.template.Step
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -104,7 +104,7 @@ class RowResolverTest {
         ))
         val header = resolver.resolve(RowIndex())
         val value = resolver.resolve(RowIndex(1))
-        val footer = resolver.resolve(RowIndex(2,Step("TRAILING_ROWS",0,0)))
+        val footer = resolver.resolve(RowIndex(2, Step("TRAILING_ROWS",0,0)))
         assertNotNull(header)
         assertEquals(0, header!!.index.value)
         with(header.value) {

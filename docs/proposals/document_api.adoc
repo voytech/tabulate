@@ -2,7 +2,7 @@
 
 === DSL, model and context processing.
 
-Currently only `table` context is maintained. That means we have table model (table is a root aggregate in here), table operation context, table aggregable attributes, and table `tabulation` state (state will eventually become `AggregateState` or `ScopedState`, `SubState` or something similar)
+Currently only `table` context is maintained. That means we have table model (table is a root aggregate in here), table operation context, table aggregable attributes, and table `tabulation` state (state will eventually become `AggregateState` or `ScopedState`, `TemplateContext` or something similar)
 
 Table multi-level aggregates:
 (Column) -> (Columns)  ->  ((*Table Model*)) <- (Rows) <- (Row) <- (Cell)
@@ -63,7 +63,7 @@ When You read above table from left column to right You get all processing steps
 
 === Rendering State
 
-Rendering state is currently called `TabulationState` and holds:
+Rendering state is currently called `TypedTableTemplateContext` and holds:
 
 - row context iterator and resolver,
 - mutable row index
@@ -187,7 +187,7 @@ New version of table:
 === Introducing new operations
 
 === State hierarchy.
-Introducing `GlobalState` which wraps `TabulationState -> TableState` as `TableState` now binds only to `Table root aggregate`
+Introducing `DocumentTemplateContext` which wraps `TabulationState -> TableState` as `TableState` now binds only to `Table root aggregate`
 
 [source,options="nowrap"]
 ----

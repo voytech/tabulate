@@ -1,11 +1,12 @@
 package io.github.voytech.tabulate.support
 
-import io.github.voytech.tabulate.template.result.OutputBinding
+import io.github.voytech.tabulate.core.reify
+import io.github.voytech.tabulate.core.template.result.OutputBinding
 import java.util.logging.Logger
 
 class TestOutputBinding: OutputBinding<TestRenderingContext, Unit> {
 
-    override fun outputClass() = Unit.javaClass
+    override fun outputClass(): Class<Unit> = reify()
 
     override fun flush() {
         logger.info("This is fake implementation of ResultProvider flushing results into ether")
@@ -22,7 +23,7 @@ class TestOutputBinding: OutputBinding<TestRenderingContext, Unit> {
 
 class AlternativeTestOutputBinding: OutputBinding<AlternativeTestRenderingContext, Unit> {
 
-    override fun outputClass() = Unit.javaClass
+    override fun outputClass(): Class<Unit> = reify()
 
     override fun flush() {
         logger.info("This is fake implementation of ResultProvider flushing results into ether")

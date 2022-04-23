@@ -1,20 +1,23 @@
 package io.github.voytech.tabulate.template.operations
 
-import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
-import io.github.voytech.tabulate.model.Table
-import io.github.voytech.tabulate.model.attributes.Colors
-import io.github.voytech.tabulate.model.attributes.cell.background
-import io.github.voytech.tabulate.model.attributes.cell.borders
-import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultBorderStyle
-import io.github.voytech.tabulate.model.attributes.cell.text
-import io.github.voytech.tabulate.model.attributes.table.template
-import io.github.voytech.tabulate.template.iterators.RowContextIterator
-import io.github.voytech.tabulate.template.resolvers.AccumulatingRowContextResolver
-import org.junit.jupiter.api.Assertions.*
+import io.github.voytech.tabulate.components.table.api.builder.dsl.ColumnLevelAttributesBuilderApi
+import io.github.voytech.tabulate.components.table.api.builder.dsl.TableBuilderApi
+import io.github.voytech.tabulate.components.table.api.builder.dsl.createTableBuilder
+import io.github.voytech.tabulate.components.table.model.Table
+import io.github.voytech.tabulate.components.table.model.attributes.Colors
+import io.github.voytech.tabulate.components.table.model.attributes.cell.background
+import io.github.voytech.tabulate.components.table.model.attributes.cell.borders
+import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultBorderStyle
+import io.github.voytech.tabulate.components.table.model.attributes.cell.text
+import io.github.voytech.tabulate.components.table.model.attributes.table.template
+import io.github.voytech.tabulate.components.table.operation.TableOpeningContext
+import io.github.voytech.tabulate.components.table.operation.createContext
+import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
+import io.github.voytech.tabulate.components.table.template.RowContextIterator
+import io.github.voytech.tabulate.core.template.operation.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import kotlin.test.*
 
 class AttributeSetCacheTest {
 
@@ -26,6 +29,7 @@ class AttributeSetCacheTest {
 
     private fun createTableModel(block: TableBuilderApi<Unit>.() -> Unit): Table<Unit> =
         createTableBuilder(block).build()
+
 
     @Test
     fun `should create AttributeSetCache for AttributedTable`() {
@@ -43,6 +47,8 @@ class AttributeSetCacheTest {
         assertNotNull(sameCacheRef)
         assertEquals(cache, sameCacheRef)
     }
+
+
 
     @Test
     fun `should setup and lookup internal caches when table attribute sets are equal`() {

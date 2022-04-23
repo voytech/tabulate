@@ -1,82 +1,81 @@
 package io.github.voytech.tabulate.support
 
-import io.github.voytech.tabulate.model.attributes.CellAttribute
-import io.github.voytech.tabulate.model.attributes.ColumnAttribute
-import io.github.voytech.tabulate.model.attributes.RowAttribute
-import io.github.voytech.tabulate.model.attributes.TableAttribute
-import io.github.voytech.tabulate.template.context.RenderingContext
-import io.github.voytech.tabulate.template.operations.AttributeOperation
-import io.github.voytech.tabulate.template.operations.AttributeOperationsFactory
-import io.github.voytech.tabulate.template.operations.ExportOperationsFactory
-import io.github.voytech.tabulate.template.operations.OperationsBuilder
-import io.github.voytech.tabulate.template.result.OutputBinding
-import io.github.voytech.tabulate.template.spi.TabulationFormat
-import io.github.voytech.tabulate.template.spi.TabulationFormat.Companion.format
+import io.github.voytech.tabulate.components.table.model.Table
+import io.github.voytech.tabulate.core.reify
+import io.github.voytech.tabulate.core.template.RenderingContext
+import io.github.voytech.tabulate.core.template.operation.AttributeOperation
+import io.github.voytech.tabulate.core.template.operation.OperationsBuilder
+import io.github.voytech.tabulate.core.template.operation.factories.AttributeOperationsFactory
+import io.github.voytech.tabulate.core.template.operation.factories.ExportOperationsFactory
+import io.github.voytech.tabulate.core.template.result.OutputBinding
+import io.github.voytech.tabulate.core.template.spi.DocumentFormat
+import io.github.voytech.tabulate.core.template.spi.DocumentFormat.Companion.format
+import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
 
-class TestAttributeOperationsFactory : AttributeOperationsFactory<TestRenderingContext> {
-    override fun createCellAttributeRenderOperations(): Set<AttributeOperation<TestRenderingContext,CellAttribute<*>,*, *>> =
-        setOf(
-            CellTextStylesAttributeTestRenderOperation(Spy.spy),
-            CellBordersAttributeTestRenderOperation(Spy.spy),
-            CellBackgroundAttributeTestRenderOperation(Spy.spy),
-            CellAlignmentAttributeTestRenderOperation(Spy.spy)
-        )
 
-    override fun createColumnAttributeRenderOperations(): Set<AttributeOperation<TestRenderingContext,ColumnAttribute<*>,*, *>> =
-        setOf(ColumnWidthAttributeTestRenderOperation(Spy.spy))
+class TestAttributeOperationsFactory : AttributeOperationsFactory<TestRenderingContext, Table<*>> {
 
-    override fun createRowAttributeRenderOperations(): Set<AttributeOperation<TestRenderingContext,RowAttribute<*>,*, *>> =
-        setOf(RowHeightAttributeTestRenderOperation(Spy.spy))
+    override fun createAttributeOperations(): Set<AttributeOperation<TestRenderingContext, Table<*>, *, *, *>> = setOf(
+        CellTextStylesAttributeTestRenderOperation(Spy.spy),
+        CellBordersAttributeTestRenderOperation(Spy.spy),
+        CellBackgroundAttributeTestRenderOperation(Spy.spy),
+        CellAlignmentAttributeTestRenderOperation(Spy.spy),
+        ColumnWidthAttributeTestRenderOperation(Spy.spy),
+        RowHeightAttributeTestRenderOperation(Spy.spy),
+        TemplateFileAttributeTestRenderOperation(Spy.spy)
+    )
 
-    override fun createTableAttributeRenderOperations(): Set<AttributeOperation<TestRenderingContext,TableAttribute<*>,*, *>> =
-        setOf(TemplateFileAttributeTestRenderOperation(Spy.spy))
+    override fun getRenderingContextClass(): Class<TestRenderingContext> = reify()
+
+    override fun getRootModelClass(): Class<Table<*>> = reify()
 
 }
 
-class TestExportOperationsFactory : ExportOperationsFactory<TestRenderingContext>() {
-
-    override fun provideExportOperations(): OperationsBuilder<TestRenderingContext>.() -> Unit = {
-        openTable = OpenTableTestOperation(Spy.spy)
-        openColumn = OpenColumnTestOperation(Spy.spy)
-        openRow = OpenRowTestOperation(Spy.spy)
-        renderRowCell = RenderRowCellTestOperation(Spy.spy)
-        closeRow = CloseRowTestOperation(Spy.spy)
-        closeColumn = CloseColumnTestOperation(Spy.spy)
-        closeTable = CloseTableTestOperation(Spy.spy)
-    }
-
+class TestOutputBindingProvider: OutputBindingsProvider<TestRenderingContext> {
     override fun createOutputBindings(): List<OutputBinding<TestRenderingContext, *>> = listOf(
         TestOutputBinding(), OutputStreamTestOutputBinding()
     )
 
-    override fun createRenderingContext(): TestRenderingContext = TestRenderingContext().also {
-        CURRENT_RENDERING_CONTEXT_INSTANCE = it
+    override fun getDocumentFormat(): DocumentFormat<TestRenderingContext> =
+        format("spy")
+}
+
+class TestExportOperationsFactory : ExportOperationsFactory<TestRenderingContext, Table<*>>() {
+
+    override fun provideExportOperations(): OperationsBuilder<TestRenderingContext, Table<*>>.() -> Unit = {
+        operation(OpenTableTestOperation(Spy.spy))
+        operation(OpenColumnTestOperation(Spy.spy))
+        operation(OpenRowTestOperation(Spy.spy))
+        operation(RenderRowCellTestOperation(Spy.spy))
+        operation(CloseRowTestOperation(Spy.spy))
+        operation(CloseColumnTestOperation(Spy.spy))
+        operation(CloseTableTestOperation(Spy.spy))
     }
 
-    override fun getTabulationFormat(): TabulationFormat<TestRenderingContext> =
-        format("spy", TestRenderingContext::class.java)
-
-    override fun getAttributeOperationsFactory(): AttributeOperationsFactory<TestRenderingContext> =
+    override fun getAttributeOperationsFactory(): AttributeOperationsFactory<TestRenderingContext, Table<*>> =
         TestAttributeOperationsFactory()
 
-    companion object {
-        @JvmStatic
-        var CURRENT_RENDERING_CONTEXT_INSTANCE: TestRenderingContext? = null
-    }
+    override fun getAggregateModelClass(): Class<Table<*>> = reify()
+
+    override fun getDocumentFormat(): DocumentFormat<TestRenderingContext> =
+        format("spy")
 
 }
 
 class AlternativeTestRenderingContext : RenderingContext
 
-class AnotherTestExportOperationsFactory : ExportOperationsFactory<AlternativeTestRenderingContext>() {
+class AnotherTestExportOperationsFactory : ExportOperationsFactory<AlternativeTestRenderingContext,Table<*>>() {
 
     /**
      * atf - Alternative Test Format ;)
      */
-    override fun getTabulationFormat() = format("atf", AlternativeTestRenderingContext::class.java)
+    override fun getDocumentFormat():  DocumentFormat<AlternativeTestRenderingContext> =
+        format("atf")
 
-    override fun provideExportOperations(): OperationsBuilder<AlternativeTestRenderingContext>.() -> Unit = { }
+    override fun provideExportOperations(): OperationsBuilder<AlternativeTestRenderingContext,Table<*>>.() -> Unit = {
+        // Empty all
+    }
 
-    override fun createOutputBindings(): List<OutputBinding<AlternativeTestRenderingContext, *>> = listOf(AlternativeTestOutputBinding())
+    override fun getAggregateModelClass(): Class<Table<*>> = reify()
 
 }

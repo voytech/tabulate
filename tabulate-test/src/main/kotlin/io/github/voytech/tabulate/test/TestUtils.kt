@@ -1,8 +1,12 @@
 package io.github.voytech.tabulate.test
 
-import io.github.voytech.tabulate.model.attributes.*
-import io.github.voytech.tabulate.template.operations.CellValue
-import io.github.voytech.tabulate.template.operations.Coordinates
+import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.ColumnAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.RowAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.TableAttribute
+import io.github.voytech.tabulate.components.table.operation.CellValue
+import io.github.voytech.tabulate.components.table.operation.Coordinates
+import io.github.voytech.tabulate.core.model.Attribute
 import java.io.File
 
 sealed interface Select<CAT: Attribute<*>>

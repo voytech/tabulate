@@ -1,10 +1,10 @@
 package io.github.voytech.tabulate.performance
 
-import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
-import io.github.voytech.tabulate.model.Table
-import io.github.voytech.tabulate.template.iterators.RowContextIterator
-import io.github.voytech.tabulate.template.resolvers.AbstractRowContextResolver
-import io.github.voytech.tabulate.template.resolvers.AccumulatingRowContextResolver
+import io.github.voytech.tabulate.components.table.api.builder.dsl.createTableBuilder
+import io.github.voytech.tabulate.components.table.model.Table
+import io.github.voytech.tabulate.components.table.template.AbstractRowContextResolver
+import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
+import io.github.voytech.tabulate.components.table.template.RowContextIterator
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.system.measureTimeMillis
