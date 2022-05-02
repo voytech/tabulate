@@ -42,5 +42,5 @@ fun <T> ColumnLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttri
 fun <T> RowLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =
     attribute(CellBackgroundAttribute.Builder().apply(block))
 
-fun <T> TableLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =
+fun <T: Any> TableLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =
     attribute(CellBackgroundAttribute.Builder().apply(block))

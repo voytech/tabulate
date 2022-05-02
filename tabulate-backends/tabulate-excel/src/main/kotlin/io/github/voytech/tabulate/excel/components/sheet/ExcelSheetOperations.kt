@@ -17,7 +17,7 @@ class ExcelSheetOperations: ExportOperationsFactory<ApachePoiRenderingContext, S
         })
     }
 
-    override fun getAggregateModelClass(): Class<Sheet> = reify()
+    override fun getModelClass(): Class<Sheet> = reify()
 
     override fun getDocumentFormat(): DocumentFormat<ApachePoiRenderingContext> = DocumentFormat.format("xlsx", "poi")
 }

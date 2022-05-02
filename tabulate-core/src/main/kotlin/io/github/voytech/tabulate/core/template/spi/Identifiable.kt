@@ -29,6 +29,6 @@ interface RenderingContextAware<CTX: RenderingContext> {
  * @author Wojciech Mąka
  * @since 0.3.0
  */
-interface RootModelAware<ARC: Model> {
-    fun getRootModelClass(): Class<ARC>
+interface ModelAware<ARC: Model<ARC>> {
+    fun getModelClass(): Class<ARC>
 }

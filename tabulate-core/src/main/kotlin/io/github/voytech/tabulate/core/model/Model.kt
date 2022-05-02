@@ -1,7 +1,11 @@
 package io.github.voytech.tabulate.core.model
 
-interface Model {
+import io.github.voytech.tabulate.core.template.ExportTemplate
+import io.github.voytech.tabulate.core.template.TemplateContext
+
+interface Model<M: Model<M>> {
     fun getId(): String
 
-    fun getExplicitAttributeCategories(): Set<Class<out Attribute<*>>> = emptySet()
+    fun getExportTemplate(): ExportTemplate<M,out TemplateContext<M>>? = null
+
 }

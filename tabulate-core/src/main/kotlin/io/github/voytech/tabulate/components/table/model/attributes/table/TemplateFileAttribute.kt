@@ -26,6 +26,6 @@ data class TemplateFileAttribute(val fileName: String): TableAttribute<TemplateF
 
 }
 
-fun <T> TableLevelAttributesBuilderApi<T>.template(block: TemplateFileAttribute.Builder.() -> Unit) {
+fun <T: Any> TableLevelAttributesBuilderApi<T>.template(block: TemplateFileAttribute.Builder.() -> Unit) {
     attribute(TemplateFileAttribute.Builder().apply(block))
 }

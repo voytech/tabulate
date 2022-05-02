@@ -70,5 +70,5 @@ fun <T> ColumnLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.B
 fun <T> RowLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =
     attribute(CellBordersAttribute.Builder().apply(block))
 
-fun <T> TableLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =
+fun <T: Any> TableLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =
     attribute(CellBordersAttribute.Builder().apply(block))

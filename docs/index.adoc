@@ -720,9 +720,9 @@ Please note that during `SyntheticRow` resolution only row level cell and row at
 === Row context resolution.  [[row_context_resolution]]
 Row context resolution is the final step of completing row data before dispatching to third party operation code. During this step, couple of intermediate contexts are produced:
 
- - `RowOpeningContext` - a context containing row coordinate (only row index) plus associated row attributes. 'AbstractRowContextResolver' notifies `TableTemplate` about completing `RowOpeningContext` using `RowCompletionListener`. Specific operation implementation associated with this type of context (`RowOpeningContext`) can be invoked even before having all row associated data.
- - `CellContext` - a context holding `CellValue` with all associated cell attributes (merged all level attributes: table, column, row and cell). Similarly to `RowOpeningContext` - `AbstractRowContextResolver` uses `RowCompletionListener` in order to notify `TableTemplate` about each `CellContext` when it is ready for rendering by corresponding operation implementation.
- - `RowClosingContext` - a context with complete row data. It contains all row attributes together with all cell values (also with attributes). As long as `RowClosingContext` is the last step it is also the value returned from `AbstractRowContextResolver.resolve(...)` method.
+ - `RowStart` - a context containing row coordinate (only row index) plus associated row attributes. 'AbstractRowContextResolver' notifies `TableTemplate` about completing `RowStart` using `RowCompletionListener`. Specific operation implementation associated with this type of context (`RowStart`) can be invoked even before having all row associated data.
+ - `CellContext` - a context holding `CellValue` with all associated cell attributes (merged all level attributes: table, column, row and cell). Similarly to `RowStart` - `AbstractRowContextResolver` uses `RowCompletionListener` in order to notify `TableTemplate` about each `CellContext` when it is ready for rendering by corresponding operation implementation.
+ - `RowEnd` - a context with complete row data. It contains all row attributes together with all cell values (also with attributes). As long as `RowEnd` is the last step it is also the value returned from `AbstractRowContextResolver.resolve(...)` method.
 
 <<<
 === Rendering operations dispatching.
@@ -754,13 +754,13 @@ interface AttributeOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, AT
     }
 }
 ----
-`AttributeOperation` is next level abstraction. It is used to render each attribute from `AttributedModel` context. The `AttributeOperation` dispatching can be achieved by `AttributesHandlingOperation` wrapper that is responsible for resolving all `AttributeOperations` and matching them with corresponding attributes.
+`AttributeOperation` is next level abstraction. It is used to render each attribute from `AttributedContext` context. The `AttributeOperation` dispatching can be achieved by `AttributesHandlingOperation` wrapper that is responsible for resolving all `AttributeOperations` and matching them with corresponding attributes.
 
 Now some more words on `operation contexts`.
 
 As can be seen on above code snippets, operation context instance is an object that is passed to operation for rendering purposes. Operation context class determines specific operation applicability, because operation can be invoked only when context is present in scope. In <<row_context_resolution>> You saw that there are three different context classes around row rendering, but in fact there are more context classes present alongside the process.
 
-Have a look at the contract of `OperationsBuilder`. Here we can see all available operation interfaces. Each interface extends base `Operation` interface by filling in corresponding `AttributedModel` context class:
+Have a look at the contract of `OperationsBuilder`. Here we can see all available operation interfaces. Each interface extends base `Operation` interface by filling in corresponding `AttributedContext` context class:
 
 [source,kotlin, options="nowrap"]
 ----
@@ -784,12 +784,12 @@ class OperationsBuilder<CTX : RenderingContext> {
 
 Order of appearance:
 
- - `TableOpeningContext` and `OpenTableOperation`,
- - `ColumnOpeningContext` and `OpenColumnOperation`,
- - `RowOpeningContext` and `OpenRowOperation`,
+ - `TableStart` and `OpenTableOperation`,
+ - `ColumnStart` and `OpenColumnOperation`,
+ - `RowStart` and `OpenRowOperation`,
  - `CellContext` and `RenderRowCellOperation`,
- - `RowClosingContext` and `CloseRowOperation`,
- - `TableClosingContext` and `CloseTableOperation`.
+ - `RowEnd` and `CloseRowOperation`,
+ - `TableEnd` and `CloseTableOperation`.
 
 <<<
 == Cookbook recipes.

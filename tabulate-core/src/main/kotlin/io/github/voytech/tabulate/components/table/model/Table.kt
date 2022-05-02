@@ -4,9 +4,12 @@ import io.github.voytech.tabulate.components.table.model.attributes.CellAttribut
 import io.github.voytech.tabulate.components.table.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.RowAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.TableAttribute
-import io.github.voytech.tabulate.core.model.Model
+import io.github.voytech.tabulate.components.table.template.TableTemplate
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.DataSourceBinding
+import io.github.voytech.tabulate.core.model.Model
+import io.github.voytech.tabulate.core.template.ExportTemplate
+import io.github.voytech.tabulate.core.template.TemplateContext
 
 /**
  * A top-level definition of tabular layout. Aggregates column as well as all row definitions. It can also contain
@@ -14,7 +17,7 @@ import io.github.voytech.tabulate.core.model.DataSourceBinding
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class Table<T> internal constructor(
+class Table<T: Any> internal constructor(
     /**
      * Name of a table. May be used as a sheet name (e.g.: in xlsx files).
      */
@@ -64,8 +67,11 @@ class Table<T> internal constructor(
     @get:JvmSynthetic
     internal val dataSource: DataSourceBinding<T>?
 
-) : Model {
+) : Model<Table<T>> {
     override fun getId(): String = name
+
+    override fun getExportTemplate(): ExportTemplate<Table<T>, out TemplateContext<Table<T>>> = TableTemplate()
+
     companion object {
         @JvmStatic
         fun jclass() : Class<Table<*>> = Table::class.java

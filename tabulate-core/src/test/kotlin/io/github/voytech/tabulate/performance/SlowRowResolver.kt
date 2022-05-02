@@ -3,13 +3,13 @@ package io.github.voytech.tabulate.performance
 import io.github.voytech.tabulate.components.table.model.RowDef
 import io.github.voytech.tabulate.components.table.model.SourceRow
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.operation.RowClosingContext
-import io.github.voytech.tabulate.components.table.operation.asRowClosing
-import io.github.voytech.tabulate.components.table.operation.createCellContext
-import io.github.voytech.tabulate.components.table.operation.createRowOpening
+import io.github.voytech.tabulate.components.table.operation.RowEnd
+import io.github.voytech.tabulate.components.table.operation.asRowEnd
+import io.github.voytech.tabulate.components.table.operation.asCellContext
+import io.github.voytech.tabulate.components.table.operation.asRowStart
 import io.github.voytech.tabulate.components.table.template.*
 
-internal class SlowRowResolver<T>(
+internal class SlowRowResolver<T: Any>(
     private val tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
     listener: RowCompletionListener<T>? = null
@@ -38,15 +38,15 @@ internal class SlowRowResolver<T>(
     private fun resolveAttributedRow(
         tableRowIndex: RowIndex,
         record: IndexedValue<T>? = null
-    ): RowClosingContext<T> {
+    ): RowEnd<T> {
         return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
             val rowDefinitions = getRows(sourceRow)
             with(SyntheticRow(tableModel, rowDefinitions)) {
-                createRowOpening(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
+                asRowStart(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
                     .let {
-                        it.asRowClosing(
+                        it.asRowEnd(
                             mapEachCell { row, column ->
-                                row.createCellContext(row = sourceRow, column = column, customAttributes)?.notify()
+                                row.asCellContext(row = sourceRow, column = column, customAttributes)?.notify()
                             }
                         )
                     }.notify()
@@ -54,7 +54,7 @@ internal class SlowRowResolver<T>(
         }
     }
 
-    override fun resolve(requestedIndex: RowIndex): IndexedContext<RowClosingContext<T>>? {
+    override fun resolve(requestedIndex: RowIndex): IndexedContext<RowEnd<T>>? {
         return if (hasCustomRows(SourceRow(requestedIndex))) {
             IndexedContext(requestedIndex, resolveAttributedRow(requestedIndex))
         } else null

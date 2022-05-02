@@ -7,32 +7,33 @@ import io.github.voytech.tabulate.components.table.model.attributes.CellAttribut
 import io.github.voytech.tabulate.components.table.operation.CellAttributeRenderOperation
 import io.github.voytech.tabulate.components.table.operation.CellContext
 import io.github.voytech.tabulate.components.table.operation.getSheetName
+import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.operation.AttributeOperation
 import io.github.voytech.tabulate.core.template.operation.factories.AttributeOperationsFactory
 import io.github.voytech.tabulate.excel.ApachePoiRenderingContext
 import io.github.voytech.tabulate.testsupport.TestRenderingContext
 
 
-class NoopTestAttributeRenderOperationsProvider : AttributeOperationsFactory<TestRenderingContext, Table<*>> {
+class NoopTestAttributeRenderOperationsProvider : AttributeOperationsFactory<TestRenderingContext, Table<Any>> {
 
-     override fun createAttributeOperations(): Set<AttributeOperation<TestRenderingContext, Table<*>, *, *, *>> = setOf(
+     override fun createAttributeOperations(): Set<AttributeOperation<TestRenderingContext, Table<Any>, *, *, *>> = setOf(
          NoopSimpleTestCellAttributeRenderOperation()
      )
 
     override fun getRenderingContextClass(): Class<TestRenderingContext> = TestRenderingContext::class.java
 
-    override fun getRootModelClass(): Class<Table<*>> = Table::class.java
+    override fun getModelClass(): Class<Table<Any>> = reify()
 
 }
 
-class TestAttributeRenderOperationsProvider : AttributeOperationsFactory<ApachePoiRenderingContext, Table<*>> {
+class TestAttributeRenderOperationsProvider : AttributeOperationsFactory<ApachePoiRenderingContext, Table<Any>> {
 
-    override fun createAttributeOperations(): Set<AttributeOperation<ApachePoiRenderingContext, Table<*>, *, *, *>> = setOf(
+    override fun createAttributeOperations(): Set<AttributeOperation<ApachePoiRenderingContext, Table<Any>, *, *, *>> = setOf(
         SimpleTestCellAttributeRenderOperation()
     )
     override fun getRenderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
-    override fun getRootModelClass(): Class<Table<*>> = Table::class.java
+    override fun getModelClass(): Class<Table<Any>> = reify()
 }
 
 data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<SimpleTestCellAttribute>() {

@@ -1,10 +1,5 @@
 package io.github.voytech.tabulate.support
 
-import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.AttributeClassifier
-import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.operation.AbstractAttributeOperation
-import io.github.voytech.tabulate.core.template.operation.AttributedModel
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.model.attributes.*
 import io.github.voytech.tabulate.components.table.model.attributes.cell.CellAlignmentAttribute
@@ -15,12 +10,17 @@ import io.github.voytech.tabulate.components.table.model.attributes.column.Colum
 import io.github.voytech.tabulate.components.table.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.components.table.operation.*
+import io.github.voytech.tabulate.core.model.Attribute
+import io.github.voytech.tabulate.core.model.AttributeClassifier
+import io.github.voytech.tabulate.core.reify
+import io.github.voytech.tabulate.core.template.operation.AbstractAttributeOperation
+import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import io.github.voytech.tabulate.support.Spy.Companion.operationPriorities
 import java.util.*
 
 data class InterceptedContext(
     val operation: InterceptedOperation,
-    val context: AttributedModel<out Attribute<*>>,
+    val context: AttributedContext<out Attribute<*>>,
     val attribute: Attribute<*>? = null
 )
 
@@ -29,7 +29,7 @@ class Spy private constructor() {
 
     internal fun track(
         interceptedOperation: InterceptedOperation,
-        context: AttributedModel<out Attribute<*>>,
+        context: AttributedContext<out Attribute<*>>,
         attribute: Attribute<*>? = null
     ) = visitedOperations.add(InterceptedContext(interceptedOperation, context, attribute))
 
@@ -47,9 +47,9 @@ class Spy private constructor() {
 
 interface InterceptedOperation
 
-abstract class InterceptedRenderOperation<T : Attribute<*>, G : T, E : AttributedModel<T>>(
+abstract class InterceptedRenderOperation<T : Attribute<*>, G : T, E : AttributedContext<T>>(
     protected var spy: Spy? = null, private val clazz: Class<G>, private val contextClass: Class<E>
-) : AbstractAttributeOperation<TestRenderingContext, Table<*>, T, G, E>(), InterceptedOperation {
+) : AbstractAttributeOperation<TestRenderingContext, Table<Any>, T, G, E>(), InterceptedOperation {
 
     override fun priority(): Int = operationPriorities[clazz] ?: 1
     override fun renderAttribute(renderingContext: TestRenderingContext, context: E, attribute: G) {
@@ -64,19 +64,19 @@ abstract class InterceptedRenderOperation<T : Attribute<*>, G : T, E : Attribute
 }
 
 class OpenTableTestOperation(private val spy: Spy? = null): OpenTableOperation<TestRenderingContext>, InterceptedOperation {
-    override fun render(renderingContext: TestRenderingContext, context: TableOpeningContext) {
+    override fun render(renderingContext: TestRenderingContext, context: TableStart) {
         spy?.track(this, context)
     }
 }
 
 class OpenColumnTestOperation(private val spy: Spy? = null): OpenColumnOperation<TestRenderingContext>, InterceptedOperation {
-    override fun render(renderingContext: TestRenderingContext, context: ColumnOpeningContext) {
+    override fun render(renderingContext: TestRenderingContext, context: ColumnStart) {
         spy?.track(this, context)
     }
 }
 
 class OpenRowTestOperation(private val spy: Spy? = null): OpenRowOperation<TestRenderingContext>, InterceptedOperation {
-    override fun render(renderingContext: TestRenderingContext, context: RowOpeningContext) {
+    override fun render(renderingContext: TestRenderingContext, context: RowStart) {
         spy?.track(this, context)
     }
 }
@@ -88,19 +88,19 @@ class RenderRowCellTestOperation(private val spy: Spy? = null): RenderRowCellOpe
 }
 
 class CloseRowTestOperation(private val spy: Spy? = null): CloseRowOperation<TestRenderingContext>, InterceptedOperation {
-    override fun render(renderingContext: TestRenderingContext, context: RowClosingContext<*>) {
+    override fun render(renderingContext: TestRenderingContext, context: RowEnd<*>) {
         spy?.track(this, context)
     }
 }
 
 class CloseColumnTestOperation(private val spy: Spy? = null): CloseColumnOperation<TestRenderingContext>, InterceptedOperation {
-    override fun render(renderingContext: TestRenderingContext, context: ColumnClosingContext) {
+    override fun render(renderingContext: TestRenderingContext, context: ColumnEnd) {
         spy?.track(this, context)
     }
 }
 
 class CloseTableTestOperation(private val spy: Spy? = null): CloseTableOperation<TestRenderingContext>, InterceptedOperation {
-    override fun render(renderingContext: TestRenderingContext, context: TableClosingContext) {
+    override fun render(renderingContext: TestRenderingContext, context: TableEnd) {
         spy?.track(this, context)
     }
 }
@@ -114,61 +114,61 @@ abstract class InterceptedCellAttributeRenderOperation<T : CellAttribute<*>>(
 abstract class InterceptedRowAttributeRenderOperation<T : RowAttribute<*>>(
     spy: Spy? = null,
     clazz: Class<T>
-) : InterceptedRenderOperation<RowAttribute<*>, T, RowOpeningContext>(spy, clazz, RowOpeningContext::class.java)
+) : InterceptedRenderOperation<RowAttribute<*>, T, RowStart>(spy, clazz, RowStart::class.java)
 
 abstract class InterceptedColumnAttributeRenderOperation<T : ColumnAttribute<*>>(
     spy: Spy? = null,
     clazz: Class<T>
-) : InterceptedRenderOperation<ColumnAttribute<*>, T, ColumnOpeningContext>(spy, clazz, ColumnOpeningContext::class.java)
+) : InterceptedRenderOperation<ColumnAttribute<*>, T, ColumnStart>(spy, clazz, ColumnStart::class.java)
 
 abstract class InterceptedTableAttributeRenderOperation<T : TableAttribute<*>>(
     spy: Spy? = null,
     clazz: Class<T>
-) : InterceptedRenderOperation<TableAttribute<*>, T, TableOpeningContext>(spy, clazz, TableOpeningContext::class.java)
+) : InterceptedRenderOperation<TableAttribute<*>, T, TableStart>(spy, clazz, TableStart::class.java)
 
 class CellTextStylesAttributeTestRenderOperation(spy: Spy? = null) :
     InterceptedCellAttributeRenderOperation<CellTextStylesAttribute>(spy, CellTextStylesAttribute::class.java) {
-    override fun classifier(): AttributeClassifier<CellAttribute<*>, Table<*>> = CellAttribute::class.java.classify()
+    override fun classifier(): AttributeClassifier<CellAttribute<*>, Table<Any>> = CellAttribute::class.java.classify()
 }
 
 class CellBordersAttributeTestRenderOperation(spy: Spy? = null) :
     InterceptedCellAttributeRenderOperation<CellBordersAttribute>(spy, CellBordersAttribute::class.java) {
-    override fun classifier(): AttributeClassifier<CellAttribute<*>, Table<*>> = CellAttribute::class.java.classify()
+    override fun classifier(): AttributeClassifier<CellAttribute<*>, Table<Any>> = CellAttribute::class.java.classify()
 
 }
 
 class CellBackgroundAttributeTestRenderOperation(spy: Spy? = null) :
     InterceptedCellAttributeRenderOperation<CellBackgroundAttribute>(spy, CellBackgroundAttribute::class.java) {
-    override fun classifier(): AttributeClassifier<CellAttribute<*>, Table<*>> = CellAttribute::class.java.classify()
+    override fun classifier(): AttributeClassifier<CellAttribute<*>, Table<Any>> = CellAttribute::class.java.classify()
 
 }
 
 class CellAlignmentAttributeTestRenderOperation(spy: Spy? = null) :
     InterceptedCellAttributeRenderOperation<CellAlignmentAttribute>(spy, CellAlignmentAttribute::class.java) {
-    override fun classifier(): AttributeClassifier<CellAttribute<*>, Table<*>> = CellAttribute::class.java.classify()
+    override fun classifier(): AttributeClassifier<CellAttribute<*>, Table<Any>> = CellAttribute::class.java.classify()
 
 }
 
 class ColumnWidthAttributeTestRenderOperation(spy: Spy? = null) :
     InterceptedColumnAttributeRenderOperation<ColumnWidthAttribute>(spy, ColumnWidthAttribute::class.java) {
-    override fun classifier(): AttributeClassifier<ColumnAttribute<*>, Table<*>> = ColumnAttribute::class.java.classify()
+    override fun classifier(): AttributeClassifier<ColumnAttribute<*>, Table<Any>> = ColumnAttribute::class.java.classify()
 
 }
 
 class RowHeightAttributeTestRenderOperation(spy: Spy? = null) :
     InterceptedRowAttributeRenderOperation<RowHeightAttribute>(spy, RowHeightAttribute::class.java) {
-    override fun classifier(): AttributeClassifier<RowAttribute<*>, Table<*>> = RowAttribute::class.java.classify()
+    override fun classifier(): AttributeClassifier<RowAttribute<*>, Table<Any>> = RowAttribute::class.java.classify()
 }
 
 class TemplateFileAttributeTestRenderOperation(spy: Spy? = null) :
     InterceptedTableAttributeRenderOperation<TemplateFileAttribute>(spy, TemplateFileAttribute::class.java) {
-    override fun classifier(): AttributeClassifier<TableAttribute<*>, Table<*>> = TableAttribute::class.java.classify()
+    override fun classifier(): AttributeClassifier<TableAttribute<*>, Table<Any>> = TableAttribute::class.java.classify()
 }
 
 class ShadowingCellTextStylesAttributeTestRenderOperation :
     InterceptedCellAttributeRenderOperation<CellTextStylesAttribute>(null, CellTextStylesAttribute::class.java) {
         init { this.spy = Spy.spy } // It is loaded by service loader. Cannot have constructor context.
 
-    override fun classifier(): AttributeClassifier<CellAttribute<*>, Table<*>> = CellAttribute::class.java.classify()
+    override fun classifier(): AttributeClassifier<CellAttribute<*>, Table<Any>> = CellAttribute::class.java.classify()
 }
 

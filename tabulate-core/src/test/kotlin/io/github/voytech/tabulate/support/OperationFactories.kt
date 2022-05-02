@@ -13,9 +13,9 @@ import io.github.voytech.tabulate.core.template.spi.DocumentFormat.Companion.for
 import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
 
 
-class TestAttributeOperationsFactory : AttributeOperationsFactory<TestRenderingContext, Table<*>> {
+class TestAttributeOperationsFactory : AttributeOperationsFactory<TestRenderingContext, Table<Any>> {
 
-    override fun createAttributeOperations(): Set<AttributeOperation<TestRenderingContext, Table<*>, *, *, *>> = setOf(
+    override fun createAttributeOperations(): Set<AttributeOperation<TestRenderingContext, Table<Any>, *, *, *>> = setOf(
         CellTextStylesAttributeTestRenderOperation(Spy.spy),
         CellBordersAttributeTestRenderOperation(Spy.spy),
         CellBackgroundAttributeTestRenderOperation(Spy.spy),
@@ -27,7 +27,7 @@ class TestAttributeOperationsFactory : AttributeOperationsFactory<TestRenderingC
 
     override fun getRenderingContextClass(): Class<TestRenderingContext> = reify()
 
-    override fun getRootModelClass(): Class<Table<*>> = reify()
+    override fun getModelClass(): Class<Table<Any>> = reify()
 
 }
 
@@ -40,9 +40,9 @@ class TestOutputBindingProvider: OutputBindingsProvider<TestRenderingContext> {
         format("spy")
 }
 
-class TestExportOperationsFactory : ExportOperationsFactory<TestRenderingContext, Table<*>>() {
+class TestExportOperationsFactory : ExportOperationsFactory<TestRenderingContext, Table<Any>>() {
 
-    override fun provideExportOperations(): OperationsBuilder<TestRenderingContext, Table<*>>.() -> Unit = {
+    override fun provideExportOperations(): OperationsBuilder<TestRenderingContext, Table<Any>>.() -> Unit = {
         operation(OpenTableTestOperation(Spy.spy))
         operation(OpenColumnTestOperation(Spy.spy))
         operation(OpenRowTestOperation(Spy.spy))
@@ -52,10 +52,10 @@ class TestExportOperationsFactory : ExportOperationsFactory<TestRenderingContext
         operation(CloseTableTestOperation(Spy.spy))
     }
 
-    override fun getAttributeOperationsFactory(): AttributeOperationsFactory<TestRenderingContext, Table<*>> =
+    override fun getAttributeOperationsFactory(): AttributeOperationsFactory<TestRenderingContext, Table<Any>> =
         TestAttributeOperationsFactory()
 
-    override fun getAggregateModelClass(): Class<Table<*>> = reify()
+    override fun getModelClass(): Class<Table<Any>> = reify()
 
     override fun getDocumentFormat(): DocumentFormat<TestRenderingContext> =
         format("spy")
@@ -64,7 +64,7 @@ class TestExportOperationsFactory : ExportOperationsFactory<TestRenderingContext
 
 class AlternativeTestRenderingContext : RenderingContext
 
-class AnotherTestExportOperationsFactory : ExportOperationsFactory<AlternativeTestRenderingContext,Table<*>>() {
+class AnotherTestExportOperationsFactory : ExportOperationsFactory<AlternativeTestRenderingContext,Table<Any>>() {
 
     /**
      * atf - Alternative Test Format ;)
@@ -72,10 +72,10 @@ class AnotherTestExportOperationsFactory : ExportOperationsFactory<AlternativeTe
     override fun getDocumentFormat():  DocumentFormat<AlternativeTestRenderingContext> =
         format("atf")
 
-    override fun provideExportOperations(): OperationsBuilder<AlternativeTestRenderingContext,Table<*>>.() -> Unit = {
+    override fun provideExportOperations(): OperationsBuilder<AlternativeTestRenderingContext,Table<Any>>.() -> Unit = {
         // Empty all
     }
 
-    override fun getAggregateModelClass(): Class<Table<*>> = reify()
+    override fun getModelClass(): Class<Table<Any>> = reify()
 
 }

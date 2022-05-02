@@ -10,7 +10,7 @@ import java.util.*
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-internal class AccumulatingRowContextResolver<T>(
+internal class AccumulatingRowContextResolver<T: Any>(
     tableModel: Table<T>,
     customAttributes: MutableMap<String, Any>,
     listener: RowCompletionListener<T>? = null

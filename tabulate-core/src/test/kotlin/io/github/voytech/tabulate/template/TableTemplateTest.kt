@@ -45,37 +45,37 @@ class TableTemplateTest {
 
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableOpeningContext).getSheetName()) }
+        history.next().run { assertEquals("Products table", (context as TableStart).getSheetName()) }
         // Columns
-        history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnOpeningContext).columnIndex) }
-        history.next().run { assertEquals(2, (context as ColumnOpeningContext).columnIndex) }
-        history.next().run { assertEquals(3, (context as ColumnOpeningContext).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStart).columnIndex) }
+        history.next().run { assertEquals(2, (context as ColumnStart).columnIndex) }
+        history.next().run { assertEquals(3, (context as ColumnStart).columnIndex) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
         history.next().run { assertEquals("name1", (context as CellContext).rawValue) }
         history.next().run { assertEquals("description1", (context as CellContext).rawValue) }
         history.next().run { assertEquals("manufacturer1", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(0, (context as RowClosingContext<*>).getRow())
+            assertEquals(0, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Row 1
-        history.next().run { assertEquals(1, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(1, (context as RowStart).getRow()) }
         history.next().run { assertEquals("code2", (context as CellContext).rawValue) }
         history.next().run { assertEquals("name2", (context as CellContext).rawValue) }
         history.next().run { assertEquals("description2", (context as CellContext).rawValue) }
         history.next().run { assertEquals("manufacturer2", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(1, (context as RowClosingContext<*>).getRow())
+            assertEquals(1, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
-        history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertEquals(2, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertEquals(3, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertIs<TableClosingContext>(context) }
+        history.next().run { assertEquals(0, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertEquals(2, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertEquals(3, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertIs<TableEnd>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -99,55 +99,55 @@ class TableTemplateTest {
 
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableOpeningContext).getSheetName()) }
+        history.next().run { assertEquals("Products table", (context as TableStart).getSheetName()) }
         // Columns - Opening
-        history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnOpeningContext).columnIndex) }
-        history.next().run { assertEquals(2, (context as ColumnOpeningContext).columnIndex) }
-        history.next().run { assertEquals(3, (context as ColumnOpeningContext).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStart).columnIndex) }
+        history.next().run { assertEquals(2, (context as ColumnStart).columnIndex) }
+        history.next().run { assertEquals(3, (context as ColumnStart).columnIndex) }
 
         // Header
-        history.next().run { assertEquals(0, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         history.next().run { assertEquals("Code", (context as CellContext).rawValue) }
         history.next().run { assertEquals("Name", (context as CellContext).rawValue) }
         history.next().run { assertEquals("Description", (context as CellContext).rawValue) }
         history.next().run { assertEquals("Manufacturer", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(0, (context as RowClosingContext<*>).getRow())
+            assertEquals(0, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Row 0
-        history.next().run { assertEquals(1, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(1, (context as RowStart).getRow()) }
         history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
         history.next().run { assertEquals("name1", (context as CellContext).rawValue) }
         history.next().run { assertEquals("description1", (context as CellContext).rawValue) }
         history.next().run { assertEquals("manufacturer1", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(1, (context as RowClosingContext<*>).getRow())
+            assertEquals(1, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Row 1
-        history.next().run { assertEquals(2, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(2, (context as RowStart).getRow()) }
         history.next().run { assertEquals("code2", (context as CellContext).rawValue) }
         history.next().run { assertEquals("name2", (context as CellContext).rawValue) }
         history.next().run { assertEquals("description2", (context as CellContext).rawValue) }
         history.next().run { assertEquals("manufacturer2", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(2, (context as RowClosingContext<*>).getRow())
+            assertEquals(2, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Footer row
-        history.next().run { assertEquals(3, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(3, (context as RowStart).getRow()) }
         history.next().run { assertEquals("First footer cell.", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(3, (context as RowClosingContext<*>).getRow())
+            assertEquals(3, (context as RowEnd<*>).getRow())
             assertEquals(1, context.getCells().keys.size)
         }
-        history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertEquals(2, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertEquals(3, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertIs<TableClosingContext>(context) }
+        history.next().run { assertEquals(0, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertEquals(2, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertEquals(3, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertIs<TableEnd>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -172,45 +172,45 @@ class TableTemplateTest {
 
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableOpeningContext).getSheetName()) }
+        history.next().run { assertEquals("Products table", (context as TableStart).getSheetName()) }
         // Columns - Opening
-        history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnOpeningContext).columnIndex) }
-        history.next().run { assertEquals(2, (context as ColumnOpeningContext).columnIndex) }
-        history.next().run { assertEquals(3, (context as ColumnOpeningContext).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStart).columnIndex) }
+        history.next().run { assertEquals(2, (context as ColumnStart).columnIndex) }
+        history.next().run { assertEquals(3, (context as ColumnStart).columnIndex) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
         history.next().run { assertEquals("name1", (context as CellContext).rawValue) }
         history.next().run { assertEquals("description1", (context as CellContext).rawValue) }
         history.next().run { assertEquals("manufacturer1", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(0, (context as RowClosingContext<*>).getRow())
+            assertEquals(0, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Row 1
-        history.next().run { assertEquals(1, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(1, (context as RowStart).getRow()) }
         history.next().run { assertEquals("code2", (context as CellContext).rawValue) }
         history.next().run { assertEquals("name2", (context as CellContext).rawValue) }
         history.next().run { assertEquals("description2", (context as CellContext).rawValue) }
         history.next().run { assertEquals("manufacturer2", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(1, (context as RowClosingContext<*>).getRow())
+            assertEquals(1, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Footer row
-        history.next().run { assertEquals(5, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(5, (context as RowStart).getRow()) }
         history.next().run { assertEquals("Custom row cell", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(5, (context as RowClosingContext<*>).getRow())
+            assertEquals(5, (context as RowEnd<*>).getRow())
             assertEquals(1, context.getCells().keys.size)
         }
         // Columns closing.
-        history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertEquals(2, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertEquals(3, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertIs<TableClosingContext>(context) }
+        history.next().run { assertEquals(0, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertEquals(2, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertEquals(3, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertIs<TableEnd>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -258,12 +258,12 @@ class TableTemplateTest {
 
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableOpeningContext).getSheetName()) }
+        history.next().run { assertEquals("Products table", (context as TableStart).getSheetName()) }
         // Columns - Opening
-        history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnOpeningContext).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStart).columnIndex) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         history.next().run { assertEquals("Green cell", (context as CellContext).rawValue) }
         history.next().run { assertEquals(Colors.GREEN, (attribute as CellTextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as CellBackgroundAttribute).color) }
@@ -271,20 +271,20 @@ class TableTemplateTest {
         history.next().run { assertEquals(Colors.WHITE, (attribute as CellTextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as CellBackgroundAttribute).color) }
         history.next().run {
-            assertEquals(0, (context as RowClosingContext<*>).getRow())
+            assertEquals(0, (context as RowEnd<*>).getRow())
             assertEquals(2, context.getCells().keys.size)
         }
         // Row 1
-        history.next().run { assertEquals(1, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(1, (context as RowStart).getRow()) }
         history.next().run { assertEquals("White cell", (context as CellContext).rawValue) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as CellTextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as CellBackgroundAttribute).color) }
         history.next().run {
-            assertEquals(1, (context as RowClosingContext<*>).getRow())
+            assertEquals(1, (context as RowEnd<*>).getRow())
             assertEquals(1, context.getCells().keys.size)
         }
         // Row 1
-        history.next().run { assertEquals(2, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(2, (context as RowStart).getRow()) }
         history.next().run { assertEquals("Red cell", (context as CellContext).rawValue) }
         history.next().run { assertEquals(Colors.RED, (attribute as CellTextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as CellBackgroundAttribute).color) }
@@ -292,13 +292,13 @@ class TableTemplateTest {
         history.next().run { assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as CellBackgroundAttribute).color) }
         history.next().run {
-            assertEquals(2, (context as RowClosingContext<*>).getRow())
+            assertEquals(2, (context as RowEnd<*>).getRow())
             assertEquals(2, context.getCells().keys.size)
         }
         // Columns closing.
-        history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertIs<TableClosingContext>(context) }
+        history.next().run { assertEquals(0, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertIs<TableEnd>(context) }
         assertFalse(history.hasNext())
 
     }
@@ -350,17 +350,17 @@ class TableTemplateTest {
         }.export(DocumentFormat("spy"), Unit)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableOpeningContext).getSheetName()) }
+        history.next().run { assertEquals("Products table", (context as TableStart).getSheetName()) }
         // Columns - Opening 0
-        history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
         // Column 0 attribute
         history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
         // Columns - Opening 1
-        history.next().run { assertEquals(1, (context as ColumnOpeningContext).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStart).columnIndex) }
         // Column 1 attribute
         history.next().run { assertEquals(100, (attribute as ColumnWidthAttribute).px) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         history.next().run { assertEquals(50, (attribute as RowHeightAttribute).px) }
         // Row 0, cell 0
         history.next().run { assertEquals("Black, strikeout, bold, italic cell", (context as CellContext).rawValue) }
@@ -370,9 +370,9 @@ class TableTemplateTest {
             assertEquals(DefaultWeightStyle.BOLD, attribute.weight)
             assertEquals(true, attribute.italic)
         }
-        history.next().run { assertTrue(context is RowClosingContext<*>) }
+        history.next().run { assertTrue(context is RowEnd<*>) }
         // Row 1, cell 0
-        history.next().run { assertEquals(1, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(1, (context as RowStart).getRow()) }
         history.next().run { assertEquals(20, (attribute as RowHeightAttribute).px) }
         history.next().run { assertEquals("Black, strikeout, bold cell", (context as CellContext).rawValue) }
         history.next().run {
@@ -381,9 +381,9 @@ class TableTemplateTest {
             assertEquals(DefaultWeightStyle.BOLD, attribute.weight)
             assertEquals(false, attribute.italic)
         }
-        history.next().run { assertTrue(context is RowClosingContext<*>) }
+        history.next().run { assertTrue(context is RowEnd<*>) }
         // Row 2, cell 0
-        history.next().run { assertEquals(2, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(2, (context as RowStart).getRow()) }
         history.next().run { assertEquals(20, (attribute as RowHeightAttribute).px) }
         history.next().run { assertEquals("Black, strikeout cell", (context as CellContext).rawValue) }
         history.next().run {
@@ -399,12 +399,12 @@ class TableTemplateTest {
             assertEquals(DefaultWeightStyle.NORMAL, attribute.weight)
             assertEquals(false, attribute.italic)
         }
-        history.next().run { assertIs<RowClosingContext<*>>(context) }
+        history.next().run { assertIs<RowEnd<*>>(context) }
         // Columns - Closing 0
-        history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnEnd).columnIndex) }
         // Columns - Closing 1
-        history.next().run { assertEquals(1, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertIs<TableClosingContext>(context) }
+        history.next().run { assertEquals(1, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertIs<TableEnd>(context) }
         assertFalse(history.hasNext())
     }
 

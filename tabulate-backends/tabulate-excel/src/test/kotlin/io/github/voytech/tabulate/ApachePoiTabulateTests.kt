@@ -3,6 +3,7 @@ package io.github.voytech.tabulate
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.sheet.api.builder.dsl.sheet
+import io.github.voytech.tabulate.components.spacing.api.builder.dsl.space
 import io.github.voytech.tabulate.components.table.api.builder.RowPredicates.all
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
@@ -681,20 +682,39 @@ class ApachePoiTabulateTests {
 
 
     @Test
-    fun `should correctly export two tables on separate sheets`() {
+    fun `should correctly export two on same sheet, one next to each others`() {
         document {
             sheet {
                 name = "Sheet 1"
-                table<Unit> {
+                table<SampleProduct> {
                     attributes { columnWidth { auto = true } }
-                    rows {
-                        newRow {
-                            cell { value = "Sheet 1, value 1" }
-                            cell { value = "Sheet 1, value 2" }
+                    columns {
+                        column(SampleProduct::code)
+                        column(SampleProduct::name)
+                        column(SampleProduct::description)
+                        column(SampleProduct::price) {
+                            attributes { format { "[\$\$-409]#,##0.00;[RED]-[\$\$-409]#,##0.00" } }
                         }
                     }
+                    rows { header("Id", "Name", "Description", "Price") }
+                    dataSource(SampleProduct.create(4))
+                }
+                space { widthInPoints = 45f }
+                table<SampleProduct> {
+                    attributes { columnWidth { auto = true } }
+                    columns {
+                        column(SampleProduct::code)
+                        column(SampleProduct::name)
+                        column(SampleProduct::description)
+                        column(SampleProduct::price) {
+                            attributes { format { "[\$\$-409]#,##0.00;[RED]-[\$\$-409]#,##0.00" } }
+                        }
+                    }
+                    rows { header("Id 2", "Name 2", "Description 2", "Price 2") }
+                    dataSource(SampleProduct.create(14))
                 }
             }
+            /*
             sheet {
                 name = "Sheet 2"
                 table<SampleProduct> {
@@ -705,7 +725,7 @@ class ApachePoiTabulateTests {
                         column(SampleProduct::name)
                     }
                 }
-            }
+            }*/
         }.export("text.xlsx")
         File("test.xlsx").delete()
     }

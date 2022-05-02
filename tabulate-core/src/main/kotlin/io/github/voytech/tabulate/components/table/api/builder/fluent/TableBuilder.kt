@@ -17,7 +17,7 @@ import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.c
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-sealed class FluentTableBuilderApi<T> {
+sealed class FluentTableBuilderApi<T: Any> {
 
     @JvmSynthetic
     internal abstract fun up(): FluentTableBuilderApi<T>
@@ -33,21 +33,21 @@ sealed class FluentTableBuilderApi<T> {
     fun build() : Table<T> = root().builderState.build()
 }
 
-interface RowBuilderMethods<T> {
+interface RowBuilderMethods<T: Any> {
     fun row(): RowBuilder<T>
     fun row(at: Int): RowBuilder<T>
     fun row(at: Int, offset: Enum<*>): RowBuilder<T>
     fun row(predicate: RowPredicate<T>): RowBuilder<T>
 }
 
-interface CellBuilderMethods<T> {
+interface CellBuilderMethods<T: Any> {
     fun cell(): CellBuilder<T>
     fun cell(id: String): CellBuilder<T>
     fun cell(key: String, reference: java.util.function.Function<T, Any?>): CellBuilder<T>
     fun cell(index: Int): CellBuilder<T>
 }
 
-interface ColumnsBuilderMethods<T> {
+interface ColumnsBuilderMethods<T: Any> {
     fun column(id: String): ColumnBuilder<T>
     fun column(key: String, reference: java.util.function.Function<T, Any?>): ColumnBuilder<T>
 }
@@ -58,7 +58,7 @@ interface ColumnsBuilderMethods<T> {
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class TableBuilder<T> : FluentTableBuilderApi<T>() {
+class TableBuilder<T: Any> : FluentTableBuilderApi<T>() {
 
     @get:JvmSynthetic
     internal val builderState: TableBuilderState<T> = TableBuilderState()
@@ -107,7 +107,7 @@ class TableBuilder<T> : FluentTableBuilderApi<T>() {
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class ColumnsBuilder<T> internal constructor(private val parent: TableBuilder<T>) :
+class ColumnsBuilder<T: Any> internal constructor(private val parent: TableBuilder<T>) :
     FluentTableBuilderApi<T>(), ColumnsBuilderMethods<T> {
 
     override fun column(id: String) =
@@ -129,7 +129,7 @@ class ColumnsBuilder<T> internal constructor(private val parent: TableBuilder<T>
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class ColumnBuilder<T> internal constructor(
+class ColumnBuilder<T: Any> internal constructor(
     private val builderState: ColumnBuilderState<T>,
     private val parent: ColumnsBuilder<T>,
 ) : FluentTableBuilderApi<T>(), ColumnsBuilderMethods<T> by parent {
@@ -184,7 +184,7 @@ class ColumnBuilder<T> internal constructor(
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class RowsBuilder<T> internal constructor(
+class RowsBuilder<T: Any> internal constructor(
     private val parent: TableBuilder<T>,
 ) : FluentTableBuilderApi<T>(), RowBuilderMethods<T> {
 
@@ -210,7 +210,7 @@ class RowsBuilder<T> internal constructor(
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class RowBuilder<T> internal constructor(
+class RowBuilder<T: Any> internal constructor(
     private val builderState: RowBuilderState<T>,
     private val parent: RowsBuilder<T>,
 ) : FluentTableBuilderApi<T>(),
@@ -278,7 +278,7 @@ class RowBuilder<T> internal constructor(
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class CellBuilder<T> internal constructor(
+class CellBuilder<T: Any> internal constructor(
     private val builderState: CellBuilderState<T>,
     private val parent: RowBuilder<T>,
 ) : FluentTableBuilderApi<T>(),

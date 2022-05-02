@@ -11,13 +11,13 @@ import kotlin.system.measureTimeMillis
 
 class TabulatePerformanceTest {
 
-    internal data class Wrapper<T>(
+    internal data class Wrapper<T: Any>(
         val iterator: RowContextIterator<T>,
         val resolver: AbstractRowContextResolver<T>,
         val customAttributes: Map<String, Any>
     )
 
-    private fun <T> createSlowIterator(table: Table<T>): Wrapper<T> =
+    private fun <T: Any> createSlowIterator(table: Table<T>): Wrapper<T> =
         mutableMapOf<String, Any>().let {
             it to SlowRowResolver(table, it)
         }.let {
@@ -28,7 +28,7 @@ class TabulatePerformanceTest {
             )
         }
 
-    private fun <T> createFastIterator(table: Table<T>): Wrapper<T> =
+    private fun <T: Any> createFastIterator(table: Table<T>): Wrapper<T> =
         mutableMapOf<String, Any>().let {
             it to AccumulatingRowContextResolver(table, it)
         }.let {
@@ -39,7 +39,7 @@ class TabulatePerformanceTest {
             )
         }
 
-    private fun <T> createTableDefinition(): Table<T> {
+    private fun <T: Any> createTableDefinition(): Table<T> {
         return createTableBuilder<T> {
             columns {
                 column("c-1")

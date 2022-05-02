@@ -16,7 +16,7 @@ import kotlin.properties.Delegates.vetoable
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class TableBuilderState<T> : ModelBuilderState<Table<T>>, AttributesAwareBuilder<Table<T>>() {
+class TableBuilderState<T: Any> : ModelBuilderState<Table<T>>, AttributesAwareBuilder<Table<T>>() {
 
     @get:JvmSynthetic
     internal val columnsBuilderState: ColumnsBuilderState<T> = ColumnsBuilderState()

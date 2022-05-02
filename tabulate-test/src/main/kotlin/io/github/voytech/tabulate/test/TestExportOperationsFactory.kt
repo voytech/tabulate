@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.test
 
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.*
+import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.operation.OperationsBuilder
 import io.github.voytech.tabulate.core.template.operation.factories.ExportOperationsFactory
@@ -17,11 +18,11 @@ fun interface RowCellTest {
 }
 
 interface CloseRowTest {
-    fun <T> test(context: RowClosingContext<T>) { }
+    fun <T> test(context: RowEnd<T>) { }
 }
 
 fun interface OpenRowTest {
-    fun test(context: ColumnOpeningContext)
+    fun test(context: ColumnStart)
 }
 
 class TestOutputBinding: OutputBinding<TestRenderingContext, Unit> {
@@ -56,7 +57,7 @@ class OutputStreamTestOutputBinding: OutputBinding<TestRenderingContext, OutputS
     }
 }
 
-class TestExportOperationsFactory: ExportOperationsFactory<TestRenderingContext, Table<*>>() {
+class TestExportOperationsFactory: ExportOperationsFactory<TestRenderingContext, Table<Any>>() {
 
     override fun getDocumentFormat(): DocumentFormat<TestRenderingContext>  = DocumentFormat.format("test")
 
@@ -66,7 +67,7 @@ class TestExportOperationsFactory: ExportOperationsFactory<TestRenderingContext,
         operation(RenderRowCellOperation { _, context ->  cellTest?.test(context) })
     }
 
-    override fun getAggregateModelClass(): Class<Table<*>> = Table::class.java
+    override fun getModelClass(): Class<Table<Any>> = reify()
 
     companion object {
         @JvmStatic

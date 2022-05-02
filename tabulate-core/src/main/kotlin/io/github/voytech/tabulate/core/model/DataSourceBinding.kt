@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.core.model
 
-data class DataSourceBinding<T>(
+data class DataSourceBinding<T : Any>(
     val dataSource: Iterable<T>,
-    val dataSourceRecordClass: Class<*> = (dataSource as Iterable<Any>).first().javaClass
+    val dataSourceRecordClass: Class<T> = dataSource.first().javaClass
 )

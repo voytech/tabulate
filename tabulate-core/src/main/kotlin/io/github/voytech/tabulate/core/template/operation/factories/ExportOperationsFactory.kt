@@ -17,7 +17,7 @@ import java.util.*
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-abstract class ExportOperationsFactory<CTX : RenderingContext, ARM: Model> : ExportOperationsProvider<CTX, ARM> {
+abstract class ExportOperationsFactory<CTX : RenderingContext, ARM : Model<ARM>> : ExportOperationsProvider<CTX, ARM> {
 
     private val attributeOperationsContainer: AttributesOperationsContainer<CTX, ARM> by lazy {
         registerAttributesOperations()
@@ -28,7 +28,7 @@ abstract class ExportOperationsFactory<CTX : RenderingContext, ARM: Model> : Exp
     protected open fun getAttributeOperationsFactory(): AttributeOperationsFactory<CTX, ARM>? = null
 
     final override fun createExportOperations(): Operations<CTX> = OperationsBuilder(
-        getRenderingContextClass(),getAggregateModelClass(), attributeOperationsContainer
+        getRenderingContextClass(),getModelClass(), attributeOperationsContainer
     ).apply(provideExportOperations()).build()
 
     private fun registerAttributesOperations(
@@ -47,7 +47,7 @@ abstract class ExportOperationsFactory<CTX : RenderingContext, ARM: Model> : Exp
         attributeOperationsContainer: AttributesOperationsContainer<CTX, ARM>,
     ): AttributesOperationsContainer<CTX, ARM> = attributeOperationsContainer.apply {
         loadRenderingContextAware<AttributeOperationsFactory<CTX,ARM>, CTX>(getRenderingContextClass())
-            .filter { it.getRootModelClass() == getAggregateModelClass() }
+            .filter { it.getModelClass() == getModelClass() }
             .forEach { registerAttributesOperations(attributeOperationsContainer, it) }
     }
 

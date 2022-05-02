@@ -27,5 +27,5 @@ data class CellSeparatorCharacterAttribute(val separator: String = ","):
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-fun <T> TableLevelAttributesBuilderApi<T>.separator(block: CellSeparatorCharacterAttribute.Builder.() -> Unit) =
+fun <T: Any> TableLevelAttributesBuilderApi<T>.separator(block: CellSeparatorCharacterAttribute.Builder.() -> Unit) =
     attribute(CellSeparatorCharacterAttribute.Builder().apply(block))

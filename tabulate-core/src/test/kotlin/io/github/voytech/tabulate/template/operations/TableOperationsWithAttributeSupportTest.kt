@@ -46,17 +46,17 @@ class TableOperationsWithAttributeSupportTest {
 
         val history = Spy.spy.readHistory()
         history.next().run {
-            assertTrue { TableOpeningContext::class.java == context.javaClass }
+            assertTrue { TableStart::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { ColumnOpeningContext::class.java == context.javaClass }
+            assertTrue { ColumnStart::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { ColumnOpeningContext::class.java == context.javaClass }
+            assertTrue { ColumnStart::class.java == context.javaClass }
             assertTrue { attribute is ColumnWidthAttribute }
         }
         history.next().run {
-            assertTrue { RowOpeningContext::class.java == context.javaClass }
+            assertTrue { RowStart::class.java == context.javaClass }
         }
         history.next().run {
             assertTrue { CellContext::class.java == context.javaClass }
@@ -71,12 +71,12 @@ class TableOperationsWithAttributeSupportTest {
             assertTrue { attribute is CellTextStylesAttribute }
         }
         history.next().run {
-            assertTrue { RowClosingContext::class.java == context.javaClass }
+            assertTrue { RowEnd::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { ColumnClosingContext::class.java == context.javaClass }
+            assertTrue { ColumnEnd::class.java == context.javaClass }
         }
-        history.next().run { assertIs<TableClosingContext>(context) }
+        history.next().run { assertIs<TableEnd>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -96,13 +96,13 @@ class TableOperationsWithAttributeSupportTest {
 
         val history = Spy.spy.readHistory()
         history.next().run {
-            assertTrue { TableOpeningContext::class.java == context.javaClass }
+            assertTrue { TableStart::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { ColumnOpeningContext::class.java == context.javaClass }
+            assertTrue { ColumnStart::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { RowOpeningContext::class.java == context.javaClass }
+            assertTrue { RowStart::class.java == context.javaClass }
         }
         history.next().run {
             assertTrue { CellContext::class.java == context.javaClass }
@@ -115,12 +115,12 @@ class TableOperationsWithAttributeSupportTest {
             assertTrue { operation is ShadowingCellTextStylesAttributeTestRenderOperation }
         }
         history.next().run {
-            assertTrue { RowClosingContext::class.java == context.javaClass }
+            assertTrue { RowEnd::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { ColumnClosingContext::class.java == context.javaClass }
+            assertTrue { ColumnEnd::class.java == context.javaClass }
         }
-        history.next().run { assertIs<TableClosingContext>(context) }
+        history.next().run { assertIs<TableEnd>(context) }
         assertFalse(history.hasNext())
     }
 }

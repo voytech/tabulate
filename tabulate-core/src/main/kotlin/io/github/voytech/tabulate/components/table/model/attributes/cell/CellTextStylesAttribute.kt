@@ -69,5 +69,5 @@ fun <T> ColumnLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.B
 fun <T> RowLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =
     attribute(CellTextStylesAttribute.Builder().apply(block))
 
-fun <T> TableLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =
+fun <T: Any> TableLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =
     attribute(CellTextStylesAttribute.Builder().apply(block))
