@@ -43,13 +43,13 @@ class TestOutputBindingProvider: OutputBindingsProvider<TestRenderingContext> {
 class TestExportOperationsFactory : ExportOperationsFactory<TestRenderingContext, Table<Any>>() {
 
     override fun provideExportOperations(): OperationsBuilder<TestRenderingContext, Table<Any>>.() -> Unit = {
-        operation(OpenTableTestOperation(Spy.spy))
-        operation(OpenColumnTestOperation(Spy.spy))
-        operation(OpenRowTestOperation(Spy.spy))
+        operation(StartTableTestOperation(Spy.spy))
+        operation(StartColumnTestOperation(Spy.spy))
+        operation(StartRowTestOperation(Spy.spy))
         operation(RenderRowCellTestOperation(Spy.spy))
-        operation(CloseRowTestOperation(Spy.spy))
-        operation(CloseColumnTestOperation(Spy.spy))
-        operation(CloseTableTestOperation(Spy.spy))
+        operation(EndRowTestOperation(Spy.spy))
+        operation(EndColumnTestOperation(Spy.spy))
+        operation(EndTableTestOperation(Spy.spy))
     }
 
     override fun getAttributeOperationsFactory(): AttributeOperationsFactory<TestRenderingContext, Table<Any>> =

@@ -4,8 +4,6 @@ package io.github.voytech.tabulate.excel
 import io.github.voytech.tabulate.components.table.model.attributes.Color
 import io.github.voytech.tabulate.components.table.operation.CellValue
 import io.github.voytech.tabulate.components.table.operation.Coordinates
-import io.github.voytech.tabulate.core.model.UnitsOfMeasure
-import io.github.voytech.tabulate.core.model.X
 import io.github.voytech.tabulate.core.template.RenderingContextForSpreadsheet
 import io.github.voytech.tabulate.core.template.result.OutputBinding
 import io.github.voytech.tabulate.core.template.result.OutputStreamOutputBinding
@@ -14,6 +12,7 @@ import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.util.IOUtils
+import org.apache.poi.util.Units
 import org.apache.poi.xssf.streaming.*
 import org.apache.poi.xssf.usermodel.XSSFCell
 import org.apache.poi.xssf.usermodel.XSSFColor
@@ -72,11 +71,13 @@ class ApachePoiRenderingContext : RenderingContextForSpreadsheet() {
     fun workbook(): SXSSFWorkbook = workbook!!
 
     fun provideSheet(sheetName: String): SXSSFSheet = getSheet(sheetName) ?: workbook().createSheet(sheetName).also {
-        setDefaults(
-            X(it.getColumnWidthInPixels(0), UnitsOfMeasure.PX).switchUnitOfMeasure(UnitsOfMeasure.PT).value,
-            it.defaultRowHeightInPoints
-        )
+        it.setupSpreadsheetLayout()
     }
+
+    private fun Sheet.setupSpreadsheetLayout() = setupSpreadsheetLayout(
+        Units.pixelToPoints(getColumnWidthInPixels(0).toDouble()).toFloat(),
+        defaultRowHeightInPoints
+    )
 
     fun provideRow(sheetName: String, rowIndex: Int): SXSSFRow =
         row(sheetName, rowIndex) ?: createRow(sheetName, rowIndex)
@@ -196,7 +197,9 @@ class ApachePoiRenderingContext : RenderingContextForSpreadsheet() {
         rowAccessWindowSize: Int = 100,
     ): SXSSFWorkbook {
         return if (templateFile != null) {
-            SXSSFWorkbook(WorkbookFactory.create(templateFile) as XSSFWorkbook?, rowAccessWindowSize)
+            SXSSFWorkbook(WorkbookFactory.create(templateFile) as XSSFWorkbook?, rowAccessWindowSize).also { workbook ->
+                workbook.sheetIterator().forEachRemaining { it.setupSpreadsheetLayout() }
+            }
         } else {
             SXSSFWorkbook()
         }

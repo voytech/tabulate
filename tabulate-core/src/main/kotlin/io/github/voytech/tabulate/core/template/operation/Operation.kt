@@ -25,10 +25,6 @@ fun interface Operation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, E : Att
     fun render(renderingContext: CTX, context: E)
 }
 
-fun <CTX : RenderingContext, ATTR_CAT : Attribute<*>, E : AttributedContext<ATTR_CAT>>
-        Class<out Operation<CTX, ATTR_CAT, E>>.noop(): Operation<CTX, ATTR_CAT, E> =
-    Operation<CTX, ATTR_CAT, E> { _, _ -> }
-
 data class AttributeOperationTypeInfo<
         CTX : RenderingContext,
         ARM : Model<ARM>,

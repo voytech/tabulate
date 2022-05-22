@@ -63,19 +63,19 @@ abstract class InterceptedRenderOperation<T : Attribute<*>, G : T, E : Attribute
 
 }
 
-class OpenTableTestOperation(private val spy: Spy? = null): OpenTableOperation<TestRenderingContext>, InterceptedOperation {
+class StartTableTestOperation(private val spy: Spy? = null): StartTableOperation<TestRenderingContext>, InterceptedOperation {
     override fun render(renderingContext: TestRenderingContext, context: TableStart) {
         spy?.track(this, context)
     }
 }
 
-class OpenColumnTestOperation(private val spy: Spy? = null): OpenColumnOperation<TestRenderingContext>, InterceptedOperation {
+class StartColumnTestOperation(private val spy: Spy? = null): StartColumnOperation<TestRenderingContext>, InterceptedOperation {
     override fun render(renderingContext: TestRenderingContext, context: ColumnStart) {
         spy?.track(this, context)
     }
 }
 
-class OpenRowTestOperation(private val spy: Spy? = null): OpenRowOperation<TestRenderingContext>, InterceptedOperation {
+class StartRowTestOperation(private val spy: Spy? = null): StartRowOperation<TestRenderingContext>, InterceptedOperation {
     override fun render(renderingContext: TestRenderingContext, context: RowStart) {
         spy?.track(this, context)
     }
@@ -87,19 +87,19 @@ class RenderRowCellTestOperation(private val spy: Spy? = null): RenderRowCellOpe
     }
 }
 
-class CloseRowTestOperation(private val spy: Spy? = null): CloseRowOperation<TestRenderingContext>, InterceptedOperation {
+class EndRowTestOperation(private val spy: Spy? = null): EndRowOperation<TestRenderingContext>, InterceptedOperation {
     override fun render(renderingContext: TestRenderingContext, context: RowEnd<*>) {
         spy?.track(this, context)
     }
 }
 
-class CloseColumnTestOperation(private val spy: Spy? = null): CloseColumnOperation<TestRenderingContext>, InterceptedOperation {
+class EndColumnTestOperation(private val spy: Spy? = null): EndColumnOperation<TestRenderingContext>, InterceptedOperation {
     override fun render(renderingContext: TestRenderingContext, context: ColumnEnd) {
         spy?.track(this, context)
     }
 }
 
-class CloseTableTestOperation(private val spy: Spy? = null): CloseTableOperation<TestRenderingContext>, InterceptedOperation {
+class EndTableTestOperation(private val spy: Spy? = null): EndTableOperation<TestRenderingContext>, InterceptedOperation {
     override fun render(renderingContext: TestRenderingContext, context: TableEnd) {
         spy?.track(this, context)
     }

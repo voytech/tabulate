@@ -55,12 +55,12 @@ class ExcelTableOperations : ExportOperationsFactory<ApachePoiRenderingContext, 
         format("xlsx", "poi")
 
     override fun provideExportOperations(): OperationsBuilder<ApachePoiRenderingContext, Table<Any>>.() -> Unit = {
-        operation(OpenTableOperation { renderingContext, context ->
+        operation(StartTableOperation { renderingContext, context ->
             renderingContext.provideWorkbook()
             renderingContext.provideSheet(context.getSheetName())
         })
-        operation(OpenColumnOperation { _, _ -> })
-        operation(OpenRowOperation { renderingContext, context ->
+        operation(StartColumnOperation { _, _ -> })
+        operation(StartRowOperation { renderingContext, context ->
             with(renderingContext) {
                 provideSheet(context.getSheetName())
                 provideRow(context.getSheetName(), context.getAbsoluteRow(context.getRow()))
@@ -91,7 +91,7 @@ class ExcelTableOperations : ExportOperationsFactory<ApachePoiRenderingContext, 
                 }
             }
         })
-        operation(CloseRowOperation { renderingContext, context ->
+        operation(EndRowOperation { renderingContext, context ->
             with(renderingContext) {
                 provideSheet(context.getSheetName()).let { sheet ->
                     val absoluteRowIndex = context.getAbsoluteRow(context.rowIndex)
@@ -101,7 +101,7 @@ class ExcelTableOperations : ExportOperationsFactory<ApachePoiRenderingContext, 
                 }
             }
         })
-        operation(CloseColumnOperation { renderingContext, context ->
+        operation(EndColumnOperation { renderingContext, context ->
             with(renderingContext) {
                 provideSheet(context.getSheetName()).let { sheet ->
                     val absoluteColumnIndex = context.getAbsoluteColumn(context.columnIndex)
@@ -111,7 +111,7 @@ class ExcelTableOperations : ExportOperationsFactory<ApachePoiRenderingContext, 
                 }
             }
         })
-        operation(CloseTableOperation { _, _ -> })
+        operation(EndTableOperation { _, _ -> })
     }
 
     override fun getAttributeOperationsFactory(): AttributeOperationsFactory<ApachePoiRenderingContext, Table<Any>> =

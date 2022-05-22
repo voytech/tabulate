@@ -17,7 +17,7 @@ abstract class RenderingContextForSpreadsheet: RenderingContext {
     private lateinit var measures: SpreadsheetQueries
     //TODO add caching of left top column row indices by layout.
 
-    fun setDefaults(defaultColumnWidth: Float, defaultRowHeight: Float) {
+    fun setupSpreadsheetLayout(defaultColumnWidth: Float, defaultRowHeight: Float) {
         measures = SpreadsheetQueries(defaultColumnWidth,defaultRowHeight)
     }
 

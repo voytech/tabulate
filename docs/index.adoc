@@ -774,22 +774,22 @@ class OperationsBuilder<CTX : RenderingContext> {
     var renderRowCell: RenderRowCellOperation<CTX>? = RenderRowCellOperation { _, _ -> } // <7>
 }
 ----
-<1> `OpenTableOperation` is defined as: `fun interface OpenTableOperation<CTX : RenderingContext> : Operation<CTX, TableAttribute<*>, TableOpeningContext>`
-<2> `CloseTableOperation` is defined as: `fun interface CloseTableOperation<CTX : RenderingContext> : Operation<CTX, TableAttribute<*>, TableClosingContext>`
-<3> `OpenColumnOperation` is defined as: `fun interface OpenColumnOperation<CTX : RenderingContext> : Operation<CTX, ColumnAttribute<*>, ColumnOpeningContext>`
-<4> `CloseColumnOperation` is defined as: `fun interface CloseColumnOperation<CTX : RenderingContext> : Operation<CTX, ColumnAttribute<*>, ColumnClosingContext>`
-<5> `OpenRowOperation` is defined as: `fun interface OpenRowOperation<CTX : RenderingContext> : Operation<CTX, RowAttribute<*>, RowOpeningContext>`
-<6> `CloseRowOperation` is defined as: `fun interface CloseRowOperation<CTX : RenderingContext> : Operation<CTX, RowAttribute<*>, RowClosingContext<*>>`
+<1> `StartTableOperation` is defined as: `fun interface OpenTableOperation<CTX : RenderingContext> : Operation<CTX, TableAttribute<*>, TableOpeningContext>`
+<2> `EndTableOperation` is defined as: `fun interface CloseTableOperation<CTX : RenderingContext> : Operation<CTX, TableAttribute<*>, TableClosingContext>`
+<3> `StartColumnOperation` is defined as: `fun interface OpenColumnOperation<CTX : RenderingContext> : Operation<CTX, ColumnAttribute<*>, ColumnOpeningContext>`
+<4> `EndColumnOperation` is defined as: `fun interface CloseColumnOperation<CTX : RenderingContext> : Operation<CTX, ColumnAttribute<*>, ColumnClosingContext>`
+<5> `StartRowOperation` is defined as: `fun interface OpenRowOperation<CTX : RenderingContext> : Operation<CTX, RowAttribute<*>, RowOpeningContext>`
+<6> `EndRowOperation` is defined as: `fun interface CloseRowOperation<CTX : RenderingContext> : Operation<CTX, RowAttribute<*>, RowClosingContext<*>>`
 <7> `RenderRowCellOperation` is defined as: `fun interface RenderRowCellOperation<CTX : RenderingContext> : Operation<CTX, CellAttribute<*>, CellContext>`
 
 Order of appearance:
 
- - `TableStart` and `OpenTableOperation`,
- - `ColumnStart` and `OpenColumnOperation`,
- - `RowStart` and `OpenRowOperation`,
+ - `TableStart` and `StartTableOperation`,
+ - `ColumnStart` and `StartColumnOperation`,
+ - `RowStart` and `StartRowOperation`,
  - `CellContext` and `RenderRowCellOperation`,
- - `RowEnd` and `CloseRowOperation`,
- - `TableEnd` and `CloseTableOperation`.
+ - `RowEnd` and `EndRowOperation`,
+ - `TableEnd` and `EndTableOperation`.
 
 <<<
 == Cookbook recipes.

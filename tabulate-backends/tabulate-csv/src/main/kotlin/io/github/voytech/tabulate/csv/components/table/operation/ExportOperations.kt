@@ -3,8 +3,8 @@ package io.github.voytech.tabulate.csv.components.table.operation
 
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.CellContext
-import io.github.voytech.tabulate.components.table.operation.CloseRowOperation
-import io.github.voytech.tabulate.components.table.operation.OpenRowOperation
+import io.github.voytech.tabulate.components.table.operation.EndRowOperation
+import io.github.voytech.tabulate.components.table.operation.StartRowOperation
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.operation.OperationsBuilder
 import io.github.voytech.tabulate.core.template.operation.factories.ExportOperationsFactory
@@ -25,10 +25,10 @@ class CsvExportOperationsFactory : ExportOperationsFactory<CsvRenderingContext, 
 
 
     override fun provideExportOperations(): OperationsBuilder<CsvRenderingContext, Table<Any>>.() -> Unit = {
-        operation(OpenRowOperation { renderingContext, _ ->
+        operation(StartRowOperation { renderingContext, _ ->
             renderingContext.line.clear()
         })
-        operation(CloseRowOperation { renderingContext, context ->
+        operation(EndRowOperation { renderingContext, context ->
             val lastIndex = context.rowCellValues.size - 1
             with(renderingContext) {
                 context.rowCellValues.values.forEachIndexed { index, cell ->

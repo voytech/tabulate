@@ -62,8 +62,8 @@ class TestExportOperationsFactory: ExportOperationsFactory<TestRenderingContext,
     override fun getDocumentFormat(): DocumentFormat<TestRenderingContext>  = DocumentFormat.format("test")
 
     override fun provideExportOperations(): OperationsBuilder<TestRenderingContext,*>.() -> Unit = {
-        operation(OpenColumnOperation { _, context ->  columnTest?.test(context) })
-        operation(CloseRowOperation { _, context ->  rowTest?.test(context) })
+        operation(StartColumnOperation { _, context ->  columnTest?.test(context) })
+        operation(EndRowOperation { _, context ->  rowTest?.test(context) })
         operation(RenderRowCellOperation { _, context ->  cellTest?.test(context) })
     }
 

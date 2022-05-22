@@ -7,16 +7,16 @@ import io.github.voytech.tabulate.components.table.model.attributes.TableAttribu
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.operation.Operation
 
-fun interface OpenTableOperation<CTX : RenderingContext>: Operation<CTX, TableAttribute<*>, TableStart>
+fun interface StartTableOperation<CTX : RenderingContext>: Operation<CTX, TableAttribute<*>, TableStart>
 
-fun interface OpenColumnOperation<CTX : RenderingContext>: Operation<CTX, ColumnAttribute<*>, ColumnStart>
+fun interface StartColumnOperation<CTX : RenderingContext>: Operation<CTX, ColumnAttribute<*>, ColumnStart>
 
-fun interface OpenRowOperation<CTX : RenderingContext>: Operation<CTX, RowAttribute<*>, RowStart>
+fun interface StartRowOperation<CTX : RenderingContext>: Operation<CTX, RowAttribute<*>, RowStart>
 
 fun interface RenderRowCellOperation<CTX : RenderingContext>: Operation<CTX, CellAttribute<*>, CellContext>
 
-fun interface CloseRowOperation<CTX : RenderingContext>: Operation<CTX, RowAttribute<*>, RowEnd<*>>
+fun interface EndRowOperation<CTX : RenderingContext>: Operation<CTX, RowAttribute<*>, RowEnd<*>>
 
-fun interface CloseColumnOperation<CTX : RenderingContext>: Operation<CTX, ColumnAttribute<*>, ColumnEnd>
+fun interface EndColumnOperation<CTX : RenderingContext>: Operation<CTX, ColumnAttribute<*>, ColumnEnd>
 
-fun interface CloseTableOperation<CTX : RenderingContext>: Operation<CTX, TableAttribute<*>, TableEnd>
+fun interface EndTableOperation<CTX : RenderingContext>: Operation<CTX, TableAttribute<*>, TableEnd>
