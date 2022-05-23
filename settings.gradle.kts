@@ -14,4 +14,6 @@ include(":tabulate-test")
 // Project component backends. Those projects provide rendering backend implementations for different DocumentFormats.
 include("tabulate-backends")
 include("tabulate-backends:tabulate-excel")
+include("tabulate-backends:tabulate-pdf")
 include("tabulate-backends:tabulate-csv")
+include("tabulate-backends:tabulate-pdf")

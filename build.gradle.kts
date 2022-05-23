@@ -36,6 +36,7 @@ configure(
         project(":tabulate-test"),
         project(":tabulate-backends:tabulate-excel"),
         project(":tabulate-backends:tabulate-csv"),
+        project(":tabulate-backends:tabulate-pdf"),
     )
 ) {
     apply(plugin = "org.jetbrains.kotlin.jvm")
