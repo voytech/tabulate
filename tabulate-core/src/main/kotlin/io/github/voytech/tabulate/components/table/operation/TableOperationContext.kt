@@ -46,7 +46,7 @@ interface RowCoordinate {
     fun getRow(): Int
 }
 
-interface RowLayoutElement : RowCoordinate, LayoutElement {
+interface RowLayoutElement : RowCoordinate, LayoutElement, LayoutElementApply {
     override fun Layout.computeBoundaries(): LayoutElementBoundaries = query.elementBoundaries(
         y = query.getY(getRow().asYPosition(), uom)
     )
@@ -65,7 +65,7 @@ interface ColumnCoordinate {
     fun getColumn(): Int
 }
 
-interface ColumnLayoutElement : ColumnCoordinate, LayoutElement {
+interface ColumnLayoutElement : ColumnCoordinate, LayoutElement, LayoutElementApply {
     override fun Layout.computeBoundaries(): LayoutElementBoundaries = query.elementBoundaries(
         x = query.getX(getColumn().asXPosition(), uom),
     )
@@ -82,7 +82,7 @@ interface ColumnLayoutElement : ColumnCoordinate, LayoutElement {
  */
 interface RowCellCoordinate : RowCoordinate, ColumnCoordinate
 
-interface RowCellLayoutElement : RowCellCoordinate, LayoutElement {
+interface RowCellLayoutElement : RowCellCoordinate, LayoutElement, LayoutElementApply {
     override fun Layout.computeBoundaries(): LayoutElementBoundaries = query.elementBoundaries(
         x = query.getX(getColumn().asXPosition(), uom),
         y = query.getY(getRow().asYPosition(), uom)

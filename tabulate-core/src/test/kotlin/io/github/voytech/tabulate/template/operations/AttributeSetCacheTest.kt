@@ -150,47 +150,5 @@ class AttributeSetCacheTest {
         }
     }
 
-    @Test
-    fun `should correctly perform withAttributeSetBasedCache() scoping`() {
-        val customAttributes = mutableMapOf<String, Any>()
-
-        val firstTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val firstTableContext: TableStart = firstTable.asTableStart(customAttributes)
-
-        val secondTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val secondTableContext: TableStart = secondTable.asTableStart(customAttributes)
-
-        val thirdTable = createTableModel { attributes { template { fileName = "third_table_filename_differs" } } }
-        val thirdTableContext: TableStart = thirdTable.asTableStart(customAttributes)
-
-        firstTableContext.withAttributeSetBasedCache {
-            firstTableContext.cacheOnAttributeSet("someKey", "someValue")
-        }
-        val error = assertThrows<IllegalStateException> {
-            firstTableContext.getCachedOnAttributeSet("someKey")
-        }
-        assertEquals("cannot resolve cached value in scope!", error.message)
-
-
-        secondTableContext.withAttributeSetBasedCache {
-            secondTableContext.let { tableContext ->
-                tableContext.cacheOnAttributeSet("someKey", "tryOverride")
-                assertEquals("someValue", tableContext.getCachedOnAttributeSet("someKey"))
-            }
-        }
-
-        thirdTableContext.withAttributeSetBasedCache {
-            thirdTableContext.let { tableContext ->
-                tableContext.cacheOnAttributeSet(
-                    "someKey",
-                    "thisIsNewValueInNewInternalCacheCosAttributesDiffers"
-                )
-                assertEquals(
-                    "thisIsNewValueInNewInternalCacheCosAttributesDiffers",
-                    tableContext.getCachedOnAttributeSet("someKey")
-                )
-            }
-        }
-    }
 
 }

@@ -1,7 +1,6 @@
 package io.github.voytech.tabulate.core.template.operation
 
 import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.AttributeCategoryAware
 import io.github.voytech.tabulate.core.model.Attributes
 
 
@@ -24,7 +23,7 @@ internal value class AttributeClassBasedCache<K : Attribute<*>, V>(
         }
 }
 
-internal typealias AttributeClassBasedMapCache<K> = AttributeClassBasedCache<K,MutableMap<String, Any>>
+internal typealias AttributeClassBasedMapCache<K> = AttributeClassBasedCache<K, MutableMap<String, Any>>
 
 /**
  * Obtains or creates (if does not exist) a cache instance. Cache resides in [ContextData.additionalAttributes]
@@ -32,17 +31,10 @@ internal typealias AttributeClassBasedMapCache<K> = AttributeClassBasedCache<K,M
  * @since 0.1.0
  */
 @JvmSynthetic
-internal fun <T:  Attribute<*>> AttributedContext<T>.ensureAttributeSetBasedCache(): AttributeClassBasedMapCache<T> {
+internal fun <T : Attribute<*>> AttributedContext<T>.ensureAttributeSetBasedCache(): AttributeClassBasedMapCache<T> {
     additionalAttributes!!.putIfAbsent("_attribute_set_based_cache", AttributeClassBasedMapCache())
     return additionalAttributes!!["_attribute_set_based_cache"] as AttributeClassBasedMapCache<T>
 }
-
-/**
- * Given attribute, resolves attribute category identifier. One of: [table|column|row|cell].
- * @author Wojciech Mąka
- * @since 0.1.0
- */
-fun <T : Attribute<*>> AttributeCategoryAware<T>.getAttributeClassId(): String = getAttributeCategoryClass().name
 
 
 /**
@@ -54,7 +46,7 @@ fun <T : Attribute<*>> AttributeCategoryAware<T>.getAttributeClassId(): String =
 @JvmSynthetic
 internal fun <T : Attribute<*>> AttributedContext<T>.setupCacheAndGet(): MutableMap<String, Any>? {
     return this.attributes?.takeIf { it.isNotEmpty() }?.let {
-        this.ensureAttributeSetBasedCache().compute(it) { mutableMapOf() }
+        ensureAttributeSetBasedCache().compute(it) { mutableMapOf() }
     }
 }
 
@@ -69,13 +61,9 @@ internal fun <T : Attribute<*>> AttributedContext<T>.setupCacheAndGet(): Mutable
  * @since 0.1.0
  */
 @JvmSynthetic
-internal fun <T : Attribute<*>> AttributedContext<T>.withAttributeSetBasedCache(block: (cache: MutableMap<String, Any>?) -> Unit) {
-    return setupCacheAndGet()?.also {
-        additionalAttributes?.put("_current_${attributes?.getAttributeClassId()}_attributes_cache", it)
-    }.run(block).also {
-        additionalAttributes?.remove("_current_${attributes?.getAttributeClassId()}_attributes_cache")
-    }
-}
+internal fun <T : Attribute<*>> AttributedContext<T>.withAttributeSetBasedCache(block: (cache: MutableMap<String, Any>?) -> Unit) =
+    setupCacheAndGet().apply(block)
+
 
 /**
  * Given [ModelAttributeAccessor] (truncated, attribute-set-less [AttributedContext] view), caches any value under specific key.
@@ -86,9 +74,7 @@ internal fun <T : Attribute<*>> AttributedContext<T>.withAttributeSetBasedCache(
 @Suppress("UNCHECKED_CAST")
 fun <M : Attribute<*>, T> T.cacheOnAttributeSet(key: String, value: Any): Any
         where T : AttributedContext<M>,
-              T : Context =
-    (getContextAttributes()?.get("_current_${getAttributeClassId()}_attributes_cache") as? MutableMap<String, Any>)
-        ?.let { it.computeIfAbsent(key) { value } } ?: error("cannot resolve cached value in scope!")
+              T : Context = setupCacheAndGet()?.computeIfAbsent(key) { value } ?: value
 
 /**
  * Given [ModelAttributeAccessor] (truncated, attribute-set-less [AttributedContext] view), gets cached value stored under given key.
@@ -99,19 +85,6 @@ fun <M : Attribute<*>, T> T.cacheOnAttributeSet(key: String, value: Any): Any
 @Suppress("UNCHECKED_CAST")
 fun <M : Attribute<*>, T> T.getCachedOnAttributeSet(key: String): Any
         where T : AttributedContext<M>,
-              T : Context =
-    (getContextAttributes()?.get("_current_${getAttributeClassId()}_attributes_cache") as? MutableMap<String, Any>)
-        ?.let { it[key] } ?: error("cannot resolve cached value in scope!")
+              T : Context = setupCacheAndGet()?.get(key) ?: error("cannot resolve cached value in scope!")
 
-/**
- * Given [ModelAttributeAccessor] (truncated, attribute-set-less [AttributedContext] view), checks if there is value stored under given key.
- * Key-value pair is stored in internal cache valid for / accessed by [AttributedContext]'s attributes (attribute-set).
- * @author Wojciech Mąka
- * @since 0.1.0
- */
-@Suppress("UNCHECKED_CAST")
-fun <M : Attribute<*>, T> T.hasCachedOnAttributeSet(key: String): Boolean
-        where T : AttributedContext<M>,
-              T : Context =
-    (getContextAttributes()?.get("_current_${getAttributeClassId()}_attributes_cache") as? MutableMap<String, Any>)
-        ?.containsKey(key) ?: false
+

@@ -6,6 +6,7 @@ import io.github.voytech.tabulate.core.model.Model
 import io.github.voytech.tabulate.core.template.exception.OutputBindingResolvingException
 import io.github.voytech.tabulate.core.template.layout.Layout
 import io.github.voytech.tabulate.core.template.layout.Layouts
+import io.github.voytech.tabulate.core.template.operation.LayoutOperations
 import io.github.voytech.tabulate.core.template.operation.Operations
 import io.github.voytech.tabulate.core.template.result.OutputBinding
 import io.github.voytech.tabulate.core.template.spi.ExportOperationsProvider
@@ -19,13 +20,11 @@ internal fun <R : RenderingContext, ARM : Model<ARM>> DiscoveredExportOperationF
 
 class ExportTemplateApis<R : RenderingContext>(
     private val operationsFactories: DiscoveredExportOperationFactories<R>,
-    private var layouts: Layouts = Layouts()
+    private var layouts: Layouts = Layouts(),
 ) {
 
     fun <ARM : Model<ARM>> getOperations(model: ARM): Operations<R>? =
-        operationsFactories.getOperations(model)?.apply {
-            layouts = this@ExportTemplateApis.layouts
-        }
+        operationsFactories.getOperations(model)?.let { LayoutOperations(it, layouts) }
 
     fun getActiveLayout(): Layout = layouts.activeLayout()
     fun getActiveLayoutBoundaries(): BoundingRectangle = getActiveLayout().boundingRectangle
@@ -43,7 +42,7 @@ fun <ARM : Model<ARM>, R : RenderingContext> Model<ARM>.export(
 ) {
     getExportTemplate()?.let { childTemplate ->
         val childContext = childTemplate.buildTemplateContext(parentContext, this as ARM)
-        (childTemplate as ExportTemplate<ARM, TemplateContext<ARM>>).export(renderingContext, childContext ,registry)
+        (childTemplate as ExportTemplate<ARM, TemplateContext<ARM>>).export(renderingContext, childContext, registry)
     }
 }
 
@@ -70,7 +69,8 @@ class StandaloneExportTemplate<CTX : TemplateContext<ARM>, ARM : Model<ARM>>(
 
     fun <O : Any, T : Any> export(model: ARM, output: O, dataSource: Iterable<T> = emptyList()) {
         val registry: ExportTemplateApis<RenderingContext> = loadExportTemplateRegistry(format)
-        val renderingContext =  loadRenderingContext(format)  //TODO it is inconvenient that in order to obtain valid DocumentFormat you need to load exportOperationFactory.
+        val renderingContext =
+            loadRenderingContext(format)  //TODO it is inconvenient that in order to obtain valid DocumentFormat you need to load exportOperationFactory.
         val templateContext = delegate.buildTemplateContext(
             TemplateContext(
                 model,

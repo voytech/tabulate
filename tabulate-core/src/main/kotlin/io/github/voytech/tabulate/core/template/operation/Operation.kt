@@ -5,9 +5,7 @@ import io.github.voytech.tabulate.core.model.AttributeClassifier
 import io.github.voytech.tabulate.core.model.Model
 import io.github.voytech.tabulate.core.model.isNullOrEmpty
 import io.github.voytech.tabulate.core.template.RenderingContext
-import io.github.voytech.tabulate.core.template.layout.LayoutElement
-import io.github.voytech.tabulate.core.template.layout.Layouts
-import io.github.voytech.tabulate.core.template.layout.dropBoundaries
+import io.github.voytech.tabulate.core.template.layout.*
 import java.util.logging.Logger
 
 data class OperationTypeInfo<
@@ -164,42 +162,51 @@ internal class AttributesHandlingOperation<
     }
 }
 
-data class Operations<CTX : RenderingContext>(
-    internal val operationsByContextClass: Map<Class<out AttributedContext<*>>, Operation<CTX, *, *>>,
-) {
-    internal var layouts: Layouts? = null
+interface Operations<CTX : RenderingContext> {
+    fun <A : Attribute<*>, E : AttributedContext<A>> render(renderingContext: CTX, context: E)
+}
+
+class RenderOperations<CTX : RenderingContext>(
+    private val operationsByContextClass: Map<Class<out AttributedContext<*>>, Operation<CTX, *, *>>,
+) : Operations<CTX> {
 
     @Suppress("UNCHECKED_CAST")
     private fun <E : AttributedContext<*>> getByContextOrNull(clazz: Class<E>): Operation<CTX, *, E>? {
         return operationsByContextClass[clazz] as? Operation<CTX, *, E>?
     }
 
-    private fun <A : Attribute<*>, E : AttributedContext<A>> Operation<CTX, *, E>.renderWithLayout(renderingContext: CTX, context: E) {
-        layouts?.usingLayout {
-            with(context as LayoutElement) {
-                computeBoundaries().let { boundaries ->
-                    boundaries.into(context)
-                    this@renderWithLayout.render(renderingContext, context)
-                    boundaries.applyOnLayout()
-                    applyBoundaries(boundaries)
-                    context.dropBoundaries()
-                }
-            }
-        }
-    }
-
-    fun <A : Attribute<*>, E : AttributedContext<A>> render(renderingContext: CTX, context: E) {
-        getByContextOrNull(context.javaClass)?.let { op ->
-            if (context is LayoutElement) {
-                op.renderWithLayout(renderingContext, context)
-            } else {
-                op.render(renderingContext, context)
-            }
-        } ?: run { logger.warning("No render operation for context class: ${context.javaClass.name} !") }
+    override fun <A : Attribute<*>, E : AttributedContext<A>> render(renderingContext: CTX, context: E) {
+        getByContextOrNull(context.javaClass)?.render(renderingContext, context)
+            ?: run { logger.warning("No render operation for context class: ${context.javaClass.name} !") }
     }
 
     companion object {
         val logger: Logger = Logger.getLogger(Operations::class.java.name)
+    }
+}
+
+class LayoutOperations<CTX : RenderingContext>(
+    private val delegate: Operations<CTX>, private val layouts: Layouts? = null,
+) : Operations<CTX> {
+    private fun <A : Attribute<*>, E : AttributedContext<A>> Layout.resolveElementBoundaries(context: E) =
+        if (context is LayoutElement) with(context) { computeBoundaries().into(context) } else null
+
+    private fun <A : Attribute<*>, E : AttributedContext<A>> Layout.commitBoundaries(
+        context: E, boundaries: LayoutElementBoundaries? = null,
+    ) {
+        if (boundaries != null) {
+            if (context is LayoutElementApply) with(context) { applyBoundaries(boundaries) }
+            context.dropBoundaries()
+        }
+    }
+
+    override fun <A : Attribute<*>, E : AttributedContext<A>> render(renderingContext: CTX, context: E) {
+        layouts?.usingLayout {
+            resolveElementBoundaries(context).let { boundaries ->
+                delegate.render(renderingContext, context).also { boundaries?.applyOnLayout() }
+                commitBoundaries(context, boundaries)
+            }
+        }
     }
 }
 
@@ -228,7 +235,7 @@ class OperationsBuilder<CTX : RenderingContext, ARM : Model<ARM>>(
         operation(E::class.java, ATTR_CAT::class.java, op)
     }
 
-    internal fun build(): Operations<CTX> = Operations(
+    internal fun build(): Operations<CTX> = RenderOperations(
         operations.associate { it.first.operationContextType to it.second }
     )
 }

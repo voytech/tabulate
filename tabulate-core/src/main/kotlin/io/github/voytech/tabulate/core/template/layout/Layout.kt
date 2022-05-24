@@ -157,8 +157,11 @@ class Layouts(
 
 }
 
-interface LayoutElement {
+fun interface LayoutElement {
     fun Layout.computeBoundaries(): LayoutElementBoundaries
+}
+
+fun interface LayoutElementApply {
     fun Layout.applyBoundaries(context: LayoutElementBoundaries)
 }
 
