@@ -2,7 +2,6 @@ package io.github.voytech.tabulate.core.template.spi
 
 import io.github.voytech.tabulate.core.model.Model
 import io.github.voytech.tabulate.core.template.RenderingContext
-import io.github.voytech.tabulate.core.template.exception.ExportOperationsFactoryResolvingException
 import io.github.voytech.tabulate.core.template.operation.Operations
 
 
@@ -30,13 +29,3 @@ interface ExportOperationsProvider<CTX: RenderingContext, MDL: Model<MDL>> : Ide
  */
 fun <CTX: RenderingContext, MDL: Model<MDL>> ExportOperationsProvider<CTX, MDL>.createRenderingContext() : CTX =
     getDocumentFormat().provider.renderingContextClass.newInstance()
-
-
-@Suppress("UNCHECKED_CAST")
-fun <CTX: RenderingContext, MDL: Model<MDL>> List<ExportOperationsProvider<CTX, *>>.byRootModel(model: MDL): ExportOperationsProvider<CTX, MDL> =
-    (find { it.getModelClass() == model.javaClass } as? ExportOperationsProvider<CTX, MDL>) ?: throw ExportOperationsFactoryResolvingException()
-
-@Suppress("UNCHECKED_CAST")
-fun <CTX: RenderingContext, MDL: Model<MDL>> Map<Class<out Model<*>>, ExportOperationsProvider<CTX, *>>.byRootModel(model: MDL): ExportOperationsProvider<CTX, MDL> =
-    this[model.javaClass]  as? ExportOperationsProvider<CTX, MDL> ?: throw ExportOperationsFactoryResolvingException()
-

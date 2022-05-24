@@ -10,6 +10,6 @@ sealed class DocumentContext(templateContext: DocumentTemplateContext) : Attribu
     }
 }
 
-class DocumentOpeningContext(templateContext: DocumentTemplateContext) : DocumentContext(templateContext)
+class DocumentStart(templateContext: DocumentTemplateContext) : DocumentContext(templateContext)
 
-class DocumentClosingContext(templateContext: DocumentTemplateContext) : DocumentContext(templateContext)
+class DocumentEnd(templateContext: DocumentTemplateContext) : DocumentContext(templateContext)

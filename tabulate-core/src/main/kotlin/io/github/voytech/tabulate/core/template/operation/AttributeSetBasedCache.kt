@@ -24,35 +24,7 @@ internal value class AttributeClassBasedCache<K : Attribute<*>, V>(
         }
 }
 
-/**
- * Multi-level cache that resides in dedicated [ContextData.additionalAttributes] state entry. This cache have following
- * properties:
- *  - it uses set of attributes as cache key which enables passing attribute set related context across different rows, cells and columns.
- *  - it consists of nested internal caches representing all attribute categories (row, cell, table, column)
- *
- * Usage Scenario:
- *
- * If we have the same set of cell attributes defined at column level then it is likely that some or most of cells
- * belonging to this particular column shares exactly the same attributes. This means that as long as third party rendering context
- * maintains its own internal state per given attribute set, then it can be simply cached and applied on all compatible cells,
- * without need of instantiating logically equal objects multiple times.
- * @author Wojciech Mąka
- * @since 0.1.0
- */
-
-// TODO this class is not needed anymore. We can use AttributeClassBasedCache straight away.
-@Suppress("UNCHECKED_CAST")
-internal class AttributeSetBasedCache {
-    private val attributesAsKeyCache: MutableMap<Class<out Attribute<*>>, AttributeClassBasedCache<Attribute<*>, MutableMap<String, Any>>> =
-        mutableMapOf()
-
-    @JvmSynthetic
-    internal fun <T : Attribute<*>> getCache(attributes: Attributes<T>): MutableMap<String, Any> =
-        attributesAsKeyCache.computeIfAbsent(attributes.getAttributeCategoryClass()) { AttributeClassBasedCache() }
-            .let {
-                (it as AttributeClassBasedCache<T, MutableMap<String, Any>>).compute(attributes) { mutableMapOf() }
-            }
-}
+internal typealias AttributeClassBasedMapCache<K> = AttributeClassBasedCache<K,MutableMap<String, Any>>
 
 /**
  * Obtains or creates (if does not exist) a cache instance. Cache resides in [ContextData.additionalAttributes]
@@ -60,9 +32,9 @@ internal class AttributeSetBasedCache {
  * @since 0.1.0
  */
 @JvmSynthetic
-internal fun ContextData.ensureAttributeSetBasedCache(): AttributeSetBasedCache {
-    additionalAttributes!!.putIfAbsent("_attribute_set_based_cache", AttributeSetBasedCache())
-    return additionalAttributes!!["_attribute_set_based_cache"] as AttributeSetBasedCache
+internal fun <T:  Attribute<*>> AttributedContext<T>.ensureAttributeSetBasedCache(): AttributeClassBasedMapCache<T> {
+    additionalAttributes!!.putIfAbsent("_attribute_set_based_cache", AttributeClassBasedMapCache())
+    return additionalAttributes!!["_attribute_set_based_cache"] as AttributeClassBasedMapCache<T>
 }
 
 /**
@@ -82,7 +54,7 @@ fun <T : Attribute<*>> AttributeCategoryAware<T>.getAttributeClassId(): String =
 @JvmSynthetic
 internal fun <T : Attribute<*>> AttributedContext<T>.setupCacheAndGet(): MutableMap<String, Any>? {
     return this.attributes?.takeIf { it.isNotEmpty() }?.let {
-        ensureAttributeSetBasedCache().getCache(it)
+        this.ensureAttributeSetBasedCache().compute(it) { mutableMapOf() }
     }
 }
 

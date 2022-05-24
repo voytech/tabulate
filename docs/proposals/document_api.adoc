@@ -158,7 +158,7 @@ New version of table:
 | `document { ...`
 | `Document`
 | `DocumentAttribute`, `ContainerAttribute`, +All sub models attributes
-| `DocumentOpeningContext`
+| `DocumentStart`
 | `DocumentAttribute`
 
 | `container {`
@@ -176,7 +176,7 @@ New version of table:
 | `document { ... }`
 | `Document`
 | `DocumentAttribute`, `ContainerAttribute`, +All sub models attributes
-| `DocumentClosingContext`
+| `DocumentEnd`
 | `DocumentAttribute`
 |===
 

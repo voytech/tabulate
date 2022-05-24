@@ -714,7 +714,6 @@ class ApachePoiTabulateTests {
                     dataSource(SampleProduct.create(14))
                 }
             }
-            /*
             sheet {
                 name = "Sheet 2"
                 table<SampleProduct> {
@@ -725,7 +724,7 @@ class ApachePoiTabulateTests {
                         column(SampleProduct::name)
                     }
                 }
-            }*/
+            }
         }.export("text.xlsx")
         File("test.xlsx").delete()
     }

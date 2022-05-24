@@ -2,8 +2,8 @@ package io.github.voytech.tabulate.components.document.template
 
 import io.github.voytech.tabulate.components.document.api.builder.dsl.DocumentBuilderApi
 import io.github.voytech.tabulate.components.document.model.Document
-import io.github.voytech.tabulate.components.document.operation.DocumentClosingContext
-import io.github.voytech.tabulate.components.document.operation.DocumentOpeningContext
+import io.github.voytech.tabulate.components.document.operation.DocumentEnd
+import io.github.voytech.tabulate.components.document.operation.DocumentStart
 import io.github.voytech.tabulate.core.api.builder.dsl.buildModel
 import io.github.voytech.tabulate.core.template.*
 import io.github.voytech.tabulate.core.template.exception.OutputBindingResolvingException
@@ -31,9 +31,9 @@ class DocumentTemplate(
         val operations = registry.getOperations(model)
         resolveOutputBinding(output).run {
             setOutput(renderingContext, output)
-            operations?.render(renderingContext, DocumentOpeningContext(templateContext))
+            operations?.render(renderingContext, DocumentStart(templateContext))
             model.nodes.forEach { it.export(renderingContext, templateContext, registry) }
-            operations?.render(renderingContext, DocumentClosingContext(templateContext))
+            operations?.render(renderingContext, DocumentEnd(templateContext))
             flush()
         }
     }

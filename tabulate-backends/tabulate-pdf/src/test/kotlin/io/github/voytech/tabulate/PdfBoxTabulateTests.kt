@@ -7,7 +7,6 @@ import io.github.voytech.tabulate.components.spacing.api.builder.dsl.space
 import io.github.voytech.tabulate.components.table.api.builder.dsl.header
 import io.github.voytech.tabulate.components.table.api.builder.dsl.table
 import io.github.voytech.tabulate.components.table.model.attributes.column.columnWidth
-import io.github.voytech.tabulate.components.table.model.attributes.row.height
 import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -19,11 +18,61 @@ class PdfBoxTabulateTests {
     fun `should correctly export two on same sheet, one next to each others`() {
         document {
             sheet {
-                space { widthInPoints = 10F }
+                name = "Sheet 1"
                 table<SampleProduct> {
                     attributes { columnWidth { px = 100 } }
                     columns {
                         column(SampleProduct::code)
+                        column(SampleProduct::name)
+                        column(SampleProduct::description)
+                        column(SampleProduct::price) {
+                            //attributes { format { "[\$\$-409]#,##0.00;[RED]-[\$\$-409]#,##0.00" } }
+                        }
+                    }
+                    rows { header("Id", "Name", "Description", "Price") }
+                    dataSource(SampleProduct.create(4))
+                }
+                space { widthInPoints = 45f }
+                table<SampleProduct> {
+                    attributes { columnWidth {  px = 100 } }
+                    columns {
+                        column(SampleProduct::code)
+                        column(SampleProduct::name)
+                        column(SampleProduct::description)
+                        column(SampleProduct::price) {
+                            //attributes { format { "[\$\$-409]#,##0.00;[RED]-[\$\$-409]#,##0.00" } }
+                        }
+                    }
+                    rows { header("Id 2", "Name 2", "Description 2", "Price 2") }
+                    dataSource(SampleProduct.create(14))
+                }
+            }
+            sheet {
+                name = "Sheet 2"
+                table<SampleProduct> {
+                    attributes { columnWidth {  px = 100 } }
+                    dataSource(SampleProduct.create(10))
+                    columns {
+                        column(SampleProduct::code)
+                        column(SampleProduct::name)
+                    }
+                }
+            }
+        }.export("text.pdf")
+        /*
+        document {
+            sheet {
+                space { widthInPoints = 10F }
+                table<SampleProduct> {
+                    attributes {
+                        columnWidth { px = 100 }
+                        text {
+                            fontFamily = "Times-Roman"
+                            fontSize = 12
+                        }
+                    }
+                    columns {
+                        column(SampleProduct::code) { attributes { text { fontColor = Colors.RED } }}
                         column(SampleProduct::name)
                         column(SampleProduct::description)
                     }
@@ -45,6 +94,31 @@ class PdfBoxTabulateTests {
                     dataSource(SampleProduct.create(10))
                 }
             }
-        }.export("text.pdf")
+            sheet {
+                space { widthInPoints = 10F }
+                table<SampleProduct> {
+                    attributes {
+                        columnWidth { px = 100 }
+                        text {
+                            fontFamily = "Times-Roman"
+                            fontSize = 12
+                        }
+                    }
+                    columns {
+                        column(SampleProduct::code) { attributes { text { fontColor = Colors.BLUE } }}
+                        column(SampleProduct::name)
+                        column(SampleProduct::description)
+                    }
+                    rows {
+                        header {
+                            columnTitles("Id", "Name", "Description")
+                            attributes { height { px = 50 } }
+                        }
+                    }
+                    dataSource(SampleProduct.create(40))
+                }
+                space { widthInPoints = 100F }
+            }
+        }.export("text.pdf")*/
     }
 }

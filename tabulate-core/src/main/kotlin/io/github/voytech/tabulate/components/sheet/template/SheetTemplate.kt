@@ -12,6 +12,7 @@ class SheetTemplate : ExportTemplate<Sheet, SheetTemplateContext> {
         templateContext: SheetTemplateContext,
         apis: ExportTemplateApis<R>,
     ) = with(templateContext) {
+        apis.resetLayouts()
         apis.getActiveLayout().newLayout(DefaultLayoutQueries()).let { layout ->
             apis.getOperations()?.render(renderingContext, model.context(templateContext))
             model.nodes?.forEach { it.export(renderingContext, templateContext, apis) }
