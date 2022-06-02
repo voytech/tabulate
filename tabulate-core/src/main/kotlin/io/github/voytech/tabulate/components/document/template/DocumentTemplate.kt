@@ -25,7 +25,7 @@ class DocumentTemplate(
     }
 
     fun <O : Any> export(model: Document, output: O) {
-        val registry: ExportTemplateApis<RenderingContext> = loadExportTemplateRegistry(format)
+        val registry: ExportTemplateApis<RenderingContext> = loadRegistry(format)
         val renderingContext = loadRenderingContext(format)
         val templateContext = DocumentTemplateContext(model)
         val operations = registry.getOperations(model)

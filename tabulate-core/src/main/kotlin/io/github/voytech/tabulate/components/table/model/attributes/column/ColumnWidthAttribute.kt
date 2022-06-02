@@ -5,6 +5,12 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.ColumnLevelAt
 import io.github.voytech.tabulate.components.table.api.builder.dsl.TableLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.model.attributes.ColumnAttribute
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
+import io.github.voytech.tabulate.core.model.UnitsOfMeasure
+import io.github.voytech.tabulate.core.model.Width
+import io.github.voytech.tabulate.core.template.layout.Layout
+import io.github.voytech.tabulate.core.template.layout.LayoutElement
+import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundaries
+import io.github.voytech.tabulate.core.template.layout.elementBoundaries
 
 enum class LengthUnit {
     PIXEL,
@@ -13,8 +19,8 @@ enum class LengthUnit {
 data class ColumnWidthAttribute(
     val auto: Boolean = false,
     val px: Int = -1,
-    val unit: LengthUnit = LengthUnit.PIXEL // TODO remove or incorporate.
-) : ColumnAttribute<ColumnWidthAttribute>() {
+    val unit: LengthUnit = LengthUnit.PIXEL, // TODO remove or incorporate.
+) : ColumnAttribute<ColumnWidthAttribute>(), LayoutElement {
 
     @TabulateMarker
     class Builder : ColumnAttributeBuilder<ColumnWidthAttribute>() {
@@ -42,14 +48,19 @@ data class ColumnWidthAttribute(
             )
         }
 
+    override fun Layout.computeBoundaries(): LayoutElementBoundaries =
+        if (!auto) query.elementBoundaries(width = Width(value = px.toFloat(), UnitsOfMeasure.PX))
+        else query.elementBoundaries()
+
     companion object {
         @JvmStatic
         fun builder(): Builder = Builder()
     }
+
 }
 
 fun <T> ColumnLevelAttributesBuilderApi<T>.width(block: ColumnWidthAttribute.Builder.() -> Unit) =
     attribute(ColumnWidthAttribute.Builder().apply(block))
 
-fun <T: Any> TableLevelAttributesBuilderApi<T>.columnWidth(block: ColumnWidthAttribute.Builder.() -> Unit) =
+fun <T : Any> TableLevelAttributesBuilderApi<T>.columnWidth(block: ColumnWidthAttribute.Builder.() -> Unit) =
     attribute(ColumnWidthAttribute.Builder().apply(block))

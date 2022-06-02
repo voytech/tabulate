@@ -8,15 +8,15 @@ import io.github.voytech.tabulate.components.table.operation.CellAttributeRender
 import io.github.voytech.tabulate.components.table.operation.CellContext
 import io.github.voytech.tabulate.components.table.operation.getSheetName
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.operation.AttributeOperation
-import io.github.voytech.tabulate.core.template.operation.factories.AttributeOperationsFactory
+import io.github.voytech.tabulate.core.template.operation.AttributesOperations
+import io.github.voytech.tabulate.core.template.spi.AttributeOperationsProvider
 import io.github.voytech.tabulate.excel.ApachePoiRenderingContext
 import io.github.voytech.tabulate.testsupport.TestRenderingContext
 
 
-class NoopTestAttributeRenderOperationsProvider : AttributeOperationsFactory<TestRenderingContext, Table<Any>> {
+class NoopTestAttributeRenderOperationsProvider : AttributeOperationsProvider<TestRenderingContext, Table<Any>> {
 
-     override fun createAttributeOperations(): Set<AttributeOperation<TestRenderingContext, Table<Any>, *, *, *>> = setOf(
+     override fun createAttributeOperations(): AttributesOperations<TestRenderingContext, Table<Any>> = AttributesOperations.of(
          NoopSimpleTestCellAttributeRenderOperation()
      )
 
@@ -26,9 +26,9 @@ class NoopTestAttributeRenderOperationsProvider : AttributeOperationsFactory<Tes
 
 }
 
-class TestAttributeRenderOperationsProvider : AttributeOperationsFactory<ApachePoiRenderingContext, Table<Any>> {
+class TestAttributeRenderOperationsProvider : AttributeOperationsProvider<ApachePoiRenderingContext, Table<Any>> {
 
-    override fun createAttributeOperations(): Set<AttributeOperation<ApachePoiRenderingContext, Table<Any>, *, *, *>> = setOf(
+    override fun createAttributeOperations(): AttributesOperations<ApachePoiRenderingContext, Table<Any>> = AttributesOperations.of(
         SimpleTestCellAttributeRenderOperation()
     )
     override fun getRenderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java

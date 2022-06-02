@@ -2,12 +2,7 @@ package io.github.voytech.tabulate.pdf.components.table
 
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.model.attributes.cell.CellTextStylesAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.column.ColumnWidthAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.components.table.operation.*
-import io.github.voytech.tabulate.core.model.Height
-import io.github.voytech.tabulate.core.model.UnitsOfMeasure
-import io.github.voytech.tabulate.core.model.Width
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.layout.boundaries
 import io.github.voytech.tabulate.core.template.operation.OperationsBuilder
@@ -42,17 +37,9 @@ class PdfTableOperations : ExportOperationsFactory<PdfBoxRenderingContext, Table
 
         operation(StartTableOperation { _, _ -> })
 
-        operation(StartColumnOperation { _, context ->
-            context.getModelAttribute<ColumnWidthAttribute>()?.px?.let {
-                context.boundaries()?.width = Width(it.toFloat(), UnitsOfMeasure.PX)
-            }
-        })
+        operation(StartColumnOperation { _, _ -> })
 
-        operation(StartRowOperation { _, context ->
-            context.getModelAttribute<RowHeightAttribute>()?.px?.let {
-                context.boundaries()?.height = Height(it.toFloat(), UnitsOfMeasure.PX)
-            }
-        })
+        operation(StartRowOperation { _, _ -> })
 
         operation(RenderRowCellOperation { renderingContext, context ->
             with(renderingContext) {

@@ -1,9 +1,7 @@
 package io.github.voytech.tabulate.core.template
 
-import io.github.voytech.tabulate.core.template.spi.ExportOperationsProvider
-import io.github.voytech.tabulate.core.template.spi.Identifiable
-import io.github.voytech.tabulate.core.template.spi.RenderingContextAware
-import io.github.voytech.tabulate.core.template.spi.createRenderingContext
+import io.github.voytech.tabulate.core.model.Model
+import io.github.voytech.tabulate.core.template.spi.*
 import java.util.*
 
 /**
@@ -60,14 +58,25 @@ internal fun <R: RenderingContext> loadExportOperationFactories(format: Document
         it.getModelClass()
     }
 
+
+/**
+ * Top level method that loads instances of [AttributeOperationsFactory] compatible with particular [RenderingContext]
+ * @author Wojciech Mąka
+ * @since 0.*.*
+ */
+internal fun <R: RenderingContext, MDL: Model<MDL>> loadAttributeOperationFactories(renderingContext: Class<R>): List<AttributeOperationsProvider<R,MDL>> =
+    loadRenderingContextAware(renderingContext)
+
 /**
  * Top level method that loads instance of [ExportTemplateApis] that matches particular [DocumentFormat].
  * Registry contains all discoverable instances of [ExportTemplate] and all document format related instances of [ExportOperationsProvider]
  * @author Wojciech Mąka
  * @since 0.*.*
  */
-internal fun <R: RenderingContext> loadExportTemplateRegistry(format: DocumentFormat): ExportTemplateApis<R> =
-    ExportTemplateApis(operationsFactories = loadExportOperationFactories(format))
+internal fun <R: RenderingContext> loadRegistry(format: DocumentFormat): ExportTemplateApis<R> =
+    ExportTemplateApis(
+        operationsFactories = loadExportOperationFactories(format)
+    )
 
 /**
  * Top level method that loads instance of [RenderingContext] identified by particular [DocumentFormat].

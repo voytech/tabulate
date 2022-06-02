@@ -442,7 +442,7 @@ class ExampleExportOperationsConfiguringFactory : ExportOperationsConfiguringFac
 }
 ----
 Factory class `StandardAttributeOperationsFactory` exposes API which assumes specific standard library attributes.
-If your file format allow additional attributes which are not present in standard library (tabulate-core), you may use `AttributeOperationsFactory` interface directly, or fill additional constructor properties on `StandardAttributeOperationsFactory` as below:
+If your file format allow additional attributes which are not present in standard library (tabulate-core), you may use `AttributeOperationsProvider` interface directly, or fill additional constructor properties on `StandardAttributeOperationsFactory` as below:
 
 [source,kotlin,options="nowrap"]
 ----
@@ -754,7 +754,7 @@ interface AttributeOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, AT
     }
 }
 ----
-`AttributeOperation` is next level abstraction. It is used to render each attribute from `AttributedContext` context. The `AttributeOperation` dispatching can be achieved by `AttributesHandlingOperation` wrapper that is responsible for resolving all `AttributeOperations` and matching them with corresponding attributes.
+`AttributeOperation` is next level abstraction. It is used to render each attribute from `AttributedContext` context. The `AttributeOperation` dispatching can be achieved by `AttributesHandlingExportOperation` wrapper that is responsible for resolving all `AttributeOperations` and matching them with corresponding attributes.
 
 Now some more words on `operation contexts`.
 

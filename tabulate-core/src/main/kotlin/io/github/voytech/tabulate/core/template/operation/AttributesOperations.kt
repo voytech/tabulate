@@ -14,7 +14,7 @@ typealias AttributeCategoryClass = Class<out Attribute<*>>
 typealias AttributeClass = Class<out Attribute<*>>
 
 @Suppress("UNCHECKED_CAST")
-class AttributesOperationsContainer<CTX : RenderingContext, ARM : Model<ARM>> {
+class AttributesOperations<CTX : RenderingContext, ARM : Model<ARM>> {
 
     private val attributeRenderOperations: MutableMap<AttributeCategoryClass, MutableMap<AttributeClass, AttributeOperation<CTX, ARM, *, *, *>>> =
         mutableMapOf()
@@ -33,5 +33,15 @@ class AttributesOperationsContainer<CTX : RenderingContext, ARM : Model<ARM>> {
 
     internal fun isEmpty(): Boolean = attributeRenderOperations.isEmpty()
 
+    operator fun plusAssign(other: AttributesOperations<CTX, ARM>) {
+        attributeRenderOperations += other.attributeRenderOperations //TODO implement correctly
+    }
+
+    companion object {
+        fun <CTX : RenderingContext, ARM : Model<ARM>> of(vararg operations: AttributeOperation<CTX, ARM, *, *, *>): AttributesOperations<CTX, ARM> =
+            AttributesOperations<CTX, ARM>().apply {
+                operations.forEach { register(it) }
+            }
+    }
 
 }

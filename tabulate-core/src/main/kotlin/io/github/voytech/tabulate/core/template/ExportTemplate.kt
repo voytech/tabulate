@@ -68,7 +68,7 @@ class StandaloneExportTemplate<CTX : TemplateContext<ARM>, ARM : Model<ARM>>(
     }
 
     fun <O : Any, T : Any> export(model: ARM, output: O, dataSource: Iterable<T> = emptyList()) {
-        val registry: ExportTemplateApis<RenderingContext> = loadExportTemplateRegistry(format)
+        val registry: ExportTemplateApis<RenderingContext> = loadRegistry(format)
         val renderingContext =
             loadRenderingContext(format)  //TODO it is inconvenient that in order to obtain valid DocumentFormat you need to load exportOperationFactory.
         val templateContext = delegate.buildTemplateContext(

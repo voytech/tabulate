@@ -28,6 +28,7 @@ interface TabularQueries : AbsolutePositionQueries {
 
 interface LayoutQueries : AbsolutePositionQueries {
     fun getLayoutBoundary(): BoundingRectangle
+
     /**
      * Extend layout rendered space by specific [Width].
      */
@@ -59,6 +60,7 @@ abstract class AbstractLayoutQueries : LayoutQueries {
     override fun getLayoutBoundary(): BoundingRectangle = layout.boundingRectangle
 
 }
+
 abstract class TabularLayoutQueries : AbstractLayoutQueries(), TabularQueries
 
 class Layout(
@@ -86,7 +88,7 @@ class Layout(
     fun newLayout(
         childQuery: AbstractLayoutQueries,
         childLeftTopCorner: Position = nextLayoutDefaultLeftTopCorner ?: leftTopCorner,
-        orientation: Orientation = this@Layout.orientation
+        orientation: Orientation = this@Layout.orientation,
     ): Layout = Layout(uom, orientation, childLeftTopCorner, childQuery, this, root ?: this).let {
         root?.activeLayout = it
         activeLayout = it
@@ -174,9 +176,16 @@ data class LayoutElementBoundaries(
 ) {
     fun unitsOfMeasure(): UnitsOfMeasure = layoutPosition.x.unit
 
-    fun <E : AttributedContext<*>> into(context: E): LayoutElementBoundaries = apply {
-        context.additionalAttributes?.put("${context.id}[boundaries]", this)
+    fun <E : AttributedContext<*>> mergeInto(context: E): LayoutElementBoundaries = apply {
+        context.additionalAttributes?.put("${context.id}[boundaries]", context.boundaries()?.merge(this) ?: this)
     }
+
+    private fun merge(other: LayoutElementBoundaries): LayoutElementBoundaries = copy(
+        absoluteX = other.absoluteX ?: absoluteX,
+        absoluteY = other.absoluteY ?: absoluteY,
+        width = other.width ?: width,
+        height = other.height ?: height
+    )
 }
 
 fun <E : AttributedContext<*>> E.boundaries(): LayoutElementBoundaries? = getContextAttribute("$id[boundaries]")

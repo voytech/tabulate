@@ -23,6 +23,11 @@ fun interface Operation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, E : Att
     fun render(renderingContext: CTX, context: E)
 }
 
+internal open class ReifiedOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, E : AttributedContext<ATTR_CAT>, M : Model<M>>(
+    internal val delegate: Operation<CTX, ATTR_CAT, E>,
+    internal val typeInfo: OperationTypeInfo<CTX, M, ATTR_CAT, E>,
+) : Operation<CTX, ATTR_CAT, E> by delegate
+
 data class AttributeOperationTypeInfo<
         CTX : RenderingContext,
         ARM : Model<ARM>,
@@ -83,36 +88,22 @@ abstract class AbstractAttributeOperation<
     }
 }
 
-fun <
-        CTX : RenderingContext,
-        ARM : Model<ARM>,
-        ATTR_CAT : Attribute<*>,
-        ATTR : ATTR_CAT,
-        E : AttributedContext<ATTR_CAT>,
-        > AttributeOperation<CTX, ARM, ATTR_CAT, ATTR, E>.attributeClass() =
-    typeInfo().attributeType
+fun <CTX : RenderingContext, ARM : Model<ARM>, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : AttributedContext<ATTR_CAT>>
+        AttributeOperation<CTX, ARM, ATTR_CAT, ATTR, E>.attributeClass() = typeInfo().attributeType
 
+internal class AttributesHandlingExportOperation<CTX : RenderingContext, M : Model<M>, ATTR_CAT : Attribute<*>, E : AttributedContext<ATTR_CAT>>(
+    delegate: ReifiedOperation<CTX, ATTR_CAT, E, M>,
+    attributesOperations: AttributesOperations<CTX, M>,
+) : ReifiedOperation<CTX, ATTR_CAT, E, M>(delegate, delegate.typeInfo) {
 
-internal class AttributesHandlingOperation<
-        CTX : RenderingContext,
-        ARM : Model<ARM>,
-        ATTR_CAT : Attribute<*>,
-        E : AttributedContext<ATTR_CAT>,
-        >(
-    typeInfo: OperationTypeInfo<CTX, ARM, ATTR_CAT, E>,
-    private val operation: Operation<CTX, ATTR_CAT, E>,
-    attributeOperationsContainer: AttributesOperationsContainer<CTX, ARM>,
-    private val enableAttributeSetBasedCaching: Boolean = true,
-) : Operation<CTX, ATTR_CAT, E> {
+    private val attributeOperations: List<AttributeOperation<CTX, M, ATTR_CAT, *, E>> =
+        attributesOperations.getOperationsBy(delegate.typeInfo)
 
-    private val attributeOperations: List<AttributeOperation<CTX, ARM, ATTR_CAT, *, E>> =
-        attributeOperationsContainer.getOperationsBy(typeInfo)
-
-    private val filteredOperationCache: AttributeClassBasedCache<ATTR_CAT, List<AttributeOperation<CTX, ARM, ATTR_CAT, *, E>>> =
+    private val filteredOperationCache: AttributeClassBasedCache<ATTR_CAT, List<AttributeOperation<CTX, M, ATTR_CAT, *, E>>> =
         AttributeClassBasedCache()
 
     @Suppress("UNCHECKED_CAST")
-    private fun <OP : AttributeOperation<CTX, ARM, ATTR_CAT, *, E>> E.forEachOperation(
+    private fun <OP : AttributeOperation<CTX, M, ATTR_CAT, *, E>> E.forEachOperation(
         unfiltered: List<OP>, consumer: (operation: OP) -> Boolean,
     ) {
         attributes?.let { _attributes ->
@@ -126,12 +117,8 @@ internal class AttributesHandlingOperation<
         }
     }
 
-    private fun E.withAttributeSetCacheIfEnabled(block: () -> Unit) {
-        if (enableAttributeSetBasedCaching) withAttributeSetBasedCache { block() } else block()
-    }
-
     @Suppress("UNCHECKED_CAST")
-    private fun <ATTR : ATTR_CAT> AttributeOperation<CTX, ARM, ATTR_CAT, ATTR, E>.renderAttribute(
+    private fun <ATTR : ATTR_CAT> AttributeOperation<CTX, M, ATTR_CAT, ATTR, E>.renderAttribute(
         renderingContext: CTX,
         context: E,
         clazz: Class<out ATTR_CAT>,
@@ -142,12 +129,12 @@ internal class AttributesHandlingOperation<
     }
 
     override fun render(renderingContext: CTX, context: E) {
-        context.withAttributeSetCacheIfEnabled {
+        context.withAttributeSetBasedCache {
             var operationRendered = false
             if (!context.attributes.isNullOrEmpty()) {
                 context.forEachOperation(attributeOperations) { attributeOperation ->
                     if (attributeOperation.priority() >= 0 && !operationRendered) {
-                        operation.render(renderingContext, context)
+                        delegate.render(renderingContext, context)
                         operationRendered = true
                     }
                     with(attributeOperation) {
@@ -156,7 +143,7 @@ internal class AttributesHandlingOperation<
                 }
             }
             if (!operationRendered) {
-                operation.render(renderingContext, context)
+                delegate.render(renderingContext, context)
             }
         }
     }
@@ -167,12 +154,12 @@ interface Operations<CTX : RenderingContext> {
 }
 
 class RenderOperations<CTX : RenderingContext>(
-    private val operationsByContextClass: Map<Class<out AttributedContext<*>>, Operation<CTX, *, *>>,
+    private val operations: Map<Class<out AttributedContext<*>>, Operation<CTX, *, *>>,
 ) : Operations<CTX> {
 
     @Suppress("UNCHECKED_CAST")
     private fun <E : AttributedContext<*>> getByContextOrNull(clazz: Class<E>): Operation<CTX, *, E>? {
-        return operationsByContextClass[clazz] as? Operation<CTX, *, E>?
+        return operations[clazz] as? Operation<CTX, *, E>?
     }
 
     override fun <A : Attribute<*>, E : AttributedContext<A>> render(renderingContext: CTX, context: E) {
@@ -187,9 +174,24 @@ class RenderOperations<CTX : RenderingContext>(
 
 class LayoutOperations<CTX : RenderingContext>(
     private val delegate: Operations<CTX>, private val layouts: Layouts? = null,
-) : Operations<CTX> {
-    private fun <A : Attribute<*>, E : AttributedContext<A>> Layout.resolveElementBoundaries(context: E) =
-        if (context is LayoutElement) with(context) { computeBoundaries().into(context) } else null
+) : Operations<CTX> by delegate{
+
+    private fun <A : Attribute<*>, E : AttributedContext<A>> Layout.resolveAttributeElementBoundaries(context: E): LayoutElementBoundaries? {
+        context.attributes?.attributeSet?.forEach {
+            if (it is LayoutElement) with(it) {
+                computeBoundaries().mergeInto(context)
+            }
+        }
+        return context.boundaries()
+    }
+
+    private fun <A : Attribute<*>, E : AttributedContext<A>> Layout.resolveElementBoundaries(context: E): LayoutElementBoundaries? {
+        if (context is LayoutElement) with(context) {
+            computeBoundaries().mergeInto(context)
+            resolveAttributeElementBoundaries(context)
+        }
+        return context.boundaries()
+    }
 
     private fun <A : Attribute<*>, E : AttributedContext<A>> Layout.commitBoundaries(
         context: E, boundaries: LayoutElementBoundaries? = null,
@@ -210,33 +212,25 @@ class LayoutOperations<CTX : RenderingContext>(
     }
 }
 
-internal typealias ReifiedOperation<CTX, ARM, ATTR_CAT, E> = Pair<OperationTypeInfo<CTX, ARM, ATTR_CAT, E>, Operation<CTX, ATTR_CAT, E>>
-
-class OperationsBuilder<CTX : RenderingContext, ARM : Model<ARM>>(
+class OperationsBuilder<CTX : RenderingContext, M : Model<M>>(
     private val renderingContext: Class<CTX>,
-    private val rootModelClass: Class<ARM>,
-    private val attributesOperations: AttributesOperationsContainer<CTX, ARM>? = null,
+    private val rootModelClass: Class<M>,
+    private val attributesOperations: AttributesOperations<CTX, M>
 ) {
-    private val operations: MutableList<ReifiedOperation<CTX, ARM, *, *>> = mutableListOf()
+    private val operations: MutableList<ReifiedOperation<CTX, *, *, M>> = mutableListOf()
 
     fun <ATTR_CAT : Attribute<*>, E : AttributedContext<ATTR_CAT>> operation(
         context: Class<E>, cat: Class<ATTR_CAT>, op: Operation<CTX, ATTR_CAT, E>,
-    ) {
-        OperationTypeInfo(renderingContext, context, AttributeClassifier(cat, rootModelClass)).let { info ->
-            attributesOperations?.let { container ->
-                info to AttributesHandlingOperation(info, op, container)
-            } ?: (info to op)
-        }.let {
-            operations.add(it)
-        }
-    }
+    ) = ReifiedOperation(
+        op, OperationTypeInfo(renderingContext, context, AttributeClassifier(cat, rootModelClass))
+    ).let { operations.add(AttributesHandlingExportOperation(it, attributesOperations)) }
 
     inline fun <reified ATTR_CAT : Attribute<*>, reified E : AttributedContext<ATTR_CAT>> operation(op: Operation<CTX, ATTR_CAT, E>) {
         operation(E::class.java, ATTR_CAT::class.java, op)
     }
 
     internal fun build(): Operations<CTX> = RenderOperations(
-        operations.associate { it.first.operationContextType to it.second }
+        operations.associateBy { it.typeInfo.operationContextType }
     )
 }
 

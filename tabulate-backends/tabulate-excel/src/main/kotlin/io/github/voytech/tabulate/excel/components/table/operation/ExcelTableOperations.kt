@@ -6,10 +6,8 @@ import io.github.voytech.tabulate.core.model.Height
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.operation.AttributeOperation
 import io.github.voytech.tabulate.core.template.operation.OperationsBuilder
 import io.github.voytech.tabulate.core.template.operation.cacheOnAttributeSet
-import io.github.voytech.tabulate.core.template.operation.factories.AttributeOperationsFactory
 import io.github.voytech.tabulate.core.template.operation.factories.ExportOperationsFactory
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat.Companion.format
@@ -22,27 +20,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class ExcelTableAttributesOperations : AttributeOperationsFactory<ApachePoiRenderingContext, Table<Any>> {
-    override fun createAttributeOperations(): Set<AttributeOperation<ApachePoiRenderingContext, Table<Any>, *, *, *>> =
-        setOf(
-            TemplateFileAttributeRenderOperation(),
-            ColumnWidthAttributeRenderOperation(),
-            RowHeightAttributeRenderOperation(),
-            CellTextStylesAttributeRenderOperation(),
-            CellBordersAttributeRenderOperation(),
-            CellAlignmentAttributeRenderOperation(),
-            CellBackgroundAttributeRenderOperation(),
-            CellDataFormatAttributeRenderOperation(),
-            CellCommentAttributeRenderOperation(),
-            FilterAndSortTableAttributeRenderOperation(),
-            PrintingAttributeRenderOperation(),
-            RowBordersAttributeRenderOperation(),
-        )
-
-    override fun getRenderingContextClass(): Class<ApachePoiRenderingContext> = reify()
-
-    override fun getModelClass(): Class<Table<Any>> = reify()
-}
 
 /**
  * Apache POI based excel export operations provider implementation.
@@ -53,6 +30,21 @@ class ExcelTableOperations : ExportOperationsFactory<ApachePoiRenderingContext, 
 
     override fun getDocumentFormat(): DocumentFormat<ApachePoiRenderingContext> =
         format("xlsx", "poi")
+
+    override fun provideAttributeOperations() =  setOf(
+        TemplateFileAttributeRenderOperation(),
+        ColumnWidthAttributeRenderOperation(),
+        RowHeightAttributeRenderOperation(),
+        CellTextStylesAttributeRenderOperation(),
+        CellBordersAttributeRenderOperation(),
+        CellAlignmentAttributeRenderOperation(),
+        CellBackgroundAttributeRenderOperation(),
+        CellDataFormatAttributeRenderOperation(),
+        CellCommentAttributeRenderOperation(),
+        FilterAndSortTableAttributeRenderOperation(),
+        PrintingAttributeRenderOperation(),
+        RowBordersAttributeRenderOperation(),
+    )
 
     override fun provideExportOperations(): OperationsBuilder<ApachePoiRenderingContext, Table<Any>>.() -> Unit = {
         operation(StartTableOperation { renderingContext, context ->
@@ -113,9 +105,6 @@ class ExcelTableOperations : ExportOperationsFactory<ApachePoiRenderingContext, 
         })
         operation(EndTableOperation { _, _ -> })
     }
-
-    override fun getAttributeOperationsFactory(): AttributeOperationsFactory<ApachePoiRenderingContext, Table<Any>> =
-        ExcelTableAttributesOperations()
 
     override fun getModelClass(): Class<Table<Any>> = reify()
 
