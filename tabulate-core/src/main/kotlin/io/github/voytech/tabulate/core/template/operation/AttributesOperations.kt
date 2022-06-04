@@ -19,22 +19,22 @@ class AttributesOperations<CTX : RenderingContext, ARM : Model<ARM>> {
     private val attributeRenderOperations: MutableMap<AttributeCategoryClass, MutableMap<AttributeClass, AttributeOperation<CTX, ARM, *, *, *>>> =
         mutableMapOf()
 
-    internal fun register(operation: AttributeOperation<CTX, ARM,*, *, *>) {
+    internal fun register(operation: AttributeOperation<CTX, ARM, *, *, *>) {
         attributeRenderOperations.computeIfAbsent(operation.typeInfo().attributeClassifier.attributeCategory) {
             mutableMapOf()
         }[operation.typeInfo().attributeType] = operation
     }
 
-    internal fun <A : Attribute<*>, E: AttributedContext<A>> getOperationsBy(typeInfo: OperationTypeInfo<CTX,ARM,A,E>): List<AttributeOperation<CTX, ARM, A, *, E>>  {
+    internal fun <A : Attribute<*>, E : AttributedContext<A>> getOperationsBy(typeInfo: OperationTypeInfo<CTX, ARM, A, E>): List<AttributeOperation<CTX, ARM, A, *, E>> {
         return attributeRenderOperations[typeInfo.attributeClassifier.attributeCategory]?.values?.filter {
             it.typeInfo().operationContextType == typeInfo.operationContextType
-        }?.sortedBy { it.priority() }?.map { it as AttributeOperation<CTX,ARM, A, *, E> } ?: emptyList()
+        }?.sortedBy { it.priority() }?.map { it as AttributeOperation<CTX, ARM, A, *, E> } ?: emptyList()
     }
 
     internal fun isEmpty(): Boolean = attributeRenderOperations.isEmpty()
 
     operator fun plusAssign(other: AttributesOperations<CTX, ARM>) {
-        attributeRenderOperations += other.attributeRenderOperations //TODO implement correctly
+        other.attributeRenderOperations.values.map { it.values }.flatten().forEach { register(it) }
     }
 
     companion object {

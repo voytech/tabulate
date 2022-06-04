@@ -31,46 +31,39 @@ abstract class ExportOperationsFactory<CTX : RenderingContext, ARM : Model<ARM>>
 
     final override fun getRenderingContextClass(): Class<CTX> = getDocumentFormat().provider.renderingContextClass
 
-    private fun registerAttributesOperations(
-        attributeOperations: AttributesOperations<CTX, ARM>,
+    private fun AttributesOperations<CTX, ARM>.registerAttributesOperations(
         factory: AttributeOperationsProvider<CTX, ARM>?,
-    ): AttributesOperations<CTX, ARM> {
-        return attributeOperations.apply {
-            if (factory == this@ExportOperationsFactory) {
-                (factory as ExportOperationsFactory<CTX, ARM>).provideAttributeOperations()?.forEach { register(it) }
-            } else {
-                factory?.createAttributeOperations()?.let { this@apply += it }
-            }
+    ): AttributesOperations<CTX, ARM> = apply {
+        if (factory == this@ExportOperationsFactory) {
+            (factory as ExportOperationsFactory<CTX, ARM>).provideAttributeOperations()?.forEach { register(it) }
+        } else {
+            factory?.createAttributeOperations()?.let { this@apply += it }
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun registerClientDefinedAttributesOperationsFromProvider(
-        // TODO think if should AttributeOperation be defined per rendering context and aggregate model or only rendering context
-        attributeOperations: AttributesOperations<CTX, ARM>,
-    ): AttributesOperations<CTX, ARM> = attributeOperations.apply {
+    private fun AttributesOperations<CTX, ARM>.registerClientDefinedAttributesOperationsFromProvider():
+            AttributesOperations<CTX, ARM> = apply {
         loadAttributeOperationFactories<CTX, ARM>(getRenderingContextClass())
             .filter { it.getModelClass() == getModelClass() }
-            .forEach { registerAttributesOperations(attributeOperations, it) }
+            .forEach { registerAttributesOperations(it) }
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun registerClientDefinedAttributesOperations(
-        // TODO think if should AttributeOperation be defined per rendering context and aggregate model or only rendering context
-        attributeOperations: AttributesOperations<CTX, ARM>,
-    ): AttributesOperations<CTX, ARM> = attributeOperations.apply {
+    private fun AttributesOperations<CTX, ARM>.registerClientDefinedAttributesOperations():
+            AttributesOperations<CTX, ARM> = apply {
         ServiceLoader.load(AttributeOperation::class.java)
             .filter { getRenderingContextClass().isAssignableFrom(it.typeInfo().renderingContextType) }
             .map { it as AttributeOperation<CTX, ARM, *, *, *> }
-            .forEach { attributeOperations.register(it) }
+            .forEach { register(it) }
     }
 
-    private fun registerAttributesOperations(): AttributesOperations<CTX, ARM> {
-        return AttributesOperations<CTX, ARM>().let {
-            registerAttributesOperations(it, this)
-            registerClientDefinedAttributesOperationsFromProvider(it)
-            registerClientDefinedAttributesOperations(it)
+
+    private fun registerAttributesOperations(): AttributesOperations<CTX, ARM> =
+        with(AttributesOperations<CTX, ARM>()) {
+            registerAttributesOperations(this@ExportOperationsFactory)
+            registerClientDefinedAttributesOperationsFromProvider()
+            registerClientDefinedAttributesOperations()
         }
-    }
 
 }
