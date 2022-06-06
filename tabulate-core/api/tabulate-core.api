@@ -2157,6 +2157,10 @@ public final class io/github/voytech/tabulate/core/template/operation/AttributeO
 	public static fun priority (Lio/github/voytech/tabulate/core/template/operation/AttributeOperation;)I
 }
 
+public final class io/github/voytech/tabulate/core/template/operation/AttributeOperationKt {
+	public static final fun attributeClass (Lio/github/voytech/tabulate/core/template/operation/AttributeOperation;)Ljava/lang/Class;
+}
+
 public final class io/github/voytech/tabulate/core/template/operation/AttributeOperationTypeInfo {
 	public fun <init> (Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/model/AttributeClassifier;Ljava/lang/Class;)V
 	public final fun component1 ()Ljava/lang/Class;
@@ -2208,18 +2212,17 @@ public abstract class io/github/voytech/tabulate/core/template/operation/Context
 	public final fun setAdditionalAttributes (Ljava/util/Map;)V
 }
 
-public final class io/github/voytech/tabulate/core/template/operation/LayoutOperations : io/github/voytech/tabulate/core/template/operation/Operations {
-	public fun <init> (Lio/github/voytech/tabulate/core/template/operation/Operations;Lio/github/voytech/tabulate/core/template/layout/Layouts;)V
-	public synthetic fun <init> (Lio/github/voytech/tabulate/core/template/operation/Operations;Lio/github/voytech/tabulate/core/template/layout/Layouts;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+public abstract interface class io/github/voytech/tabulate/core/template/operation/Enhance : kotlin/jvm/functions/Function1 {
+}
+
+public final class io/github/voytech/tabulate/core/template/operation/LayoutAwareOperation : io/github/voytech/tabulate/core/template/operation/Operation {
+	public fun <init> (Lio/github/voytech/tabulate/core/template/operation/Operation;Lio/github/voytech/tabulate/core/template/layout/Layouts;)V
+	public synthetic fun <init> (Lio/github/voytech/tabulate/core/template/operation/Operation;Lio/github/voytech/tabulate/core/template/layout/Layouts;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun render (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
 }
 
 public abstract interface class io/github/voytech/tabulate/core/template/operation/Operation {
 	public abstract fun render (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
-}
-
-public final class io/github/voytech/tabulate/core/template/operation/OperationKt {
-	public static final fun attributeClass (Lio/github/voytech/tabulate/core/template/operation/AttributeOperation;)Ljava/lang/Class;
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/OperationTypeInfo {
@@ -2237,31 +2240,38 @@ public final class io/github/voytech/tabulate/core/template/operation/OperationT
 	public fun toString ()Ljava/lang/String;
 }
 
-public abstract interface class io/github/voytech/tabulate/core/template/operation/Operations {
-	public abstract fun render (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
-}
-
-public final class io/github/voytech/tabulate/core/template/operation/OperationsBuilder {
-	public fun <init> (Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/template/operation/AttributesOperations;)V
-	public final fun operation (Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/template/operation/Operation;)Z
-}
-
-public final class io/github/voytech/tabulate/core/template/operation/RenderOperations : io/github/voytech/tabulate/core/template/operation/Operations {
-	public static final field Companion Lio/github/voytech/tabulate/core/template/operation/RenderOperations$Companion;
+public final class io/github/voytech/tabulate/core/template/operation/Operations {
+	public static final field Companion Lio/github/voytech/tabulate/core/template/operation/Operations$Companion;
 	public fun <init> (Ljava/util/Map;)V
-	public fun render (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
+	public final fun render (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
 }
 
-public final class io/github/voytech/tabulate/core/template/operation/RenderOperations$Companion {
+public final class io/github/voytech/tabulate/core/template/operation/Operations$Companion {
 	public final fun getLogger ()Ljava/util/logging/Logger;
 }
 
-public abstract class io/github/voytech/tabulate/core/template/operation/factories/ExportOperationsFactory : io/github/voytech/tabulate/core/template/spi/OperationsBundleProvider {
+public final class io/github/voytech/tabulate/core/template/operation/OperationsBuilder {
+	public fun <init> (Ljava/lang/Class;Ljava/lang/Class;)V
+	public final fun enhanceOperations (Lio/github/voytech/tabulate/core/template/operation/Enhance;)Lio/github/voytech/tabulate/core/template/operation/OperationsBuilder;
+	public final fun operation (Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/template/operation/Operation;)V
+}
+
+public class io/github/voytech/tabulate/core/template/operation/ReifiedOperation : io/github/voytech/tabulate/core/template/operation/Operation {
+	public fun <init> (Lio/github/voytech/tabulate/core/template/operation/Operation;Lio/github/voytech/tabulate/core/template/operation/OperationTypeInfo;)V
+	public fun render (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
+}
+
+public abstract class io/github/voytech/tabulate/core/template/operation/factories/AttributeOperationsFactory : io/github/voytech/tabulate/core/template/spi/AttributeOperationsProvider {
 	public fun <init> ()V
 	public final fun createAttributeOperations ()Lio/github/voytech/tabulate/core/template/operation/AttributesOperations;
-	public final fun createExportOperations ()Lio/github/voytech/tabulate/core/template/operation/Operations;
-	public final fun getRenderingContextClass ()Ljava/lang/Class;
 	protected fun provideAttributeOperations ()Ljava/util/Set;
+}
+
+public abstract class io/github/voytech/tabulate/core/template/operation/factories/ExportOperationsFactory : io/github/voytech/tabulate/core/template/operation/factories/AttributeOperationsFactory, io/github/voytech/tabulate/core/template/spi/OperationsBundleProvider {
+	public fun <init> ()V
+	public final fun createExportOperations ()Lio/github/voytech/tabulate/core/template/operation/Operations;
+	public final fun enhanceExportOperations (Lio/github/voytech/tabulate/core/template/operation/Enhance;)Z
+	public final fun getRenderingContextClass ()Ljava/lang/Class;
 	protected abstract fun provideExportOperations ()Lkotlin/jvm/functions/Function1;
 }
 

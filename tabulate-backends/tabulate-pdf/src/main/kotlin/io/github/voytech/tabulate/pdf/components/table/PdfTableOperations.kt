@@ -43,8 +43,8 @@ class PdfTableOperations : ExportOperationsFactory<PdfBoxRenderingContext, Table
 
         operation(RenderRowCellOperation { renderingContext, context ->
             with(renderingContext) {
-                renderingContext.getCurrentContentStream().let { content ->
-                    val height = renderingContext.getCurrentPage().mediaBox.height
+                getCurrentContentStream().let { content ->
+                    val height = getCurrentPage().mediaBox.height
                     content.beginText()
                     content.setFont(font(context), fontSize(context))
                     content.setNonStrokingColor(fontColor(context))

@@ -754,7 +754,7 @@ interface AttributeOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, AT
     }
 }
 ----
-`AttributeOperation` is next level abstraction. It is used to render each attribute from `AttributedContext` context. The `AttributeOperation` dispatching can be achieved by `AttributesHandlingExportOperation` wrapper that is responsible for resolving all `AttributeOperations` and matching them with corresponding attributes.
+`AttributeOperation` is next level abstraction. It is used to render each attribute from `AttributedContext` context. The `AttributeOperation` dispatching can be achieved by `AttributesAwareExportOperation` wrapper that is responsible for resolving all `AttributeOperations` and matching them with corresponding attributes.
 
 Now some more words on `operation contexts`.
 

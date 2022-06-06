@@ -6,6 +6,8 @@ import io.github.voytech.tabulate.components.sheet.api.builder.dsl.sheet
 import io.github.voytech.tabulate.components.spacing.api.builder.dsl.space
 import io.github.voytech.tabulate.components.table.api.builder.dsl.header
 import io.github.voytech.tabulate.components.table.api.builder.dsl.table
+import io.github.voytech.tabulate.components.table.model.attributes.Colors
+import io.github.voytech.tabulate.components.table.model.attributes.cell.text
 import io.github.voytech.tabulate.components.table.model.attributes.column.columnWidth
 import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import org.junit.jupiter.api.DisplayName
@@ -19,10 +21,11 @@ class PdfBoxTabulateTests {
         document {
             sheet {
                 name = "Sheet 1"
+                space { widthInPoints = 45f }
                 table<SampleProduct> {
                     attributes { columnWidth { px = 100 } }
                     columns {
-                        column(SampleProduct::code)
+                        column(SampleProduct::code) { attributes { text { fontColor = Colors.RED } }}
                         column(SampleProduct::name)
                         column(SampleProduct::description)
                         column(SampleProduct::price) {
@@ -58,67 +61,6 @@ class PdfBoxTabulateTests {
                     }
                 }
             }
-        }.export("text.pdf")
-        /*
-        document {
-            sheet {
-                space { widthInPoints = 10F }
-                table<SampleProduct> {
-                    attributes {
-                        columnWidth { px = 100 }
-                        text {
-                            fontFamily = "Times-Roman"
-                            fontSize = 12
-                        }
-                    }
-                    columns {
-                        column(SampleProduct::code) { attributes { text { fontColor = Colors.RED } }}
-                        column(SampleProduct::name)
-                        column(SampleProduct::description)
-                    }
-                    rows {
-                        header {
-                            columnTitles("Id", "Name", "Description")
-                            attributes { height { px = 50 } }
-                        }
-                    }
-                    dataSource(SampleProduct.create(40))
-                }
-                space { widthInPoints = 100F }
-                table<SampleProduct> {
-                    attributes { columnWidth { px = 100 } }
-                    columns {
-                        column(SampleProduct::code)
-                    }
-                    rows { header("Id") }
-                    dataSource(SampleProduct.create(10))
-                }
-            }
-            sheet {
-                space { widthInPoints = 10F }
-                table<SampleProduct> {
-                    attributes {
-                        columnWidth { px = 100 }
-                        text {
-                            fontFamily = "Times-Roman"
-                            fontSize = 12
-                        }
-                    }
-                    columns {
-                        column(SampleProduct::code) { attributes { text { fontColor = Colors.BLUE } }}
-                        column(SampleProduct::name)
-                        column(SampleProduct::description)
-                    }
-                    rows {
-                        header {
-                            columnTitles("Id", "Name", "Description")
-                            attributes { height { px = 50 } }
-                        }
-                    }
-                    dataSource(SampleProduct.create(40))
-                }
-                space { widthInPoints = 100F }
-            }
-        }.export("text.pdf")*/
+        }.export("test.pdf")
     }
 }
