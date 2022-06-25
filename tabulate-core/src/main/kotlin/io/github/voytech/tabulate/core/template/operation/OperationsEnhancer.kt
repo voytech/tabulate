@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.core.template.operation
 
+import io.github.voytech.tabulate.core.invoke
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.Model
 import io.github.voytech.tabulate.core.model.isNullOrEmpty
@@ -13,18 +14,18 @@ import io.github.voytech.tabulate.core.template.layout.*
  * @since 0.2.0
  */
 internal class AttributesAwareExportOperation<CTX : RenderingContext, M : Model<M>, ATTR_CAT : Attribute<*>, E : AttributedContext<ATTR_CAT>>(
-    delegate: ReifiedOperation<CTX, ATTR_CAT, E, M>,
-    attributesOperations: AttributesOperations<CTX, M>,
-) : ReifiedOperation<CTX, ATTR_CAT, E, M>(delegate, delegate.typeInfo) {
+    private val delegate: ReifiedOperation<CTX, ATTR_CAT, E>,
+    attributesOperations: AttributesOperations<CTX>,
+) : Operation<CTX, ATTR_CAT, E> {
 
-    private val attributeOperations: List<AttributeOperation<CTX, M, ATTR_CAT, *, E>> =
-        attributesOperations.getOperationsBy(delegate.typeInfo)
+    private val attributeOperations: List<ReifiedAttributeOperation<CTX, ATTR_CAT, *, E>> =
+        attributesOperations.getOperationsBy(delegate.meta)
 
-    private val filteredOperationCache: AttributeClassBasedCache<ATTR_CAT, List<AttributeOperation<CTX, M, ATTR_CAT, *, E>>> =
+    private val filteredOperationCache: AttributeClassBasedCache<ATTR_CAT, List<ReifiedAttributeOperation<CTX, ATTR_CAT, out ATTR_CAT, E>>> =
         AttributeClassBasedCache()
 
     @Suppress("UNCHECKED_CAST")
-    private fun <OP : AttributeOperation<CTX, M, ATTR_CAT, *, E>> E.forEachOperation(
+    private fun <OP : ReifiedAttributeOperation<CTX, ATTR_CAT, out ATTR_CAT, E>> E.forEachOperation(
         unfiltered: List<OP>, consumer: (operation: OP) -> Boolean,
     ) {
         attributes?.let { _attributes ->
@@ -39,35 +40,43 @@ internal class AttributesAwareExportOperation<CTX : RenderingContext, M : Model<
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <ATTR : ATTR_CAT> AttributeOperation<CTX, M, ATTR_CAT, ATTR, E>.renderAttribute(
+    private fun <ATTR : ATTR_CAT> AttributeOperation<CTX, ATTR_CAT, ATTR, E>.renderAttribute(
         renderingContext: CTX,
         context: E,
-        clazz: Class<out ATTR_CAT>,
+        clazz: Class<ATTR>,
     ): Boolean {
         return context.getModelAttribute(clazz)?.let {
-            renderAttribute(renderingContext, context, it as ATTR).let { true }
+            invoke(renderingContext, context, it).let { true }
         } ?: false
     }
 
-    override fun render(renderingContext: CTX, context: E) {
+    override operator fun invoke(renderingContext: CTX, context: E) {
         context.withAttributeSetBasedCache {
             var operationRendered = false
             if (!context.attributes.isNullOrEmpty()) {
                 context.forEachOperation(attributeOperations) { attributeOperation ->
-                    if (attributeOperation.priority() >= 0 && !operationRendered) {
-                        delegate.render(renderingContext, context)
+                    if (attributeOperation.delegate.priority() >= 0 && !operationRendered) {
+                        delegate(renderingContext, context)
                         operationRendered = true
                     }
-                    with(attributeOperation) {
-                        renderAttribute(renderingContext, context, attributeClass())
+                    with(attributeOperation.delegate) {
+                        renderAttribute(renderingContext, context, attributeOperation.attributeClass())
                     }
                 }
             }
             if (!operationRendered) {
-                delegate.render(renderingContext, context)
+                delegate(renderingContext, context)
             }
         }
     }
+}
+
+class EnableAttributeOperationAwareness<CTX : RenderingContext>(private val attributesOperations: AttributesOperations<CTX>) :
+    Enhance<CTX> {
+    override fun <ATTR_CAT : Attribute<*>, E : AttributedContext<ATTR_CAT>> invoke(op: ReifiedOperation<CTX, ATTR_CAT, E>): Operation<CTX, ATTR_CAT, E> {
+        return AttributesAwareExportOperation(op, attributesOperations)
+    }
+
 }
 
 /**
@@ -106,12 +115,19 @@ class LayoutAwareOperation<CTX : RenderingContext, A : Attribute<*>, E : Attribu
         }
     }
 
-    override fun render(renderingContext: CTX, context: E) {
+    override operator fun invoke(renderingContext: CTX, context: E) {
         layouts?.usingLayout {
             resolveElementBoundaries(context).let { boundaries ->
-                delegate.render(renderingContext, context).also { boundaries?.applyOnLayout() }
+                delegate(renderingContext, context).also { boundaries?.applyOnLayout() }
                 commitBoundaries(context, boundaries)
             }
         }
     }
+}
+
+class EnableLayoutsAwareness<CTX : RenderingContext>(private val layouts: Layouts) : Enhance<CTX> {
+    override fun <ATTR_CAT : Attribute<*>, E : AttributedContext<ATTR_CAT>> invoke(op: ReifiedOperation<CTX, ATTR_CAT, E>): Operation<CTX, ATTR_CAT, E> {
+        return LayoutAwareOperation(op.delegate, layouts)
+    }
+
 }

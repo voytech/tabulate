@@ -6,37 +6,26 @@ import io.github.voytech.tabulate.core.model.Model
 import io.github.voytech.tabulate.core.template.exception.OutputBindingResolvingException
 import io.github.voytech.tabulate.core.template.layout.Layout
 import io.github.voytech.tabulate.core.template.layout.Layouts
-import io.github.voytech.tabulate.core.template.operation.LayoutAwareOperation
+import io.github.voytech.tabulate.core.template.operation.EnableLayoutsAwareness
 import io.github.voytech.tabulate.core.template.operation.Operations
 import io.github.voytech.tabulate.core.template.operation.factories.ExportOperationsFactory
 import io.github.voytech.tabulate.core.template.result.OutputBinding
-import io.github.voytech.tabulate.core.template.spi.ExportOperationsProvider
 import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
 
-typealias DiscoveredExportOperationFactories<R> = Map<Class<out Model<*>>, ExportOperationsProvider<R, *>>
-
-@Suppress("UNCHECKED_CAST")
-internal fun <R : RenderingContext, ARM : Model<ARM>> DiscoveredExportOperationFactories<R>.getOperations(
-    model: ARM,
-    layouts: Layouts,
-): Operations<R>? =
-    (this[model.javaClass] as? ExportOperationsProvider<R, ARM>)?.let { provider ->
-        if (provider is ExportOperationsFactory<R, ARM>) {
-            provider.enhanceExportOperations { LayoutAwareOperation(it, layouts) }
-        }
-        provider.createExportOperations()
-    }
 
 class ExportTemplateApis<R : RenderingContext>(
-    private val operationsFactories: DiscoveredExportOperationFactories<R>,
+    private val operationsFactory: ExportOperationsFactory<R>,
     private var layouts: Layouts = Layouts(),
 ) {
 
-    fun <ARM : Model<ARM>> getOperations(model: ARM): Operations<R>? =
-        operationsFactories.getOperations(model, layouts)
+    fun <ARM : Model<ARM>> getOperations(model: ARM): Operations<R> =
+        operationsFactory.createExportOperations(model, EnableLayoutsAwareness(layouts))
 
     fun getActiveLayout(): Layout = layouts.activeLayout()
+
     fun getActiveLayoutBoundaries(): BoundingRectangle = getActiveLayout().boundingRectangle
+
+    fun getRenderingContextType(): Class<R> = operationsFactory.renderingContext
 
     fun resetLayouts() {
         layouts = Layouts()
@@ -77,7 +66,7 @@ class StandaloneExportTemplate<CTX : TemplateContext<ARM>, ARM : Model<ARM>>(
     }
 
     fun <O : Any, T : Any> export(model: ARM, output: O, dataSource: Iterable<T> = emptyList()) {
-        val registry: ExportTemplateApis<RenderingContext> = loadRegistry(format)
+        val registry: ExportTemplateApis<RenderingContext> = ExportTemplateApis(ExportOperationsFactory(format))
         val renderingContext = loadRenderingContext(format)  //TODO it is inconvenient that in order to obtain valid DocumentFormat you need to load exportOperationFactory.
         val templateContext = delegate.buildTemplateContext(
             TemplateContext(

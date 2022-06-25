@@ -19,10 +19,10 @@ class SpacingBuilderState : CompositeModelBuilderState<Spacing> {
     internal var child: ModelBuilderState<*>? = null
 
     @get:JvmSynthetic
-    var widthInPoints: Float = 0f
+    var width: Width = Width.zero(UnitsOfMeasure.PT)
 
     @get:JvmSynthetic
-    var heightInPoints: Float = 0f
+    var height: Height = Height.zero(UnitsOfMeasure.PT)
 
     @JvmSynthetic
     override fun <E: Model<E>> bind(node: ModelBuilderState<E>) {
@@ -33,7 +33,7 @@ class SpacingBuilderState : CompositeModelBuilderState<Spacing> {
     override fun build(): Spacing = Spacing(
         child = child?.build(),
         id = UUID.randomUUID().toString(),
-        size = Size(Width(widthInPoints, UnitsOfMeasure.PT), Height(heightInPoints, UnitsOfMeasure.PT)),
+        size = Size(width, height),
         childOrientation = Orientation.HORIZONTAL
     )
 

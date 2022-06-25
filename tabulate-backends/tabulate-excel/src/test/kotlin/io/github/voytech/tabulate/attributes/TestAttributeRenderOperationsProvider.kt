@@ -8,17 +8,17 @@ import io.github.voytech.tabulate.components.table.operation.CellAttributeRender
 import io.github.voytech.tabulate.components.table.operation.CellContext
 import io.github.voytech.tabulate.components.table.operation.getSheetName
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.operation.AttributesOperations
 import io.github.voytech.tabulate.core.template.spi.AttributeOperationsProvider
+import io.github.voytech.tabulate.core.template.spi.BuildAttributeOperations
 import io.github.voytech.tabulate.excel.ApachePoiRenderingContext
 import io.github.voytech.tabulate.testsupport.TestRenderingContext
 
 
 class NoopTestAttributeRenderOperationsProvider : AttributeOperationsProvider<TestRenderingContext, Table<Any>> {
 
-     override fun createAttributeOperations(): AttributesOperations<TestRenderingContext, Table<Any>> = AttributesOperations.of(
-         NoopSimpleTestCellAttributeRenderOperation()
-     )
+     override fun provideAttributeOperations(): BuildAttributeOperations<TestRenderingContext> = {
+         operation(NoopSimpleTestCellAttributeRenderOperation())
+     }
 
     override fun getRenderingContextClass(): Class<TestRenderingContext> = TestRenderingContext::class.java
 
@@ -28,9 +28,9 @@ class NoopTestAttributeRenderOperationsProvider : AttributeOperationsProvider<Te
 
 class TestAttributeRenderOperationsProvider : AttributeOperationsProvider<ApachePoiRenderingContext, Table<Any>> {
 
-    override fun createAttributeOperations(): AttributesOperations<ApachePoiRenderingContext, Table<Any>> = AttributesOperations.of(
-        SimpleTestCellAttributeRenderOperation()
-    )
+    override fun provideAttributeOperations(): BuildAttributeOperations<ApachePoiRenderingContext> = {
+        operation(SimpleTestCellAttributeRenderOperation())
+    }
     override fun getRenderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
     override fun getModelClass(): Class<Table<Any>> = reify()
@@ -43,11 +43,8 @@ data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<Simp
     }
 }
 
-class SimpleTestCellAttributeRenderOperation :
-    CellAttributeRenderOperation<ApachePoiRenderingContext, SimpleTestCellAttribute>() {
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
-    override fun attributeClass(): Class<SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
-    override fun renderAttribute(
+class SimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<ApachePoiRenderingContext, SimpleTestCellAttribute>() {
+    override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: CellContext,
         attribute: SimpleTestCellAttribute
@@ -58,11 +55,9 @@ class SimpleTestCellAttributeRenderOperation :
     }
 }
 
-class NoopSimpleTestCellAttributeRenderOperation :
-    CellAttributeRenderOperation<TestRenderingContext, SimpleTestCellAttribute>() {
-    override fun renderingContextClass(): Class<TestRenderingContext> = TestRenderingContext::class.java
-    override fun attributeClass(): Class<SimpleTestCellAttribute> = SimpleTestCellAttribute::class.java
-    override fun renderAttribute(
+class NoopSimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<TestRenderingContext, SimpleTestCellAttribute>() {
+
+    override operator fun invoke(
         renderingContext: TestRenderingContext,
         context: CellContext,
         attribute: SimpleTestCellAttribute

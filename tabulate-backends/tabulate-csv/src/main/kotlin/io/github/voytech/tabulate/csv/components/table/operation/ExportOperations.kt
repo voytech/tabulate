@@ -6,10 +6,10 @@ import io.github.voytech.tabulate.components.table.operation.CellContext
 import io.github.voytech.tabulate.components.table.operation.EndRowOperation
 import io.github.voytech.tabulate.components.table.operation.StartRowOperation
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.operation.OperationsBuilder
-import io.github.voytech.tabulate.core.template.operation.factories.ExportOperationsFactory
+import io.github.voytech.tabulate.core.template.spi.BuildOperations
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat.Companion.format
+import io.github.voytech.tabulate.core.template.spi.ExportOperationsProvider
 import io.github.voytech.tabulate.csv.CsvRenderingContext
 import io.github.voytech.tabulate.csv.components.table.model.attributes.CellSeparatorCharacterAttribute
 
@@ -19,12 +19,12 @@ import io.github.voytech.tabulate.csv.components.table.model.attributes.CellSepa
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class CsvExportOperationsFactory : ExportOperationsFactory<CsvRenderingContext, Table<Any>>() {
+class CsvExportOperationsFactory : ExportOperationsProvider<CsvRenderingContext, Table<Any>>  {
 
     override fun getDocumentFormat(): DocumentFormat<CsvRenderingContext> = format("csv")
 
 
-    override fun provideExportOperations(): OperationsBuilder<CsvRenderingContext, Table<Any>>.() -> Unit = {
+    override fun provideExportOperations(): BuildOperations<CsvRenderingContext> = {
         operation(StartRowOperation { renderingContext, _ ->
             renderingContext.line.clear()
         })

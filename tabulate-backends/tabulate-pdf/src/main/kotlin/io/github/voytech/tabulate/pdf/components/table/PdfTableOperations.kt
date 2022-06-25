@@ -5,15 +5,15 @@ import io.github.voytech.tabulate.components.table.model.attributes.cell.CellTex
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.layout.boundaries
-import io.github.voytech.tabulate.core.template.operation.OperationsBuilder
-import io.github.voytech.tabulate.core.template.operation.factories.ExportOperationsFactory
+import io.github.voytech.tabulate.core.template.spi.BuildOperations
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat
+import io.github.voytech.tabulate.core.template.spi.ExportOperationsProvider
 import io.github.voytech.tabulate.pdf.PdfBoxRenderingContext
 import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType1Font
 import java.awt.Color
 
-class PdfTableOperations : ExportOperationsFactory<PdfBoxRenderingContext, Table<Any>>() {
+class PdfTableOperations : ExportOperationsProvider<PdfBoxRenderingContext, Table<Any>> {
 
     private fun font(context: CellContext): PDFont =
         context.getModelAttribute<CellTextStylesAttribute>()?.let {
@@ -33,7 +33,7 @@ class PdfTableOperations : ExportOperationsFactory<PdfBoxRenderingContext, Table
             style.fontColor?.let { Color(it.r,it.g,it.b) }
         } ?: Color.BLACK
 
-    override fun provideExportOperations(): OperationsBuilder<PdfBoxRenderingContext, Table<Any>>.() -> Unit = {
+    override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {
 
         operation(StartTableOperation { _, _ -> })
 

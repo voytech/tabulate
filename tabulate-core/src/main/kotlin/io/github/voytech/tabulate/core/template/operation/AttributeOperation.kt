@@ -1,37 +1,23 @@
 package io.github.voytech.tabulate.core.template.operation
 
+import io.github.voytech.tabulate.core.InvokeWithThreeParams
+import io.github.voytech.tabulate.core.ReifiedInvocation
+import io.github.voytech.tabulate.core.ThreeParamsBasedDispatch
+import io.github.voytech.tabulate.core.TypesInfo
 import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.AttributeClassifier
-import io.github.voytech.tabulate.core.model.Model
 import io.github.voytech.tabulate.core.template.RenderingContext
-
-
-typealias AttributeCategoryClass = Class<out Attribute<*>>
-typealias AttributeClass = Class<out Attribute<*>>
-
-
-data class AttributeOperationTypeInfo<
-        CTX : RenderingContext,
-        ARM : Model<ARM>,
-        ATTR_CAT : Attribute<*>,
-        ATTR : ATTR_CAT,
-        E : AttributedContext<ATTR_CAT>,
-        >(
-    val renderingContextType: Class<CTX>,
-    val operationContextType: Class<E>,
-    val attributeClassifier: AttributeClassifier<ATTR_CAT, ARM>,
-    val attributeType: Class<ATTR>,
-)
 
 /**
  * A base class for all exporting (rendering) attribute operations associated with specific rendering contexts.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-interface AttributeOperation<CTX : RenderingContext, ARM : Model<ARM>, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : AttributedContext<ATTR_CAT>> {
-    fun typeInfo(): AttributeOperationTypeInfo<CTX, ARM, ATTR_CAT, ATTR, E>
+interface AttributeOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : AttributedContext<ATTR_CAT>> :
+    InvokeWithThreeParams<CTX, E, ATTR> {
     fun priority(): Int = DEFAULT
-    fun renderAttribute(renderingContext: CTX, context: E, attribute: ATTR)
+
+    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
+    override operator fun invoke(renderingContext: CTX, context: E, attribute: ATTR)
 
     companion object {
         const val LOWEST = Int.MIN_VALUE
@@ -40,73 +26,38 @@ interface AttributeOperation<CTX : RenderingContext, ARM : Model<ARM>, ATTR_CAT 
     }
 }
 
-abstract class AbstractAttributeOperation<
-        CTX : RenderingContext,
-        ARM : Model<ARM>,
-        ATTR_CAT : Attribute<*>,
-        ATTR : ATTR_CAT,
-        E : AttributedContext<ATTR_CAT>,
-        > : AttributeOperation<CTX, ARM, ATTR_CAT, ATTR, E> {
-    override fun typeInfo(): AttributeOperationTypeInfo<CTX, ARM, ATTR_CAT, ATTR, E> =
-        AttributeOperationTypeInfo(
-            renderingContextClass(),
-            operationContextClass(),
-            classifier(),
-            attributeClass()
-        )
+typealias ReifiedAttributeOperation<CTX, CAT, ATTR, E> = ReifiedInvocation<AttributeOperation<CTX, CAT, ATTR, E>>
 
-    abstract fun renderingContextClass(): Class<CTX>
-
-    abstract fun operationContextClass(): Class<E>
-
-    abstract fun attributeClass(): Class<ATTR>
-
-    abstract fun classifier(): AttributeClassifier<ATTR_CAT, ARM>
-
-    companion object {
-        const val LOWEST = Int.MIN_VALUE
-        const val LOWER = -1
-        const val DEFAULT = 1
-    }
-}
-
-fun <CTX : RenderingContext, ARM : Model<ARM>, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : AttributedContext<ATTR_CAT>>
-        AttributeOperation<CTX, ARM, ATTR_CAT, ATTR, E>.attributeClass() = typeInfo().attributeType
+fun <CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR: ATTR_CAT, E : AttributedContext<ATTR_CAT>>
+        ReifiedAttributeOperation<CTX, ATTR_CAT, *, E>.attributeClass(): Class<ATTR> = meta.types.last() as Class<ATTR>
 
 /**
  * Specialised container for all discovered attribute operations.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-@Suppress("UNCHECKED_CAST")
-class AttributesOperations<CTX : RenderingContext, ARM : Model<ARM>> {
+@JvmInline
+value class AttributesOperations<CTX : RenderingContext>(private val dispatch: ThreeParamsBasedDispatch) {
 
-    private val attributeRenderOperations: MutableMap<AttributeCategoryClass, MutableMap<AttributeClass, AttributeOperation<CTX, ARM, *, *, *>>> =
-        mutableMapOf()
-
-    internal fun register(operation: AttributeOperation<CTX, ARM, *, *, *>) {
-        attributeRenderOperations.computeIfAbsent(operation.typeInfo().attributeClassifier.attributeCategory) {
-            mutableMapOf()
-        }[operation.typeInfo().attributeType] = operation
+    @Suppress("UNCHECKED_CAST")
+    internal fun <A : Attribute<*>, E : AttributedContext<A>> getOperationsBy(typeInfo: TypesInfo): List<ReifiedAttributeOperation<CTX, A, *, E>> {
+        return dispatch.find { it.dropLast(1) == typeInfo }.map { it as ReifiedAttributeOperation<CTX, A, *, E> }
+            .sortedBy { it.delegate.priority() }
     }
 
-    internal fun <A : Attribute<*>, E : AttributedContext<A>> getOperationsBy(typeInfo: OperationTypeInfo<CTX, ARM, A, E>): List<AttributeOperation<CTX, ARM, A, *, E>> {
-        return attributeRenderOperations[typeInfo.attributeClassifier.attributeCategory]?.values?.filter {
-            it.typeInfo().operationContextType == typeInfo.operationContextType
-        }?.sortedBy { it.priority() }?.map { it as AttributeOperation<CTX, ARM, A, *, E> } ?: emptyList()
+    internal fun isEmpty(): Boolean = dispatch.isEmpty()
+
+}
+
+class AttributeOperationsBuilder<CTX : RenderingContext>(val renderingContext: Class<CTX>) {
+    val dispatch: ThreeParamsBasedDispatch = ThreeParamsBasedDispatch()
+    inline fun <ATTR_CAT : Attribute<*>, reified E : AttributedContext<ATTR_CAT>, reified ATTR: ATTR_CAT> operation(op: AttributeOperation<CTX, ATTR_CAT, ATTR, E>) {
+        with(dispatch) {
+            op.bind(renderingContext, E::class.java, ATTR::class.java)
+        }
     }
 
-    internal fun isEmpty(): Boolean = attributeRenderOperations.isEmpty()
-
-    operator fun plusAssign(other: AttributesOperations<CTX, ARM>) {
-        other.attributeRenderOperations.values.map { it.values }.flatten().forEach { register(it) }
-    }
-
-    companion object {
-        fun <CTX : RenderingContext, ARM : Model<ARM>> of(vararg operations: AttributeOperation<CTX, ARM, *, *, *>): AttributesOperations<CTX, ARM> =
-            AttributesOperations<CTX, ARM>().apply {
-                operations.forEach { register(it) }
-            }
-    }
+    @JvmSynthetic
+    internal fun build(): AttributesOperations<CTX> = AttributesOperations(dispatch)
 
 }

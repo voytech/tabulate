@@ -20,38 +20,37 @@ class PdfBoxTabulateTests {
     fun `should correctly export two on same sheet, one next to each others`() {
         document {
             sheet {
-                name = "Sheet 1"
-                space { widthInPoints = 45f }
+                space {
+                    width { 25.pt() }
+                }
                 table<SampleProduct> {
                     attributes { columnWidth { px = 100 } }
                     columns {
                         column(SampleProduct::code) { attributes { text { fontColor = Colors.RED } }}
                         column(SampleProduct::name)
                         column(SampleProduct::description)
-                        column(SampleProduct::price) {
-                            //attributes { format { "[\$\$-409]#,##0.00;[RED]-[\$\$-409]#,##0.00" } }
-                        }
+                        column(SampleProduct::price)
                     }
                     rows { header("Id", "Name", "Description", "Price") }
                     dataSource(SampleProduct.create(4))
                 }
-                space { widthInPoints = 45f }
+                space { height { 45.pt() }  }
                 table<SampleProduct> {
                     attributes { columnWidth {  px = 100 } }
                     columns {
                         column(SampleProduct::code)
                         column(SampleProduct::name)
                         column(SampleProduct::description)
-                        column(SampleProduct::price) {
-                            //attributes { format { "[\$\$-409]#,##0.00;[RED]-[\$\$-409]#,##0.00" } }
-                        }
+                        column(SampleProduct::price)
                     }
                     rows { header("Id 2", "Name 2", "Description 2", "Price 2") }
                     dataSource(SampleProduct.create(14))
                 }
             }
             sheet {
-                name = "Sheet 2"
+                space {
+                    width { 25.pt() }
+                }
                 table<SampleProduct> {
                     attributes { columnWidth {  px = 100 } }
                     dataSource(SampleProduct.create(10))
@@ -59,6 +58,7 @@ class PdfBoxTabulateTests {
                         column(SampleProduct::code)
                         column(SampleProduct::name)
                     }
+                    rows { header("Id 2", "Name 2", "Description 2", "Price 2") }
                 }
             }
         }.export("test.pdf")

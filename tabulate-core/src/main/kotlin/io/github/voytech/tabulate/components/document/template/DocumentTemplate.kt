@@ -7,6 +7,7 @@ import io.github.voytech.tabulate.components.document.operation.DocumentStart
 import io.github.voytech.tabulate.core.api.builder.dsl.buildModel
 import io.github.voytech.tabulate.core.template.*
 import io.github.voytech.tabulate.core.template.exception.OutputBindingResolvingException
+import io.github.voytech.tabulate.core.template.operation.factories.ExportOperationsFactory
 import io.github.voytech.tabulate.core.template.result.OutputBinding
 import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
 import java.io.File
@@ -25,15 +26,15 @@ class DocumentTemplate(
     }
 
     fun <O : Any> export(model: Document, output: O) {
-        val registry: ExportTemplateApis<RenderingContext> = loadRegistry(format)
+        val registry: ExportTemplateApis<RenderingContext> = ExportTemplateApis(ExportOperationsFactory(format))
         val renderingContext = loadRenderingContext(format)
         val templateContext = DocumentTemplateContext(model)
         val operations = registry.getOperations(model)
         resolveOutputBinding(output).run {
             setOutput(renderingContext, output)
-            operations?.render(renderingContext, DocumentStart(templateContext))
+            operations.render(renderingContext, DocumentStart(templateContext))
             model.nodes.forEach { it.export(renderingContext, templateContext, registry) }
-            operations?.render(renderingContext, DocumentEnd(templateContext))
+            operations.render(renderingContext, DocumentEnd(templateContext))
             flush()
         }
     }

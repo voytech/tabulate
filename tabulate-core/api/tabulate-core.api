@@ -120,19 +120,17 @@ public final class io/github/voytech/tabulate/components/spacing/api/builder/Spa
 	public synthetic fun bind (Lio/github/voytech/tabulate/core/api/builder/ModelBuilderState;)V
 	public synthetic fun build ()Lio/github/voytech/tabulate/components/spacing/model/Spacing;
 	public synthetic fun build ()Ljava/lang/Object;
-	public final synthetic fun getHeightInPoints ()F
-	public final synthetic fun getWidthInPoints ()F
-	public final fun setHeightInPoints (F)V
-	public final fun setWidthInPoints (F)V
+	public final synthetic fun getHeight ()Lio/github/voytech/tabulate/core/model/Height;
+	public final synthetic fun getWidth ()Lio/github/voytech/tabulate/core/model/Width;
+	public final fun setHeight (Lio/github/voytech/tabulate/core/model/Height;)V
+	public final fun setWidth (Lio/github/voytech/tabulate/core/model/Width;)V
 }
 
 public final class io/github/voytech/tabulate/components/spacing/api/builder/dsl/SpacingBuilderApi : io/github/voytech/tabulate/core/api/builder/dsl/CompositeModelBuilderApi {
-	public final synthetic fun getHeightInPoints ()F
-	public static fun getHeightInPoints$delegate (Lio/github/voytech/tabulate/components/spacing/api/builder/dsl/SpacingBuilderApi;)Ljava/lang/Object;
-	public final synthetic fun getWidthInPoints ()F
-	public static fun getWidthInPoints$delegate (Lio/github/voytech/tabulate/components/spacing/api/builder/dsl/SpacingBuilderApi;)Ljava/lang/Object;
-	public final synthetic fun setHeightInPoints (F)V
-	public final synthetic fun setWidthInPoints (F)V
+	public final fun height (Lkotlin/jvm/functions/Function0;)V
+	public final fun pt (Ljava/lang/Number;)Lio/github/voytech/tabulate/core/model/MeasuredValue;
+	public final fun px (Ljava/lang/Number;)Lio/github/voytech/tabulate/core/model/MeasuredValue;
+	public final fun width (Lkotlin/jvm/functions/Function0;)V
 }
 
 public final class io/github/voytech/tabulate/components/spacing/api/builder/dsl/SpacingBuilderApiKt {
@@ -1317,10 +1315,9 @@ public final class io/github/voytech/tabulate/components/table/model/attributes/
 	public static final fun template (Lio/github/voytech/tabulate/components/table/api/builder/dsl/TableLevelAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
 }
 
-public abstract class io/github/voytech/tabulate/components/table/operation/CellAttributeRenderOperation : io/github/voytech/tabulate/core/template/operation/AbstractAttributeOperation {
+public abstract class io/github/voytech/tabulate/components/table/operation/CellAttributeRenderOperation : io/github/voytech/tabulate/core/template/operation/AttributeOperation {
 	public fun <init> ()V
-	public fun classifier ()Lio/github/voytech/tabulate/core/model/AttributeClassifier;
-	public fun operationContextClass ()Ljava/lang/Class;
+	public fun priority ()I
 }
 
 public final class io/github/voytech/tabulate/components/table/operation/CellContext : io/github/voytech/tabulate/core/template/operation/AttributedContext, io/github/voytech/tabulate/components/table/operation/RowCellLayoutElement {
@@ -1352,10 +1349,9 @@ public final class io/github/voytech/tabulate/components/table/operation/CellVal
 	public fun toString ()Ljava/lang/String;
 }
 
-public abstract class io/github/voytech/tabulate/components/table/operation/ColumnAttributeRenderOperation : io/github/voytech/tabulate/core/template/operation/AbstractAttributeOperation {
-	public fun <init> (Ljava/lang/Class;)V
-	public fun classifier ()Lio/github/voytech/tabulate/core/model/AttributeClassifier;
-	public fun operationContextClass ()Ljava/lang/Class;
+public abstract class io/github/voytech/tabulate/components/table/operation/ColumnAttributeRenderOperation : io/github/voytech/tabulate/core/template/operation/AttributeOperation {
+	public fun <init> ()V
+	public fun priority ()I
 }
 
 public abstract class io/github/voytech/tabulate/components/table/operation/ColumnContext : io/github/voytech/tabulate/core/template/operation/AttributedContext {
@@ -1429,10 +1425,9 @@ public abstract interface class io/github/voytech/tabulate/components/table/oper
 public abstract interface class io/github/voytech/tabulate/components/table/operation/RenderRowCellOperation : io/github/voytech/tabulate/core/template/operation/Operation {
 }
 
-public abstract class io/github/voytech/tabulate/components/table/operation/RowAttributeRenderOperation : io/github/voytech/tabulate/core/template/operation/AbstractAttributeOperation {
-	public fun <init> (Ljava/lang/Class;)V
-	public fun classifier ()Lio/github/voytech/tabulate/core/model/AttributeClassifier;
-	public fun operationContextClass ()Ljava/lang/Class;
+public abstract class io/github/voytech/tabulate/components/table/operation/RowAttributeRenderOperation : io/github/voytech/tabulate/core/template/operation/AttributeOperation {
+	public fun <init> ()V
+	public fun priority ()I
 }
 
 public abstract interface class io/github/voytech/tabulate/components/table/operation/RowCellCoordinate : io/github/voytech/tabulate/components/table/operation/ColumnCoordinate, io/github/voytech/tabulate/components/table/operation/RowCoordinate {
@@ -1493,10 +1488,9 @@ public abstract interface class io/github/voytech/tabulate/components/table/oper
 public abstract interface class io/github/voytech/tabulate/components/table/operation/StartTableOperation : io/github/voytech/tabulate/core/template/operation/Operation {
 }
 
-public abstract class io/github/voytech/tabulate/components/table/operation/TableAttributeRenderOperation : io/github/voytech/tabulate/core/template/operation/AbstractAttributeOperation {
-	public fun <init> (Ljava/lang/Class;)V
-	public fun classifier ()Lio/github/voytech/tabulate/core/model/AttributeClassifier;
-	public fun operationContextClass ()Ljava/lang/Class;
+public abstract class io/github/voytech/tabulate/components/table/operation/TableAttributeRenderOperation : io/github/voytech/tabulate/core/template/operation/AttributeOperation {
+	public fun <init> ()V
+	public fun priority ()I
 }
 
 public abstract class io/github/voytech/tabulate/components/table/operation/TableContext : io/github/voytech/tabulate/core/template/operation/AttributedContext {
@@ -1603,6 +1597,73 @@ public abstract interface class io/github/voytech/tabulate/components/table/temp
 	public abstract fun nextRow (Ljava/lang/Object;)V
 }
 
+public abstract class io/github/voytech/tabulate/core/GenericParamsBasedDispatch {
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/util/Map;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun find (Ljava/util/function/Predicate;)Ljava/util/List;
+	public final fun getContainer ()Ljava/util/Map;
+	public final fun isEmpty ()Z
+	public final fun transform (Lkotlin/jvm/functions/Function1;)V
+}
+
+public abstract interface class io/github/voytech/tabulate/core/Invoke {
+}
+
+public abstract interface class io/github/voytech/tabulate/core/InvokeWithOneParam : io/github/voytech/tabulate/core/Invoke {
+	public abstract fun invoke (Ljava/lang/Object;)V
+}
+
+public abstract interface class io/github/voytech/tabulate/core/InvokeWithThreeParams : io/github/voytech/tabulate/core/Invoke {
+	public abstract fun invoke (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V
+}
+
+public abstract interface class io/github/voytech/tabulate/core/InvokeWithTwoParams : io/github/voytech/tabulate/core/Invoke {
+	public abstract fun invoke (Ljava/lang/Object;Ljava/lang/Object;)V
+}
+
+public final class io/github/voytech/tabulate/core/ReifiedInvocation {
+	public fun <init> (Lio/github/voytech/tabulate/core/TypesInfo;Lio/github/voytech/tabulate/core/Invoke;)V
+	public final fun getDelegate ()Lio/github/voytech/tabulate/core/Invoke;
+	public final fun getMeta ()Lio/github/voytech/tabulate/core/TypesInfo;
+}
+
+public final class io/github/voytech/tabulate/core/SingleParamBasedDispatch : io/github/voytech/tabulate/core/GenericParamsBasedDispatch {
+	public fun <init> ()V
+	public final fun bind (Lio/github/voytech/tabulate/core/InvokeWithOneParam;Ljava/lang/Class;)V
+	public final fun invoke (Ljava/lang/Object;)V
+}
+
+public final class io/github/voytech/tabulate/core/ThreeParamsBasedDispatch : io/github/voytech/tabulate/core/GenericParamsBasedDispatch {
+	public fun <init> ()V
+	public final fun bind (Lio/github/voytech/tabulate/core/InvokeWithThreeParams;Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/Class;)V
+	public final fun invoke (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V
+}
+
+public final class io/github/voytech/tabulate/core/TwoParamsBasedDispatch : io/github/voytech/tabulate/core/GenericParamsBasedDispatch {
+	public fun <init> ()V
+	public final fun bind (Lio/github/voytech/tabulate/core/InvokeWithTwoParams;Ljava/lang/Class;Ljava/lang/Class;)V
+	public final fun invoke (Ljava/lang/Object;Ljava/lang/Object;)V
+}
+
+public final class io/github/voytech/tabulate/core/TypesInfo {
+	public static final field Companion Lio/github/voytech/tabulate/core/TypesInfo$Companion;
+	public fun <init> (Ljava/util/List;)V
+	public final fun dropLast (I)Lio/github/voytech/tabulate/core/TypesInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTypes ()Ljava/util/List;
+	public fun hashCode ()I
+}
+
+public final class io/github/voytech/tabulate/core/TypesInfo$Companion {
+	public final fun invoke ([Ljava/lang/Class;)Lio/github/voytech/tabulate/core/TypesInfo;
+}
+
+public final class io/github/voytech/tabulate/core/TypesKt {
+	public static final fun invoke (Lio/github/voytech/tabulate/core/ReifiedInvocation;Ljava/lang/Object;)V
+	public static final fun invoke (Lio/github/voytech/tabulate/core/ReifiedInvocation;Ljava/lang/Object;Ljava/lang/Object;)V
+	public static final fun invoke (Lio/github/voytech/tabulate/core/ReifiedInvocation;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V
+}
+
 public abstract class io/github/voytech/tabulate/core/api/builder/AttributeBuilder : io/github/voytech/tabulate/core/api/builder/Builder {
 	public fun <init> ()V
 	public synthetic fun build$tabulate_core ()Ljava/lang/Object;
@@ -1696,10 +1757,6 @@ public final class io/github/voytech/tabulate/core/model/Attributes : io/github/
 	public final fun plus (Lio/github/voytech/tabulate/core/model/Attributes;)Lio/github/voytech/tabulate/core/model/Attributes;
 }
 
-public abstract class io/github/voytech/tabulate/core/model/AttributesAware {
-	public fun <init> (Lio/github/voytech/tabulate/core/model/CategorizedAttributes;)V
-}
-
 public final class io/github/voytech/tabulate/core/model/AttributesKt {
 	public static final fun isNullOrEmpty (Lio/github/voytech/tabulate/core/model/Attributes;)Z
 }
@@ -1776,10 +1833,20 @@ public final class io/github/voytech/tabulate/core/model/LayoutKt {
 	public static final fun switchUnitOfMeasure (Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;FLio/github/voytech/tabulate/core/model/UnitsOfMeasure;)F
 }
 
-public class io/github/voytech/tabulate/core/model/Measure {
+public abstract class io/github/voytech/tabulate/core/model/Measure {
+	public synthetic fun <init> (FLio/github/voytech/tabulate/core/model/UnitsOfMeasure;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getUnit ()Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;
+	public fun getValue ()F
+}
+
+public final class io/github/voytech/tabulate/core/model/MeasuredValue : io/github/voytech/tabulate/core/model/Measure {
 	public fun <init> (FLio/github/voytech/tabulate/core/model/UnitsOfMeasure;)V
 	public fun getUnit ()Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;
 	public fun getValue ()F
+	public final fun height ()Lio/github/voytech/tabulate/core/model/Height;
+	public final fun width ()Lio/github/voytech/tabulate/core/model/Width;
+	public final fun x ()Lio/github/voytech/tabulate/core/model/X;
+	public final fun y ()Lio/github/voytech/tabulate/core/model/Y;
 }
 
 public abstract interface class io/github/voytech/tabulate/core/model/Model {
@@ -1929,11 +1996,12 @@ public abstract interface class io/github/voytech/tabulate/core/template/ExportT
 }
 
 public final class io/github/voytech/tabulate/core/template/ExportTemplateApis {
-	public fun <init> (Ljava/util/Map;Lio/github/voytech/tabulate/core/template/layout/Layouts;)V
-	public synthetic fun <init> (Ljava/util/Map;Lio/github/voytech/tabulate/core/template/layout/Layouts;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lio/github/voytech/tabulate/core/template/operation/factories/ExportOperationsFactory;Lio/github/voytech/tabulate/core/template/layout/Layouts;)V
+	public synthetic fun <init> (Lio/github/voytech/tabulate/core/template/operation/factories/ExportOperationsFactory;Lio/github/voytech/tabulate/core/template/layout/Layouts;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getActiveLayout ()Lio/github/voytech/tabulate/core/template/layout/Layout;
 	public final fun getActiveLayoutBoundaries ()Lio/github/voytech/tabulate/core/model/BoundingRectangle;
-	public final fun getOperations (Lio/github/voytech/tabulate/core/model/Model;)Lio/github/voytech/tabulate/core/template/operation/Operations;
+	public final fun getOperations-ND7xy6o (Lio/github/voytech/tabulate/core/model/Model;)Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;
+	public final fun getRenderingContextType ()Ljava/lang/Class;
 	public final fun resetLayouts ()V
 }
 
@@ -1967,7 +2035,7 @@ public class io/github/voytech/tabulate/core/template/TemplateContext {
 	public final fun getCustomAttributes ()Ljava/util/Map;
 	public final fun getModel ()Lio/github/voytech/tabulate/core/model/Model;
 	public final fun getModelAttributes ()Lio/github/voytech/tabulate/core/model/CategorizedAttributes;
-	public final fun getOperations (Lio/github/voytech/tabulate/core/template/ExportTemplateApis;)Lio/github/voytech/tabulate/core/template/operation/Operations;
+	public final fun getOperations-dA20k-I (Lio/github/voytech/tabulate/core/template/ExportTemplateApis;)Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;
 	public final fun getStateAttributes ()Ljava/util/Map;
 }
 
@@ -2120,31 +2188,13 @@ public abstract interface class io/github/voytech/tabulate/core/template/layout/
 	public abstract fun setRowHeight (ILio/github/voytech/tabulate/core/model/Height;)V
 }
 
-public abstract class io/github/voytech/tabulate/core/template/operation/AbstractAttributeOperation : io/github/voytech/tabulate/core/template/operation/AttributeOperation {
-	public static final field Companion Lio/github/voytech/tabulate/core/template/operation/AbstractAttributeOperation$Companion;
-	public static final field DEFAULT I
-	public static final field LOWER I
-	public static final field LOWEST I
-	public fun <init> ()V
-	public abstract fun attributeClass ()Ljava/lang/Class;
-	public abstract fun classifier ()Lio/github/voytech/tabulate/core/model/AttributeClassifier;
-	public abstract fun operationContextClass ()Ljava/lang/Class;
-	public fun priority ()I
-	public abstract fun renderingContextClass ()Ljava/lang/Class;
-	public fun typeInfo ()Lio/github/voytech/tabulate/core/template/operation/AttributeOperationTypeInfo;
-}
-
-public final class io/github/voytech/tabulate/core/template/operation/AbstractAttributeOperation$Companion {
-}
-
-public abstract interface class io/github/voytech/tabulate/core/template/operation/AttributeOperation {
+public abstract interface class io/github/voytech/tabulate/core/template/operation/AttributeOperation : io/github/voytech/tabulate/core/InvokeWithThreeParams {
 	public static final field Companion Lio/github/voytech/tabulate/core/template/operation/AttributeOperation$Companion;
 	public static final field DEFAULT I
 	public static final field LOWER I
 	public static final field LOWEST I
+	public abstract fun invoke (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;Lio/github/voytech/tabulate/core/model/Attribute;)V
 	public abstract fun priority ()I
-	public abstract fun renderAttribute (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;Lio/github/voytech/tabulate/core/model/Attribute;)V
-	public abstract fun typeInfo ()Lio/github/voytech/tabulate/core/template/operation/AttributeOperationTypeInfo;
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/AttributeOperation$Companion {
@@ -2158,24 +2208,13 @@ public final class io/github/voytech/tabulate/core/template/operation/AttributeO
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/AttributeOperationKt {
-	public static final fun attributeClass (Lio/github/voytech/tabulate/core/template/operation/AttributeOperation;)Ljava/lang/Class;
+	public static final fun attributeClass (Lio/github/voytech/tabulate/core/ReifiedInvocation;)Ljava/lang/Class;
 }
 
-public final class io/github/voytech/tabulate/core/template/operation/AttributeOperationTypeInfo {
-	public fun <init> (Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/model/AttributeClassifier;Ljava/lang/Class;)V
-	public final fun component1 ()Ljava/lang/Class;
-	public final fun component2 ()Ljava/lang/Class;
-	public final fun component3 ()Lio/github/voytech/tabulate/core/model/AttributeClassifier;
-	public final fun component4 ()Ljava/lang/Class;
-	public final fun copy (Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/model/AttributeClassifier;Ljava/lang/Class;)Lio/github/voytech/tabulate/core/template/operation/AttributeOperationTypeInfo;
-	public static synthetic fun copy$default (Lio/github/voytech/tabulate/core/template/operation/AttributeOperationTypeInfo;Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/model/AttributeClassifier;Ljava/lang/Class;ILjava/lang/Object;)Lio/github/voytech/tabulate/core/template/operation/AttributeOperationTypeInfo;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAttributeClassifier ()Lio/github/voytech/tabulate/core/model/AttributeClassifier;
-	public final fun getAttributeType ()Ljava/lang/Class;
-	public final fun getOperationContextType ()Ljava/lang/Class;
-	public final fun getRenderingContextType ()Ljava/lang/Class;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
+public final class io/github/voytech/tabulate/core/template/operation/AttributeOperationsBuilder {
+	public fun <init> (Ljava/lang/Class;)V
+	public final fun getDispatch ()Lio/github/voytech/tabulate/core/ThreeParamsBasedDispatch;
+	public final fun getRenderingContext ()Ljava/lang/Class;
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/AttributeSetBasedCacheKt {
@@ -2193,13 +2232,16 @@ public abstract class io/github/voytech/tabulate/core/template/operation/Attribu
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/AttributesOperations {
-	public static final field Companion Lio/github/voytech/tabulate/core/template/operation/AttributesOperations$Companion;
-	public fun <init> ()V
-	public final fun plusAssign (Lio/github/voytech/tabulate/core/template/operation/AttributesOperations;)V
-}
-
-public final class io/github/voytech/tabulate/core/template/operation/AttributesOperations$Companion {
-	public final fun of ([Lio/github/voytech/tabulate/core/template/operation/AttributeOperation;)Lio/github/voytech/tabulate/core/template/operation/AttributesOperations;
+	public static final synthetic fun box-impl (Lio/github/voytech/tabulate/core/ThreeParamsBasedDispatch;)Lio/github/voytech/tabulate/core/template/operation/AttributesOperations;
+	public static fun constructor-impl (Lio/github/voytech/tabulate/core/ThreeParamsBasedDispatch;)Lio/github/voytech/tabulate/core/ThreeParamsBasedDispatch;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Lio/github/voytech/tabulate/core/ThreeParamsBasedDispatch;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Lio/github/voytech/tabulate/core/ThreeParamsBasedDispatch;Lio/github/voytech/tabulate/core/ThreeParamsBasedDispatch;)Z
+	public fun hashCode ()I
+	public static fun hashCode-impl (Lio/github/voytech/tabulate/core/ThreeParamsBasedDispatch;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Lio/github/voytech/tabulate/core/ThreeParamsBasedDispatch;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Lio/github/voytech/tabulate/core/ThreeParamsBasedDispatch;
 }
 
 public abstract interface class io/github/voytech/tabulate/core/template/operation/Context {
@@ -2212,67 +2254,59 @@ public abstract class io/github/voytech/tabulate/core/template/operation/Context
 	public final fun setAdditionalAttributes (Ljava/util/Map;)V
 }
 
-public abstract interface class io/github/voytech/tabulate/core/template/operation/Enhance : kotlin/jvm/functions/Function1 {
+public final class io/github/voytech/tabulate/core/template/operation/EnableAttributeOperationAwareness : io/github/voytech/tabulate/core/template/operation/Enhance {
+	public synthetic fun <init> (Lio/github/voytech/tabulate/core/ThreeParamsBasedDispatch;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun invoke (Lio/github/voytech/tabulate/core/ReifiedInvocation;)Lio/github/voytech/tabulate/core/template/operation/Operation;
+}
+
+public final class io/github/voytech/tabulate/core/template/operation/EnableLayoutsAwareness : io/github/voytech/tabulate/core/template/operation/Enhance {
+	public fun <init> (Lio/github/voytech/tabulate/core/template/layout/Layouts;)V
+	public fun invoke (Lio/github/voytech/tabulate/core/ReifiedInvocation;)Lio/github/voytech/tabulate/core/template/operation/Operation;
+}
+
+public abstract interface class io/github/voytech/tabulate/core/template/operation/Enhance {
+	public abstract fun invoke (Lio/github/voytech/tabulate/core/ReifiedInvocation;)Lio/github/voytech/tabulate/core/template/operation/Operation;
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/LayoutAwareOperation : io/github/voytech/tabulate/core/template/operation/Operation {
 	public fun <init> (Lio/github/voytech/tabulate/core/template/operation/Operation;Lio/github/voytech/tabulate/core/template/layout/Layouts;)V
 	public synthetic fun <init> (Lio/github/voytech/tabulate/core/template/operation/Operation;Lio/github/voytech/tabulate/core/template/layout/Layouts;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun render (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
+	public fun invoke (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
+	public synthetic fun invoke (Ljava/lang/Object;Ljava/lang/Object;)V
 }
 
-public abstract interface class io/github/voytech/tabulate/core/template/operation/Operation {
-	public abstract fun render (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
-}
-
-public final class io/github/voytech/tabulate/core/template/operation/OperationTypeInfo {
-	public fun <init> (Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/model/AttributeClassifier;)V
-	public final fun component1 ()Ljava/lang/Class;
-	public final fun component2 ()Ljava/lang/Class;
-	public final fun component3 ()Lio/github/voytech/tabulate/core/model/AttributeClassifier;
-	public final fun copy (Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/model/AttributeClassifier;)Lio/github/voytech/tabulate/core/template/operation/OperationTypeInfo;
-	public static synthetic fun copy$default (Lio/github/voytech/tabulate/core/template/operation/OperationTypeInfo;Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/model/AttributeClassifier;ILjava/lang/Object;)Lio/github/voytech/tabulate/core/template/operation/OperationTypeInfo;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAttributeClassifier ()Lio/github/voytech/tabulate/core/model/AttributeClassifier;
-	public final fun getOperationContextType ()Ljava/lang/Class;
-	public final fun getRenderingContextType ()Ljava/lang/Class;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
+public abstract interface class io/github/voytech/tabulate/core/template/operation/Operation : io/github/voytech/tabulate/core/InvokeWithTwoParams {
+	public abstract fun invoke (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/Operations {
-	public static final field Companion Lio/github/voytech/tabulate/core/template/operation/Operations$Companion;
-	public fun <init> (Ljava/util/Map;)V
-	public final fun render (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
-}
-
-public final class io/github/voytech/tabulate/core/template/operation/Operations$Companion {
-	public final fun getLogger ()Ljava/util/logging/Logger;
+	public static final synthetic fun box-impl (Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;)Lio/github/voytech/tabulate/core/template/operation/Operations;
+	public static fun constructor-impl (Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;)Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;)Z
+	public fun hashCode ()I
+	public static fun hashCode-impl (Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;)I
+	public static final fun render-impl (Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/OperationsBuilder {
-	public fun <init> (Ljava/lang/Class;Ljava/lang/Class;)V
-	public final fun enhanceOperations (Lio/github/voytech/tabulate/core/template/operation/Enhance;)Lio/github/voytech/tabulate/core/template/operation/OperationsBuilder;
-	public final fun operation (Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/template/operation/Operation;)V
+	public fun <init> (Ljava/lang/Class;)V
+	public final fun getDispatch ()Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;
+	public final fun getRenderingContext ()Ljava/lang/Class;
 }
 
-public class io/github/voytech/tabulate/core/template/operation/ReifiedOperation : io/github/voytech/tabulate/core/template/operation/Operation {
-	public fun <init> (Lio/github/voytech/tabulate/core/template/operation/Operation;Lio/github/voytech/tabulate/core/template/operation/OperationTypeInfo;)V
-	public fun render (Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
+public final class io/github/voytech/tabulate/core/template/operation/factories/AttributeOperationsFactory {
+	public fun <init> (Ljava/lang/Class;)V
+	public final fun createAttributeOperations-OpqrNBc (Lio/github/voytech/tabulate/core/model/Model;)Lio/github/voytech/tabulate/core/ThreeParamsBasedDispatch;
 }
 
-public abstract class io/github/voytech/tabulate/core/template/operation/factories/AttributeOperationsFactory : io/github/voytech/tabulate/core/template/spi/AttributeOperationsProvider {
-	public fun <init> ()V
-	public final fun createAttributeOperations ()Lio/github/voytech/tabulate/core/template/operation/AttributesOperations;
-	protected fun provideAttributeOperations ()Ljava/util/Set;
-}
-
-public abstract class io/github/voytech/tabulate/core/template/operation/factories/ExportOperationsFactory : io/github/voytech/tabulate/core/template/operation/factories/AttributeOperationsFactory, io/github/voytech/tabulate/core/template/spi/OperationsBundleProvider {
-	public fun <init> ()V
-	public final fun createExportOperations ()Lio/github/voytech/tabulate/core/template/operation/Operations;
-	public final fun enhanceExportOperations (Lio/github/voytech/tabulate/core/template/operation/Enhance;)Z
-	public final fun getRenderingContextClass ()Ljava/lang/Class;
-	protected abstract fun provideExportOperations ()Lkotlin/jvm/functions/Function1;
+public final class io/github/voytech/tabulate/core/template/operation/factories/ExportOperationsFactory {
+	public fun <init> (Lio/github/voytech/tabulate/core/template/DocumentFormat;)V
+	public final fun createExportOperations-6Zcl9PE (Lio/github/voytech/tabulate/core/model/Model;[Lio/github/voytech/tabulate/core/template/operation/Enhance;)Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;
 }
 
 public abstract interface class io/github/voytech/tabulate/core/template/result/OutputBinding {
@@ -2298,7 +2332,7 @@ public abstract class io/github/voytech/tabulate/core/template/result/OutputStre
 }
 
 public abstract interface class io/github/voytech/tabulate/core/template/spi/AttributeOperationsProvider : io/github/voytech/tabulate/core/template/spi/ModelAware, io/github/voytech/tabulate/core/template/spi/RenderingContextAware {
-	public abstract fun createAttributeOperations ()Lio/github/voytech/tabulate/core/template/operation/AttributesOperations;
+	public abstract fun provideAttributeOperations ()Lkotlin/jvm/functions/Function1;
 }
 
 public final class io/github/voytech/tabulate/core/template/spi/DocumentFormat {
@@ -2314,9 +2348,8 @@ public final class io/github/voytech/tabulate/core/template/spi/DocumentFormat$C
 	public static synthetic fun format$default (Lio/github/voytech/tabulate/core/template/spi/DocumentFormat$Companion;Ljava/lang/String;Ljava/lang/Class;Ljava/lang/String;ILjava/lang/Object;)Lio/github/voytech/tabulate/core/template/spi/DocumentFormat;
 }
 
-public abstract interface class io/github/voytech/tabulate/core/template/spi/ExportOperationsProvider : io/github/voytech/tabulate/core/template/spi/Identifiable {
-	public abstract fun createExportOperations ()Lio/github/voytech/tabulate/core/template/operation/Operations;
-	public abstract fun getModelClass ()Ljava/lang/Class;
+public abstract interface class io/github/voytech/tabulate/core/template/spi/ExportOperationsProvider : io/github/voytech/tabulate/core/template/spi/Identifiable, io/github/voytech/tabulate/core/template/spi/ModelAware {
+	public abstract fun provideExportOperations ()Lkotlin/jvm/functions/Function1;
 }
 
 public final class io/github/voytech/tabulate/core/template/spi/ExportOperationsProviderKt {

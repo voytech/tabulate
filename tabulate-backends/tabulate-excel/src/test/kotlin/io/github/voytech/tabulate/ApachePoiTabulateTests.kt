@@ -699,7 +699,7 @@ class ApachePoiTabulateTests {
                     rows { header("Id", "Name", "Description", "Price") }
                     dataSource(SampleProduct.create(4))
                 }
-                space { widthInPoints = 45f }
+                space { width { 45f.pt() } }
                 table<SampleProduct> {
                     attributes { columnWidth { auto = true } }
                     columns {

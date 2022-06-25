@@ -4,6 +4,10 @@ import io.github.voytech.tabulate.components.spacing.api.builder.SpacingBuilderS
 import io.github.voytech.tabulate.components.spacing.model.Spacing
 import io.github.voytech.tabulate.core.api.builder.dsl.CompositeModelBuilderApi
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
+import io.github.voytech.tabulate.core.model.Height
+import io.github.voytech.tabulate.core.model.MeasuredValue
+import io.github.voytech.tabulate.core.model.UnitsOfMeasure
+import io.github.voytech.tabulate.core.model.Width
 
 /**
  * Kotlin type-safe DSL document sheet builder API for defining entire document sheet.
@@ -16,11 +20,22 @@ class SpacingBuilderApi internal constructor(): CompositeModelBuilderApi<Spacing
 
     @set:JvmSynthetic
     @get:JvmSynthetic
-    var widthInPoints: Float by builder::widthInPoints
+    private var width: Width by builder::width
 
     @set:JvmSynthetic
     @get:JvmSynthetic
-    var heightInPoints: Float by builder::heightInPoints
+    private var height: Height by builder::height
+
+    fun Number.pt(): MeasuredValue = MeasuredValue(toFloat(), UnitsOfMeasure.PT)
+    fun Number.px(): MeasuredValue = MeasuredValue(toFloat(), UnitsOfMeasure.PX)
+
+    fun width(block: () -> MeasuredValue) {
+        width = block().width()
+    }
+
+    fun height(block: () -> MeasuredValue) {
+        height = block().height()
+    }
 }
 
 fun CompositeModelBuilderApi<*,*>.space(block: SpacingBuilderApi.() -> Unit) = bind(SpacingBuilderApi().apply(block))

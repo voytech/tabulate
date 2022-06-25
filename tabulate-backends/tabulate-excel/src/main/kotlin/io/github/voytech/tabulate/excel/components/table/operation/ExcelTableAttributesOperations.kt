@@ -40,11 +40,8 @@ import java.io.FileInputStream
  */
 class CellTextStylesAttributeRenderOperation :
     CellAttributeRenderOperation<ApachePoiRenderingContext, CellTextStylesAttribute>() {
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
-    override fun attributeClass(): Class<CellTextStylesAttribute> = CellTextStylesAttribute::class.java
-
-    override fun renderAttribute(
+    override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: CellContext,
         attribute: CellTextStylesAttribute,
@@ -78,11 +75,8 @@ class CellTextStylesAttributeRenderOperation :
  */
 class CellBackgroundAttributeRenderOperation :
     CellAttributeRenderOperation<ApachePoiRenderingContext, CellBackgroundAttribute>() {
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
-    override fun attributeClass(): Class<CellBackgroundAttribute> = CellBackgroundAttribute::class.java
-
-    override fun renderAttribute(
+    override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: CellContext,
         attribute: CellBackgroundAttribute,
@@ -125,11 +119,8 @@ class CellBackgroundAttributeRenderOperation :
  */
 class CellBordersAttributeRenderOperation :
     CellAttributeRenderOperation<ApachePoiRenderingContext, CellBordersAttribute>() {
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
-    override fun attributeClass(): Class<CellBordersAttribute> = CellBordersAttribute::class.java
-
-    override fun renderAttribute(
+    override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: CellContext,
         attribute: CellBordersAttribute,
@@ -166,12 +157,9 @@ class CellBordersAttributeRenderOperation :
  * @since 0.2.0
  */
 class RowBordersAttributeRenderOperation :
-    RowAttributeRenderOperation<ApachePoiRenderingContext, RowBordersAttribute, RowEnd<*>>(RowEnd::class.java) {
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
+    RowAttributeRenderOperation<ApachePoiRenderingContext, RowBordersAttribute, RowEnd<*>>() {
 
-    override fun attributeClass(): Class<RowBordersAttribute> = RowBordersAttribute::class.java
-
-    override fun renderAttribute(
+    override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: RowEnd<*>,
         attribute: RowBordersAttribute,
@@ -215,11 +203,8 @@ class RowBordersAttributeRenderOperation :
  */
 class CellAlignmentAttributeRenderOperation :
     CellAttributeRenderOperation<ApachePoiRenderingContext, CellAlignmentAttribute>() {
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
-    override fun attributeClass(): Class<CellAlignmentAttribute> = CellAlignmentAttribute::class.java
-
-    override fun renderAttribute(
+    override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: CellContext,
         attribute: CellAlignmentAttribute,
@@ -261,11 +246,8 @@ class CellAlignmentAttributeRenderOperation :
  */
 class CellDataFormatAttributeRenderOperation :
     CellAttributeRenderOperation<ApachePoiRenderingContext, CellExcelDataFormatAttribute>() {
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
 
-    override fun attributeClass(): Class<CellExcelDataFormatAttribute> = CellExcelDataFormatAttribute::class.java
-
-    override fun renderAttribute(
+    override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: CellContext,
         attribute: CellExcelDataFormatAttribute,
@@ -287,14 +269,9 @@ class CellDataFormatAttributeRenderOperation :
  * @since 0.1.0
  */
 class ColumnWidthAttributeRenderOperation :
-    ColumnAttributeRenderOperation<ApachePoiRenderingContext, ColumnWidthAttribute, ColumnEnd>(
-        ColumnEnd::class.java
-    ) {
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
+    ColumnAttributeRenderOperation<ApachePoiRenderingContext, ColumnWidthAttribute, ColumnEnd>() {
 
-    override fun attributeClass(): Class<ColumnWidthAttribute> = ColumnWidthAttribute::class.java
-
-    override fun renderAttribute(
+    override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: ColumnEnd,
         attribute: ColumnWidthAttribute,
@@ -342,10 +319,9 @@ class ColumnWidthAttributeRenderOperation :
  * @since 0.1.0
  */
 class RowHeightAttributeRenderOperation :
-    RowAttributeRenderOperation<ApachePoiRenderingContext, RowHeightAttribute, RowStart>(RowStart::class.java) {
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
-    override fun attributeClass(): Class<RowHeightAttribute> = RowHeightAttribute::class.java
-    override fun renderAttribute(
+    RowAttributeRenderOperation<ApachePoiRenderingContext, RowHeightAttribute, RowStart>() {
+
+    override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: RowStart,
         attribute: RowHeightAttribute,
@@ -365,12 +341,9 @@ class RowHeightAttributeRenderOperation :
  * @since 0.1.0
  */
 class FilterAndSortTableAttributeRenderOperation :
-    TableAttributeRenderOperation<ApachePoiRenderingContext, FilterAndSortTableAttribute, TableStart>(
-        TableStart::class.java
-    ) {
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
-    override fun attributeClass(): Class<FilterAndSortTableAttribute> = FilterAndSortTableAttribute::class.java
-    override fun renderAttribute(
+    TableAttributeRenderOperation<ApachePoiRenderingContext, FilterAndSortTableAttribute, TableStart>() {
+
+    override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: TableStart,
         attribute: FilterAndSortTableAttribute,
@@ -396,13 +369,9 @@ class FilterAndSortTableAttributeRenderOperation :
  * @since 0.1.0
  */
 class TemplateFileAttributeRenderOperation :
-    TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute, TableStart>(
-        TableStart::class.java
-    ) {
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
-    override fun attributeClass(): Class<TemplateFileAttribute> = TemplateFileAttribute::class.java
+    TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute, TableStart>() {
     override fun priority() = -1
-    override fun renderAttribute(
+    override fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: TableStart,
         attribute: TemplateFileAttribute,
@@ -420,9 +389,7 @@ class TemplateFileAttributeRenderOperation :
  */
 class CellCommentAttributeRenderOperation :
     CellAttributeRenderOperation<ApachePoiRenderingContext, CellCommentAttribute>() {
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
-    override fun attributeClass(): Class<CellCommentAttribute> = CellCommentAttribute::class.java
-    override fun renderAttribute(
+    override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: CellContext,
         attribute: CellCommentAttribute,
@@ -448,10 +415,9 @@ class CellCommentAttributeRenderOperation :
  * @since 0.2.0
  */
 class PrintingAttributeRenderOperation :
-    TableAttributeRenderOperation<ApachePoiRenderingContext, PrintingAttribute, TableStart>(TableStart::class.java) {
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
-    override fun attributeClass(): Class<PrintingAttribute> = PrintingAttribute::class.java
-    override fun renderAttribute(
+    TableAttributeRenderOperation<ApachePoiRenderingContext, PrintingAttribute, TableStart>() {
+
+    override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: TableStart,
         attribute: PrintingAttribute,

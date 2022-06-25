@@ -138,7 +138,7 @@ class TableTemplate<T : Any> : ExportTemplate<Table<T>, TableTemplateContext<T>>
         templateContext: TableTemplateContext<T>,
         apis: ExportTemplateApis<R>,
     ) = with(templateContext) {
-        val operations = apis.getOperations(model) ?: error("operations are required by TableTemplate")
+        val operations = apis.getOperations(model)
         apis.getActiveLayout().newLayout(TableLayoutQueries()).let { layout ->
             templateContext.initializeInternalState(RowCompletionListenerImpl(renderingContext, operations))
             TabulationApiImpl(renderingContext, templateContext, operations).let { api ->

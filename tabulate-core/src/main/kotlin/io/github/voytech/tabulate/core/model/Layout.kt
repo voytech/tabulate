@@ -27,10 +27,21 @@ enum class UnitsOfMeasure {
     }
 }
 
-open class Measure(
+sealed class Measure(
     open val value: Float,
     open val unit: UnitsOfMeasure,
 )
+
+class MeasuredValue(override val value: Float, override val unit: UnitsOfMeasure) : Measure(value, unit) {
+    fun width(): Width = Width(value, unit)
+
+    fun height(): Height = Height(value, unit)
+
+    fun x(): X = X(value, unit)
+
+    fun y(): Y = Y(value, unit)
+
+}
 
 fun UnitsOfMeasure.switchUnitOfMeasure(value: Float, targetUnit: UnitsOfMeasure): Float = if (targetUnit != this) {
     when {
@@ -46,7 +57,7 @@ data class Width(override val value: Float, override val unit: UnitsOfMeasure) :
     } else this
 
     companion object {
-        fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) =  Width(0.0f, uom)
+        fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Width(0.0f, uom)
     }
 }
 
@@ -58,7 +69,7 @@ data class Height(override val value: Float, override val unit: UnitsOfMeasure) 
     } else this
 
     companion object {
-        fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) =  Height(0.0f, uom)
+        fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Height(0.0f, uom)
     }
 }
 

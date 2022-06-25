@@ -4,10 +4,10 @@ import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.RenderingContext
-import io.github.voytech.tabulate.core.template.operation.OperationsBuilder
-import io.github.voytech.tabulate.core.template.operation.factories.ExportOperationsFactory
 import io.github.voytech.tabulate.core.template.result.OutputBinding
+import io.github.voytech.tabulate.core.template.spi.BuildOperations
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat
+import io.github.voytech.tabulate.core.template.spi.ExportOperationsProvider
 import java.io.OutputStream
 import java.util.logging.Logger
 
@@ -57,11 +57,11 @@ class OutputStreamTestOutputBinding: OutputBinding<TestRenderingContext, OutputS
     }
 }
 
-class TestExportOperationsFactory: ExportOperationsFactory<TestRenderingContext, Table<Any>>() {
+class TestExportOperationsFactory: ExportOperationsProvider<TestRenderingContext, Table<Any>> {
 
     override fun getDocumentFormat(): DocumentFormat<TestRenderingContext>  = DocumentFormat.format("test")
 
-    override fun provideExportOperations(): OperationsBuilder<TestRenderingContext,*>.() -> Unit = {
+    override fun provideExportOperations(): BuildOperations<TestRenderingContext> = {
         operation(StartColumnOperation { _, context ->  columnTest?.test(context) })
         operation(EndRowOperation { _, context ->  rowTest?.test(context) })
         operation(RenderRowCellOperation { _, context ->  cellTest?.test(context) })

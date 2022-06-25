@@ -1,7 +1,6 @@
 package io.github.voytech.tabulate.template.operations
 
 import io.github.voytech.tabulate.components.table.api.builder.dsl.table
-import io.github.voytech.tabulate.core.template.DocumentFormat.Companion.format
 import io.github.voytech.tabulate.components.table.model.attributes.Colors
 import io.github.voytech.tabulate.components.table.model.attributes.cell.CellBordersAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.cell.CellTextStylesAttribute
@@ -10,10 +9,10 @@ import io.github.voytech.tabulate.components.table.model.attributes.cell.text
 import io.github.voytech.tabulate.components.table.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.column.width
 import io.github.voytech.tabulate.components.table.operation.*
-import io.github.voytech.tabulate.support.ShadowingCellTextStylesAttributeTestRenderOperation
+import io.github.voytech.tabulate.components.table.template.export
+import io.github.voytech.tabulate.core.template.DocumentFormat.Companion.format
 import io.github.voytech.tabulate.support.Spy
 import io.github.voytech.tabulate.support.Spy.Companion.operationPriorities
-import io.github.voytech.tabulate.components.table.template.export
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
@@ -80,47 +79,4 @@ class TableOperationsWithAttributeSupportTest {
         assertFalse(history.hasNext())
     }
 
-    @Test
-    fun `should use user defined attribute operation instead of factory provided`() {
-
-        table {
-            rows {
-                newRow {
-                    cell { value = "cell" }
-                    attributes {
-                        text { fontColor = Colors.BLACK }
-                    }
-                }
-            }
-        }.export(format("spy"), Unit)
-
-        val history = Spy.spy.readHistory()
-        history.next().run {
-            assertTrue { TableStart::class.java == context.javaClass }
-        }
-        history.next().run {
-            assertTrue { ColumnStart::class.java == context.javaClass }
-        }
-        history.next().run {
-            assertTrue { RowStart::class.java == context.javaClass }
-        }
-        history.next().run {
-            assertTrue { CellContext::class.java == context.javaClass }
-            assertNull(attribute)
-        }
-        history.next().run {
-            assertTrue { CellContext::class.java == context.javaClass }
-            assertTrue { attribute is CellTextStylesAttribute }
-            // Below operation is loaded by ServiceLoader as standalone operation (not from factory)
-            assertTrue { operation is ShadowingCellTextStylesAttributeTestRenderOperation }
-        }
-        history.next().run {
-            assertTrue { RowEnd::class.java == context.javaClass }
-        }
-        history.next().run {
-            assertTrue { ColumnEnd::class.java == context.javaClass }
-        }
-        history.next().run { assertIs<TableEnd>(context) }
-        assertFalse(history.hasNext())
-    }
 }

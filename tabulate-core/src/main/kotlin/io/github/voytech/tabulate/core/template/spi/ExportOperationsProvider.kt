@@ -2,7 +2,10 @@ package io.github.voytech.tabulate.core.template.spi
 
 import io.github.voytech.tabulate.core.model.Model
 import io.github.voytech.tabulate.core.template.RenderingContext
-import io.github.voytech.tabulate.core.template.operation.Operations
+import io.github.voytech.tabulate.core.template.operation.OperationsBuilder
+
+
+typealias BuildOperations<CTX> = OperationsBuilder<CTX>.() -> Unit
 
 
 /**
@@ -10,7 +13,7 @@ import io.github.voytech.tabulate.core.template.operation.Operations
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-interface ExportOperationsProvider<CTX: RenderingContext, MDL: Model<MDL>> : Identifiable<CTX> {
+interface ExportOperationsProvider<CTX: RenderingContext, MDL: Model<MDL>> : Identifiable<CTX>, ModelAware<MDL> {
 
     /**
      * Creates export operations working on attributed contexts (table, row, column, cell).
@@ -18,8 +21,7 @@ interface ExportOperationsProvider<CTX: RenderingContext, MDL: Model<MDL>> : Ide
      * @author Wojciech Mąka
      * @since 0.1.0
      */
-    fun createExportOperations(): Operations<CTX>
-    fun getModelClass(): Class<MDL>
+    fun provideExportOperations(): BuildOperations<CTX>
 }
 
 /**
