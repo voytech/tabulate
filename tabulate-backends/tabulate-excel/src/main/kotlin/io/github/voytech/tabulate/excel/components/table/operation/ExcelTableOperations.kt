@@ -35,7 +35,7 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
     override fun getRenderingContextClass(): Class<ApachePoiRenderingContext> = reify()
 
     override fun provideAttributeOperations(): BuildAttributeOperations<ApachePoiRenderingContext> = {
-        operation(TemplateFileAttributeRenderOperation())
+        operation(TemplateFileAttributeRenderOperation(),-1)
         operation(ColumnWidthAttributeRenderOperation())
         operation(RowHeightAttributeRenderOperation())
         operation(CellTextStylesAttributeRenderOperation())

@@ -50,6 +50,9 @@ internal class AttributesAwareExportOperation<CTX : RenderingContext, M : Model<
         } ?: false
     }
 
+    private fun <ATTR : ATTR_CAT> AttributeOperation<CTX, ATTR_CAT, ATTR, E>.priority(): Int =
+        (this as PrioritizedAttributeOperation<CTX, ATTR_CAT, ATTR, E>).priority
+
     override operator fun invoke(renderingContext: CTX, context: E) {
         context.withAttributeSetBasedCache {
             var operationRendered = false

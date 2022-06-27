@@ -9,12 +9,21 @@ import io.github.voytech.tabulate.core.template.RenderingContext
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-interface AttributeOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : AttributedContext<ATTR_CAT>> :
+fun interface AttributeOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : AttributedContext<ATTR_CAT>> :
     InvokeWithThreeParams<CTX, E, ATTR> {
-    fun priority(): Int = DEFAULT
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     override operator fun invoke(renderingContext: CTX, context: E, attribute: ATTR)
+
+}
+
+internal class PrioritizedAttributeOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : AttributedContext<ATTR_CAT>>(
+    internal val priority: Int = DEFAULT,
+    internal val operation: AttributeOperation<CTX, ATTR_CAT, ATTR, E>
+) : AttributeOperation<CTX, ATTR_CAT, ATTR, E> {
+
+    override fun invoke(renderingContext: CTX, context: E, attribute: ATTR) =
+        operation(renderingContext, context, attribute)
 
     companion object {
         const val LOWEST = Int.MIN_VALUE
@@ -26,7 +35,7 @@ interface AttributeOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, AT
 typealias ReifiedAttributeOperation<CTX, CAT, ATTR, E> = ReifiedInvocation<AttributeOperation<CTX, CAT, ATTR, E>, ThreeParamsTypeInfo<CTX, E, ATTR>>
 
 @Suppress("UNCHECKED_CAST")
-fun <CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR: ATTR_CAT, E : AttributedContext<ATTR_CAT>>
+fun <CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : AttributedContext<ATTR_CAT>>
         ReifiedAttributeOperation<CTX, ATTR_CAT, *, E>.attributeClass(): Class<ATTR> = meta.t3 as Class<ATTR>
 
 /**
@@ -40,15 +49,23 @@ value class AttributesOperations<CTX : RenderingContext>(private val dispatch: T
     @Suppress("UNCHECKED_CAST")
     internal fun <A : Attribute<*>, E : AttributedContext<A>> getOperationsBy(info: TwoParamsTypeInfo<CTX, E>): List<ReifiedAttributeOperation<CTX, A, *, E>> {
         return dispatch.find { it.firstTwoParamTypes() == info }.map { it as ReifiedAttributeOperation<CTX, A, *, E> }
-            .sortedBy { it.delegate.priority() }
+            .sortedBy { (it.delegate as PrioritizedAttributeOperation<CTX, *, *, E>).priority }
     }
 }
 
 class AttributeOperationsBuilder<CTX : RenderingContext>(val renderingContext: Class<CTX>) {
     val dispatch: ThreeParamsBasedDispatch = ThreeParamsBasedDispatch()
-    inline fun <ATTR_CAT : Attribute<*>, reified E : AttributedContext<ATTR_CAT>, reified ATTR: ATTR_CAT> operation(op: AttributeOperation<CTX, ATTR_CAT, ATTR, E>) {
+
+    fun <ATTR_CAT : Attribute<*>, E : AttributedContext<ATTR_CAT>, ATTR : ATTR_CAT> AttributeOperation<CTX, ATTR_CAT, ATTR, E>.prioritized(
+        priority: Int
+    ): AttributeOperation<CTX, ATTR_CAT, ATTR, E> = PrioritizedAttributeOperation(priority, this)
+
+
+    inline fun <ATTR_CAT : Attribute<*>, reified E : AttributedContext<ATTR_CAT>, reified ATTR : ATTR_CAT> operation(
+        op: AttributeOperation<CTX, ATTR_CAT, ATTR, E>, priority: Int = 1
+    ) {
         with(dispatch) {
-            op.bind(renderingContext, E::class.java, ATTR::class.java)
+            op.prioritized(priority).bind(renderingContext, E::class.java, ATTR::class.java)
         }
     }
 

@@ -370,7 +370,6 @@ class FilterAndSortTableAttributeRenderOperation :
  */
 class TemplateFileAttributeRenderOperation :
     TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute, TableStart>() {
-    override fun priority() = -1
     override fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: TableStart,

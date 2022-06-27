@@ -1,6 +1,13 @@
 package io.github.voytech.tabulate.support
 
 import io.github.voytech.tabulate.components.table.model.Table
+import io.github.voytech.tabulate.components.table.model.attributes.cell.CellAlignmentAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.cell.CellBackgroundAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.cell.CellBordersAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.cell.CellTextStylesAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.column.ColumnWidthAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.row.RowHeightAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.operation.AttributeOperationsBuilder
@@ -8,6 +15,7 @@ import io.github.voytech.tabulate.core.template.operation.OperationsBuilder
 import io.github.voytech.tabulate.core.template.result.OutputBinding
 import io.github.voytech.tabulate.core.template.spi.*
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat.Companion.format
+import io.github.voytech.tabulate.support.Spy.Companion.operationPriorities
 
 
 class TestOutputBindingProvider: OutputBindingsProvider<TestRenderingContext> {
@@ -32,13 +40,13 @@ class TestExportOperationsFactory : OperationsBundleProvider<TestRenderingContex
     }
 
     override fun provideAttributeOperations(): BuildAttributeOperations<TestRenderingContext> = {
-        operation(CellTextStylesAttributeTestRenderOperation(Spy.spy))
-        operation(CellBordersAttributeTestRenderOperation(Spy.spy))
-        operation(CellBackgroundAttributeTestRenderOperation(Spy.spy))
-        operation(CellAlignmentAttributeTestRenderOperation(Spy.spy))
-        operation(ColumnWidthAttributeTestRenderOperation(Spy.spy))
-        operation(RowHeightAttributeTestRenderOperation(Spy.spy))
-        operation(TemplateFileAttributeTestRenderOperation(Spy.spy))
+        operation(CellTextStylesAttributeTestRenderOperation(Spy.spy),operationPriorities[CellTextStylesAttribute::class.java] ?: 1)
+        operation(CellBordersAttributeTestRenderOperation(Spy.spy),operationPriorities[CellBordersAttribute::class.java] ?: 1)
+        operation(CellBackgroundAttributeTestRenderOperation(Spy.spy),operationPriorities[CellBackgroundAttribute::class.java] ?: 1)
+        operation(CellAlignmentAttributeTestRenderOperation(Spy.spy),operationPriorities[CellAlignmentAttribute::class.java] ?: 1)
+        operation(ColumnWidthAttributeTestRenderOperation(Spy.spy),operationPriorities[ColumnWidthAttribute::class.java] ?: 1)
+        operation(RowHeightAttributeTestRenderOperation(Spy.spy),operationPriorities[RowHeightAttribute::class.java] ?: 1)
+        operation(TemplateFileAttributeTestRenderOperation(Spy.spy),operationPriorities[TemplateFileAttribute::class.java] ?: 1)
     }
 
     override fun getRenderingContextClass(): Class<TestRenderingContext> = reify()
