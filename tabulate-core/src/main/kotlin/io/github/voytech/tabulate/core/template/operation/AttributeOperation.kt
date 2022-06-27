@@ -1,9 +1,6 @@
 package io.github.voytech.tabulate.core.template.operation
 
-import io.github.voytech.tabulate.core.InvokeWithThreeParams
-import io.github.voytech.tabulate.core.ReifiedInvocation
-import io.github.voytech.tabulate.core.ThreeParamsBasedDispatch
-import io.github.voytech.tabulate.core.TypesInfo
+import io.github.voytech.tabulate.core.*
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.template.RenderingContext
 
@@ -26,10 +23,11 @@ interface AttributeOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, AT
     }
 }
 
-typealias ReifiedAttributeOperation<CTX, CAT, ATTR, E> = ReifiedInvocation<AttributeOperation<CTX, CAT, ATTR, E>>
+typealias ReifiedAttributeOperation<CTX, CAT, ATTR, E> = ReifiedInvocation<AttributeOperation<CTX, CAT, ATTR, E>, ThreeParamsTypeInfo<CTX, E, ATTR>>
 
+@Suppress("UNCHECKED_CAST")
 fun <CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR: ATTR_CAT, E : AttributedContext<ATTR_CAT>>
-        ReifiedAttributeOperation<CTX, ATTR_CAT, *, E>.attributeClass(): Class<ATTR> = meta.types.last() as Class<ATTR>
+        ReifiedAttributeOperation<CTX, ATTR_CAT, *, E>.attributeClass(): Class<ATTR> = meta.t3 as Class<ATTR>
 
 /**
  * Specialised container for all discovered attribute operations.
@@ -40,13 +38,10 @@ fun <CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR: ATTR_CAT, E : Attrib
 value class AttributesOperations<CTX : RenderingContext>(private val dispatch: ThreeParamsBasedDispatch) {
 
     @Suppress("UNCHECKED_CAST")
-    internal fun <A : Attribute<*>, E : AttributedContext<A>> getOperationsBy(typeInfo: TypesInfo): List<ReifiedAttributeOperation<CTX, A, *, E>> {
-        return dispatch.find { it.dropLast(1) == typeInfo }.map { it as ReifiedAttributeOperation<CTX, A, *, E> }
+    internal fun <A : Attribute<*>, E : AttributedContext<A>> getOperationsBy(info: TwoParamsTypeInfo<CTX, E>): List<ReifiedAttributeOperation<CTX, A, *, E>> {
+        return dispatch.find { it.firstTwoParamTypes() == info }.map { it as ReifiedAttributeOperation<CTX, A, *, E> }
             .sortedBy { it.delegate.priority() }
     }
-
-    internal fun isEmpty(): Boolean = dispatch.isEmpty()
-
 }
 
 class AttributeOperationsBuilder<CTX : RenderingContext>(val renderingContext: Class<CTX>) {

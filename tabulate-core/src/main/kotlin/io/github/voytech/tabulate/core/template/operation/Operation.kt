@@ -1,11 +1,8 @@
 package io.github.voytech.tabulate.core.template.operation
 
-import io.github.voytech.tabulate.core.InvokeWithTwoParams
-import io.github.voytech.tabulate.core.ReifiedInvocation
-import io.github.voytech.tabulate.core.TwoParamsBasedDispatch
+import io.github.voytech.tabulate.core.*
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.template.RenderingContext
-
 
 fun interface Operation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, E : AttributedContext<ATTR_CAT>> :
     InvokeWithTwoParams<CTX, E> {
@@ -14,7 +11,7 @@ fun interface Operation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, E : Att
     override operator fun invoke(renderingContext: CTX, context: E)
 }
 
-typealias ReifiedOperation<CTX, CAT, E> = ReifiedInvocation<Operation<CTX, CAT, E>>
+typealias ReifiedOperation<CTX, CAT, E> = ReifiedInvocation<Operation<CTX, CAT, E>, TwoParamsTypeInfo<CTX, E>>
 
 @JvmInline
 value class Operations<CTX : RenderingContext>(private val dispatch: TwoParamsBasedDispatch) {
@@ -39,7 +36,7 @@ class OperationsBuilder<CTX : RenderingContext>(val renderingContext: Class<CTX>
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <CAT : Attribute<*>, E : AttributedContext<CAT>> List<Enhance<CTX>>.applyEnhancers(delegate: ReifiedInvocation<InvokeWithTwoParams<*, *>>): Operation<CTX, CAT, E> =
+    private fun <CAT : Attribute<*>, E : AttributedContext<CAT>> List<Enhance<CTX>>.applyEnhancers(delegate: ReifiedInvocation<InvokeWithTwoParams<*, *>, TwoParamsTypeInfo<*, *>>): Operation<CTX, CAT, E> =
         fold(delegate as ReifiedOperation<CTX, CAT, E>) { op, transformer ->
             ReifiedOperation(op.meta, transformer.invoke(op))
         }.delegate

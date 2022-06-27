@@ -21,11 +21,11 @@ internal class AttributesAwareExportOperation<CTX : RenderingContext, M : Model<
     private val attributeOperations: List<ReifiedAttributeOperation<CTX, ATTR_CAT, *, E>> =
         attributesOperations.getOperationsBy(delegate.meta)
 
-    private val filteredOperationCache: AttributeClassBasedCache<ATTR_CAT, List<ReifiedAttributeOperation<CTX, ATTR_CAT, out ATTR_CAT, E>>> =
+    private val filteredOperationCache: AttributeClassBasedCache<ATTR_CAT, List<ReifiedAttributeOperation<CTX, ATTR_CAT, *, E>>> =
         AttributeClassBasedCache()
 
     @Suppress("UNCHECKED_CAST")
-    private fun <OP : ReifiedAttributeOperation<CTX, ATTR_CAT, out ATTR_CAT, E>> E.forEachOperation(
+    private fun <OP : ReifiedAttributeOperation<CTX, ATTR_CAT, *, E>> E.forEachOperation(
         unfiltered: List<OP>, consumer: (operation: OP) -> Boolean,
     ) {
         attributes?.let { _attributes ->
