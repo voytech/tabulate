@@ -9,20 +9,20 @@ import io.github.voytech.tabulate.core.template.RenderingContext
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-fun interface AttributeOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : AttributedContext<ATTR_CAT>> :
-    InvokeWithThreeParams<CTX, E, ATTR> {
+fun interface AttributeOperation<CTX : RenderingContext, A : Attribute<A>, E : AttributedContext<E>> :
+    InvokeWithThreeParams<CTX, E, A> {
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
-    override operator fun invoke(renderingContext: CTX, context: E, attribute: ATTR)
+    override operator fun invoke(renderingContext: CTX, context: E, attribute: A)
 
 }
 
-internal class PrioritizedAttributeOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : AttributedContext<ATTR_CAT>>(
+internal class PrioritizedAttributeOperation<CTX : RenderingContext, A : Attribute<A>, E : AttributedContext<E>>(
     internal val priority: Int = DEFAULT,
-    internal val operation: AttributeOperation<CTX, ATTR_CAT, ATTR, E>
-) : AttributeOperation<CTX, ATTR_CAT, ATTR, E> {
+    internal val operation: AttributeOperation<CTX, A,  E>
+) : AttributeOperation<CTX, A, E> {
 
-    override fun invoke(renderingContext: CTX, context: E, attribute: ATTR) =
+    override fun invoke(renderingContext: CTX, context: E, attribute: A) =
         operation(renderingContext, context, attribute)
 
     companion object {
@@ -32,11 +32,11 @@ internal class PrioritizedAttributeOperation<CTX : RenderingContext, ATTR_CAT : 
     }
 }
 
-typealias ReifiedAttributeOperation<CTX, CAT, ATTR, E> = ReifiedInvocation<AttributeOperation<CTX, CAT, ATTR, E>, ThreeParamsTypeInfo<CTX, E, ATTR>>
+typealias ReifiedAttributeOperation<CTX, A, E> = ReifiedInvocation<AttributeOperation<CTX, A, E>, ThreeParamsTypeInfo<CTX, E, A>>
 
 @Suppress("UNCHECKED_CAST")
-fun <CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : AttributedContext<ATTR_CAT>>
-        ReifiedAttributeOperation<CTX, ATTR_CAT, *, E>.attributeClass(): Class<ATTR> = meta.t3 as Class<ATTR>
+fun <CTX : RenderingContext, A : Attribute<A>, E : AttributedContext<E>>
+        ReifiedAttributeOperation<CTX, A, E>.attributeClass(): Class<A> = meta.t3 as Class<A>
 
 /**
  * Specialised container for all discovered attribute operations.
@@ -47,25 +47,25 @@ fun <CTX : RenderingContext, ATTR_CAT : Attribute<*>, ATTR : ATTR_CAT, E : Attri
 value class AttributesOperations<CTX : RenderingContext>(private val dispatch: ThreeParamsBasedDispatch) {
 
     @Suppress("UNCHECKED_CAST")
-    internal fun <A : Attribute<*>, E : AttributedContext<A>> getOperationsBy(info: TwoParamsTypeInfo<CTX, E>): List<ReifiedAttributeOperation<CTX, A, *, E>> {
-        return dispatch.find { it.firstTwoParamTypes() == info }.map { it as ReifiedAttributeOperation<CTX, A, *, E> }
-            .sortedBy { (it.delegate as PrioritizedAttributeOperation<CTX, *, *, E>).priority }
+    internal fun <E : AttributedContext<E>> getOperationsBy(info: TwoParamsTypeInfo<CTX, E>): List<ReifiedAttributeOperation<CTX, *, E>> {
+        return dispatch.find { it.firstTwoParamTypes() == info }.map { it as ReifiedAttributeOperation<CTX, *, E> }
+            .sortedBy { (it.delegate as PrioritizedAttributeOperation<CTX, *, E>).priority }
     }
 }
 
 class AttributeOperationsBuilder<CTX : RenderingContext>(val renderingContext: Class<CTX>) {
     val dispatch: ThreeParamsBasedDispatch = ThreeParamsBasedDispatch()
 
-    fun <ATTR_CAT : Attribute<*>, E : AttributedContext<ATTR_CAT>, ATTR : ATTR_CAT> AttributeOperation<CTX, ATTR_CAT, ATTR, E>.prioritized(
+    fun <A : Attribute<A>, E : AttributedContext<E>> AttributeOperation<CTX, A, E>.prioritized(
         priority: Int
-    ): AttributeOperation<CTX, ATTR_CAT, ATTR, E> = PrioritizedAttributeOperation(priority, this)
+    ): AttributeOperation<CTX, A, E> = PrioritizedAttributeOperation(priority, this)
 
 
-    inline fun <ATTR_CAT : Attribute<*>, reified E : AttributedContext<ATTR_CAT>, reified ATTR : ATTR_CAT> operation(
-        op: AttributeOperation<CTX, ATTR_CAT, ATTR, E>, priority: Int = 1
+    inline fun <reified A : Attribute<A>, reified E : AttributedContext<E>> operation(
+        op: AttributeOperation<CTX, A, E>, priority: Int = 1
     ) {
         with(dispatch) {
-            op.prioritized(priority).bind(renderingContext, E::class.java, ATTR::class.java)
+            op.prioritized(priority).bind(renderingContext, E::class.java, A::class.java)
         }
     }
 

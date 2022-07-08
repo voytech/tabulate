@@ -46,7 +46,7 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
         operation(CellCommentAttributeRenderOperation())
         operation(FilterAndSortTableAttributeRenderOperation())
         operation(PrintingAttributeRenderOperation())
-        operation(RowBordersAttributeRenderOperation())
+        operation(RowBordersAttributeRenderOperation<Any>())
     }
 
     override fun provideExportOperations(): BuildOperations<ApachePoiRenderingContext> = {
@@ -86,7 +86,7 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
                 }
             }
         })
-        operation(EndRowOperation { renderingContext, context ->
+        operation(EndRowOperation<ApachePoiRenderingContext,Any> { renderingContext, context ->
             with(renderingContext) {
                 provideSheet(context.getSheetName()).let { sheet ->
                     val absoluteRowIndex = context.getAbsoluteRow(context.rowIndex)

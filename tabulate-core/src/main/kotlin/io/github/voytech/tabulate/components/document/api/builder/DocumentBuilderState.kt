@@ -6,8 +6,9 @@ import io.github.voytech.tabulate.core.api.builder.AttributesAwareBuilder
 import io.github.voytech.tabulate.core.api.builder.CompositeModelBuilderState
 import io.github.voytech.tabulate.core.api.builder.ModelBuilderState
 import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.AttributeClassifier
+import io.github.voytech.tabulate.core.model.AttributeConstraint
 import io.github.voytech.tabulate.core.model.Model
+import io.github.voytech.tabulate.core.reify
 
 
 /**
@@ -37,11 +38,11 @@ class DocumentBuilderState : CompositeModelBuilderState<Document>, AttributesAwa
         id = name
     )
 
+    override fun modelClass(): Class<Document> = reify()
+
     @JvmSynthetic
     public override fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(builder: B) {
         super.attribute(builder)
     }
-
-    override fun getUnsupportedClassifiers(): Set<AttributeClassifier<*, *>> = emptySet()
 
 }

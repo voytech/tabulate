@@ -1,8 +1,32 @@
 package io.github.voytech.tabulate.core.template
 
+import io.github.voytech.tabulate.core.model.AttributeConstraint
+import io.github.voytech.tabulate.core.model.AttributeConstraintsBuilder
+import io.github.voytech.tabulate.core.model.AttributeConstraintsProvider
+import io.github.voytech.tabulate.core.model.AttributesConstraints
 import io.github.voytech.tabulate.core.template.operation.factories.DiscoveredExportOperationFactories
 import io.github.voytech.tabulate.core.template.spi.*
 import java.util.*
+
+/**
+ * Top level method that loads all  [AttributeClassificationProvider] providers.
+ * @author Wojciech Mąka
+ * @since 0.*.*
+ */
+internal fun loadAttributeConstraintsProviders(): List<AttributeConstraintsProvider> =
+    ServiceLoader.load(AttributeConstraintsProvider::class.java).toList()
+
+
+/**
+ * Top level method that loads all  [AttributeClassificationProvider] providers.
+ * @author Wojciech Mąka
+ * @since 0.*.*
+ */
+internal fun loadAttributeConstraints(): AttributesConstraints =
+    loadAttributeConstraintsProviders().toList().fold(AttributeConstraintsBuilder()) { aggr, builder ->
+        aggr.apply(builder.defineConstraints())
+    }.build()
+
 
 /**
  * Top level method that loads instance of [Identifiable] factory through ServiceLoader infrastructure.

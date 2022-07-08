@@ -686,7 +686,7 @@ class ApachePoiTabulateTests {
         document {
             sheet {
                 name = "Sheet 1"
-                table<SampleProduct> {
+                table {
                     attributes { columnWidth { auto = true } }
                     columns {
                         column(SampleProduct::code)
@@ -700,14 +700,14 @@ class ApachePoiTabulateTests {
                     dataSource(SampleProduct.create(4))
                 }
                 space { width { 45f.pt() } }
-                table<SampleProduct> {
+                table {
                     attributes { columnWidth { auto = true } }
                     columns {
                         column(SampleProduct::code)
                         column(SampleProduct::name)
                         column(SampleProduct::description)
                         column(SampleProduct::price) {
-                            attributes { format { "[\$\$-409]#,##0.00;[RED]-[\$\$-409]#,##0.00" } }
+                            attributes { format { "[\$\$-409]#,##0.00;[\$PLN]-[\$\$-409]#,##0.00 [\$PLN]" } }
                         }
                     }
                     rows { header("Id 2", "Name 2", "Description 2", "Price 2") }

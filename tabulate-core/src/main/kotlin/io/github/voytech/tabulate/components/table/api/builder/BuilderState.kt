@@ -2,11 +2,14 @@ package io.github.voytech.tabulate.components.table.api.builder
 
 import io.github.voytech.tabulate.api.builder.exception.BuilderException
 import io.github.voytech.tabulate.components.table.model.*
-import io.github.voytech.tabulate.components.table.model.attributes.*
+import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.ColumnAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.RowAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.TableAttribute
 import io.github.voytech.tabulate.core.api.builder.*
 import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.AttributeClassifier
 import io.github.voytech.tabulate.core.model.DataSourceBinding
+import io.github.voytech.tabulate.core.reify
 import kotlin.properties.Delegates
 import kotlin.properties.Delegates.vetoable
 
@@ -44,19 +47,15 @@ class TableBuilderState<T: Any> : ModelBuilderState<Table<T>>, AttributesAwareBu
     override fun build(): Table<T> = Table(
         name, firstRow, firstColumn,
         columnsBuilderState.build(), rowsBuilderState.build(),
-        getAttributesByClassifier(TableAttribute::class.java.classify()),
-        getAttributesByClassifier(CellAttribute::class.java.classify()),
-        getAttributesByClassifier(ColumnAttribute::class.java.classify()),
-        getAttributesByClassifier(RowAttribute::class.java.classify()),
-        dataSource
+        dataSource, attributes()
     )
+
+    override fun modelClass(): Class<Table<T>> = reify()
 
     @JvmSynthetic
     public override fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(builder: B) {
         super.attribute(builder)
     }
-
-    override fun getUnsupportedClassifiers(): Set<AttributeClassifier<*, *>> = setOf()
 
 }
 
@@ -220,15 +219,12 @@ internal class ColumnBuilderState<T>(private val columnBuilderStates: List<Colum
 
     @JvmSynthetic
     fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
-    override fun getUnsupportedClassifiers(): Set<AttributeClassifier<*, *>> = setOf(
-        TableAttribute::class.java.classify()
-    )
+
+    override fun modelClass(): Class<ColumnDef<T>> = reify()
 
     @JvmSynthetic
     override fun build(): ColumnDef<T> = ColumnDef(
-        id, index,
-        getAttributesByClassifier(ColumnAttribute::class.java.classify()),
-        getAttributesByClassifier(CellAttribute::class.java.classify())
+        id, index, attributes()
     )
 
 }
@@ -372,18 +368,13 @@ internal class RowBuilderState<T>(
         }
     }
 
-    override fun getUnsupportedClassifiers(): Set<AttributeClassifier<*, *>> = setOf(
-        ColumnAttribute::class.java.classify(),
-        TableAttribute::class.java.classify(),
-    )
-
+    override fun modelClass(): Class<RowDef<T>> = reify()
 
     @JvmSynthetic
     override fun build(): RowDef<T> = RowDef(
         qualifier,
-        getAttributesByClassifier(RowAttribute::class.java.classify()),
-        getAttributesByClassifier(CellAttribute::class.java.classify()),
-        cellsBuilderState.build()
+        cellsBuilderState.build(),
+        attributes()
     )
 
     @JvmSynthetic
@@ -566,16 +557,14 @@ internal class CellBuilderState<T>(
     @get:JvmSynthetic
     @set:JvmSynthetic
     var rowSpanStrategy: CollidingRowSpanStrategy = CollidingRowSpanStrategy.SHADOW
-    override fun getUnsupportedClassifiers(): Set<AttributeClassifier<*, *>> = setOf(
-        TableAttribute::class.java.classify(), ColumnAttribute::class.java.classify(),
-        RowAttribute::class.java.classify()
-    )
+
+    override fun modelClass(): Class<CellDef<T>> = reify()
 
     @JvmSynthetic
     override fun build(): CellDef<T> =
         CellDef(
             value, expression, colSpan, rowSpan, rowSpanStrategy,
-            getAttributesByClassifier(CellAttribute::class.java.classify())
+            attributes()
         )
 
     @JvmSynthetic

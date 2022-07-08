@@ -1,10 +1,9 @@
 package io.github.voytech.tabulate.components.document.operation
 
-import io.github.voytech.tabulate.components.document.model.DocumentAttribute
 import io.github.voytech.tabulate.components.document.template.DocumentTemplateContext
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 
-sealed class DocumentContext(templateContext: DocumentTemplateContext) : AttributedContext<DocumentAttribute<*>>() {
+sealed class DocumentContext(templateContext: DocumentTemplateContext) : AttributedContext<DocumentContext>() {
     init {
         additionalAttributes = templateContext.stateAttributes
     }

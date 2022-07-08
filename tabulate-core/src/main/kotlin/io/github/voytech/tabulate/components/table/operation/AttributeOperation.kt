@@ -12,16 +12,16 @@ import io.github.voytech.tabulate.core.template.operation.AttributeOperation
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class TableAttributeRenderOperation<CTX : RenderingContext, ATTR : TableAttribute<*>, AC : TableContext> :
-    AttributeOperation<CTX, TableAttribute<*>, ATTR, AC>
+abstract class TableAttributeRenderOperation<CTX : RenderingContext, A : TableAttribute<A>, AC : TableContext<AC>> :
+    AttributeOperation<CTX, A, AC>
 
 /**
  * Row attribute operation associated with row rendering context
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class RowAttributeRenderOperation<CTX : RenderingContext, ATTR : RowAttribute<*>, AC : RowContext> :
-    AttributeOperation<CTX, RowAttribute<*>, ATTR, AC>
+abstract class RowAttributeRenderOperation<CTX : RenderingContext, A : RowAttribute<A>, AC : RowContext<AC>> :
+    AttributeOperation<CTX, A, AC>
 
 
 /**
@@ -29,14 +29,14 @@ abstract class RowAttributeRenderOperation<CTX : RenderingContext, ATTR : RowAtt
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class CellAttributeRenderOperation<CTX : RenderingContext, ATTR : CellAttribute<*>> :
-    AttributeOperation<CTX, CellAttribute<*>, ATTR, CellContext>
+abstract class CellAttributeRenderOperation<CTX : RenderingContext, A : CellAttribute<A>> :
+    AttributeOperation<CTX, A, CellContext>
 
 /**
  * Column attribute operation associated with column rendering context
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class ColumnAttributeRenderOperation<CTX : RenderingContext, ATTR : ColumnAttribute<*>, AC : ColumnContext> :
-    AttributeOperation<CTX, ColumnAttribute<*>, ATTR, AC>
+abstract class ColumnAttributeRenderOperation<CTX : RenderingContext, A : ColumnAttribute<A>, AC : ColumnContext<AC>> :
+    AttributeOperation<CTX, A, AC>
 

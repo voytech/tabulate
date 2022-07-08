@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.components.table.model
 
 import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
 import io.github.voytech.tabulate.components.table.operation.CellValue
+import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.orEmpty
 
@@ -80,9 +81,9 @@ internal data class CellDef<T> internal constructor(
     /**
      * Set of [CellAttribute] instances that enable customization of table cell appearance
      */
-    @get:JvmSynthetic
-    val cellAttributes: Attributes<CellAttribute<*>>?
-) {
+    override val attributes: Attributes<CellDef<T>>?,
+
+) : AttributedModelOrPart<CellDef<T>> {
 
     @JvmSynthetic
     internal fun resolveRawValue(context: SourceRow<T>? = null) : Any? = context?.let { expression?.evaluate(it) } ?: value
@@ -110,7 +111,7 @@ internal operator fun <T> CellDef<T>?.plus(other: CellDef<T>): CellDef<T> {
             colSpan = other.colSpan,
             rowSpan = other.rowSpan,
             rowSpanMode = other.rowSpanMode,
-            cellAttributes = cellAttributes.orEmpty() + other.cellAttributes.orEmpty()
+            attributes = attributes.orEmpty() + other.attributes.orEmpty()
         )
     } else other
 }

@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.core.template.operation
 
 import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.AttributeCategoryAware
+import io.github.voytech.tabulate.core.model.AttributeAware
 import io.github.voytech.tabulate.core.model.Attributes
 
 
@@ -35,17 +35,15 @@ sealed class ContextData : Context {
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class AttributedContext<A : Attribute<*>>(@JvmSynthetic internal open val attributes: Attributes<A>? = null) :
+abstract class AttributedContext<A : AttributedContext<A>>(@JvmSynthetic override val attributes: Attributes<A>? = null) :
     ContextData(),
-    AttributeCategoryAware<A> {
+    AttributeAware<A> {
 
     val id: String by lazy { "_${javaClass}-${hashCode()}" }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : A> getModelAttribute(clazz: Class<T>): T? =
+    fun <T : Attribute<T>> getModelAttribute(clazz: Class<T>): T? =
         attributes?.get(clazz)
-
-    override fun getAttributeCategoryClass(): Class<A> = attributes!!.getAttributeCategoryClass()
 
 }
 

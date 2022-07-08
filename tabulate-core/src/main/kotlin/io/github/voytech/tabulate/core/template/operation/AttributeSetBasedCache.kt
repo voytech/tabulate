@@ -1,11 +1,10 @@
 package io.github.voytech.tabulate.core.template.operation
 
-import io.github.voytech.tabulate.core.model.Attribute
+import io.github.voytech.tabulate.core.model.AttributeAware
 import io.github.voytech.tabulate.core.model.Attributes
 
-
 @JvmInline
-internal value class AttributeClassBasedCache<K : Attribute<*>, V>(
+internal value class AttributeClassBasedCache<K : AttributeAware<K>, V>(
     private val cache: MutableMap<Attributes<K>, V> = mutableMapOf(),
 ) {
     @JvmSynthetic
@@ -31,8 +30,8 @@ internal typealias AttributeClassBasedMapCache<K> = AttributeClassBasedCache<K, 
  * @since 0.1.0
  */
 @JvmSynthetic
-internal fun <T : Attribute<*>> AttributedContext<T>.ensureAttributeSetBasedCache(): AttributeClassBasedMapCache<T> {
-    additionalAttributes!!.putIfAbsent("_attribute_set_based_cache", AttributeClassBasedMapCache())
+internal fun <T : AttributedContext<T>> AttributedContext<T>.ensureAttributeSetBasedCache(): AttributeClassBasedMapCache<T> {
+    additionalAttributes!!.putIfAbsent("_attribute_set_based_cache", AttributeClassBasedMapCache<T>())
     return additionalAttributes!!["_attribute_set_based_cache"] as AttributeClassBasedMapCache<T>
 }
 
@@ -44,7 +43,7 @@ internal fun <T : Attribute<*>> AttributedContext<T>.ensureAttributeSetBasedCach
  * @since 0.1.0
  */
 @JvmSynthetic
-internal fun <T : Attribute<*>> AttributedContext<T>.setupCacheAndGet(): MutableMap<String, Any>? {
+internal fun <T :  AttributedContext<T>> AttributedContext<T>.setupCacheAndGet(): MutableMap<String, Any>? {
     return this.attributes?.takeIf { it.isNotEmpty() }?.let {
         ensureAttributeSetBasedCache().compute(it) { mutableMapOf() }
     }
@@ -61,7 +60,7 @@ internal fun <T : Attribute<*>> AttributedContext<T>.setupCacheAndGet(): Mutable
  * @since 0.1.0
  */
 @JvmSynthetic
-internal fun <T : Attribute<*>> AttributedContext<T>.withAttributeSetBasedCache(block: (cache: MutableMap<String, Any>?) -> Unit) =
+internal fun <T :  AttributedContext<T>> AttributedContext<T>.withAttributeSetBasedCache(block: (cache: MutableMap<String, Any>?) -> Unit) =
     setupCacheAndGet().apply(block)
 
 
@@ -72,8 +71,8 @@ internal fun <T : Attribute<*>> AttributedContext<T>.withAttributeSetBasedCache(
  * @since 0.1.0
  */
 @Suppress("UNCHECKED_CAST")
-fun <M : Attribute<*>, T> T.cacheOnAttributeSet(key: String, value: Any): Any
-        where T : AttributedContext<M>,
+fun <T> T.cacheOnAttributeSet(key: String, value: Any): Any
+        where T : AttributedContext<T>,
               T : Context = setupCacheAndGet()?.computeIfAbsent(key) { value } ?: value
 
 /**
@@ -83,8 +82,8 @@ fun <M : Attribute<*>, T> T.cacheOnAttributeSet(key: String, value: Any): Any
  * @since 0.1.0
  */
 @Suppress("UNCHECKED_CAST")
-fun <M : Attribute<*>, T> T.getCachedOnAttributeSet(key: String): Any
-        where T : AttributedContext<M>,
+fun <T> T.getCachedOnAttributeSet(key: String): Any
+        where T : AttributedContext<T>,
               T : Context = setupCacheAndGet()?.get(key) ?: error("cannot resolve cached value in scope!")
 
 
