@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.core.template.operation
 
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.AttributeAware
+import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
 
 
@@ -47,3 +48,17 @@ abstract class AttributedContext<A : AttributedContext<A>>(@JvmSynthetic overrid
 
 }
 
+
+class AttributesByContexts<T : AttributedModelOrPart<T>>(
+    from: T, to: List<Class<out AttributedContext<*>>>,
+    val attributes: Map<Class<out AttributedContext<*>>, Attributes<out AttributedContext<*>>> =
+        to.associate { (it to (from.attributes?.forContext(it) ?: Attributes(it))) },
+) {
+    @Suppress("UNCHECKED_CAST")
+    internal inline fun <reified E : AttributedContext<E>> get(): Attributes<E> =
+        (attributes[E::class.java] ?: Attributes(E::class.java)) as Attributes<E>
+}
+
+fun <T : AttributedModelOrPart<T>> T.distributeAttributesForContexts(
+    vararg clazz: Class<out AttributedContext<*>>,
+): AttributesByContexts<T> = AttributesByContexts(this, listOf(*clazz))

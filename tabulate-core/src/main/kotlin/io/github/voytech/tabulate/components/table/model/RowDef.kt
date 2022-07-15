@@ -48,12 +48,12 @@ internal data class RowDef<T> internal constructor(
 }
 
 @JvmSynthetic
-internal fun <T> Collection<RowDef<T>>.flattenRowAttributes(): Attributes<RowAttribute<*>> =
-    mapNotNull { it.attributes }.fold(Attributes(attributeCategory = RowAttribute::class.java)) { acc, r -> acc + r }
+internal fun <T> Collection<RowDef<T>>.flattenRowAttributes(): Attributes<RowDef<T>> =
+    mapNotNull { it.attributes }.fold(Attributes()) { acc, r -> acc + r }
 
 @JvmSynthetic
-internal fun <T> Collection<RowDef<T>>.flattenCellAttributes(): Attributes<CellAttribute<*>> =
-    mapNotNull { it.attributes }.fold(Attributes(attributeCategory = CellAttribute::class.java)) { acc, r -> acc + r }
+internal fun <T> Collection<RowDef<T>>.flattenCellAttributes(): Attributes<CellDef<T>> =
+    mapNotNull { it.attributes?.cast<CellDef<T>>() }.fold(Attributes()) { acc, r -> acc + r }
 
 @JvmSynthetic
 internal fun <T> Collection<RowDef<T>>.mergeCells(): Map<ColumnKey<T>, CellDef<T>> =

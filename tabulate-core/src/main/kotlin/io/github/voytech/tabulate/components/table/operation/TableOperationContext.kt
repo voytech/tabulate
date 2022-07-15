@@ -2,11 +2,9 @@ package io.github.voytech.tabulate.components.table.operation
 
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.ColumnAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.RowAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.TableAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHintAttribute
 import io.github.voytech.tabulate.components.table.template.SyntheticRow
+import io.github.voytech.tabulate.components.table.template.TableTemplate
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.asXPosition
 import io.github.voytech.tabulate.core.model.asYPosition
@@ -154,7 +152,7 @@ class TableStart(
 ) : TableContext<TableStart>(attributes)
 
 internal fun <T : Any> Table<T>.asTableStart(customAttributes: MutableMap<String, Any>): TableStart =
-    TableStart(attributes).apply { additionalAttributes = customAttributes }
+    TableStart(attributes?.forContext()).apply { additionalAttributes = customAttributes }
 
 /**
  * Table operation context with additional model attributes applicable on table level.
@@ -166,7 +164,7 @@ class TableEnd(
 ) : TableContext<TableEnd>(attributes)
 
 internal fun <T : Any> Table<T>.asTableEnd(customAttributes: MutableMap<String, Any>): TableEnd =
-    TableEnd(attributes).apply { additionalAttributes = customAttributes }
+    TableEnd(attributes?.forContext()).apply { additionalAttributes = customAttributes }
 
 /**
  * Row operation context with additional model attributes applicable on row level.
@@ -184,7 +182,7 @@ internal fun <T : Any> SyntheticRow<T>.asRowStart(
     rowIndex: Int,
     customAttributes: MutableMap<String, Any>,
 ): RowStart {
-    return RowStart(rowIndex = table.getRowIndex(rowIndex), attributes = attributes)
+    return RowStart(rowIndex = table.getRowIndex(rowIndex), attributes = rowStartAttributes)
         .apply { additionalAttributes = customAttributes }
 }
 
@@ -205,12 +203,13 @@ class RowEnd<T>(
 
 }
 
-fun <T> RowStart.asRowEnd(rowCellValues: Map<ColumnKey<T>, CellContext>): RowEnd<T> =
+internal fun  <T : Any> SyntheticRow<T>.asRowEnd(rowStart: RowStart,rowCellValues: Map<ColumnKey<T>, CellContext>): RowEnd<T> =
     RowEnd(
-        rowIndex = this@asRowEnd.rowIndex,
-        attributes = this@asRowEnd.attributes ?: Attributes(),
+        rowIndex = rowStart.rowIndex,
+        attributes =  rowEndAttributes,
         rowCellValues = rowCellValues
-    ).apply { additionalAttributes = this@asRowEnd.additionalAttributes }
+    ).apply { additionalAttributes = rowStart.additionalAttributes }
+
 
 /**
  * Column operation context with additional model attributes applicable on column level.
@@ -225,12 +224,13 @@ class ColumnStart(
     override fun getColumn(): Int = columnIndex
 }
 
-internal fun <T : Any> Table<T>.asColumnStart(
-    column: ColumnDef<T>,
+internal fun <T : Any> ColumnDef<T>.asColumnStart(
+    table: Table<T>,
+    attributes: Attributes<ColumnStart>,
     customAttributes: MutableMap<String, Any>,
 ) = ColumnStart(
-    columnIndex = getColumnIndex(column.index),
-    attributes = attributes.orEmpty() + column.attributes.orEmpty()
+    columnIndex = table.getColumnIndex(index),
+    attributes = attributes
 ).apply { additionalAttributes = customAttributes }
 
 /**
@@ -252,12 +252,13 @@ class ColumnEnd(
     override fun getColumn(): Int = columnIndex
 }
 
-internal fun <T : Any> Table<T>.asColumnEnd(
-    column: ColumnDef<T>,
+internal fun <T : Any> ColumnDef<T>.asColumnEnd(
+    table: Table<T>,
+    attributes: Attributes<ColumnEnd>,
     customAttributes: MutableMap<String, Any>,
 ) = ColumnEnd(
-    columnIndex = getColumnIndex(column.index),
-    attributes = attributes.orEmpty() + column.attributes.orEmpty()
+    columnIndex = table.getColumnIndex(index),
+    attributes = attributes
 ).apply { additionalAttributes = customAttributes }
 
 /**
@@ -284,7 +285,7 @@ internal fun <T : Any> SyntheticRow<T>.asCellContext(
     cellDefinitions.resolveCellValue(column, row)?.let { value ->
         CellContext(
             value = value,
-            attributes = cellAttributes[column],
+            attributes = cellContextAttributes[column],
             rowIndex = table.getRowIndex(row.rowIndexValue()),
             columnIndex = table.getColumnIndex(column.index)
         ).apply { additionalAttributes = customAttributes }

@@ -5,11 +5,13 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.createTable
 import io.github.voytech.tabulate.components.table.model.ColumnDef
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.*
+import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.DataSourceBinding
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.*
 import io.github.voytech.tabulate.core.template.layout.TableLayoutQueries
 import io.github.voytech.tabulate.core.template.operation.Operations
+import io.github.voytech.tabulate.core.template.operation.distributeAttributesForContexts
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
@@ -59,16 +61,30 @@ interface TabulationApi<T> {
 
 class TableTemplate<T : Any> : ExportTemplate<Table<T>, TableTemplateContext<T>> {
 
+    data class ColumnContextAttributes(val start: Attributes<ColumnStart>, val end: Attributes<ColumnEnd>)
+
     private inner class TabulationApiImpl<T : Any, R : RenderingContext>(
         private val renderingContext: R,
         private val templateContext: TableTemplateContext<T>,
         private val operations: Operations<R>,
     ) : TabulationApi<T> {
+        private val columnContextAttributes = templateContext.model.distributeAttributesForContexts(
+            ColumnStart::class.java, ColumnEnd::class.java
+        )
+        private val columnAttributes: Map<ColumnDef<T>, ColumnContextAttributes> =
+            templateContext.model.columns.associateWith { column ->
+                column.distributeAttributesForContexts(ColumnStart::class.java, ColumnEnd::class.java).let {
+                    ColumnContextAttributes(
+                        columnContextAttributes.get<ColumnStart>() + it.get(),
+                        columnContextAttributes.get<ColumnEnd>() + it.get()
+                    )
+                }
+            }
 
         init {
             with(templateContext) {
                 operations.render(renderingContext, model.asTableStart(templateContext.getCustomAttributes()))
-                renderColumns(renderingContext, operations, templateContext, ColumnRenderPhase.BEFORE_FIRST_ROW)
+                renderingContext.renderColumnStarts(columnAttributes, operations, templateContext)
             }
         }
 
@@ -76,7 +92,7 @@ class TableTemplate<T : Any> : ExportTemplate<Table<T>, TableTemplateContext<T>>
 
         override fun finish() {
             renderRemainingBufferedRows(templateContext)
-            renderColumns(renderingContext, operations, templateContext, ColumnRenderPhase.AFTER_LAST_ROW)
+            renderingContext.renderColumnEnds(columnAttributes, operations, templateContext)
             operations.render(
                 renderingContext,
                 templateContext.model.asTableEnd(templateContext.getCustomAttributes())
@@ -112,24 +128,29 @@ class TableTemplate<T : Any> : ExportTemplate<Table<T>, TableTemplateContext<T>>
         while (state.next() != null);
     }
 
-    private fun <R : RenderingContext, T : Any> renderColumns(
-        renderingContext: R,
+    private fun <R : RenderingContext, T : Any> R.renderColumnStarts(
+        columnAttributes: Map<ColumnDef<T>, ColumnContextAttributes>,
         operations: Operations<R>,
         templateContext: TableTemplateContext<T>,
-        renderPhase: ColumnRenderPhase,
-    ) {
-        with(templateContext) {
-            model.columns.forEach { column: ColumnDef<T> ->
-                operations.render(
-                    renderingContext,
-                    when (renderPhase) {
-                        ColumnRenderPhase.BEFORE_FIRST_ROW ->
-                            model.asColumnStart(column, getCustomAttributes())
-                        ColumnRenderPhase.AFTER_LAST_ROW ->
-                            model.asColumnEnd(column, getCustomAttributes())
-                    }
-                )
-            }
+    ) = with(templateContext) {
+        model.columns.forEach { column: ColumnDef<T> ->
+            operations.render(
+                this@renderColumnStarts,
+                column.asColumnStart(model, columnAttributes[column]?.start ?: Attributes(), getCustomAttributes())
+            )
+        }
+    }
+
+    private fun <R : RenderingContext, T : Any> R.renderColumnEnds(
+        columnAttributes: Map<ColumnDef<T>, ColumnContextAttributes>,
+        operations: Operations<R>,
+        templateContext: TableTemplateContext<T>,
+    ) = with(templateContext) {
+        model.columns.forEach { column: ColumnDef<T> ->
+            operations.render(
+                this@renderColumnEnds,
+                column.asColumnEnd(model, columnAttributes[column]?.end ?: Attributes(), getCustomAttributes())
+            )
         }
     }
 

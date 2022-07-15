@@ -1,8 +1,6 @@
 package io.github.voytech.tabulate.components.sheet.model
 
 import io.github.voytech.tabulate.components.sheet.template.SheetTemplate
-import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.AttributeConstraint
 import io.github.voytech.tabulate.core.model.Model
 import io.github.voytech.tabulate.core.template.ExportTemplate
 import io.github.voytech.tabulate.core.template.TemplateContext

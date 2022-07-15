@@ -17,25 +17,24 @@ import io.github.voytech.tabulate.core.model.AttributeConstraintsBuilder
 class TableAttributesConstraints: AttributeConstraintsProvider {
     override fun defineConstraints(): AttributeConstraintsBuilder.() -> Unit = {
 
-        disableOnModel(ColumnDef::class.java, RowBordersAttribute::class.java)
-        disableOnModel(ColumnDef::class.java, RowHeightAttribute::class.java)
-        disableOnModel(RowDef::class.java, ColumnWidthAttribute::class.java)
-        disableOnModel(CellDef::class.java, RowBordersAttribute::class.java)
-        disableOnModel(CellDef::class.java, RowHeightAttribute::class.java)
-        disableOnModel(CellDef::class.java, ColumnWidthAttribute::class.java)
+        disable<RowBordersAttribute,ColumnDef<Any>>()
+        disable<RowBordersAttribute,CellDef<Any>>()
+        disable<RowHeightAttribute,ColumnDef<Any>>()
+        disable<RowHeightAttribute,CellDef<Any>>()
+        disable<ColumnWidthAttribute,RowDef<Any>>()
+        disable<ColumnWidthAttribute,CellDef<Any>>()
 
-        enableOnContext(ColumnStart::class.java, ColumnWidthAttribute::class.java)
-        enableOnContext(ColumnEnd::class.java, ColumnWidthAttribute::class.java)
+        enable<ColumnWidthAttribute,ColumnStart>()
+        enable<ColumnWidthAttribute,ColumnEnd>()
 
-        enableOnContext(RowStart::class.java, RowBordersAttribute::class.java)
-        enableOnContext(RowEnd::class.java, RowBordersAttribute::class.java)
-        enableOnContext(RowStart::class.java, RowHeightAttribute::class.java)
-        enableOnContext(RowEnd::class.java, RowHeightAttribute::class.java)
+        enable<RowBordersAttribute,RowStart>()
+        enable<RowBordersAttribute,RowEnd<Any>>()
+        enable<RowHeightAttribute,RowStart>()
+        enable<RowHeightAttribute,RowEnd<Any>>()
 
-        enableOnContext(CellContext::class.java, CellTextStylesAttribute::class.java)
-        enableOnContext(CellContext::class.java, CellBordersAttribute::class.java)
-        enableOnContext(CellContext::class.java, CellBackgroundAttribute::class.java)
-        enableOnContext(CellContext::class.java, CellAlignmentAttribute::class.java)
-
+        enable<CellTextStylesAttribute,CellContext>()
+        enable<CellBordersAttribute,CellContext>()
+        enable<CellBackgroundAttribute,CellContext>()
+        enable<CellAlignmentAttribute,CellContext>()
     }
 }

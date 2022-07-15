@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.components.document.api.builder.dsl
 
 import io.github.voytech.tabulate.components.document.api.builder.DocumentBuilderState
 import io.github.voytech.tabulate.components.document.model.Document
+import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.CompositeModelBuilderApi
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.api.builder.dsl.buildModel
@@ -47,7 +48,7 @@ fun createDocument(block: DocumentBuilderApi.() -> Unit): Document = buildModel(
 @TabulateMarker
 class DocumentLevelAttributesBuilderApi internal constructor(private val builderState: DocumentBuilderState) {
     @JvmSynthetic
-    fun attribute(attribute: io.github.voytech.tabulate.core.api.builder.AttributeBuilder<*>) {
+    fun attribute(attribute: AttributeBuilder<*>) {
         builderState.attribute(attribute)
     }
 }

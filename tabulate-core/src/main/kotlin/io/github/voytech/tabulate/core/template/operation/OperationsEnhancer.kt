@@ -39,13 +39,12 @@ internal class AttributesAwareExportOperation<CTX : RenderingContext, E : Attrib
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <A : Attribute<A>> AttributeOperation<CTX, A, E>.renderAttribute(
-        renderingContext: CTX,
-        context: E,
-        clazz: Class<A>,
+    private fun <A: Attribute<A>> ReifiedAttributeOperation<CTX, *, E>.renderAttribute(
+        renderingContext: CTX, context: E,
     ): Boolean {
+        val clazz = meta.t3 as Class<A>
         return context.getModelAttribute(clazz)?.let {
-            invoke(renderingContext, context, it).let { true }
+            (delegate as AttributeOperation<CTX,A,E>).invoke(renderingContext, context, it).let { true }
         } ?: false
     }
 
@@ -61,9 +60,7 @@ internal class AttributesAwareExportOperation<CTX : RenderingContext, E : Attrib
                         delegate(renderingContext, context)
                         operationRendered = true
                     }
-                    with(attributeOperation.delegate) {
-                        renderAttribute(renderingContext, context, attributeOperation.meta.t3)
-                    }
+                    attributeOperation.renderAttribute(renderingContext, context)
                 }
             }
             if (!operationRendered) {
