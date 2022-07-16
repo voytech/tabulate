@@ -63,7 +63,7 @@ class TestExportOperationsFactory: ExportOperationsProvider<TestRenderingContext
 
     override fun provideExportOperations(): BuildOperations<TestRenderingContext> = {
         operation(StartColumnOperation { _, context ->  columnTest?.test(context) })
-        operation(EndRowOperation { _, context ->  rowTest?.test(context) })
+        operation(EndRowOperation<TestRenderingContext,Table<Any>> { _, context ->  rowTest?.test(context) })
         operation(RenderRowCellOperation { _, context ->  cellTest?.test(context) })
     }
 

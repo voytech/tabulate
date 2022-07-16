@@ -62,6 +62,12 @@ abstract class AttributesAwareBuilder<T : AttributedModelOrPart<T>> : InternalBu
         }
     }
 
+    /**
+     * Collects all attributes from stateful builder managed set, and merges them all by class by wrapping
+     * in [Attributes] class
+     * @author Wojciech Mąka
+     * @since 0.2.0
+     */
     fun attributes(): Attributes<T> = Attributes(modelClass(), attributes)
 
 }

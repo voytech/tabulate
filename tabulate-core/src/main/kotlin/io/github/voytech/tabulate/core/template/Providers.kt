@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.core.template
 
-import io.github.voytech.tabulate.core.model.AttributeConstraint
 import io.github.voytech.tabulate.core.model.AttributeConstraintsBuilder
 import io.github.voytech.tabulate.core.model.AttributeConstraintsProvider
 import io.github.voytech.tabulate.core.model.AttributesConstraints

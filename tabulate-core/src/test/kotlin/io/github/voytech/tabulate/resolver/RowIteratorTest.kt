@@ -72,7 +72,7 @@ class RowIteratorTest {
 
     @Test
     fun `should resolve AttributedRow from custom row definition`() {
-        val wrapper = createDefaultIterator<Product> {
+        val wrapper = createDefaultIterator {
             columns {
                 column(Product::code)
             }
@@ -182,7 +182,7 @@ class RowIteratorTest {
                 matching { eq(0) } assign {
                     cell {
                         attributes {
-                            background { color = Colors.BLACK }
+                            background { color = Colors.WHITE }
                         }
                     }
                 }
@@ -198,7 +198,7 @@ class RowIteratorTest {
             assertEquals(1, rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
             with(rowCellValues[ColumnKey("column-0")]!!.attributes!![CellBackgroundAttribute::class.java]) {
                 assertTrue(this is CellBackgroundAttribute)
-                assertEquals(Colors.BLACK, (this as CellBackgroundAttribute).color)
+                assertEquals(Colors.WHITE, (this as CellBackgroundAttribute).color)
                 assertEquals(DefaultCellFill.BRICKS, this.fill)
             }
         }

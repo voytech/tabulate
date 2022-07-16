@@ -10,31 +10,37 @@ import io.github.voytech.tabulate.components.table.model.attributes.cell.CellTex
 import io.github.voytech.tabulate.components.table.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.row.RowBordersAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.row.RowHeightAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.AttributeConstraintsProvider
 import io.github.voytech.tabulate.core.model.AttributeConstraintsBuilder
 
-class TableAttributesConstraints: AttributeConstraintsProvider {
+class TableAttributesConstraints : AttributeConstraintsProvider {
     override fun defineConstraints(): AttributeConstraintsBuilder.() -> Unit = {
 
-        disable<RowBordersAttribute,ColumnDef<Any>>()
-        disable<RowBordersAttribute,CellDef<Any>>()
-        disable<RowHeightAttribute,ColumnDef<Any>>()
-        disable<RowHeightAttribute,CellDef<Any>>()
-        disable<ColumnWidthAttribute,RowDef<Any>>()
-        disable<ColumnWidthAttribute,CellDef<Any>>()
+        disable<TemplateFileAttribute, ColumnDef<Any>>()
+        disable<TemplateFileAttribute, CellDef<Any>>()
+        disable<TemplateFileAttribute, RowDef<Any>>()
+        disable<RowBordersAttribute, ColumnDef<Any>>()
+        disable<RowBordersAttribute, CellDef<Any>>()
+        disable<RowHeightAttribute, ColumnDef<Any>>()
+        disable<RowHeightAttribute, CellDef<Any>>()
+        disable<ColumnWidthAttribute, RowDef<Any>>()
+        disable<ColumnWidthAttribute, CellDef<Any>>()
 
-        enable<ColumnWidthAttribute,ColumnStart>()
-        enable<ColumnWidthAttribute,ColumnEnd>()
+        enable<TemplateFileAttribute, TableStart>()
+        enable<TemplateFileAttribute, TableEnd>()
+        enable<ColumnWidthAttribute, ColumnStart>()
+        enable<ColumnWidthAttribute, ColumnEnd>()
 
-        enable<RowBordersAttribute,RowStart>()
-        enable<RowBordersAttribute,RowEnd<Any>>()
-        enable<RowHeightAttribute,RowStart>()
-        enable<RowHeightAttribute,RowEnd<Any>>()
+        enable<RowBordersAttribute, RowStart>()
+        enable<RowBordersAttribute, RowEnd<Any>>()
+        enable<RowHeightAttribute, RowStart>()
+        enable<RowHeightAttribute, RowEnd<Any>>()
 
-        enable<CellTextStylesAttribute,CellContext>()
-        enable<CellBordersAttribute,CellContext>()
-        enable<CellBackgroundAttribute,CellContext>()
-        enable<CellAlignmentAttribute,CellContext>()
+        enable<CellTextStylesAttribute, CellContext>()
+        enable<CellBordersAttribute, CellContext>()
+        enable<CellBackgroundAttribute, CellContext>()
+        enable<CellAlignmentAttribute, CellContext>()
     }
 }
