@@ -34,7 +34,7 @@ class TestExportOperationsFactory : OperationsBundleProvider<TestRenderingContex
         operation(StartColumnTestOperation(Spy.spy))
         operation(StartRowTestOperation(Spy.spy))
         operation(RenderRowCellTestOperation(Spy.spy))
-        operation(EndRowTestOperation(Spy.spy))
+        operation(EndRowTestOperation<Table<Any>>(Spy.spy))
         operation(EndColumnTestOperation(Spy.spy))
         operation(EndTableTestOperation(Spy.spy))
     }
