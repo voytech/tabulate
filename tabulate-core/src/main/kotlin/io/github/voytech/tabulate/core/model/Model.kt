@@ -9,3 +9,11 @@ interface Model<M: Model<M>> {
     fun getExportTemplate(): ExportTemplate<M,out TemplateContext<M>>? = null
 
 }
+
+interface AttributeAware<A: AttributeAware<A>> {
+    val attributes: Attributes<A>?
+}
+
+interface AttributedModelOrPart<A: AttributedModelOrPart<A>> : AttributeAware<A>
+
+abstract class ModelWithAttributes<M: ModelWithAttributes<M>> : AttributedModelOrPart<M>, Model<M>

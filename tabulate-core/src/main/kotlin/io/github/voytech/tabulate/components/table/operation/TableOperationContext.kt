@@ -2,11 +2,9 @@ package io.github.voytech.tabulate.components.table.operation
 
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.ColumnAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.RowAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.TableAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHintAttribute
 import io.github.voytech.tabulate.components.table.template.SyntheticRow
+import io.github.voytech.tabulate.components.table.template.TableTemplate
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.asXPosition
 import io.github.voytech.tabulate.core.model.asYPosition
@@ -113,47 +111,36 @@ internal fun <T : Any> Table<T>.getRowIndex(rowIndex: Int) = (firstRow ?: 0) + r
 internal fun <T : Any> Table<T>.getColumnIndex(columnIndex: Int) = (firstColumn ?: 0) + columnIndex
 
 @JvmName("getCellModelAttributes")
-inline fun <reified T : CellAttribute<T>> AttributedContext<CellAttribute<*>>.getModelAttribute(): T? =
+inline fun <reified T : CellAttribute<T>> AttributedContext<*>.getModelAttribute(): T? =
     getModelAttribute(T::class.java)
 
-@JvmName("getColumnModelAttributes")
-inline fun <reified T : ColumnAttribute<T>> AttributedContext<ColumnAttribute<*>>.getModelAttribute(): T? =
-    getModelAttribute(T::class.java)
-
-@JvmName("getRowModelAttributes")
-inline fun <reified T : RowAttribute<T>> AttributedContext<RowAttribute<*>>.getModelAttribute(): T? =
-    getModelAttribute(T::class.java)
-
-@JvmName("getTableModelAttributes")
-inline fun <reified T : TableAttribute<T>> AttributedContext<TableAttribute<*>>.getModelAttribute(): T? =
-    getModelAttribute(T::class.java)
 
 /**
  * Table operation context with additional model attributes applicable on table level.
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-sealed class TableContext(
-    attributes: Attributes<TableAttribute<*>>?,
-) : AttributedContext<TableAttribute<*>>(attributes)
+sealed class TableContext<C: TableContext<C>>(
+    attributes: Attributes<C>?,
+) : AttributedContext<C>(attributes)
 
 /**
  * Column operation context with additional model attributes applicable on table level.
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-sealed class ColumnContext(
-    attributes: Attributes<ColumnAttribute<*>>?,
-) : AttributedContext<ColumnAttribute<*>>(attributes)
+sealed class ColumnContext<C: ColumnContext<C>>(
+    attributes: Attributes<C>?,
+) : AttributedContext<C>(attributes)
 
 /**
  * Row operation context with additional model attributes applicable on table level.
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-sealed class RowContext(
-    attributes: Attributes<RowAttribute<*>>?,
-) : AttributedContext<RowAttribute<*>>(attributes)
+sealed class RowContext<C: RowContext<C>>(
+    attributes: Attributes<C>?,
+) : AttributedContext<C>(attributes)
 
 /**
  * Table operation context with additional model attributes applicable on table level.
@@ -161,11 +148,11 @@ sealed class RowContext(
  * @since 0.1.0
  */
 class TableStart(
-    attributes: Attributes<TableAttribute<*>>?,
-) : TableContext(attributes)
+    attributes: Attributes<TableStart>?,
+) : TableContext<TableStart>(attributes)
 
 internal fun <T : Any> Table<T>.asTableStart(customAttributes: MutableMap<String, Any>): TableStart =
-    TableStart(tableAttributes).apply { additionalAttributes = customAttributes }
+    TableStart(attributes?.forContext()).apply { additionalAttributes = customAttributes }
 
 /**
  * Table operation context with additional model attributes applicable on table level.
@@ -173,11 +160,11 @@ internal fun <T : Any> Table<T>.asTableStart(customAttributes: MutableMap<String
  * @since 0.1.0
  */
 class TableEnd(
-    attributes: Attributes<TableAttribute<*>>?,
-) : TableContext(attributes)
+    attributes: Attributes<TableEnd>?,
+) : TableContext<TableEnd>(attributes)
 
 internal fun <T : Any> Table<T>.asTableEnd(customAttributes: MutableMap<String, Any>): TableEnd =
-    TableEnd(tableAttributes).apply { additionalAttributes = customAttributes }
+    TableEnd(attributes?.forContext()).apply { additionalAttributes = customAttributes }
 
 /**
  * Row operation context with additional model attributes applicable on row level.
@@ -185,9 +172,9 @@ internal fun <T : Any> Table<T>.asTableEnd(customAttributes: MutableMap<String, 
  * @since 0.1.0
  */
 class RowStart(
-    attributes: Attributes<RowAttribute<*>>?,
+    attributes: Attributes<RowStart>?,
     val rowIndex: Int,
-) : RowContext(attributes), RowLayoutElement {
+) : RowContext<RowStart>(attributes), RowLayoutElement {
     override fun getRow(): Int = rowIndex
 }
 
@@ -195,7 +182,7 @@ internal fun <T : Any> SyntheticRow<T>.asRowStart(
     rowIndex: Int,
     customAttributes: MutableMap<String, Any>,
 ): RowStart {
-    return RowStart(rowIndex = table.getRowIndex(rowIndex), attributes = rowAttributes)
+    return RowStart(rowIndex = table.getRowIndex(rowIndex), attributes = rowStartAttributes)
         .apply { additionalAttributes = customAttributes }
 }
 
@@ -206,22 +193,23 @@ internal fun <T : Any> SyntheticRow<T>.asRowStart(
  * @since 0.1.0
  */
 class RowEnd<T>(
-    attributes: Attributes<RowAttribute<*>>?,
+    attributes: Attributes<RowEnd<T>>?,
     val rowCellValues: Map<ColumnKey<T>, CellContext>,
     val rowIndex: Int,
-) : RowContext(attributes), RowLayoutElement {
+) : RowContext<RowEnd<T>>(attributes), RowLayoutElement {
     override fun getRow(): Int = rowIndex
 
     fun getCells(): Map<ColumnKey<T>, CellContext> = rowCellValues
 
 }
 
-fun <T> RowStart.asRowEnd(rowCellValues: Map<ColumnKey<T>, CellContext>): RowEnd<T> =
+internal fun  <T : Any> SyntheticRow<T>.asRowEnd(rowStart: RowStart,rowCellValues: Map<ColumnKey<T>, CellContext>): RowEnd<T> =
     RowEnd(
-        rowIndex = this@asRowEnd.rowIndex,
-        attributes = this@asRowEnd.attributes ?: Attributes(attributeCategory = RowAttribute::class.java),
+        rowIndex = rowStart.rowIndex,
+        attributes =  rowEndAttributes,
         rowCellValues = rowCellValues
-    ).apply { additionalAttributes = this@asRowEnd.additionalAttributes }
+    ).apply { additionalAttributes = rowStart.additionalAttributes }
+
 
 /**
  * Column operation context with additional model attributes applicable on column level.
@@ -229,19 +217,20 @@ fun <T> RowStart.asRowEnd(rowCellValues: Map<ColumnKey<T>, CellContext>): RowEnd
  * @since 0.1.0
  */
 class ColumnStart(
-    attributes: Attributes<ColumnAttribute<*>>? = null,
+    attributes: Attributes<ColumnStart>? = null,
     val columnIndex: Int,
-) : ColumnContext(attributes), ColumnLayoutElement {
+) : ColumnContext<ColumnStart>(attributes), ColumnLayoutElement {
     val currentPhase: ColumnRenderPhase = ColumnRenderPhase.BEFORE_FIRST_ROW
     override fun getColumn(): Int = columnIndex
 }
 
-internal fun <T : Any> Table<T>.asColumnStart(
-    column: ColumnDef<T>,
+internal fun <T : Any> ColumnDef<T>.asColumnStart(
+    table: Table<T>,
+    attributes: Attributes<ColumnStart>,
     customAttributes: MutableMap<String, Any>,
 ) = ColumnStart(
-    columnIndex = getColumnIndex(column.index),
-    attributes = columnAttributes.orEmpty() + column.columnAttributes.orEmpty()
+    columnIndex = table.getColumnIndex(index),
+    attributes = attributes
 ).apply { additionalAttributes = customAttributes }
 
 /**
@@ -256,19 +245,20 @@ enum class ColumnRenderPhase {
 }
 
 class ColumnEnd(
-    attributes: Attributes<ColumnAttribute<*>>? = null,
+    attributes: Attributes<ColumnEnd>? = null,
     val columnIndex: Int,
-) : ColumnContext(attributes), ColumnLayoutElement {
+) : ColumnContext<ColumnEnd>(attributes), ColumnLayoutElement {
     val currentPhase: ColumnRenderPhase = ColumnRenderPhase.AFTER_LAST_ROW
     override fun getColumn(): Int = columnIndex
 }
 
-internal fun <T : Any> Table<T>.asColumnEnd(
-    column: ColumnDef<T>,
+internal fun <T : Any> ColumnDef<T>.asColumnEnd(
+    table: Table<T>,
+    attributes: Attributes<ColumnEnd>,
     customAttributes: MutableMap<String, Any>,
 ) = ColumnEnd(
-    columnIndex = getColumnIndex(column.index),
-    attributes = columnAttributes.orEmpty() + column.columnAttributes.orEmpty()
+    columnIndex = table.getColumnIndex(index),
+    attributes = attributes
 ).apply { additionalAttributes = customAttributes }
 
 /**
@@ -278,16 +268,14 @@ internal fun <T : Any> Table<T>.asColumnEnd(
  */
 class CellContext(
     val value: CellValue,
-    attributes: Attributes<CellAttribute<*>>?,
+    attributes: Attributes<CellContext>?,
     val rowIndex: Int,
     val columnIndex: Int,
     val rawValue: Any = value.value,
-) : AttributedContext<CellAttribute<*>>(attributes), RowCellLayoutElement {
+) : AttributedContext<CellContext>(attributes), RowCellLayoutElement {
     override fun getRow(): Int = rowIndex
     override fun getColumn(): Int = columnIndex
-
 }
-
 
 internal fun <T : Any> SyntheticRow<T>.asCellContext(
     row: SourceRow<T>,
@@ -297,7 +285,7 @@ internal fun <T : Any> SyntheticRow<T>.asCellContext(
     cellDefinitions.resolveCellValue(column, row)?.let { value ->
         CellContext(
             value = value,
-            attributes = cellAttributes[column],
+            attributes = cellContextAttributes[column],
             rowIndex = table.getRowIndex(row.rowIndexValue()),
             columnIndex = table.getColumnIndex(column.index)
         ).apply { additionalAttributes = customAttributes }

@@ -12,6 +12,7 @@ import java.io.OutputStream
 
 
 class PdfBoxOutputBindingsFactory : OutputBindingsProvider<PdfBoxRenderingContext> {
+
     override fun createOutputBindings(): List<OutputBinding<PdfBoxRenderingContext, *>> = listOf(
         PdfBoxOutputStreamOutputBinding()
     )

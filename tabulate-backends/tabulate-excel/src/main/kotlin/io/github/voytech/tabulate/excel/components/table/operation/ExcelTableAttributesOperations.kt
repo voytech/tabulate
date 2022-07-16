@@ -156,12 +156,12 @@ class CellBordersAttributeRenderOperation :
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-class RowBordersAttributeRenderOperation :
-    RowAttributeRenderOperation<ApachePoiRenderingContext, RowBordersAttribute, RowEnd<*>>() {
+class RowBordersAttributeRenderOperation<T: Any> :
+    RowAttributeRenderOperation<ApachePoiRenderingContext, RowBordersAttribute, RowEnd<T>>() {
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
-        context: RowEnd<*>,
+        context: RowEnd<T>,
         attribute: RowBordersAttribute,
     ): Unit = with(renderingContext) {
         provideSheet(context.getSheetName()).let { sheet ->

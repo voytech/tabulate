@@ -57,7 +57,7 @@ class PdfTableOperations : ExportOperationsProvider<PdfBoxRenderingContext, Tabl
                 }
             }
         })
-        operation(EndRowOperation { _, _ ->
+        operation(EndRowOperation<PdfBoxRenderingContext,Table<Any>> { _, _ ->
 
         })
         operation(EndColumnOperation { _, _ ->

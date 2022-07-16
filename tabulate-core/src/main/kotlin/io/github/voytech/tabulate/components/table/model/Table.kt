@@ -1,13 +1,9 @@
 package io.github.voytech.tabulate.components.table.model
 
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.ColumnAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.RowAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.TableAttribute
 import io.github.voytech.tabulate.components.table.template.TableTemplate
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.DataSourceBinding
-import io.github.voytech.tabulate.core.model.Model
+import io.github.voytech.tabulate.core.model.ModelWithAttributes
 import io.github.voytech.tabulate.core.template.ExportTemplate
 import io.github.voytech.tabulate.core.template.TemplateContext
 
@@ -46,28 +42,13 @@ class Table<T: Any> internal constructor(
     /**
      * Table attributes.
      */
-    @get:JvmSynthetic
-    internal val tableAttributes: Attributes<TableAttribute<*>>?,
-    /**
-     * Cell attributes. To be applied on each cell within entire table.
-     */
-    @get:JvmSynthetic
-    internal val cellAttributes: Attributes<CellAttribute<*>>?,
-    /**
-     * Column attributes. To be applied on each column within entire table.
-     */
-    @get:JvmSynthetic
-    internal val columnAttributes: Attributes<ColumnAttribute<*>>?,
-    /**
-     * Row attributes. To be applied on each row within entire table.
-     */
-    @get:JvmSynthetic
-    internal val rowAttributes: Attributes<RowAttribute<*>>?,
 
     @get:JvmSynthetic
-    internal val dataSource: DataSourceBinding<T>?
+    internal val dataSource: DataSourceBinding<T>?,
 
-) : Model<Table<T>> {
+    override val attributes: Attributes<Table<T>>?
+
+) : ModelWithAttributes<Table<T>>() {
     override fun getId(): String = name
 
     override fun getExportTemplate(): ExportTemplate<Table<T>, out TemplateContext<Table<T>>> = TableTemplate()

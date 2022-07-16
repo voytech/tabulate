@@ -1,9 +1,7 @@
 package io.github.voytech.tabulate.core.api.builder
 
-import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.AttributeClassifier
-import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.model.Model
+import io.github.voytech.tabulate.core.model.*
+import io.github.voytech.tabulate.core.template.loadAttributeConstraints
 import kotlin.properties.ObservableProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -14,6 +12,7 @@ typealias DslBlock<T> = (T) -> Unit
 sealed interface BuilderInterface<T> {
     fun build(): T
 }
+
 /**
  * Basic builder contract.
  * @author Wojciech Mąka
@@ -32,38 +31,44 @@ abstract class InternalBuilder<T> : BuilderInterface<T> {
 interface ModelBuilderState<T : Model<T>> : BuilderInterface<T>
 
 interface CompositeModelBuilderState<T : Model<T>> : ModelBuilderState<T> {
-    fun <E: Model<E>> bind(node: ModelBuilderState<E>)
+    fun <E : Model<E>> bind(node: ModelBuilderState<E>)
 }
+
 /**
  * Base class for all table builders that allow creating attributes.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class AttributesAwareBuilder<T> : InternalBuilder<T>() {
+abstract class AttributesAwareBuilder<T : AttributedModelOrPart<T>> : InternalBuilder<T>() {
 
-    private var attributes: MutableMap<AttributeClassifier<*,*>, MutableSet<Attribute<*>>> = mutableMapOf()
+    private var attributes: MutableSet<Attribute<*>> = mutableSetOf()
+
+    private val constraints: AttributesConstraints by lazy {
+        loadAttributeConstraints()
+    }
+
+    private val constraintsForModel: List<ModelAttributeConstraint<*, *>> by lazy {
+        constraints.disabledOnModels[modelClass()] ?: emptyList()
+    }
+
+    abstract fun modelClass(): Class<T>
 
     @JvmSynthetic
     protected open fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(builder: B) {
-        applyAttribute(builder.build())
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    @JvmSynthetic
-    protected fun <C : Attribute<*>> getAttributesByClassifier(classifier: AttributeClassifier<C,*>): Attributes<C> {
-        return Attributes(
-            if (attributes.containsKey(classifier)) attributes[classifier] as Set<C> else emptySet(),
-            classifier.attributeCategory
-        )
-    }
-
-    private fun applyAttribute(attribute: Attribute<*>) {
-        if (!getUnsupportedClassifiers().contains(attribute.getClassifier())) {
-            attributes.computeIfAbsent(attribute.getClassifier()) { mutableSetOf() }.run { add(attribute) }
+        with(builder.build()) {
+            if (!constraintsForModel.contains(ModelAttributeConstraint(modelClass(), javaClass))) {
+                attributes.add(this)
+            }
         }
     }
 
-    abstract fun getUnsupportedClassifiers(): Set<AttributeClassifier<*,*>>
+    /**
+     * Collects all attributes from stateful builder managed set, and merges them all by class by wrapping
+     * in [Attributes] class
+     * @author Wojciech Mąka
+     * @since 0.2.0
+     */
+    fun attributes(): Attributes<T> = Attributes(modelClass(), attributes)
 
 }
 

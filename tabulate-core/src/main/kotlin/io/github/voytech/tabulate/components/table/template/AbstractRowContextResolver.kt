@@ -1,15 +1,25 @@
 package io.github.voytech.tabulate.components.table.template
 
 import io.github.voytech.tabulate.components.table.model.*
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.RowAttribute
 import io.github.voytech.tabulate.components.table.operation.*
+import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.orEmpty
+import io.github.voytech.tabulate.core.template.operation.AttributesByContexts
+import io.github.voytech.tabulate.core.template.operation.distributeAttributesForContexts
 
-internal class IndexedTableRows<T: Any>(
+internal fun <T : AttributedModelOrPart<T>> T.attributesForAllContexts(): AttributesByContexts<T> =
+    distributeAttributesForContexts(
+        CellContext::class.java,
+        RowStart::class.java,
+        RowEnd::class.java,
+        ColumnStart::class.java,
+        ColumnEnd::class.java
+    )
+
+internal class IndexedTableRows<T : Any>(
     val table: Table<T>,
-    private val stepClass: Class<out Enum<*>> = AdditionalSteps::class.java
+    private val stepClass: Class<out Enum<*>> = AdditionalSteps::class.java,
 ) {
     private val indexedCustomRows: Map<RowIndexDef, List<RowDef<T>>>? = table.rows
         ?.filter { it.qualifier.index != null }
@@ -52,42 +62,45 @@ internal class IndexedTableRows<T: Any>(
     }
 }
 
-internal fun <T: Any> Table<T>.indexRows(): IndexedTableRows<T> = IndexedTableRows(this)
+internal fun <T : Any> Table<T>.indexRows(): IndexedTableRows<T> = IndexedTableRows(this)
 
-internal class SyntheticRow<T: Any>(
+internal class SyntheticRow<T : Any>(
     internal val table: Table<T>,
     private val rowDefinitions: Set<RowDef<T>>,
+    // computed intermediate properties:
+    internal val tableAttributesForContext: AttributesByContexts<Table<T>> = table.attributesForAllContexts(),
     internal val cellDefinitions: Map<ColumnKey<T>, CellDef<T>> = rowDefinitions.mergeCells(),
-    private val rowCellAttributes: Attributes<CellAttribute<*>> = rowDefinitions.flattenCellAttributes(),
-    internal val rowAttributes: Attributes<RowAttribute<*>> =
-        table.rowAttributes.orEmpty() + rowDefinitions.flattenRowAttributes(),
-    internal val cellAttributes: MutableMap<ColumnDef<T>, Attributes<CellAttribute<*>>> = mutableMapOf()
+    private val allRowAttributes: Attributes<RowDef<T>> = rowDefinitions.flattenRowAttributes(),
+    // attributes to be accessible on AttributedContext:
+    internal val rowStartAttributes: Attributes<RowStart> = tableAttributesForContext.get<RowStart>() + allRowAttributes.forContext(),
+    internal val rowEndAttributes: Attributes<RowEnd<T>> = tableAttributesForContext.get<RowEnd<T>>() + allRowAttributes.forContext(),
+    private val rowCellAttributes: Attributes<CellContext> = rowDefinitions.flattenCellAttributes().forContext(),
+    internal val cellContextAttributes: MutableMap<ColumnDef<T>, Attributes<CellContext>> = mutableMapOf(),
 ) {
 
     @Suppress("NOTHING_TO_INLINE")
-    inline fun mergeCellAttributes(column: ColumnDef<T>) =
-            table.cellAttributes.orEmpty() +
-            column.cellAttributes.orEmpty() +
-            rowCellAttributes +
-            cellDefinitions[column.id]?.cellAttributes.orEmpty()
-
+    inline fun mergeCellAttributes(column: ColumnDef<T>): Attributes<CellContext> =
+        tableAttributesForContext.get<CellContext>().orEmpty() +
+                column.attributes.orEmpty().forContext() +
+                rowCellAttributes +
+                cellDefinitions[column.id]?.attributes.orEmpty().forContext()
 
     internal fun mapEachCell(
-        block: (syntheticRow: SyntheticRow<T>, column: ColumnDef<T>) -> CellContext?
+        block: (syntheticRow: SyntheticRow<T>, column: ColumnDef<T>) -> CellContext?,
     ): Map<ColumnKey<T>, CellContext> =
-        if (cellAttributes.isEmpty()) {
+        if (cellContextAttributes.isEmpty()) {
             table.columns.mapNotNull { column ->
-                cellAttributes[column] = mergeCellAttributes(column)
+                cellContextAttributes[column] = mergeCellAttributes(column)
                 block(this, column)?.let { column.id to it }
             }.toMap()
         } else {
-            cellAttributes.keys.mapNotNull { column ->
+            cellContextAttributes.keys.mapNotNull { column ->
                 block(this, column)?.let { column.id to it }
             }.toMap()
         }
 }
 
-internal class QualifiedRows<T: Any>(private val indexedTableRows: IndexedTableRows<T>) {
+internal class QualifiedRows<T : Any>(private val indexedTableRows: IndexedTableRows<T>) {
     private var qualifiedRowsIndex: MutableMap<Set<RowDef<T>>, SyntheticRow<T>> = mutableMapOf()
 
     internal fun findQualifying(sourceRow: SourceRow<T>): SyntheticRow<T> =
@@ -115,7 +128,7 @@ interface RowCompletionListener<T> {
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-internal abstract class AbstractRowContextResolver<T: Any>(
+internal abstract class AbstractRowContextResolver<T : Any>(
     tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
     private val listener: RowCompletionListener<T>? = null,
@@ -139,18 +152,16 @@ internal abstract class AbstractRowContextResolver<T: Any>(
 
     private fun resolveAttributedRow(
         tableRowIndex: RowIndex,
-        record: IndexedValue<T>? = null
+        record: IndexedValue<T>? = null,
     ): RowEnd<T> {
         return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
             with(rows.findQualifying(sourceRow)) {
-                asRowStart(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
-                    .let {
-                        it.asRowEnd(
-                            mapEachCell { row, column ->
-                                row.asCellContext(row = sourceRow, column = column, customAttributes)?.notify()
-                            }
-                        )
-                    }.notify()
+                asRowEnd(
+                    asRowStart(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify(),
+                    mapEachCell { row, column ->
+                        row.asCellContext(row = sourceRow, column = column, customAttributes)?.notify()
+                    }
+                ).notify()
             }
         }
     }
@@ -158,9 +169,9 @@ internal abstract class AbstractRowContextResolver<T: Any>(
     private fun resolveRowContext(
         tableRowIndex: RowIndex,
         indexedRecord: IndexedValue<T>? = null,
-    ): IndexedContext<RowEnd<T>> {
-        return IndexedContext(tableRowIndex, resolveAttributedRow(tableRowIndex, indexedRecord))
-    }
+    ): IndexedContext<RowEnd<T>> =
+        IndexedContext(tableRowIndex, resolveAttributedRow(tableRowIndex, indexedRecord))
+
 
     /**
      * Resolves indexed [RowEnd]. Index may be equal to parameter index value, or if there are no matching predicates,

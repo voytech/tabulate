@@ -44,7 +44,8 @@ internal class SlowRowResolver<T: Any>(
             with(SyntheticRow(tableModel, rowDefinitions)) {
                 asRowStart(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
                     .let {
-                        it.asRowEnd(
+                        asRowEnd(
+                            it,
                             mapEachCell { row, column ->
                                 row.asCellContext(row = sourceRow, column = column, customAttributes)?.notify()
                             }

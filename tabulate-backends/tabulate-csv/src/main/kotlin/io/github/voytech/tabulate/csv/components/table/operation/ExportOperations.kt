@@ -28,7 +28,7 @@ class CsvExportOperationsFactory : ExportOperationsProvider<CsvRenderingContext,
         operation(StartRowOperation { renderingContext, _ ->
             renderingContext.line.clear()
         })
-        operation(EndRowOperation { renderingContext, context ->
+        operation(EndRowOperation<CsvRenderingContext,Any> { renderingContext, context ->
             val lastIndex = context.rowCellValues.size - 1
             with(renderingContext) {
                 context.rowCellValues.values.forEachIndexed { index, cell ->

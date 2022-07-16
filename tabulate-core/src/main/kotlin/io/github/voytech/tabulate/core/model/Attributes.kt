@@ -1,16 +1,54 @@
 package io.github.voytech.tabulate.core.model
 
+import io.github.voytech.tabulate.core.template.loadAttributeConstraints
+import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
-data class AttributeClassifier<CAT : Attribute<*>, ARM : Model<ARM>>(
-    val attributeCategory: Class<CAT>,
-    val model: Class<ARM>
-) {
-    companion object {
-        inline fun <reified CAT : Attribute<*>, reified ARM : Model<ARM>> classify() =
-            AttributeClassifier(CAT::class.java, ARM::class.java)
+interface AttributeConstraint
+
+data class ModelAttributeConstraint<A : Attribute<A>, MA : AttributedModelOrPart<MA>>(
+    val model: Class<MA>,
+    val attribute: Class<A>,
+) : AttributeConstraint
+
+data class ContextAttributeConstraint<A : Attribute<A>, CA : AttributedContext<CA>>(
+    val context: Class<CA>,
+    val attribute: Class<A>,
+) : AttributeConstraint
+
+
+data class AttributesConstraints(
+    private val disabledOnModelsIn: List<ModelAttributeConstraint<*, *>>,
+    private val enabledForContextsIn: List<ContextAttributeConstraint<*, *>>,
+    val disabledOnModels: Map<Class<out AttributedModelOrPart<*>>, List<ModelAttributeConstraint<*, *>>> = disabledOnModelsIn.groupBy { it.model },
+    val enabledForContext: Map<Class<out AttributedContext<*>>, List<ContextAttributeConstraint<*, *>>> = enabledForContextsIn.groupBy { it.context },
+)
+
+class AttributeConstraintsBuilder {
+    private val modelConstraints: MutableList<ModelAttributeConstraint<*, *>> = mutableListOf()
+    private val contextConstraints: MutableList<ContextAttributeConstraint<*, *>> = mutableListOf()
+
+    fun disableOnModel(
+        model: Class<out AttributedModelOrPart<*>>,
+        attribute: Class<out Attribute<*>>,
+    ) {
+        modelConstraints.add(ModelAttributeConstraint(model, attribute))
     }
+
+    inline fun <reified A: Attribute<A>,reified T: AttributedModelOrPart<T>> disable() = disableOnModel(T::class.java,A::class.java)
+
+    fun enableOnContext(
+        context: Class<out AttributedContext<*>>,
+        attribute: Class<out Attribute<*>>,
+    ) {
+        contextConstraints.add(ContextAttributeConstraint(context, attribute))
+    }
+
+    inline fun <reified A: Attribute<A>,reified T: AttributedContext<T>> enable() = enableOnContext(T::class.java,A::class.java)
+
+    @JvmSynthetic
+    internal fun build(): AttributesConstraints = AttributesConstraints(modelConstraints, contextConstraints)
 }
 
 abstract class Attribute<T : Attribute<T>> {
@@ -30,32 +68,27 @@ abstract class Attribute<T : Attribute<T>> {
     protected fun <P> takeIfChanged(other: T, property: KProperty1<T, P>): P =
         if (other.isModified(property)) property.invoke(other) else property.invoke(this as T)
 
-    abstract fun getClassifier(): AttributeClassifier<*, *>
-
 }
 
-inline fun <reified CAT : Attribute<*>, ARM : Model<ARM>> Class<CAT>.classifyUnder(rootModel: Class<ARM>) =
-    AttributeClassifier(CAT::class.java, rootModel)
+typealias AttributeMap = MutableMap<Class<Attribute<*>>, Attribute<*>>
 
-inline fun <CAT : Attribute<*>, reified ARM : Model<ARM>> Class<ARM>.classifyWith(category: Class<CAT>) =
-    AttributeClassifier(category, ARM::class.java)
+class Attributes<A : AttributeAware<A>>(
+    private val ownerClass: Class<A>,
+    internal val attributeSet: Set<Attribute<*>> = emptySet(),
+) {
+    private val constraints: AttributesConstraints by lazy {
+        loadAttributeConstraints()
+    }
 
-fun interface AttributeCategoryAware<A : Attribute<*>> {
-    fun getAttributeCategoryClass(): Class<A>
-}
-
-class Attributes<A : Attribute<*>>(
-    internal val attributeSet: Set<A> = emptySet(), private val attributeCategory: Class<A>
-) : AttributeCategoryAware<A> {
-    private var attributeMap: MutableMap<Class<A>, A> = LinkedHashMap()
+    private var attributeMap: AttributeMap = LinkedHashMap()
 
     private val attributeSetHashCode by lazy { attributeSet.hashCode() }
 
     val size: Int by attributeSet::size
 
-    private constructor(attributeSet: Set<A>, map: HashMap<Class<A>, A>, attributeCategory: Class<A>) : this(
-        attributeSet,
-        attributeCategory
+    private constructor(ownerClass: Class<A>, attributeSet: Set<Attribute<*>>, map: AttributeMap) : this(
+        ownerClass,
+        attributeSet
     ) {
         this.attributeMap = map
     }
@@ -63,19 +96,18 @@ class Attributes<A : Attribute<*>>(
     init {
         if (attributeMap.isEmpty()) {
             attributeSet.mergeAttributes().forEach {
-                attributeMap[(it as A).javaClass] = it
+                attributeMap[it.javaClass] = it
             }
         }
     }
 
-    override fun getAttributeCategoryClass(): Class<A> = attributeCategory
-
     @Suppress("UNCHECKED_CAST")
-    private fun <I: Attribute<I>> Attribute<*>.overrideAttribute(other: Attribute<*>): Attribute<*> = (this as I) + (other as I)
+    private fun <I : Attribute<I>> Attribute<*>.overrideAttribute(other: Attribute<*>): Attribute<*> =
+        (this as I) + (other as I)
 
     operator fun plus(other: Attributes<A>): Attributes<A> {
-        val result = HashMap<Class<A>, A>()
-        val set = mutableSetOf<A>()
+        val result = HashMap<Class<Attribute<*>>, Attribute<*>>()
+        val set = mutableSetOf<Attribute<*>>()
         attributeMap.forEach { (clazz, attribute) ->
             result[clazz] = attribute
             set.add(attribute)
@@ -83,17 +115,33 @@ class Attributes<A : Attribute<*>>(
         other.attributeMap.forEach { (clazz, attribute) ->
             if (result.containsKey(clazz)) {
                 set.remove(result[clazz])
-                result[clazz] = result[clazz]!!.overrideAttribute(attribute) as A
+                result[clazz] = result[clazz]!!.overrideAttribute(attribute)
             } else {
                 result[clazz] = attribute
             }
             set.add(result[clazz]!!)
         }
-        return Attributes(set, result, attributeCategory)
+        return Attributes(ownerClass, set, result)
     }
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <E : A> get(clazz: Class<E>): E? = (attributeMap as Map<Class<out A>, A>) [clazz] as E?
+    operator fun <E : Attribute<E>> get(clazz: Class<E>): E? = attributeMap[clazz as Class<Attribute<*>>] as E?
+
+    fun <O : AttributedModelOrPart<O>> cast(clazz: Class<O>): Attributes<O> {
+        return constraints.disabledOnModels[clazz]?.map { it.attribute }?.let { incompatibleClasses ->
+            Attributes(clazz, attributeSet.filter { it.javaClass !in incompatibleClasses }.toSet())
+        } ?: Attributes(clazz, attributeSet)
+    }
+
+    fun <O : AttributedContext<O>> forContext(clazz: Class<O>): Attributes<O> {
+        return constraints.enabledForContext[clazz]?.map { it.attribute }?.let { compatibleClasses ->
+            Attributes(clazz, attributeSet.filter { it.javaClass in compatibleClasses }.toSet())
+        } ?: Attributes(clazz)
+    }
+
+    inline fun <reified O : AttributedModelOrPart<O>> cast(): Attributes<O> = cast(O::class.java)
+
+    inline fun <reified O : AttributedContext<O>> forContext(): Attributes<O> = forContext(O::class.java)
 
     fun isNotEmpty(): Boolean = size > 0
 
@@ -105,16 +153,16 @@ class Attributes<A : Attribute<*>>(
     }
 
     override fun hashCode(): Int = attributeSetHashCode
+
+    companion object {
+        inline operator fun <reified A : AttributeAware<A>> invoke() = Attributes(A::class.java)
+    }
 }
 
-inline fun <reified A: Attribute<*>> Attributes<A>?.orEmpty() = this ?: Attributes(emptySet(), A::class.java)
 
-fun <A: Attribute<*>> Attributes<A>?.isNullOrEmpty(): Boolean = this?.size == 0
+inline fun <reified A : AttributeAware<A>> Attributes<A>?.orEmpty() = this ?: Attributes(A::class.java, emptySet())
 
-data class CategorizedAttributes(
-    private val categories: Set<Attributes<*>>,
-    internal val byCategory: Map<Class<out Attribute<*>>, Attributes<*>> = categories.associateBy { it.getAttributeCategoryClass() }
-)
+fun <A : AttributeAware<A>> Attributes<A>?.isNullOrEmpty(): Boolean = this?.size == 0
 
 /**
  * Takes a list of same class attributes and merges them into single attribute.
