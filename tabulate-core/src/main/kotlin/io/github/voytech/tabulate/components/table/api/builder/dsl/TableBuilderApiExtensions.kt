@@ -8,7 +8,7 @@ import java.time.LocalDate
 import kotlin.reflect.KProperty1
 
 @TabulateMarker
-class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
+class HeaderBuilderApi<T: Any>(val builder: RowsBuilderApi<T>) {
 
     @JvmSynthetic
     fun columnTitle(id: String, block: CellBuilderApi<T>.() -> Unit) {
@@ -51,11 +51,11 @@ class HeaderBuilderApi<T>(val builder: RowsBuilderApi<T>) {
 
 }
 
-fun <T> RowsBuilderApi<T>.header(block: HeaderBuilderApi<T>.() -> Unit) =
+fun <T: Any> RowsBuilderApi<T>.header(block: HeaderBuilderApi<T>.() -> Unit) =
     HeaderBuilderApi(this).apply(block)
 
 
-fun <T> RowsBuilderApi<T>.header(vararg names: String) =
+fun <T: Any> RowsBuilderApi<T>.header(vararg names: String) =
     newRow(0) {
         cells {
             names.forEach {
@@ -64,7 +64,7 @@ fun <T> RowsBuilderApi<T>.header(vararg names: String) =
         }
     }
 
-fun <T> RowsBuilderApi<T>.rowNumberingOn(id: String) {
+fun <T: Any> RowsBuilderApi<T>.rowNumberingOn(id: String) {
     row({ source -> source.rowIndexValue() > 0 && source.rowIndex.step == null }) {
         cells {
             cell(id) {
@@ -74,19 +74,19 @@ fun <T> RowsBuilderApi<T>.rowNumberingOn(id: String) {
     }
 }
 
-fun <T> RowsBuilderApi<T>.footer(block: RowBuilderApi<T>.() -> Unit) {
+fun <T: Any> RowsBuilderApi<T>.footer(block: RowBuilderApi<T>.() -> Unit) {
     newRow(0, AdditionalSteps.TRAILING_ROWS, block)
 }
 
-fun <T> RowsBuilderApi<T>.newTrailingRow(block: RowBuilderApi<T>.() -> Unit) {
+fun <T: Any> RowsBuilderApi<T>.newTrailingRow(block: RowBuilderApi<T>.() -> Unit) {
     newRow(AdditionalSteps.TRAILING_ROWS, block)
 }
 
-fun <T> RowsBuilderApi<T>.newTrailingRow(index: Int, block: RowBuilderApi<T>.() -> Unit) {
+fun <T: Any> RowsBuilderApi<T>.newTrailingRow(index: Int, block: RowBuilderApi<T>.() -> Unit) {
     newRow(index, AdditionalSteps.TRAILING_ROWS, block)
 }
 
-private fun <T, R> cellBuilderBlock(
+private fun <T: Any, R> cellBuilderBlock(
     cSpan: Int = 1,
     rSpan: Int = 1,
     valueSupplier: () -> R,
@@ -96,7 +96,7 @@ private fun <T, R> cellBuilderBlock(
     value = valueSupplier()
 }
 
-fun <T> RowBuilderApi<T>.textCell(
+fun <T: Any> RowBuilderApi<T>.textCell(
     index: Int? = null,
     colSpan: Int = 1,
     rowSpan: Int = 1,
@@ -106,7 +106,7 @@ fun <T> RowBuilderApi<T>.textCell(
     index?.let { cell(it, block) } ?: cell(block)
 }
 
-fun <T> RowBuilderApi<T>.decimalCell(
+fun <T: Any> RowBuilderApi<T>.decimalCell(
     index: Int? = null,
     colSpan: Int = 1,
     rowSpan: Int = 1,
@@ -116,7 +116,7 @@ fun <T> RowBuilderApi<T>.decimalCell(
     index?.let { cell(it, block) } ?: cell(block)
 }
 
-fun <T> RowBuilderApi<T>.dataCell(
+fun <T: Any> RowBuilderApi<T>.dataCell(
     index: Int? = null,
     colSpan: Int = 1,
     rowSpan: Int = 1,
@@ -125,7 +125,7 @@ fun <T> RowBuilderApi<T>.dataCell(
     index?.let { cell(it, block) } ?: cell(block)
 }
 
-fun <T> RowBuilderApi<T>.boolCell(
+fun <T: Any> RowBuilderApi<T>.boolCell(
     index: Int? = null,
     colSpan: Int = 1,
     rowSpan: Int = 1,
@@ -134,7 +134,7 @@ fun <T> RowBuilderApi<T>.boolCell(
     index?.let { cell(it, block) } ?: cell(block)
 }
 
-fun <T> RowBuilderApi<T>.imageUrlCell(
+fun <T: Any> RowBuilderApi<T>.imageUrlCell(
     index: Int? = null,
     colSpan: Int = 1,
     rowSpan: Int = 1,
@@ -143,7 +143,7 @@ fun <T> RowBuilderApi<T>.imageUrlCell(
     index?.let { cell(it, block) } ?: cell(block)
 }
 
-fun <T> RowBuilderApi<T>.imageDataCell(
+fun <T: Any> RowBuilderApi<T>.imageDataCell(
     index: Int? = null,
     colSpan: Int = 1,
     rowSpan: Int = 1,

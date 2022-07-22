@@ -35,13 +35,13 @@ data class CellAlignmentAttribute(
 
 }
 
-fun <T> CellLevelAttributesBuilderApi<T>.alignment(block: CellAlignmentAttribute.Builder.() -> Unit) =
+fun <T: Any> CellLevelAttributesBuilderApi<T>.alignment(block: CellAlignmentAttribute.Builder.() -> Unit) =
     attribute(CellAlignmentAttribute.Builder().apply(block))
 
-fun <T> ColumnLevelAttributesBuilderApi<T>.alignment(block: CellAlignmentAttribute.Builder.() -> Unit) =
+fun <T: Any> ColumnLevelAttributesBuilderApi<T>.alignment(block: CellAlignmentAttribute.Builder.() -> Unit) =
     attribute(CellAlignmentAttribute.Builder().apply(block))
 
-fun <T> RowLevelAttributesBuilderApi<T>.alignment(block: CellAlignmentAttribute.Builder.() -> Unit) =
+fun <T: Any> RowLevelAttributesBuilderApi<T>.alignment(block: CellAlignmentAttribute.Builder.() -> Unit) =
     attribute(CellAlignmentAttribute.Builder().apply(block))
 
 fun <T: Any> TableLevelAttributesBuilderApi<T>.alignment(block: CellAlignmentAttribute.Builder.() -> Unit) =

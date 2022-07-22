@@ -10,10 +10,14 @@ interface Model<M: Model<M>> {
 
 }
 
+interface ModelPart
+
 interface AttributeAware<A: AttributeAware<A>> {
     val attributes: Attributes<A>?
 }
 
-interface AttributedModelOrPart<A: AttributedModelOrPart<A>> : AttributeAware<A>
+interface AttributedModelOrPart<A: AttributedModelOrPart<A>> : AttributeAware<A>, ModelPart
 
 abstract class ModelWithAttributes<M: ModelWithAttributes<M>> : AttributedModelOrPart<M>, Model<M>
+
+abstract class ModelPartWithAttributes<M: ModelPartWithAttributes<M>>: AttributedModelOrPart<M>, ModelPart

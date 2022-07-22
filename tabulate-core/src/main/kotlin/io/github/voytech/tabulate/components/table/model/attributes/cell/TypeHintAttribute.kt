@@ -27,8 +27,8 @@ data class TypeHintAttribute(
     }
 }
 
-fun <T> CellLevelAttributesBuilderApi<T>.cellType(block: () -> CellType) =
+fun <T: Any> CellLevelAttributesBuilderApi<T>.cellType(block: () -> CellType) =
     attribute(TypeHintAttribute.Builder().apply { type = block() })
 
-fun <T> ColumnLevelAttributesBuilderApi<T>.cellType(block: () -> CellType) =
+fun <T: Any> ColumnLevelAttributesBuilderApi<T>.cellType(block: () -> CellType) =
     attribute(TypeHintAttribute.Builder().apply { type = block() })

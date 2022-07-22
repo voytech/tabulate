@@ -35,23 +35,23 @@ class BuilderStateTest {
                 columnsBuilderState.ensureColumnBuilder("customCol1") {}
                 columnsBuilderState.ensureColumnBuilder(ExportedData::string.id()) {}
             }.also {
-                assertEquals(2, it.columnsBuilderState.columnBuilderStates.size)
+                assertEquals(2, it.columnsBuilderState.values().size)
             }
         }
         step("Assert that indices where properly set") {
-            with(builder.columnsBuilderState.find(ColumnKey("customCol1"))) {
+            with(builder.columnsBuilderState[ColumnKey("customCol1")]) {
                 assertEquals("customCol1", this?.id?.name)
                 assertEquals(0, this?.index)
             }
 
-            with(builder.columnsBuilderState.find(ColumnKey(property = ExportedData::string.id()))) {
+            with(builder.columnsBuilderState[ColumnKey(property = ExportedData::string.id())]) {
                 assertEquals(ExportedData::string.id(), this?.id?.property)
                 assertEquals(1, this?.index)
             }
         }
         step("Check if no new column was created in the mean time.") {
             builder.columnsBuilderState.ensureColumnBuilder("customCol1") {}
-            assertEquals(2, builder.columnsBuilderState.columnBuilderStates.size)
+            assertEquals(2, builder.columnsBuilderState.values().size)
         }
         step("Ensure it is not possible to set colliding index on column definition.") {
             val exception = assertThrows<BuilderException> {
@@ -59,34 +59,34 @@ class BuilderStateTest {
                     it.index = 1
                 }
             }
-            assertEquals("Could not set column index 1 because index is in use by another column.", exception.message)
+            assertEquals("Could not move builder at index 1 because index is in use by another builder.", exception.message)
         }
 
         step("Reorder first column by setting higher index") {
             builder.columnsBuilderState.ensureColumnBuilder("customCol1") {
                 it.index = 2
             }
-            with(builder.columnsBuilderState.find(ColumnKey("customCol1"))) {
+            with(builder.columnsBuilderState[ColumnKey("customCol1")]) {
                 assertEquals("customCol1", this?.id?.name)
                 assertEquals(2, this?.index)
             }
         }
         step("Check if no new column was created in the mean time.") {
-            assertEquals(2, builder.columnsBuilderState.columnBuilderStates.size)
+            assertEquals(2, builder.columnsBuilderState.values().size)
         }
         step("Add new column with highest index") {
             builder.columnsBuilderState.ensureColumnBuilder("customCol2") {
                 it.index = 4
             }
-            assertEquals(3, builder.columnsBuilderState.columnBuilderStates.size)
-            with(builder.columnsBuilderState.find(ColumnKey("customCol2"))) {
+            assertEquals(3, builder.columnsBuilderState.values().size)
+            with(builder.columnsBuilderState[ColumnKey("customCol2")]) {
                 assertEquals(4, this?.index)
             }
         }
         step("Add new column and check if index has been set automatically and correctly") {
             builder.columnsBuilderState.ensureColumnBuilder("customCol3") {}
-            assertEquals(4, builder.columnsBuilderState.columnBuilderStates.size)
-            with(builder.columnsBuilderState.find(ColumnKey("customCol3"))) {
+            assertEquals(4, builder.columnsBuilderState.values().size)
+            with(builder.columnsBuilderState[ColumnKey("customCol3")]) {
                 assertEquals(5, this?.index)
             }
         }
@@ -103,11 +103,11 @@ class BuilderStateTest {
         step("Create TableBuilderState with implicit columns") {
             TableBuilderState<ExportedData>().apply {
                 rowsBuilderState.addRowBuilder { row ->
-                    row.cellsBuilderState.addCellBuilder { cell ->
+                    row.cellBuilderStateCollection.addCellBuilder { cell ->
                         cell.value = "Cell 0"
                         cell.rowSpan = 2
                     }
-                    row.cellsBuilderState.addCellBuilder { cell ->
+                    row.cellBuilderStateCollection.addCellBuilder { cell ->
                         cell.value = "Cell 1"
                         cell.rowSpan = 2
                     }
@@ -127,18 +127,7 @@ class BuilderStateTest {
                         it.index = 1
                     }
                 }
-                assertEquals("Could not set column index 1 because index is in use by another column.", ex.message)
-            }
-            step("Check if validates key") {
-                assertNotNull(builder.columnsBuilderState.ensureColumnBuilder(0) {
-                    it.id = ColumnKey("column-0")
-                })
-                val ex = assertThrows<BuilderException> {
-                    builder.columnsBuilderState.ensureColumnBuilder(0) {
-                        it.id = ColumnKey("column-1")
-                    }
-                }
-                assertEquals("Could not set column id ColumnKey = column-1 because this id is in use by another column.", ex.message)
+                assertEquals("Could not move builder at index 1 because index is in use by another builder.", ex.message)
             }
         }
     }
@@ -147,17 +136,17 @@ class BuilderStateTest {
     fun `should redefine column`() {
         val builder = `create TableBuilderState with implicit columns`()
         step("Check column default keys and indices") {
-            with(builder.columnsBuilderState.find(ColumnKey("column-0"))) {
+            with(builder.columnsBuilderState[ColumnKey("column-0")]) {
                 assertEquals(0, this?.index)
             }
-            with(builder.columnsBuilderState.find(ColumnKey("column-1"))) {
+            with(builder.columnsBuilderState[ColumnKey("column-1")]) {
                 assertEquals(1, this?.index)
             }
         }
         step("Check if cells can be addressed by default indices") {
-            with(builder.rowsBuilderState.rowBuilderStates.first()) {
-                assertEquals("Cell 0", cells[builder.columnsBuilderState.find(0)!!.id]!!.value)
-                assertEquals("Cell 1", cells[builder.columnsBuilderState.find(1)!!.id]!!.value)
+            with(builder.rowsBuilderState.values().first()) {
+                assertEquals("Cell 0", cellBuilderStateCollection[builder.columnsBuilderState[0]!!.id]!!.value)
+                assertEquals("Cell 1", cellBuilderStateCollection[builder.columnsBuilderState[1]!!.id]!!.value)
             }
         }
         step("Change column-0 index") {
@@ -166,33 +155,15 @@ class BuilderStateTest {
             }
         }
         step("Check that there is no column at old index") {
-            assertNull(builder.columnsBuilderState.find(0))
+            assertNull(builder.columnsBuilderState.find { it.index == 0})
         }
         step("Check that it is possible to find cells using new index") {
-            with(builder.rowsBuilderState.rowBuilderStates.first()) {
-                assertEquals("Cell 0", cells[builder.columnsBuilderState.find(2)!!.id]!!.value)
-                assertEquals("Cell 1", cells[builder.columnsBuilderState.find(1)!!.id]!!.value)
+            with(builder.rowsBuilderState.values().first()) {
+                assertEquals("Cell 0", cellBuilderStateCollection[builder.columnsBuilderState.find { it.index == 2 }!!.id]!!.value)
+                assertEquals("Cell 1", cellBuilderStateCollection[builder.columnsBuilderState.find { it.index == 1 }!!.id]!!.value)
             }
-        }
-        step("Change id of column at specified index") {
-            assertEquals(
-                builder.columnsBuilderState.find(2),
-                builder.columnsBuilderState.ensureColumnBuilder(2)
-            )
-            builder.columnsBuilderState.ensureColumnBuilder(2) {
-                it.id = ColumnKey.field(ExportedData::string)
-            }
-        }
-        step("Access column by new id") {
-            assertEquals(2, builder.columnsBuilderState.find(ColumnKey(property = ExportedData::string.id()))!!.index)
         }
     }
-
-    private fun <T> ColumnsBuilderState<T>.find(key: ColumnKey<T>): ColumnBuilderState<T>? =
-        columnBuilderStates.find { it.id == key }
-
-    private fun <T> ColumnsBuilderState<T>.find(index: Int): ColumnBuilderState<T>? =
-        columnBuilderStates.find { it.index == index }
 
     @Test
     fun `should create subsequent rows`() {
@@ -222,7 +193,7 @@ class BuilderStateTest {
                 rowsBuilderState.addRowBuilder(RowIndexPredicateLiteral(lte(5)))
                 rowsBuilderState.addRowBuilder()
             }
-            assertEquals(2, builder.rowsBuilderState.rowBuilderStates.size)
+            assertEquals(2, builder.rowsBuilderState.values().size)
             assertEquals(
                 RowIndexPredicateLiteral<ExportedData>(lte(5)),
                 builder.rowsBuilderState.findRowBuilder(RowIndexPredicateLiteral(lte(5)))?.qualifier?.index
@@ -240,7 +211,7 @@ class BuilderStateTest {
                 )
                 rowsBuilderState.addRowBuilder()
             }
-            assertEquals(2, builder.rowsBuilderState.rowBuilderStates.size)
+            assertEquals(2, builder.rowsBuilderState.values().size)
             assertEquals(
                 RowIndexPredicateLiteral<ExportedData>(eq(16)),
                 builder.rowsBuilderState.findRowBuilder(RowIndexPredicateLiteral(eq(16)))?.qualifier?.index
@@ -254,11 +225,11 @@ class BuilderStateTest {
             rowsBuilderState.addRowBuilder(RowIndexPredicateLiteral(lte(5)))
             rowsBuilderState.addRowBuilder()
         }.also { builder ->
-            assertEquals(2, builder.rowsBuilderState.rowBuilderStates.size)
+            assertEquals(2, builder.rowsBuilderState.values().size)
         }.also { builder ->
             builder.rowsBuilderState.addRowBuilder(RowIndexPredicateLiteral(lte(5)))
         }.also { builder ->
-            assertEquals(2, builder.rowsBuilderState.rowBuilderStates.size)
+            assertEquals(2, builder.rowsBuilderState.values().size)
             assertEquals(
                 RowIndexPredicateLiteral<ExportedData>(lte(5)),
                 builder.rowsBuilderState.findRowBuilder(RowIndexPredicateLiteral(lte(5)))?.qualifier?.index
@@ -272,56 +243,56 @@ class BuilderStateTest {
             rowsBuilderState.addRowBuilder(
                 RowIndexPredicateLiteral(eq(8))
             ) { row ->
-                row.cellsBuilderState.addCellBuilder { cell ->
+                row.cellBuilderStateCollection.addCellBuilder { cell ->
                     cell.rowSpan = 2
                 }
-                assertEquals(1, row.cells.size)
-                assertNotNull(row.cells[ColumnKey("column-0")])
+                assertEquals(1, row.cellBuilderStateCollection.size())
+                assertNotNull(row.cellBuilderStateCollection[ColumnKey("column-0")])
             }
             rowsBuilderState.addRowBuilder(RowIndexPredicateLiteral(eq(9))) { row_2 ->
-                row_2.cellsBuilderState.addCellBuilder {}
-                assertEquals(1, row_2.cells.size)
-                assertNotNull(row_2.cells[ColumnKey("column-1")])
+                row_2.cellBuilderStateCollection.addCellBuilder {}
+                assertEquals(1, row_2.cellBuilderStateCollection.size())
+                assertNotNull(row_2.cellBuilderStateCollection[ColumnKey("column-1")])
             }
 
             rowsBuilderState.addRowBuilder(RowIndexPredicateLiteral(eq(9))) { row_2 ->
-                row_2.cellsBuilderState.addCellBuilder {}
-                assertEquals(2, row_2.cells.size)
-                assertNotNull(row_2.cells[ColumnKey("column-2")])
+                row_2.cellBuilderStateCollection.addCellBuilder {}
+                assertEquals(2, row_2.cellBuilderStateCollection.size())
+                assertNotNull(row_2.cellBuilderStateCollection[ColumnKey("column-2")])
             }
             rowsBuilderState.addRowBuilder(RowIndexPredicateLiteral(eq(10))) { row_3 ->
-                row_3.cellsBuilderState.addCellBuilder {}
-                assertEquals(1, row_3.cells.size)
-                assertNotNull(row_3.cells[ColumnKey("column-0")])
+                row_3.cellBuilderStateCollection.addCellBuilder {}
+                assertEquals(1, row_3.cellBuilderStateCollection.size())
+                assertNotNull(row_3.cellBuilderStateCollection[ColumnKey("column-0")])
             }
         }
     }
 
     @Test
     fun `should validate against upstream row spans of a row addressed by index predicate`() {
-        fun <T> `check throws on colliding row spans`(rowsBuilderState: RowsBuilderState<T>, index: Int) {
+        fun <T: Any> `check throws on colliding row spans`(rowsBuilderState: RowBuilderStateCollection<T>, index: Int) {
             rowsBuilderState.addRowBuilder(
                 RowIndexPredicateLiteral(eq(index))
             ) { row ->
-                assertEquals(0, row.cells.size)
+                assertEquals(0, row.cellBuilderStateCollection.size())
                 val ex = assertThrows<BuilderException> {
-                    row.cellsBuilderState.addCellBuilder(0) {}
+                    row.cellBuilderStateCollection.addCellBuilder(0) {}
                 }
                 assertEquals("Cannot create cell at ColumnKey = column-0 due to 'rowSpan' lock.", ex.message)
-                row.cellsBuilderState.addCellBuilder {}
-                assertEquals(1, row.cells.size)
-                assertNotNull(row.cells[ColumnKey("column-1")])
+                row.cellBuilderStateCollection.addCellBuilder {}
+                assertEquals(1, row.cellBuilderStateCollection.size())
+                assertNotNull(row.cellBuilderStateCollection[ColumnKey("column-1")])
             }
         }
 
-        fun <T> `check if succeeds on not colliding row spans`(rowsBuilderState: RowsBuilderState<T>, index: Int) {
+        fun <T: Any> `check if succeeds on not colliding row spans`(rowsBuilderState: RowBuilderStateCollection<T>, index: Int) {
             rowsBuilderState.addRowBuilder(
                 RowIndexPredicateLiteral(eq(index))
             ) { row ->
-                assertEquals(0, row.cells.size)
-                row.cellsBuilderState.addCellBuilder(0) {}
-                assertEquals(1, row.cells.size)
-                assertNotNull(row.cells[ColumnKey("column-0")])
+                assertEquals(0, row.cellBuilderStateCollection.size())
+                row.cellBuilderStateCollection.addCellBuilder(0) {}
+                assertEquals(1, row.cellBuilderStateCollection.size())
+                assertNotNull(row.cellBuilderStateCollection[ColumnKey("column-0")])
             }
         }
 
@@ -330,10 +301,10 @@ class BuilderStateTest {
                 rowsBuilderState.addRowBuilder(
                     RowIndexPredicateLiteral(lte(6) or (gte(11) and lte(11)))
                 ) { row ->
-                    assertEquals(0, row.cells.size)
-                    row.cellsBuilderState.addCellBuilder { it.rowSpan = 4 }
-                    assertEquals(1, row.cells.size)
-                    assertNotNull(row.cells[ColumnKey("column-0")])
+                    assertEquals(0, row.cellBuilderStateCollection.size())
+                    row.cellBuilderStateCollection.addCellBuilder { it.rowSpan = 4 }
+                    assertEquals(1, row.cellBuilderStateCollection.size())
+                    assertNotNull(row.cellBuilderStateCollection[ColumnKey("column-0")])
                 }
             }
             step("Check if adding cell at row on index colliding with row-spanned cell throws an exception (first range)") {
@@ -351,8 +322,8 @@ class BuilderStateTest {
         }
     }
 
-    private fun <T> RowsBuilderState<T>.findRowBuilder(index: RowIndexPredicateLiteral<T>): RowBuilderState<T>? =
-        rowBuilderStates.find { it.qualifier.index?.let { i -> i == index } ?: false }
+    private fun <T: Any> RowBuilderStateCollection<T>.findRowBuilder(index: RowIndexPredicateLiteral<T>): RowBuilderState<T>? =
+        find { it.qualifier.index?.let { i -> i == index } ?: false }
 
     private fun <T> step(title: String, block: () -> T): T {
         log.info("Executing step: $title")

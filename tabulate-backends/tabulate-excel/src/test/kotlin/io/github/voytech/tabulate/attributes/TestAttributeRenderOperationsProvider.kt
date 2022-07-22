@@ -64,5 +64,5 @@ class NoopSimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<
     ) {}
 }
 
-fun <T> CellLevelAttributesBuilderApi<T>.simpleTestCellAttrib(block: SimpleTestCellAttribute.Builder.() -> Unit) =
+fun <T: Any> CellLevelAttributesBuilderApi<T>.simpleTestCellAttrib(block: SimpleTestCellAttribute.Builder.() -> Unit) =
     attribute(SimpleTestCellAttribute.Builder().apply(block))

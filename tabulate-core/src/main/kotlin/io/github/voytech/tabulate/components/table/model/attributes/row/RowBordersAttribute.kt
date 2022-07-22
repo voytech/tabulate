@@ -59,5 +59,5 @@ data class RowBordersAttribute(
     }
 }
 
-fun <T> RowLevelAttributesBuilderApi<T>.rowBorders(block: RowBordersAttribute.Builder.() -> Unit) =
+fun <T: Any> RowLevelAttributesBuilderApi<T>.rowBorders(block: RowBordersAttribute.Builder.() -> Unit) =
     attribute(RowBordersAttribute.Builder().apply(block))

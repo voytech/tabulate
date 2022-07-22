@@ -217,22 +217,22 @@ class RowBuilder<T: Any> internal constructor(
     RowBuilderMethods<T> by parent,
     CellBuilderMethods<T> {
 
-    override fun cell() = CellBuilder(builderState.cellsBuilderState.addCellBuilder { }, this)
+    override fun cell() = CellBuilder(builderState.cellBuilderStateCollection.addCellBuilder { }, this)
 
     override fun cell(id: String) = CellBuilder(
         root().cache.cached<T>(id)?.let {
-            builderState.cellsBuilderState.addCellBuilder(it) {}
-        } ?: builderState.cellsBuilderState.addCellBuilder(id) {},
+            builderState.cellBuilderStateCollection.addCellBuilder(it) {}
+        } ?: builderState.cellBuilderStateCollection.addCellBuilder(id) {},
         this
     )
 
     override fun cell(key: String, reference: java.util.function.Function<T, Any?>) =
-        CellBuilder(builderState.cellsBuilderState.addCellBuilder(
+        CellBuilder(builderState.cellBuilderStateCollection.addCellBuilder(
             root().cache.cached(NamedPropertyReferenceColumnKey(key,reference))
         ) {}, this)
 
     override fun cell(index: Int): CellBuilder<T> =
-        CellBuilder(builderState.cellsBuilderState.addCellBuilder(index) {}, this)
+        CellBuilder(builderState.cellBuilderStateCollection.addCellBuilder(index) {}, this)
 
     @JvmName("rowAttribute")
     fun <A : RowAttribute<A>, B : RowAttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {

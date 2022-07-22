@@ -1,11 +1,11 @@
 package io.github.voytech.tabulate.core.api.builder
 
+import io.github.voytech.tabulate.api.builder.exception.BuilderException
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.template.loadAttributeConstraints
 import kotlin.properties.ObservableProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
-
 
 typealias DslBlock<T> = (T) -> Unit
 
@@ -32,6 +32,75 @@ interface ModelBuilderState<T : Model<T>> : BuilderInterface<T>
 
 interface CompositeModelBuilderState<T : Model<T>> : ModelBuilderState<T> {
     fun <E : Model<E>> bind(node: ModelBuilderState<E>)
+}
+
+abstract class ModelPartBuilderState<T : ModelPart> : BuilderInterface<T>
+
+/**
+ * Abstract helper class for nesting model part builders in a way that helps to achieve builder method invocation idempotence.
+ * @author Wojciech Mąka
+ * @since 0.*.0
+ */
+abstract class ModelPartBuilderCollection<K : Any, M : ModelPart, P : BuilderInterface<*>, B : BuilderInterface<M>>(
+    protected val parentBuilder: P,
+    private val transform: ((List<M>) -> List<M>)? = null,
+) {
+    private val builders: MutableMap<K, B> = LinkedHashMap()
+
+    fun size(): Int = builders.size
+
+    protected fun ensureBuilder(key: K): B = builders.computeIfAbsent(key, ::createBuilder)
+
+    protected fun ensureBuilder(index: Int): B {
+        val atIndex = builders.values.toList().getOrNull(index)
+        return atIndex ?: createBuilder(index)!!.let {
+            builders[it.first] = it.second
+            it.second
+        }
+    }
+
+    protected abstract fun createBuilder(key: K): B
+
+    protected open fun createBuilder(index: Int): Pair<K, B>? = null
+
+    fun entries() = builders.entries
+
+    fun moveAt(key: K, index: Int): Boolean =
+        get(key)?.takeIf { it.orCollides(index) }?.let { value ->
+            builders.entries.asSequence()
+                .mapIndexed { idx, entry -> IndexedValue(idx, entry.toPair()) }
+                .filter { it.value.first != key }
+                .toMutableList().apply { add(IndexedValue(index, key to value)) }
+                .sortedBy { it.index }
+        }?.let { copy ->
+            builders.clear()
+            copy.forEach {
+                builders[it.value.first] = it.value.second
+            }.let { true }
+        } ?: false
+
+    fun values(): List<B> = builders.values.toList()
+
+    operator fun get(key: K): B? = builders[key]
+
+    operator fun get(index: Int): B? = builders.values.toList().getOrNull(index)
+
+    fun find(predicate: (B) -> Boolean): B? = builders.values.find(predicate)
+
+    fun build(): List<M> = builders.values.map { it.build() }.let {
+        transform?.invoke(it) ?: it
+    }
+
+    fun buildMap(): Map<K, M> = builders.mapValues { it.value.build() }
+
+    private fun B.orCollides(index: Int): Boolean = get(index)?.let { existing ->
+        (existing != this).also {
+            if (it) {
+                throw BuilderException("Could not move builder at index $index because index is in use by another builder.")
+            }
+        }
+    } ?: true
+
 }
 
 /**

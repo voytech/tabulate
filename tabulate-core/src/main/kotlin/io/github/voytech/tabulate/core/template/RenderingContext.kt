@@ -6,12 +6,20 @@ import io.github.voytech.tabulate.core.template.layout.boundaries
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 
 /**
- * RenderingContext is a marker interface representing entire group of classes implementing low-level context rendering logic.
- * It is related to specific rendering backend implementation.
+ * RenderingContext is a marker interface representing entire group of classes implementing low-level rendering logic.
+ * It is related to specific rendering backend implementation. Implementations of that interface should represent shared state
+ * to be accessed and mutated by [ExportTemplate] managed operations.
  * @since 0.1.0
+ * @author Wojciech Mąka
  */
 interface RenderingContext
 
+/**
+ * RenderingContextForSpreadsheet is a base class for all rendering contexts communicating with spreadsheets. It adds
+ * capabilities of tracking and accessing spreadsheet cell coordinates related to document root.
+ * @since 0.*.0
+ * @author Wojciech Mąka
+ */
 abstract class RenderingContextForSpreadsheet: RenderingContext {
 
     private lateinit var measures: SpreadsheetQueries

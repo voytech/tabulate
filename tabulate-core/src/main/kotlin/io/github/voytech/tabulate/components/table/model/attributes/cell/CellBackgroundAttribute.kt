@@ -33,13 +33,13 @@ data class CellBackgroundAttribute(
     }
 }
 
-fun <T> CellLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =
+fun <T: Any> CellLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =
     attribute(CellBackgroundAttribute.Builder().apply(block))
 
-fun <T> ColumnLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =
+fun <T: Any> ColumnLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =
     attribute(CellBackgroundAttribute.Builder().apply(block))
 
-fun <T> RowLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =
+fun <T: Any> RowLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =
     attribute(CellBackgroundAttribute.Builder().apply(block))
 
 fun <T: Any> TableLevelAttributesBuilderApi<T>.background(block: CellBackgroundAttribute.Builder.() -> Unit) =

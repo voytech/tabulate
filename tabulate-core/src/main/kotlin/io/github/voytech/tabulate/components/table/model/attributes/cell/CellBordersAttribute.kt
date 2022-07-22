@@ -61,13 +61,13 @@ data class CellBordersAttribute(
     }
 }
 
-fun <T> CellLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =
+fun <T: Any> CellLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =
     attribute(CellBordersAttribute.Builder().apply(block))
 
-fun <T> ColumnLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =
+fun <T: Any> ColumnLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =
     attribute(CellBordersAttribute.Builder().apply(block))
 
-fun <T> RowLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =
+fun <T: Any> RowLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =
     attribute(CellBordersAttribute.Builder().apply(block))
 
 fun <T: Any> TableLevelAttributesBuilderApi<T>.borders(block: CellBordersAttribute.Builder.() -> Unit) =

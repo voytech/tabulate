@@ -60,13 +60,13 @@ data class CellTextStylesAttribute(
     }
 }
 
-fun <T> CellLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =
+fun <T: Any> CellLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =
     attribute(CellTextStylesAttribute.Builder().apply(block))
 
-fun <T> ColumnLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =
+fun <T: Any> ColumnLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =
     attribute(CellTextStylesAttribute.Builder().apply(block))
 
-fun <T> RowLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =
+fun <T: Any> RowLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =
     attribute(CellTextStylesAttribute.Builder().apply(block))
 
 fun <T: Any> TableLevelAttributesBuilderApi<T>.text(block: CellTextStylesAttribute.Builder.() -> Unit) =

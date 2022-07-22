@@ -8,16 +8,16 @@ import io.github.voytech.tabulate.core.template.spi.*
 import java.util.*
 
 /**
- * Top level method that loads all  [AttributeClassificationProvider] providers.
+ * Top level method that loads all  [AttributeConstraintsProvider] providers.
  * @author Wojciech Mąka
  * @since 0.*.*
  */
 internal fun loadAttributeConstraintsProviders(): List<AttributeConstraintsProvider> =
     ServiceLoader.load(AttributeConstraintsProvider::class.java).toList()
 
-
 /**
- * Top level method that loads all  [AttributeClassificationProvider] providers.
+ * Top level method that loads all  [AttributeConstraintsProvider] providers, and then transform the result into
+ * global instance of [AttributesConstraints]
  * @author Wojciech Mąka
  * @since 0.*.*
  */
@@ -25,7 +25,6 @@ internal fun loadAttributeConstraints(): AttributesConstraints =
     loadAttributeConstraintsProviders().toList().fold(AttributeConstraintsBuilder()) { aggr, builder ->
         aggr.apply(builder.defineConstraints())
     }.build()
-
 
 /**
  * Top level method that loads instance of [Identifiable] factory through ServiceLoader infrastructure.
@@ -60,7 +59,8 @@ inline fun <reified E : Identifiable<CTX>, CTX : RenderingContext> loadAllByDocu
         }
 
 /**
- * Top level method that loads many instances of providers that can match specific rendering context through ServiceLoader infrastructure.
+ * Top level method that loads many instances of [RenderingContextAware] providers that can match specific rendering
+ * context through ServiceLoader infrastructure.
  * @author Wojciech Mąka
  * @since 0.*.*
  */
@@ -70,9 +70,8 @@ inline fun <reified E : RenderingContextAware<CTX>, CTX : RenderingContext> load
     ServiceLoader.load(E::class.java)
         .filter { renderingContext.isAssignableFrom(it.getRenderingContextClass()) }
 
-
 /**
- * Top level method that loads instances of [ExportOperationProvider] associated by [DocumentFormat] compatible [RenderingContext] class.
+ * Top level method that loads instances of [ExportOperationsProvider] associated by [DocumentFormat] compatible [RenderingContext] class.
  * @author Wojciech Mąka
  * @since 0.*.*
  */
@@ -81,15 +80,13 @@ internal fun <R: RenderingContext> loadExportOperationProviders(format: Document
         it.getModelClass()
     }
 
-
 /**
- * Top level method that loads instances of [AttributeOperationsFactory] compatible with particular [RenderingContext]
+ * Top level method that loads instances of [AttributeOperationsProvider] compatible with particular [RenderingContext]
  * @author Wojciech Mąka
  * @since 0.*.*
  */
 internal fun <R: RenderingContext> loadAttributeOperationProviders(renderingContext: Class<R>): List<AttributeOperationsProvider<R,*>> =
     loadRenderingContextAware(renderingContext)
-
 
 /**
  * Top level method that loads instance of [RenderingContext] identified by particular [DocumentFormat].

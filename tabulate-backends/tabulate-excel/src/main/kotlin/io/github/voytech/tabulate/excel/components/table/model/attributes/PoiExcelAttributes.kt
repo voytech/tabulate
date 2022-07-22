@@ -37,16 +37,16 @@ data class CellExcelDataFormatAttribute(
 
 }
 
-fun <T> CellLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
+fun <T: Any> CellLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
     attribute(CellExcelDataFormatAttribute.Builder().apply(block))
 
-fun <T> RowLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
+fun <T: Any> RowLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
     attribute(CellExcelDataFormatAttribute.Builder().apply(block))
 
-fun <T> ColumnLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
+fun <T: Any> ColumnLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
     attribute(CellExcelDataFormatAttribute.Builder().apply(block))
 
-fun <T> ColumnLevelAttributesBuilderApi<T>.format(block: () -> String) =
+fun <T: Any> ColumnLevelAttributesBuilderApi<T>.format(block: () -> String) =
     attribute(CellExcelDataFormatAttribute.Builder().apply { value = block() })
 
 /**
@@ -102,7 +102,7 @@ data class CellCommentAttribute(
 
 }
 
-fun <T> CellLevelAttributesBuilderApi<T>.comment(block: CellCommentAttribute.Builder.() -> Unit) =
+fun <T: Any> CellLevelAttributesBuilderApi<T>.comment(block: CellCommentAttribute.Builder.() -> Unit) =
     attribute(CellCommentAttribute.Builder().apply(block))
 
 

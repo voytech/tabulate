@@ -33,7 +33,7 @@ data class RowHeightAttribute(val px: Int) : RowAttribute<RowHeightAttribute>(),
     }
 }
 
-fun <T> RowLevelAttributesBuilderApi<T>.height(block: RowHeightAttribute.Builder.() -> Unit) =
+fun <T: Any> RowLevelAttributesBuilderApi<T>.height(block: RowHeightAttribute.Builder.() -> Unit) =
     attribute(RowHeightAttribute.Builder().apply(block))
 
 fun <T: Any> TableLevelAttributesBuilderApi<T>.rowHeight(block: RowHeightAttribute.Builder.() -> Unit) =

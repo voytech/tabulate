@@ -59,7 +59,7 @@ data class ColumnWidthAttribute(
 
 }
 
-fun <T> ColumnLevelAttributesBuilderApi<T>.width(block: ColumnWidthAttribute.Builder.() -> Unit) =
+fun <T: Any> ColumnLevelAttributesBuilderApi<T>.width(block: ColumnWidthAttribute.Builder.() -> Unit) =
     attribute(ColumnWidthAttribute.Builder().apply(block))
 
 fun <T : Any> TableLevelAttributesBuilderApi<T>.columnWidth(block: ColumnWidthAttribute.Builder.() -> Unit) =

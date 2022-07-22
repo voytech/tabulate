@@ -102,7 +102,7 @@ class TableLevelAttributesBuilderApi<T: Any> internal constructor(private val bu
  * @since 0.1.0
  */
 @TabulateMarker
-class ColumnLevelAttributesBuilderApi<T> internal constructor(private val builderState: ColumnBuilderState<T>) {
+class ColumnLevelAttributesBuilderApi<T: Any> internal constructor(private val builderState: ColumnBuilderState<T>) {
 
     @JvmSynthetic
     fun <B : ColumnAttributeBuilder<A>, A : ColumnAttribute<A>> attribute(attributeBuilder: B) {
@@ -123,7 +123,7 @@ class ColumnLevelAttributesBuilderApi<T> internal constructor(private val builde
  * @since 0.1.0
  */
 @TabulateMarker
-class RowLevelAttributesBuilderApi<T> internal constructor(private val builderState: RowBuilderState<T>) {
+class RowLevelAttributesBuilderApi<T: Any> internal constructor(private val builderState: RowBuilderState<T>) {
 
     @JvmSynthetic
     fun <B : RowAttributeBuilder<A>, A : RowAttribute<A>> attribute(attributeBuilder: B) {
@@ -143,7 +143,7 @@ class RowLevelAttributesBuilderApi<T> internal constructor(private val builderSt
  * @since 0.1.0
  */
 @TabulateMarker
-class CellLevelAttributesBuilderApi<T> internal constructor(private val builderState: CellBuilderState<T>) {
+class CellLevelAttributesBuilderApi<T: Any> internal constructor(private val builderState: CellBuilderState<T>) {
     @JvmSynthetic
     fun <B : CellAttributeBuilder<A>, A : CellAttribute<A>> attribute(attributeBuilder: B) {
         builderState.attribute(attributeBuilder)
@@ -208,7 +208,7 @@ class TableBuilderApi<T: Any> internal constructor() : ModelBuilderApi<Table<T>,
  * @since 0.1.0
  */
 @TabulateMarker
-class ColumnsBuilderApi<T> internal constructor(private val builderState: ColumnsBuilderState<T>) {
+class ColumnsBuilderApi<T: Any> internal constructor(private val builderState: ColumnBuilderStateCollection<T>) {
 
     @JvmSynthetic
     fun column(id: String) {
@@ -249,32 +249,12 @@ class ColumnsBuilderApi<T> internal constructor(private val builderState: Column
  * @since 0.1.0
  */
 @TabulateMarker
-class ColumnBuilderApi<T> internal constructor(private val builderState: ColumnBuilderState<T>) {
+class ColumnBuilderApi<T: Any> internal constructor(private val builderState: ColumnBuilderState<T>) {
 
     @set:JvmSynthetic
     @get:JvmSynthetic
     var index: Int by builderState::index
 
-    @set:JvmSynthetic
-    @get:JvmSynthetic
-    var property: KProperty1<T, Any?>? = null
-        set(value) {
-            field = value
-            if (value != null) {
-                builderState.id = ColumnKey(property = value.id())
-            }
-        }
-
-
-    @set:JvmSynthetic
-    @get:JvmSynthetic
-    var name: String?
-        set(value) {
-            if (value != null) {
-                builderState.id = ColumnKey(value)
-            }
-        }
-        get() = builderState.id.name
 
     @JvmSynthetic
     fun attributes(block: ColumnLevelAttributesBuilderApi<T>.() -> Unit) {
@@ -383,7 +363,7 @@ class RowIndexPredicateBuilderApi {
  * @since 0.1.0
  */
 @TabulateMarker
-class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuilderState<T>) {
+class RowsBuilderApi<T: Any> internal constructor(private val builderState: RowBuilderStateCollection<T>) {
 
     @JvmSynthetic
     fun newRow(block: RowBuilderApi<T>.() -> Unit) {
@@ -451,11 +431,11 @@ class RowsBuilderApi<T> internal constructor(private val builderState: RowsBuild
  * @since 0.1.0
  */
 @TabulateMarker
-class RowBuilderApi<T> internal constructor(private val builderState: RowBuilderState<T>) {
+class RowBuilderApi<T: Any> internal constructor(private val builderState: RowBuilderState<T>) {
 
     @JvmSynthetic
     fun cells(block: CellsBuilderApi<T>.() -> Unit) {
-        CellsBuilderApi(builderState.cellsBuilderState).apply(block)
+        CellsBuilderApi(builderState.cellBuilderStateCollection).apply(block)
     }
 
     @JvmSynthetic
@@ -500,7 +480,7 @@ class RowBuilderApi<T> internal constructor(private val builderState: RowBuilder
  * @since 0.1.0
  */
 @TabulateMarker
-class CellsBuilderApi<T> internal constructor(private val builderState: CellsBuilderState<T>) {
+class CellsBuilderApi<T: Any> internal constructor(private val builderState: CellBuilderStateCollection<T>) {
 
     @JvmSynthetic
     fun cell(id: String, block: CellBuilderApi<T>.() -> Unit) {
@@ -539,7 +519,7 @@ class CellsBuilderApi<T> internal constructor(private val builderState: CellsBui
  * @since 0.1.0
  */
 @TabulateMarker
-class CellBuilderApi<T> internal constructor(private val builderState: CellBuilderState<T>) {
+class CellBuilderApi<T: Any> internal constructor(private val builderState: CellBuilderState<T>) {
 
     @set:JvmSynthetic
     @get:JvmSynthetic
