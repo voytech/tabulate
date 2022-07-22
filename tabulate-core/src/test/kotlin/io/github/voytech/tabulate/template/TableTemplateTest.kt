@@ -1,23 +1,15 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.components.table.api.builder.dsl.footer
-import io.github.voytech.tabulate.components.table.api.builder.dsl.header
-import io.github.voytech.tabulate.components.table.api.builder.dsl.table
-import io.github.voytech.tabulate.components.table.model.attributes.Colors
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellBackgroundAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellTextStylesAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.background
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultWeightStyle
-import io.github.voytech.tabulate.components.table.model.attributes.cell.text
-import io.github.voytech.tabulate.components.table.model.attributes.column.ColumnWidthAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.column.columnWidth
-import io.github.voytech.tabulate.components.table.model.attributes.column.width
-import io.github.voytech.tabulate.components.table.model.attributes.row.RowHeightAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.row.height
-import io.github.voytech.tabulate.components.table.model.attributes.row.rowHeight
+import io.github.voytech.tabulate.components.table.api.builder.dsl.*
+import io.github.voytech.tabulate.core.model.color.Colors
+import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.components.table.template.export
 import io.github.voytech.tabulate.components.table.template.tabulate
+import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
+import io.github.voytech.tabulate.core.model.attributes.HeightAttribute
+import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
+import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
 import io.github.voytech.tabulate.core.template.DocumentFormat
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
@@ -265,11 +257,11 @@ class TableTemplateTest {
         // Row 0
         history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         history.next().run { assertEquals("Green cell", (context as CellContext).rawValue) }
-        history.next().run { assertEquals(Colors.GREEN, (attribute as CellTextStylesAttribute).fontColor) }
-        history.next().run { assertEquals(Colors.WHITE, (attribute as CellBackgroundAttribute).color) }
+        history.next().run { assertEquals(Colors.GREEN, (attribute as TextStylesAttribute).fontColor) }
+        history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
         history.next().run { assertEquals("White cell", (context as CellContext).rawValue) }
-        history.next().run { assertEquals(Colors.WHITE, (attribute as CellTextStylesAttribute).fontColor) }
-        history.next().run { assertEquals(Colors.WHITE, (attribute as CellBackgroundAttribute).color) }
+        history.next().run { assertEquals(Colors.WHITE, (attribute as TextStylesAttribute).fontColor) }
+        history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
         history.next().run {
             assertEquals(0, (context as RowEnd<*>).getRow())
             assertEquals(2, context.getCells().keys.size)
@@ -277,8 +269,8 @@ class TableTemplateTest {
         // Row 1
         history.next().run { assertEquals(1, (context as RowStart).getRow()) }
         history.next().run { assertEquals("White cell", (context as CellContext).rawValue) }
-        history.next().run { assertEquals(Colors.WHITE, (attribute as CellTextStylesAttribute).fontColor) }
-        history.next().run { assertEquals(Colors.WHITE, (attribute as CellBackgroundAttribute).color) }
+        history.next().run { assertEquals(Colors.WHITE, (attribute as TextStylesAttribute).fontColor) }
+        history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
         history.next().run {
             assertEquals(1, (context as RowEnd<*>).getRow())
             assertEquals(1, context.getCells().keys.size)
@@ -286,11 +278,11 @@ class TableTemplateTest {
         // Row 1
         history.next().run { assertEquals(2, (context as RowStart).getRow()) }
         history.next().run { assertEquals("Red cell", (context as CellContext).rawValue) }
-        history.next().run { assertEquals(Colors.RED, (attribute as CellTextStylesAttribute).fontColor) }
-        history.next().run { assertEquals(Colors.WHITE, (attribute as CellBackgroundAttribute).color) }
+        history.next().run { assertEquals(Colors.RED, (attribute as TextStylesAttribute).fontColor) }
+        history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
         history.next().run { assertEquals("Black cell", (context as CellContext).rawValue) }
-        history.next().run { assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor) }
-        history.next().run { assertEquals(Colors.WHITE, (attribute as CellBackgroundAttribute).color) }
+        history.next().run { assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor) }
+        history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
         history.next().run {
             assertEquals(2, (context as RowEnd<*>).getRow())
             assertEquals(2, context.getCells().keys.size)
@@ -309,14 +301,14 @@ class TableTemplateTest {
             name = "Products table"
             attributes {
                 text { fontColor = Colors.BLACK }
-                columnWidth { px = 100 }
-                rowHeight { px = 20 }
+                columnWidth { 100.px() }
+                rowHeight { 20.pt() }
             }
             columns {
                 column(0) {
                     attributes {
                         text { strikeout = true }
-                        width { px = 45 }
+                        width { 45.px() }
                     }
                 }
                 column(1) {}
@@ -325,7 +317,7 @@ class TableTemplateTest {
                 newRow {
                     attributes {
                         text { weight = DefaultWeightStyle.BOLD }
-                        height { px = 50 }
+                        height { 50.pt() }
                     }
                     cell {
                         attributes { text { italic = true } }
@@ -354,18 +346,18 @@ class TableTemplateTest {
         // Columns - Opening 0
         history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
         // Column 0 attribute
-        history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Columns - Opening 1
         history.next().run { assertEquals(1, (context as ColumnStart).columnIndex) }
         // Column 1 attribute
-        history.next().run { assertEquals(100, (attribute as ColumnWidthAttribute).px) }
+        history.next().run { assertEquals(100, (attribute as WidthAttribute).value.value.toInt()) }
         // Row 0
         history.next().run { assertEquals(0, (context as RowStart).getRow()) }
-        history.next().run { assertEquals(50, (attribute as RowHeightAttribute).px) }
+        history.next().run { assertEquals(50, (attribute as HeightAttribute).value.value.toInt()) }
         // Row 0, cell 0
         history.next().run { assertEquals("Black, strikeout, bold, italic cell", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
             assertEquals(true, attribute.strikeout)
             assertEquals(DefaultWeightStyle.BOLD, attribute.weight)
             assertEquals(true, attribute.italic)
@@ -373,10 +365,10 @@ class TableTemplateTest {
         history.next().run { assertTrue(context is RowEnd<*>) }
         // Row 1, cell 0
         history.next().run { assertEquals(1, (context as RowStart).getRow()) }
-        history.next().run { assertEquals(20, (attribute as RowHeightAttribute).px) }
+        history.next().run { assertEquals(20, (attribute as HeightAttribute).value.value.toInt()) }
         history.next().run { assertEquals("Black, strikeout, bold cell", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
             assertEquals(true, attribute.strikeout)
             assertEquals(DefaultWeightStyle.BOLD, attribute.weight)
             assertEquals(false, attribute.italic)
@@ -384,17 +376,17 @@ class TableTemplateTest {
         history.next().run { assertTrue(context is RowEnd<*>) }
         // Row 2, cell 0
         history.next().run { assertEquals(2, (context as RowStart).getRow()) }
-        history.next().run { assertEquals(20, (attribute as RowHeightAttribute).px) }
+        history.next().run { assertEquals(20, (attribute as HeightAttribute).value.value.toInt()) }
         history.next().run { assertEquals("Black, strikeout cell", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
             assertEquals(true, attribute.strikeout)
             assertEquals(DefaultWeightStyle.NORMAL, attribute.weight)
             assertEquals(false, attribute.italic)
         }
         history.next().run { assertEquals("Black cell", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
             assertEquals(false, attribute.strikeout)
             assertEquals(DefaultWeightStyle.NORMAL, attribute.weight)
             assertEquals(false, attribute.italic)

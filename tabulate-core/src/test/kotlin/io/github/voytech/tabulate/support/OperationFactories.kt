@@ -1,13 +1,8 @@
 package io.github.voytech.tabulate.support
 
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellAlignmentAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellBackgroundAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellBordersAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellTextStylesAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.column.ColumnWidthAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.table.TemplateFileAttribute
+import io.github.voytech.tabulate.core.model.attributes.*
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.operation.AttributeOperationsBuilder
@@ -40,12 +35,12 @@ class TestExportOperationsFactory : OperationsBundleProvider<TestRenderingContex
     }
 
     override fun provideAttributeOperations(): BuildAttributeOperations<TestRenderingContext> = {
-        operation(CellTextStylesAttributeTestRenderOperation(Spy.spy),operationPriorities[CellTextStylesAttribute::class.java] ?: 1)
-        operation(CellBordersAttributeTestRenderOperation(Spy.spy),operationPriorities[CellBordersAttribute::class.java] ?: 1)
-        operation(CellBackgroundAttributeTestRenderOperation(Spy.spy),operationPriorities[CellBackgroundAttribute::class.java] ?: 1)
-        operation(CellAlignmentAttributeTestRenderOperation(Spy.spy),operationPriorities[CellAlignmentAttribute::class.java] ?: 1)
-        operation(ColumnWidthAttributeTestRenderOperation(Spy.spy),operationPriorities[ColumnWidthAttribute::class.java] ?: 1)
-        operation(RowHeightAttributeTestRenderOperation(Spy.spy),operationPriorities[RowHeightAttribute::class.java] ?: 1)
+        operation(CellTextStylesAttributeTestRenderOperation(Spy.spy),operationPriorities[TextStylesAttribute::class.java] ?: 1)
+        operation(CellBordersAttributeTestRenderOperation(Spy.spy),operationPriorities[BordersAttribute::class.java] ?: 1)
+        operation(CellBackgroundAttributeTestRenderOperation(Spy.spy),operationPriorities[BackgroundAttribute::class.java] ?: 1)
+        operation(CellAlignmentAttributeTestRenderOperation(Spy.spy),operationPriorities[AlignmentAttribute::class.java] ?: 1)
+        operation(ColumnWidthAttributeTestRenderOperation(Spy.spy),operationPriorities[WidthAttribute::class.java] ?: 1)
+        operation(RowHeightAttributeTestRenderOperation(Spy.spy),operationPriorities[HeightAttribute::class.java] ?: 1)
         operation(TemplateFileAttributeTestRenderOperation(Spy.spy),operationPriorities[TemplateFileAttribute::class.java] ?: 1)
     }
 

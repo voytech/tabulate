@@ -6,7 +6,7 @@ import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import io.github.voytech.tabulate.core.template.operation.Operation
 
-class SheetContext(val sheetName: String) : AttributedContext<SheetContext>()
+class SheetContext(val sheetName: String) : AttributedContext()
 
 fun interface RenderSheetOperation<CTX : RenderingContext> : Operation<CTX, SheetContext>
 

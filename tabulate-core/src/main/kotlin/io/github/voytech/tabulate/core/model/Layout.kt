@@ -68,6 +68,7 @@ data class Height(override val value: Float, override val unit: UnitsOfMeasure) 
         Height(unit.switchUnitOfMeasure(value, targetUnit), targetUnit)
     } else this
 
+    fun asY(): Y = Y(value,unit)
     companion object {
         fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Height(0.0f, uom)
     }
@@ -92,8 +93,18 @@ data class X(override val value: Float, override val unit: UnitsOfMeasure) : Mea
         unit = unit
     )
 
+    operator fun minus(other: X): X = copy(
+        value = value - other.switchUnitOfMeasure(unit).value,
+        unit = unit
+    )
+
     operator fun plus(other: Float): X = copy(
         value = value + other,
+        unit = unit
+    )
+
+    operator fun minus(other: Float): X = copy(
+        value = value - other,
         unit = unit
     )
 
@@ -116,6 +127,21 @@ data class Y(override val value: Float, override val unit: UnitsOfMeasure) : Mea
 
     operator fun plus(other: Float): Y = copy(
         value = value + other,
+        unit = unit
+    )
+
+    operator fun minus(other: Height): Y = copy(
+        value = value - other.switchUnitOfMeasure(unit).value,
+        unit = unit
+    )
+
+    operator fun minus(other: Y): Y = copy(
+        value = value - other.switchUnitOfMeasure(unit).value,
+        unit = unit
+    )
+
+    operator fun minus(other: Float): Y = copy(
+        value = value - other,
         unit = unit
     )
 
@@ -148,6 +174,8 @@ data class BoundingRectangle(
             if (rightBottom.y.value <= other.rightBottom.y.value) other.rightBottom.y else rightBottom.y,
         ),
     )
+
+    fun getWidth(): Width = Width(rightBottom.x.value - leftTop.x.value,leftTop.x.unit)
 }
 
 enum class Orientation {

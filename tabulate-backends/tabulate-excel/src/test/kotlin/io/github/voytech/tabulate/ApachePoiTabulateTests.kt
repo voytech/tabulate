@@ -8,20 +8,22 @@ import io.github.voytech.tabulate.components.table.api.builder.RowPredicates.all
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
 import io.github.voytech.tabulate.components.table.model.and
-import io.github.voytech.tabulate.components.table.model.attributes.Color
-import io.github.voytech.tabulate.components.table.model.attributes.Colors
-import io.github.voytech.tabulate.components.table.model.attributes.TableAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.*
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.*
-import io.github.voytech.tabulate.components.table.model.attributes.column.ColumnWidthAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.column.columnWidth
-import io.github.voytech.tabulate.components.table.model.attributes.column.width
-import io.github.voytech.tabulate.components.table.model.attributes.row.RowHeightAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.row.height
-import io.github.voytech.tabulate.components.table.model.attributes.row.rowBorders
+import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
 import io.github.voytech.tabulate.components.table.model.attributes.table.template
 import io.github.voytech.tabulate.components.table.template.export
 import io.github.voytech.tabulate.components.table.template.tabulate
+import io.github.voytech.tabulate.core.model.Attribute
+import io.github.voytech.tabulate.core.model.Height
+import io.github.voytech.tabulate.core.model.UnitsOfMeasure
+import io.github.voytech.tabulate.core.model.Width
+import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
+import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
+import io.github.voytech.tabulate.core.model.attributes.*
+import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
+import io.github.voytech.tabulate.core.model.color.Color
+import io.github.voytech.tabulate.core.model.color.Colors
+import io.github.voytech.tabulate.core.model.text.DefaultFonts
+import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.excel.components.table.model.ExcelBorderStyle
 import io.github.voytech.tabulate.excel.components.table.model.attributes.*
 import io.github.voytech.tabulate.test.*
@@ -33,6 +35,9 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.io.FileInputStream
+import java.math.BigDecimal
+import java.math.RoundingMode
+import kotlin.reflect.KProperty1
 import kotlin.system.measureTimeMillis
 
 @DisplayName("Testing various excel exports")
@@ -56,7 +61,7 @@ class ApachePoiTabulateTests {
                 }
             }
             columns {
-                column(SampleProduct::code) { attributes { width { px = 222 } }}
+                column(SampleProduct::code) { attributes { width { 222.px() } }}
                 column(SampleProduct::name)
                 column(SampleProduct::description)
                 column(SampleProduct::manufacturer)
@@ -131,7 +136,7 @@ class ApachePoiTabulateTests {
             tableName = "Products table",
             file = File("test.xlsx"),
             attributeTests = mapOf(
-                ColumnPosition(0) to AssertEqualsAttribute(ColumnWidthAttribute(px = 222)),
+                ColumnPosition(0) to AssertEqualsAttribute(WidthAttribute(value = Width(222F,UnitsOfMeasure.PX))),
             )
         ).perform().also {
             it.cleanup()
@@ -150,7 +155,7 @@ class ApachePoiTabulateTests {
                     column("nr") {
                         attributes {
                             text {
-                                fontFamily = "Times New Roman"
+                                fontFamily = DefaultFonts.TIMES_NEW_ROMAN
                                 fontColor = Color(10, 100, 100)
                                 fontSize = 12
                                 italic = true
@@ -163,7 +168,7 @@ class ApachePoiTabulateTests {
                     column(SampleProduct::code) {
                         attributes {
                             text {
-                                fontFamily = "Times New Roman"
+                                fontFamily = DefaultFonts.TIMES_NEW_ROMAN
                                 fontColor = Colors.BLACK
                                 fontSize = 12
                             }
@@ -185,7 +190,7 @@ class ApachePoiTabulateTests {
                         columnTitle("nr") { value = "Nr.:" }
                         columnTitles("Code", "Name", "Description", "Manufacturer", "Price", "Distribution")
                         attributes {
-                            height { px = 120 }
+                            height { 120.px() }
                             borders {
                                 leftBorderStyle = DefaultBorderStyle.SOLID
                                 leftBorderColor = Colors.BLACK
@@ -201,7 +206,7 @@ class ApachePoiTabulateTests {
                                 vertical = DefaultVerticalAlignment.MIDDLE
                             }
                             text {
-                                fontFamily = "Times New Roman"
+                                fontFamily = DefaultFonts.TIMES_NEW_ROMAN
                                 fontColor = Color(90, 100, 100)
                                 fontSize = 12
                                 italic = true
@@ -237,8 +242,8 @@ class ApachePoiTabulateTests {
             ),
             attributeTests = mapOf(
                 CellPosition(2, 2) to AssertContainsAttributes(
-                    CellTextStylesAttribute(
-                        fontFamily = "Times New Roman",
+                    TextStylesAttribute(
+                        fontFamily = DefaultFonts.TIMES_NEW_ROMAN,
                         fontColor = Color(90, 100, 100),
                         fontSize = 12,
                         italic = true,
@@ -248,7 +253,7 @@ class ApachePoiTabulateTests {
                     )
                 ),
                 CellRange((2..2), (3..8)) to AssertContainsAttributes(
-                    CellBordersAttribute(
+                    BordersAttribute(
                         leftBorderStyle = DefaultBorderStyle.SOLID,
                         leftBorderColor = Colors.BLACK,
                         rightBorderStyle = DefaultBorderStyle.SOLID,
@@ -258,12 +263,12 @@ class ApachePoiTabulateTests {
                         topBorderStyle = DefaultBorderStyle.SOLID,
                         topBorderColor = Colors.BLACK,
                     ),
-                    CellAlignmentAttribute(
+                    AlignmentAttribute(
                         horizontal = DefaultHorizontalAlignment.CENTER,
                         vertical = DefaultVerticalAlignment.MIDDLE
                     ),
-                    CellTextStylesAttribute(
-                        fontFamily = "Times New Roman",
+                    TextStylesAttribute(
+                        fontFamily = DefaultFonts.TIMES_NEW_ROMAN,
                         fontColor = Color(90, 100, 100),
                         fontSize = 12,
                         italic = true,
@@ -271,20 +276,20 @@ class ApachePoiTabulateTests {
                     )
                 ),
                 CellPosition(2, 3) to AssertContainsAttributes(
-                        CellTextStylesAttribute(
-                            fontFamily = "Times New Roman",
+                        TextStylesAttribute(
+                            fontFamily = DefaultFonts.TIMES_NEW_ROMAN,
                             fontColor = Color(90, 100, 100),
                             fontSize = 12,
                             italic = true,
                             weight = DefaultWeightStyle.BOLD
                         ),
-                        CellBackgroundAttribute(color = Colors.BLUE)
+                        BackgroundAttribute(color = Colors.BLUE)
                 ),
                 CellPosition(3, 8) to AssertEqualsAttribute(
                     CellExcelDataFormatAttribute("dd.mm.YYYY")
                 ),
                 RowPosition(2) to AssertEqualsAttribute(
-                    RowHeightAttribute(px = 120)
+                    HeightAttribute(value = Height(120F,UnitsOfMeasure.PX))
                 )
             )
         ).perform().also {
@@ -445,7 +450,7 @@ class ApachePoiTabulateTests {
             tableName = "Test table",
             file = File("test.xlsx"),
             attributeTests = mapOf(
-                EntireTable to AssertContainsAttributes<TableAttribute<*>>(
+                EntireTable to AssertContainsAttributes<Attribute<*>>(
                 PrintingAttribute(
                     numberOfCopies = 10,
                     isDraft = true,
@@ -564,12 +569,12 @@ class ApachePoiTabulateTests {
             columns {
                 column("description")
                 column("image") {
-                    attributes { width { px = 300 } }
+                    attributes { width { 300.px() } }
                 }
             }
             rows {
                 newRow {
-                    attributes { height { px = 200 } }
+                    attributes { height { 200.px() } }
                     cell { value = "It is : " }
                     cell {
                         value = "src/test/resources/kotlin.jpeg"
@@ -645,16 +650,16 @@ class ApachePoiTabulateTests {
         })
         val headerAttributes = AssertMany(
             AssertEqualsAttribute(
-                expectedAttribute = CellTextStylesAttribute(
+                expectedAttribute = TextStylesAttribute(
                     fontColor = Colors.WHITE,
                     weight = DefaultWeightStyle.BOLD
                 ),
                 onlyProperties = setOf(
-                    CellTextStylesAttribute::fontColor,
-                    CellTextStylesAttribute::weight
+                    TextStylesAttribute::fontColor,
+                    TextStylesAttribute::weight
                 )
             ),
-            AssertEqualsAttribute(CellBackgroundAttribute(color = Colors.BLACK))
+            AssertEqualsAttribute(BackgroundAttribute(color = Colors.BLACK))
         )
         PoiTableAssert<SampleProduct>(
             tableName = "Products",
@@ -670,62 +675,101 @@ class ApachePoiTabulateTests {
                 CellPosition(0, 1) to headerAttributes,
                 CellPosition(0, 2) to headerAttributes,
                 CellPosition(0, 3) to headerAttributes,
-                CellRange(1..1, 0..3) to AssertNoAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
-                CellRange(2..2, 0..3) to AssertEqualsAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
-                CellRange(3..3, 0..3) to AssertNoAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
-                CellRange(4..4, 0..3) to AssertEqualsAttribute(CellBackgroundAttribute(color = Colors.GREEN)),
+                CellRange(1..1, 0..3) to AssertNoAttribute(BackgroundAttribute(color = Colors.GREEN)),
+                CellRange(2..2, 0..3) to AssertEqualsAttribute(BackgroundAttribute(color = Colors.GREEN)),
+                CellRange(3..3, 0..3) to AssertNoAttribute(BackgroundAttribute(color = Colors.GREEN)),
+                CellRange(4..4, 0..3) to AssertEqualsAttribute(BackgroundAttribute(color = Colors.GREEN)),
             )
         ).perform().also {
             it.cleanup()
         }
     }
 
+    private fun <T: Any> RowBuilderApi<T>.dollarColumn(prop: KProperty1<T, Any?>) =
+        cell(prop) {
+            expression = RowCellExpression {
+                "${(it.record?.let { obj -> (prop.get(obj) as BigDecimal).setScale(2, RoundingMode.HALF_UP) } ?: 0)} $"
+            }
+        }
 
     @Test
-    fun `should correctly export two on same sheet, one next to each others`() {
+    fun `should correctly export two on same sheet, one next to each others 2`() {
+        val tableStyle = table {
+            attributes {
+                columnWidth { 110.px() }
+                rowHeight { 20.px() }
+                text { fontSize = 8 }
+                alignment {
+                    vertical = DefaultVerticalAlignment.MIDDLE
+                    horizontal = DefaultHorizontalAlignment.CENTER
+                }
+                borders {
+                    leftBorderColor = Colors.LIGHT_GRAY
+                    leftBorderStyle = DefaultBorderStyle.DASHED
+                    rightBorderColor = Colors.LIGHT_GRAY
+                    rightBorderStyle = DefaultBorderStyle.DASHED
+                    topBorderColor = Colors.LIGHT_GRAY
+                    topBorderStyle = DefaultBorderStyle.DOTTED
+                    bottomBorderColor = Colors.LIGHT_GRAY
+                    bottomBorderStyle = DefaultBorderStyle.DOTTED
+                }
+            }
+        }
+        val headerStyle = table {
+            rows {
+                header {
+                    attributes {
+                        text {
+                            fontColor = Colors.WHITE
+                            weight = DefaultWeightStyle.BOLD
+                        }
+                        background {
+                            color = Colors.BLACK
+                        }
+                    }
+                }
+            }
+        }
         document {
             sheet {
-                name = "Sheet 1"
-                table {
-                    attributes { columnWidth { auto = true } }
-                    columns {
-                        column(SampleProduct::code)
-                        column(SampleProduct::name)
-                        column(SampleProduct::description)
-                        column(SampleProduct::price) {
-                            attributes { format { "[\$\$-409]#,##0.00;[RED]-[\$\$-409]#,##0.00" } }
+                name = "first"
+                space {
+                    height { 100.pt() }
+                    width { 105.pt() }
+                    table(tableStyle + headerStyle + typedTable<SampleProduct> {
+                        columns {
+                            column(SampleProduct::code) { attributes { text { fontColor = Colors.RED } } }
+                            column(SampleProduct::name)
+                            column(SampleProduct::description)
+                            column(SampleProduct::price)
                         }
-                    }
-                    rows { header("Id", "Name", "Description", "Price") }
-                    dataSource(SampleProduct.create(4))
-                }
-                space { width { 45f.pt() } }
-                table {
-                    attributes { columnWidth { auto = true } }
-                    columns {
-                        column(SampleProduct::code)
-                        column(SampleProduct::name)
-                        column(SampleProduct::description)
-                        column(SampleProduct::price) {
-                            attributes { format { "[\$\$-409]#,##0.00;[\$PLN]-[\$\$-409]#,##0.00 [\$PLN]" } }
+                        rows {
+                            header("Id", "Name", "Description", "Price")
+                            matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
+                            matching { odd() } assign { attributes { background { color = Colors.YELLOW } }}
                         }
-                    }
-                    rows { header("Id 2", "Name 2", "Description 2", "Price 2") }
-                    dataSource(SampleProduct.create(14))
+                        dataSource(SampleProduct.create(25))
+                    })
                 }
             }
             sheet {
-                name = "Sheet 2"
-                table<SampleProduct> {
-                    attributes { columnWidth { auto = true } }
+                name = "second"
+                space {
+                    width { 25.pt() }
+                }
+                table<SampleProduct>(headerStyle + typedTable {
+                    attributes {
+                        columnWidth { 100.px() }
+                        text { fontColor = Colors.BLACK }
+                    }
                     dataSource(SampleProduct.create(10))
                     columns {
                         column(SampleProduct::code)
                         column(SampleProduct::name)
                     }
-                }
+                    rows { header("Id 2", "Name 2", "Description 2", "Price 2") }
+                })
             }
-        }.export("text.xlsx")
-        File("test.xlsx").delete()
+        }.export("test.xlsx")
     }
 }

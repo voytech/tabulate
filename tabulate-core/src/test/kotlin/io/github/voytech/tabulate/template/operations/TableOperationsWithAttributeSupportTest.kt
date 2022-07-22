@@ -1,15 +1,15 @@
 package io.github.voytech.tabulate.template.operations
 
+import io.github.voytech.tabulate.components.table.api.builder.dsl.borders
 import io.github.voytech.tabulate.components.table.api.builder.dsl.table
-import io.github.voytech.tabulate.components.table.model.attributes.Colors
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellBordersAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellTextStylesAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.borders
-import io.github.voytech.tabulate.components.table.model.attributes.cell.text
-import io.github.voytech.tabulate.components.table.model.attributes.column.ColumnWidthAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.column.width
+import io.github.voytech.tabulate.components.table.api.builder.dsl.text
+import io.github.voytech.tabulate.components.table.api.builder.dsl.width
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.components.table.template.export
+import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
+import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
+import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
+import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.template.DocumentFormat.Companion.format
 import io.github.voytech.tabulate.support.Spy
 import io.github.voytech.tabulate.support.Spy.Companion.operationPriorities
@@ -23,13 +23,13 @@ class TableOperationsWithAttributeSupportTest {
 
     @Test
     fun `should dispatch attributes to corresponding operations`() {
-        operationPriorities[CellBordersAttribute::class.java] = -1   // should be rendered first,
-        operationPriorities[CellTextStylesAttribute::class.java] = 1 // should be rendered next.
+        operationPriorities[BordersAttribute::class.java] = -1   // should be rendered first,
+        operationPriorities[TextStylesAttribute::class.java] = 1 // should be rendered next.
 
         table {
             columns {
                 column(0) {
-                    attributes { width { px = 100 } }
+                    attributes { width { 100.px() } }
                 }
             }
             rows {
@@ -52,14 +52,14 @@ class TableOperationsWithAttributeSupportTest {
         }
         history.next().run {
             assertTrue { ColumnStart::class.java == context.javaClass }
-            assertTrue { attribute is ColumnWidthAttribute }
+            assertTrue { attribute is WidthAttribute }
         }
         history.next().run {
             assertTrue { RowStart::class.java == context.javaClass }
         }
         history.next().run {
             assertTrue { CellContext::class.java == context.javaClass }
-            assertTrue { attribute is CellBordersAttribute }
+            assertTrue { attribute is BordersAttribute }
         }
         history.next().run {
             assertTrue { CellContext::class.java == context.javaClass }
@@ -67,7 +67,7 @@ class TableOperationsWithAttributeSupportTest {
         }
         history.next().run {
             assertTrue { CellContext::class.java == context.javaClass }
-            assertTrue { attribute is CellTextStylesAttribute }
+            assertTrue { attribute is TextStylesAttribute }
         }
         history.next().run {
             assertTrue { RowEnd::class.java == context.javaClass }

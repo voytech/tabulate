@@ -3,6 +3,7 @@ package io.github.voytech.tabulate.core.api.builder
 import io.github.voytech.tabulate.api.builder.exception.BuilderException
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.template.loadAttributeConstraints
+import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import kotlin.properties.ObservableProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -33,8 +34,6 @@ interface ModelBuilderState<T : Model<T>> : BuilderInterface<T>
 interface CompositeModelBuilderState<T : Model<T>> : ModelBuilderState<T> {
     fun <E : Model<E>> bind(node: ModelBuilderState<E>)
 }
-
-abstract class ModelPartBuilderState<T : ModelPart> : BuilderInterface<T>
 
 /**
  * Abstract helper class for nesting model part builders in a way that helps to achieve builder method invocation idempotence.
@@ -123,10 +122,12 @@ abstract class AttributesAwareBuilder<T : AttributedModelOrPart<T>> : InternalBu
     abstract fun modelClass(): Class<T>
 
     @JvmSynthetic
-    protected open fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(builder: B) {
+    fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(builder: B) {
         with(builder.build()) {
             if (!constraintsForModel.contains(ModelAttributeConstraint(modelClass(), javaClass))) {
                 attributes.add(this)
+            } else {
+                throw BuilderException("Attribute '${this.javaClass.simpleName}' is disallowed on ${this@AttributesAwareBuilder.modelClass().simpleName}.")
             }
         }
     }
@@ -137,7 +138,7 @@ abstract class AttributesAwareBuilder<T : AttributedModelOrPart<T>> : InternalBu
      * @author Wojciech Mąka
      * @since 0.2.0
      */
-    fun attributes(): Attributes<T> = Attributes(modelClass(), attributes)
+    fun attributes(): Attributes = Attributes(attributes)
 
 }
 
@@ -149,7 +150,7 @@ abstract class AttributesAwareBuilder<T : AttributedModelOrPart<T>> : InternalBu
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class AttributeBuilder<T : Attribute<*>> : Builder<T>() {
+abstract class AttributeBuilder<T : Attribute<T>>(private val owner: Class<out AttributedContext>) : Builder<T>() {
     private val propertyChanges = mutableSetOf<KProperty<*>>()
     private val mappings = mutableMapOf<String, String>()
     fun <F> observable(initialValue: F, fieldMapping: Pair<String, String>? = null): ReadWriteProperty<Any?, F> {
@@ -168,6 +169,7 @@ abstract class AttributeBuilder<T : Attribute<*>> : Builder<T>() {
     @JvmSynthetic
     final override fun build(): T {
         return provide().apply {
+            ownerClass = this@AttributeBuilder.owner
             nonDefaultProps = propertyChanges.map {
                 if (mappings.containsKey(it.name)) mappings[it.name]!! else it.name
             }.toSet()

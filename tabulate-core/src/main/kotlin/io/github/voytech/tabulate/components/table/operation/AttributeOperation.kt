@@ -1,9 +1,6 @@
 package io.github.voytech.tabulate.components.table.operation
 
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.ColumnAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.RowAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.TableAttribute
+import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.operation.AttributeOperation
 
@@ -12,7 +9,7 @@ import io.github.voytech.tabulate.core.template.operation.AttributeOperation
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class TableAttributeRenderOperation<CTX : RenderingContext, A : TableAttribute<A>, AC : TableContext<AC>> :
+abstract class TableAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>, AC : TableContext> :
     AttributeOperation<CTX, A, AC>
 
 /**
@@ -20,7 +17,7 @@ abstract class TableAttributeRenderOperation<CTX : RenderingContext, A : TableAt
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class RowAttributeRenderOperation<CTX : RenderingContext, A : RowAttribute<A>, AC : RowContext<AC>> :
+abstract class RowAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>, AC : RowContext> :
     AttributeOperation<CTX, A, AC>
 
 
@@ -29,7 +26,7 @@ abstract class RowAttributeRenderOperation<CTX : RenderingContext, A : RowAttrib
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class CellAttributeRenderOperation<CTX : RenderingContext, A : CellAttribute<A>> :
+abstract class CellAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>> :
     AttributeOperation<CTX, A, CellContext>
 
 /**
@@ -37,6 +34,6 @@ abstract class CellAttributeRenderOperation<CTX : RenderingContext, A : CellAttr
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class ColumnAttributeRenderOperation<CTX : RenderingContext, A : ColumnAttribute<A>, AC : ColumnContext<AC>> :
+abstract class ColumnAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>, AC : ColumnContext> :
     AttributeOperation<CTX, A, AC>
 

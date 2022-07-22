@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.excel
 
 
-import io.github.voytech.tabulate.components.table.model.attributes.Color
+import io.github.voytech.tabulate.core.model.color.Color
 import io.github.voytech.tabulate.components.table.operation.CellValue
 import io.github.voytech.tabulate.components.table.operation.Coordinates
 import io.github.voytech.tabulate.core.template.RenderingContextForSpreadsheet

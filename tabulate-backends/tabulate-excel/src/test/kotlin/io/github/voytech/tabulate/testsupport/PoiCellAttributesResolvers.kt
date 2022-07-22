@@ -1,13 +1,21 @@
 package io.github.voytech.tabulate.testsupport
 
-import io.github.voytech.tabulate.components.table.model.attributes.*
-import io.github.voytech.tabulate.components.table.model.attributes.cell.*
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.*
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.contract.BorderStyle
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.contract.CellFill
-import io.github.voytech.tabulate.components.table.model.attributes.column.ColumnWidthAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.row.RowHeightAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHintAttribute
 import io.github.voytech.tabulate.components.table.operation.Coordinates
+import io.github.voytech.tabulate.core.model.Attribute
+import io.github.voytech.tabulate.core.model.Height
+import io.github.voytech.tabulate.core.model.UnitsOfMeasure
+import io.github.voytech.tabulate.core.model.Width
+import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
+import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
+import io.github.voytech.tabulate.core.model.attributes.*
+import io.github.voytech.tabulate.core.model.background.DefaultFillType
+import io.github.voytech.tabulate.core.model.background.FillType
+import io.github.voytech.tabulate.core.model.border.BorderStyle
+import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
+import io.github.voytech.tabulate.core.model.color.Color
+import io.github.voytech.tabulate.core.model.text.DefaultFonts
+import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.excel.ApachePoiRenderingContext
 import io.github.voytech.tabulate.excel.components.table.model.ExcelBorderStyle
 import io.github.voytech.tabulate.excel.components.table.model.ExcelCellFills
@@ -22,6 +30,7 @@ import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.util.Units
 import org.apache.poi.xssf.usermodel.XSSFColor
+import kotlin.math.roundToInt
 import org.apache.poi.ss.usermodel.BorderStyle as PoiBorderStyle
 import org.apache.poi.ss.usermodel.HorizontalAlignment as PoiHorizontalAlignment
 import org.apache.poi.ss.usermodel.VerticalAlignment as PoiVerticalAlignment
@@ -33,12 +42,15 @@ private fun parseColor(xssfColor: XSSFColor) =
         xssfColor.rgb[2].toInt().and(0xFF)
     )
 
-class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiRenderingContext,CellAttribute<*>, CellPosition> {
+class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiRenderingContext, Attribute<*>, CellPosition> {
 
-    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): Attribute<*> {
         return api.xssfCell(Coordinates(tableId, select.rowIndex, select.columnIndex)).let { cell ->
-            CellTextStylesAttribute(
-                fontFamily = cell?.cellStyle?.font?.fontName,
+            TextStylesAttribute(
+                fontFamily = cell?.cellStyle?.font?.fontName
+                    ?.replace(" ","_")
+                    ?.uppercase()
+                    ?.let { DefaultFonts.valueOf(it) },
                 fontSize = cell?.cellStyle?.font?.fontHeightInPoints?.toInt(),
                 fontColor = cell?.cellStyle?.font?.xssfColor?.let { parseColor(it) },
                 weight = cell?.cellStyle?.font?.bold?.let {
@@ -55,43 +67,43 @@ class PoiCellFontAttributeResolver : AttributeResolver<ApachePoiRenderingContext
     }
 }
 
-class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiRenderingContext, CellAttribute<*>, CellPosition> {
-    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
+class PoiCellBackgroundAttributeResolver : AttributeResolver<ApachePoiRenderingContext, Attribute<*>, CellPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): Attribute<*> {
         return with(api.xssfCell(Coordinates(tableId,select.rowIndex,select.columnIndex))?.cellStyle) {
             if (this != null) {
-                CellBackgroundAttribute(
+                BackgroundAttribute(
                     color = fillForegroundXSSFColor?.let { parseColor(it) },
                     fill = fillPattern.let {
                         when (it) {
-                            FillPatternType.BIG_SPOTS -> DefaultCellFill.LARGE_SPOTS
-                            FillPatternType.SQUARES -> DefaultCellFill.SQUARES
-                            FillPatternType.FINE_DOTS -> DefaultCellFill.SMALL_DOTS
-                            FillPatternType.ALT_BARS -> DefaultCellFill.WIDE_DOTS
-                            FillPatternType.DIAMONDS -> DefaultCellFill.DIAMONDS
-                            FillPatternType.BRICKS -> DefaultCellFill.BRICKS
-                            FillPatternType.SOLID_FOREGROUND -> DefaultCellFill.SOLID
+                            FillPatternType.BIG_SPOTS -> DefaultFillType.LARGE_SPOTS
+                            FillPatternType.SQUARES -> DefaultFillType.SQUARES
+                            FillPatternType.FINE_DOTS -> DefaultFillType.SMALL_DOTS
+                            FillPatternType.ALT_BARS -> DefaultFillType.WIDE_DOTS
+                            FillPatternType.DIAMONDS -> DefaultFillType.DIAMONDS
+                            FillPatternType.BRICKS -> DefaultFillType.BRICKS
+                            FillPatternType.SOLID_FOREGROUND -> DefaultFillType.SOLID
                             else -> resolveCellFillPattern(it)
                         }
-                    } ?: DefaultCellFill.SOLID
+                    } ?: DefaultFillType.SOLID
                 )
-            } else CellBackgroundAttribute()
+            } else BackgroundAttribute()
         }
     }
 
-    private fun resolveCellFillPattern(fillPattern: FillPatternType?): CellFill? {
+    private fun resolveCellFillPattern(fillPattern: FillPatternType?): FillType? {
         return try {
-            if (fillPattern != null) ExcelCellFills.valueOf(fillPattern.name) else DefaultCellFill.SOLID
+            if (fillPattern != null) ExcelCellFills.valueOf(fillPattern.name) else DefaultFillType.SOLID
         } catch (e: IllegalArgumentException) {
-            DefaultCellFill.SOLID
+            DefaultFillType.SOLID
         }
     }
 }
 
-class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiRenderingContext, CellAttribute<*>, CellPosition> {
-    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
+class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiRenderingContext, Attribute<*>, CellPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): Attribute<*> {
 
         return api.xssfCell(Coordinates(tableId,select.rowIndex,select.columnIndex)).let { cell ->
-            CellBordersAttribute(
+            BordersAttribute(
                 leftBorderStyle = cell?.cellStyle?.borderLeft?.let { resolveBorderStyle(it) },
                 leftBorderColor = cell?.cellStyle?.leftBorderXSSFColor?.let { parseColor(it) },
                 rightBorderStyle = cell?.cellStyle?.borderRight?.let { resolveBorderStyle(it) },
@@ -122,8 +134,8 @@ class PoiCellBordersAttributeResolver : AttributeResolver<ApachePoiRenderingCont
 
 }
 
-class PoiCellDataFormatAttributeResolver : AttributeResolver<ApachePoiRenderingContext, CellAttribute<*>, CellPosition> {
-    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
+class PoiCellDataFormatAttributeResolver : AttributeResolver<ApachePoiRenderingContext, Attribute<*>, CellPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): Attribute<*> {
         return api.xssfCell(Coordinates(tableId,select.rowIndex,select.columnIndex)).let {
             it?.cellStyle?.dataFormatString?.let { dataFormat ->
                 CellExcelDataFormatAttribute(
@@ -134,8 +146,8 @@ class PoiCellDataFormatAttributeResolver : AttributeResolver<ApachePoiRenderingC
     }
 }
 
-class PoiCellTypeHintAttributeResolver : AttributeResolver<ApachePoiRenderingContext, CellAttribute<*>, CellPosition> {
-    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
+class PoiCellTypeHintAttributeResolver : AttributeResolver<ApachePoiRenderingContext, Attribute<*>, CellPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): Attribute<*> {
         return api.xssfCell(Coordinates(tableId, select.rowIndex, select.columnIndex)).let {
             it?.cellType?.let { type ->
                 TypeHintAttribute(
@@ -153,8 +165,8 @@ class PoiCellTypeHintAttributeResolver : AttributeResolver<ApachePoiRenderingCon
     }
 }
 
-class PoiCellCommentAttributeResolver : AttributeResolver<ApachePoiRenderingContext, CellAttribute<*>, CellPosition> {
-    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
+class PoiCellCommentAttributeResolver : AttributeResolver<ApachePoiRenderingContext, Attribute<*>, CellPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): Attribute<*> {
         return api.xssfCell(Coordinates(tableId, select.rowIndex, select.columnIndex))?.cellComment?.let {
             CellCommentAttribute(it.author, it.string.string)
         } ?: CellCommentAttribute()
@@ -162,10 +174,10 @@ class PoiCellCommentAttributeResolver : AttributeResolver<ApachePoiRenderingCont
 }
 
 
-class PoiCellAlignmentAttributeResolver : AttributeResolver<ApachePoiRenderingContext, CellAttribute<*>, CellPosition> {
-    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): CellAttribute<*> {
+class PoiCellAlignmentAttributeResolver : AttributeResolver<ApachePoiRenderingContext, Attribute<*>, CellPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: CellPosition): Attribute<*> {
         return api.xssfCell(Coordinates(tableId, select.rowIndex, select.columnIndex)).let {
-            CellAlignmentAttribute(
+            AlignmentAttribute(
                 vertical = when (it?.cellStyle?.verticalAlignment) {
                     PoiVerticalAlignment.TOP -> DefaultVerticalAlignment.TOP
                     PoiVerticalAlignment.CENTER -> DefaultVerticalAlignment.MIDDLE
@@ -185,9 +197,9 @@ class PoiCellAlignmentAttributeResolver : AttributeResolver<ApachePoiRenderingCo
     }
 }
 
-class PoiPrintingAttributeResolver : AttributeResolver<ApachePoiRenderingContext, TableAttribute<*>, SelectAll<TableAttribute<*>>>  {
+class PoiPrintingAttributeResolver : AttributeResolver<ApachePoiRenderingContext, Attribute<*>, SelectAll<Attribute<*>>>  {
 
-    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: SelectAll<TableAttribute<*>>): TableAttribute<*> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: SelectAll<Attribute<*>>): Attribute<*> {
         api.workbook().let { wb ->
             val index = wb.getSheetIndex(tableId)
             val sheet = wb.getSheetAt(index)
@@ -221,24 +233,24 @@ class PoiPrintingAttributeResolver : AttributeResolver<ApachePoiRenderingContext
     }
 }
 
-class PoiColumnWidthAttributeResolver : AttributeResolver<ApachePoiRenderingContext, ColumnAttribute<*>, ColumnPosition> {
-    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: ColumnPosition): ColumnAttribute<*> {
+class PoiColumnWidthAttributeResolver : AttributeResolver<ApachePoiRenderingContext, Attribute<*>, ColumnPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: ColumnPosition): Attribute<*> {
         return api.workbook().getSheet(tableId)?.let {
             val autoSizing = it.isColumnTrackedForAutoSizing(select.columnIndex)
-            val pxWidth = it.getColumnWidthInPixels(select.columnIndex)
+            val pxWidth = it.getColumnWidthInPixels(select.columnIndex).roundToInt()
             return if (autoSizing) {
-                ColumnWidthAttribute(auto = true)
+                WidthAttribute(auto = true, Width.zero(UnitsOfMeasure.PX))
             } else {
-                ColumnWidthAttribute(px = pxWidth.toInt())
+                WidthAttribute(value = Width(pxWidth.toFloat(), UnitsOfMeasure.PX))
             }
-        } ?: ColumnWidthAttribute()
+        } ?: WidthAttribute()
     }
 }
 
-class PoiRowHeightAttributeResolver : AttributeResolver<ApachePoiRenderingContext, RowAttribute<*>, RowPosition> {
-    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: RowPosition): RowAttribute<*>? {
+class PoiRowHeightAttributeResolver : AttributeResolver<ApachePoiRenderingContext, Attribute<*>, RowPosition> {
+    override fun resolve(api: ApachePoiRenderingContext, tableId: String, select: RowPosition): Attribute<*>? {
         return api.workbook().xssfWorkbook.getSheet(tableId)?.getRow(select.rowIndex)?.let {
-          RowHeightAttribute(Units.pointsToPixel(it.heightInPoints.toDouble()))
+          HeightAttribute(Height(Units.pointsToPixel(it.heightInPoints.toDouble()).toFloat(), UnitsOfMeasure.PX))
         }
     }
 }

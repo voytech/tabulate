@@ -2,17 +2,16 @@ package io.github.voytech.tabulate.components.table.api.builder.dsl
 
 import io.github.voytech.tabulate.components.document.api.builder.dsl.DocumentBuilderApi
 import io.github.voytech.tabulate.components.sheet.api.builder.dsl.SheetBuilderApi
+import io.github.voytech.tabulate.components.spacing.api.builder.dsl.SpacingBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.*
 import io.github.voytech.tabulate.components.table.model.*
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.ColumnAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.RowAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.cell.cellType
 import io.github.voytech.tabulate.components.table.template.AdditionalSteps
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.ModelBuilderApi
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.api.builder.dsl.buildModel
+import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.DataSourceBinding
 import kotlin.reflect.KProperty1
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.contract.CellType as TypeHint
@@ -63,6 +62,9 @@ fun <T: Any> DocumentBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bi
 
 fun <T: Any> SheetBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
 
+fun <T: Any> SpacingBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
+
+
 /**
  * Plus operator for merging multiple table DSL builders.
  * @return lambda receiver block
@@ -89,8 +91,8 @@ operator fun <T: Any,E: Any> (TableBuilderApi<E>.() -> Unit).plus(block: TableBu
 class TableLevelAttributesBuilderApi<T: Any> internal constructor(private val builderState: TableBuilderState<T>) {
 
     @JvmSynthetic
-    fun attribute(attribute: AttributeBuilder<*>) {
-        builderState.attribute(attribute)
+    fun <B : AttributeBuilder<A>, A : Attribute<A>> attribute(attributeBuilder: B) {
+        builderState.attribute(attributeBuilder)
     }
 
 }
@@ -103,14 +105,8 @@ class TableLevelAttributesBuilderApi<T: Any> internal constructor(private val bu
  */
 @TabulateMarker
 class ColumnLevelAttributesBuilderApi<T: Any> internal constructor(private val builderState: ColumnBuilderState<T>) {
-
     @JvmSynthetic
-    fun <B : ColumnAttributeBuilder<A>, A : ColumnAttribute<A>> attribute(attributeBuilder: B) {
-        builderState.attribute(attributeBuilder)
-    }
-
-    @JvmSynthetic
-    fun <B : CellAttributeBuilder<A>, A : CellAttribute<A>> attribute(attributeBuilder: B) {
+    fun <B : AttributeBuilder<A>, A : Attribute<A>> attribute(attributeBuilder: B) {
         builderState.attribute(attributeBuilder)
     }
 
@@ -126,14 +122,10 @@ class ColumnLevelAttributesBuilderApi<T: Any> internal constructor(private val b
 class RowLevelAttributesBuilderApi<T: Any> internal constructor(private val builderState: RowBuilderState<T>) {
 
     @JvmSynthetic
-    fun <B : RowAttributeBuilder<A>, A : RowAttribute<A>> attribute(attributeBuilder: B) {
+    fun <B : AttributeBuilder<A>, A : Attribute<A>> attribute(attributeBuilder: B) {
         builderState.attribute(attributeBuilder)
     }
 
-    @JvmSynthetic
-    fun <B : CellAttributeBuilder<A>, A : CellAttribute<A>> attribute(attributeBuilder: B) {
-        builderState.attribute(attributeBuilder)
-    }
 }
 
 /**
@@ -145,9 +137,10 @@ class RowLevelAttributesBuilderApi<T: Any> internal constructor(private val buil
 @TabulateMarker
 class CellLevelAttributesBuilderApi<T: Any> internal constructor(private val builderState: CellBuilderState<T>) {
     @JvmSynthetic
-    fun <B : CellAttributeBuilder<A>, A : CellAttribute<A>> attribute(attributeBuilder: B) {
+    fun <B : AttributeBuilder<A>, A : Attribute<A>> attribute(attributeBuilder: B) {
         builderState.attribute(attributeBuilder)
     }
+
 }
 
 /**

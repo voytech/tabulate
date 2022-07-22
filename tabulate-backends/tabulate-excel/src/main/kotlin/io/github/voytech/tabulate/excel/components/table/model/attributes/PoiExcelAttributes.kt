@@ -1,14 +1,17 @@
 package io.github.voytech.tabulate.excel.components.table.model.attributes
 
-import io.github.voytech.tabulate.components.table.api.builder.CellAttributeBuilder
-import io.github.voytech.tabulate.components.table.api.builder.TableAttributeBuilder
 import io.github.voytech.tabulate.components.table.api.builder.dsl.CellLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.dsl.ColumnLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.dsl.RowLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.dsl.TableLevelAttributesBuilderApi
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.TableAttribute
+import io.github.voytech.tabulate.components.table.operation.CellContext
+import io.github.voytech.tabulate.components.table.operation.TableContext
+import io.github.voytech.tabulate.components.table.operation.TableStart
+import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
+import io.github.voytech.tabulate.core.model.Attribute
+import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
+import io.github.voytech.tabulate.core.template.operation.AttributedContext
 
 /**
  * Excel data format attribute.
@@ -17,10 +20,10 @@ import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
  */
 data class CellExcelDataFormatAttribute(
     val dataFormat: String
-) : CellAttribute<CellExcelDataFormatAttribute>() {
+) : Attribute<CellExcelDataFormatAttribute>() {
 
     @TabulateMarker
-    class Builder : CellAttributeBuilder<CellExcelDataFormatAttribute>() {
+    class Builder : AttributeBuilder<CellExcelDataFormatAttribute>(CellContext::class.java) {
         var value: String by observable("General", "value" to "dataFormat")
         override fun provide(): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute(value)
     }
@@ -31,23 +34,24 @@ data class CellExcelDataFormatAttribute(
         )
 
     companion object {
+
         @JvmStatic
-        fun builder(): Builder = Builder()
+        inline fun builder() : Builder = Builder()
     }
 
 }
 
 fun <T: Any> CellLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
-    attribute(CellExcelDataFormatAttribute.Builder().apply(block))
+    attribute(CellExcelDataFormatAttribute.builder().apply(block))
 
 fun <T: Any> RowLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
-    attribute(CellExcelDataFormatAttribute.Builder().apply(block))
+    attribute(CellExcelDataFormatAttribute.builder().apply(block))
 
 fun <T: Any> ColumnLevelAttributesBuilderApi<T>.dataFormat(block: CellExcelDataFormatAttribute.Builder.() -> Unit) =
-    attribute(CellExcelDataFormatAttribute.Builder().apply(block))
+    attribute(CellExcelDataFormatAttribute.builder().apply(block))
 
 fun <T: Any> ColumnLevelAttributesBuilderApi<T>.format(block: () -> String) =
-    attribute(CellExcelDataFormatAttribute.Builder().apply { value = block() })
+    attribute(CellExcelDataFormatAttribute.builder().apply { value = block() })
 
 /**
  * Excel data table attribute. Enables sorting and filtering within specific column and row ranges.
@@ -57,10 +61,10 @@ fun <T: Any> ColumnLevelAttributesBuilderApi<T>.format(block: () -> String) =
 data class FilterAndSortTableAttribute(
     val columnRange: IntRange,
     val rowRange: IntRange
-) : TableAttribute<FilterAndSortTableAttribute>() {
+) : Attribute<FilterAndSortTableAttribute>() {
 
     @TabulateMarker
-    class Builder : TableAttributeBuilder<FilterAndSortTableAttribute>() {
+    class Builder : AttributeBuilder<FilterAndSortTableAttribute>(TableContext::class.java) {
         var columnRange: IntRange by observable(0..100)
         var rowRange: IntRange by observable(0..65000)
         override fun provide(): FilterAndSortTableAttribute = FilterAndSortTableAttribute(columnRange, rowRange)
@@ -86,10 +90,10 @@ fun <T: Any> TableLevelAttributesBuilderApi<T>.filterAndSort(block: FilterAndSor
 data class CellCommentAttribute(
     val author: String = "anonymous",
     val comment: String = "Please provide a commentary!"
-) : CellAttribute<CellCommentAttribute>() {
+) : Attribute<CellCommentAttribute>() {
 
     @TabulateMarker
-    class Builder : CellAttributeBuilder<CellCommentAttribute>() {
+    class Builder() : AttributeBuilder<CellCommentAttribute>(CellContext::class.java) {
         var author: String by observable("anonymous")
         var comment: String by observable("Please provide a commentary!")
         override fun provide(): CellCommentAttribute = CellCommentAttribute(author, comment)
@@ -135,10 +139,10 @@ data class PrintingAttribute(
     val headerCenter: String,
     val headerLeft: String,
     val headerRight: String,
-) : TableAttribute<PrintingAttribute>() {
+) : Attribute<PrintingAttribute>() {
 
     @TabulateMarker
-    class Builder : TableAttributeBuilder<PrintingAttribute>() {
+    class Builder : AttributeBuilder<PrintingAttribute>(TableStart::class.java) {
         var numberOfCopies: Short by observable(1)
         var isDraft: Boolean by observable(false)
         var blackAndWhite: Boolean by observable(false)

@@ -1,12 +1,12 @@
 package io.github.voytech.tabulate.attributes
 
-import io.github.voytech.tabulate.components.table.api.builder.CellAttributeBuilder
 import io.github.voytech.tabulate.components.table.api.builder.dsl.CellLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
 import io.github.voytech.tabulate.components.table.operation.CellAttributeRenderOperation
 import io.github.voytech.tabulate.components.table.operation.CellContext
 import io.github.voytech.tabulate.components.table.operation.getSheetName
+import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
+import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.spi.AttributeOperationsProvider
 import io.github.voytech.tabulate.core.template.spi.BuildAttributeOperations
@@ -36,9 +36,9 @@ class TestAttributeRenderOperationsProvider : AttributeOperationsProvider<Apache
     override fun getModelClass(): Class<Table<Any>> = reify()
 }
 
-data class SimpleTestCellAttribute(val valueSuffix: String) : CellAttribute<SimpleTestCellAttribute>() {
+data class SimpleTestCellAttribute(val valueSuffix: String) : Attribute<SimpleTestCellAttribute>() {
 
-    class Builder(var valueSuffix: String = "") : CellAttributeBuilder<SimpleTestCellAttribute>() {
+    class Builder(var valueSuffix: String = "") : AttributeBuilder<SimpleTestCellAttribute>(CellContext::class.java) {
         override fun provide(): SimpleTestCellAttribute = SimpleTestCellAttribute(valueSuffix)
     }
 }

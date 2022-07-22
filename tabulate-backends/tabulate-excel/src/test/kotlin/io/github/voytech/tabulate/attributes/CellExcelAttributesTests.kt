@@ -1,17 +1,23 @@
 package io.github.voytech.tabulate.attributes
 
-import io.github.voytech.tabulate.components.table.api.builder.CellAttributeBuilder
 import io.github.voytech.tabulate.components.table.api.builder.dsl.table
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.Color
-import io.github.voytech.tabulate.components.table.model.attributes.Colors
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellAlignmentAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellBackgroundAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellBordersAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellTextStylesAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.*
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.contract.BorderStyle
+import io.github.voytech.tabulate.components.table.operation.CellContext
 import io.github.voytech.tabulate.components.table.template.export
+import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
+import io.github.voytech.tabulate.core.model.Attribute
+import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
+import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
+import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
+import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
+import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
+import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
+import io.github.voytech.tabulate.core.model.background.DefaultFillType
+import io.github.voytech.tabulate.core.model.border.BorderStyle
+import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
+import io.github.voytech.tabulate.core.model.color.Color
+import io.github.voytech.tabulate.core.model.color.Colors
+import io.github.voytech.tabulate.core.model.text.DefaultFonts
+import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.excel.components.table.model.ExcelCellFills
 import io.github.voytech.tabulate.excel.components.table.model.attributes.CellExcelDataFormatAttribute
 import io.github.voytech.tabulate.test.CellPosition
@@ -38,10 +44,10 @@ class CellExcelAttributesTests {
             file = File("src/test/resources/default.xlsx"),
             attributeTests = mapOf(
                 CellPosition(0, 0) to AssertContainsAttributes(
-                    CellTextStylesAttribute(fontFamily = "Arial"),
-                    CellBackgroundAttribute(),
-                    CellAlignmentAttribute(),
-                    CellBordersAttribute(),
+                    TextStylesAttribute(fontFamily = DefaultFonts.ARIAL),
+                    BackgroundAttribute(),
+                    AlignmentAttribute(),
+                    BordersAttribute(),
                     CellExcelDataFormatAttribute(dataFormat = "General")
                 )
             )
@@ -50,7 +56,7 @@ class CellExcelAttributesTests {
 
     @ParameterizedTest
     @MethodSource("cellAttributesProvider")
-    fun `should export with cell attribute`(attr: CellAttributeBuilder<*>, expectedAttribute: CellAttribute<*>) {
+    fun `should export with cell attribute`(attr: AttributeBuilder<*>, expectedAttribute: Attribute<*>) {
         // when
         table {
             name = "test"
@@ -142,10 +148,7 @@ class CellExcelAttributesTests {
         )
 
         private val KNOWN_FONT_FAMILIES = listOf(
-            "Times New Roman", "Times" , "Helvetica", "Arial", "Courier", "Courier New" ,
-            "Verdana", "Georgia", "Comic Sans MS", "Trebuchet MS", "Arial Black" , "Tahoma",
-            "Bodoni", "Futura", "Frutiger", "Garamond", "Avenir", "Impact", "Palatino",
-            "Garamond", "Bookman", "Avant Garde", "Century Schoolbook", "Andale Mono", "Calibri"
+            "Times New Roman", "Times Roman" , "Helvetica", "Arial", "Courier", "Courier New" , "Arial Black", "Calibri"
         )
 
         @JvmStatic
@@ -159,25 +162,25 @@ class CellExcelAttributesTests {
         }
 
         private fun textStyleAttributes(): List<Arguments> = (KNOWN_FONT_FAMILIES.map {
-            CellTextStylesAttribute.Builder().apply { fontFamily = it }
+            TextStylesAttribute.builder<CellContext>().apply { fontFamily = DefaultFonts.valueOf(it.replace(" ","_").uppercase()) }
         } + listOf(
-            CellTextStylesAttribute.Builder().apply {
-                fontFamily = "Times New Roman"
+            TextStylesAttribute.builder<CellContext>().apply {
+                fontFamily = DefaultFonts.TIMES_NEW_ROMAN
                 fontSize = 12
                 italic = true
                 strikeout = true
                 underline = true
                 weight = DefaultWeightStyle.BOLD
             },
-            CellTextStylesAttribute.Builder().apply {
-                fontFamily = "Times New Roman"
+            TextStylesAttribute.builder<CellContext>().apply {
+                fontFamily = DefaultFonts.TIMES_NEW_ROMAN
                 wrapText = true
                 rotation = 90
                 ident = 2
             }
         )).map { Arguments.of(
             it,
-            CellTextStylesAttribute(
+            TextStylesAttribute(
                 fontFamily = it.fontFamily,
                 fontSize = it.fontSize,
                 italic = it.italic,
@@ -195,11 +198,11 @@ class CellExcelAttributesTests {
             return DefaultHorizontalAlignment.values().flatMap { horizontal ->
                 DefaultVerticalAlignment.values().map { vertical ->
                     Arguments.of(
-                        CellAlignmentAttribute.Builder().apply {
+                        AlignmentAttribute.builder<CellContext>().apply {
                             this.horizontal = horizontal
                             this.vertical = vertical
                         },
-                        CellAlignmentAttribute(
+                        AlignmentAttribute(
                             horizontal = horizontal,
                             vertical = vertical
                         )
@@ -210,18 +213,18 @@ class CellExcelAttributesTests {
 
         private fun cellBackgroundStyles(): List<Arguments> {
             return (KNOWN_COLORS + null).flatMap { color ->
-                DefaultCellFill.values().map { fill -> CellBackgroundAttribute.Builder().apply {
+                DefaultFillType.values().map { fill -> BackgroundAttribute.builder<CellContext>().apply {
                     this.fill = fill
                     this.color = color
                 } } +
-                ExcelCellFills.values().map { fill -> CellBackgroundAttribute.Builder().apply {
+                ExcelCellFills.values().map { fill -> BackgroundAttribute.builder<CellContext>().apply {
                     this.fill = fill
                     this.color = color
                 } } +
-                CellBackgroundAttribute.Builder().apply { this.color = color }
+                BackgroundAttribute.builder<CellContext>().apply { this.color = color }
             }.map { Arguments.of(
                 it,
-                CellBackgroundAttribute(
+                BackgroundAttribute(
                     color = it.color,
                     fill = it.fill
                 )
@@ -231,7 +234,7 @@ class CellExcelAttributesTests {
         private fun cellBorderStyles(): List<Arguments> {
             return (KNOWN_COLORS + null).flatMap { color ->
                 DefaultBorderStyle.values().map { borderStyle ->
-                    CellBordersAttribute.Builder().apply {
+                    BordersAttribute.builder<CellContext>().apply {
                         leftBorderStyle = borderStyle
                         leftBorderColor = color
                         rightBorderStyle = borderStyle
@@ -245,8 +248,8 @@ class CellExcelAttributesTests {
             }.map { Arguments.of(it, expectBorderStyleAttribute(it)) }
         }
 
-        private fun expectBorderStyleAttribute(borderStyle: CellBordersAttribute.Builder): CellBordersAttribute {
-            return CellBordersAttribute(
+        private fun expectBorderStyleAttribute(borderStyle: BordersAttribute.Builder): BordersAttribute {
+            return BordersAttribute(
                 leftBorderStyle = expectBorderStyle(borderStyle.leftBorderStyle),
                 rightBorderStyle = expectBorderStyle(borderStyle.rightBorderStyle),
                 topBorderStyle = expectBorderStyle(borderStyle.topBorderStyle),

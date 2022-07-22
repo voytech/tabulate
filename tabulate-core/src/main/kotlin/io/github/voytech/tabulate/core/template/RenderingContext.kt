@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.core.template
 
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.template.layout.SpreadsheetQueries
-import io.github.voytech.tabulate.core.template.layout.boundaries
+import io.github.voytech.tabulate.core.template.layout.boundingBox
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 
 /**
@@ -29,38 +29,38 @@ abstract class RenderingContextForSpreadsheet: RenderingContext {
         measures = SpreadsheetQueries(defaultColumnWidth,defaultRowHeight)
     }
 
-    fun AttributedContext<*>.getAbsoluteColumn(column: Int): Int {
-        return boundaries()?.layoutPosition?.x?.let {
+    fun AttributedContext.getAbsoluteColumn(column: Int): Int {
+        return boundingBox()?.layoutPosition?.x?.let {
             measures.getX(it, UnitsOfMeasure.NU).asColumn() + column
         } ?: 0
     }
 
-    fun AttributedContext<*>.getAbsoluteRow(row: Int): Int {
-        return boundaries()?.layoutPosition?.y?.let {
+    fun AttributedContext.getAbsoluteRow(row: Int): Int {
+        return boundingBox()?.layoutPosition?.y?.let {
             measures.getY(it, UnitsOfMeasure.NU).asRow() + row
         } ?: 0
     }
 
-    fun AttributedContext<*>.setColumnWidth(column: Int, width: Width) {
+    fun AttributedContext.setColumnWidth(column: Int, width: Width) {
         setAbsoluteColumnWidth(getAbsoluteColumn(column),width)
     }
 
-    fun AttributedContext<*>.setRowHeight(row: Int, height: Height) {
+    fun AttributedContext.setRowHeight(row: Int, height: Height) {
         setAbsoluteRowHeight(getAbsoluteRow(row), height)
     }
 
-    fun AttributedContext<*>.setAbsoluteColumnWidth(column: Int, width: Width) {
+    fun AttributedContext.setAbsoluteColumnWidth(column: Int, width: Width) {
         val converted = width.switchUnitOfMeasure(measures.standardUnit.asUnitsOfMeasure())
         measures.setColumnWidth(column, converted)
-        boundaries()?.let {
+        boundingBox()?.let {
             it.width = width.switchUnitOfMeasure(it.unitsOfMeasure())
         }
     }
 
-    fun AttributedContext<*>.setAbsoluteRowHeight(row: Int, height: Height) {
+    fun AttributedContext.setAbsoluteRowHeight(row: Int, height: Height) {
         val converted = height.switchUnitOfMeasure(measures.standardUnit.asUnitsOfMeasure())
         measures.setRowHeight(row, converted)
-        boundaries()?.let {
+        boundingBox()?.let {
             it.height = height.switchUnitOfMeasure(it.unitsOfMeasure())
         }
     }

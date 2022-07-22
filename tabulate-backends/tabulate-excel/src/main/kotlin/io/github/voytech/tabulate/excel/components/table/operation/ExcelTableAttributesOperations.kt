@@ -1,18 +1,16 @@
 package io.github.voytech.tabulate.excel.components.table.operation
 
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellAlignmentAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellBackgroundAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellBordersAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellTextStylesAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.*
-import io.github.voytech.tabulate.components.table.model.attributes.column.ColumnWidthAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.row.RowBordersAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.Height
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
+import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
+import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
+import io.github.voytech.tabulate.core.model.attributes.*
+import io.github.voytech.tabulate.core.model.background.DefaultFillType
+import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.core.template.operation.*
 import io.github.voytech.tabulate.excel.ApachePoiRenderingContext
 import io.github.voytech.tabulate.excel.components.table.model.attributes.CellCommentAttribute
@@ -39,12 +37,12 @@ import java.io.FileInputStream
  * @since 0.1.0
  */
 class CellTextStylesAttributeRenderOperation :
-    CellAttributeRenderOperation<ApachePoiRenderingContext, CellTextStylesAttribute>() {
+    CellAttributeRenderOperation<ApachePoiRenderingContext, TextStylesAttribute>() {
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: CellContext,
-        attribute: CellTextStylesAttribute,
+        attribute: TextStylesAttribute,
     ) = with(renderingContext) {
         provideCellStyle(
             sheetName = context.getSheetName(),
@@ -53,7 +51,7 @@ class CellTextStylesAttributeRenderOperation :
             provideCellStyle = { getCachedStyle(renderingContext, context) }
         ).let {
             val font: XSSFFont = renderingContext.workbook().createFont() as XSSFFont
-            attribute.fontFamily?.run { font.fontName = this }
+            attribute.fontFamily?.run { font.fontName = this.fontName }
             attribute.fontColor?.run { font.setColor(ApachePoiRenderingContext.color(this)) }
             attribute.fontSize?.run { font.fontHeightInPoints = toShort() }
             attribute.italic?.run { font.italic = this }
@@ -74,12 +72,12 @@ class CellTextStylesAttributeRenderOperation :
  * @since 0.1.0
  */
 class CellBackgroundAttributeRenderOperation :
-    CellAttributeRenderOperation<ApachePoiRenderingContext, CellBackgroundAttribute>() {
+    CellAttributeRenderOperation<ApachePoiRenderingContext, BackgroundAttribute>() {
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: CellContext,
-        attribute: CellBackgroundAttribute,
+        attribute: BackgroundAttribute,
     ) = with(renderingContext) {
         provideCellStyle(
             sheetName = context.getSheetName(),
@@ -91,19 +89,19 @@ class CellBackgroundAttributeRenderOperation :
                 (it as XSSFCellStyle).setFillForegroundColor(ApachePoiRenderingContext.color(attribute.color!!))
             }
             when (attribute.fill) {
-                DefaultCellFill.SOLID -> it.fillPattern = FillPatternType.SOLID_FOREGROUND
-                DefaultCellFill.BRICKS -> it.fillPattern = FillPatternType.BRICKS
-                DefaultCellFill.WIDE_DOTS -> it.fillPattern = FillPatternType.ALT_BARS
-                DefaultCellFill.DIAMONDS -> it.fillPattern = FillPatternType.DIAMONDS
-                DefaultCellFill.SMALL_DOTS -> it.fillPattern = FillPatternType.FINE_DOTS
-                DefaultCellFill.SQUARES -> it.fillPattern = FillPatternType.SQUARES
-                DefaultCellFill.LARGE_SPOTS -> it.fillPattern = FillPatternType.BIG_SPOTS
+                DefaultFillType.SOLID -> it.fillPattern = FillPatternType.SOLID_FOREGROUND
+                DefaultFillType.BRICKS -> it.fillPattern = FillPatternType.BRICKS
+                DefaultFillType.WIDE_DOTS -> it.fillPattern = FillPatternType.ALT_BARS
+                DefaultFillType.DIAMONDS -> it.fillPattern = FillPatternType.DIAMONDS
+                DefaultFillType.SMALL_DOTS -> it.fillPattern = FillPatternType.FINE_DOTS
+                DefaultFillType.SQUARES -> it.fillPattern = FillPatternType.SQUARES
+                DefaultFillType.LARGE_SPOTS -> it.fillPattern = FillPatternType.BIG_SPOTS
                 else -> it.fillPattern = resolveFillPatternByEnumName(attribute)
             }
         }
     }
 
-    private fun resolveFillPatternByEnumName(background: CellBackgroundAttribute): FillPatternType {
+    private fun resolveFillPatternByEnumName(background: BackgroundAttribute): FillPatternType {
         return try {
             FillPatternType.valueOf(background.fill.getCellFillId())
         } catch (e: IllegalArgumentException) {
@@ -118,12 +116,12 @@ class CellBackgroundAttributeRenderOperation :
  * @since 0.1.0
  */
 class CellBordersAttributeRenderOperation :
-    CellAttributeRenderOperation<ApachePoiRenderingContext, CellBordersAttribute>() {
+    CellAttributeRenderOperation<ApachePoiRenderingContext, BordersAttribute>() {
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: CellContext,
-        attribute: CellBordersAttribute,
+        attribute: BordersAttribute,
     ): Unit = with(renderingContext) {
         renderingContext.provideCellStyle(
             sheetName = context.getSheetName(),
@@ -157,12 +155,12 @@ class CellBordersAttributeRenderOperation :
  * @since 0.2.0
  */
 class RowBordersAttributeRenderOperation<T: Any> :
-    RowAttributeRenderOperation<ApachePoiRenderingContext, RowBordersAttribute, RowEnd<T>>() {
+    RowAttributeRenderOperation<ApachePoiRenderingContext, BordersAttribute, RowEnd<T>>() {
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: RowEnd<T>,
-        attribute: RowBordersAttribute,
+        attribute: BordersAttribute,
     ): Unit = with(renderingContext) {
         provideSheet(context.getSheetName()).let { sheet ->
             context.rowCellValues.values.let {
@@ -202,12 +200,12 @@ class RowBordersAttributeRenderOperation<T: Any> :
  * @since 0.1.0
  */
 class CellAlignmentAttributeRenderOperation :
-    CellAttributeRenderOperation<ApachePoiRenderingContext, CellAlignmentAttribute>() {
+    CellAttributeRenderOperation<ApachePoiRenderingContext, AlignmentAttribute>() {
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: CellContext,
-        attribute: CellAlignmentAttribute,
+        attribute: AlignmentAttribute,
     ) = with(renderingContext) {
         provideCellStyle(
             sheetName = context.getSheetName(),
@@ -269,12 +267,12 @@ class CellDataFormatAttributeRenderOperation :
  * @since 0.1.0
  */
 class ColumnWidthAttributeRenderOperation :
-    ColumnAttributeRenderOperation<ApachePoiRenderingContext, ColumnWidthAttribute, ColumnEnd>() {
+    ColumnAttributeRenderOperation<ApachePoiRenderingContext, WidthAttribute, ColumnEnd>() {
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: ColumnEnd,
-        attribute: ColumnWidthAttribute,
+        attribute: WidthAttribute,
     ): Unit = with(renderingContext) {
         provideSheet(context.getSheetName()).let {
             val absoluteColumn = context.getAbsoluteColumn(context.getColumn())
@@ -283,8 +281,8 @@ class ColumnWidthAttributeRenderOperation :
                     it.trackColumnForAutoSizing(absoluteColumn)
                 }
                 it.autoSizeColumn(absoluteColumn)
-            } else if (attribute.px > 0) {
-                it.setColumnWidth(absoluteColumn, widthFromPixels(attribute.px))
+            } else if (attribute.value.value > 0) {
+                it.setColumnWidth(absoluteColumn, widthFromPixels(attribute.value.switchUnitOfMeasure(UnitsOfMeasure.PX)))
             }
             interceptMeasures(it, context, absoluteColumn)
         }
@@ -305,9 +303,9 @@ class ColumnWidthAttributeRenderOperation :
         private const val UNIT_OFFSET_LENGTH = 7
         private val UNIT_OFFSET_MAP = intArrayOf(0, 36, 73, 109, 146, 182, 219)
 
-        fun widthFromPixels(pxs: Int): Int {
-            var widthUnits = EXCEL_COLUMN_WIDTH_FACTOR * (pxs / UNIT_OFFSET_LENGTH)
-            widthUnits += UNIT_OFFSET_MAP[pxs % UNIT_OFFSET_LENGTH]
+        fun widthFromPixels(pxs: Width): Int {
+            var widthUnits = EXCEL_COLUMN_WIDTH_FACTOR * (pxs.value.toInt() / UNIT_OFFSET_LENGTH)
+            widthUnits += UNIT_OFFSET_MAP[pxs.value.toInt() % UNIT_OFFSET_LENGTH]
             return widthUnits
         }
     }
@@ -319,16 +317,16 @@ class ColumnWidthAttributeRenderOperation :
  * @since 0.1.0
  */
 class RowHeightAttributeRenderOperation :
-    RowAttributeRenderOperation<ApachePoiRenderingContext, RowHeightAttribute, RowStart>() {
+    RowAttributeRenderOperation<ApachePoiRenderingContext, HeightAttribute, RowStart>() {
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
         context: RowStart,
-        attribute: RowHeightAttribute,
+        attribute: HeightAttribute,
     ): Unit = with(renderingContext) {
         val absoluteRow = context.getAbsoluteColumn(context.getRow())
         renderingContext.provideRow(context.getSheetName(), absoluteRow).heightInPoints =
-            Units.pixelToPoints(attribute.px.toDouble()).toFloat().also {
+            Units.pixelToPoints(attribute.value.switchUnitOfMeasure(UnitsOfMeasure.PX).value.toDouble()).toFloat().also {
                 context.setAbsoluteRowHeight(absoluteRow, Height(it, UnitsOfMeasure.PT))
             }
     }

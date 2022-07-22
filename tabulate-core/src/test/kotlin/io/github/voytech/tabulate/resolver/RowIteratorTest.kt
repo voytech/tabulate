@@ -5,11 +5,9 @@ import io.github.voytech.tabulate.components.table.model.ColumnKey
 import io.github.voytech.tabulate.components.table.model.PredicateLiteral
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
 import io.github.voytech.tabulate.components.table.model.and
-import io.github.voytech.tabulate.components.table.model.attributes.Colors
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellBackgroundAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.background
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultCellFill
-import io.github.voytech.tabulate.components.table.model.attributes.cell.text
+import io.github.voytech.tabulate.core.model.color.Colors
+import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
+import io.github.voytech.tabulate.core.model.background.DefaultFillType
 import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
 import io.github.voytech.tabulate.components.table.template.RowContextIterator
 import io.github.voytech.tabulate.data.Product
@@ -173,7 +171,7 @@ class RowIteratorTest {
                     cell {
                         value = "R0C0"
                         attributes {
-                            background { fill = DefaultCellFill.BRICKS }
+                            background { fill = DefaultFillType.BRICKS }
                         }
                     }
                     cell { value = "R0C1" }
@@ -196,10 +194,10 @@ class RowIteratorTest {
             assertEquals("R0C0", rowCellValues[ColumnKey("column-0")]!!.value.value)
             assertEquals(0, rowCellValues[ColumnKey("column-0")]!!.columnIndex)
             assertEquals(1, rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
-            with(rowCellValues[ColumnKey("column-0")]!!.attributes!![CellBackgroundAttribute::class.java]) {
-                assertTrue(this is CellBackgroundAttribute)
-                assertEquals(Colors.WHITE, (this as CellBackgroundAttribute).color)
-                assertEquals(DefaultCellFill.BRICKS, this.fill)
+            with(rowCellValues[ColumnKey("column-0")]!!.attributes!![BackgroundAttribute::class.java]) {
+                assertTrue(this is BackgroundAttribute)
+                assertEquals(Colors.WHITE, (this as BackgroundAttribute).color)
+                assertEquals(DefaultFillType.BRICKS, this.fill)
             }
         }
     }
@@ -211,7 +209,7 @@ class RowIteratorTest {
                 column(0) {
                     attributes {
                         background {
-                            fill = DefaultCellFill.BRICKS
+                            fill = DefaultFillType.BRICKS
                             color = Colors.GREEN
                         }
                     }
@@ -240,10 +238,10 @@ class RowIteratorTest {
         with(first) {
             assertEquals(0, rowIndex)
             assertEquals(1, rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
-            with(rowCellValues[ColumnKey("column-0")]!!.attributes!![CellBackgroundAttribute::class.java]) {
-                assertTrue(this is CellBackgroundAttribute)
-                assertEquals(Colors.BLACK, (this as CellBackgroundAttribute).color)
-                assertEquals(DefaultCellFill.BRICKS, this.fill)
+            with(rowCellValues[ColumnKey("column-0")]!!.attributes!![BackgroundAttribute::class.java]) {
+                assertTrue(this is BackgroundAttribute)
+                assertEquals(Colors.BLACK, (this as BackgroundAttribute).color)
+                assertEquals(DefaultFillType.BRICKS, this.fill)
             }
         }
     }
@@ -260,7 +258,7 @@ class RowIteratorTest {
                     cell { value = "?" }
                     attributes {
                         background {
-                            fill = DefaultCellFill.BRICKS
+                            fill = DefaultFillType.BRICKS
                             color = Colors.GREEN
                         }
                     }
@@ -284,10 +282,10 @@ class RowIteratorTest {
         with(first) {
             assertEquals("R0C0", rowCellValues[ColumnKey("column-0")]!!.value.value)
             assertEquals(1, rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
-            with(rowCellValues[ColumnKey("column-0")]!!.attributes!![CellBackgroundAttribute::class.java]) {
-                assertTrue(this is CellBackgroundAttribute)
-                assertEquals(Colors.BLACK, (this as CellBackgroundAttribute).color)
-                assertEquals(DefaultCellFill.BRICKS, this.fill)
+            with(rowCellValues[ColumnKey("column-0")]!!.attributes!![BackgroundAttribute::class.java]) {
+                assertTrue(this is BackgroundAttribute)
+                assertEquals(Colors.BLACK, (this as BackgroundAttribute).color)
+                assertEquals(DefaultFillType.BRICKS, this.fill)
             }
         }
     }
@@ -300,7 +298,7 @@ class RowIteratorTest {
                     cell { value = "?" }
                     attributes {
                         background {
-                            fill = DefaultCellFill.BRICKS
+                            fill = DefaultFillType.BRICKS
                             color = Colors.GREEN
                         }
                     }
@@ -332,19 +330,19 @@ class RowIteratorTest {
         listOf(first, third, fourth).forEach {
             assertEquals("?", it.rowCellValues[ColumnKey("column-0")]!!.value.value)
             assertEquals(1, it.rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
-            with(it.rowCellValues[ColumnKey("column-0")]!!.attributes!![CellBackgroundAttribute::class.java]) {
-                assertTrue(this is CellBackgroundAttribute)
-                assertEquals(Colors.GREEN, (this as CellBackgroundAttribute).color)
-                assertEquals(DefaultCellFill.BRICKS, this.fill)
+            with(it.rowCellValues[ColumnKey("column-0")]!!.attributes!![BackgroundAttribute::class.java]) {
+                assertTrue(this is BackgroundAttribute)
+                assertEquals(Colors.GREEN, (this as BackgroundAttribute).color)
+                assertEquals(DefaultFillType.BRICKS, this.fill)
             }
         }
         with(second) {
             assertEquals("R0C0", rowCellValues[ColumnKey("column-0")]!!.value.value)
             assertEquals(1, rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
-            with(rowCellValues[ColumnKey("column-0")]!!.attributes!![CellBackgroundAttribute::class.java]) {
-                assertTrue(this is CellBackgroundAttribute)
-                assertEquals(Colors.BLACK, (this as CellBackgroundAttribute).color)
-                assertEquals(DefaultCellFill.BRICKS, this.fill)
+            with(rowCellValues[ColumnKey("column-0")]!!.attributes!![BackgroundAttribute::class.java]) {
+                assertTrue(this is BackgroundAttribute)
+                assertEquals(Colors.BLACK, (this as BackgroundAttribute).color)
+                assertEquals(DefaultFillType.BRICKS, this.fill)
             }
         }
     }

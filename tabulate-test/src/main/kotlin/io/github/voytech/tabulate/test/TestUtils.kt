@@ -1,9 +1,5 @@
 package io.github.voytech.tabulate.test
 
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.ColumnAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.RowAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.TableAttribute
 import io.github.voytech.tabulate.components.table.operation.CellValue
 import io.github.voytech.tabulate.components.table.operation.Coordinates
 import io.github.voytech.tabulate.core.model.Attribute
@@ -15,22 +11,22 @@ sealed interface SelectRange<CAT: Attribute<*>, E: Select<CAT>> : Select<CAT> {
 }
 sealed interface SelectAll<CAT: Attribute<*>>: Select<CAT>
 
-data class ColumnPosition(val columnIndex: Int) : Select<ColumnAttribute<*>>
-data class ColumnRange(val columnIndices: IntRange) : SelectRange<ColumnAttribute<*>, ColumnPosition> {
+data class ColumnPosition(val columnIndex: Int) : Select<Attribute<*>>
+data class ColumnRange(val columnIndices: IntRange) : SelectRange<Attribute<*>, ColumnPosition> {
     override fun onSelect(select: (ColumnPosition) -> Unit) {
         columnIndices.forEach { index -> select.invoke(ColumnPosition(index)) }
     }
 }
 
-data class RowPosition(val rowIndex: Int) : Select<RowAttribute<*>>
-data class RowRange(val rowIndices: IntRange) : SelectRange<RowAttribute<*>, RowPosition> {
+data class RowPosition(val rowIndex: Int) : Select<Attribute<*>>
+data class RowRange(val rowIndices: IntRange) : SelectRange<Attribute<*>, RowPosition> {
     override fun onSelect(select: (RowPosition) -> Unit) {
         rowIndices.forEach { index -> select.invoke(RowPosition(index)) }
     }
 }
 
-data class CellPosition(val rowIndex: Int, val columnIndex: Int) : Select<CellAttribute<*>>
-data class CellRange(val rowIndices: IntRange, val columnIndices: IntRange) : SelectRange<CellAttribute<*>, CellPosition> {
+data class CellPosition(val rowIndex: Int, val columnIndex: Int) : Select<Attribute<*>>
+data class CellRange(val rowIndices: IntRange, val columnIndices: IntRange) : SelectRange<Attribute<*>, CellPosition> {
     override fun onSelect(select: (CellPosition) -> Unit) {
         rowIndices.forEach { rowIndex ->
             columnIndices.forEach { columnIndex ->
@@ -40,7 +36,7 @@ data class CellRange(val rowIndices: IntRange, val columnIndices: IntRange) : Se
     }
 }
 
-object EntireTable : SelectAll<TableAttribute<*>>
+object EntireTable : SelectAll<Attribute<*>>
 
 fun interface StateProvider<E> {
     fun createState(file: File): E

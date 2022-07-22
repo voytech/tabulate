@@ -1,7 +1,5 @@
 package io.github.voytech.tabulate.components.table.model
 
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.RowAttribute
 import io.github.voytech.tabulate.components.table.operation.CellValue
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
@@ -34,7 +32,7 @@ internal data class RowDef<T> internal constructor(
      * Row level attributes to be used in row context while rendering row.
      */
     @get:JvmSynthetic
-    override val attributes: Attributes<RowDef<T>>?,
+    override val attributes: Attributes?,
 
 ): AttributedModelOrPart<RowDef<T>> {
     @JvmSynthetic
@@ -48,11 +46,11 @@ internal data class RowDef<T> internal constructor(
 }
 
 @JvmSynthetic
-internal fun <T> Collection<RowDef<T>>.flattenRowAttributes(): Attributes<RowDef<T>> =
+internal fun <T> Collection<RowDef<T>>.flattenRowAttributes(): Attributes =
     mapNotNull { it.attributes }.fold(Attributes()) { acc, r -> acc + r }
 
 @JvmSynthetic
-internal fun <T> Collection<RowDef<T>>.flattenCellAttributes(): Attributes<CellDef<T>> =
+internal fun <T> Collection<RowDef<T>>.flattenCellAttributes(): Attributes =
     mapNotNull { it.attributes?.cast<CellDef<T>>() }.fold(Attributes()) { acc, r -> acc + r }
 
 @JvmSynthetic

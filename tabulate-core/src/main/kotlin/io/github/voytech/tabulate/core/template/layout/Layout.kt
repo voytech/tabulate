@@ -24,6 +24,8 @@ interface AbsolutePositionQueries {
 interface TabularQueries : AbsolutePositionQueries {
     fun setColumnWidth(column: Int, width: Width)
     fun setRowHeight(row: Int, height: Height)
+    fun getColumnWidth(column: Int,uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width
+    fun getRowHeight(row: Int,uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height
 }
 
 interface LayoutQueries : AbsolutePositionQueries {
@@ -135,7 +137,7 @@ class Layout(
     //
     // context receivers
     //
-    fun LayoutElementBoundaries.applyOnLayout() {
+    fun LayoutElementBoundingBox.applyOnLayout() {
         if (absoluteX != null) {
             extend(absoluteX + width.orZero())
         }
@@ -160,14 +162,14 @@ class Layouts(
 }
 
 fun interface LayoutElement {
-    fun Layout.computeBoundaries(): LayoutElementBoundaries
+    fun Layout.computeBoundaries(): LayoutElementBoundingBox
 }
 
 fun interface LayoutElementApply {
-    fun Layout.applyBoundaries(context: LayoutElementBoundaries)
+    fun Layout.applyBoundaries(context: LayoutElementBoundingBox)
 }
 
-data class LayoutElementBoundaries(
+data class LayoutElementBoundingBox(
     val layoutPosition: Position,
     val absoluteX: X? = null,
     val absoluteY: Y? = null,
@@ -176,28 +178,28 @@ data class LayoutElementBoundaries(
 ) {
     fun unitsOfMeasure(): UnitsOfMeasure = layoutPosition.x.unit
 
-    fun <E : AttributedContext<*>> mergeInto(context: E): LayoutElementBoundaries = apply {
-        context.additionalAttributes?.put("${context.id}[boundaries]", context.boundaries()?.merge(this) ?: this)
+    fun <E : AttributedContext> mergeInto(context: E): LayoutElementBoundingBox = apply {
+        context.additionalAttributes?.put("${context.id}[boundaries]", context.boundingBox()?.merge(this) ?: this)
     }
 
-    private fun merge(other: LayoutElementBoundaries): LayoutElementBoundaries = copy(
-        absoluteX = other.absoluteX ?: absoluteX,
-        absoluteY = other.absoluteY ?: absoluteY,
-        width = other.width ?: width,
-        height = other.height ?: height
+    private fun merge(other: LayoutElementBoundingBox): LayoutElementBoundingBox = copy(
+        absoluteX = other.absoluteX?.switchUnitOfMeasure(unitsOfMeasure()) ?: absoluteX,
+        absoluteY = other.absoluteY?.switchUnitOfMeasure(unitsOfMeasure()) ?: absoluteY,
+        width = other.width?.switchUnitOfMeasure(unitsOfMeasure()) ?: width,
+        height = other.height?.switchUnitOfMeasure(unitsOfMeasure()) ?: height
     )
 }
 
-fun <E : AttributedContext<*>> E.boundaries(): LayoutElementBoundaries? = getContextAttribute("$id[boundaries]")
-fun <E : AttributedContext<*>> E.dropBoundaries() = removeContextAttribute<LayoutElementBoundaries>("$id[boundaries]")
+fun <E : AttributedContext> E.boundingBox(): LayoutElementBoundingBox? = getContextAttribute("$id[boundaries]")
+fun <E : AttributedContext> E.dropBoundaries() = removeContextAttribute<LayoutElementBoundingBox>("$id[boundaries]")
 
 fun AbstractLayoutQueries.elementBoundaries(x: X? = null, y: Y? = null, width: Width? = null, height: Height? = null) =
-    LayoutElementBoundaries(
+    LayoutElementBoundingBox(
         layoutPosition = getLayoutBoundary().leftTop,
-        absoluteX = x,
-        absoluteY = y,
-        width = width,
-        height = height
+        absoluteX = x?.switchUnitOfMeasure(getLayoutBoundary().leftTop.x.unit),
+        absoluteY = y?.switchUnitOfMeasure(getLayoutBoundary().leftTop.x.unit),
+        width = width?.switchUnitOfMeasure(getLayoutBoundary().leftTop.x.unit),
+        height = height?.switchUnitOfMeasure(getLayoutBoundary().leftTop.x.unit)
     )
 
 class DefaultLayoutQueries : AbstractLayoutQueries() {
@@ -342,6 +344,12 @@ class SpreadsheetQueries(
 
     override fun setRowHeight(row: Int, height: Height) = rows.setLengthAtIndex(row, height, defaultHeightInPt)
 
+    override fun getColumnWidth(column: Int,uom: UnitsOfMeasure): Width =
+        Width(columns[column]?.length ?: defaultWidthInPt  ,standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(uom)
+
+    override fun getRowHeight(row: Int,uom: UnitsOfMeasure): Height =
+        Height(rows[row]?.length ?: defaultHeightInPt ,standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(uom)
+
 }
 
 class TableLayoutQueries : TabularLayoutQueries() {
@@ -392,5 +400,9 @@ class TableLayoutQueries : TabularLayoutQueries() {
     override fun setRowHeight(row: Int, height: Height) {
         delegate.setRowHeight(row, height)
     }
+
+    override fun getColumnWidth(column: Int,uom: UnitsOfMeasure): Width = delegate.getColumnWidth(column,uom)
+
+    override fun getRowHeight(row: Int,uom: UnitsOfMeasure): Height = delegate.getRowHeight(row,uom)
 
 }

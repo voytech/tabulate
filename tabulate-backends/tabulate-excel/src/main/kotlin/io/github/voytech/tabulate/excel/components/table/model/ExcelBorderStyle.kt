@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.excel.components.table.model
 
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultBorderStyle
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.contract.BorderStyle
+import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
+import io.github.voytech.tabulate.core.model.border.BorderStyle
 import org.apache.poi.ss.usermodel.BorderStyle as POIBorderStyle
 /**
  * Excel format specific border styles

@@ -1,8 +1,8 @@
 package io.github.voytech.tabulate.attributes
 
+import io.github.voytech.tabulate.components.table.api.builder.dsl.columnWidth
 import io.github.voytech.tabulate.components.table.api.builder.dsl.table
-import io.github.voytech.tabulate.components.table.model.attributes.column.columnWidth
-import io.github.voytech.tabulate.components.table.model.attributes.column.width
+import io.github.voytech.tabulate.components.table.api.builder.dsl.width
 import io.github.voytech.tabulate.components.table.template.export
 import io.github.voytech.tabulate.testsupport.PoiTableAssert
 import org.junit.jupiter.api.DisplayName
@@ -18,14 +18,14 @@ class ColumnExcelAttributesTests {
         table {
             name = "test"
             attributes {
-                columnWidth { px = 500 }
+                columnWidth { 500.px() }
             }
             columns {
                 column(0) {}
                 column(1) {
                     attributes {
                         width {
-                            px = 1000
+                            1000.px()
                         }
                     }
                 }

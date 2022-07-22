@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.components.table.model
 
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
 import io.github.voytech.tabulate.components.table.operation.CellValue
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
@@ -79,9 +78,9 @@ internal data class CellDef<T> internal constructor(
     @get:JvmSynthetic
     val rowSpanMode: CollidingRowSpanStrategy = CollidingRowSpanStrategy.SHADOW,
     /**
-     * Set of [CellAttribute] instances that enable customization of table cell appearance
+     * Set of [Attribute] instances that enable customization of table cell appearance
      */
-    override val attributes: Attributes<CellDef<T>>?,
+    override val attributes: Attributes?,
 
 ) : AttributedModelOrPart<CellDef<T>> {
 

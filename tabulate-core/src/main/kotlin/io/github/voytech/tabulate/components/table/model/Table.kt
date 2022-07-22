@@ -4,6 +4,7 @@ import io.github.voytech.tabulate.components.table.template.TableTemplate
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.DataSourceBinding
 import io.github.voytech.tabulate.core.model.ModelWithAttributes
+import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.ExportTemplate
 import io.github.voytech.tabulate.core.template.TemplateContext
 
@@ -46,7 +47,7 @@ class Table<T: Any> internal constructor(
     @get:JvmSynthetic
     internal val dataSource: DataSourceBinding<T>?,
 
-    override val attributes: Attributes<Table<T>>?
+    override val attributes: Attributes?
 
 ) : ModelWithAttributes<Table<T>>() {
     override fun getId(): String = name
@@ -55,6 +56,6 @@ class Table<T: Any> internal constructor(
 
     companion object {
         @JvmStatic
-        fun jclass() : Class<Table<*>> = Table::class.java
+        fun <T: Any> jclass() : Class<Table<T>> = reify()
     }
 }

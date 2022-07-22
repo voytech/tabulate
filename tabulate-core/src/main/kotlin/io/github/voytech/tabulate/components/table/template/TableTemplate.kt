@@ -61,7 +61,7 @@ interface TabulationApi<T> {
 
 class TableTemplate<T : Any> : ExportTemplate<Table<T>, TableTemplateContext<T>> {
 
-    data class ColumnContextAttributes(val start: Attributes<ColumnStart>, val end: Attributes<ColumnEnd>)
+    data class ColumnContextAttributes(val start: Attributes, val end: Attributes)
 
     private inner class TabulationApiImpl<T : Any, R : RenderingContext>(
         private val renderingContext: R,
@@ -75,8 +75,8 @@ class TableTemplate<T : Any> : ExportTemplate<Table<T>, TableTemplateContext<T>>
             templateContext.model.columns.associateWith { column ->
                 column.distributeAttributesForContexts(ColumnStart::class.java, ColumnEnd::class.java).let {
                     ColumnContextAttributes(
-                        columnContextAttributes.get<ColumnStart>() + it.get(),
-                        columnContextAttributes.get<ColumnEnd>() + it.get()
+                        columnContextAttributes.get<ColumnStart>() + it.get<ColumnStart>(),
+                        columnContextAttributes.get<ColumnEnd>() + it.get<ColumnEnd>()
                     )
                 }
             }

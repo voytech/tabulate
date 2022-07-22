@@ -9,7 +9,7 @@ class Document internal constructor(
     internal val id: String,
     @get:JvmSynthetic
     internal val nodes: List<Model<*>>,
-    @get:JvmSynthetic override val attributes: Attributes<Document>?,
+    @get:JvmSynthetic override val attributes: Attributes?,
 ) : ModelWithAttributes<Document>() {
     override fun getId(): String = id
 }

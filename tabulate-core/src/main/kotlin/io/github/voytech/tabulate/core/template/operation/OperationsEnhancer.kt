@@ -12,7 +12,7 @@ import io.github.voytech.tabulate.core.template.layout.*
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-internal class AttributesAwareExportOperation<CTX : RenderingContext, E : AttributedContext<E>>(
+internal class AttributesAwareExportOperation<CTX : RenderingContext, E : AttributedContext>(
     private val delegate: ReifiedOperation<CTX, E>,
     attributesOperations: AttributesOperations<CTX>,
 ) : Operation<CTX, E> {
@@ -72,7 +72,7 @@ internal class AttributesAwareExportOperation<CTX : RenderingContext, E : Attrib
 
 class EnableAttributeOperationAwareness<CTX : RenderingContext>(private val attributesOperations: AttributesOperations<CTX>) :
     Enhance<CTX> {
-    override fun <E : AttributedContext<E>> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> {
+    override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> {
         return AttributesAwareExportOperation(op, attributesOperations)
     }
 
@@ -84,29 +84,29 @@ class EnableAttributeOperationAwareness<CTX : RenderingContext>(private val attr
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext<E>>(
+class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
     private val delegate: Operation<CTX, E>, private val layouts: Layouts? = null,
 ) : Operation<CTX, E> {
 
-    private fun <E : AttributedContext<E>> Layout.resolveAttributeElementBoundaries(context: E): LayoutElementBoundaries? {
+    private fun <E : AttributedContext> Layout.resolveAttributeElementBoundaries(context: E): LayoutElementBoundingBox? {
         context.attributes?.attributeSet?.forEach {
             if (it is LayoutElement) with(it) {
                 computeBoundaries().mergeInto(context)
             }
         }
-        return context.boundaries()
+        return context.boundingBox()
     }
 
-    private fun <E : AttributedContext<E>> Layout.resolveElementBoundaries(context: E): LayoutElementBoundaries? {
+    private fun <E : AttributedContext> Layout.resolveElementBoundaries(context: E): LayoutElementBoundingBox? {
         if (context is LayoutElement) with(context) {
             computeBoundaries().mergeInto(context)
             resolveAttributeElementBoundaries(context)
         }
-        return context.boundaries()
+        return context.boundingBox()
     }
 
-    private fun <E : AttributedContext<E>> Layout.commitBoundaries(
-        context: E, boundaries: LayoutElementBoundaries? = null,
+    private fun <E : AttributedContext> Layout.commitBoundaries(
+        context: E, boundaries: LayoutElementBoundingBox? = null,
     ) {
         if (boundaries != null) {
             if (context is LayoutElementApply) with(context) { applyBoundaries(boundaries) }
@@ -125,7 +125,7 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext<E>>(
 }
 
 class EnableLayoutsAwareness<CTX : RenderingContext>(private val layouts: Layouts) : Enhance<CTX> {
-    override fun <E : AttributedContext<E>> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> {
+    override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> {
         return LayoutAwareOperation(op.delegate, layouts)
     }
 

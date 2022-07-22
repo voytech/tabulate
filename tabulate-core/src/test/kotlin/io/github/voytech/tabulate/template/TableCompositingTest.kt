@@ -1,19 +1,15 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.components.table.api.builder.dsl.plus
-import io.github.voytech.tabulate.components.table.api.builder.dsl.table
-import io.github.voytech.tabulate.components.table.api.builder.dsl.typedTable
+import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.core.template.DocumentFormat
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
-import io.github.voytech.tabulate.components.table.model.attributes.Colors
-import io.github.voytech.tabulate.components.table.model.attributes.cell.CellTextStylesAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.text
-import io.github.voytech.tabulate.components.table.model.attributes.column.ColumnWidthAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.column.width
+import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.components.table.template.export
 import io.github.voytech.tabulate.components.table.template.tabulate
+import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
+import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
 import io.github.voytech.tabulate.support.Spy
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -33,7 +29,7 @@ class TableCompositingTest {
             columns {
                 column(0) {
                     attributes {
-                        width { px = 45 }
+                        width { 45.px() }
                     }
                 }
             }
@@ -55,13 +51,13 @@ class TableCompositingTest {
         // Column 0
         history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
         // Column 0 attribute
-        history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Row 0
         history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         // Row 0, cell 0
         history.next().run { assertEquals("I gave a value.", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
         history.next().run { assertTrue(context is RowEnd<*>) }
         // Column 0
@@ -80,7 +76,7 @@ class TableCompositingTest {
             columns {
                 column(0) {
                     attributes {
-                        width { px = 45 }
+                        width { 45.px() }
                     }
                 }
             }
@@ -98,7 +94,7 @@ class TableCompositingTest {
         // Column 0
         history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
         // Column 0 attribute
-        history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Column 1
         history.next().run { assertEquals(1, (context as ColumnStart).columnIndex) }
         // Row 0
@@ -106,7 +102,7 @@ class TableCompositingTest {
         // Row 0, cell 0
         history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
         history.next().run { assertTrue(context is RowEnd<*>) }
         // Column 0
@@ -127,7 +123,7 @@ class TableCompositingTest {
             columns {
                 column(Product::code) {
                     attributes {
-                        width { px = 45 }
+                        width { 45.px() }
                     }
                 }
             }
@@ -145,7 +141,7 @@ class TableCompositingTest {
         // Column 0
         history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
         // Column 0 attribute
-        history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Column 1
         history.next().run { assertEquals(1, (context as ColumnStart).columnIndex) }
         // Row 0
@@ -153,12 +149,12 @@ class TableCompositingTest {
         // Row 0, cell 0
         history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
         // Row 0, cell 1
         history.next().run { assertEquals("name1", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
         history.next().run { assertTrue(context is RowEnd<*>) }
         // Column 0
@@ -179,7 +175,7 @@ class TableCompositingTest {
             columns {
                 column(Product::code) {
                     attributes {
-                        width { px = 45 }
+                        width { 45.px() }
                     }
                 }
             }
@@ -191,13 +187,13 @@ class TableCompositingTest {
         // Column 0
         history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
         // Column 0 attribute
-        history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Row 0
         history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         // Row 0, cell 0
         history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
         history.next().run { assertTrue(context is RowEnd<*>) }
         // Column 0

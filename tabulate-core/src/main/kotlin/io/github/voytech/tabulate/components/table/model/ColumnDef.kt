@@ -30,7 +30,7 @@ internal class ColumnDef<T> internal constructor(
     /**
      * column attributes for controlling appearance of entire column, which are applicable column-wide not per cell. (e.g. width)
      */
-    override val attributes: Attributes<ColumnDef<T>>?,
+    override val attributes: Attributes?,
 ) : AttributedModelOrPart<ColumnDef<T>> {
     @JvmSynthetic
     internal fun resolveRawValue(value: T?): Any? = value?.let { id.property?.getPropertyValue(it) }

@@ -1,18 +1,19 @@
 package io.github.voytech.tabulate.components.table.model.attributes.cell
 
-import io.github.voytech.tabulate.components.table.api.builder.CellAttributeBuilder
 import io.github.voytech.tabulate.components.table.api.builder.dsl.CellLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.dsl.ColumnLevelAttributesBuilderApi
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.contract.CellType
+import io.github.voytech.tabulate.components.table.operation.CellContext
+import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
+import io.github.voytech.tabulate.core.model.Attribute
 
 data class TypeHintAttribute(
     val type: CellType,
-) : CellAttribute<TypeHintAttribute>() {
+) : Attribute<TypeHintAttribute>() {
     @TabulateMarker
-    class Builder : CellAttributeBuilder<TypeHintAttribute>() {
+    class Builder : AttributeBuilder<TypeHintAttribute>(CellContext::class.java) {
         var type: CellType by observable(DefaultTypeHints.STRING)
         override fun provide(): TypeHintAttribute = TypeHintAttribute(type)
     }

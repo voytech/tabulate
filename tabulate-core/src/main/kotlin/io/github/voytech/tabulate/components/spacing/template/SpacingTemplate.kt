@@ -14,7 +14,7 @@ class SpacingTemplate : ExportTemplate<Spacing, SpacingTemplateContext> {
     ) = with(templateContext) {
         Position(
             apis.getActiveLayoutBoundaries().rightBottom.x + templateContext.model.size.width,
-            apis.getActiveLayoutBoundaries().rightBottom.y + templateContext.model.size.height
+            apis.getActiveLayoutBoundaries().leftTop.y + templateContext.model.size.height
         ).let { leftTop ->
             val layout = apis.getActiveLayout()
                 .newLayout(DefaultLayoutQueries(), leftTop, templateContext.model.childOrientation)

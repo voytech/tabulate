@@ -39,9 +39,4 @@ class DocumentBuilderState : CompositeModelBuilderState<Document>, AttributesAwa
 
     override fun modelClass(): Class<Document> = reify()
 
-    @JvmSynthetic
-    public override fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(builder: B) {
-        super.attribute(builder)
-    }
-
 }

@@ -1,13 +1,13 @@
 package io.github.voytech.tabulate.excel.components.table.model
 
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.contract.CellFill
+import io.github.voytech.tabulate.core.model.background.FillType
 
 /**
  * Excel format specific cell fill styles
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-enum class ExcelCellFills : CellFill {
+enum class ExcelCellFills : FillType {
     LEAST_DOTS,
     LESS_DOTS,
     SPARSE_DOTS,

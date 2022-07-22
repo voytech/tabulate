@@ -1,14 +1,9 @@
 package io.github.voytech.tabulate.template.operations
 
-import io.github.voytech.tabulate.components.table.api.builder.dsl.ColumnLevelAttributesBuilderApi
-import io.github.voytech.tabulate.components.table.api.builder.dsl.TableBuilderApi
-import io.github.voytech.tabulate.components.table.api.builder.dsl.createTableBuilder
+import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.model.attributes.Colors
-import io.github.voytech.tabulate.components.table.model.attributes.cell.background
-import io.github.voytech.tabulate.components.table.model.attributes.cell.borders
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultBorderStyle
-import io.github.voytech.tabulate.components.table.model.attributes.cell.text
+import io.github.voytech.tabulate.core.model.color.Colors
+import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.components.table.model.attributes.table.template
 import io.github.voytech.tabulate.components.table.operation.TableStart
 import io.github.voytech.tabulate.components.table.operation.asTableStart

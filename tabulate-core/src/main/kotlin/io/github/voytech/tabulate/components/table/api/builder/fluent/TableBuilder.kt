@@ -2,11 +2,14 @@ package io.github.voytech.tabulate.components.table.api.builder.fluent
 
 import io.github.voytech.tabulate.components.table.api.builder.*
 import io.github.voytech.tabulate.components.table.model.*
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.ColumnAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.RowAttribute
 import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHintAttribute
+import io.github.voytech.tabulate.components.table.operation.CellContext
+import io.github.voytech.tabulate.components.table.operation.ColumnContext
+import io.github.voytech.tabulate.components.table.operation.RowContext
+import io.github.voytech.tabulate.components.table.template.TableTemplate
+import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.model.Attribute
+import io.github.voytech.tabulate.core.model.attributes.*
 import java.util.concurrent.Callable
 import java.util.function.Consumer
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.contract.CellType as TypeHint
@@ -82,11 +85,11 @@ class TableBuilder<T: Any> : FluentTableBuilderApi<T>() {
 
     fun rows() = RowsBuilder(this)
 
-    fun <A : Attribute<A>, B : io.github.voytech.tabulate.core.api.builder.AttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
+    fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
         this.builderState.attribute(attributeProvider.call())
     }
 
-    fun <A : Attribute<A>, B : io.github.voytech.tabulate.core.api.builder.AttributeBuilder<A>> attribute(
+    fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(
         attributeProvider: Callable<B>,
         attributeConfigurer: Consumer<B>,
     ) = apply {
@@ -140,30 +143,11 @@ class ColumnBuilder<T: Any> internal constructor(
 
     fun rows() = up().up().rows()
 
-    @JvmName("columnAttribute")
-    fun <A : ColumnAttribute<A>, B : ColumnAttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
+    fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
         this.builderState.attribute(attributeProvider.call())
     }
 
-    @JvmName("columnAttribute")
-    fun <A : ColumnAttribute<A>, B : ColumnAttributeBuilder<A>> attribute(
-        attributeProvider: Callable<B>,
-        attributeConfigurer: Consumer<B>,
-    ) = apply {
-        this.builderState.attribute(
-            attributeProvider.call().apply {
-                attributeConfigurer.accept(this)
-            }
-        )
-    }
-
-    @JvmName("cellAttribute")
-    fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
-        this.builderState.attribute(attributeProvider.call())
-    }
-
-    @JvmName("cellAttribute")
-    fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(
+    fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(
         attributeProvider: Callable<B>,
         attributeConfigurer: Consumer<B>,
     ) = apply {
@@ -234,30 +218,11 @@ class RowBuilder<T: Any> internal constructor(
     override fun cell(index: Int): CellBuilder<T> =
         CellBuilder(builderState.cellBuilderStateCollection.addCellBuilder(index) {}, this)
 
-    @JvmName("rowAttribute")
-    fun <A : RowAttribute<A>, B : RowAttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
+    fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
         this.builderState.attribute(attributeProvider.call())
     }
 
-    @JvmName("rowAttribute")
-    fun <A : RowAttribute<A>, B : RowAttributeBuilder<A>> attribute(
-        attributeProvider: Callable<B>,
-        attributeConfigurer: Consumer<B>,
-    ) = apply {
-        this.builderState.attribute(
-            attributeProvider.call().apply {
-                attributeConfigurer.accept(this)
-            }
-        )
-    }
-
-    @JvmName("cellAttribute")
-    fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
-        this.builderState.attribute(attributeProvider.call())
-    }
-
-    @JvmName("cellAttribute")
-    fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(
+    fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(
         attributeProvider: Callable<B>,
         attributeConfigurer: Consumer<B>,
     ) = apply {
@@ -305,13 +270,12 @@ class CellBuilder<T: Any> internal constructor(
         builderState.rowSpan = rowSpan
     }
 
-    @JvmName("cellAttribute")
-    fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
+
+    fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(attributeProvider: Callable<B>) = apply {
         builderState.attribute(attributeProvider.call())
     }
 
-    @JvmName("cellAttribute")
-    fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(
+    fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(
         attributeProvider: Callable<B>,
         attributeConfigurer: Consumer<B>,
     ) = apply {
@@ -324,4 +288,22 @@ class CellBuilder<T: Any> internal constructor(
 
     @JvmSynthetic
     override fun up(): RowBuilder<T> = parent
+}
+
+
+object TableAttributes {
+    @JvmStatic
+    fun heightAttribute(): HeightAttribute.Builder= HeightAttribute.builder(RowContext::class.java)
+    @JvmStatic
+    fun widthAttribute(): WidthAttribute.Builder= WidthAttribute.builder(ColumnContext::class.java)
+    @JvmStatic
+    fun textAttribute(): TextStylesAttribute.Builder= TextStylesAttribute.builder(CellContext::class.java)
+    @JvmStatic
+    fun cellBorderAttribute(): BordersAttribute.Builder= BordersAttribute.builder(CellContext::class.java)
+    @JvmStatic
+    fun rowBorderAttribute(): BordersAttribute.Builder= BordersAttribute.builder(RowContext::class.java)
+    @JvmStatic
+    fun backgroundAttribute(): BackgroundAttribute.Builder= BackgroundAttribute.builder(CellContext::class.java)
+    @JvmStatic
+    fun alignmentAttribute(): AlignmentAttribute.Builder= AlignmentAttribute.builder(CellContext::class.java)
 }

@@ -70,20 +70,20 @@ internal class SyntheticRow<T : Any>(
     // computed intermediate properties:
     internal val tableAttributesForContext: AttributesByContexts<Table<T>> = table.attributesForAllContexts(),
     internal val cellDefinitions: Map<ColumnKey<T>, CellDef<T>> = rowDefinitions.mergeCells(),
-    private val allRowAttributes: Attributes<RowDef<T>> = rowDefinitions.flattenRowAttributes(),
+    private val allRowAttributes: Attributes = rowDefinitions.flattenRowAttributes(),
     // attributes to be accessible on AttributedContext:
-    internal val rowStartAttributes: Attributes<RowStart> = tableAttributesForContext.get<RowStart>() + allRowAttributes.forContext(),
-    internal val rowEndAttributes: Attributes<RowEnd<T>> = tableAttributesForContext.get<RowEnd<T>>() + allRowAttributes.forContext(),
-    private val rowCellAttributes: Attributes<CellContext> = rowDefinitions.flattenCellAttributes().forContext(),
-    internal val cellContextAttributes: MutableMap<ColumnDef<T>, Attributes<CellContext>> = mutableMapOf(),
+    internal val rowStartAttributes: Attributes = tableAttributesForContext.get<RowStart>() + allRowAttributes.forContext<RowStart>(),
+    internal val rowEndAttributes: Attributes = tableAttributesForContext.get<RowEnd<T>>() + allRowAttributes.forContext<RowEnd<T>>(),
+    private val rowCellAttributes: Attributes = rowDefinitions.flattenCellAttributes().forContext<CellContext>(),
+    internal val cellContextAttributes: MutableMap<ColumnDef<T>, Attributes> = mutableMapOf(),
 ) {
 
     @Suppress("NOTHING_TO_INLINE")
-    inline fun mergeCellAttributes(column: ColumnDef<T>): Attributes<CellContext> =
+    private inline fun mergeCellAttributes(column: ColumnDef<T>): Attributes =
         tableAttributesForContext.get<CellContext>().orEmpty() +
-                column.attributes.orEmpty().forContext() +
+                column.attributes.orEmpty().forContext<CellContext>() +
                 rowCellAttributes +
-                cellDefinitions[column.id]?.attributes.orEmpty().forContext()
+                cellDefinitions[column.id]?.attributes.orEmpty().forContext<CellContext>()
 
     internal fun mapEachCell(
         block: (syntheticRow: SyntheticRow<T>, column: ColumnDef<T>) -> CellContext?,

@@ -1,9 +1,10 @@
 package io.github.voytech.tabulate.csv.components.table.model.attributes
 
-import io.github.voytech.tabulate.components.table.api.builder.CellAttributeBuilder
 import io.github.voytech.tabulate.components.table.api.builder.dsl.TableLevelAttributesBuilderApi
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
+import io.github.voytech.tabulate.components.table.operation.CellContext
+import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
+import io.github.voytech.tabulate.core.model.Attribute
 
 /**
  * Attribute that tells what cell separator will be used in CSV file.
@@ -11,9 +12,9 @@ import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
  * @since 0.1.0
  */
 data class CellSeparatorCharacterAttribute(val separator: String = ","):
-    CellAttribute<CellSeparatorCharacterAttribute>() {
+    Attribute<CellSeparatorCharacterAttribute>() {
     @TabulateMarker
-    class Builder : CellAttributeBuilder<CellSeparatorCharacterAttribute>() {
+    class Builder : AttributeBuilder<CellSeparatorCharacterAttribute>(CellContext::class.java) {
         var value: String by observable(",")
         override fun provide(): CellSeparatorCharacterAttribute = CellSeparatorCharacterAttribute(value)
     }

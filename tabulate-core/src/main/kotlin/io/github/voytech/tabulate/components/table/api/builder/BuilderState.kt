@@ -2,12 +2,7 @@ package io.github.voytech.tabulate.components.table.api.builder
 
 import io.github.voytech.tabulate.api.builder.exception.BuilderException
 import io.github.voytech.tabulate.components.table.model.*
-import io.github.voytech.tabulate.components.table.model.attributes.CellAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.ColumnAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.RowAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.TableAttribute
 import io.github.voytech.tabulate.core.api.builder.*
-import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.DataSourceBinding
 import io.github.voytech.tabulate.core.reify
 import kotlin.properties.Delegates
@@ -51,11 +46,6 @@ class TableBuilderState<T : Any> : ModelBuilderState<Table<T>>, AttributesAwareB
     )
 
     override fun modelClass(): Class<Table<T>> = reify()
-
-    @JvmSynthetic
-    public override fun <A : Attribute<A>, B : AttributeBuilder<A>> attribute(builder: B) {
-        super.attribute(builder)
-    }
 
 }
 
@@ -170,12 +160,6 @@ internal class ColumnBuilderState<T: Any>(
     var index: Int by vetoable(columnBuilderStates.nextIndex()) { _, _, newValue ->
         columnBuilderStates.moveAt(id, newValue)
     }
-
-    @JvmSynthetic
-    fun <A : ColumnAttribute<A>, B : ColumnAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
-
-    @JvmSynthetic
-    fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
 
     override fun modelClass(): Class<ColumnDef<T>> = reify()
 
@@ -319,12 +303,6 @@ internal class RowBuilderState<T: Any>(
         cellBuilderStateCollection.buildMap(),
         attributes()
     )
-
-    @JvmSynthetic
-    fun <A : RowAttribute<A>, B : RowAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
-
-    @JvmSynthetic
-    fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
 
     internal fun isCellLockedByRowSpan(key: ColumnKey<T>): Boolean = with(rowsBuilderState.rowSpans) {
         isColumnLocked(key)
@@ -504,39 +482,4 @@ internal class CellBuilderState<T: Any>(
             attributes()
         )
 
-    @JvmSynthetic
-    fun <A : CellAttribute<A>, B : CellAttributeBuilder<A>> attribute(builder: B): Unit = super.attribute(builder)
 }
-
-
-/**
- * Base class for all table attribute builders.
- * @see AttributeBuilder
- * @author Wojciech Mąka
- * @since 0.1.0
- */
-abstract class TableAttributeBuilder<T : TableAttribute<T>> : AttributeBuilder<T>()
-
-/**
- * Base class for all cell attribute builders.
- * @see AttributeBuilder
- * @author Wojciech Mąka
- * @since 0.1.0
- */
-abstract class CellAttributeBuilder<T : CellAttribute<T>> : AttributeBuilder<T>()
-
-/**
- * Base class for all row attribute builders.
- * @see AttributeBuilder
- * @author Wojciech Mąka
- * @since 0.1.0
- */
-abstract class RowAttributeBuilder<T : RowAttribute<T>> : AttributeBuilder<T>()
-
-/**
- * Base class for all column attribute builders.
- * @see AttributeBuilder
- * @author Wojciech Mąka
- * @since 0.1.0
- */
-abstract class ColumnAttributeBuilder<T : ColumnAttribute<T>> : AttributeBuilder<T>()
