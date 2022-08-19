@@ -1,10 +1,10 @@
-package io.github.voytech.tabulate.components.spacing.api.builder
+package io.github.voytech.tabulate.components.margins.api.builder
 
-import io.github.voytech.tabulate.components.spacing.model.Spacing
+import io.github.voytech.tabulate.components.margins.model.Margins
+import io.github.voytech.tabulate.core.api.builder.BuiltModel
 import io.github.voytech.tabulate.core.api.builder.CompositeModelBuilderState
 import io.github.voytech.tabulate.core.api.builder.ModelBuilderState
 import io.github.voytech.tabulate.core.model.*
-import java.util.*
 
 
 /**
@@ -13,7 +13,7 @@ import java.util.*
  * @author Wojciech Mąka
  * @since 0.*.*
  */
-class SpacingBuilderState : CompositeModelBuilderState<Spacing> {
+class MarginsBuilderState : CompositeModelBuilderState<Margins> {
 
     @get:JvmSynthetic
     internal var child: ModelBuilderState<*>? = null
@@ -25,14 +25,13 @@ class SpacingBuilderState : CompositeModelBuilderState<Spacing> {
     var height: Height = Height.zero(UnitsOfMeasure.PT)
 
     @JvmSynthetic
-    override fun <E: Model<E>> bind(node: ModelBuilderState<E>) {
+    override fun <E : BuiltModel<E>> bind(node: ModelBuilderState<E>) {
         child = node
     }
 
     @JvmSynthetic
-    override fun build(): Spacing = Spacing(
+    override fun build(): Margins = Margins(
         child = child?.build(),
-        id = UUID.randomUUID().toString(),
         size = Size(width, height),
         childOrientation = Orientation.HORIZONTAL
     )

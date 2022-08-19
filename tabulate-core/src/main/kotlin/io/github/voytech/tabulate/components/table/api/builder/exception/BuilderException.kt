@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.api.builder.exception
+package io.github.voytech.tabulate.components.table.api.builder.exception
 
 /**
  * Build-time validation exception.

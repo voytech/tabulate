@@ -1,7 +1,7 @@
-package io.github.voytech.tabulate.components.spacing.api.builder.dsl
+package io.github.voytech.tabulate.components.margins.api.builder.dsl
 
-import io.github.voytech.tabulate.components.spacing.api.builder.SpacingBuilderState
-import io.github.voytech.tabulate.components.spacing.model.Spacing
+import io.github.voytech.tabulate.components.margins.api.builder.MarginsBuilderState
+import io.github.voytech.tabulate.components.margins.model.Margins
 import io.github.voytech.tabulate.core.api.builder.dsl.CompositeModelBuilderApi
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.model.Height
@@ -16,7 +16,7 @@ import io.github.voytech.tabulate.core.model.Width
  * @since 0.1.0
  */
 @TabulateMarker
-class SpacingBuilderApi internal constructor(): CompositeModelBuilderApi<Spacing, SpacingBuilderState>(SpacingBuilderState()) {
+class MarginsBuilderApi internal constructor(): CompositeModelBuilderApi<Margins, MarginsBuilderState>(MarginsBuilderState()) {
 
     @set:JvmSynthetic
     @get:JvmSynthetic
@@ -29,13 +29,13 @@ class SpacingBuilderApi internal constructor(): CompositeModelBuilderApi<Spacing
     fun Number.pt(): MeasuredValue = MeasuredValue(toFloat(), UnitsOfMeasure.PT)
     fun Number.px(): MeasuredValue = MeasuredValue(toFloat(), UnitsOfMeasure.PX)
 
-    fun width(block: () -> MeasuredValue) {
+    fun left(block: () -> MeasuredValue) {
         width = block().width()
     }
 
-    fun height(block: () -> MeasuredValue) {
+    fun top(block: () -> MeasuredValue) {
         height = block().height()
     }
 }
 
-fun CompositeModelBuilderApi<*,*>.space(block: SpacingBuilderApi.() -> Unit) = bind(SpacingBuilderApi().apply(block))
+fun CompositeModelBuilderApi<*,*>.margins(block: MarginsBuilderApi.() -> Unit) = bind(MarginsBuilderApi().apply(block))

@@ -4,16 +4,17 @@ import io.github.voytech.tabulate.components.table.model.RowDef
 import io.github.voytech.tabulate.components.table.model.SourceRow
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.RowEnd
-import io.github.voytech.tabulate.components.table.operation.asRowEnd
-import io.github.voytech.tabulate.components.table.operation.asCellContext
-import io.github.voytech.tabulate.components.table.operation.asRowStart
+import io.github.voytech.tabulate.components.table.operation.createRowEnd
+import io.github.voytech.tabulate.components.table.operation.createCellContext
+import io.github.voytech.tabulate.components.table.operation.createRowStart
 import io.github.voytech.tabulate.components.table.template.*
 
 internal class SlowRowResolver<T: Any>(
     private val tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
-    listener: RowCompletionListener<T>? = null
-): AbstractRowContextResolver<T>(tableModel, customAttributes, listener) {
+    offsets: OverflowOffsets = OverflowOffsets(),
+    listener: CaptureRowCompletion<T>? = null
+): AbstractRowContextResolver<T>(tableModel, customAttributes, offsets, listener) {
 
     private val customRows = tableModel.rows?.filter { it.qualifier.index != null }
     private val rowsWithPredicates = tableModel.rows?.filter { it.qualifier.matching != null }
@@ -38,26 +39,23 @@ internal class SlowRowResolver<T: Any>(
     private fun resolveAttributedRow(
         tableRowIndex: RowIndex,
         record: IndexedValue<T>? = null
-    ): RowEnd<T> {
+    ): ContextResult<RowEnd<T>> {
         return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
             val rowDefinitions = getRows(sourceRow)
             with(SyntheticRow(tableModel, rowDefinitions)) {
-                asRowStart(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
-                    .let {
-                        asRowEnd(
-                            it,
-                            mapEachCell { row, column ->
-                                row.asCellContext(row = sourceRow, column = column, customAttributes)?.notify()
-                            }
-                        )
-                    }.notify()
+                SuccessResult(createRowEnd(
+                    createRowStart(rowIndex = tableRowIndex.value, customAttributes = customAttributes).also { it.render() },
+                    mapEachCell { row, column ->
+                        row.createCellContext(row = sourceRow, column = column, customAttributes)?.also { it.render() }
+                    }
+                ).also { it.render() })
             }
         }
     }
 
-    override fun resolve(requestedIndex: RowIndex): IndexedContext<RowEnd<T>>? {
+    override fun resolve(requestedIndex: RowIndex): IndexedResult<RowEnd<T>>? {
         return if (hasCustomRows(SourceRow(requestedIndex))) {
-            IndexedContext(requestedIndex, resolveAttributedRow(requestedIndex))
+            IndexedResult(requestedIndex, null, resolveAttributedRow(requestedIndex))
         } else null
     }
 

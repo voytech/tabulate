@@ -1,12 +1,11 @@
 package io.github.voytech.tabulate.components.table.model
 
 import io.github.voytech.tabulate.components.table.template.TableTemplate
+import io.github.voytech.tabulate.components.table.template.TableTemplateContext
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.DataSourceBinding
 import io.github.voytech.tabulate.core.model.ModelWithAttributes
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.ExportTemplate
-import io.github.voytech.tabulate.core.template.TemplateContext
 
 /**
  * A top-level definition of tabular layout. Aggregates column as well as all row definitions. It can also contain
@@ -49,10 +48,9 @@ class Table<T: Any> internal constructor(
 
     override val attributes: Attributes?
 
-) : ModelWithAttributes<Table<T>>() {
-    override fun getId(): String = name
+) : ModelWithAttributes<TableTemplate<T>,Table<T>, TableTemplateContext<T>>() {
 
-    override fun getExportTemplate(): ExportTemplate<Table<T>, out TemplateContext<Table<T>>> = TableTemplate()
+    override fun getExportTemplate(): TableTemplate<T> = TableTemplate()
 
     companion object {
         @JvmStatic

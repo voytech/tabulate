@@ -18,7 +18,7 @@ import io.github.voytech.tabulate.core.template.operation.Context
 
 
 fun Context.getSheetName(): String {
-    return (getContextAttributes()?.get("_sheetName") ?: error("")) as String
+    return (getCustomAttributes()?.get("_sheetName") ?: error("")) as String
 }
 
 /**
@@ -42,14 +42,14 @@ interface RowCoordinate {
 }
 
 interface RowLayoutElement : RowCoordinate, LayoutElement, LayoutElementApply {
-    override fun Layout.computeBoundaries(): LayoutElementBoundingBox = query.elementBoundaries(
+    override fun Layout<*,*,*>.computeBoundaries(): LayoutElementBoundingBox = query.elementBoundaries(
         x = query.getX(0.asXPosition(), uom),
         y = query.getY(getRow().asYPosition(), uom),
         width = query.getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
         height = (query as? TableLayoutQueries)?.getRowHeight(getRow(), uom)
     )
 
-    override fun Layout.applyBoundaries(context: LayoutElementBoundingBox): Unit = with(query as TableLayoutQueries) {
+    override fun Layout<*,*,*>.applyBoundaries(context: LayoutElementBoundingBox): Unit = with(query as TableLayoutQueries) {
         context.height?.let { setRowHeight(getRow(), it) }
     }
 }
@@ -64,11 +64,11 @@ interface ColumnCoordinate {
 }
 
 interface ColumnLayoutElement : ColumnCoordinate, LayoutElement, LayoutElementApply {
-    override fun Layout.computeBoundaries(): LayoutElementBoundingBox = query.elementBoundaries(
+    override fun Layout<*,*,*>.computeBoundaries(): LayoutElementBoundingBox = query.elementBoundaries(
         x = query.getX(getColumn().asXPosition(), uom),
     )
 
-    override fun Layout.applyBoundaries(context: LayoutElementBoundingBox): Unit = with(query as TableLayoutQueries) {
+    override fun Layout<*,*,*>.applyBoundaries(context: LayoutElementBoundingBox): Unit = with(query as TableLayoutQueries) {
         context.width?.let { setColumnWidth(getColumn(), it) }
     }
 }
@@ -81,14 +81,14 @@ interface ColumnLayoutElement : ColumnCoordinate, LayoutElement, LayoutElementAp
 interface RowCellCoordinate : RowCoordinate, ColumnCoordinate
 
 interface RowCellLayoutElement : RowCellCoordinate, LayoutElement, LayoutElementApply {
-    override fun Layout.computeBoundaries(): LayoutElementBoundingBox = query.elementBoundaries(
+    override fun Layout<*,*,*>.computeBoundaries(): LayoutElementBoundingBox = query.elementBoundaries(
         x = query.getX(getColumn().asXPosition(), uom),
         y = query.getY(getRow().asYPosition(), uom),
         width = (query as? TableLayoutQueries)?.getColumnWidth(getColumn(),uom),
         height = (query as? TableLayoutQueries)?.getRowHeight(getRow(),uom)
     )
 
-    override fun Layout.applyBoundaries(context: LayoutElementBoundingBox): Unit = with(query as TableLayoutQueries) {
+    override fun Layout<*,*,*>.applyBoundaries(context: LayoutElementBoundingBox): Unit = with(query as TableLayoutQueries) {
         context.width?.let { setColumnWidth(getColumn(), it) }
         context.height?.let { setRowHeight(getRow(), it) }
     }
@@ -175,7 +175,7 @@ class RowStart(
     override fun getRow(): Int = rowIndex
 }
 
-internal fun <T : Any> SyntheticRow<T>.asRowStart(
+internal fun <T : Any> SyntheticRow<T>.createRowStart(
     rowIndex: Int,
     customAttributes: MutableMap<String, Any>,
 ): RowStart {
@@ -200,7 +200,7 @@ class RowEnd<T>(
 
 }
 
-internal fun  <T : Any> SyntheticRow<T>.asRowEnd(rowStart: RowStart,rowCellValues: Map<ColumnKey<T>, CellContext>): RowEnd<T> =
+internal fun  <T : Any> SyntheticRow<T>.createRowEnd(rowStart: RowStart, rowCellValues: Map<ColumnKey<T>, CellContext>): RowEnd<T> =
     RowEnd(
         rowIndex = rowStart.rowIndex,
         attributes =  rowEndAttributes,
@@ -274,7 +274,7 @@ class CellContext(
     override fun getColumn(): Int = columnIndex
 }
 
-internal fun <T : Any> SyntheticRow<T>.asCellContext(
+internal fun <T : Any> SyntheticRow<T>.createCellContext(
     row: SourceRow<T>,
     column: ColumnDef<T>,
     customAttributes: MutableMap<String, Any>,

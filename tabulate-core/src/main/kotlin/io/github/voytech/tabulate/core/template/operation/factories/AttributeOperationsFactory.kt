@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.core.template.operation.factories
 
-import io.github.voytech.tabulate.core.model.Model
+import io.github.voytech.tabulate.core.model.UnconstrainedModel
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.loadAttributeOperationProviders
 import io.github.voytech.tabulate.core.template.operation.AttributeOperationsBuilder
@@ -18,7 +18,7 @@ class AttributeOperationsFactory<CTX : RenderingContext>(private val renderingCo
         loadAttributeOperationProviders(renderingContextType)
     }
 
-    fun <ARM : Model<ARM>> createAttributeOperations(model: ARM): AttributesOperations<CTX> =
+    fun <M : UnconstrainedModel<M>> createAttributeOperations(model: M): AttributesOperations<CTX> =
         attributeOperationsProviders
             .filter { it.getModelClass() == model.javaClass }
             .fold(AttributeOperationsBuilder(renderingContextType)) { builder, provider ->

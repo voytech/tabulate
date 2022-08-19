@@ -58,10 +58,12 @@ data class Width(override val value: Float, override val unit: UnitsOfMeasure) :
 
     companion object {
         fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Width(0.0f, uom)
+        fun max(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Width(Int.MAX_VALUE.toFloat(), uom)
     }
 }
 
 fun Width?.orZero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = this ?: Width.zero(uom)
+fun Width?.orMax(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = this ?: Width.max(uom)
 
 data class Height(override val value: Float, override val unit: UnitsOfMeasure) : Measure(value, unit) {
     fun switchUnitOfMeasure(targetUnit: UnitsOfMeasure): Height = if (unit != targetUnit) {
@@ -69,12 +71,16 @@ data class Height(override val value: Float, override val unit: UnitsOfMeasure) 
     } else this
 
     fun asY(): Y = Y(value,unit)
+
     companion object {
         fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Height(0.0f, uom)
+        fun max(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Height(Int.MAX_VALUE.toFloat(), uom)
     }
 }
 
 fun Height?.orZero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = this ?: Height.zero(uom)
+fun Height?.orMax(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = this ?: Height.max(uom)
+
 
 data class Size(val width: Width, val height: Height)
 
@@ -107,6 +113,11 @@ data class X(override val value: Float, override val unit: UnitsOfMeasure) : Mea
         value = value - other,
         unit = unit
     )
+
+    companion object {
+        fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = X(0.0f, uom)
+        fun max(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = X(Int.MAX_VALUE.toFloat(), uom)
+    }
 
 }
 
@@ -145,6 +156,10 @@ data class Y(override val value: Float, override val unit: UnitsOfMeasure) : Mea
         unit = unit
     )
 
+    companion object {
+        fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Y(0.0f, uom)
+        fun max(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Y(Int.MAX_VALUE.toFloat(), uom)
+    }
 }
 
 data class Position(val x: X, val y: Y) {
@@ -152,10 +167,14 @@ data class Position(val x: X, val y: Y) {
         x = X(x.value + other.x.switchUnitOfMeasure(x.unit).value, x.unit),
         y = Y(y.value + other.y.switchUnitOfMeasure(y.unit).value, y.unit)
     )
-
+    companion object {
+        fun start(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Position(X.zero(uom),Y.zero(uom))
+    }
 }
 
-fun max(left: Position, right: Position) = Position(
+fun Position?.orStart(uom: UnitsOfMeasure): Position = this?:Position.start(uom)
+
+fun orMax(left: Position, right: Position) = Position(
     X(max(left.x.value, right.x.switchUnitOfMeasure(left.x.unit).value), left.x.unit),
     Y(max(left.y.value, right.y.switchUnitOfMeasure(left.y.unit).value), left.y.unit)
 )

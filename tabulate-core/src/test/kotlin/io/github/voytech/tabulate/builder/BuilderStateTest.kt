@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.builder
 
-import io.github.voytech.tabulate.api.builder.exception.BuilderException
 import io.github.voytech.tabulate.components.table.api.builder.*
+import io.github.voytech.tabulate.components.table.api.builder.exception.BuilderException
 import io.github.voytech.tabulate.components.table.model.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

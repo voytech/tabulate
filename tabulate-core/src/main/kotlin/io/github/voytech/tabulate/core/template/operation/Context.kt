@@ -12,7 +12,7 @@ import io.github.voytech.tabulate.core.model.Attributes
  * @since 0.1.0
  */
 sealed interface Context {
-    fun getContextAttributes(): MutableMap<String, Any>?
+    fun getCustomAttributes(): MutableMap<String, Any>?
 }
 
 /**
@@ -23,11 +23,11 @@ sealed interface Context {
  */
 sealed class ContextData : Context {
     var additionalAttributes: MutableMap<String, Any>? = null
-    override fun getContextAttributes(): MutableMap<String, Any>? = additionalAttributes
+    override fun getCustomAttributes(): MutableMap<String, Any>? = additionalAttributes
 
-    inline fun <reified C: Any> getContextAttribute(key: String): C? = additionalAttributes?.get(key) as C?
+    inline fun <reified C: Any> getCustomAttribute(key: String): C? = additionalAttributes?.get(key) as C?
 
-    inline fun <reified C: Any> removeContextAttribute(key: String): C? = additionalAttributes?.remove(key) as C?
+    inline fun <reified C: Any> removeCustomAttribute(key: String): C? = additionalAttributes?.remove(key) as C?
 }
 
 /**
@@ -42,22 +42,33 @@ abstract class AttributedContext(@JvmSynthetic override val attributes: Attribut
 
     val id: String by lazy { "_${javaClass}-${hashCode()}" }
 
-    @Suppress("UNCHECKED_CAST")
     fun <T : Attribute<T>> getModelAttribute(clazz: Class<T>): T? =
         attributes?.get(clazz)
 
     inline fun <reified T : Attribute<T>> getModelAttribute(): T? =
         getModelAttribute(T::class.java)
+
+    fun <A: Any> setContextAttribute(key: String, value: A) {
+        additionalAttributes?.put("$id[$key]", value)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <A: Any> getContextAttribute(key: String): A? = if (additionalAttributes?.containsKey("$id[$key]") == true) {
+        additionalAttributes?.get("$id[$key]") as? A
+    } else null
+
+    @Suppress("UNCHECKED_CAST")
+    fun <A: Any> removeContextAttribute(key: String): A? = if (additionalAttributes?.containsKey("$id[$key]") == true) {
+        additionalAttributes?.remove("$id[$key]") as? A
+    } else null
+
 }
-
-
 
 class AttributesByContexts<T : AttributedModelOrPart<T>>(
     from: T, to: List<Class<out AttributedContext>>,
     val attributes: Map<Class<out AttributedContext>, Attributes> =
         to.associate { (it to (from.attributes?.forContext(it) ?: Attributes())) },
 ) {
-    @Suppress("UNCHECKED_CAST")
     internal inline fun <reified E : AttributedContext> get(): Attributes = attributes[E::class.java] ?: Attributes()
 }
 

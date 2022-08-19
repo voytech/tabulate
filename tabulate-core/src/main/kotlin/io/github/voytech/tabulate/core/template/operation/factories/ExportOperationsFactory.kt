@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.core.template.operation.factories
 
-import io.github.voytech.tabulate.core.model.Model
+import io.github.voytech.tabulate.core.model.UnconstrainedModel
 import io.github.voytech.tabulate.core.template.DocumentFormat
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.loadExportOperationProviders
@@ -11,15 +11,14 @@ import io.github.voytech.tabulate.core.template.operation.OperationsBuilder
 import io.github.voytech.tabulate.core.template.spi.ExportOperationsProvider
 import io.github.voytech.tabulate.core.template.spi.getRenderingContextClass
 
-typealias DiscoveredExportOperationFactories<R> = Map<Class<out Model<*>>, List<ExportOperationsProvider<R, *>>>
+typealias DiscoveredExportOperationFactories<R> = Map<Class<out UnconstrainedModel<*>>, List<ExportOperationsProvider<R, *>>>
 
 private fun <R : RenderingContext> DiscoveredExportOperationFactories<R>.getRenderingContextClass(): Class<R> =
     values.first().first().getRenderingContextClass()
 
-
 @Suppress("UNCHECKED_CAST")
-private operator fun <R : RenderingContext, MDL : Model<MDL>> DiscoveredExportOperationFactories<R>.get(model: MDL): List<ExportOperationsProvider<R, MDL>> =
-    (this[model.javaClass] as? List<ExportOperationsProvider<R, MDL>>) ?: emptyList()
+private operator fun <R : RenderingContext, M : UnconstrainedModel<M>> DiscoveredExportOperationFactories<R>.get(model: M): List<ExportOperationsProvider<R, M>> =
+    (this[model.javaClass] as? List<ExportOperationsProvider<R, M>>) ?: emptyList()
 
 /**
  * Export operations factory that can discover attribute operations.
@@ -41,7 +40,7 @@ class ExportOperationsFactory<CTX : RenderingContext>(private val documentFormat
         AttributeOperationsFactory(renderingContext)
     }
 
-    fun <ARM : Model<ARM>> createExportOperations(model: ARM, vararg customEnhancers: Enhance<CTX>): Operations<CTX> =
+    fun <M : UnconstrainedModel<M>> createExportOperations(model: M, vararg customEnhancers: Enhance<CTX>): Operations<CTX> =
         operationProviders[model].fold(OperationsBuilder(renderingContext)) { builder, provider ->
             builder.apply(provider.provideExportOperations())
         }.build(

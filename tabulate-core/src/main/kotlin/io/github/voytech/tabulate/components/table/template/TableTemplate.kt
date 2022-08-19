@@ -7,10 +7,11 @@ import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.DataSourceBinding
-import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.*
 import io.github.voytech.tabulate.core.template.layout.TableLayoutQueries
+import io.github.voytech.tabulate.core.template.operation.OperationStatus
 import io.github.voytech.tabulate.core.template.operation.Operations
+import io.github.voytech.tabulate.core.template.operation.Success
 import io.github.voytech.tabulate.core.template.operation.distributeAttributesForContexts
 import java.io.File
 import java.io.FileOutputStream
@@ -32,7 +33,7 @@ interface TabulationApi<T> {
      * first buffered and rendered eventually according to row qualification rules defined trough table DSL api.
      * @param record - a record from source collection to be buffered, and transformed into [RowEnd] at some point of time.
      */
-    fun nextRow(record: T)
+    fun exportNextRecord(record: T): ContextResult<RowEnd<T>>?
 
     /**
      * To be called explicitly in order to finalize rendering.
@@ -48,25 +49,25 @@ interface TabulationApi<T> {
 /**
  * An entry point of table export.
  * Contains entry point methods:
- * - [TableTemplate.export] - export collection of objects.
+ * - [TableTemplate.doExport] - export collection of objects.
  * - [TableTemplate.create] - create [TabulationApi] to enable 'interactive' export. Removes restriction of exporting
  * only iterables. Gives full control on when to schedule next item for rendering.
  *
  * This class provides also convenience extension methods:
  * - [TableBuilderState.export] for exporting user defined table.
  * - [Iterable.tabulate] for tabulating collection of elements. Method is called 'tabulate' to emphasize
- * its sole role - constructing tables from from various objects.
+ * its sole role - constructing tables from various objects.
  * @author Wojciech Mąka
  */
 
-class TableTemplate<T : Any> : ExportTemplate<Table<T>, TableTemplateContext<T>> {
+class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableTemplateContext<T>>() {
 
     data class ColumnContextAttributes(val start: Attributes, val end: Attributes)
 
-    private inner class TabulationApiImpl<T : Any, R : RenderingContext>(
-        private val renderingContext: R,
+    private inner class TabulationApiImpl(
+        private val renderingContext: RenderingContext,
         private val templateContext: TableTemplateContext<T>,
-        private val operations: Operations<R>,
+        private val operations: Operations<RenderingContext>,
     ) : TabulationApi<T> {
         private val columnContextAttributes = templateContext.model.distributeAttributesForContexts(
             ColumnStart::class.java, ColumnEnd::class.java
@@ -83,12 +84,13 @@ class TableTemplate<T : Any> : ExportTemplate<Table<T>, TableTemplateContext<T>>
 
         init {
             with(templateContext) {
-                operations.render(renderingContext, model.asTableStart(templateContext.getCustomAttributes()))
+                render(model.asTableStart(templateContext.getCustomAttributes()))
                 renderingContext.renderColumnStarts(columnAttributes, operations, templateContext)
             }
         }
 
-        override fun nextRow(record: T) = captureRecordAndRenderRow(templateContext, record)
+        override fun exportNextRecord(record: T): ContextResult<RowEnd<T>>? =
+            captureRecordAndRenderRow(templateContext, record)
 
         override fun finish() {
             renderRemainingBufferedRows(templateContext)
@@ -100,50 +102,58 @@ class TableTemplate<T : Any> : ExportTemplate<Table<T>, TableTemplateContext<T>>
         }
     }
 
-    private inner class RowCompletionListenerImpl<T, R : RenderingContext>(
+    private inner class CaptureRowCompletionImpl<T, R : RenderingContext>(
         private val renderingContext: R,
         private val operations: Operations<R>,
-    ) : RowCompletionListener<T> {
+    ) : CaptureRowCompletion<T> {
 
-        override fun onAttributedRowResolved(row: RowStart) {
+        override fun onRowStartResolved(row: RowStart): OperationStatus? =
             operations.render(renderingContext, row)
-        }
 
-        override fun onAttributedCellResolved(cell: CellContext) {
+        override fun onCellResolved(cell: CellContext): OperationStatus? =
             operations.render(renderingContext, cell)
-        }
 
-        override fun onAttributedRowResolved(row: RowEnd<T>) {
+        override fun onRowEndResolved(row: RowEnd<T>): OperationStatus? =
             operations.render(renderingContext, row)
-        }
 
     }
 
-    private fun <T : Any> captureRecordAndRenderRow(state: TableTemplateContext<T>, record: T) {
-        state.capture(record)
-    }
+    private fun <T : Any> captureRecordAndRenderRow(
+        state: TableTemplateContext<T>,
+        record: T,
+    ): ContextResult<RowEnd<T>>? = state.capture(record)
 
     private fun <T : Any> renderRemainingBufferedRows(state: TableTemplateContext<T>) {
+        if (state.isYOverflow()) return
         @Suppress("ControlFlowWithEmptyBody")
-        while (state.next() != null);
+        while (state.next()?.let { it is SuccessResult } == true);
     }
 
-    private fun <R : RenderingContext, T : Any> R.renderColumnStarts(
+    private fun <T : Any> RenderingContext.renderColumnStarts(
         columnAttributes: Map<ColumnDef<T>, ColumnContextAttributes>,
-        operations: Operations<R>,
+        operations: Operations<RenderingContext>,
         templateContext: TableTemplateContext<T>,
-    ) = with(templateContext) {
-        model.columns.forEach { column: ColumnDef<T> ->
-            operations.render(
-                this@renderColumnStarts,
-                column.asColumnStart(model, columnAttributes[column]?.start ?: Attributes(), getCustomAttributes())
+    ): OperationStatus? = with(templateContext) {
+        val iterator = with(templateContext.indices) { model.columns.crop().iterator() }
+        var status: OperationStatus? = Success
+        var column: ColumnDef<T>? = null
+        while (iterator.hasNext() && status == Success) {
+            column = iterator.next()
+            val context = column.asColumnStart(
+                model, columnAttributes[column]?.start ?: Attributes(), getCustomAttributes()
             )
+            status = operations.render(this@renderColumnStarts, context)
         }
+        if (status != Success) {
+            templateContext.suspendX()
+            templateContext.indices.setNextIndexOnX(column?.index ?: 0)
+        }
+        return status
     }
 
-    private fun <R : RenderingContext, T : Any> R.renderColumnEnds(
+    private fun <T : Any> RenderingContext.renderColumnEnds(
         columnAttributes: Map<ColumnDef<T>, ColumnContextAttributes>,
-        operations: Operations<R>,
+        operations: Operations<RenderingContext>,
         templateContext: TableTemplateContext<T>,
     ) = with(templateContext) {
         model.columns.forEach { column: ColumnDef<T> ->
@@ -154,40 +164,54 @@ class TableTemplate<T : Any> : ExportTemplate<Table<T>, TableTemplateContext<T>>
         }
     }
 
-    override fun <R : RenderingContext> export(
-        renderingContext: R,
-        templateContext: TableTemplateContext<T>,
-        apis: ExportTemplateApis<R>,
-    ) = with(templateContext) {
-        val operations = apis.getOperations(model)
-        apis.getActiveLayout().newLayout(TableLayoutQueries()).let { layout ->
-            templateContext.initializeInternalState(RowCompletionListenerImpl(renderingContext, operations))
-            TabulationApiImpl(renderingContext, templateContext, operations).let { api ->
-                templateContext.dataSource?.forEach { api.nextRow(it) }
-                    .also { api.finish() }
-            }
-            layout.finish()
+    @Suppress("ControlFlowWithEmptyBody")
+    private fun Iterable<T>?.exportRows(api: TabulationApiImpl) =
+        this?.iterator()?.let { iterator ->
+            while (iterator.hasNext() && api.exportNextRecord(iterator.next()) !is OverflowResult) { }
         }
+
+    override fun doExport(templateContext: TableTemplateContext<T>): Unit = with(templateContext) {
+        createLayoutScope(TableLayoutQueries()) {
+            val operations = services.getOperations(model)
+            templateContext.setupRowResolver(CaptureRowCompletionImpl(renderingContext, operations))
+            TabulationApiImpl(renderingContext, templateContext, operations).let { api ->
+                dataSource.exportRows(api)
+                api.finish()
+            }
+        }
+        keepStatus()
     }
 
-    override fun buildTemplateContext(
-        parentContext: TemplateContext<*>,
-        childModel: Table<T>,
+    override fun doResume(templateContext: TableTemplateContext<T>) = with(templateContext) {
+        beforeResume()
+        createLayoutScope(
+            TableLayoutQueries(templateContext.indices.getIndexValueOnY(), templateContext.indices.getIndexOnX())
+        ) {
+            val operations = services.getOperations(model)
+            templateContext.setupRowResolver(CaptureRowCompletionImpl(renderingContext, operations))
+            TabulationApiImpl(renderingContext, templateContext, operations).let { api ->
+                cropDataSource().exportRows(api)
+                api.finish()
+            }
+        }
+        keepStatus()
+    }
+
+    override fun createTemplateContext(
+        parentContext: TemplateContext<*, *>,
+        model: Table<T>,
     ): TableTemplateContext<T> {
         val binding = parentContext.stateAttributes["_dataSourceOverride"] as? DataSourceBinding<T>
         return TableTemplateContext(
-            childModel, parentContext.stateAttributes,
-            childModel.dataSource?.dataSourceRecordClass ?: binding?.dataSourceRecordClass,
-            childModel.dataSource?.dataSource ?: binding?.dataSource
+            model, parentContext.stateAttributes,
+            parentContext.services,
+            model.dataSource?.dataSource ?: binding?.dataSource
         )
     }
-
-    override fun modelClass(): Class<Table<T>> = reify()
 
 
     fun <O : Any> export(format: DocumentFormat, source: Iterable<T>, output: O, table: Table<T>) =
         StandaloneExportTemplate(format, this).export(table, output, source)
-
 }
 
 /**

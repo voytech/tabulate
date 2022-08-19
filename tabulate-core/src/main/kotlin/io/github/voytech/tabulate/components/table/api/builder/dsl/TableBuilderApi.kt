@@ -1,8 +1,8 @@
 package io.github.voytech.tabulate.components.table.api.builder.dsl
 
 import io.github.voytech.tabulate.components.document.api.builder.dsl.DocumentBuilderApi
-import io.github.voytech.tabulate.components.sheet.api.builder.dsl.SheetBuilderApi
-import io.github.voytech.tabulate.components.spacing.api.builder.dsl.SpacingBuilderApi
+import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
+import io.github.voytech.tabulate.components.margins.api.builder.dsl.MarginsBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.*
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.model.attributes.cell.cellType
@@ -60,9 +60,9 @@ fun table(block: TableBuilderApi<Unit>.() -> Unit): TableBuilderApi<Unit>.() -> 
 
 fun <T: Any> DocumentBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
 
-fun <T: Any> SheetBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
+fun <T: Any> PageBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
 
-fun <T: Any> SpacingBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
+fun <T: Any> MarginsBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
 
 
 /**

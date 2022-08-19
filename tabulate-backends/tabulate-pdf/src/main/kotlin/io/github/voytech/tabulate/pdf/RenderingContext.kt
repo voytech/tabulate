@@ -20,6 +20,8 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font
 import java.awt.Color as AwtColor
 import java.io.OutputStream
 import io.github.voytech.tabulate.core.model.color.Color
+import io.github.voytech.tabulate.core.template.RenderingContextAttributes
+import org.apache.pdfbox.pdmodel.common.PDRectangle
 
 class PdfBoxOutputBindingsFactory : OutputBindingsProvider<PdfBoxRenderingContext> {
 
@@ -42,7 +44,7 @@ class PdfBoxOutputStreamOutputBinding : OutputStreamOutputBinding<PdfBoxRenderin
     }
 }
 
-class PdfBoxRenderingContext(val document: PDDocument = PDDocument()) : RenderingContext {
+class PdfBoxRenderingContext(val document: PDDocument = PDDocument()) : RenderingContext, RenderingContextAttributes {
 
     private lateinit var pageContentStream: PDPageContentStream
     private lateinit var currentPage: PDPage
@@ -144,6 +146,15 @@ class PdfBoxRenderingContext(val document: PDDocument = PDDocument()) : Renderin
 
 
     private fun PDPage.createContent(): PDPageContentStream = PDPageContentStream(document, this)
+
+    override fun getWidth(): Width = if (this@PdfBoxRenderingContext::currentPage.isInitialized) {
+        Width(currentPage.mediaBox.width, UnitsOfMeasure.PT)
+    } else Width(PDRectangle.LETTER.width, UnitsOfMeasure.PT)
+
+
+    override fun getHeight(): Height = if (this@PdfBoxRenderingContext::currentPage.isInitialized) {
+        Height(currentPage.mediaBox.height, UnitsOfMeasure.PT)
+    } else Height(PDRectangle.LETTER.height, UnitsOfMeasure.PT)
 
 }
 

@@ -72,6 +72,10 @@ class TwoParamsBasedDispatch : GenericParamsBasedDispatch<InvokeWithTwoParams<*,
             (container[it]?.delegate as? InvokeWithTwoParams<T1, T2>)?.invoke(t1, t2)
         }
     }
+
+    operator fun <T1 : Any, T2 : Any> get(t1: T1, t2: T2): InvokeWithTwoParams<T1, T2>? =
+        container[TwoParamsTypeInfo(t1::class.java, t2::class.java)]?.delegate as? InvokeWithTwoParams<T1, T2>
+
 }
 
 @Suppress("UNCHECKED_CAST")

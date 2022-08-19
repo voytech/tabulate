@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.core.template.spi
 
-import io.github.voytech.tabulate.core.model.Model
+import io.github.voytech.tabulate.core.model.UnconstrainedModel
 import io.github.voytech.tabulate.core.template.RenderingContext
 
 
@@ -29,6 +29,6 @@ interface RenderingContextAware<CTX: RenderingContext> {
  * @author Wojciech Mąka
  * @since 0.3.0
  */
-interface ModelAware<ARC: Model<ARC>> {
-    fun getModelClass(): Class<ARC>
+interface ModelAware<M: UnconstrainedModel<M>> {
+    fun getModelClass(): Class<M>
 }

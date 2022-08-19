@@ -5,12 +5,22 @@ import io.github.voytech.tabulate.components.table.model.ColumnKey
 import io.github.voytech.tabulate.components.table.model.PredicateLiteral
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
 import io.github.voytech.tabulate.components.table.model.and
+import io.github.voytech.tabulate.components.table.operation.CellContext
+import io.github.voytech.tabulate.components.table.operation.RowEnd
+import io.github.voytech.tabulate.components.table.operation.RowStart
 import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
 import io.github.voytech.tabulate.core.model.background.DefaultFillType
 import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
+import io.github.voytech.tabulate.components.table.template.CaptureRowCompletion
+import io.github.voytech.tabulate.components.table.template.OverflowOffsets
 import io.github.voytech.tabulate.components.table.template.RowContextIterator
+import io.github.voytech.tabulate.core.template.operation.OperationStatus
+import io.github.voytech.tabulate.core.template.operation.Success
 import io.github.voytech.tabulate.data.Product
+import io.github.voytech.tabulate.support.createTableContext
+import io.github.voytech.tabulate.support.success
+import io.github.voytech.tabulate.support.successfulRowComplete
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -30,14 +40,16 @@ class RowIteratorTest {
     )
 
     private fun <T: Any> createDefaultIterator(block: TableBuilderApi<T>.() -> Unit): Wrapper<T> =
-        mutableMapOf<String, Any>().let {
-            it to AccumulatingRowContextResolver(createTableBuilder(block).build(), it)
-        }.let {
-            Wrapper(
-                iterator = RowContextIterator(it.second),
-                resolver = it.second,
-                customAttributes = it.first
-            )
+        createTableBuilder(block).build().let { table ->
+            mutableMapOf<String, Any>().let {
+                it to AccumulatingRowContextResolver(table, it, OverflowOffsets(), successfulRowComplete())
+            }.let {
+                Wrapper(
+                    iterator = RowContextIterator(it.second,table.createTableContext(it.first)),
+                    resolver = it.second,
+                    customAttributes = it.first
+                )
+            }
         }
 
     @Test
@@ -60,7 +72,7 @@ class RowIteratorTest {
                 }
             }
         }
-        val resolvedIndexedAttributedRow = wrapper.iterator.next()
+        val resolvedIndexedAttributedRow = wrapper.iterator.next().success()
         assertNotNull(resolvedIndexedAttributedRow)
         assertEquals(0, resolvedIndexedAttributedRow.rowIndex)
         with(resolvedIndexedAttributedRow) {
@@ -82,7 +94,7 @@ class RowIteratorTest {
                 }
             }
         }
-        val resolvedIndexedAttributedRow = wrapper.iterator.next()
+        val resolvedIndexedAttributedRow = wrapper.iterator.next().success()
         assertNotNull(resolvedIndexedAttributedRow)
         assertEquals(0, resolvedIndexedAttributedRow.rowIndex)
         with(resolvedIndexedAttributedRow) {
@@ -117,11 +129,11 @@ class RowIteratorTest {
                 }
             }
         }
-        val firstRow = wrapper.iterator.next()
-        val secondRow = wrapper.iterator.next()
-        val thirdRow = wrapper.iterator.next()
-        val fourthRow = wrapper.iterator.next()
-        val fifthRow = wrapper.iterator.next()
+        val firstRow = wrapper.iterator.next().success()
+        val secondRow = wrapper.iterator.next().success()
+        val thirdRow = wrapper.iterator.next().success()
+        val fourthRow = wrapper.iterator.next().success()
+        val fifthRow = wrapper.iterator.next().success()
         assertFalse(wrapper.iterator.hasNext())
         assertNotNull(firstRow)
         assertNotNull(secondRow)
@@ -186,7 +198,7 @@ class RowIteratorTest {
                 }
             }
         }
-        val firstRow = wrapper.iterator.next()
+        val firstRow = wrapper.iterator.next().success()
         assertFalse(wrapper.iterator.hasNext())
         assertNotNull(firstRow)
         with(firstRow) {
@@ -232,7 +244,7 @@ class RowIteratorTest {
                 }
             }
         })
-        val first = wrapper.iterator.next()
+        val first = wrapper.iterator.next().success()
         assertFalse(wrapper.iterator.hasNext())
         assertNotNull(first)
         with(first) {
@@ -277,7 +289,7 @@ class RowIteratorTest {
                 }
             }
         })
-        val first = wrapper.iterator.next()
+        val first = wrapper.iterator.next().success()
         assertNotNull(first)
         with(first) {
             assertEquals("R0C0", rowCellValues[ColumnKey("column-0")]!!.value.value)
@@ -318,10 +330,10 @@ class RowIteratorTest {
             }
         })
 
-        val first = wrapper.iterator.next()
-        val second = wrapper.iterator.next()
-        val third = wrapper.iterator.next()
-        val fourth = wrapper.iterator.next()
+        val first = wrapper.iterator.next().success()
+        val second = wrapper.iterator.next().success()
+        val third = wrapper.iterator.next().success()
+        val fourth = wrapper.iterator.next().success()
         assertFalse(wrapper.iterator.hasNext())
         assertNotNull(first)
         assertNotNull(second)
@@ -355,8 +367,8 @@ class RowIteratorTest {
                 header("header")
             }
         }
-        val header = wrapper.iterator.next()
-        val footer = wrapper.iterator.next()
+        val header = wrapper.iterator.next().success()
+        val footer = wrapper.iterator.next().success()
         assertFalse(wrapper.iterator.hasNext())
         assertNotNull(header)
         assertNotNull(footer)
@@ -401,12 +413,12 @@ class RowIteratorTest {
                 newTrailingRow { cell { value = "FOOTER_R0C0" } }
             }
         }
-        val firstRow = wrapper.iterator.next()
+        val firstRow = wrapper.iterator.next().success()
         wrapper.resolver.buffer()
-        val secondRow = wrapper.iterator.next()
-        val thirdRow = wrapper.iterator.next()
-        val fourthRow = wrapper.iterator.next()
-        val trailingRow = wrapper.iterator.next()
+        val secondRow = wrapper.iterator.next().success()
+        val thirdRow = wrapper.iterator.next().success()
+        val fourthRow = wrapper.iterator.next().success()
+        val trailingRow = wrapper.iterator.next().success()
         assertFalse(wrapper.iterator.hasNext())
         assertNotNull(firstRow)
         assertNotNull(secondRow)
@@ -444,8 +456,8 @@ class RowIteratorTest {
                 newTrailingRow { cell { value = "T0C0" } }
             }
         }
-        val firstRow = wrapper.iterator.next()
-        val footerRow = wrapper.iterator.next()
+        val firstRow = wrapper.iterator.next().success()
+        val footerRow = wrapper.iterator.next().success()
         assertFalse(wrapper.iterator.hasNext())
         assertNotNull(firstRow)
         assertNotNull(footerRow)
@@ -470,12 +482,12 @@ class RowIteratorTest {
                 newTrailingRow(5) { cell { value = "T5C0" } }
             }
         }
-        val firstRow = wrapper.iterator.next()
+        val firstRow = wrapper.iterator.next().success()
         wrapper.resolver.buffer()
-        val secondRow = wrapper.iterator.next()
-        val trailingRow1 = wrapper.iterator.next()
-        val trailingRow2 = wrapper.iterator.next()
-        val trailingRow3 = wrapper.iterator.next()
+        val secondRow = wrapper.iterator.next().success()
+        val trailingRow1 = wrapper.iterator.next().success()
+        val trailingRow2 = wrapper.iterator.next().success()
+        val trailingRow3 = wrapper.iterator.next().success()
         assertFalse(wrapper.iterator.hasNext())
         assertNotNull(firstRow)
         assertNotNull(secondRow)
@@ -518,9 +530,9 @@ class RowIteratorTest {
             }
         }
         wrapper.resolver.buffer()
-        val header = wrapper.iterator.next()
-        val value = wrapper.iterator.next()
-        val footer = wrapper.iterator.next()
+        val header = wrapper.iterator.next().success()
+        val value = wrapper.iterator.next().success()
+        val footer = wrapper.iterator.next().success()
         assertFalse(wrapper.iterator.hasNext())
         assertNotNull(header)
         assertEquals(0, header.rowIndex)

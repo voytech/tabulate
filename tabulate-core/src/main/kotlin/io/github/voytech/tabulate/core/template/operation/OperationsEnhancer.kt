@@ -39,12 +39,12 @@ internal class AttributesAwareExportOperation<CTX : RenderingContext, E : Attrib
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <A: Attribute<A>> ReifiedAttributeOperation<CTX, *, E>.renderAttribute(
+    private fun <A : Attribute<A>> ReifiedAttributeOperation<CTX, *, E>.renderAttribute(
         renderingContext: CTX, context: E,
     ): Boolean {
         val clazz = meta.t3 as Class<A>
         return context.getModelAttribute(clazz)?.let {
-            (delegate as AttributeOperation<CTX,A,E>).invoke(renderingContext, context, it).let { true }
+            (delegate as AttributeOperation<CTX, A, E>).invoke(renderingContext, context, it).let { true }
         } ?: false
     }
 
@@ -75,7 +75,6 @@ class EnableAttributeOperationAwareness<CTX : RenderingContext>(private val attr
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> {
         return AttributesAwareExportOperation(op, attributesOperations)
     }
-
 }
 
 /**
@@ -85,48 +84,55 @@ class EnableAttributeOperationAwareness<CTX : RenderingContext>(private val attr
  * @since 0.2.0
  */
 class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
-    private val delegate: Operation<CTX, E>, private val layouts: Layouts? = null,
+    private val delegate: Operation<CTX, E>, private val layout: () -> Layout<*,*,*>,
 ) : Operation<CTX, E> {
 
-    private fun <E : AttributedContext> Layout.resolveAttributeElementBoundaries(context: E): LayoutElementBoundingBox? {
+    private fun <E : AttributedContext> Layout<*,*,*>.resolveAttributeElementBoundaries(context: E): LayoutElementBoundingBox? {
         context.attributes?.attributeSet?.forEach {
-            if (it is LayoutElement) with(it) {
-                computeBoundaries().mergeInto(context)
+            if (it is LayoutElement) {
+                with(it) { computeBoundaries().mergeInto(context) }
             }
         }
         return context.boundingBox()
     }
 
-    private fun <E : AttributedContext> Layout.resolveElementBoundaries(context: E): LayoutElementBoundingBox? {
-        if (context is LayoutElement) with(context) {
-            computeBoundaries().mergeInto(context)
-            resolveAttributeElementBoundaries(context)
+    private fun <E : AttributedContext> Layout<*,*,*>.resolveElementBoundaries(context: E): LayoutElementBoundingBox? {
+        if (context is LayoutElement) {
+            with(context) { computeBoundaries().mergeInto(context) }
         }
+        resolveAttributeElementBoundaries(context)
         return context.boundingBox()
     }
 
-    private fun <E : AttributedContext> Layout.commitBoundaries(
+    private fun <E : AttributedContext> Layout<*,*,*>.commitBoundaries(
         context: E, boundaries: LayoutElementBoundingBox? = null,
     ) {
         if (boundaries != null) {
             if (context is LayoutElementApply) with(context) { applyBoundaries(boundaries) }
-            context.dropBoundaries()
+            context.dropBoundingBox()
         }
     }
 
     override operator fun invoke(renderingContext: CTX, context: E) {
-        layouts?.usingLayout {
+        with(layout()) {
             resolveElementBoundaries(context).let { boundaries ->
-                delegate(renderingContext, context).also { boundaries?.applyOnLayout() }
-                commitBoundaries(context, boundaries)
+                boundaries.checkRootOverflow()?.let {
+                    context.setStatus(OverflowStatus(it))
+                } ?: run {
+                    delegate(renderingContext, context).also {
+                        boundaries?.applyOnLayout()
+                    }
+                    commitBoundaries(context, boundaries)
+                    context.setStatus(Success)
+                }
             }
         }
     }
 }
 
-class EnableLayoutsAwareness<CTX : RenderingContext>(private val layouts: Layouts) : Enhance<CTX> {
+class EnableLayoutsAwareness<CTX : RenderingContext>(private val layout: () -> Layout<*,*,*>) : Enhance<CTX> {
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> {
-        return LayoutAwareOperation(op.delegate, layouts)
+        return LayoutAwareOperation(op.delegate, layout)
     }
 
 }

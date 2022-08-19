@@ -7,8 +7,12 @@ import io.github.voytech.tabulate.core.template.operation.ContextData
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-internal interface IndexedContextResolver<T, CTX : ContextData> {
-    fun resolve(requestedIndex: RowIndex): IndexedContext<CTX>?
+internal interface IndexedContextResolver<CTX : ContextData> {
+    fun resolve(requestedIndex: RowIndex): IndexedResult<CTX>?
 }
 
-internal data class IndexedContext<CTX : ContextData>(val index: RowIndex, val value: CTX)
+internal data class IndexedResult<CTX : ContextData>(
+    val rowIndex: RowIndex,
+    val sourceIndex: Int? = null,
+    val result: ContextResult<CTX>
+)

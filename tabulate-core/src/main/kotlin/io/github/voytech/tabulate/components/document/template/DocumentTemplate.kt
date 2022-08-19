@@ -6,10 +6,6 @@ import io.github.voytech.tabulate.components.document.operation.DocumentEnd
 import io.github.voytech.tabulate.components.document.operation.DocumentStart
 import io.github.voytech.tabulate.core.api.builder.dsl.buildModel
 import io.github.voytech.tabulate.core.template.*
-import io.github.voytech.tabulate.core.template.exception.OutputBindingResolvingException
-import io.github.voytech.tabulate.core.template.operation.factories.ExportOperationsFactory
-import io.github.voytech.tabulate.core.template.result.OutputBinding
-import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
 import java.io.File
 
 /**
@@ -17,41 +13,27 @@ import java.io.File
  * @author Wojciech Mąka
  * @since 0.*.*
  */
-class DocumentTemplate(
-    private val format: DocumentFormat,
-) {
+class DocumentTemplate: ExportTemplate<DocumentTemplate, Document, DocumentTemplateContext>()  {
 
-    private val outputBindingsProvider: OutputBindingsProvider<RenderingContext> by lazy {
-        loadFirstByDocumentFormat<OutputBindingsProvider<RenderingContext>, RenderingContext>(format)!!
-    }
+    override fun createTemplateContext(parentContext: TemplateContext<*, *>, model: Document): DocumentTemplateContext =
+        DocumentTemplateContext(model,parentContext.services)
 
-    fun <O : Any> export(model: Document, output: O) {
-        val registry: ExportTemplateApis<RenderingContext> = ExportTemplateApis(ExportOperationsFactory(format))
-        val renderingContext = loadRenderingContext(format)
-        val templateContext = DocumentTemplateContext(model)
-        val operations = registry.getOperations(model)
-        resolveOutputBinding(output).run {
-            setOutput(renderingContext, output)
-            operations.render(renderingContext, DocumentStart(templateContext))
-            model.nodes.forEach { it.export(renderingContext, templateContext, registry) }
-            operations.render(renderingContext, DocumentEnd(templateContext))
-            flush()
+    override fun doExport(templateContext: DocumentTemplateContext) = with(templateContext) {
+        createLayoutScope {
+            with(model) {
+                render(DocumentStart(templateContext))
+                nodes.forEach { it.export(templateContext) }
+                render(DocumentEnd(templateContext))
+            }
         }
     }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun <O : Any> resolveOutputBinding(output: O): OutputBinding<RenderingContext, O> {
-        return outputBindingsProvider.createOutputBindings()
-            .filter {
-                it.outputClass().isAssignableFrom(output::class.java)
-            }.map { it as OutputBinding<RenderingContext, O> }
-            .firstOrNull() ?: throw OutputBindingResolvingException()
-    }
-
+    
 }
 
-fun (DocumentBuilderApi.() -> Unit).export(file: File) = file.documentFormat().let {
-    DocumentTemplate(it).export(buildModel(DocumentBuilderApi().apply(this)), file.outputStream())
+fun (DocumentBuilderApi.() -> Unit).export(file: File) = file.documentFormat().let { format ->
+    buildModel(DocumentBuilderApi().apply(this)).let { doc ->
+        StandaloneExportTemplate(format,DocumentTemplate()).export(doc, file.outputStream())
+    }
 }
 
 fun (DocumentBuilderApi.() -> Unit).export(file: String) = export(File(file))

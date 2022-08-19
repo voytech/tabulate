@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.components.table.api.builder
 
-import io.github.voytech.tabulate.api.builder.exception.BuilderException
+import io.github.voytech.tabulate.components.table.api.builder.exception.BuilderException
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.core.api.builder.*
 import io.github.voytech.tabulate.core.model.DataSourceBinding

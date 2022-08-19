@@ -6,8 +6,11 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.header
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.components.table.model.ColumnKey
 import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
+import io.github.voytech.tabulate.components.table.template.OverflowOffsets
 import io.github.voytech.tabulate.components.table.template.RowIndex
 import io.github.voytech.tabulate.components.table.template.Step
+import io.github.voytech.tabulate.support.success
+import io.github.voytech.tabulate.support.successfulRowComplete
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -21,7 +24,7 @@ class RowResolverTest {
     fun `should resolve AttributedRow to null if no table definition nor data is provided`() {
         val resolver = AccumulatingRowContextResolver(
             createTableBuilder<Product> {  }.build(),
-            mutableMapOf()
+            mutableMapOf(), OverflowOffsets(), successfulRowComplete()
         )
         val resolvedIndexedAttributedRow = resolver.resolve(RowIndex(0))
         assertNull(resolvedIndexedAttributedRow)
@@ -44,13 +47,15 @@ class RowResolverTest {
                     }
                 }
             }.build(),
-            mutableMapOf()
+            mutableMapOf(),
+            OverflowOffsets(),
+            successfulRowComplete()
         )
         val resolvedIndexedAttributedRow = resolver.resolve(RowIndex(0))
         assertNotNull(resolvedIndexedAttributedRow)
-        assertEquals(index, resolvedIndexedAttributedRow!!.index.value)
-        with(resolvedIndexedAttributedRow.value) {
-            assertEquals("CustomProductCode",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        assertEquals(index, resolvedIndexedAttributedRow!!.rowIndex.value)
+        with(resolvedIndexedAttributedRow.result) {
+            assertEquals("CustomProductCode",success().rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
         }
     }
 
@@ -60,7 +65,9 @@ class RowResolverTest {
             createTableBuilder<Product> {
                 columns { column(Product::code) }
             }.build(),
-            mutableMapOf()
+            mutableMapOf(),
+            OverflowOffsets(),
+            successfulRowComplete()
         )
         resolver.append(Product(
             "code1",
@@ -72,9 +79,9 @@ class RowResolverTest {
         ))
         val resolvedIndexedAttributedRow = resolver.resolve(RowIndex())
         assertNotNull(resolvedIndexedAttributedRow)
-        assertEquals(0, resolvedIndexedAttributedRow!!.index.value)
-        with(resolvedIndexedAttributedRow.value) {
-            assertEquals("code1",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        assertEquals(0, resolvedIndexedAttributedRow!!.rowIndex.value)
+        with(resolvedIndexedAttributedRow.result) {
+            assertEquals("code1",success().rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
         }
     }
 
@@ -92,7 +99,9 @@ class RowResolverTest {
                     }
                 }
             }.build(),
-            mutableMapOf()
+            mutableMapOf(),
+            OverflowOffsets(),
+            successfulRowComplete()
         )
         resolver.append(Product(
             "code1",
@@ -106,19 +115,19 @@ class RowResolverTest {
         val value = resolver.resolve(RowIndex(1))
         val footer = resolver.resolve(RowIndex(2, Step("TRAILING_ROWS",0,0)))
         assertNotNull(header)
-        assertEquals(0, header!!.index.value)
-        with(header.value) {
-            assertEquals("CODE",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        assertEquals(0, header!!.rowIndex.value)
+        with(header.result) {
+            assertEquals("CODE",success().rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
         }
         assertNotNull(value)
-        assertEquals(1, value!!.index.value)
-        with(value.value) {
-            assertEquals("code1",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        assertEquals(1, value!!.rowIndex.value)
+        with(value.result) {
+            assertEquals("code1",success().rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
         }
         assertNotNull(footer)
-        assertEquals(2, footer!!.index.value)
-        with(footer.value) {
-            assertEquals("footer",rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+        assertEquals(2, footer!!.rowIndex.value)
+        with(footer.result) {
+            assertEquals("footer",success().rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
         }
     }
 

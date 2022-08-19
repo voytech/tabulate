@@ -1,6 +1,8 @@
 package io.github.voytech.tabulate.core.template.layout
 
 import io.github.voytech.tabulate.core.model.*
+import io.github.voytech.tabulate.core.model.attributes.MarginsAttribute
+import io.github.voytech.tabulate.core.template.*
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 
 interface AbsolutePositionQueries {
@@ -24,8 +26,8 @@ interface AbsolutePositionQueries {
 interface TabularQueries : AbsolutePositionQueries {
     fun setColumnWidth(column: Int, width: Width)
     fun setRowHeight(row: Int, height: Height)
-    fun getColumnWidth(column: Int,uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width
-    fun getRowHeight(row: Int,uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height
+    fun getColumnWidth(column: Int, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width
+    fun getRowHeight(row: Int, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height
 }
 
 interface LayoutQueries : AbsolutePositionQueries {
@@ -40,99 +42,122 @@ interface LayoutQueries : AbsolutePositionQueries {
      * Extend layout rendered space by specific [Height].
      */
     fun extend(height: Height)
-
-    /**
-     * Re-set layout rendered space by specific [Width].
-     */
-    fun setWidth(width: Width)
-
-    /**
-     * Re-set layout rendered space by specific [Height].
-     */
-    fun setHeight(height: Height)
-
 }
 
 abstract class AbstractLayoutQueries : LayoutQueries {
-    protected lateinit var layout: Layout
-    internal fun setLayout(layout: Layout) {
-        this.layout = layout
-    }
+
+    internal lateinit var layout: Layout<*, *, *>
 
     override fun getLayoutBoundary(): BoundingRectangle = layout.boundingRectangle
 
 }
 
-abstract class TabularLayoutQueries : AbstractLayoutQueries(), TabularQueries
+abstract class TabularLayoutQueries(protected open val rowIndex: Int = 0, protected open val columnIndex: Int = 0) :
+    AbstractLayoutQueries(), TabularQueries
 
-class Layout(
+fun <M: Model<M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> RootNode<M,E,C>.setLayout(
+    queries: AbstractLayoutQueries = DefaultLayoutQueries(),
+    uom: UnitsOfMeasure = UnitsOfMeasure.PT,
+    maxHeight: Height = Height.max(uom),
+    maxWidth: Width = Width.max(uom),
+    orientation: Orientation = Orientation.HORIZONTAL,
+    leftTopCorner: Position = Position(X(0.0f, uom), Y(0.0f, uom)),
+): RootLayout<M,E,C> =
+    RootLayout(
+        uom = uom,
+        orientation = orientation,
+        leftTopCorner = resolveMargins(leftTopCorner),
+        query = queries,
+        node = this,
+        maxWidth,
+        maxHeight
+    ).also { layout = it }
+
+fun <M: Model<M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> BranchNode<M,E,C>.setLayout(
+    queries: AbstractLayoutQueries,
+    childLeftTopCorner: Position? = null,
+    orientation: Orientation? = null,
+): InnerLayout<M,E,C> = getWrappingLayout().let { wrapping ->
+    InnerLayout(
+        wrapping.uom,
+        orientation ?: Orientation.HORIZONTAL,
+        resolveMargins(childLeftTopCorner ?: wrapping.nextLayoutDefaultLeftTopCorner ?: wrapping.leftTopCorner),
+        queries, this
+    ).also { layout = it }
+}
+
+fun <M: Model<M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> BranchNode<M,E,C>.createLayoutScope(
+    queries: AbstractLayoutQueries,
+    childLeftTopCorner: Position? = null,
+    orientation: Orientation? = null,
+    block: InnerLayout<M,E,C>.() -> Unit,
+) = setLayout(queries, childLeftTopCorner, orientation).apply(block).finish()
+
+private fun TreeNode<*,*,*>.resolveMargins(sourcePosition: Position): Position {
+    val model = (context.model as? AttributedModelOrPart<*>)
+    return model?.attributes?.get(MarginsAttribute::class.java)?.let {
+        Position(it.left + sourcePosition.x, it.top + sourcePosition.y)
+    } ?: sourcePosition
+}
+
+sealed class Layout<M: Model<M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>>(
+    open val node: TreeNode<M,E,C>,
     val uom: UnitsOfMeasure,
-    private val orientation: Orientation,
-    private val leftTopCorner: Position,
-    val query: AbstractLayoutQueries = DefaultLayoutQueries(),
-    private val parent: Layout? = null,
-    private val root: Layout? = null,
+    protected val orientation: Orientation,
+    val leftTopCorner: Position,
+    val query: AbstractLayoutQueries
 ) {
-    init {
-        query.setLayout(this)
+
+    internal var rightBottomCorner: Position = leftTopCorner
+
+    internal var nextLayoutDefaultLeftTopCorner: Position? = null
+
+    var boundingRectangle: BoundingRectangle = BoundingRectangle(leftTopCorner)
+
+    private fun root(): RootLayout<*, *, *> = when (node) {
+        is RootNode -> node.layout as RootLayout<*, *, *>
+        is BranchNode -> (node as BranchNode<M, E, C>).root.layout as RootLayout<*, *, *>
     }
 
-    private var rightBottomCorner: Position = leftTopCorner
-
-    private var nextLayoutDefaultLeftTopCorner: Position? = null
-
-    private val renderedChildren: MutableList<Layout> = mutableListOf()
-
-    internal var boundingRectangle: BoundingRectangle = BoundingRectangle(leftTopCorner)
-
-    internal var activeLayout: Layout? = null
-
-    fun newLayout(
-        childQuery: AbstractLayoutQueries,
-        childLeftTopCorner: Position = nextLayoutDefaultLeftTopCorner ?: leftTopCorner,
-        orientation: Orientation = this@Layout.orientation,
-    ): Layout = Layout(uom, orientation, childLeftTopCorner, childQuery, this, root ?: this).let {
-        root?.activeLayout = it
-        activeLayout = it
-        it
+    private fun getMaxWidth(): Width = when (this) {
+        is RootLayout -> maxWidth.orZero()
+        is InnerLayout -> root().maxWidth.orZero()
     }
 
+    private fun getMaxHeight(): Height = when (this) {
+        is RootLayout -> maxHeight.orZero()
+        is InnerLayout -> root().maxHeight.orZero()
+    }
 
-    internal fun extend(position: Position) {
-        rightBottomCorner = max(rightBottomCorner, position)
+    private fun LayoutElementBoundingBox.isXOverflow(): Boolean =
+        ((absoluteX?.value ?: 0F) + (width.orZero().value)) > getMaxWidth().value
+
+    private fun LayoutElementBoundingBox.isYOverflow(): Boolean =
+        ((absoluteY?.value ?: 0F) + (height.orZero().value)) > getMaxHeight().value
+
+    fun LayoutElementBoundingBox?.checkRootOverflow(): Overflow? = if (this == null) null else {
+        if (isXOverflow()) {
+            Overflow.X
+        } else if (isYOverflow()) {
+            Overflow.Y
+        } else null
+    }
+
+    protected abstract fun extendParent(position: Position)
+
+    internal fun extend(position: Position): Unit = with(node.template) {
+        extendParent(position)
+        rightBottomCorner = orMax(rightBottomCorner, position)
         boundingRectangle = boundingRectangle.copy(rightBottom = rightBottomCorner)
-    }
-
-    internal fun setWidth(width: Width) {
-        TODO("Not yet implemented")
-    }
-
-    internal fun setHeight(height: Height) {
-        TODO("Not yet implemented")
     }
 
     internal fun extend(width: Width) = extend(Position(rightBottomCorner.x + width, rightBottomCorner.y))
 
-    internal fun extend(x: X) = extend(Position(x, rightBottomCorner.y))
+    private fun extend(x: X) = extend(Position(x, rightBottomCorner.y))
 
     internal fun extend(height: Height) = extend(Position(rightBottomCorner.x, rightBottomCorner.y + height))
 
-    internal fun extend(y: Y) = extend(Position(rightBottomCorner.x, y))
-
-    fun finish() {
-        if (parent != null) {
-            parent.activeLayout = null
-            parent.boundingRectangle = parent.boundingRectangle + boundingRectangle
-            parent.rightBottomCorner = parent.boundingRectangle.rightBottom
-            parent.nextLayoutDefaultLeftTopCorner = if (orientation == Orientation.HORIZONTAL) {
-                Position(parent.rightBottomCorner.x + EPSILON, parent.leftTopCorner.y)
-            } else {
-                Position(parent.leftTopCorner.x, parent.rightBottomCorner.y + EPSILON)
-            }
-            parent.renderedChildren.add(this)
-            root?.activeLayout = parent
-        }
-    }
+    private fun extend(y: Y) = extend(Position(rightBottomCorner.x, y))
 
     //
     // context receivers
@@ -148,25 +173,57 @@ class Layout(
 
 }
 
-class Layouts(
-    val uom: UnitsOfMeasure = UnitsOfMeasure.PT,
-    orientation: Orientation = Orientation.HORIZONTAL,
-    leftTopCorner: Position = Position(X(0.0f, uom), Y(0.0f, uom)),
-    private var root: Layout = Layout(uom, orientation, leftTopCorner, DefaultLayoutQueries()),
-) {
+class RootLayout<M: Model<M, C>,E : ExportTemplate<E, M,C>, C : TemplateContext<C,M>>(
+    uom: UnitsOfMeasure,
+    orientation: Orientation,
+    leftTopCorner: Position,
+    query: AbstractLayoutQueries = DefaultLayoutQueries(),
+    node: TreeNode<M,E,C>,
+    internal val maxWidth: Width? = null,
+    internal val maxHeight: Height? = null,
+) : Layout<M,E,C>(node, uom, orientation, leftTopCorner, query) {
 
-    fun activeLayout(): Layout = root.activeLayout ?: root
+    init {
+        query.layout = this
+    }
 
-    fun <R> usingLayout(block: Layout.() -> R) = activeLayout().run(block)
+    override fun extendParent(position: Position) {}
+}
+
+class InnerLayout<M: Model<M, C>,E : ExportTemplate<E, M,C>, C : TemplateContext<C,M>>(
+    uom: UnitsOfMeasure,
+    orientation: Orientation,
+    leftTopCorner: Position,
+    query: AbstractLayoutQueries = DefaultLayoutQueries(),
+    override val node: BranchNode<M,E,C>,
+) : Layout<M,E,C>(node, uom, orientation, leftTopCorner, query) {
+
+    init {
+        query.layout = this
+    }
+
+    override fun extendParent(position: Position) {
+        node.getWrappingLayout().extend(position)
+    }
+
+    internal fun finish() {
+        val wrappingLayout = node.getWrappingLayout()
+        wrappingLayout.nextLayoutDefaultLeftTopCorner = if (orientation == Orientation.HORIZONTAL) {
+            Position(wrappingLayout.rightBottomCorner.x + EPSILON, wrappingLayout.leftTopCorner.y)
+        } else {
+            Position(wrappingLayout.leftTopCorner.x, wrappingLayout.rightBottomCorner.y + EPSILON)
+        }
+    }
 
 }
 
+
 fun interface LayoutElement {
-    fun Layout.computeBoundaries(): LayoutElementBoundingBox
+    fun Layout<*, *, *>.computeBoundaries(): LayoutElementBoundingBox
 }
 
 fun interface LayoutElementApply {
-    fun Layout.applyBoundaries(context: LayoutElementBoundingBox)
+    fun Layout<*, *, *>.applyBoundaries(context: LayoutElementBoundingBox)
 }
 
 data class LayoutElementBoundingBox(
@@ -179,7 +236,7 @@ data class LayoutElementBoundingBox(
     fun unitsOfMeasure(): UnitsOfMeasure = layoutPosition.x.unit
 
     fun <E : AttributedContext> mergeInto(context: E): LayoutElementBoundingBox = apply {
-        context.additionalAttributes?.put("${context.id}[boundaries]", context.boundingBox()?.merge(this) ?: this)
+        context.setContextAttribute("bbox", context.boundingBox()?.merge(this) ?: this)
     }
 
     private fun merge(other: LayoutElementBoundingBox): LayoutElementBoundingBox = copy(
@@ -190,17 +247,30 @@ data class LayoutElementBoundingBox(
     )
 }
 
-fun <E : AttributedContext> E.boundingBox(): LayoutElementBoundingBox? = getContextAttribute("$id[boundaries]")
-fun <E : AttributedContext> E.dropBoundaries() = removeContextAttribute<LayoutElementBoundingBox>("$id[boundaries]")
+enum class Overflow {
+    X,
+    Y
+}
 
-fun AbstractLayoutQueries.elementBoundaries(x: X? = null, y: Y? = null, width: Width? = null, height: Height? = null) =
-    LayoutElementBoundingBox(
+fun <E : AttributedContext> E.boundingBox(): LayoutElementBoundingBox? = getContextAttribute("bbox")
+
+fun <E : AttributedContext> E.dropBoundingBox() = removeContextAttribute<LayoutElementBoundingBox>("bbox")
+
+fun AbstractLayoutQueries.elementBoundaries(
+    x: X? = null,
+    y: Y? = null,
+    width: Width? = null,
+    height: Height? = null,
+): LayoutElementBoundingBox {
+    val uom = getLayoutBoundary().leftTop.x.unit
+    return LayoutElementBoundingBox(
         layoutPosition = getLayoutBoundary().leftTop,
-        absoluteX = x?.switchUnitOfMeasure(getLayoutBoundary().leftTop.x.unit),
-        absoluteY = y?.switchUnitOfMeasure(getLayoutBoundary().leftTop.x.unit),
-        width = width?.switchUnitOfMeasure(getLayoutBoundary().leftTop.x.unit),
-        height = height?.switchUnitOfMeasure(getLayoutBoundary().leftTop.x.unit)
+        absoluteX = x?.switchUnitOfMeasure(uom),
+        absoluteY = y?.switchUnitOfMeasure(uom),
+        width = width?.switchUnitOfMeasure(uom),
+        height = height?.switchUnitOfMeasure(uom)
     )
+}
 
 class DefaultLayoutQueries : AbstractLayoutQueries() {
     override fun getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position = Position(
@@ -231,23 +301,11 @@ class DefaultLayoutQueries : AbstractLayoutQueries() {
         layout.extend(height)
     }
 
-    /**
-     * Re-set layout rendered space by specific [Width].
-     */
-    override fun setWidth(width: Width) {
-        TODO("Not yet implemented")
-    }
-
-    /**
-     * Re-set layout rendered space by specific [Height].
-     */
-    override fun setHeight(height: Height) {
-        TODO("Not yet implemented")
-    }
-
 }
 
 class SpreadsheetQueries(
+    private val rowIndex: Int = 0,
+    private val columnIndex: Int = 0,
     private val defaultWidthInPt: Float = 56.25f,
     private val defaultHeightInPt: Float = 15f,
     val standardUnit: StandardUnits = StandardUnits.PT,
@@ -267,20 +325,26 @@ class SpreadsheetQueries(
         getX(relativePosition.x, targetUnit), getY(relativePosition.y, targetUnit)
     )
 
+    private fun MutableMap<Int, PositionAndLength>.startingIndex(): Int = if (this === rows) {
+        rowIndex
+    } else {
+        columnIndex
+    }
+
     private fun MutableMap<Int, PositionAndLength>.findIndex(position: Float, defMeasure: Float): Int {
         var entry: PositionAndLength? = null
-        return (0..Int.MAX_VALUE).find { index ->
+        return (startingIndex()..Int.MAX_VALUE).find { index ->
             val pos = entry?.let { it.position + it.length + EPSILON } ?: 0.0f
             val resolved = this[index] ?: PositionAndLength(pos, defMeasure)
             entry = resolved
             resolved.contains(position)
-        } ?: 0
+        } ?: startingIndex()
     }
 
     private fun MutableMap<Int, PositionAndLength>.findPosition(index: Int, defMeasure: Float): PositionAndLength {
         return this[index] ?: run {
-            val first = this[0] ?: PositionAndLength(0.0f, defMeasure)
-            return (1..index).fold(first) { agg, _index ->
+            val first = this[startingIndex()] ?: PositionAndLength(0.0f, defMeasure)
+            return (startingIndex() + 1..index).fold(first) { agg, _index ->
                 this[_index] ?: PositionAndLength(agg.position + agg.length + EPSILON, defMeasure)
             }.also { this[index] = it }
         }
@@ -344,17 +408,19 @@ class SpreadsheetQueries(
 
     override fun setRowHeight(row: Int, height: Height) = rows.setLengthAtIndex(row, height, defaultHeightInPt)
 
-    override fun getColumnWidth(column: Int,uom: UnitsOfMeasure): Width =
-        Width(columns[column]?.length ?: defaultWidthInPt  ,standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(uom)
+    override fun getColumnWidth(column: Int, uom: UnitsOfMeasure): Width =
+        Width(columns[column]?.length ?: defaultWidthInPt, standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(uom)
 
-    override fun getRowHeight(row: Int,uom: UnitsOfMeasure): Height =
-        Height(rows[row]?.length ?: defaultHeightInPt ,standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(uom)
+    override fun getRowHeight(row: Int, uom: UnitsOfMeasure): Height =
+        Height(rows[row]?.length ?: defaultHeightInPt, standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(uom)
 
 }
 
-class TableLayoutQueries : TabularLayoutQueries() {
+class TableLayoutQueries(
+    override val rowIndex: Int = 0, override val columnIndex: Int = 0,
+) : TabularLayoutQueries(rowIndex, columnIndex) {
 
-    private val delegate = SpreadsheetQueries()
+    private val delegate = SpreadsheetQueries(rowIndex, columnIndex)
 
     override fun getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position {
         return Position(
@@ -364,15 +430,15 @@ class TableLayoutQueries : TabularLayoutQueries() {
     }
 
     override fun getX(relativeX: X, targetUnit: UnitsOfMeasure): X {
-        assert(relativeX.unit == UnitsOfMeasure.NU) { "input coordinate must be expressed in tabular, numeric units" }
-        val absoluteXPosition = layout.query.getLayoutBoundary().leftTop.x.switchUnitOfMeasure(targetUnit)
+        assert(relativeX.unit == UnitsOfMeasure.NU) { "input coordinate must be expressed in ordinal numeric units" }
+        val absoluteXPosition = getLayoutBoundary().leftTop.x.switchUnitOfMeasure(targetUnit)
         val currentLayoutRelativeX = delegate.getX(relativeX, targetUnit)
         return absoluteXPosition + currentLayoutRelativeX
     }
 
     override fun getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y {
-        assert(relativeY.unit == UnitsOfMeasure.NU) { "input coordinate must be expressed in tabular, numeric units" }
-        val absoluteYPosition = layout.query.getLayoutBoundary().leftTop.y.switchUnitOfMeasure(targetUnit)
+        assert(relativeY.unit == UnitsOfMeasure.NU) { "input coordinate must be expressed in ordinal numeric units" }
+        val absoluteYPosition = getLayoutBoundary().leftTop.y.switchUnitOfMeasure(targetUnit)
         val currentLayoutRelativeY = delegate.getY(relativeY, targetUnit)
         return absoluteYPosition + currentLayoutRelativeY
     }
@@ -385,14 +451,6 @@ class TableLayoutQueries : TabularLayoutQueries() {
         layout.extend(height)
     }
 
-    override fun setWidth(width: Width) {
-        TODO("Not yet implemented")
-    }
-
-    override fun setHeight(height: Height) {
-        TODO("Not yet implemented")
-    }
-
     override fun setColumnWidth(column: Int, width: Width) {
         delegate.setColumnWidth(column, width)
     }
@@ -401,8 +459,8 @@ class TableLayoutQueries : TabularLayoutQueries() {
         delegate.setRowHeight(row, height)
     }
 
-    override fun getColumnWidth(column: Int,uom: UnitsOfMeasure): Width = delegate.getColumnWidth(column,uom)
+    override fun getColumnWidth(column: Int, uom: UnitsOfMeasure): Width = delegate.getColumnWidth(column, uom)
 
-    override fun getRowHeight(row: Int,uom: UnitsOfMeasure): Height = delegate.getRowHeight(row,uom)
+    override fun getRowHeight(row: Int, uom: UnitsOfMeasure): Height = delegate.getRowHeight(row, uom)
 
 }

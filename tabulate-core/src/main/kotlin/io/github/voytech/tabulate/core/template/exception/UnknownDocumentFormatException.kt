@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.template.exception
+package io.github.voytech.tabulate.core.template.exception
 
 /**
  * Exception thrown when [TabulationFormat] is not known.

@@ -18,7 +18,6 @@ import io.github.voytech.tabulate.core.model.border.BorderStyle
 import io.github.voytech.tabulate.core.model.border.Borders
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.color.Color
-import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.color.darken
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.core.template.operation.AttributedContext

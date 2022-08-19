@@ -1,12 +1,16 @@
 package io.github.voytech.tabulate.core.api.builder
 
-import io.github.voytech.tabulate.api.builder.exception.BuilderException
+import io.github.voytech.tabulate.components.table.api.builder.exception.BuilderException
 import io.github.voytech.tabulate.core.model.*
+import io.github.voytech.tabulate.core.template.TemplateContext
 import io.github.voytech.tabulate.core.template.loadAttributeConstraints
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import kotlin.properties.ObservableProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
+
+typealias BuiltModel<T> = AbstractModel<*,T,out TemplateContext<*,T>>
+
 
 typealias DslBlock<T> = (T) -> Unit
 
@@ -29,10 +33,10 @@ abstract class InternalBuilder<T> : BuilderInterface<T> {
     abstract override fun build(): T
 }
 
-interface ModelBuilderState<T : Model<T>> : BuilderInterface<T>
+interface ModelBuilderState<T : BuiltModel<T>> : BuilderInterface<T>
 
-interface CompositeModelBuilderState<T : Model<T>> : ModelBuilderState<T> {
-    fun <E : Model<E>> bind(node: ModelBuilderState<E>)
+interface CompositeModelBuilderState<T : BuiltModel<T>> : ModelBuilderState<T> {
+    fun <E : BuiltModel<E>> bind(node: ModelBuilderState<E>)
 }
 
 /**

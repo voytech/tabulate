@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.components.table.model.RowIndexDef
 
 /**
  * [AdditionalSteps] enum represents default additional steps to be executed after regular collection elements are exported.
- * Currently there is only single step supported - a TRAILING_ROWS step. This step is used when there is a need to
+ * Currently, there is only single step supported - a TRAILING_ROWS step. This step is used when there is a need to
  * specify row index relatively to the end of exported collection (e.g: footer row)
  * @since 0.1.0
  * @author Wojciech Mąka

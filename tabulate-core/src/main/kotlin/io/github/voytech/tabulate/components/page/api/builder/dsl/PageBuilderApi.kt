@@ -1,8 +1,8 @@
-package io.github.voytech.tabulate.components.sheet.api.builder.dsl
+package io.github.voytech.tabulate.components.page.api.builder.dsl
 
 import io.github.voytech.tabulate.components.document.api.builder.dsl.DocumentBuilderApi
-import io.github.voytech.tabulate.components.sheet.api.builder.SheetBuilderState
-import io.github.voytech.tabulate.components.sheet.model.Sheet
+import io.github.voytech.tabulate.components.page.api.builder.PageBuilderState
+import io.github.voytech.tabulate.components.page.model.Page
 import io.github.voytech.tabulate.core.api.builder.dsl.CompositeModelBuilderApi
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 
@@ -13,7 +13,7 @@ import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
  * @since 0.1.0
  */
 @TabulateMarker
-class SheetBuilderApi internal constructor(): CompositeModelBuilderApi<Sheet, SheetBuilderState>(SheetBuilderState()) {
+class PageBuilderApi internal constructor(): CompositeModelBuilderApi<Page, PageBuilderState>(PageBuilderState()) {
 
     @set:JvmSynthetic
     @get:JvmSynthetic
@@ -21,4 +21,5 @@ class SheetBuilderApi internal constructor(): CompositeModelBuilderApi<Sheet, Sh
 
 }
 
-fun DocumentBuilderApi.sheet(block: SheetBuilderApi.() -> Unit) = bind(SheetBuilderApi().apply(block))
+fun DocumentBuilderApi.page(block: PageBuilderApi.() -> Unit) = bind(PageBuilderApi().apply(block))
+fun DocumentBuilderApi.sheet(block: PageBuilderApi.() -> Unit) = page(block)

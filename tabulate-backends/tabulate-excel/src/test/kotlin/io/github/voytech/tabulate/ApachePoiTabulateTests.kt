@@ -2,8 +2,8 @@ package io.github.voytech.tabulate
 
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
-import io.github.voytech.tabulate.components.sheet.api.builder.dsl.sheet
-import io.github.voytech.tabulate.components.spacing.api.builder.dsl.space
+import io.github.voytech.tabulate.components.page.api.builder.dsl.sheet
+import io.github.voytech.tabulate.components.margins.api.builder.dsl.margins
 import io.github.voytech.tabulate.components.table.api.builder.RowPredicates.all
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
@@ -693,7 +693,7 @@ class ApachePoiTabulateTests {
         }
 
     @Test
-    fun `should correctly export two on same sheet, one next to each others 2`() {
+    fun `should correctly export tables on separate excel sheets`() {
         val tableStyle = table {
             attributes {
                 columnWidth { 110.px() }
@@ -733,9 +733,9 @@ class ApachePoiTabulateTests {
         document {
             sheet {
                 name = "first"
-                space {
-                    height { 100.pt() }
-                    width { 105.pt() }
+                margins {
+                    top { 100.pt() }
+                    left { 105.pt() }
                     table(tableStyle + headerStyle + typedTable<SampleProduct> {
                         columns {
                             column(SampleProduct::code) { attributes { text { fontColor = Colors.RED } } }
@@ -754,8 +754,8 @@ class ApachePoiTabulateTests {
             }
             sheet {
                 name = "second"
-                space {
-                    width { 25.pt() }
+                margins {
+                    left { 25.pt() }
                 }
                 table<SampleProduct>(headerStyle + typedTable {
                     attributes {

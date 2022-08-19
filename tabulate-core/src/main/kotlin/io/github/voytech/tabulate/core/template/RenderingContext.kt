@@ -14,6 +14,11 @@ import io.github.voytech.tabulate.core.template.operation.AttributedContext
  */
 interface RenderingContext
 
+
+interface RenderingContextAttributes {
+    fun getWidth(): Width
+    fun getHeight(): Height
+}
 /**
  * RenderingContextForSpreadsheet is a base class for all rendering contexts communicating with spreadsheets. It adds
  * capabilities of tracking and accessing spreadsheet cell coordinates related to document root.
@@ -26,7 +31,7 @@ abstract class RenderingContextForSpreadsheet: RenderingContext {
     //TODO add caching of left top column row indices by layout.
 
     fun setupSpreadsheetLayout(defaultColumnWidth: Float, defaultRowHeight: Float) {
-        measures = SpreadsheetQueries(defaultColumnWidth,defaultRowHeight)
+        measures = SpreadsheetQueries(0,0,defaultColumnWidth,defaultRowHeight)
     }
 
     fun AttributedContext.getAbsoluteColumn(column: Int): Int {

@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.core.template
 
-import io.github.voytech.tabulate.template.exception.UnknownDocumentFormatException
+import io.github.voytech.tabulate.core.template.exception.UnknownDocumentFormatException
 import java.io.File
 
 /**

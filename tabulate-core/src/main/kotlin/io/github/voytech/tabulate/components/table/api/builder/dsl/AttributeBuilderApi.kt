@@ -4,10 +4,14 @@ package io.github.voytech.tabulate.components.table.api.builder.dsl
 import io.github.voytech.tabulate.components.table.operation.CellContext
 import io.github.voytech.tabulate.components.table.operation.ColumnContext
 import io.github.voytech.tabulate.components.table.operation.RowContext
+import io.github.voytech.tabulate.components.table.operation.TableStart
 import io.github.voytech.tabulate.core.model.attributes.*
 
 
 // Attributes available on table level
+fun <T: Any> TableLevelAttributesBuilderApi<T>.margins(block: MarginsAttribute.Builder.() -> Unit) =
+    attribute(MarginsAttribute.builder<TableStart>().apply(block))
+
 fun <T: Any> TableLevelAttributesBuilderApi<T>.text(block: TextStylesAttribute.Builder.() -> Unit) =
     attribute(TextStylesAttribute.builder<CellContext>().apply(block))
 
@@ -25,7 +29,6 @@ fun <T: Any> TableLevelAttributesBuilderApi<T>.columnWidth(block: WidthAttribute
 
 fun <T: Any> TableLevelAttributesBuilderApi<T>.rowHeight(block: HeightAttribute.Builder.() -> Unit) =
     attribute(HeightAttribute.builder(RowContext::class.java).apply(block))
-
 
 //Attributes available on column level
 fun <T: Any> ColumnLevelAttributesBuilderApi<T>.text(block: TextStylesAttribute.Builder.() -> Unit) =

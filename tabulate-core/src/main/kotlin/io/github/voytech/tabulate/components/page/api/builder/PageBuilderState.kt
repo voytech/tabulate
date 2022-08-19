@@ -1,9 +1,9 @@
-package io.github.voytech.tabulate.components.sheet.api.builder
+package io.github.voytech.tabulate.components.page.api.builder
 
-import io.github.voytech.tabulate.components.sheet.model.Sheet
+import io.github.voytech.tabulate.components.page.model.Page
+import io.github.voytech.tabulate.core.api.builder.BuiltModel
 import io.github.voytech.tabulate.core.api.builder.CompositeModelBuilderState
 import io.github.voytech.tabulate.core.api.builder.ModelBuilderState
-import io.github.voytech.tabulate.core.model.Model
 
 
 /**
@@ -12,24 +12,24 @@ import io.github.voytech.tabulate.core.model.Model
  * @author Wojciech Mąka
  * @since 0.*.*
  */
-class SheetBuilderState : CompositeModelBuilderState<Sheet> {
+class PageBuilderState : CompositeModelBuilderState<Page> {
 
     @get:JvmSynthetic
     internal var nodes: MutableList<ModelBuilderState<*>> = mutableListOf()
 
     @get:JvmSynthetic
     @set:JvmSynthetic
-    internal var name: String = "untitled sheet"
+    internal var name: String = "untitled"
 
     @JvmSynthetic
-    override fun <E: Model<E>> bind(node: ModelBuilderState<E>) {
+    override fun <E : BuiltModel<E>> bind(node: ModelBuilderState<E>) {
         nodes.add(node)
     }
 
     @JvmSynthetic
-    override fun build(): Sheet = Sheet(
+    override fun build(): Page = Page(
+        name = name,
         nodes = nodes.map { it.build() },
-        id = name
     )
 
 }

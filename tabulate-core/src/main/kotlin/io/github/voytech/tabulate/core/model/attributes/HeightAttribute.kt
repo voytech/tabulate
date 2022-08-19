@@ -6,10 +6,7 @@ import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.Height
 import io.github.voytech.tabulate.core.model.MeasuredValue
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
-import io.github.voytech.tabulate.core.template.layout.Layout
-import io.github.voytech.tabulate.core.template.layout.LayoutElement
-import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
-import io.github.voytech.tabulate.core.template.layout.elementBoundaries
+import io.github.voytech.tabulate.core.template.layout.*
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 
 data class HeightAttribute(
@@ -35,7 +32,7 @@ data class HeightAttribute(
         override fun provide(): HeightAttribute = HeightAttribute(value)
     }
 
-    override fun Layout.computeBoundaries(): LayoutElementBoundingBox =
+    override fun Layout<*,*,*>.computeBoundaries(): LayoutElementBoundingBox =
         query.elementBoundaries(height = value)
 
     companion object {

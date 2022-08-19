@@ -88,13 +88,4 @@ internal fun <R: RenderingContext> loadExportOperationProviders(format: Document
 internal fun <R: RenderingContext> loadAttributeOperationProviders(renderingContext: Class<R>): List<AttributeOperationsProvider<R,*>> =
     loadRenderingContextAware(renderingContext)
 
-/**
- * Top level method that loads instance of [RenderingContext] identified by particular [DocumentFormat].
- * @author Wojciech Mąka
- * @since 0.*.*
- */
-internal fun loadRenderingContext(format: DocumentFormat): RenderingContext =
-    loadFirstByDocumentFormat<ExportOperationsProvider<RenderingContext, *>, RenderingContext>(format)?.createRenderingContext()
-        ?: error("cannot create rendering context")
-
 

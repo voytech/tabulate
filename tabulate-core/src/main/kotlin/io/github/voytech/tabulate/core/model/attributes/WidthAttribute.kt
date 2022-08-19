@@ -6,10 +6,7 @@ import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.MeasuredValue
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
-import io.github.voytech.tabulate.core.template.layout.Layout
-import io.github.voytech.tabulate.core.template.layout.LayoutElement
-import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
-import io.github.voytech.tabulate.core.template.layout.elementBoundaries
+import io.github.voytech.tabulate.core.template.layout.*
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 
 data class WidthAttribute(
@@ -49,7 +46,7 @@ data class WidthAttribute(
             )
         }
 
-    override fun Layout.computeBoundaries(): LayoutElementBoundingBox =
+    override fun Layout<*,*,*>.computeBoundaries(): LayoutElementBoundingBox =
         if (!auto) query.elementBoundaries(width = value)
         else query.elementBoundaries()
 

@@ -5,8 +5,7 @@ import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.orEmpty
-import io.github.voytech.tabulate.core.template.operation.AttributesByContexts
-import io.github.voytech.tabulate.core.template.operation.distributeAttributesForContexts
+import io.github.voytech.tabulate.core.template.operation.*
 
 internal fun <T : AttributedModelOrPart<T>> T.attributesForAllContexts(): AttributesByContexts<T> =
     distributeAttributesForContexts(
@@ -64,11 +63,13 @@ internal class IndexedTableRows<T : Any>(
 
 internal fun <T : Any> Table<T>.indexRows(): IndexedTableRows<T> = IndexedTableRows(this)
 
+internal fun interface ProvideCellContext<T : Any> : (SyntheticRow<T>, ColumnDef<T>) -> CellContext?
+
 internal class SyntheticRow<T : Any>(
     internal val table: Table<T>,
     private val rowDefinitions: Set<RowDef<T>>,
     // computed intermediate properties:
-    internal val tableAttributesForContext: AttributesByContexts<Table<T>> = table.attributesForAllContexts(),
+    private val tableAttributesForContext: AttributesByContexts<Table<T>> = table.attributesForAllContexts(),
     internal val cellDefinitions: Map<ColumnKey<T>, CellDef<T>> = rowDefinitions.mergeCells(),
     private val allRowAttributes: Attributes = rowDefinitions.flattenRowAttributes(),
     // attributes to be accessible on AttributedContext:
@@ -86,7 +87,7 @@ internal class SyntheticRow<T : Any>(
                 cellDefinitions[column.id]?.attributes.orEmpty().forContext<CellContext>()
 
     internal fun mapEachCell(
-        block: (syntheticRow: SyntheticRow<T>, column: ColumnDef<T>) -> CellContext?,
+        block: ProvideCellContext<T>,
     ): Map<ColumnKey<T>, CellContext> =
         if (cellContextAttributes.isEmpty()) {
             table.columns.mapNotNull { column ->
@@ -111,17 +112,17 @@ internal class QualifiedRows<T : Any>(private val indexedTableRows: IndexedTable
         }
 }
 
-interface RowCompletionListener<T> {
-    fun onAttributedCellResolved(cell: CellContext)
-    fun onAttributedRowResolved(row: RowStart)
-    fun onAttributedRowResolved(row: RowEnd<T>)
+interface CaptureRowCompletion<T> {
+    fun onCellResolved(cell: CellContext): OperationStatus?
+    fun onRowStartResolved(row: RowStart): OperationStatus?
+    fun onRowEndResolved(row: RowEnd<T>): OperationStatus?
 }
 
 /**
  * Given requested index, [Table] model, and map of custom attributes, it resolves [RowEnd] (row context) with
  * associated effective index.
  *
- * Additionally it notifies about following events:
+ * Additionally, it notifies about following events:
  *  - all row attributes on row has been resolved,
  *  - cell and its attributes has been resolved,
  *  - entire row has been completed (row with attributes and all row cells with its attributes).
@@ -131,46 +132,53 @@ interface RowCompletionListener<T> {
 internal abstract class AbstractRowContextResolver<T : Any>(
     tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
-    private val listener: RowCompletionListener<T>? = null,
-) : IndexedContextResolver<T, RowEnd<T>> {
+    private val offsets: OverflowOffsets,
+    private val listener: CaptureRowCompletion<T>? = null,
+) : IndexedContextResolver<RowEnd<T>> {
 
     private val indexedTableRows: IndexedTableRows<T> = tableModel.indexRows()
     private val rows = QualifiedRows(indexedTableRows)
 
     @Suppress("NOTHING_TO_INLINE")
-    protected inline fun RowStart.notify(): RowStart =
-        also { listener?.onAttributedRowResolved(it) }
+    protected inline fun RowStart.render(): OperationStatus? =
+        listener?.onRowStartResolved(this)
 
     @Suppress("NOTHING_TO_INLINE")
-    protected inline fun RowEnd<T>.notify(): RowEnd<T> =
-        also { listener?.onAttributedRowResolved(it) }
+    protected inline fun RowEnd<T>.render(): OperationStatus? =
+        listener?.onRowEndResolved(this)
 
     @Suppress("NOTHING_TO_INLINE")
-    protected inline fun CellContext.notify(): CellContext =
-        also { listener?.onAttributedCellResolved(it) }
+    protected inline fun CellContext.render(): CellContext =
+        also { listener?.onCellResolved(it) }
 
+    private fun offsetAwareCellContext(sourceRow: SourceRow<T>) = ProvideCellContext { row, column ->
+        if (offsets.isValid(column.index)) {
+            row.createCellContext(row = sourceRow, column = column, customAttributes)?.render()
+        } else null
+    }
 
-    private fun resolveAttributedRow(
+    private fun orchestrateTableRow(
         tableRowIndex: RowIndex,
         record: IndexedValue<T>? = null,
-    ): RowEnd<T> {
+    ): ContextResult<RowEnd<T>> {
         return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
             with(rows.findQualifying(sourceRow)) {
-                asRowEnd(
-                    asRowStart(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify(),
-                    mapEachCell { row, column ->
-                        row.asCellContext(row = sourceRow, column = column, customAttributes)?.notify()
+                val provideCell = offsetAwareCellContext(sourceRow)
+                createRowStart(rowIndex = tableRowIndex.value, customAttributes = customAttributes).let { rowStart ->
+                    when (val status = rowStart.render()) {
+                        Success -> SuccessResult(createRowEnd(rowStart, mapEachCell(provideCell)).also { it.render() })
+                        else -> OverflowResult(status as OverflowStatus)
                     }
-                ).notify()
+                }
             }
         }
     }
 
     private fun resolveRowContext(
-        tableRowIndex: RowIndex,
+        requestedIndex: RowIndex,
         indexedRecord: IndexedValue<T>? = null,
-    ): IndexedContext<RowEnd<T>> =
-        IndexedContext(tableRowIndex, resolveAttributedRow(tableRowIndex, indexedRecord))
+    ): IndexedResult<RowEnd<T>> =
+        IndexedResult(requestedIndex, indexedRecord?.index, orchestrateTableRow(requestedIndex, indexedRecord))
 
 
     /**
@@ -180,7 +188,7 @@ internal abstract class AbstractRowContextResolver<T : Any>(
      * @author Wojciech Mąka
      * @since 0.1.0
      */
-    override fun resolve(requestedIndex: RowIndex): IndexedContext<RowEnd<T>>? {
+    override fun resolve(requestedIndex: RowIndex): IndexedResult<RowEnd<T>>? {
         return if (indexedTableRows.hasCustomRows(SourceRow(requestedIndex))) {
             resolveRowContext(requestedIndex)
         } else {

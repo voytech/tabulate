@@ -13,16 +13,16 @@ import java.util.*
 internal class AccumulatingRowContextResolver<T: Any>(
     tableModel: Table<T>,
     customAttributes: MutableMap<String, Any>,
-    listener: RowCompletionListener<T>? = null
-) : AbstractRowContextResolver<T>(tableModel, customAttributes, listener) {
+    offsets: OverflowOffsets,
+    listener: CaptureRowCompletion<T>
+) : AbstractRowContextResolver<T>(tableModel, customAttributes, offsets, listener) {
 
-    private var index: Int = 0
-
+    private var pollIndex: Int = 0
     private val dataSourceBuffer: Queue<T> = LinkedList()
 
     override fun getNextRecord(): IndexedValue<T>? {
         return dataSourceBuffer.poll()?.let {
-            IndexedValue(index, it).also { index++ }
+            IndexedValue(pollIndex, it).also { pollIndex++ }
         }
     }
 
