@@ -13,8 +13,4 @@ sealed class DocumentContext(templateContext: DocumentTemplateContext) : Attribu
 
 class DocumentStart(templateContext: DocumentTemplateContext) : DocumentContext(templateContext)
 
-class TurnPage(templateContext: DocumentTemplateContext) : DocumentContext(templateContext)
-
 class DocumentEnd(templateContext: DocumentTemplateContext) : DocumentContext(templateContext)
-
-fun interface TurnPageOperation<CTX : RenderingContext>: Operation<CTX, TurnPage>

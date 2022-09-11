@@ -9,18 +9,10 @@ import io.github.voytech.tabulate.core.template.TemplateContext
 class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
 
     override fun doExport(templateContext: PageTemplateContext) = with(templateContext) {
+        resumeAllSuspendedNodes()
         resetLayouts()
-        render(newPage(templateContext))
-        resumeAllPendingComponents()
+        render(newPage(templateContext.model.name))
         model.exportChildren(templateContext)
-    }
-
-    private fun PageTemplateContext.resumeAllPendingComponents() {
-        while (otherSuspensionsExist()) {
-            resumeAll()
-            resetLayouts()
-            render(newPage(this))
-        }
     }
 
     private fun Page.exportChildren(context: PageTemplateContext) {

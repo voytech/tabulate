@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.core.template
 
+import io.github.voytech.tabulate.components.page.operation.newPage
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.template.exception.OutputBindingResolvingException
 import io.github.voytech.tabulate.core.template.layout.*
@@ -18,7 +19,7 @@ class ExportTemplateServices(
     private val uom: UnitsOfMeasure = UnitsOfMeasure.PT
     private lateinit var root: RootNode<*, *, *>
     private lateinit var activeNode: TreeNode<*, *, *>
-    private val nodes: MutableMap<TemplateContext<*, *>, TreeNode<*, *, *>> = mutableMapOf()
+    private val nodes: MutableMap<Model<*, *>, TreeNode<*, *, *>> = mutableMapOf()
     internal var suspendedNodes: MutableSet<TemplateContext<*, *>> = mutableSetOf()
 
     //TODO add caching
@@ -29,7 +30,7 @@ class ExportTemplateServices(
         getOperations(this).render(renderingContext, context)
     }
 
-    private fun TemplateContext<*, *>.node(): TreeNode<*, *, *> = nodes[this] ?: error("Could not find node by context")
+    private fun TemplateContext<*, *>.node(): TreeNode<*, *, *> = nodes[model] ?: error("Could not find node by context")
 
     private fun ensureRootLayout() {
         if (root.layout == null) {
@@ -71,13 +72,13 @@ class ExportTemplateServices(
         template: E, context: C,
     ): TreeNode<M, E, C> = if (!::root.isInitialized) {
         RootNode(template, context).apply {
-            nodes[context] = this
+            nodes[context.model] = this
             root = this
             activeNode = root
         }
     } else {
         BranchNode(template, context, activeNode, root).apply {
-            nodes[context] = this
+            nodes[context.model] = this
             activeNode.children.add(this)
             activeNode = this
         }
@@ -101,10 +102,17 @@ class ExportTemplateServices(
         traverse { it.dropLayout() }.also { ensureRootLayout() }
     }
 
-    fun TemplateContext<*, *>?.suspensionsExist() =
-        suspendedNodes.isNotEmpty() && suspendedNodes.toSet().intersect(setOf(this)) != setOf(this)
+    fun <M : Model<M, *>> resumeAllSuspendedNodes(onModel: M)  {
+        while (suspensionsExist()) {
+            resetLayouts()
+            onModel.render(newPage(onModel.id))
+            resumeAll()
+        }
+    }
 
-    fun resumeAll() = with(root) {
+    private fun suspensionsExist() = suspendedNodes.isNotEmpty()
+
+    private fun resumeAll() = with(root) {
         keepingCurrentActiveNode {
             traverse {
                 activeNode = it
@@ -129,7 +137,7 @@ enum class TemplateStatus {
     PARTIAL_YX,
     FINISHED;
 
-    internal fun isPartiallyExported(): Boolean =
+    internal fun isPartlyExported(): Boolean =
         PARTIAL_YX == this || PARTIAL_XY == this || PARTIAL_X == this || PARTIAL_Y == this
 
     internal fun isYOverflow(): Boolean = PARTIAL_YX == this || PARTIAL_XY == this || PARTIAL_Y == this
@@ -181,7 +189,7 @@ open class TemplateContext<C : TemplateContext<C, M>, M : Model<M, C>>(
     }
 
     fun finishOrSuspend() {
-        if (status.isPartiallyExported()) {
+        if (status.isPartlyExported()) {
             services.suspendedNodes.add(this)
         } else {
             services.suspendedNodes.remove(this)
@@ -189,7 +197,7 @@ open class TemplateContext<C : TemplateContext<C, M>, M : Model<M, C>>(
         }
     }
 
-    fun isPartiallyExported(): Boolean = status.isPartiallyExported()
+    fun isPartlyExported(): Boolean = status.isPartlyExported()
 
     fun isYOverflow(): Boolean = status.isYOverflow()
 
@@ -236,10 +244,8 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : Model<M, C>, C : 
 
     protected fun C.resetLayouts() = services.resetLayouts()
 
-    protected fun C.resumeAll() = services.resumeAll()
-
-    protected fun C.otherSuspensionsExist() = with(services) {
-        suspensionsExist()
+    fun C.resumeAllSuspendedNodes() = with(services) {
+        resumeAllSuspendedNodes(model)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -264,6 +270,7 @@ class StandaloneExportTemplate<E : ExportTemplate<E, M, C>, M : Model<M, C>, C :
         resolveOutputBinding(output).run {
             setOutput(renderingContext, output)
             delegate.export(TemplateContext(model, mutableMapOf(), this@with), model)
+            resumeAllSuspendedNodes(model)
             flush()
         }
     }
@@ -271,8 +278,10 @@ class StandaloneExportTemplate<E : ExportTemplate<E, M, C>, M : Model<M, C>, C :
     fun <O : Any, T : Any> export(model: M, output: O, dataSource: Iterable<T> = emptyList()) =
         with(ExportTemplateServices(format)) {
             resolveOutputBinding(output).run {
+                val templateContext = TemplateContext(model, dataSource.asStateAttributes(), this@with)
                 setOutput(renderingContext, output)
-                delegate.export(TemplateContext(model, dataSource.asStateAttributes(), this@with), model)
+                delegate.export(templateContext, model)
+                resumeAllSuspendedNodes(model)
                 flush()
             }
         }

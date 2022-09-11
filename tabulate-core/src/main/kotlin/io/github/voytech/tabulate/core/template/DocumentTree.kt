@@ -21,7 +21,7 @@ sealed class TreeNode<M: Model<M, C>,E : ExportTemplate<E, M,C>, C : TemplateCon
     }
 
     fun resume() {
-        if (context.isPartiallyExported()) {
+        if (context.isPartlyExported()) {
             template.onResume(context)
         }
     }

@@ -13,7 +13,7 @@ class ExcelSheetOperations: ExportOperationsProvider<ApachePoiRenderingContext, 
     override fun provideExportOperations(): BuildOperations<ApachePoiRenderingContext> = {
         operation(RenderPageOperation { renderingContext, context ->
             renderingContext.provideWorkbook()
-            renderingContext.provideSheet(context.sheetName)
+            renderingContext.provideSheet(context.pageName)
         })
     }
 

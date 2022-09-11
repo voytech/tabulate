@@ -207,7 +207,7 @@ class PdfBoxTabulateTests {
                     dataSource(SampleProduct.create(125))
                 })
             }
-            page {
+            /*page {
                 name = "second"
                 table {
                     attributes {
@@ -463,7 +463,7 @@ class PdfBoxTabulateTests {
                         }
                     }
                 }
-            }
+            }*/
         }.export("test.pdf")
     }
 }
