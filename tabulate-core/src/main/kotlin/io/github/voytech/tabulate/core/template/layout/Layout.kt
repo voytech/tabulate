@@ -55,7 +55,7 @@ abstract class AbstractLayoutQueries : LayoutQueries {
 abstract class TabularLayoutQueries(protected open val rowIndex: Int = 0, protected open val columnIndex: Int = 0) :
     AbstractLayoutQueries(), TabularQueries
 
-fun <M: Model<M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> RootNode<M,E,C>.setLayout(
+fun <M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> RootNode<M,E,C>.setLayout(
     queries: AbstractLayoutQueries = DefaultLayoutQueries(),
     uom: UnitsOfMeasure = UnitsOfMeasure.PT,
     maxHeight: Height = Height.max(uom),
@@ -73,7 +73,7 @@ fun <M: Model<M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> RootNod
         maxHeight
     ).also { layout = it }
 
-fun <M: Model<M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> BranchNode<M,E,C>.setLayout(
+fun <M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> BranchNode<M,E,C>.setLayout(
     queries: AbstractLayoutQueries,
     childLeftTopCorner: Position? = null,
     orientation: Orientation? = null,
@@ -86,7 +86,7 @@ fun <M: Model<M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> BranchN
     ).also { layout = it }
 }
 
-fun <M: Model<M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> BranchNode<M,E,C>.createLayoutScope(
+fun <M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> BranchNode<M,E,C>.createLayoutScope(
     queries: AbstractLayoutQueries,
     childLeftTopCorner: Position? = null,
     orientation: Orientation? = null,
@@ -100,7 +100,7 @@ private fun TreeNode<*,*,*>.resolveMargins(sourcePosition: Position): Position {
     } ?: sourcePosition
 }
 
-sealed class Layout<M: Model<M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>>(
+sealed class Layout<M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>>(
     open val node: TreeNode<M,E,C>,
     val uom: UnitsOfMeasure,
     protected val orientation: Orientation,
@@ -173,7 +173,7 @@ sealed class Layout<M: Model<M, C>,E : ExportTemplate<E,M,C>, C : TemplateContex
 
 }
 
-class RootLayout<M: Model<M, C>,E : ExportTemplate<E, M,C>, C : TemplateContext<C,M>>(
+class RootLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M,C>, C : TemplateContext<C,M>>(
     uom: UnitsOfMeasure,
     orientation: Orientation,
     leftTopCorner: Position,
@@ -190,7 +190,7 @@ class RootLayout<M: Model<M, C>,E : ExportTemplate<E, M,C>, C : TemplateContext<
     override fun extendParent(position: Position) {}
 }
 
-class InnerLayout<M: Model<M, C>,E : ExportTemplate<E, M,C>, C : TemplateContext<C,M>>(
+class InnerLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M,C>, C : TemplateContext<C,M>>(
     uom: UnitsOfMeasure,
     orientation: Orientation,
     leftTopCorner: Position,

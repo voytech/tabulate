@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.components.page.template
 
 import io.github.voytech.tabulate.components.page.model.Page
-import io.github.voytech.tabulate.components.page.operation.newPage
+import io.github.voytech.tabulate.components.commons.operation.newPage
 import io.github.voytech.tabulate.core.template.ExportTemplate
 import io.github.voytech.tabulate.core.template.ExportTemplateServices
 import io.github.voytech.tabulate.core.template.TemplateContext

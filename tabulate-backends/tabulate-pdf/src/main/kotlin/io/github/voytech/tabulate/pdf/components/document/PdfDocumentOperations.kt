@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.pdf.components.document
 
 import io.github.voytech.tabulate.components.document.model.Document
-import io.github.voytech.tabulate.components.page.operation.RenderPageOperation
+import io.github.voytech.tabulate.components.commons.operation.RenderPageOperation
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.spi.BuildAttributeOperations
 import io.github.voytech.tabulate.core.template.spi.BuildOperations

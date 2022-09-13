@@ -8,6 +8,7 @@ import io.github.voytech.tabulate.core.api.builder.dsl.buildModel
 import io.github.voytech.tabulate.core.template.*
 import java.io.File
 
+typealias StandaloneDocumentTemplate = StandaloneExportTemplate<DocumentTemplate,Document,DocumentTemplateContext>
 /**
  * Entry point for document exporting.
  * @author Wojciech Mąka
@@ -32,7 +33,7 @@ class DocumentTemplate: ExportTemplate<DocumentTemplate, Document, DocumentTempl
 
 fun (DocumentBuilderApi.() -> Unit).export(file: File) = file.documentFormat().let { format ->
     buildModel(DocumentBuilderApi().apply(this)).let { doc ->
-        StandaloneExportTemplate(format,DocumentTemplate()).export(doc, file.outputStream())
+        StandaloneDocumentTemplate(format).export(doc, file.outputStream())
     }
 }
 

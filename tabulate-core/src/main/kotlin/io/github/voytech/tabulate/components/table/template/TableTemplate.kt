@@ -17,6 +17,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 
+typealias StandaloneTableTemplate<T> = StandaloneExportTemplate<TableTemplate<T>,Table<T>,TableTemplateContext<T>>
 /**
  * [TabulationApi] An API enabling interactive table export.
  * Allows to:
@@ -211,7 +212,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
 
 
     fun <O : Any> export(format: DocumentFormat, source: Iterable<T>, output: O, table: Table<T>) =
-        StandaloneExportTemplate(format, this).export(table, output, source)
+        StandaloneTableTemplate<T>(format).export(table, output, source)
 }
 
 /**
@@ -223,20 +224,19 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
  * @receiver collection of records to be rendered into file.
  */
 fun <T : Any, O : Any> Iterable<T>.tabulate(format: DocumentFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
-    StandaloneExportTemplate(format, TableTemplate<T>()).export(createTable(block), output, this)
+    StandaloneTableTemplate<T>(format).export(createTable(block), output, this)
 }
 
 fun <T : Any, O : Any> Table<T>.export(format: DocumentFormat, output: O) {
-    StandaloneExportTemplate(format, TableTemplate<T>()).export(this, output, emptyList<T>())
+    StandaloneTableTemplate<T>(format).export(this, output, emptyList<T>())
 }
 
-fun <T : Any, O : Any> TableTemplate<T>.export(
+fun <T : Any, O : Any> export(
     format: DocumentFormat,
     source: Iterable<T>,
     output: O,
     block: TableBuilderApi<T>.() -> Unit,
-) =
-    StandaloneExportTemplate(format, this).export(createTable(block), output, source)
+) = StandaloneTableTemplate<T>(format).export(createTable(block), output, source)
 
 
 /**
@@ -259,7 +259,7 @@ fun <T : Any, O : Any> (TableBuilderApi<T>.() -> Unit).export(format: DocumentFo
 fun <T : Any> (TableBuilderApi<T>.() -> Unit).export(file: File) {
     file.documentFormat().let { format ->
         FileOutputStream(file).use {
-            TableTemplate<T>().export(format, emptyList(), it, this)
+            export(format, emptyList(), it, this)
         }
     }
 }

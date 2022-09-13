@@ -6,10 +6,13 @@ import io.github.voytech.tabulate.core.model.AbstractModel
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.Model
 import io.github.voytech.tabulate.core.model.ModelWithAttributes
+import io.github.voytech.tabulate.core.template.ExportTemplate
 
 class Document internal constructor(
     @get:JvmSynthetic
     internal val nodes: List<AbstractModel<*,*,*>>,
     @get:JvmSynthetic override val attributes: Attributes?,
     override val id: String
-) : ModelWithAttributes<DocumentTemplate,Document,DocumentTemplateContext>()
+) : ModelWithAttributes<DocumentTemplate,Document,DocumentTemplateContext>() {
+    override fun getExportTemplate(): ExportTemplate<DocumentTemplate, Document, DocumentTemplateContext> = DocumentTemplate()
+}

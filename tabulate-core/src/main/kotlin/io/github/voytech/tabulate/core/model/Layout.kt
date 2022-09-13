@@ -70,7 +70,7 @@ data class Height(override val value: Float, override val unit: UnitsOfMeasure) 
         Height(unit.switchUnitOfMeasure(value, targetUnit), targetUnit)
     } else this
 
-    fun asY(): Y = Y(value,unit)
+    fun asY(): Y = Y(value, unit)
 
     companion object {
         fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Height(0.0f, uom)
@@ -167,12 +167,13 @@ data class Position(val x: X, val y: Y) {
         x = X(x.value + other.x.switchUnitOfMeasure(x.unit).value, x.unit),
         y = Y(y.value + other.y.switchUnitOfMeasure(y.unit).value, y.unit)
     )
+
     companion object {
-        fun start(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Position(X.zero(uom),Y.zero(uom))
+        fun start(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Position(X.zero(uom), Y.zero(uom))
     }
 }
 
-fun Position?.orStart(uom: UnitsOfMeasure): Position = this?:Position.start(uom)
+fun Position?.orStart(uom: UnitsOfMeasure): Position = this ?: Position.start(uom)
 
 fun orMax(left: Position, right: Position) = Position(
     X(max(left.x.value, right.x.switchUnitOfMeasure(left.x.unit).value), left.x.unit),
@@ -194,7 +195,9 @@ data class BoundingRectangle(
         ),
     )
 
-    fun getWidth(): Width = Width(rightBottom.x.value - leftTop.x.value,leftTop.x.unit)
+    fun getWidth(): Width = Width(rightBottom.x.value - leftTop.x.value, leftTop.x.unit)
+
+    fun getHeight(): Height = Height(rightBottom.y.value - leftTop.y.value, leftTop.y.unit)
 }
 
 enum class Orientation {

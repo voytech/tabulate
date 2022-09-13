@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.components.page.operation
+package io.github.voytech.tabulate.components.commons.operation
 
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
