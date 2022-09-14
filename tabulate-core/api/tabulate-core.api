@@ -2553,11 +2553,12 @@ public abstract interface class io/github/voytech/tabulate/core/template/operati
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/OperationKt {
+	public static final fun isXOverflow (Lio/github/voytech/tabulate/core/template/operation/OperationStatus;)Z
+	public static final fun isYOverflow (Lio/github/voytech/tabulate/core/template/operation/OperationStatus;)Z
 	public static final fun setStatus (Lio/github/voytech/tabulate/core/template/operation/AttributedContext;Lio/github/voytech/tabulate/core/template/operation/OperationStatus;)V
 }
 
 public abstract interface class io/github/voytech/tabulate/core/template/operation/OperationStatus {
-	public abstract fun getOverflow ()Lio/github/voytech/tabulate/core/template/layout/Overflow;
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/Operations {
@@ -2582,20 +2583,11 @@ public final class io/github/voytech/tabulate/core/template/operation/Operations
 
 public class io/github/voytech/tabulate/core/template/operation/OverflowStatus : io/github/voytech/tabulate/core/template/operation/OperationStatus {
 	public fun <init> (Lio/github/voytech/tabulate/core/template/layout/Overflow;)V
-	public fun getOverflow ()Lio/github/voytech/tabulate/core/template/layout/Overflow;
+	public final fun getOverflow ()Lio/github/voytech/tabulate/core/template/layout/Overflow;
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/Success : io/github/voytech/tabulate/core/template/operation/OperationStatus {
 	public static final field INSTANCE Lio/github/voytech/tabulate/core/template/operation/Success;
-	public fun getOverflow ()Lio/github/voytech/tabulate/core/template/layout/Overflow;
-}
-
-public final class io/github/voytech/tabulate/core/template/operation/XOverflow : io/github/voytech/tabulate/core/template/operation/OverflowStatus {
-	public static final field INSTANCE Lio/github/voytech/tabulate/core/template/operation/XOverflow;
-}
-
-public final class io/github/voytech/tabulate/core/template/operation/YOverflow : io/github/voytech/tabulate/core/template/operation/OverflowStatus {
-	public static final field INSTANCE Lio/github/voytech/tabulate/core/template/operation/YOverflow;
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/factories/AttributeOperationsFactory {

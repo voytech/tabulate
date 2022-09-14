@@ -17,13 +17,13 @@ fun interface Operation<CTX : RenderingContext, E : AttributedContext> :
 
 typealias ReifiedOperation<CTX, E> = ReifiedInvocation<Operation<CTX, E>, TwoParamsTypeInfo<CTX, E>>
 
-sealed interface OperationStatus {
-    val overflow: Overflow?
-}
-open class OverflowStatus(override val overflow: Overflow) : OperationStatus
-object XOverflow: OverflowStatus(Overflow.X)
-object YOverflow: OverflowStatus(Overflow.Y)
-object Success: OperationStatus { override val overflow: Overflow? = null }
+sealed interface OperationStatus
+open class OverflowStatus(val overflow: Overflow) : OperationStatus
+object Success: OperationStatus
+
+fun OperationStatus?.isXOverflow(): Boolean = this is OverflowStatus && overflow == Overflow.X
+
+fun OperationStatus?.isYOverflow(): Boolean = this is OverflowStatus && overflow == Overflow.Y
 
 fun <E : AttributedContext> E.setStatus(status: OperationStatus) = setContextAttribute("status",status)
 

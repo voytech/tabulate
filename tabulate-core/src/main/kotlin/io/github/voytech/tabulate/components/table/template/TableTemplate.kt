@@ -9,10 +9,7 @@ import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.DataSourceBinding
 import io.github.voytech.tabulate.core.template.*
 import io.github.voytech.tabulate.core.template.layout.TableLayoutQueries
-import io.github.voytech.tabulate.core.template.operation.OperationStatus
-import io.github.voytech.tabulate.core.template.operation.Operations
-import io.github.voytech.tabulate.core.template.operation.Success
-import io.github.voytech.tabulate.core.template.operation.distributeAttributesForContexts
+import io.github.voytech.tabulate.core.template.operation.*
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
@@ -145,7 +142,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
             )
             status = operations.render(this@renderColumnStarts, context)
         }
-        if (status != Success) {
+        if (status.isXOverflow()) {
             templateContext.suspendX()
             templateContext.indices.setNextIndexOnX(column?.index ?: 0)
         }
