@@ -116,14 +116,14 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
     override operator fun invoke(renderingContext: CTX, context: E) {
         with(layout()) {
             resolveElementBoundaries(context).let { boundaries ->
-                boundaries.checkRootOverflow()?.let {
-                    context.setStatus(OverflowStatus(it))
+                boundaries.checkOverflow()?.let {
+                    context.setResult(OverflowResult(it))
                 } ?: run {
                     delegate(renderingContext, context).also {
                         boundaries?.applyOnLayout()
                     }
                     commitBoundaries(context, boundaries)
-                    context.setStatus(Success)
+                    context.setResult(Success)
                 }
             }
         }

@@ -17,27 +17,28 @@ fun interface Operation<CTX : RenderingContext, E : AttributedContext> :
 
 typealias ReifiedOperation<CTX, E> = ReifiedInvocation<Operation<CTX, E>, TwoParamsTypeInfo<CTX, E>>
 
-sealed interface OperationStatus
-open class OverflowStatus(val overflow: Overflow) : OperationStatus
-object Success: OperationStatus
+sealed interface OperationResult
+open class OverflowResult(val overflow: Overflow) : OperationResult
+interface QueryResult: OperationResult
+object Success: OperationResult
 
-fun OperationStatus?.isXOverflow(): Boolean = this is OverflowStatus && overflow == Overflow.X
+fun OperationResult?.isXOverflow(): Boolean = this is OverflowResult && overflow == Overflow.X
 
-fun OperationStatus?.isYOverflow(): Boolean = this is OverflowStatus && overflow == Overflow.Y
+fun OperationResult?.isYOverflow(): Boolean = this is OverflowResult && overflow == Overflow.Y
 
-fun <E : AttributedContext> E.setStatus(status: OperationStatus) = setContextAttribute("status",status)
+fun <E : AttributedContext> E.setResult(status: OperationResult) = setContextAttribute("status",status)
 
 @JvmInline
 value class Operations<CTX : RenderingContext>(private val dispatch: TwoParamsBasedDispatch) {
 
-    private fun <E : AttributedContext> E.getStatus(): OperationStatus? = removeContextAttribute("status")
+    private fun <E : AttributedContext> E.getResult(): OperationResult? = removeContextAttribute("status")
 
-    private fun <CTX : RenderingContext, E : AttributedContext> Operation<CTX, E>.invokeWithStatus(
+    private fun <CTX : RenderingContext, E : AttributedContext> Operation<CTX, E>.invokeWithResult(
         renderingContext: CTX, context: E
-    ): OperationStatus = invoke(renderingContext, context).let { context.getStatus() ?: Success }
+    ): OperationResult = invoke(renderingContext, context).let { context.getResult() ?: Success }
 
-    fun <A : Attribute<*>, E : AttributedContext> render(renderingContext: CTX, context: E): OperationStatus? =
-        (dispatch[renderingContext, context] as? Operation<CTX, E>)?.invokeWithStatus(renderingContext, context)
+    fun <A : Attribute<*>, E : AttributedContext> render(renderingContext: CTX, context: E): OperationResult? =
+        (dispatch[renderingContext, context] as? Operation<CTX, E>)?.invokeWithResult(renderingContext, context)
 
 }
 

@@ -7,6 +7,7 @@ import io.github.voytech.tabulate.components.page.api.builder.dsl.page
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
 import io.github.voytech.tabulate.components.table.template.AdditionalSteps
+import io.github.voytech.tabulate.components.text.api.builder.dsl.text
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
@@ -103,6 +104,8 @@ class PdfBoxTabulateTests {
         document {
             page {
                 name = "first"
+                //header { text { value = "Some heading." } }
+                //footer { text { value = "Some footer." } }
                 table(tableStyle + headerStyle + typedTable<SampleProduct> {
                     attributes {
                         margins {

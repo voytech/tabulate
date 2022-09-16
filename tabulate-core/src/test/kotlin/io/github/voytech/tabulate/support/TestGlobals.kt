@@ -11,7 +11,7 @@ import io.github.voytech.tabulate.components.table.template.TableTemplateContext
 import io.github.voytech.tabulate.core.template.DocumentFormat
 import io.github.voytech.tabulate.core.template.ExportTemplateServices
 import io.github.voytech.tabulate.core.template.operation.ContextData
-import io.github.voytech.tabulate.core.template.operation.OperationStatus
+import io.github.voytech.tabulate.core.template.operation.OperationResult
 import io.github.voytech.tabulate.core.template.operation.Success
 import io.github.voytech.tabulate.core.template.operation.factories.ExportOperationsFactory
 
@@ -28,7 +28,7 @@ fun <T: Any> Table<T>.createTableContext(customAttributes: MutableMap<String, An
 fun <CTX: ContextData> ContextResult<CTX>.success() : CTX = (this as SuccessResult<CTX>).context
 
 fun <T: Any> successfulRowComplete() = object: CaptureRowCompletion<T> {
-    override fun onCellResolved(cell: CellContext): OperationStatus = Success
-    override fun onRowStartResolved(row: RowStart): OperationStatus = Success
-    override fun onRowEndResolved(row: RowEnd<T>): OperationStatus = Success
+    override fun onCellResolved(cell: CellContext): OperationResult = Success
+    override fun onRowStartResolved(row: RowStart): OperationResult = Success
+    override fun onRowEndResolved(row: RowEnd<T>): OperationResult = Success
 }

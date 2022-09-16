@@ -22,7 +22,7 @@ sealed interface Context {
  * @since 0.1.0
  */
 sealed class ContextData : Context {
-    var additionalAttributes: MutableMap<String, Any>? = null
+    var additionalAttributes: MutableMap<String, Any>? = mutableMapOf()
     override fun getCustomAttributes(): MutableMap<String, Any>? = additionalAttributes
 
     inline fun <reified C: Any> getCustomAttribute(key: String): C? = additionalAttributes?.get(key) as C?

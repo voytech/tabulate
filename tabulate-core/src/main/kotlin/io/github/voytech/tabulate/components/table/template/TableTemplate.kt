@@ -105,13 +105,13 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
         private val operations: Operations<R>,
     ) : CaptureRowCompletion<T> {
 
-        override fun onRowStartResolved(row: RowStart): OperationStatus? =
+        override fun onRowStartResolved(row: RowStart): OperationResult? =
             operations.render(renderingContext, row)
 
-        override fun onCellResolved(cell: CellContext): OperationStatus? =
+        override fun onCellResolved(cell: CellContext): OperationResult? =
             operations.render(renderingContext, cell)
 
-        override fun onRowEndResolved(row: RowEnd<T>): OperationStatus? =
+        override fun onRowEndResolved(row: RowEnd<T>): OperationResult? =
             operations.render(renderingContext, row)
 
     }
@@ -131,9 +131,9 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
         columnAttributes: Map<ColumnDef<T>, ColumnContextAttributes>,
         operations: Operations<RenderingContext>,
         templateContext: TableTemplateContext<T>,
-    ): OperationStatus? = with(templateContext) {
+    ): OperationResult? = with(templateContext) {
         val iterator = with(templateContext.indices) { model.columns.crop().iterator() }
-        var status: OperationStatus? = Success
+        var status: OperationResult? = Success
         var column: ColumnDef<T>? = null
         while (iterator.hasNext() && status == Success) {
             column = iterator.next()

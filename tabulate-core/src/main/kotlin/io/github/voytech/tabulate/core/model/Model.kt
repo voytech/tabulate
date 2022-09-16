@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.core.model
 
 import io.github.voytech.tabulate.core.template.ExportTemplate
+import io.github.voytech.tabulate.core.template.LayoutContext
 import io.github.voytech.tabulate.core.template.TemplateContext
 import java.util.*
 
@@ -28,8 +29,8 @@ abstract class AbstractModel<E : ExportTemplate<E, M, C>, M : AbstractModel<E, M
 
     protected abstract fun getExportTemplate(): ExportTemplate<E, M, C>
 
-    fun export(parentContext: TemplateContext<*, *>) {
-        template.export(parentContext, this as M)
+    fun export(parentContext: TemplateContext<*, *>, layoutContext: LayoutContext? = null) {
+        template.export(parentContext, this as M, layoutContext)
     }
 
     fun getSize(parentContext: TemplateContext<*, *>): Size? =

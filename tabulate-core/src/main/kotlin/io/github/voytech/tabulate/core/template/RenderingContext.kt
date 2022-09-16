@@ -15,7 +15,7 @@ import io.github.voytech.tabulate.core.template.operation.AttributedContext
 interface RenderingContext
 
 
-interface RenderingContextAttributes {
+interface HavingViewportSize {
     fun getWidth(): Width
     fun getHeight(): Height
 }

@@ -21,6 +21,14 @@ class PageBuilderState : CompositeModelBuilderState<Page> {
     @set:JvmSynthetic
     internal var name: String = "untitled"
 
+    @get:JvmSynthetic
+    @set:JvmSynthetic
+    internal var header: ModelBuilderState<*>? = null
+
+    @get:JvmSynthetic
+    @set:JvmSynthetic
+    internal var footer: ModelBuilderState<*>? = null
+
     @JvmSynthetic
     override fun <E : BuiltModel<E>> bind(node: ModelBuilderState<E>) {
         nodes.add(node)
@@ -30,6 +38,8 @@ class PageBuilderState : CompositeModelBuilderState<Page> {
     override fun build(): Page = Page(
         name = name,
         nodes = nodes.map { it.build() },
+        header = header?.build(),
+        footer = footer?.build()
     )
 
 }

@@ -27,6 +27,8 @@ sealed class TreeNode<M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : T
 
     abstract fun getRoot(): RootNode<*,*,*>
 
+    abstract fun getParent(): TreeNode<*,*,*>?
+
     internal fun traverse(action: (TreeNode<*,*,*>) -> Unit) {
         action(this).also {
             children.forEach { child -> child.traverse(action) }
@@ -47,14 +49,8 @@ class BranchNode<M: AbstractModel<E,M,C>,E : ExportTemplate<E, M,C>, C : Templat
     internal val root: RootNode<*, *, *>
 ) : TreeNode<M,E,C>(template, context) {
 
-    fun getWrappingLayout(): Layout<*, *, *> = parent.layout ?: run {
-        when (parent) {
-            is BranchNode -> parent.getWrappingLayout()
-            is RootNode -> error("No wrapping layout")
-        }
-    }
-
     override fun getRoot(): RootNode<*, *,*> = root
+    override fun getParent(): TreeNode<*, *, *> = parent
 }
 
 class RootNode<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M, C>, C : TemplateContext<C,M>>(
@@ -72,6 +68,7 @@ class RootNode<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M, C>, C : Templa
     internal fun TemplateContext<*, *>.nodeOrNull(): TreeNode<*, *, *>? = nodes[model]
 
     override fun getRoot(): RootNode<*, *, *> = this
+    override fun getParent(): TreeNode<*, *, *>? = null
 }
 
 fun TreeNode<*,*,*>.setActive() = with(getRoot()) {
@@ -84,7 +81,6 @@ fun TreeNode<*,*,*>.endActive() = with(getRoot()) {
         else -> this
     }
 }
-
 
 fun <E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>, M : Model<M, C>> inScope(
     template: E, context: C, block: TreeNode<*, *, *>.() -> Unit,

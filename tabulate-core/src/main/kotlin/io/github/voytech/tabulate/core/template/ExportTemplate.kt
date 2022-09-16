@@ -34,23 +34,27 @@ class ExportTemplateServices(
 
     private fun ensureRootLayout() {
         if (root.layout == null) {
-            root.setLayout(maxHeight = maxHeight(uom), maxWidth = maxWidth(uom))
+            root.setLayout(maxRightBottom = viewPortMaxRightBottom())
         }
     }
 
     fun TemplateContext<*, *>.createLayoutScope(
         queries: AbstractLayoutQueries = DefaultLayoutQueries(),
-        childLeftTopCorner: Position? = null,
+        childLeftTopCorner: Position? = layoutContext?.leftTop,
+        maxRightBottom: Position? = layoutContext?.maxRightBottom,
         orientation: Orientation = Orientation.HORIZONTAL,
         block: Layout<*, *, *>.() -> Unit,
     ): Unit = when (val current = node()) {
         is BranchNode -> {
             ensureRootLayout()
-            current.createLayoutScope(queries, childLeftTopCorner, orientation, block)
+            current.createLayoutScope(queries, childLeftTopCorner, maxRightBottom, orientation, block)
         }
 
         is RootNode -> current.setLayout(
-            queries, uom, maxHeight(uom), maxWidth(uom), orientation, childLeftTopCorner.orStart(uom)
+            queries, uom,
+            childLeftTopCorner.orStart(uom),
+            viewPortMaxRightBottom(),
+            orientation
         ).let(block)
     }
 
@@ -61,13 +65,15 @@ class ExportTemplateServices(
 
     fun getActiveLayoutBoundaries(): BoundingRectangle = getActiveLayout().boundingRectangle
 
-    private fun maxHeight(uom: UnitsOfMeasure): Height = if (renderingContext is RenderingContextAttributes) {
-        renderingContext.getHeight()
-    } else Height.max(uom)
-
-    private fun maxWidth(uom: UnitsOfMeasure): Width = if (renderingContext is RenderingContextAttributes) {
-        renderingContext.getWidth()
-    } else Width.max(uom)
+    private fun viewPortMaxRightBottom(): Position =
+        if (renderingContext is HavingViewportSize) {
+            Position(
+                X(renderingContext.getWidth().orMax(uom).value, uom),
+                Y(renderingContext.getHeight().orMax(uom).value, uom)
+            )
+        } else {
+            Position(X.max(uom), Y.max(uom)) //TODO instead make it nullable - when null - renderer does not clip
+        }
 
     private fun <E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>, M : AbstractModel<E, M, C>> createNode(
         template: E, context: C,
@@ -134,11 +140,12 @@ enum class TemplateStatus {
 }
 
 data class LayoutContext(
-    val boundingRectangle: BoundingRectangle? = null,
+    val leftTop: Position? = null,
+    val maxRightBottom: Position? = null,
     val orientation: Orientation = Orientation.HORIZONTAL,
 )
 
-open class TemplateContext<C : TemplateContext<C, M>, M : AbstractModel<*,M, C>>(
+open class TemplateContext<C : TemplateContext<C, M>, M : AbstractModel<*, M, C>>(
     val model: M,
     val stateAttributes: MutableMap<String, Any>,
     val services: ExportTemplateServices,
@@ -228,11 +235,12 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
 
     protected fun C.createLayoutScope(
         queries: AbstractLayoutQueries = DefaultLayoutQueries(),
-        childLeftTopCorner: Position? = null,
         orientation: Orientation = Orientation.HORIZONTAL,
+        childLeftTopCorner: Position? = null,
+        maxRightBottom: Position? = null,
         block: Layout<*, *, *>.() -> Unit,
     ) = with(services) {
-        createLayoutScope(queries, childLeftTopCorner, orientation, block)
+        createLayoutScope(queries, childLeftTopCorner, maxRightBottom, orientation, block)
     }
 
     protected fun C.render(context: AttributedContext) = with(services) {

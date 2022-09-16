@@ -113,9 +113,9 @@ internal class QualifiedRows<T : Any>(private val indexedTableRows: IndexedTable
 }
 
 interface CaptureRowCompletion<T> {
-    fun onCellResolved(cell: CellContext): OperationStatus?
-    fun onRowStartResolved(row: RowStart): OperationStatus?
-    fun onRowEndResolved(row: RowEnd<T>): OperationStatus?
+    fun onCellResolved(cell: CellContext): OperationResult?
+    fun onRowStartResolved(row: RowStart): OperationResult?
+    fun onRowEndResolved(row: RowEnd<T>): OperationResult?
 }
 
 /**
@@ -140,11 +140,11 @@ internal abstract class AbstractRowContextResolver<T : Any>(
     private val rows = QualifiedRows(indexedTableRows)
 
     @Suppress("NOTHING_TO_INLINE")
-    protected inline fun RowStart.render(): OperationStatus? =
+    protected inline fun RowStart.render(): OperationResult? =
         listener?.onRowStartResolved(this)
 
     @Suppress("NOTHING_TO_INLINE")
-    protected inline fun RowEnd<T>.render(): OperationStatus? =
+    protected inline fun RowEnd<T>.render(): OperationResult? =
         listener?.onRowEndResolved(this)
 
     @Suppress("NOTHING_TO_INLINE")
@@ -167,7 +167,7 @@ internal abstract class AbstractRowContextResolver<T : Any>(
                 createRowStart(rowIndex = tableRowIndex.value, customAttributes = customAttributes).let { rowStart ->
                     when (val status = rowStart.render()) {
                         Success -> SuccessResult(createRowEnd(rowStart, mapEachCell(provideCell)).also { it.render() })
-                        else -> OverflowResult(status as OverflowStatus)
+                        else -> OverflowResult(status as io.github.voytech.tabulate.core.template.operation.OverflowResult)
                     }
                 }
             }

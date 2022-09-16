@@ -20,7 +20,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font
 import java.awt.Color as AwtColor
 import java.io.OutputStream
 import io.github.voytech.tabulate.core.model.color.Color
-import io.github.voytech.tabulate.core.template.RenderingContextAttributes
+import io.github.voytech.tabulate.core.template.HavingViewportSize
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 
 class PdfBoxOutputBindingsFactory : OutputBindingsProvider<PdfBoxRenderingContext> {
@@ -44,7 +44,7 @@ class PdfBoxOutputStreamOutputBinding : OutputStreamOutputBinding<PdfBoxRenderin
     }
 }
 
-class PdfBoxRenderingContext(val document: PDDocument = PDDocument()) : RenderingContext, RenderingContextAttributes {
+class PdfBoxRenderingContext(val document: PDDocument = PDDocument()) : RenderingContext, HavingViewportSize {
 
     private lateinit var pageContentStream: PDPageContentStream
     private lateinit var currentPage: PDPage

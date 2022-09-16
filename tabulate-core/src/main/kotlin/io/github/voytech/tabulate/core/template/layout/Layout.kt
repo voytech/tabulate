@@ -55,87 +55,31 @@ abstract class AbstractLayoutQueries : LayoutQueries {
 abstract class TabularLayoutQueries(protected open val rowIndex: Int = 0, protected open val columnIndex: Int = 0) :
     AbstractLayoutQueries(), TabularQueries
 
-fun <M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> RootNode<M,E,C>.setLayout(
-    queries: AbstractLayoutQueries = DefaultLayoutQueries(),
-    uom: UnitsOfMeasure = UnitsOfMeasure.PT,
-    maxHeight: Height = Height.max(uom),
-    maxWidth: Width = Width.max(uom),
-    orientation: Orientation = Orientation.HORIZONTAL,
-    leftTopCorner: Position = Position(X(0.0f, uom), Y(0.0f, uom)),
-): RootLayout<M,E,C> =
-    RootLayout(
-        uom = uom,
-        orientation = orientation,
-        leftTopCorner = resolveMargins(leftTopCorner),
-        query = queries,
-        node = this,
-        maxWidth,
-        maxHeight
-    ).also { layout = it }
-
-fun <M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> BranchNode<M,E,C>.setLayout(
-    queries: AbstractLayoutQueries,
-    childLeftTopCorner: Position? = null,
-    orientation: Orientation? = null,
-): InnerLayout<M,E,C> = getWrappingLayout().let { wrapping ->
-    InnerLayout(
-        wrapping.uom,
-        orientation ?: Orientation.HORIZONTAL,
-        resolveMargins(childLeftTopCorner ?: wrapping.nextLayoutDefaultLeftTopCorner ?: wrapping.leftTopCorner),
-        queries, this
-    ).also { layout = it }
-}
-
-fun <M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> BranchNode<M,E,C>.createLayoutScope(
-    queries: AbstractLayoutQueries,
-    childLeftTopCorner: Position? = null,
-    orientation: Orientation? = null,
-    block: InnerLayout<M,E,C>.() -> Unit,
-) = setLayout(queries, childLeftTopCorner, orientation).apply(block).finish()
-
-private fun TreeNode<*,*,*>.resolveMargins(sourcePosition: Position): Position {
-    val model = (context.model as? AttributedModelOrPart<*>)
-    return model?.attributes?.get(MarginsAttribute::class.java)?.let {
-        Position(it.left + sourcePosition.x, it.top + sourcePosition.y)
-    } ?: sourcePosition
-}
-
 sealed class Layout<M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>>(
     open val node: TreeNode<M,E,C>,
     val uom: UnitsOfMeasure,
     protected val orientation: Orientation,
-    val leftTopCorner: Position,
+    val leftTop: Position,
+    val maxRightBottom: Position? = null,
     val query: AbstractLayoutQueries
 ) {
 
-    internal var rightBottomCorner: Position = leftTopCorner
+    internal var rightBottom: Position = leftTop
 
-    internal var nextLayoutDefaultLeftTopCorner: Position? = null
+    internal var nextLayoutLeftTop: Position? = null
 
-    var boundingRectangle: BoundingRectangle = BoundingRectangle(leftTopCorner)
+    val boundingRectangle: BoundingRectangle
+        get() = BoundingRectangle(leftTop, rightBottom)
 
-    private fun root(): RootLayout<*, *, *> = when (node) {
-        is RootNode -> node.layout as RootLayout<*, *, *>
-        is BranchNode -> (node as BranchNode<M, E, C>).root.layout as RootLayout<*, *, *>
-    }
+    private fun LayoutElementBoundingBox.isXOverflow(): Boolean = maxRightBottom?.let {
+        ((absoluteX?.value ?: 0F) + (width.orZero().value)) > it.x.value
+    } ?: if (this@Layout is InnerLayout) node.getWrappingLayout().run { isXOverflow() } else false
 
-    private fun getMaxWidth(): Width = when (this) {
-        is RootLayout -> maxWidth.orZero()
-        is InnerLayout -> root().maxWidth.orZero()
-    }
+    private fun LayoutElementBoundingBox.isYOverflow(): Boolean = maxRightBottom?.let {
+        ((absoluteY?.value ?: 0F) + (height.orZero().value)) > it.y.value
+    } ?:  if (this@Layout is InnerLayout) node.getWrappingLayout().run { isYOverflow() } else false
 
-    private fun getMaxHeight(): Height = when (this) {
-        is RootLayout -> maxHeight.orZero()
-        is InnerLayout -> root().maxHeight.orZero()
-    }
-
-    private fun LayoutElementBoundingBox.isXOverflow(): Boolean =
-        ((absoluteX?.value ?: 0F) + (width.orZero().value)) > getMaxWidth().value
-
-    private fun LayoutElementBoundingBox.isYOverflow(): Boolean =
-        ((absoluteY?.value ?: 0F) + (height.orZero().value)) > getMaxHeight().value
-
-    fun LayoutElementBoundingBox?.checkRootOverflow(): Overflow? = if (this == null) null else {
+    fun LayoutElementBoundingBox?.checkOverflow(): Overflow? = if (this == null) null else {
         if (isXOverflow()) {
             Overflow.X
         } else if (isYOverflow()) {
@@ -147,17 +91,16 @@ sealed class Layout<M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : Tem
 
     internal fun extend(position: Position): Unit = with(node.template) {
         extendParent(position)
-        rightBottomCorner = orMax(rightBottomCorner, position)
-        boundingRectangle = boundingRectangle.copy(rightBottom = rightBottomCorner)
+        rightBottom = orMax(rightBottom, position)
     }
 
-    internal fun extend(width: Width) = extend(Position(rightBottomCorner.x + width, rightBottomCorner.y))
+    internal fun extend(width: Width) = extend(Position(rightBottom.x + width, rightBottom.y))
 
-    private fun extend(x: X) = extend(Position(x, rightBottomCorner.y))
+    private fun extend(x: X) = extend(Position(x, rightBottom.y))
 
-    internal fun extend(height: Height) = extend(Position(rightBottomCorner.x, rightBottomCorner.y + height))
+    internal fun extend(height: Height) = extend(Position(rightBottom.x, rightBottom.y + height))
 
-    private fun extend(y: Y) = extend(Position(rightBottomCorner.x, y))
+    private fun extend(y: Y) = extend(Position(rightBottom.x, y))
 
     //
     // context receivers
@@ -176,12 +119,11 @@ sealed class Layout<M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : Tem
 class RootLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M,C>, C : TemplateContext<C,M>>(
     uom: UnitsOfMeasure,
     orientation: Orientation,
-    leftTopCorner: Position,
+    leftTop: Position,
+    maxRightBottom: Position?,
     query: AbstractLayoutQueries = DefaultLayoutQueries(),
     node: TreeNode<M,E,C>,
-    internal val maxWidth: Width? = null,
-    internal val maxHeight: Height? = null,
-) : Layout<M,E,C>(node, uom, orientation, leftTopCorner, query) {
+) : Layout<M,E,C>(node, uom, orientation, leftTop, maxRightBottom, query) {
 
     init {
         query.layout = this
@@ -194,9 +136,10 @@ class InnerLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M,C>, C : Temp
     uom: UnitsOfMeasure,
     orientation: Orientation,
     leftTopCorner: Position,
+    maxRightBottom: Position?,
     query: AbstractLayoutQueries = DefaultLayoutQueries(),
     override val node: BranchNode<M,E,C>,
-) : Layout<M,E,C>(node, uom, orientation, leftTopCorner, query) {
+) : Layout<M,E,C>(node, uom, orientation, leftTopCorner,maxRightBottom,query) {
 
     init {
         query.layout = this
@@ -208,13 +151,63 @@ class InnerLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M,C>, C : Temp
 
     internal fun finish() {
         val wrappingLayout = node.getWrappingLayout()
-        wrappingLayout.nextLayoutDefaultLeftTopCorner = if (orientation == Orientation.HORIZONTAL) {
-            Position(wrappingLayout.rightBottomCorner.x + EPSILON, wrappingLayout.leftTopCorner.y)
+        wrappingLayout.nextLayoutLeftTop = if (orientation == Orientation.HORIZONTAL) {
+            Position(wrappingLayout.rightBottom.x + EPSILON, wrappingLayout.leftTop.y)
         } else {
-            Position(wrappingLayout.leftTopCorner.x, wrappingLayout.rightBottomCorner.y + EPSILON)
+            Position(wrappingLayout.leftTop.x, wrappingLayout.rightBottom.y + EPSILON)
         }
     }
 
+}
+
+fun TreeNode<*,*,*>.getWrappingLayout(): Layout<*, *, *> = getParent()?.let { parent ->
+    parent.layout ?: parent.getWrappingLayout()
+} ?: error("No wrapping layout")
+
+fun <M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> RootNode<M,E,C>.setLayout(
+    queries: AbstractLayoutQueries = DefaultLayoutQueries(),
+    uom: UnitsOfMeasure = UnitsOfMeasure.PT,
+    leftTopCorner: Position = Position(X(0.0f, uom), Y(0.0f, uom)),
+    maxRightBottom: Position? = null,
+    orientation: Orientation = Orientation.HORIZONTAL
+): RootLayout<M,E,C> =
+    RootLayout(
+        uom = uom,
+        orientation = orientation,
+        leftTop = resolveMargins(leftTopCorner),
+        maxRightBottom,
+        query = queries,
+        node = this
+    ).also { layout = it }
+
+fun <M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> BranchNode<M,E,C>.setLayout(
+    queries: AbstractLayoutQueries,
+    childLeftTopCorner: Position? = null,
+    maxRightBottom: Position? = null,
+    orientation: Orientation? = null,
+): InnerLayout<M,E,C> = getWrappingLayout().let { wrapping ->
+    InnerLayout(
+        wrapping.uom,
+        orientation ?: Orientation.HORIZONTAL,
+        resolveMargins(childLeftTopCorner ?: wrapping.nextLayoutLeftTop ?: wrapping.leftTop),
+        maxRightBottom,
+        queries, this
+    ).also { layout = it }
+}
+
+fun <M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> BranchNode<M,E,C>.createLayoutScope(
+    queries: AbstractLayoutQueries,
+    childLeftTopCorner: Position? = null,
+    maxRightBottom: Position? = null,
+    orientation: Orientation? = null,
+    block: InnerLayout<M,E,C>.() -> Unit,
+) = setLayout(queries, childLeftTopCorner, maxRightBottom, orientation).apply(block).finish()
+
+private fun TreeNode<*,*,*>.resolveMargins(sourcePosition: Position): Position {
+    val model = (context.model as? AttributedModelOrPart<*>)
+    return model?.attributes?.get(MarginsAttribute::class.java)?.let {
+        Position(it.left + sourcePosition.x, it.top + sourcePosition.y)
+    } ?: sourcePosition
 }
 
 

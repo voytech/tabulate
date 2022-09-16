@@ -12,8 +12,8 @@ class MarginsTemplate : ExportTemplate<MarginsTemplate, Margins, MarginsTemplate
         Position(
             services.getActiveLayoutBoundaries().rightBottom.x + model.size.width,
             services.getActiveLayoutBoundaries().leftTop.y + model.size.height
-        ).let {
-            createLayoutScope(DefaultLayoutQueries(), it, model.childOrientation) {
+        ).let { leftTop ->
+            createLayoutScope(DefaultLayoutQueries(), model.childOrientation, leftTop) {
                 model.child?.export(templateContext)
             }
         }

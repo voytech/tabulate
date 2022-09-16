@@ -163,9 +163,15 @@ data class Y(override val value: Float, override val unit: UnitsOfMeasure) : Mea
 }
 
 data class Position(val x: X, val y: Y) {
+
     operator fun plus(other: Position): Position = copy(
         x = X(x.value + other.x.switchUnitOfMeasure(x.unit).value, x.unit),
         y = Y(y.value + other.y.switchUnitOfMeasure(y.unit).value, y.unit)
+    )
+
+    operator fun plus(other: Size): Position = copy(
+        x = X(x.value + other.width.switchUnitOfMeasure(x.unit).value, x.unit),
+        y = Y(y.value + other.height.switchUnitOfMeasure(y.unit).value, y.unit)
     )
 
     companion object {
