@@ -36,9 +36,10 @@ class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
 
     private fun Page.exportFooter(context: PageTemplateContext, layout: Layout<*,*,*>) {
         footer?.let { model ->
-            val footerY = model.getSize(context)?.height?.let { layout.rightBottom.y - it }
+            val footerSize = model.getSize(context)
+            val footerTop = footerSize?.height?.let { layout.maxRightBottom?.y?.minus(it) }
             model.export(context, LayoutContext(
-                leftTop = Position(layout.leftTop.x,footerY ?: layout.rightBottom.y))
+                leftTop = Position(layout.leftTop.x,footerTop ?: layout.rightBottom.y))
             )
         }
     }

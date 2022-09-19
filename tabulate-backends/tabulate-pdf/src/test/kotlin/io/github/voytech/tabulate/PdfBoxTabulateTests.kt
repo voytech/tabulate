@@ -104,7 +104,7 @@ class PdfBoxTabulateTests {
         document {
             page {
                 name = "first"
-                //header { text { value = "Some heading." } }
+                header { text { value = "Some heading." } }
                 //footer { text { value = "Some footer." } }
                 table(tableStyle + headerStyle + typedTable<SampleProduct> {
                     attributes {

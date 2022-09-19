@@ -59,7 +59,7 @@ class ExportTemplateServices(
     }
 
     private fun getActiveLayout(): Layout<*, *, *> = root.activeNode.layout ?: when (root.activeNode) {
-        is BranchNode -> (root.activeNode as BranchNode).getWrappingLayout()
+        is BranchNode -> (root.activeNode as BranchNode).getWrappingLayoutOrThrow()
         else -> error("No active layout present!")
     }
 
