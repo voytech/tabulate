@@ -4,9 +4,11 @@ import io.github.voytech.tabulate.components.page.api.builder.dsl.FooterBuilderA
 import io.github.voytech.tabulate.components.page.api.builder.dsl.HeaderBuilderApi
 import io.github.voytech.tabulate.components.text.api.builder.TextBuilderState
 import io.github.voytech.tabulate.components.text.model.Text
+import io.github.voytech.tabulate.components.text.operation.TextRenderable
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.ModelBuilderApi
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
+import io.github.voytech.tabulate.core.model.attributes.HeightAttribute
 
 
 /**
@@ -44,3 +46,7 @@ class TextAttributesBuilderApi internal constructor(private val builderState: Te
 fun HeaderBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
 
 fun FooterBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
+
+fun TextAttributesBuilderApi.height(block: HeightAttribute.Builder.() -> Unit) {
+    attribute(HeightAttribute.Builder(TextRenderable::class.java).apply(block))
+}

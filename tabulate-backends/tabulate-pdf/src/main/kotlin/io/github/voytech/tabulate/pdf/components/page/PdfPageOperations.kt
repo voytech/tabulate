@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.pdf.components.sheet
+package io.github.voytech.tabulate.pdf.components.page
 
 import io.github.voytech.tabulate.components.page.model.Page
 import io.github.voytech.tabulate.components.commons.operation.RenderPageOperation
@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.core.template.spi.DocumentFormat
 import io.github.voytech.tabulate.core.template.spi.ExportOperationsProvider
 import io.github.voytech.tabulate.pdf.PdfBoxRenderingContext
 
-class PdfSheetOperations: ExportOperationsProvider<PdfBoxRenderingContext, Page> {
+class PdfPageOperations: ExportOperationsProvider<PdfBoxRenderingContext, Page> {
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {
         operation(RenderPageOperation { renderingContext, _ ->
             renderingContext.addPage()

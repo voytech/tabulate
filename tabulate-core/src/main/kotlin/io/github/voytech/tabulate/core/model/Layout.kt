@@ -84,6 +84,8 @@ fun Height?.orMax(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = this ?: Height.max(
 
 data class Size(val width: Width, val height: Height)
 
+data class SomeSize(val width: Width? = null, val height: Height? = null)
+
 data class X(override val value: Float, override val unit: UnitsOfMeasure) : Measure(value, unit) {
     fun switchUnitOfMeasure(targetUnit: UnitsOfMeasure): X = if (targetUnit != unit) {
         X(unit.switchUnitOfMeasure(value, targetUnit), targetUnit)
@@ -100,6 +102,11 @@ data class X(override val value: Float, override val unit: UnitsOfMeasure) : Mea
     )
 
     operator fun minus(other: X): X = copy(
+        value = value - other.switchUnitOfMeasure(unit).value,
+        unit = unit
+    )
+
+    operator fun minus(other: Width): X = copy(
         value = value - other.switchUnitOfMeasure(unit).value,
         unit = unit
     )

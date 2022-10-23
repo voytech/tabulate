@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.core.template
 
-import io.github.voytech.tabulate.components.commons.operation.newPage
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.template.exception.OutputBindingResolvingException
 import io.github.voytech.tabulate.core.template.layout.*
@@ -10,6 +9,8 @@ import io.github.voytech.tabulate.core.template.operation.Operations
 import io.github.voytech.tabulate.core.template.operation.factories.ExportOperationsFactory
 import io.github.voytech.tabulate.core.template.result.OutputBinding
 import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
+
+typealias ResumeNext = () -> Unit
 
 class ExportTemplateServices(
     format: DocumentFormat,
@@ -32,6 +33,15 @@ class ExportTemplateServices(
     private fun TemplateContext<*, *>.node(): TreeNode<*, *, *> =
         root.nodes[model] ?: error("Could not find node by context")
 
+    fun TemplateContext<*, *>.bubblePartialStatus() {
+        node().getParent()?.let {
+            if (status.isPartlyExported()) {
+                it.context.status = status
+                it.context.bubblePartialStatus()
+            }
+        }
+    }
+
     private fun ensureRootLayout() {
         if (root.layout == null) {
             root.setLayout(maxRightBottom = viewPortMaxRightBottom())
@@ -40,19 +50,24 @@ class ExportTemplateServices(
 
     fun TemplateContext<*, *>.createLayoutScope(
         queries: AbstractLayoutQueries = DefaultLayoutQueries(),
-        childLeftTopCorner: Position? = layoutContext?.leftTop,
-        maxRightBottom: Position? = layoutContext?.maxRightBottom,
+        childLeftTopCorner: Position?,
+        maxRightBottom: Position?,
         orientation: Orientation = Orientation.HORIZONTAL,
         block: Layout<*, *, *>.() -> Unit,
     ): Unit = when (val current = node()) {
         is BranchNode -> {
             ensureRootLayout()
-            current.createLayoutScope(queries, childLeftTopCorner, maxRightBottom, orientation, block)
+            current.createLayoutScope(
+                queries,
+                childLeftTopCorner?:layoutContext?.leftTop,
+                maxRightBottom?:layoutContext?.maxRightBottom,
+                orientation, block
+            )
         }
 
         is RootNode -> current.setLayout(
             queries, uom,
-            childLeftTopCorner.orStart(uom),
+            childLeftTopCorner?:layoutContext?.leftTop.orStart(uom),
             viewPortMaxRightBottom(),
             orientation
         ).let(block)
@@ -95,21 +110,28 @@ class ExportTemplateServices(
         traverse { it.dropLayout() }.also { ensureRootLayout() }
     }
 
-    fun <M : UnconstrainedModel<M>> resumeAllSuspendedNodes(onModel: M) = with(root) {
+    fun resumeAllSuspendedNodes() = with(root) {
         while (suspendedNodes.isNotEmpty()) {
             resetLayouts()
-            onModel.render(newPage(onModel.id))
             resumeAll()
         }
     }
 
     private fun resumeAll() = with(root) {
-        preserveActive {
-            traverse {
-                activeNode = it
-                it.resume()
-            }
-        }
+        preserveActive { resume(root) }
+    }
+
+    private fun resumeChildren(node: TreeNode<*, *, *>) {
+        node.forChildren { resume(it) }
+    }
+
+    private fun resume(node: TreeNode<*, *, *>) = with(root) {
+        activeNode = node
+        resumeTemplate(node)
+    }
+
+    private fun <M : AbstractModel<E, M, C>, E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>> resumeTemplate(node: TreeNode<M, E, C>) {
+        node.template.onResume(node.context) { resumeChildren(node) }
     }
 
     fun TemplateContext<*, *>.setSuspended() = with(root) {
@@ -162,7 +184,7 @@ open class TemplateContext<C : TemplateContext<C, M>, M : AbstractModel<*, M, C>
 
     fun ExportTemplateServices.getOperations(): Operations<RenderingContext> = getOperations(model)
 
-    fun suspendX() {
+    fun suspendX() = with(services) {
         status = when (status) {
             TemplateStatus.ACTIVE,
             TemplateStatus.PARTIAL_X,
@@ -173,10 +195,10 @@ open class TemplateContext<C : TemplateContext<C, M>, M : AbstractModel<*, M, C>
             TemplateStatus.PARTIAL_YX -> TemplateStatus.PARTIAL_YX
             TemplateStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
         }
-        status = TemplateStatus.PARTIAL_X
+        bubblePartialStatus()
     }
 
-    fun suspendY() {
+    fun suspendY() = with(services) {
         status = when (status) {
             TemplateStatus.ACTIVE,
             TemplateStatus.PARTIAL_Y,
@@ -187,6 +209,7 @@ open class TemplateContext<C : TemplateContext<C, M>, M : AbstractModel<*, M, C>
             TemplateStatus.PARTIAL_YX -> TemplateStatus.PARTIAL_YX
             TemplateStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
         }
+        bubblePartialStatus()
     }
 
     fun finishOrSuspend() = with(services) {
@@ -219,19 +242,23 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
             }
         }
 
-    internal fun onResume(context: C) {
-        context.status = TemplateStatus.ACTIVE
-        doResume(context)
-        context.finishOrSuspend()
+    internal fun onResume(context: C, resumeNext: ResumeNext) {
+        if (context.isPartlyExported()) {
+            context.status = TemplateStatus.ACTIVE
+            doResume(context, resumeNext)
+            context.finishOrSuspend()
+        }
     }
 
-    open fun computeSize(parentContext: TemplateContext<*, *>, model: M): Size? = null
+    open fun computeSize(parentContext: TemplateContext<*, *>, model: M): SomeSize? = null
 
     protected abstract fun createTemplateContext(parentContext: TemplateContext<*, *>, model: M): C
 
     protected abstract fun doExport(templateContext: C)
 
-    protected open fun doResume(templateContext: C) {}
+    protected open fun doResume(templateContext: C, resumeNext: ResumeNext) {
+        resumeNext()
+    }
 
     protected fun C.createLayoutScope(
         queries: AbstractLayoutQueries = DefaultLayoutQueries(),
@@ -250,7 +277,7 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
     protected fun C.resetLayouts() = services.resetLayouts()
 
     fun C.resumeAllSuspendedNodes() = with(services) {
-        resumeAllSuspendedNodes(model)
+        resumeAllSuspendedNodes()
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -274,7 +301,7 @@ class StandaloneExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E,
         resolveOutputBinding(output).run {
             setOutput(renderingContext, output)
             model.template.export(TemplateContext(model, mutableMapOf(), this@with), model)
-            resumeAllSuspendedNodes(model)
+            resumeAllSuspendedNodes()
             flush()
         }
     }
@@ -285,7 +312,7 @@ class StandaloneExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E,
                 val templateContext = TemplateContext(model, dataSource.asStateAttributes(), this@with)
                 setOutput(renderingContext, output)
                 model.template.export(templateContext, model)
-                resumeAllSuspendedNodes(model)
+                resumeAllSuspendedNodes()
                 flush()
             }
         }

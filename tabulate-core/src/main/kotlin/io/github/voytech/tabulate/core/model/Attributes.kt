@@ -108,6 +108,8 @@ class Attributes(
     @Suppress("UNCHECKED_CAST")
     operator fun <E : Attribute<E>> get(clazz: Class<E>): E? = attributeMap[clazz as Class<Attribute<*>>] as E?
 
+    inline fun <reified E : Attribute<E>> get(): E? = get(E::class.java)
+
     fun <O : AttributedModelOrPart<O>> cast(clazz: Class<O>): Attributes {
         return constraints.disabledOnModels[clazz]?.map { it.attribute }?.let { incompatibleClasses ->
             Attributes(attributeSet.filter { it.javaClass !in incompatibleClasses }.toSet())

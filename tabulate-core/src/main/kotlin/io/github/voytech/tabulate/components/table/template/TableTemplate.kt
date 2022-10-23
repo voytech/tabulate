@@ -180,7 +180,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
         keepStatus()
     }
 
-    override fun doResume(templateContext: TableTemplateContext<T>) = with(templateContext) {
+    override fun doResume(templateContext: TableTemplateContext<T>, resumeNext: ResumeNext) = with(templateContext) {
         beforeResume()
         createLayoutScope(
             TableLayoutQueries(templateContext.indices.getIndexValueOnY(), templateContext.indices.getIndexOnX())

@@ -3,10 +3,12 @@ package io.github.voytech.tabulate
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.margins.api.builder.dsl.margins
+import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
 import io.github.voytech.tabulate.components.table.template.AdditionalSteps
+import io.github.voytech.tabulate.components.text.api.builder.dsl.height
 import io.github.voytech.tabulate.components.text.api.builder.dsl.text
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
@@ -101,116 +103,131 @@ class PdfBoxTabulateTests {
             }
         }
 
-        document {
-            page {
-                name = "first"
-                header { text { value = "Some heading." } }
-                //footer { text { value = "Some footer." } }
-                table(tableStyle + headerStyle + typedTable<SampleProduct> {
+        val firstPage: (PageBuilderApi.()->Unit) = {
+            header {
+                text {
+                    value = "Some heading."
                     attributes {
-                        margins {
-                            top { 10.pt() }
-                            left { 10.pt() }
-                        }
+                        height { 10.pt() }
                     }
-                    columns {
-                        column(SampleProduct::code) {
-                            attributes {
-                                text {
-                                    fontColor = Colors.RED
-                                    weight = DefaultWeightStyle.BOLD
-                                    fontFamily =
-                                        DefaultFonts.COURIER_NEW // TODO make accessing model enumerations easier by providing them into scope of the builder.
-                                }
-                                alignment {
-                                    horizontal = DefaultHorizontalAlignment.LEFT
-                                    vertical = DefaultVerticalAlignment.MIDDLE
-                                }
-                                borders { leftBorderWidth = 2f.pt() }
-                            }
-                        }
-                        column(SampleProduct::name)
-                        column(SampleProduct::description)
-                        column(SampleProduct::price) {
-                            attributes {
-                                alignment {
-                                    horizontal = DefaultHorizontalAlignment.RIGHT
-                                    vertical = DefaultVerticalAlignment.MIDDLE
-                                }
-                                borders { rightBorderWidth = 10f.pt() }
-                            }
-                        }
-                    }
-                    rows {
-                        header("Id", "Name", "Description", "Price")
-                        matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
-                        matching { odd() } assign { attributes { background { color = Colors.YELLOW } } }
-                        newRow(25) {
-                            attributes {
-                                borders { all { style = DefaultBorderStyle.NONE } } //TODO BUG FIX. borders on cell level dont apply here.
-                                rowBorders {
-                                    all {
-                                        color = Colors.RED
-                                        style = DefaultBorderStyle.DOUBLE
-                                    }
-                                }
-                            }
-                            cell(SampleProduct::code) { value = "Mid row" }
-                            cell(SampleProduct::name) { value = "Mid row" }
-                            cell(SampleProduct::description) { value = "Mid row" }
-                            cell(SampleProduct::price) {  }
-                        }
-                        footer {
-                            cell(SampleProduct::code) { value = "." }
-                            cell(SampleProduct::name) { value = "." }
-                            cell(SampleProduct::description) { value = "." }
-                            cell(SampleProduct::price) { value = "." }
-                        }
-                        newRow(AdditionalSteps.TRAILING_ROWS) {
-                            attributes { background { color = Colors.RED } ; borders { all { style = DefaultBorderStyle.NONE } } }
-                            cell(SampleProduct::code) { value = "" }
-                            cell(SampleProduct::name) { value = "" }
-                            cell(SampleProduct::description) { value = "" }
-                            cell(SampleProduct::price) {  }
-                        }
-                    }
-                    dataSource(SampleProduct.create(154))
-                })
-                table(headerStyle + typedTable<SampleProduct> {
-                    attributes {
-                        margins {
-                            left { 15.pt() }
-                            top { 25.pt() }
-                        }
-                        alignment {
-                            horizontal = DefaultHorizontalAlignment.LEFT
-                            vertical = DefaultVerticalAlignment.MIDDLE
-                        }
-                        borders {
-                            topBorderWidth = 0.5f.pt()
-                            topBorderColor = Colors.LIGHT_GRAY
-                            topBorderStyle = DefaultBorderStyle.SOLID
-                        }
-                        text {
-                            fontColor = Colors.BLACK
-                            fontFamily = DefaultFonts.COURIER_NEW
-                            fontSize = 7
-                        }
-                    }
-                    columns {
-                        column(SampleProduct::price)
-                        column(SampleProduct::name)
-                        column(SampleProduct::description) { attributes { width { 100.pt() } } }
-                        column(SampleProduct::code) { attributes { width { 50.pt() } } }
-                    }
-                    rows {
-                        header("Id", "Name", "Description", "price")
-                        matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
-                    }
-                    dataSource(SampleProduct.create(125))
-                })
+                }
             }
-            /*page {
+            footer {
+                text {
+                    value = "Some footer."
+                    attributes {
+                        height { 30.pt() }
+                    }
+                }
+            }
+            table(tableStyle + headerStyle + typedTable<SampleProduct> {
+                attributes {
+                    margins {
+                        top { 10.pt() }
+                        left { 10.pt() }
+                    }
+                }
+                columns {
+                    column(SampleProduct::code) {
+                        attributes {
+                            text {
+                                fontColor = Colors.RED
+                                weight = DefaultWeightStyle.BOLD
+                                fontFamily =
+                                    DefaultFonts.COURIER_NEW // TODO make accessing model enumerations easier by providing them into scope of the builder.
+                            }
+                            alignment {
+                                horizontal = DefaultHorizontalAlignment.LEFT
+                                vertical = DefaultVerticalAlignment.MIDDLE
+                            }
+                            borders { leftBorderWidth = 2f.pt() }
+                        }
+                    }
+                    column(SampleProduct::name)
+                    column(SampleProduct::description)
+                    column(SampleProduct::price) {
+                        attributes {
+                            alignment {
+                                horizontal = DefaultHorizontalAlignment.RIGHT
+                                vertical = DefaultVerticalAlignment.MIDDLE
+                            }
+                            borders { rightBorderWidth = 10f.pt() }
+                        }
+                    }
+                }
+                rows {
+                    header("Id", "Name", "Description", "Price")
+                    matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
+                    matching { odd() } assign { attributes { background { color = Colors.YELLOW } } }
+                    newRow(25) {
+                        attributes {
+                            borders { all { style = DefaultBorderStyle.NONE } } //TODO BUG FIX. borders on cell level dont apply here.
+                            rowBorders {
+                                all {
+                                    color = Colors.RED
+                                    style = DefaultBorderStyle.DOUBLE
+                                }
+                            }
+                        }
+                        cell(SampleProduct::code) { value = "Mid row" }
+                        cell(SampleProduct::name) { value = "Mid row" }
+                        cell(SampleProduct::description) { value = "Mid row" }
+                        cell(SampleProduct::price) {  }
+                    }
+                    footer {
+                        cell(SampleProduct::code) { value = "." }
+                        cell(SampleProduct::name) { value = "." }
+                        cell(SampleProduct::description) { value = "." }
+                        cell(SampleProduct::price) { value = "." }
+                    }
+                    newRow(AdditionalSteps.TRAILING_ROWS) {
+                        attributes { background { color = Colors.RED } ; borders { all { style = DefaultBorderStyle.NONE } } }
+                        cell(SampleProduct::code) { value = "" }
+                        cell(SampleProduct::name) { value = "" }
+                        cell(SampleProduct::description) { value = "" }
+                        cell(SampleProduct::price) {  }
+                    }
+                }
+                dataSource(SampleProduct.create(154))
+            })
+            table(headerStyle + typedTable<SampleProduct> {
+                attributes {
+                    margins {
+                        left { 15.pt() }
+                        top { 25.pt() }
+                    }
+                    alignment {
+                        horizontal = DefaultHorizontalAlignment.LEFT
+                        vertical = DefaultVerticalAlignment.MIDDLE
+                    }
+                    borders {
+                        topBorderWidth = 0.5f.pt()
+                        topBorderColor = Colors.LIGHT_GRAY
+                        topBorderStyle = DefaultBorderStyle.SOLID
+                    }
+                    text {
+                        fontColor = Colors.BLACK
+                        fontFamily = DefaultFonts.COURIER_NEW
+                        fontSize = 7
+                    }
+                }
+                columns {
+                    column(SampleProduct::price)
+                    column(SampleProduct::name)
+                    column(SampleProduct::description) { attributes { width { 100.pt() } } }
+                    column(SampleProduct::code) { attributes { width { 50.pt() } } }
+                }
+                rows {
+                    header("Id", "Name", "Description", "price")
+                    matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
+                }
+                dataSource(SampleProduct.create(125))
+            })
+        }
+
+        document {
+            page(firstPage)
+            page {
                 name = "second"
                 table {
                     attributes {
@@ -466,7 +483,7 @@ class PdfBoxTabulateTests {
                         }
                     }
                 }
-            }*/
+            }
         }.export("test.pdf")
     }
 }

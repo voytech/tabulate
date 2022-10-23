@@ -58,7 +58,7 @@ abstract class TabularLayoutQueries(protected open val rowIndex: Int = 0, protec
 sealed class Layout<M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>>(
     open val node: TreeNode<M,E,C>,
     val uom: UnitsOfMeasure,
-    protected val orientation: Orientation,
+    internal val orientation: Orientation,
     val leftTop: Position,
     val maxRightBottom: Position? = null,
     val query: AbstractLayoutQueries
@@ -70,6 +70,9 @@ sealed class Layout<M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : Tem
 
     val boundingRectangle: BoundingRectangle
         get() = BoundingRectangle(leftTop, rightBottom)
+
+    val maxBoundingRectangle: BoundingRectangle?
+        get() = maxRightBottom?.let { BoundingRectangle(leftTop, it) }
 
     private fun LayoutElementBoundingBox.isXOverflow(): Boolean = maxRightBottom?.let {
         ((absoluteX?.value ?: 0F) + (width.orZero().value)) > it.x.value
@@ -150,11 +153,12 @@ class InnerLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M,C>, C : Temp
     }
 
     internal fun finish() {
-        val wrappingLayout = node.getWrappingLayoutOrThrow()
-        wrappingLayout.nextLayoutLeftTop = if (orientation == Orientation.HORIZONTAL) {
-            Position(wrappingLayout.rightBottom.x + EPSILON, wrappingLayout.leftTop.y)
-        } else {
-            Position(wrappingLayout.leftTop.x, wrappingLayout.rightBottom.y + EPSILON)
+        node.getWrappingLayoutOrThrow().let { parentLayout ->
+            parentLayout.nextLayoutLeftTop = if (parentLayout.orientation == Orientation.HORIZONTAL) {
+                Position(parentLayout.rightBottom.x + EPSILON, parentLayout.leftTop.y)
+            } else {
+                Position(parentLayout.leftTop.x, parentLayout.rightBottom.y + EPSILON)
+            }
         }
     }
 
