@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.pdf.components.table
+package io.github.voytech.tabulate.pdf
 
 import io.github.voytech.tabulate.components.table.operation.CellAttributeRenderOperation
 import io.github.voytech.tabulate.components.table.operation.CellContext
@@ -20,13 +20,15 @@ import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.color.Color
 import io.github.voytech.tabulate.core.model.color.darken
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
+import io.github.voytech.tabulate.core.template.operation.AttributeOperation
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
-import io.github.voytech.tabulate.pdf.*
+import io.github.voytech.tabulate.core.template.operation.HasText
+import io.github.voytech.tabulate.core.template.operation.HasValue
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType1Font
 
-private fun TextStylesAttribute.default(): PDFont =
+fun TextStylesAttribute.default(): PDFont =
     if (weight == DefaultWeightStyle.BOLD) {
         PDType1Font.HELVETICA_BOLD_OBLIQUE.takeIf { italic == true } ?: PDType1Font.HELVETICA_BOLD
     } else if (italic == true) {
@@ -35,7 +37,7 @@ private fun TextStylesAttribute.default(): PDFont =
         PDType1Font.HELVETICA
     }
 
-private fun TextStylesAttribute.pdFont(): PDFont =
+fun TextStylesAttribute.pdFont(): PDFont =
     if (fontFamily != null) {
         when (fontFamily!!.getFontId()) {
             "TIMES_NEW_ROMAN", "TIMES_ROMAN" -> {
@@ -63,10 +65,10 @@ private fun TextStylesAttribute.pdFont(): PDFont =
         }
     } else default()
 
-class CellAlignmentAttributeRenderOperation :
-    CellAttributeRenderOperation<PdfBoxRenderingContext, AlignmentAttribute>() {
+class AlignmentAttributeRenderOperation<CTX> :
+    AttributeOperation<PdfBoxRenderingContext, AlignmentAttribute, CTX> where CTX : AttributedContext, CTX: HasValue<*> {
 
-    private fun fontAndSize(context: CellContext): Pair<PDFont, Int> =
+    private fun fontAndSize(context: CTX): Pair<PDFont, Int> =
         context.getModelAttribute<TextStylesAttribute>().let {
             val font = it?.pdFont() ?: PDType1Font.HELVETICA
             val size: Int = it?.fontSize ?: 16
@@ -74,7 +76,7 @@ class CellAlignmentAttributeRenderOperation :
         }
 
     private fun PdfBoxRenderingContext.applyTextAlignment(
-        context: CellContext,
+        context: CTX,
         vertical: VerticalAlignment? = DefaultVerticalAlignment.MIDDLE,
         horizontal: HorizontalAlignment? = DefaultHorizontalAlignment.CENTER,
     ) {
@@ -96,7 +98,7 @@ class CellAlignmentAttributeRenderOperation :
             }
         }
         if (horizontal != null) {
-            val textWidth = params.measureTextWidth(context)
+            val textWidth = params.measureTextWidth(context.value.toString())
             when (horizontal) {
                 DefaultHorizontalAlignment.LEFT -> {}
                 DefaultHorizontalAlignment.CENTER -> {
@@ -114,7 +116,7 @@ class CellAlignmentAttributeRenderOperation :
 
     override fun invoke(
         renderingContext: PdfBoxRenderingContext,
-        context: CellContext,
+        context: CTX,
         attribute: AlignmentAttribute,
     ) = with(renderingContext) {
         beginText()
@@ -123,12 +125,12 @@ class CellAlignmentAttributeRenderOperation :
 
 }
 
-class CellTextStylesAttributeRenderOperation :
-    CellAttributeRenderOperation<PdfBoxRenderingContext, TextStylesAttribute>() {
+class TextStylesAttributeRenderOperation<CTX: AttributedContext> :
+    AttributeOperation<PdfBoxRenderingContext,TextStylesAttribute,CTX> {
 
     override operator fun invoke(
         renderingContext: PdfBoxRenderingContext,
-        context: CellContext,
+        context: CTX,
         attribute: TextStylesAttribute,
     ) = with(renderingContext) {
         getCurrentContentStream().let { content ->
@@ -145,11 +147,11 @@ class CellTextStylesAttributeRenderOperation :
     }
 }
 
-class CellBackgroundAttributeRenderOperation :
-    CellAttributeRenderOperation<PdfBoxRenderingContext, BackgroundAttribute>() {
+class BackgroundAttributeRenderOperation<CTX: AttributedContext> :
+    AttributeOperation<PdfBoxRenderingContext, BackgroundAttribute, CTX> {
     override fun invoke(
         renderingContext: PdfBoxRenderingContext,
-        context: CellContext,
+        context: CTX,
         attribute: BackgroundAttribute,
     ): Unit = with(renderingContext) {
         val bbox = boxLayout(context, context.getModelAttribute<BordersAttribute>())
@@ -202,32 +204,18 @@ fun <A : AttributedContext> PdfBoxRenderingContext.drawBorders(context: A, borde
     )
 }
 
-class RowBordersAttributeRenderOperation<T : Any> :
-    RowAttributeRenderOperation<PdfBoxRenderingContext, BordersAttribute, RowEnd<T>>() {
+class BordersAttributeRenderOperation<CTX : AttributedContext> :
+    AttributeOperation<PdfBoxRenderingContext, BordersAttribute, CTX> {
     override fun invoke(
         renderingContext: PdfBoxRenderingContext,
-        context: RowEnd<T>,
+        context: CTX,
         attribute: BordersAttribute,
     ): Unit = with(renderingContext) {
         drawBorders(context, attribute)
     }
-}
-
-class CellBordersAttributeRenderOperation :
-    CellAttributeRenderOperation<PdfBoxRenderingContext, BordersAttribute>() {
-
-    override fun invoke(
-        renderingContext: PdfBoxRenderingContext,
-        context: CellContext,
-        attribute: BordersAttribute,
-    ): Unit = with(renderingContext) {
-        drawBorders(context, attribute)
-    }
-
 }
 
 typealias LineDashPattern = Pair<FloatArray, Float>
-
 
 private fun BorderStyle.resolveLineDashPattern(): LineDashPattern =
     when (getBorderStyleId()) {
@@ -399,7 +387,7 @@ private fun <A : AttributedContext> PdfBoxRenderingContext.bottomBorder(
     if (borders.bottomBorderStyle.hasBorder()) {
         boxLayout(context, borders).let {
             if (borders.bottomBorderStyle.hasComplexBorder()) {
-                 bottomCompositeBorder(it, context, borders, primaryColor, secondaryColor)
+                bottomCompositeBorder(it, context, borders, primaryColor, secondaryColor)
             } else {
                 setBorderStyle(borders.bottomBorderStyle, borders.bottomBorderColor, borders.bottomBorderWidth)
                 val x1 = it.outerX

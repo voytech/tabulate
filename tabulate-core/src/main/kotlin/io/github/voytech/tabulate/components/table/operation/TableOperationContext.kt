@@ -9,6 +9,7 @@ import io.github.voytech.tabulate.core.model.asYPosition
 import io.github.voytech.tabulate.core.template.layout.*
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import io.github.voytech.tabulate.core.template.operation.Context
+import io.github.voytech.tabulate.core.template.operation.HasValue
 
 /**
  * Basic interface providing custom attributes that are shared throughout entire exporting process.
@@ -264,12 +265,12 @@ internal fun <T : Any> ColumnDef<T>.asColumnEnd(
  * @since 0.1.0
  */
 class CellContext(
-    val value: CellValue,
+    val cellValue: CellValue,
     attributes: Attributes?,
     val rowIndex: Int,
     val columnIndex: Int,
-    val rawValue: Any = value.value,
-) : AttributedContext(attributes), RowCellLayoutElement {
+    override val value: Any = cellValue.value,
+) : AttributedContext(attributes), RowCellLayoutElement, HasValue<Any> {
     override fun getRow(): Int = rowIndex
     override fun getColumn(): Int = columnIndex
 }
@@ -281,7 +282,7 @@ internal fun <T : Any> SyntheticRow<T>.createCellContext(
 ): CellContext? =
     cellDefinitions.resolveCellValue(column, row)?.let { value ->
         CellContext(
-            value = value,
+            cellValue = value,
             attributes = cellContextAttributes[column],
             rowIndex = table.getRowIndex(row.rowIndexValue()),
             columnIndex = table.getColumnIndex(column.index)

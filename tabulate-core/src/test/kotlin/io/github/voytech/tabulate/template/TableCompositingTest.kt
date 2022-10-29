@@ -55,7 +55,7 @@ class TableCompositingTest {
         // Row 0
         history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("I gave a value.", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("I gave a value.", (context as CellContext).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
@@ -100,7 +100,7 @@ class TableCompositingTest {
         // Row 0
         history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("code1", (context as CellContext).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
@@ -147,12 +147,12 @@ class TableCompositingTest {
         // Row 0
         history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("code1", (context as CellContext).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
         // Row 0, cell 1
-        history.next().run { assertEquals("name1", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("name1", (context as CellContext).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
@@ -191,7 +191,7 @@ class TableCompositingTest {
         // Row 0
         history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("code1", (context as CellContext).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }

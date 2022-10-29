@@ -843,17 +843,17 @@ public abstract class io/github/voytech/tabulate/components/table/operation/Cell
 	public fun <init> ()V
 }
 
-public final class io/github/voytech/tabulate/components/table/operation/CellContext : io/github/voytech/tabulate/core/template/operation/AttributedContext, io/github/voytech/tabulate/components/table/operation/RowCellLayoutElement {
+public final class io/github/voytech/tabulate/components/table/operation/CellContext : io/github/voytech/tabulate/core/template/operation/AttributedContext, io/github/voytech/tabulate/components/table/operation/RowCellLayoutElement, io/github/voytech/tabulate/core/template/operation/HasValue {
 	public fun <init> (Lio/github/voytech/tabulate/components/table/operation/CellValue;Lio/github/voytech/tabulate/core/model/Attributes;IILjava/lang/Object;)V
 	public synthetic fun <init> (Lio/github/voytech/tabulate/components/table/operation/CellValue;Lio/github/voytech/tabulate/core/model/Attributes;IILjava/lang/Object;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun applyBoundaries (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;)V
 	public fun computeBoundaries (Lio/github/voytech/tabulate/core/template/layout/Layout;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
+	public final fun getCellValue ()Lio/github/voytech/tabulate/components/table/operation/CellValue;
 	public fun getColumn ()I
 	public final fun getColumnIndex ()I
-	public final fun getRawValue ()Ljava/lang/Object;
 	public fun getRow ()I
 	public final fun getRowIndex ()I
-	public final fun getValue ()Lio/github/voytech/tabulate/components/table/operation/CellValue;
+	public fun getValue ()Ljava/lang/Object;
 }
 
 public final class io/github/voytech/tabulate/components/table/operation/CellValue {
@@ -1226,6 +1226,17 @@ public final class io/github/voytech/tabulate/components/text/api/builder/TextBu
 	public fun modelClass ()Ljava/lang/Class;
 }
 
+public final class io/github/voytech/tabulate/components/text/api/builder/dsl/AttributeBuilderApiKt {
+	public static final fun alignment (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun background (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun borders (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun columnWidth (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun height (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun margins (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun rowHeight (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun text (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+}
+
 public final class io/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi {
 	public final synthetic fun attribute (Lio/github/voytech/tabulate/core/api/builder/AttributeBuilder;)V
 }
@@ -1238,7 +1249,6 @@ public final class io/github/voytech/tabulate/components/text/api/builder/dsl/Te
 }
 
 public final class io/github/voytech/tabulate/components/text/api/builder/dsl/TextBuilderApiKt {
-	public static final fun height (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
 	public static final fun text (Lio/github/voytech/tabulate/components/page/api/builder/dsl/FooterBuilderApi;Lkotlin/jvm/functions/Function1;)V
 	public static final fun text (Lio/github/voytech/tabulate/components/page/api/builder/dsl/HeaderBuilderApi;Lkotlin/jvm/functions/Function1;)V
 }
@@ -1253,12 +1263,14 @@ public final class io/github/voytech/tabulate/components/text/model/Text : io/gi
 public abstract interface class io/github/voytech/tabulate/components/text/operation/RenderTextOperation : io/github/voytech/tabulate/core/template/operation/Operation {
 }
 
-public final class io/github/voytech/tabulate/components/text/operation/TextRenderable : io/github/voytech/tabulate/core/template/operation/AttributedContext, io/github/voytech/tabulate/core/template/layout/LayoutElement {
+public final class io/github/voytech/tabulate/components/text/operation/TextRenderable : io/github/voytech/tabulate/core/template/operation/AttributedContext, io/github/voytech/tabulate/core/template/layout/LayoutElement, io/github/voytech/tabulate/core/template/operation/HasText {
 	public static final field Companion Lio/github/voytech/tabulate/components/text/operation/TextRenderable$Companion;
 	public synthetic fun <init> (Ljava/lang/String;Lio/github/voytech/tabulate/core/model/Attributes;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun computeBoundaries (Lio/github/voytech/tabulate/core/template/layout/Layout;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public fun getAttributes ()Lio/github/voytech/tabulate/core/model/Attributes;
 	public final fun getText ()Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/lang/String;
 }
 
 public final class io/github/voytech/tabulate/components/text/operation/TextRenderable$Companion {
@@ -2635,6 +2647,13 @@ public final class io/github/voytech/tabulate/core/template/operation/EnableLayo
 
 public abstract interface class io/github/voytech/tabulate/core/template/operation/Enhance {
 	public abstract fun invoke (Lio/github/voytech/tabulate/core/ReifiedInvocation;)Lio/github/voytech/tabulate/core/template/operation/Operation;
+}
+
+public abstract interface class io/github/voytech/tabulate/core/template/operation/HasText : io/github/voytech/tabulate/core/template/operation/HasValue {
+}
+
+public abstract interface class io/github/voytech/tabulate/core/template/operation/HasValue {
+	public abstract fun getValue ()Ljava/lang/Object;
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/LayoutAwareOperation : io/github/voytech/tabulate/core/template/operation/Operation {

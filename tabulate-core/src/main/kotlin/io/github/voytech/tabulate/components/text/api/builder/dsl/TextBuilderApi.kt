@@ -46,7 +46,3 @@ class TextAttributesBuilderApi internal constructor(private val builderState: Te
 fun HeaderBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
 
 fun FooterBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
-
-fun TextAttributesBuilderApi.height(block: HeightAttribute.Builder.() -> Unit) {
-    attribute(HeightAttribute.Builder(TextRenderable::class.java).apply(block))
-}

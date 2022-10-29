@@ -45,20 +45,20 @@ class TableTemplateTest {
         history.next().run { assertEquals(3, (context as ColumnStart).columnIndex) }
         // Row 0
         history.next().run { assertEquals(0, (context as RowStart).getRow()) }
-        history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("name1", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("description1", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("manufacturer1", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("code1", (context as CellContext).value) }
+        history.next().run { assertEquals("name1", (context as CellContext).value) }
+        history.next().run { assertEquals("description1", (context as CellContext).value) }
+        history.next().run { assertEquals("manufacturer1", (context as CellContext).value) }
         history.next().run {
             assertEquals(0, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Row 1
         history.next().run { assertEquals(1, (context as RowStart).getRow()) }
-        history.next().run { assertEquals("code2", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("name2", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("description2", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("manufacturer2", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("code2", (context as CellContext).value) }
+        history.next().run { assertEquals("name2", (context as CellContext).value) }
+        history.next().run { assertEquals("description2", (context as CellContext).value) }
+        history.next().run { assertEquals("manufacturer2", (context as CellContext).value) }
         history.next().run {
             assertEquals(1, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
@@ -100,37 +100,37 @@ class TableTemplateTest {
 
         // Header
         history.next().run { assertEquals(0, (context as RowStart).getRow()) }
-        history.next().run { assertEquals("Code", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("Name", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("Description", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("Manufacturer", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("Code", (context as CellContext).value) }
+        history.next().run { assertEquals("Name", (context as CellContext).value) }
+        history.next().run { assertEquals("Description", (context as CellContext).value) }
+        history.next().run { assertEquals("Manufacturer", (context as CellContext).value) }
         history.next().run {
             assertEquals(0, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Row 0
         history.next().run { assertEquals(1, (context as RowStart).getRow()) }
-        history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("name1", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("description1", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("manufacturer1", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("code1", (context as CellContext).value) }
+        history.next().run { assertEquals("name1", (context as CellContext).value) }
+        history.next().run { assertEquals("description1", (context as CellContext).value) }
+        history.next().run { assertEquals("manufacturer1", (context as CellContext).value) }
         history.next().run {
             assertEquals(1, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Row 1
         history.next().run { assertEquals(2, (context as RowStart).getRow()) }
-        history.next().run { assertEquals("code2", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("name2", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("description2", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("manufacturer2", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("code2", (context as CellContext).value) }
+        history.next().run { assertEquals("name2", (context as CellContext).value) }
+        history.next().run { assertEquals("description2", (context as CellContext).value) }
+        history.next().run { assertEquals("manufacturer2", (context as CellContext).value) }
         history.next().run {
             assertEquals(2, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Footer row
         history.next().run { assertEquals(3, (context as RowStart).getRow()) }
-        history.next().run { assertEquals("First footer cell.", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("First footer cell.", (context as CellContext).value) }
         history.next().run {
             assertEquals(3, (context as RowEnd<*>).getRow())
             assertEquals(1, context.getCells().keys.size)
@@ -172,27 +172,27 @@ class TableTemplateTest {
         history.next().run { assertEquals(3, (context as ColumnStart).columnIndex) }
         // Row 0
         history.next().run { assertEquals(0, (context as RowStart).getRow()) }
-        history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("name1", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("description1", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("manufacturer1", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("code1", (context as CellContext).value) }
+        history.next().run { assertEquals("name1", (context as CellContext).value) }
+        history.next().run { assertEquals("description1", (context as CellContext).value) }
+        history.next().run { assertEquals("manufacturer1", (context as CellContext).value) }
         history.next().run {
             assertEquals(0, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Row 1
         history.next().run { assertEquals(1, (context as RowStart).getRow()) }
-        history.next().run { assertEquals("code2", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("name2", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("description2", (context as CellContext).rawValue) }
-        history.next().run { assertEquals("manufacturer2", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("code2", (context as CellContext).value) }
+        history.next().run { assertEquals("name2", (context as CellContext).value) }
+        history.next().run { assertEquals("description2", (context as CellContext).value) }
+        history.next().run { assertEquals("manufacturer2", (context as CellContext).value) }
         history.next().run {
             assertEquals(1, (context as RowEnd<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Footer row
         history.next().run { assertEquals(5, (context as RowStart).getRow()) }
-        history.next().run { assertEquals("Custom row cell", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("Custom row cell", (context as CellContext).value) }
         history.next().run {
             assertEquals(5, (context as RowEnd<*>).getRow())
             assertEquals(1, context.getCells().keys.size)
@@ -256,10 +256,10 @@ class TableTemplateTest {
         history.next().run { assertEquals(1, (context as ColumnStart).columnIndex) }
         // Row 0
         history.next().run { assertEquals(0, (context as RowStart).getRow()) }
-        history.next().run { assertEquals("Green cell", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("Green cell", (context as CellContext).value) }
         history.next().run { assertEquals(Colors.GREEN, (attribute as TextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
-        history.next().run { assertEquals("White cell", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("White cell", (context as CellContext).value) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as TextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
         history.next().run {
@@ -268,7 +268,7 @@ class TableTemplateTest {
         }
         // Row 1
         history.next().run { assertEquals(1, (context as RowStart).getRow()) }
-        history.next().run { assertEquals("White cell", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("White cell", (context as CellContext).value) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as TextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
         history.next().run {
@@ -277,10 +277,10 @@ class TableTemplateTest {
         }
         // Row 1
         history.next().run { assertEquals(2, (context as RowStart).getRow()) }
-        history.next().run { assertEquals("Red cell", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("Red cell", (context as CellContext).value) }
         history.next().run { assertEquals(Colors.RED, (attribute as TextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
-        history.next().run { assertEquals("Black cell", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("Black cell", (context as CellContext).value) }
         history.next().run { assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
         history.next().run {
@@ -355,7 +355,7 @@ class TableTemplateTest {
         history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         history.next().run { assertEquals(50, (attribute as HeightAttribute).value.value.toInt()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("Black, strikeout, bold, italic cell", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("Black, strikeout, bold, italic cell", (context as CellContext).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
             assertEquals(true, attribute.strikeout)
@@ -366,7 +366,7 @@ class TableTemplateTest {
         // Row 1, cell 0
         history.next().run { assertEquals(1, (context as RowStart).getRow()) }
         history.next().run { assertEquals(20, (attribute as HeightAttribute).value.value.toInt()) }
-        history.next().run { assertEquals("Black, strikeout, bold cell", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("Black, strikeout, bold cell", (context as CellContext).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
             assertEquals(true, attribute.strikeout)
@@ -377,14 +377,14 @@ class TableTemplateTest {
         // Row 2, cell 0
         history.next().run { assertEquals(2, (context as RowStart).getRow()) }
         history.next().run { assertEquals(20, (attribute as HeightAttribute).value.value.toInt()) }
-        history.next().run { assertEquals("Black, strikeout cell", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("Black, strikeout cell", (context as CellContext).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
             assertEquals(true, attribute.strikeout)
             assertEquals(DefaultWeightStyle.NORMAL, attribute.weight)
             assertEquals(false, attribute.italic)
         }
-        history.next().run { assertEquals("Black cell", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("Black cell", (context as CellContext).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
             assertEquals(false, attribute.strikeout)

@@ -8,17 +8,16 @@ import io.github.voytech.tabulate.core.template.spi.BuildAttributeOperations
 import io.github.voytech.tabulate.core.template.spi.BuildOperations
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat
 import io.github.voytech.tabulate.core.template.spi.OperationsBundleProvider
-import io.github.voytech.tabulate.pdf.PdfBoxRenderingContext
-
+import io.github.voytech.tabulate.pdf.*
 
 class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Table<Any>> {
 
     override fun provideAttributeOperations(): BuildAttributeOperations<PdfBoxRenderingContext> = {
-        operation(CellBackgroundAttributeRenderOperation(), -3)
-        operation(CellBordersAttributeRenderOperation(), -2)
-        operation(RowBordersAttributeRenderOperation<Table<Any>>(), -2)
-        operation(CellTextStylesAttributeRenderOperation(), -1)
-        operation(CellAlignmentAttributeRenderOperation(), -1)
+        operation(BackgroundAttributeRenderOperation<CellContext>(), -3)
+        operation(BordersAttributeRenderOperation<CellContext>(), -2)
+        operation(BordersAttributeRenderOperation<RowEnd<Table<*>>>(), -2)
+        operation(TextStylesAttributeRenderOperation<CellContext>(), -1)
+        operation(AlignmentAttributeRenderOperation<CellContext>(), -1)
     }
 
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {
@@ -32,9 +31,9 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
         operation(RenderRowCellOperation { renderingContext, context ->
             with(renderingContext) {
                 beginText()
-                val box = renderingContext.boxLayout(context, context.getModelAttribute<BordersAttribute>()) //TODO boxModel should be a part of boundingRectangle comming from core
+                val box = renderingContext.boxLayout(context, context.getModelAttribute<BordersAttribute>()) //TODO boxModel should be a part of boundingRectangle coming from core
                 setTextPosition(box.innerX + xTextOffset, box.innerY + yTextOffset)
-                showText(context.rawValue.toString())
+                showText(context.value.toString())
                 endText()
             }
         })

@@ -55,7 +55,7 @@ class RowResolverTest {
         assertNotNull(resolvedIndexedAttributedRow)
         assertEquals(index, resolvedIndexedAttributedRow!!.rowIndex.value)
         with(resolvedIndexedAttributedRow.result) {
-            assertEquals("CustomProductCode",success().rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("CustomProductCode",success().rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
     }
 
@@ -81,7 +81,7 @@ class RowResolverTest {
         assertNotNull(resolvedIndexedAttributedRow)
         assertEquals(0, resolvedIndexedAttributedRow!!.rowIndex.value)
         with(resolvedIndexedAttributedRow.result) {
-            assertEquals("code1",success().rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("code1",success().rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
     }
 
@@ -117,17 +117,17 @@ class RowResolverTest {
         assertNotNull(header)
         assertEquals(0, header!!.rowIndex.value)
         with(header.result) {
-            assertEquals("CODE",success().rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("CODE",success().rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
         assertNotNull(value)
         assertEquals(1, value!!.rowIndex.value)
         with(value.result) {
-            assertEquals("code1",success().rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("code1",success().rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
         assertNotNull(footer)
         assertEquals(2, footer!!.rowIndex.value)
         with(footer.result) {
-            assertEquals("footer",success().rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("footer",success().rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
     }
 

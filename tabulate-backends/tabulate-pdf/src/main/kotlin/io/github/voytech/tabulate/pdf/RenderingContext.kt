@@ -11,7 +11,6 @@ import io.github.voytech.tabulate.core.template.result.OutputBinding
 import io.github.voytech.tabulate.core.template.result.OutputStreamOutputBinding
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat
 import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
-import io.github.voytech.tabulate.pdf.components.table.hasBorder
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -217,7 +216,7 @@ fun Pair<PDFont, Int>.measureTextHeight(): Float =
 
 
 fun Pair<PDFont, Int>.measureTextWidth(context: CellContext): Float =
-    first.getStringWidth(context.rawValue.toString()) / 1000 * second
+    first.getStringWidth(context.value.toString()) / 1000 * second
 
 fun Pair<PDFont, Int>.measureTextWidth(string: String): Float =
     first.getStringWidth(string) / 1000 * second

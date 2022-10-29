@@ -2,16 +2,15 @@ package io.github.voytech.tabulate
 
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
-import io.github.voytech.tabulate.components.margins.api.builder.dsl.margins
 import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
 import io.github.voytech.tabulate.components.table.template.AdditionalSteps
-import io.github.voytech.tabulate.components.text.api.builder.dsl.height
-import io.github.voytech.tabulate.components.text.api.builder.dsl.text
+import io.github.voytech.tabulate.components.text.api.builder.dsl.*
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
+import io.github.voytech.tabulate.core.model.background.DefaultFillType
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.text.DefaultFonts
@@ -72,7 +71,7 @@ class PdfBoxTabulateTests {
                    } */
             }
         }
-        val headerStyle = table {
+        val tableHeaderStyle = table {
             rows {
                 header {
                     attributes {
@@ -103,12 +102,34 @@ class PdfBoxTabulateTests {
             }
         }
 
+        val pageHeadingStyle : TextAttributesBuilderApi.() -> Unit = {
+            height { 20.pt() }
+            text {
+                fontFamily = DefaultFonts.COURIER_NEW
+            }
+            alignment {
+                horizontal = DefaultHorizontalAlignment.CENTER
+                vertical = DefaultVerticalAlignment.MIDDLE
+            }
+            background {
+                color = Colors.LIGHT_GRAY
+                fill = DefaultFillType.SOLID
+            }
+            borders {
+                all {
+                    style = DefaultBorderStyle.DOUBLE
+                    width = 3.pt()
+                    color = Colors.BLACK
+                }
+            }
+        }
+
         val firstPage: (PageBuilderApi.()->Unit) = {
             header {
                 text {
                     value = "Some heading."
                     attributes {
-                        height { 10.pt() }
+                        pageHeadingStyle()
                     }
                 }
             }
@@ -116,11 +137,12 @@ class PdfBoxTabulateTests {
                 text {
                     value = "Some footer."
                     attributes {
-                        height { 30.pt() }
+                        pageHeadingStyle()
+                        height { 130.pt() }
                     }
                 }
             }
-            table(tableStyle + headerStyle + typedTable<SampleProduct> {
+            table(tableStyle + tableHeaderStyle + typedTable<SampleProduct> {
                 attributes {
                     margins {
                         top { 10.pt() }
@@ -133,8 +155,7 @@ class PdfBoxTabulateTests {
                             text {
                                 fontColor = Colors.RED
                                 weight = DefaultWeightStyle.BOLD
-                                fontFamily =
-                                    DefaultFonts.COURIER_NEW // TODO make accessing model enumerations easier by providing them into scope of the builder.
+                                fontFamily = DefaultFonts.COURIER_NEW // TODO make accessing model enumerations easier by providing them into scope of the builder.
                             }
                             alignment {
                                 horizontal = DefaultHorizontalAlignment.LEFT
@@ -169,8 +190,11 @@ class PdfBoxTabulateTests {
                                 }
                             }
                         }
-                        cell(SampleProduct::code) { value = "Mid row" }
-                        cell(SampleProduct::name) { value = "Mid row" }
+                        cell(SampleProduct::code) {
+                            colSpan = 2
+                            value = "Mid row"
+                        }
+                        //cell(SampleProduct::name) { value = "Mid row" }
                         cell(SampleProduct::description) { value = "Mid row" }
                         cell(SampleProduct::price) {  }
                     }
@@ -190,7 +214,7 @@ class PdfBoxTabulateTests {
                 }
                 dataSource(SampleProduct.create(154))
             })
-            table(headerStyle + typedTable<SampleProduct> {
+            table(tableHeaderStyle + typedTable<SampleProduct> {
                 attributes {
                     margins {
                         left { 15.pt() }

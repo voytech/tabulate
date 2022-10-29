@@ -11,10 +11,11 @@ import io.github.voytech.tabulate.core.template.layout.LayoutElement
 import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
 import io.github.voytech.tabulate.core.template.layout.elementBoundaries
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
+import io.github.voytech.tabulate.core.template.operation.HasText
 import io.github.voytech.tabulate.core.template.operation.Operation
 
 class TextRenderable private constructor(val text: String, override val attributes: Attributes?) : AttributedContext(),
-    LayoutElement {
+    LayoutElement, HasText {
     override fun Layout<*, *, *>.computeBoundaries(): LayoutElementBoundingBox = query.elementBoundaries(
         x = query.getX(0.asXPosition(), uom),
         y = query.getY(0.asYPosition(), uom),
@@ -27,6 +28,9 @@ class TextRenderable private constructor(val text: String, override val attribut
             TextRenderable(value, attributes.orEmpty().forContext<TextRenderable>())
         }
     }
+
+    override val value: String
+        get() = text
 }
 
 fun interface RenderTextOperation<CTX : RenderingContext> : Operation<CTX, TextRenderable>

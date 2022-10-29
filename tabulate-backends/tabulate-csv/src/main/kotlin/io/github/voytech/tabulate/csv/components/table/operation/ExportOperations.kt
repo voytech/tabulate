@@ -32,7 +32,7 @@ class CsvExportOperationsFactory : ExportOperationsProvider<CsvRenderingContext,
             val lastIndex = context.rowCellValues.size - 1
             with(renderingContext) {
                 context.rowCellValues.values.forEachIndexed { index, cell ->
-                    line.append(cell.rawValue.toString())
+                    line.append(cell.value.toString())
                     if (index < lastIndex) line.append(cell.getSeparatorCharacter())
                 }
                 bufferedWriter.write(line.toString())

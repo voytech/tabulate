@@ -80,8 +80,8 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
                         context.getSheetName(),
                         context.getAbsoluteRow(context.getRow()),
                         context.getAbsoluteColumn(context.getColumn()),
-                        context.value.rowSpan,
-                        context.value.colSpan
+                        context.cellValue.rowSpan,
+                        context.cellValue.colSpan
                     )
                 }
             }
@@ -111,7 +111,7 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
 
     override fun getModelClass(): Class<Table<Any>> = reify()
 
-    private fun CellContext.hasSpans(): Boolean = value.colSpan > 1 || value.rowSpan > 1
+    private fun CellContext.hasSpans(): Boolean = cellValue.colSpan > 1 || cellValue.rowSpan > 1
 
     private fun ApachePoiRenderingContext.provideCell(context: CellContext, block: (SXSSFCell.() -> Unit)) {
         provideCell(
@@ -126,9 +126,9 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
             context.getSheetName(),
             context.getAbsoluteRow(context.getRow()),
             context.getAbsoluteColumn(context.getColumn()),
-            context.value.rowSpan,
-            context.value.colSpan,
-            context.rawValue as ByteArray
+            context.cellValue.rowSpan,
+            context.cellValue.colSpan,
+            context.value as ByteArray
         )
     }
 
@@ -137,38 +137,38 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
             context.getSheetName(),
             context.getAbsoluteRow(context.getRow()),
             context.getAbsoluteColumn(context.getColumn()),
-            context.value.rowSpan,
-            context.value.colSpan,
-            context.rawValue as String
+            context.cellValue.rowSpan,
+            context.cellValue.colSpan,
+            context.value as String
         )
     }
 
     private fun ApachePoiRenderingContext.renderFormulaCell(context: CellContext) = provideCell(context) {
-        cellFormula = context.rawValue as? String
+        cellFormula = context.value as? String
     }
 
     private fun ApachePoiRenderingContext.renderErrorCell(context: CellContext) = provideCell(context) {
-        setCellErrorValue(context.rawValue as Byte)
+        setCellErrorValue(context.value as Byte)
     }
 
     private fun ApachePoiRenderingContext.renderStringCellValue(context: CellContext) = provideCell(context) {
-        setCellValue(context.rawValue.toString())
+        setCellValue(context.value.toString())
     }
 
     private fun ApachePoiRenderingContext.renderNumericCellValue(context: CellContext) = provideCell(context) {
-        setCellValue((context.rawValue as Number).toDouble())
+        setCellValue((context.value as Number).toDouble())
     }
 
     private fun ApachePoiRenderingContext.renderBooleanCellValue(context: CellContext) = provideCell(context) {
-        setCellValue(context.rawValue as Boolean)
+        setCellValue(context.value as Boolean)
     }
 
     private fun ApachePoiRenderingContext.renderDateCellValue(context: CellContext) = provideCell(context) {
-        setCellValue(toDate(context.rawValue))
+        setCellValue(toDate(context.value))
     }
 
     private fun ApachePoiRenderingContext.castAndRenderCellValue(context: CellContext) =
-        when (context.rawValue) {
+        when (context.value) {
             is String -> renderStringCellValue(context)
             is Boolean -> renderBooleanCellValue(context)
             is LocalDate,

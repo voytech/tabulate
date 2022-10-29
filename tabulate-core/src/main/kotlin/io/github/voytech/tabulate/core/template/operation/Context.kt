@@ -75,3 +75,10 @@ class AttributesByContexts<T : AttributedModelOrPart<T>>(
 fun <T : AttributedModelOrPart<T>> T.distributeAttributesForContexts(
     vararg clazz: Class<out AttributedContext>,
 ): AttributesByContexts<T> = AttributesByContexts(this, listOf(*clazz))
+
+
+interface HasValue<V: Any> {
+    val value: V
+}
+
+interface HasText: HasValue<String>

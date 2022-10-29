@@ -92,7 +92,7 @@ class RowIteratorTest {
         assertNotNull(resolvedIndexedAttributedRow)
         assertEquals(0, resolvedIndexedAttributedRow.rowIndex)
         with(resolvedIndexedAttributedRow) {
-            assertEquals("CustomProductCode", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("CustomProductCode", rowCellValues[ColumnKey.field(Product::code)]!!.value)
         }
     }
 
@@ -136,35 +136,35 @@ class RowIteratorTest {
         assertNotNull(fifthRow)
         with(firstRow) {
             assertEquals(0, rowIndex)
-            assertEquals("R0C0", rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals("R0C0", rowCellValues[ColumnKey("c0")]!!.cellValue.value)
             assertEquals(0, rowCellValues[ColumnKey("c0")]!!.columnIndex)
-            assertEquals("R0C2", rowCellValues[ColumnKey("c2")]!!.value.value)
+            assertEquals("R0C2", rowCellValues[ColumnKey("c2")]!!.cellValue.value)
             assertEquals(2, rowCellValues[ColumnKey("c2")]!!.columnIndex)
-            assertEquals("R0C4", rowCellValues[ColumnKey("c4")]!!.value.value)
+            assertEquals("R0C4", rowCellValues[ColumnKey("c4")]!!.cellValue.value)
             assertEquals(4, rowCellValues[ColumnKey("c4")]!!.columnIndex)
         }
         with(secondRow) {
             assertEquals(1, rowIndex)
-            assertEquals("R1C0", rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals("R1C0", rowCellValues[ColumnKey("c0")]!!.cellValue.value)
             assertEquals(0, rowCellValues[ColumnKey("c0")]!!.columnIndex)
-            assertEquals("R1C2", rowCellValues[ColumnKey("c2")]!!.value.value)
+            assertEquals("R1C2", rowCellValues[ColumnKey("c2")]!!.cellValue.value)
             assertEquals(2, rowCellValues[ColumnKey("c2")]!!.columnIndex)
-            assertEquals("R1C4", rowCellValues[ColumnKey("c4")]!!.value.value)
+            assertEquals("R1C4", rowCellValues[ColumnKey("c4")]!!.cellValue.value)
             assertEquals(4, rowCellValues[ColumnKey("c4")]!!.columnIndex)
         }
         with(thirdRow) {
             assertEquals(3, rowIndex)
-            assertEquals("R3C0", rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals("R3C0", rowCellValues[ColumnKey("c0")]!!.cellValue.value)
             assertEquals(0, rowCellValues[ColumnKey("c0")]!!.columnIndex)
         }
         with(fourthRow) {
             assertEquals(4, rowIndex)
-            assertEquals("R4C0", rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals("R4C0", rowCellValues[ColumnKey("c0")]!!.cellValue.value)
             assertEquals(0, rowCellValues[ColumnKey("c0")]!!.columnIndex)
         }
         with(fifthRow) {
             assertEquals(5, rowIndex)
-            assertEquals("R5C0", rowCellValues[ColumnKey("c0")]!!.value.value)
+            assertEquals("R5C0", rowCellValues[ColumnKey("c0")]!!.cellValue.value)
             assertEquals(0, rowCellValues[ColumnKey("c0")]!!.columnIndex)
         }
     }
@@ -197,7 +197,7 @@ class RowIteratorTest {
         assertNotNull(firstRow)
         with(firstRow) {
             assertEquals(0, rowIndex)
-            assertEquals("R0C0", rowCellValues[ColumnKey("column-0")]!!.value.value)
+            assertEquals("R0C0", rowCellValues[ColumnKey("column-0")]!!.cellValue.value)
             assertEquals(0, rowCellValues[ColumnKey("column-0")]!!.columnIndex)
             assertEquals(1, rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
             with(rowCellValues[ColumnKey("column-0")]!!.attributes!![BackgroundAttribute::class.java]) {
@@ -286,7 +286,7 @@ class RowIteratorTest {
         val first = wrapper.iterator.next().success()
         assertNotNull(first)
         with(first) {
-            assertEquals("R0C0", rowCellValues[ColumnKey("column-0")]!!.value.value)
+            assertEquals("R0C0", rowCellValues[ColumnKey("column-0")]!!.cellValue.value)
             assertEquals(1, rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
             with(rowCellValues[ColumnKey("column-0")]!!.attributes!![BackgroundAttribute::class.java]) {
                 assertTrue(this is BackgroundAttribute)
@@ -334,7 +334,7 @@ class RowIteratorTest {
         assertNotNull(third)
         assertNotNull(fourth)
         listOf(first, third, fourth).forEach {
-            assertEquals("?", it.rowCellValues[ColumnKey("column-0")]!!.value.value)
+            assertEquals("?", it.rowCellValues[ColumnKey("column-0")]!!.cellValue.value)
             assertEquals(1, it.rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
             with(it.rowCellValues[ColumnKey("column-0")]!!.attributes!![BackgroundAttribute::class.java]) {
                 assertTrue(this is BackgroundAttribute)
@@ -343,7 +343,7 @@ class RowIteratorTest {
             }
         }
         with(second) {
-            assertEquals("R0C0", rowCellValues[ColumnKey("column-0")]!!.value.value)
+            assertEquals("R0C0", rowCellValues[ColumnKey("column-0")]!!.cellValue.value)
             assertEquals(1, rowCellValues[ColumnKey("column-0")]!!.attributes!!.size)
             with(rowCellValues[ColumnKey("column-0")]!!.attributes!![BackgroundAttribute::class.java]) {
                 assertTrue(this is BackgroundAttribute)
@@ -421,23 +421,23 @@ class RowIteratorTest {
         assertNotNull(trailingRow)
         with(firstRow) {
             assertEquals(2, rowIndex)
-            assertEquals("R2C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("R2C0", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
         with(secondRow) {
             assertEquals(3, rowIndex)
-            assertEquals("R3C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("R3C0", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
         with(thirdRow) {
             assertEquals(4, rowIndex)
-            assertEquals("C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("C0", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
         with(fourthRow) {
             assertEquals(7, rowIndex)
-            assertEquals("R7C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("R7C0", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
         with(trailingRow) {
             assertEquals(8, rowIndex)
-            assertEquals("FOOTER_R0C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("FOOTER_R0C0", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
     }
 
@@ -457,11 +457,11 @@ class RowIteratorTest {
         assertNotNull(footerRow)
         with(firstRow) {
             assertEquals(2, rowIndex)
-            assertEquals("R2C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("R2C0", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
         with(footerRow) {
             assertEquals(3, rowIndex)
-            assertEquals("T0C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("T0C0", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
     }
 
@@ -490,23 +490,23 @@ class RowIteratorTest {
         assertNotNull(trailingRow3)
         with(firstRow) {
             assertEquals(2, rowIndex)
-            assertEquals("R2C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("R2C0", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
         with(secondRow) {
             assertEquals(3, rowIndex)
-            assertEquals("C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("C0", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
         with(trailingRow1) {
             assertEquals(6, rowIndex)
-            assertEquals("T2C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("T2C0", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
         with(trailingRow2) {
             assertEquals(7, rowIndex)
-            assertEquals("T3C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("T3C0", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
         with(trailingRow3) {
             assertEquals(9, rowIndex)
-            assertEquals("T5C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("T5C0", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
     }
 
@@ -531,17 +531,17 @@ class RowIteratorTest {
         assertNotNull(header)
         assertEquals(0, header.rowIndex)
         with(header) {
-            assertEquals("CODE", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("CODE", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
         assertNotNull(value)
         assertEquals(1, value.rowIndex)
         with(value) {
-            assertEquals("C0", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("C0", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
         assertNotNull(footer)
         assertEquals(2, footer.rowIndex)
         with(footer) {
-            assertEquals("footer", rowCellValues[ColumnKey.field(Product::code)]!!.value.value)
+            assertEquals("footer", rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
         }
     }
 
