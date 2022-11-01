@@ -22,12 +22,12 @@ sealed interface Context {
  * @since 0.1.0
  */
 sealed class ContextData : Context {
-    var additionalAttributes: MutableMap<String, Any>? = mutableMapOf()
+    var additionalAttributes: MutableMap<String, Any> = mutableMapOf()
     override fun getCustomAttributes(): MutableMap<String, Any>? = additionalAttributes
 
-    inline fun <reified C: Any> getCustomAttribute(key: String): C? = additionalAttributes?.get(key) as C?
+    inline fun <reified C: Any> getCustomAttribute(key: String): C? = additionalAttributes[key] as C?
 
-    inline fun <reified C: Any> removeCustomAttribute(key: String): C? = additionalAttributes?.remove(key) as C?
+    inline fun <reified C: Any> removeCustomAttribute(key: String): C? = additionalAttributes.remove(key) as C?
 }
 
 /**
@@ -49,17 +49,17 @@ abstract class AttributedContext(@JvmSynthetic override val attributes: Attribut
         getModelAttribute(T::class.java)
 
     fun <A: Any> setContextAttribute(key: String, value: A) {
-        additionalAttributes?.put("$id[$key]", value)
+        additionalAttributes["$id[$key]"] = value
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <A: Any> getContextAttribute(key: String): A? = if (additionalAttributes?.containsKey("$id[$key]") == true) {
-        additionalAttributes?.get("$id[$key]") as? A
+    fun <A: Any> getContextAttribute(key: String): A? = if (additionalAttributes.containsKey("$id[$key]")) {
+        additionalAttributes["$id[$key]"] as? A
     } else null
 
     @Suppress("UNCHECKED_CAST")
-    fun <A: Any> removeContextAttribute(key: String): A? = if (additionalAttributes?.containsKey("$id[$key]") == true) {
-        additionalAttributes?.remove("$id[$key]") as? A
+    fun <A: Any> removeContextAttribute(key: String): A? = if (additionalAttributes.containsKey("$id[$key]")) {
+        additionalAttributes.remove("$id[$key]") as? A
     } else null
 
 }

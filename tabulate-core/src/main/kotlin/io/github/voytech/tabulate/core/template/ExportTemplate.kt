@@ -167,6 +167,34 @@ data class LayoutContext(
     val orientation: Orientation = Orientation.HORIZONTAL,
 )
 
+@JvmInline
+value class StateAttributes(val stateAttributes: MutableMap<String, Any>) {
+
+    inline fun <reified E: ExecutionContext> addExecutionContext(executionContext: E) {
+        stateAttributes["executionContext-${E::class.java.canonicalName}"] = executionContext
+    }
+
+    inline fun <reified E: ExecutionContext> getExecutionContext(): E? = getExecutionContext(E::class.java)
+
+    @Suppress("UNCHECKED_CAST")
+    fun <E: ExecutionContext> getExecutionContext(_class: Class<E>): E? =
+        stateAttributes["executionContext-${_class.canonicalName}"] as E?
+
+    inline fun <reified E: ExecutionContext> ensureExecutionContext(provider: () -> E): E =
+        getExecutionContext() ?: run { addExecutionContext(provider()); getExecutionContext()!! }
+
+    inline fun <reified E: ExecutionContext> removeExecutionContext(): E? =
+        stateAttributes.remove("executionContext-${E::class.java.canonicalName}") as E?
+
+    inline fun <reified C: Any> getCustomAttribute(key: String): C? = stateAttributes[key] as C?
+
+    inline fun <reified C: Any> removeCustomAttribute(key: String): C? = stateAttributes.remove(key) as C?
+
+    @Suppress("UNCHECKED_CAST")
+    fun <C: ExecutionContext,R: Any> ReifiedValueSupplier<C,R>.value(): R? =
+        getExecutionContext(inClass)?.let { ctx -> this(ctx as C) }
+}
+
 open class TemplateContext<C : TemplateContext<C, M>, M : AbstractModel<*, M, C>>(
     val model: M,
     val stateAttributes: MutableMap<String, Any>,
@@ -228,6 +256,9 @@ open class TemplateContext<C : TemplateContext<C, M>, M : AbstractModel<*, M, C>
     fun isXOverflow(): Boolean = status.isXOverflow()
 
 }
+
+fun <C : ExecutionContext, R: Any> TemplateContext<*, *>.value(supplier: ReifiedValueSupplier<C,R>): R? =
+    with(StateAttributes(getCustomAttributes())) { supplier.value() }
 
 abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, M, C>, C : TemplateContext<C, M>> {
 

@@ -139,6 +139,23 @@ public final class io/github/voytech/tabulate/components/page/model/Page : io/gi
 	public synthetic fun getExportTemplate ()Lio/github/voytech/tabulate/core/template/ExportTemplate;
 }
 
+public final class io/github/voytech/tabulate/components/page/model/PageExecutionContext : io/github/voytech/tabulate/core/model/TypedExecutionContext {
+	public fun <init> ()V
+	public fun <init> (ILjava/lang/String;)V
+	public synthetic fun <init> (ILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (ILjava/lang/String;)Lio/github/voytech/tabulate/components/page/model/PageExecutionContext;
+	public static synthetic fun copy$default (Lio/github/voytech/tabulate/components/page/model/PageExecutionContext;ILjava/lang/String;ILjava/lang/Object;)Lio/github/voytech/tabulate/components/page/model/PageExecutionContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getPageNumber ()I
+	public fun hashCode ()I
+	public final fun setDescription (Ljava/lang/String;)V
+	public final fun setPageNumber (I)V
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class io/github/voytech/tabulate/components/page/template/PageTemplate : io/github/voytech/tabulate/core/template/ExportTemplate {
 	public fun <init> ()V
 	public synthetic fun createTemplateContext (Lio/github/voytech/tabulate/core/template/TemplateContext;Lio/github/voytech/tabulate/core/model/AbstractModel;)Lio/github/voytech/tabulate/core/template/TemplateContext;
@@ -1682,6 +1699,9 @@ public final class io/github/voytech/tabulate/core/model/StandardUnits : java/la
 	public static fun values ()[Lio/github/voytech/tabulate/core/model/StandardUnits;
 }
 
+public abstract interface class io/github/voytech/tabulate/core/model/TypedExecutionContext {
+}
+
 public final class io/github/voytech/tabulate/core/model/UnitsOfMeasure : java/lang/Enum {
 	public static final field Companion Lio/github/voytech/tabulate/core/model/UnitsOfMeasure$Companion;
 	public static final field NU Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;
@@ -2271,6 +2291,20 @@ public final class io/github/voytech/tabulate/core/template/DocumentTreeKt {
 	public static final fun inScope (Lio/github/voytech/tabulate/core/template/ExportTemplate;Lio/github/voytech/tabulate/core/template/TemplateContext;Lkotlin/jvm/functions/Function1;)V
 	public static final fun preserveActive (Lio/github/voytech/tabulate/core/template/TreeNode;Lkotlin/jvm/functions/Function0;)V
 	public static final fun setActive (Lio/github/voytech/tabulate/core/template/TreeNode;)V
+}
+
+public final class io/github/voytech/tabulate/core/template/ExecutionContextAttributes {
+	public static final synthetic fun box-impl (Ljava/util/Map;)Lio/github/voytech/tabulate/core/template/ExecutionContextAttributes;
+	public static fun constructor-impl (Ljava/util/Map;)Ljava/util/Map;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/util/Map;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/util/Map;Ljava/util/Map;)Z
+	public final fun getStateAttributes ()Ljava/util/Map;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/util/Map;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/util/Map;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/util/Map;
 }
 
 public abstract class io/github/voytech/tabulate/core/template/ExportTemplate {

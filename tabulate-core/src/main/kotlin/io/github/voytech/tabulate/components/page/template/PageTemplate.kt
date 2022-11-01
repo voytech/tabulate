@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.components.page.template
 
 import io.github.voytech.tabulate.components.page.model.Page
 import io.github.voytech.tabulate.components.commons.operation.newPage
+import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.template.*
 import io.github.voytech.tabulate.core.template.layout.Layout
@@ -13,6 +14,7 @@ class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
         resetLayouts()
         with(model) {
             createLayoutScope(orientation = Orientation.VERTICAL) {
+                nextPageNumber()
                 render(newPage(name))
                 exportHeader(templateContext)
                 val size = footerSize(templateContext,this)
@@ -26,6 +28,7 @@ class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
     override fun doResume(templateContext: PageTemplateContext, resumeNext: ResumeNext) = with(templateContext) {
         with(model) {
             createLayoutScope(orientation = Orientation.VERTICAL) {
+                nextPageNumber()
                 render(newPage(name))
                 exportHeader(templateContext)
                 val size = footerSize(templateContext,this)
@@ -91,4 +94,10 @@ class PageTemplateContext(
     init {
         stateAttributes["_sheetName"] = model.name
     }
+
+    fun nextPageNumber(): Int =
+        StateAttributes(stateAttributes).run {
+             ++ ensureExecutionContext { PageExecutionContext() }.pageNumber
+        }
+
 }

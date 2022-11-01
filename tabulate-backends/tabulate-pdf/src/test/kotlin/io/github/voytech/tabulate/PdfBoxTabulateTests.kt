@@ -4,6 +4,7 @@ import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
+import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
 import io.github.voytech.tabulate.components.table.template.AdditionalSteps
@@ -18,6 +19,7 @@ import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import java.awt.SystemColor.text
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.reflect.KProperty1
@@ -135,10 +137,10 @@ class PdfBoxTabulateTests {
             }
             footer {
                 text {
-                    value = "Some footer."
+                    value<PageExecutionContext> { ctx -> "Page number: ${ctx.pageNumber}" }
                     attributes {
                         pageHeadingStyle()
-                        height { 130.pt() }
+                        height { 30.pt() }
                     }
                 }
             }
@@ -253,6 +255,26 @@ class PdfBoxTabulateTests {
             page(firstPage)
             page {
                 name = "second"
+                footer {
+                    text {
+                        value<PageExecutionContext> { "Page number: ${it.pageNumber}" }
+                        attributes { pageHeadingStyle() }
+                    }
+                }
+                text {
+                    value = "First line of text"
+                    attributes {
+                        width { 400.pt()  }
+                        pageHeadingStyle()
+                    }
+                }
+                text {
+                    value = "Second line of text"
+                    attributes {
+                        pageHeadingStyle()
+                        margins { top { 10.pt() } ; left { 10.pt() } } //TODO does not work as expected
+                    }
+                }
                 table {
                     attributes {
                         margins {

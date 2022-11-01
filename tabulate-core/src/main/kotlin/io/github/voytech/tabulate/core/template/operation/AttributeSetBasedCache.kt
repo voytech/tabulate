@@ -31,8 +31,8 @@ internal typealias AttributeClassBasedMapCache<K> = AttributeClassBasedCache<K, 
  */
 @JvmSynthetic
 internal fun <T : AttributedContext> T.ensureAttributeSetBasedCache(): AttributeClassBasedMapCache<T> {
-    additionalAttributes!!.putIfAbsent("_attribute_set_based_cache", AttributeClassBasedMapCache<T>())
-    return additionalAttributes!!["_attribute_set_based_cache"] as AttributeClassBasedMapCache<T>
+    additionalAttributes.putIfAbsent("_attribute_set_based_cache", AttributeClassBasedMapCache<T>())
+    return additionalAttributes["_attribute_set_based_cache"] as AttributeClassBasedMapCache<T>
 }
 
 

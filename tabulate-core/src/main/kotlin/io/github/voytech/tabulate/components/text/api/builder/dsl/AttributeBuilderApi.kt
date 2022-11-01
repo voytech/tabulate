@@ -20,12 +20,10 @@ fun TextAttributesBuilderApi.borders(block: BordersAttribute.Builder.() -> Unit)
 fun TextAttributesBuilderApi.background(block: BackgroundAttribute.Builder.() -> Unit) =
     attribute(BackgroundAttribute.builder<TextRenderable>().apply(block))
 
-fun TextAttributesBuilderApi.columnWidth(block: WidthAttribute.Builder.() -> Unit) =
-    attribute(WidthAttribute.builder(TextRenderable::class.java).apply(block))
-
-fun TextAttributesBuilderApi.rowHeight(block: HeightAttribute.Builder.() -> Unit) =
-    attribute(HeightAttribute.builder(TextRenderable::class.java).apply(block))
-
 fun TextAttributesBuilderApi.height(block: HeightAttribute.Builder.() -> Unit) {
     attribute(HeightAttribute.Builder(TextRenderable::class.java).apply(block))
+}
+
+fun TextAttributesBuilderApi.width(block: WidthAttribute.Builder.() -> Unit) {
+    attribute(WidthAttribute.Builder(TextRenderable::class.java).apply(block))
 }

@@ -39,3 +39,15 @@ abstract class AbstractModel<E : ExportTemplate<E, M, C>, M : AbstractModel<E, M
 
 abstract class ModelWithAttributes<E : ExportTemplate<E, M, C>, M : ModelWithAttributes<E, M, C>, C : TemplateContext<C, M>> :
     AttributedModelOrPart<M>, AbstractModel<E, M, C>()
+
+interface ExecutionContext
+
+fun interface ValueSupplier<C: ExecutionContext,V: Any>: (C) -> V
+
+data class ReifiedValueSupplier<C: ExecutionContext,V : Any>(
+    val inClass: Class<out ExecutionContext>,
+    val retClass: Class<V>,
+    val delegate: ValueSupplier<C,V>
+): ValueSupplier<C,V> {
+    override fun invoke(context: C): V = delegate(context)
+}
