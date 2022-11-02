@@ -3,7 +3,6 @@ package io.github.voytech.tabulate
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.page.api.builder.dsl.sheet
-import io.github.voytech.tabulate.components.margins.api.builder.dsl.margins
 import io.github.voytech.tabulate.components.table.api.builder.RowPredicates.all
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
@@ -733,30 +732,23 @@ class ApachePoiTabulateTests {
         document {
             sheet {
                 name = "first"
-                margins {
-                    top { 100.pt() }
-                    left { 105.pt() }
-                    table(tableStyle + headerStyle + typedTable<SampleProduct> {
-                        columns {
-                            column(SampleProduct::code) { attributes { text { fontColor = Colors.RED } } }
-                            column(SampleProduct::name)
-                            column(SampleProduct::description)
-                            column(SampleProduct::price)
-                        }
-                        rows {
-                            header("Id", "Name", "Description", "Price")
-                            matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
-                            matching { odd() } assign { attributes { background { color = Colors.YELLOW } }}
-                        }
-                        dataSource(SampleProduct.create(25))
-                    })
-                }
+                table(tableStyle + headerStyle + typedTable<SampleProduct> {
+                    columns {
+                        column(SampleProduct::code) { attributes { text { fontColor = Colors.RED } } }
+                        column(SampleProduct::name)
+                        column(SampleProduct::description)
+                        column(SampleProduct::price)
+                    }
+                    rows {
+                        header("Id", "Name", "Description", "Price")
+                        matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
+                        matching { odd() } assign { attributes { background { color = Colors.YELLOW } }}
+                    }
+                    dataSource(SampleProduct.create(25))
+                })
             }
             sheet {
                 name = "second"
-                margins {
-                    left { 25.pt() }
-                }
                 table<SampleProduct>(headerStyle + typedTable {
                     attributes {
                         columnWidth { 100.px() }

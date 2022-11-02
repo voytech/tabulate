@@ -70,42 +70,6 @@ public final class io/github/voytech/tabulate/components/document/template/Docum
 	public static final fun export (Lkotlin/jvm/functions/Function1;Ljava/lang/String;)V
 }
 
-public final class io/github/voytech/tabulate/components/margins/api/builder/MarginsBuilderState : io/github/voytech/tabulate/core/api/builder/CompositeModelBuilderState {
-	public fun <init> ()V
-	public synthetic fun bind (Lio/github/voytech/tabulate/core/api/builder/ModelBuilderState;)V
-	public synthetic fun build ()Lio/github/voytech/tabulate/components/margins/model/Margins;
-	public synthetic fun build ()Ljava/lang/Object;
-	public final synthetic fun getHeight ()Lio/github/voytech/tabulate/core/model/Height;
-	public final synthetic fun getWidth ()Lio/github/voytech/tabulate/core/model/Width;
-	public final fun setHeight (Lio/github/voytech/tabulate/core/model/Height;)V
-	public final fun setWidth (Lio/github/voytech/tabulate/core/model/Width;)V
-}
-
-public final class io/github/voytech/tabulate/components/margins/api/builder/dsl/MarginsBuilderApi : io/github/voytech/tabulate/core/api/builder/dsl/CompositeModelBuilderApi {
-	public final fun left (Lkotlin/jvm/functions/Function0;)V
-	public final fun pt (Ljava/lang/Number;)Lio/github/voytech/tabulate/core/model/MeasuredValue;
-	public final fun px (Ljava/lang/Number;)Lio/github/voytech/tabulate/core/model/MeasuredValue;
-	public final fun top (Lkotlin/jvm/functions/Function0;)V
-}
-
-public final class io/github/voytech/tabulate/components/margins/api/builder/dsl/MarginsBuilderApiKt {
-	public static final fun margins (Lio/github/voytech/tabulate/core/api/builder/dsl/CompositeModelBuilderApi;Lkotlin/jvm/functions/Function1;)V
-}
-
-public final class io/github/voytech/tabulate/components/margins/model/Margins : io/github/voytech/tabulate/core/model/AbstractModel {
-	public synthetic fun getExportTemplate ()Lio/github/voytech/tabulate/core/template/ExportTemplate;
-}
-
-public final class io/github/voytech/tabulate/components/margins/template/MarginsTemplate : io/github/voytech/tabulate/core/template/ExportTemplate {
-	public fun <init> ()V
-	public synthetic fun createTemplateContext (Lio/github/voytech/tabulate/core/template/TemplateContext;Lio/github/voytech/tabulate/core/model/AbstractModel;)Lio/github/voytech/tabulate/core/template/TemplateContext;
-	public synthetic fun doExport (Lio/github/voytech/tabulate/core/template/TemplateContext;)V
-}
-
-public final class io/github/voytech/tabulate/components/margins/template/MarginsTemplateContext : io/github/voytech/tabulate/core/template/TemplateContext {
-	public fun <init> (Lio/github/voytech/tabulate/components/margins/model/Margins;Ljava/util/Map;Lio/github/voytech/tabulate/core/template/ExportTemplateServices;)V
-}
-
 public final class io/github/voytech/tabulate/components/page/api/builder/PageBuilderState : io/github/voytech/tabulate/core/api/builder/CompositeModelBuilderState {
 	public fun <init> ()V
 	public synthetic fun bind (Lio/github/voytech/tabulate/core/api/builder/ModelBuilderState;)V
@@ -139,7 +103,7 @@ public final class io/github/voytech/tabulate/components/page/model/Page : io/gi
 	public synthetic fun getExportTemplate ()Lio/github/voytech/tabulate/core/template/ExportTemplate;
 }
 
-public final class io/github/voytech/tabulate/components/page/model/PageExecutionContext : io/github/voytech/tabulate/core/model/TypedExecutionContext {
+public final class io/github/voytech/tabulate/components/page/model/PageExecutionContext : io/github/voytech/tabulate/core/model/ExecutionContext {
 	public fun <init> ()V
 	public fun <init> (ILjava/lang/String;)V
 	public synthetic fun <init> (ILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -165,6 +129,7 @@ public final class io/github/voytech/tabulate/components/page/template/PageTempl
 
 public final class io/github/voytech/tabulate/components/page/template/PageTemplateContext : io/github/voytech/tabulate/core/template/TemplateContext {
 	public fun <init> (Lio/github/voytech/tabulate/components/page/model/Page;Ljava/util/Map;Lio/github/voytech/tabulate/core/template/ExportTemplateServices;)V
+	public final fun nextPageNumber ()I
 }
 
 public final class io/github/voytech/tabulate/components/table/TableAttributesConstraints : io/github/voytech/tabulate/core/model/AttributeConstraintsProvider {
@@ -390,7 +355,6 @@ public final class io/github/voytech/tabulate/components/table/api/builder/dsl/T
 	public static final fun createTable (Lkotlin/jvm/functions/Function1;)Lio/github/voytech/tabulate/components/table/model/Table;
 	public static final synthetic fun plus (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function1;
 	public static final fun table (Lio/github/voytech/tabulate/components/document/api/builder/dsl/DocumentBuilderApi;Lkotlin/jvm/functions/Function1;)V
-	public static final fun table (Lio/github/voytech/tabulate/components/margins/api/builder/dsl/MarginsBuilderApi;Lkotlin/jvm/functions/Function1;)V
 	public static final fun table (Lio/github/voytech/tabulate/components/page/api/builder/dsl/PageBuilderApi;Lkotlin/jvm/functions/Function1;)V
 	public static final fun table (Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function1;
 	public static final fun typedTable (Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function1;
@@ -1247,11 +1211,10 @@ public final class io/github/voytech/tabulate/components/text/api/builder/dsl/At
 	public static final fun alignment (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
 	public static final fun background (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
 	public static final fun borders (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
-	public static final fun columnWidth (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
 	public static final fun height (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
 	public static final fun margins (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
-	public static final fun rowHeight (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
 	public static final fun text (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun width (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
 }
 
 public final class io/github/voytech/tabulate/components/text/api/builder/dsl/TextAttributesBuilderApi {
@@ -1263,16 +1226,18 @@ public final class io/github/voytech/tabulate/components/text/api/builder/dsl/Te
 	public final synthetic fun getValue ()Ljava/lang/String;
 	public static fun getValue$delegate (Lio/github/voytech/tabulate/components/text/api/builder/dsl/TextBuilderApi;)Ljava/lang/Object;
 	public final synthetic fun setValue (Ljava/lang/String;)V
+	public final synthetic fun value (Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)V
 }
 
 public final class io/github/voytech/tabulate/components/text/api/builder/dsl/TextBuilderApiKt {
 	public static final fun text (Lio/github/voytech/tabulate/components/page/api/builder/dsl/FooterBuilderApi;Lkotlin/jvm/functions/Function1;)V
 	public static final fun text (Lio/github/voytech/tabulate/components/page/api/builder/dsl/HeaderBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun text (Lio/github/voytech/tabulate/components/page/api/builder/dsl/PageBuilderApi;Lkotlin/jvm/functions/Function1;)V
 }
 
 public final class io/github/voytech/tabulate/components/text/model/Text : io/github/voytech/tabulate/core/model/ModelWithAttributes {
-	public fun <init> (Ljava/lang/String;Lio/github/voytech/tabulate/core/model/Attributes;)V
-	public synthetic fun <init> (Ljava/lang/String;Lio/github/voytech/tabulate/core/model/Attributes;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lio/github/voytech/tabulate/core/model/ReifiedValueSupplier;Lio/github/voytech/tabulate/core/model/Attributes;)V
+	public synthetic fun <init> (Ljava/lang/String;Lio/github/voytech/tabulate/core/model/ReifiedValueSupplier;Lio/github/voytech/tabulate/core/model/Attributes;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun getAttributes ()Lio/github/voytech/tabulate/core/model/Attributes;
 	public synthetic fun getExportTemplate ()Lio/github/voytech/tabulate/core/template/ExportTemplate;
 }
@@ -1281,17 +1246,11 @@ public abstract interface class io/github/voytech/tabulate/components/text/opera
 }
 
 public final class io/github/voytech/tabulate/components/text/operation/TextRenderable : io/github/voytech/tabulate/core/template/operation/AttributedContext, io/github/voytech/tabulate/core/template/layout/LayoutElement, io/github/voytech/tabulate/core/template/operation/HasText {
-	public static final field Companion Lio/github/voytech/tabulate/components/text/operation/TextRenderable$Companion;
-	public synthetic fun <init> (Ljava/lang/String;Lio/github/voytech/tabulate/core/model/Attributes;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun computeBoundaries (Lio/github/voytech/tabulate/core/template/layout/Layout;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public fun getAttributes ()Lio/github/voytech/tabulate/core/model/Attributes;
 	public final fun getText ()Ljava/lang/String;
 	public synthetic fun getValue ()Ljava/lang/Object;
 	public fun getValue ()Ljava/lang/String;
-}
-
-public final class io/github/voytech/tabulate/components/text/operation/TextRenderable$Companion {
-	public final fun Text (Lio/github/voytech/tabulate/components/text/template/TextTemplateContext;)Lio/github/voytech/tabulate/components/text/operation/TextRenderable;
 }
 
 public final class io/github/voytech/tabulate/components/text/template/TextTemplate : io/github/voytech/tabulate/core/template/ExportTemplate {
@@ -1303,7 +1262,7 @@ public final class io/github/voytech/tabulate/components/text/template/TextTempl
 }
 
 public final class io/github/voytech/tabulate/components/text/template/TextTemplateContext : io/github/voytech/tabulate/core/template/TemplateContext {
-	public fun <init> (Lio/github/voytech/tabulate/components/text/model/Text;Lio/github/voytech/tabulate/core/template/ExportTemplateServices;)V
+	public fun <init> (Lio/github/voytech/tabulate/components/text/model/Text;Ljava/util/Map;Lio/github/voytech/tabulate/core/template/ExportTemplateServices;)V
 }
 
 public final class io/github/voytech/tabulate/core/DispatchKt {
@@ -1554,6 +1513,9 @@ public final class io/github/voytech/tabulate/core/model/DataSourceBinding {
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract interface class io/github/voytech/tabulate/core/model/ExecutionContext {
+}
+
 public final class io/github/voytech/tabulate/core/model/Height : io/github/voytech/tabulate/core/model/Measure {
 	public static final field Companion Lio/github/voytech/tabulate/core/model/Height$Companion;
 	public fun <init> (FLio/github/voytech/tabulate/core/model/UnitsOfMeasure;)V
@@ -1663,6 +1625,23 @@ public final class io/github/voytech/tabulate/core/model/Position$Companion {
 	public static synthetic fun start$default (Lio/github/voytech/tabulate/core/model/Position$Companion;Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;ILjava/lang/Object;)Lio/github/voytech/tabulate/core/model/Position;
 }
 
+public final class io/github/voytech/tabulate/core/model/ReifiedValueSupplier : io/github/voytech/tabulate/core/model/ValueSupplier {
+	public fun <init> (Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/model/ValueSupplier;)V
+	public final fun component1 ()Ljava/lang/Class;
+	public final fun component2 ()Ljava/lang/Class;
+	public final fun component3 ()Lio/github/voytech/tabulate/core/model/ValueSupplier;
+	public final fun copy (Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/model/ValueSupplier;)Lio/github/voytech/tabulate/core/model/ReifiedValueSupplier;
+	public static synthetic fun copy$default (Lio/github/voytech/tabulate/core/model/ReifiedValueSupplier;Ljava/lang/Class;Ljava/lang/Class;Lio/github/voytech/tabulate/core/model/ValueSupplier;ILjava/lang/Object;)Lio/github/voytech/tabulate/core/model/ReifiedValueSupplier;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDelegate ()Lio/github/voytech/tabulate/core/model/ValueSupplier;
+	public final fun getInClass ()Ljava/lang/Class;
+	public final fun getRetClass ()Ljava/lang/Class;
+	public fun hashCode ()I
+	public fun invoke (Lio/github/voytech/tabulate/core/model/ExecutionContext;)Ljava/lang/Object;
+	public synthetic fun invoke (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class io/github/voytech/tabulate/core/model/Size {
 	public fun <init> (Lio/github/voytech/tabulate/core/model/Width;Lio/github/voytech/tabulate/core/model/Height;)V
 	public final fun component1 ()Lio/github/voytech/tabulate/core/model/Width;
@@ -1699,9 +1678,6 @@ public final class io/github/voytech/tabulate/core/model/StandardUnits : java/la
 	public static fun values ()[Lio/github/voytech/tabulate/core/model/StandardUnits;
 }
 
-public abstract interface class io/github/voytech/tabulate/core/model/TypedExecutionContext {
-}
-
 public final class io/github/voytech/tabulate/core/model/UnitsOfMeasure : java/lang/Enum {
 	public static final field Companion Lio/github/voytech/tabulate/core/model/UnitsOfMeasure$Companion;
 	public static final field NU Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;
@@ -1714,6 +1690,9 @@ public final class io/github/voytech/tabulate/core/model/UnitsOfMeasure : java/l
 
 public final class io/github/voytech/tabulate/core/model/UnitsOfMeasure$Companion {
 	public final fun default ()Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;
+}
+
+public abstract interface class io/github/voytech/tabulate/core/model/ValueSupplier : kotlin/jvm/functions/Function1 {
 }
 
 public final class io/github/voytech/tabulate/core/model/Width : io/github/voytech/tabulate/core/model/Measure {
@@ -2000,7 +1979,7 @@ public final class io/github/voytech/tabulate/core/model/attributes/HeightAttrib
 	public final fun builder (Ljava/lang/Class;)Lio/github/voytech/tabulate/core/model/attributes/HeightAttribute$Builder;
 }
 
-public final class io/github/voytech/tabulate/core/model/attributes/MarginsAttribute : io/github/voytech/tabulate/core/model/Attribute, io/github/voytech/tabulate/core/template/layout/LayoutElement {
+public final class io/github/voytech/tabulate/core/model/attributes/MarginsAttribute : io/github/voytech/tabulate/core/model/Attribute {
 	public static final field Companion Lio/github/voytech/tabulate/core/model/attributes/MarginsAttribute$Companion;
 	public fun <init> ()V
 	public fun <init> (Lio/github/voytech/tabulate/core/model/X;Lio/github/voytech/tabulate/core/model/Y;)V
@@ -2008,7 +1987,6 @@ public final class io/github/voytech/tabulate/core/model/attributes/MarginsAttri
 	public static final fun builder (Ljava/lang/Class;)Lio/github/voytech/tabulate/core/model/attributes/MarginsAttribute$Builder;
 	public final fun component1 ()Lio/github/voytech/tabulate/core/model/X;
 	public final fun component2 ()Lio/github/voytech/tabulate/core/model/Y;
-	public fun computeBoundaries (Lio/github/voytech/tabulate/core/template/layout/Layout;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public final fun copy (Lio/github/voytech/tabulate/core/model/X;Lio/github/voytech/tabulate/core/model/Y;)Lio/github/voytech/tabulate/core/model/attributes/MarginsAttribute;
 	public static synthetic fun copy$default (Lio/github/voytech/tabulate/core/model/attributes/MarginsAttribute;Lio/github/voytech/tabulate/core/model/X;Lio/github/voytech/tabulate/core/model/Y;ILjava/lang/Object;)Lio/github/voytech/tabulate/core/model/attributes/MarginsAttribute;
 	public fun equals (Ljava/lang/Object;)Z
@@ -2293,20 +2271,6 @@ public final class io/github/voytech/tabulate/core/template/DocumentTreeKt {
 	public static final fun setActive (Lio/github/voytech/tabulate/core/template/TreeNode;)V
 }
 
-public final class io/github/voytech/tabulate/core/template/ExecutionContextAttributes {
-	public static final synthetic fun box-impl (Ljava/util/Map;)Lio/github/voytech/tabulate/core/template/ExecutionContextAttributes;
-	public static fun constructor-impl (Ljava/util/Map;)Ljava/util/Map;
-	public fun equals (Ljava/lang/Object;)Z
-	public static fun equals-impl (Ljava/util/Map;Ljava/lang/Object;)Z
-	public static final fun equals-impl0 (Ljava/util/Map;Ljava/util/Map;)Z
-	public final fun getStateAttributes ()Ljava/util/Map;
-	public fun hashCode ()I
-	public static fun hashCode-impl (Ljava/util/Map;)I
-	public fun toString ()Ljava/lang/String;
-	public static fun toString-impl (Ljava/util/Map;)Ljava/lang/String;
-	public final synthetic fun unbox-impl ()Ljava/util/Map;
-}
-
 public abstract class io/github/voytech/tabulate/core/template/ExportTemplate {
 	public fun <init> ()V
 	public fun computeSize (Lio/github/voytech/tabulate/core/template/TemplateContext;Lio/github/voytech/tabulate/core/model/AbstractModel;)Lio/github/voytech/tabulate/core/model/SomeSize;
@@ -2318,6 +2282,10 @@ public abstract class io/github/voytech/tabulate/core/template/ExportTemplate {
 	protected final fun render (Lio/github/voytech/tabulate/core/template/TemplateContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
 	protected final fun resetLayouts (Lio/github/voytech/tabulate/core/template/TemplateContext;)V
 	public final fun resumeAllSuspendedNodes (Lio/github/voytech/tabulate/core/template/TemplateContext;)V
+}
+
+public final class io/github/voytech/tabulate/core/template/ExportTemplateKt {
+	public static final fun value (Lio/github/voytech/tabulate/core/template/TemplateContext;Lio/github/voytech/tabulate/core/model/ReifiedValueSupplier;)Ljava/lang/Object;
 }
 
 public final class io/github/voytech/tabulate/core/template/ExportTemplateServices {
@@ -2383,6 +2351,22 @@ public final class io/github/voytech/tabulate/core/template/StandaloneExportTemp
 	public final fun export (Lio/github/voytech/tabulate/core/model/AbstractModel;Ljava/lang/Object;)V
 	public final fun export (Lio/github/voytech/tabulate/core/model/AbstractModel;Ljava/lang/Object;Ljava/lang/Iterable;)V
 	public static synthetic fun export$default (Lio/github/voytech/tabulate/core/template/StandaloneExportTemplate;Lio/github/voytech/tabulate/core/model/AbstractModel;Ljava/lang/Object;Ljava/lang/Iterable;ILjava/lang/Object;)V
+}
+
+public final class io/github/voytech/tabulate/core/template/StateAttributes {
+	public static final synthetic fun box-impl (Ljava/util/Map;)Lio/github/voytech/tabulate/core/template/StateAttributes;
+	public static fun constructor-impl (Ljava/util/Map;)Ljava/util/Map;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/util/Map;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/util/Map;Ljava/util/Map;)Z
+	public static final fun getExecutionContext-impl (Ljava/util/Map;Ljava/lang/Class;)Lio/github/voytech/tabulate/core/model/ExecutionContext;
+	public final fun getStateAttributes ()Ljava/util/Map;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/util/Map;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/util/Map;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/util/Map;
+	public static final fun value-impl (Ljava/util/Map;Lio/github/voytech/tabulate/core/model/ReifiedValueSupplier;)Ljava/lang/Object;
 }
 
 public class io/github/voytech/tabulate/core/template/TemplateContext {

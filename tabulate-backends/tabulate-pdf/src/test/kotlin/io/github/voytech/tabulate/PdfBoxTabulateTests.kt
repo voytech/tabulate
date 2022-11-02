@@ -19,7 +19,6 @@ import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import java.awt.SystemColor.text
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.reflect.KProperty1
@@ -33,6 +32,28 @@ class PdfBoxTabulateTests {
                 "${(it.record?.let { obj -> (prop.get(obj) as BigDecimal).setScale(2, RoundingMode.HALF_UP) } ?: 0)} $"
             }
         }
+
+    val textBoxStyle : TextAttributesBuilderApi.() -> Unit = {
+        height { 20.pt() }
+        text {
+            fontFamily = DefaultFonts.COURIER_NEW
+        }
+        alignment {
+            horizontal = DefaultHorizontalAlignment.CENTER
+            vertical = DefaultVerticalAlignment.MIDDLE
+        }
+        background {
+            color = Colors.LIGHT_GRAY
+            fill = DefaultFillType.SOLID
+        }
+        borders {
+            all {
+                style = DefaultBorderStyle.DOUBLE
+                width = 3.pt()
+                color = Colors.BLACK
+            }
+        }
+    }
 
     @Test
     fun `should correctly export two on same sheet, one next to each others`() {
@@ -104,34 +125,13 @@ class PdfBoxTabulateTests {
             }
         }
 
-        val pageHeadingStyle : TextAttributesBuilderApi.() -> Unit = {
-            height { 20.pt() }
-            text {
-                fontFamily = DefaultFonts.COURIER_NEW
-            }
-            alignment {
-                horizontal = DefaultHorizontalAlignment.CENTER
-                vertical = DefaultVerticalAlignment.MIDDLE
-            }
-            background {
-                color = Colors.LIGHT_GRAY
-                fill = DefaultFillType.SOLID
-            }
-            borders {
-                all {
-                    style = DefaultBorderStyle.DOUBLE
-                    width = 3.pt()
-                    color = Colors.BLACK
-                }
-            }
-        }
 
         val firstPage: (PageBuilderApi.()->Unit) = {
             header {
                 text {
                     value = "Some heading."
                     attributes {
-                        pageHeadingStyle()
+                        textBoxStyle()
                     }
                 }
             }
@@ -139,7 +139,7 @@ class PdfBoxTabulateTests {
                 text {
                     value<PageExecutionContext> { ctx -> "Page number: ${ctx.pageNumber}" }
                     attributes {
-                        pageHeadingStyle()
+                        textBoxStyle()
                         height { 30.pt() }
                     }
                 }
@@ -258,21 +258,7 @@ class PdfBoxTabulateTests {
                 footer {
                     text {
                         value<PageExecutionContext> { "Page number: ${it.pageNumber}" }
-                        attributes { pageHeadingStyle() }
-                    }
-                }
-                text {
-                    value = "First line of text"
-                    attributes {
-                        width { 400.pt()  }
-                        pageHeadingStyle()
-                    }
-                }
-                text {
-                    value = "Second line of text"
-                    attributes {
-                        pageHeadingStyle()
-                        margins { top { 10.pt() } ; left { 10.pt() } } //TODO does not work as expected
+                        attributes { textBoxStyle() }
                     }
                 }
                 table {
@@ -531,5 +517,30 @@ class PdfBoxTabulateTests {
                 }
             }
         }.export("test.pdf")
+    }
+
+    @Test
+    fun `should correctly export document with several text lines with random attributes`() {
+        document {
+            page {
+                text {
+                    value = "First line of text"
+                    attributes {
+                        width { 400.pt() }
+                        textBoxStyle()
+                    }
+                }
+                text {
+                    value = "Second line of text"
+                    attributes {
+                        textBoxStyle()
+                        margins {
+                            top { 10.pt() }
+                            left { 10.pt() }
+                        } //TODO does not work as expected
+                    }
+                }
+            }
+        }.export("textBoxesTest.pdf")
     }
 }
