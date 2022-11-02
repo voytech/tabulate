@@ -3,6 +3,8 @@ package io.github.voytech.tabulate.pdf
 import io.github.voytech.tabulate.components.table.operation.CellContext
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.border.Borders
+import io.github.voytech.tabulate.core.model.color.Color
+import io.github.voytech.tabulate.core.template.HavingViewportSize
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
 import io.github.voytech.tabulate.core.template.layout.boundingBox
@@ -14,13 +16,12 @@ import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
+import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType1Font
-import java.awt.Color as AwtColor
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import java.io.OutputStream
-import io.github.voytech.tabulate.core.model.color.Color
-import io.github.voytech.tabulate.core.template.HavingViewportSize
-import org.apache.pdfbox.pdmodel.common.PDRectangle
+import java.awt.Color as AwtColor
 
 class PdfBoxOutputBindingsFactory : OutputBindingsProvider<PdfBoxRenderingContext> {
 
@@ -84,6 +85,15 @@ class PdfBoxRenderingContext(val document: PDDocument = PDDocument()) : Renderin
             getCurrentContentStream().setFont(PDType1Font.HELVETICA, 10F)
         }
         getCurrentContentStream().showText(text)
+    }
+
+    fun loadImage(filePath: String):PDImageXObject = PDImageXObject.createFromFile(filePath, document)
+
+    fun PDImageXObject.showImage(x: Float, y: Float, width: Float?, height: Float?) {
+        if (width!=null && height != null) {
+            getCurrentContentStream().drawImage(this, x, y, width, height)
+        } else
+            getCurrentContentStream().drawImage(this, x, y)
     }
 
     fun endText() {

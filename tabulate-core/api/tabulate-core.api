@@ -70,6 +70,67 @@ public final class io/github/voytech/tabulate/components/document/template/Docum
 	public static final fun export (Lkotlin/jvm/functions/Function1;Ljava/lang/String;)V
 }
 
+public final class io/github/voytech/tabulate/components/image/api/builder/ImageBuilderState : io/github/voytech/tabulate/core/api/builder/AttributesAwareBuilder, io/github/voytech/tabulate/core/api/builder/ModelBuilderState {
+	public fun <init> ()V
+	public synthetic fun build ()Lio/github/voytech/tabulate/components/image/model/Image;
+	public synthetic fun build ()Ljava/lang/Object;
+	public fun modelClass ()Ljava/lang/Class;
+}
+
+public final class io/github/voytech/tabulate/components/image/api/builder/dsl/AttributeBuilderApiKt {
+	public static final fun alignment (Lio/github/voytech/tabulate/components/image/api/builder/dsl/ImageAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun background (Lio/github/voytech/tabulate/components/image/api/builder/dsl/ImageAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun borders (Lio/github/voytech/tabulate/components/image/api/builder/dsl/ImageAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun height (Lio/github/voytech/tabulate/components/image/api/builder/dsl/ImageAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun margins (Lio/github/voytech/tabulate/components/image/api/builder/dsl/ImageAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun width (Lio/github/voytech/tabulate/components/image/api/builder/dsl/ImageAttributesBuilderApi;Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class io/github/voytech/tabulate/components/image/api/builder/dsl/ImageAttributesBuilderApi {
+	public final synthetic fun attribute (Lio/github/voytech/tabulate/core/api/builder/AttributeBuilder;)V
+}
+
+public final class io/github/voytech/tabulate/components/image/api/builder/dsl/ImageBuilderApi : io/github/voytech/tabulate/core/api/builder/dsl/ModelBuilderApi {
+	public final synthetic fun attributes (Lkotlin/jvm/functions/Function1;)V
+	public final synthetic fun getFilePath ()Ljava/lang/String;
+	public static fun getFilePath$delegate (Lio/github/voytech/tabulate/components/image/api/builder/dsl/ImageBuilderApi;)Ljava/lang/Object;
+	public final synthetic fun setFilePath (Ljava/lang/String;)V
+}
+
+public final class io/github/voytech/tabulate/components/image/api/builder/dsl/ImageBuilderApiKt {
+	public static final fun image (Lio/github/voytech/tabulate/components/page/api/builder/dsl/FooterBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun image (Lio/github/voytech/tabulate/components/page/api/builder/dsl/HeaderBuilderApi;Lkotlin/jvm/functions/Function1;)V
+	public static final fun image (Lio/github/voytech/tabulate/components/page/api/builder/dsl/PageBuilderApi;Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class io/github/voytech/tabulate/components/image/model/Image : io/github/voytech/tabulate/core/model/ModelWithAttributes {
+	public fun <init> (Ljava/lang/String;Lio/github/voytech/tabulate/core/model/Attributes;)V
+	public synthetic fun <init> (Ljava/lang/String;Lio/github/voytech/tabulate/core/model/Attributes;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAttributes ()Lio/github/voytech/tabulate/core/model/Attributes;
+	public synthetic fun getExportTemplate ()Lio/github/voytech/tabulate/core/template/ExportTemplate;
+}
+
+public final class io/github/voytech/tabulate/components/image/operation/ImageRenderable : io/github/voytech/tabulate/core/template/operation/AttributedContext, io/github/voytech/tabulate/core/template/layout/LayoutElement {
+	public fun computeBoundaries (Lio/github/voytech/tabulate/core/template/layout/Layout;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
+	public fun getAttributes ()Lio/github/voytech/tabulate/core/model/Attributes;
+	public final fun getFilePath ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/voytech/tabulate/components/image/operation/RenderImageOperation : io/github/voytech/tabulate/core/template/operation/Operation {
+}
+
+public final class io/github/voytech/tabulate/components/image/template/ImageTemplate : io/github/voytech/tabulate/core/template/ExportTemplate {
+	public fun <init> ()V
+	public fun computeSize (Lio/github/voytech/tabulate/core/template/TemplateContext;Lio/github/voytech/tabulate/components/image/model/Image;)Lio/github/voytech/tabulate/core/model/SomeSize;
+	public synthetic fun computeSize (Lio/github/voytech/tabulate/core/template/TemplateContext;Lio/github/voytech/tabulate/core/model/AbstractModel;)Lio/github/voytech/tabulate/core/model/SomeSize;
+	public synthetic fun createTemplateContext (Lio/github/voytech/tabulate/core/template/TemplateContext;Lio/github/voytech/tabulate/core/model/AbstractModel;)Lio/github/voytech/tabulate/core/template/TemplateContext;
+	public synthetic fun doExport (Lio/github/voytech/tabulate/core/template/TemplateContext;)V
+}
+
+public final class io/github/voytech/tabulate/components/image/template/ImageTemplateContext : io/github/voytech/tabulate/core/template/TemplateContext {
+	public fun <init> (Lio/github/voytech/tabulate/components/image/model/Image;Ljava/util/Map;Lio/github/voytech/tabulate/core/template/ExportTemplateServices;)V
+}
+
 public final class io/github/voytech/tabulate/components/page/api/builder/PageBuilderState : io/github/voytech/tabulate/core/api/builder/CompositeModelBuilderState {
 	public fun <init> ()V
 	public synthetic fun bind (Lio/github/voytech/tabulate/core/api/builder/ModelBuilderState;)V

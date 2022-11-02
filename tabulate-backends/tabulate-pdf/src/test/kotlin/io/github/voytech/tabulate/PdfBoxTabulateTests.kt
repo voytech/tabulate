@@ -2,6 +2,7 @@ package io.github.voytech.tabulate
 
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
+import io.github.voytech.tabulate.components.image.api.builder.dsl.*
 import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
 import io.github.voytech.tabulate.components.page.model.PageExecutionContext
@@ -9,6 +10,9 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
 import io.github.voytech.tabulate.components.table.template.AdditionalSteps
 import io.github.voytech.tabulate.components.text.api.builder.dsl.*
+import io.github.voytech.tabulate.components.text.api.builder.dsl.alignment
+import io.github.voytech.tabulate.components.text.api.builder.dsl.background
+import io.github.voytech.tabulate.components.text.api.builder.dsl.borders
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.background.DefaultFillType
@@ -55,6 +59,19 @@ class PdfBoxTabulateTests {
         }
     }
 
+    val imageStyles : ImageAttributesBuilderApi.() -> Unit = {
+        background {
+            color = Colors.LIGHT_GRAY
+            fill = DefaultFillType.SOLID
+        }
+        borders {
+            all {
+                style = DefaultBorderStyle.DASHED
+                width = 2.pt()
+                color = Colors.BLACK
+            }
+        }
+    }
     @Test
     fun `should correctly export two on same sheet, one next to each others`() {
         val tableStyle = table {
@@ -524,20 +541,43 @@ class PdfBoxTabulateTests {
         document {
             page {
                 text {
-                    value = "First line of text"
-                    attributes {
-                        width { 400.pt() }
-                        textBoxStyle()
-                    }
-                }
-                text {
                     value = "Second line of text"
                     attributes {
                         textBoxStyle()
                         margins {
-                            top { 10.pt() }
+                            top { 2.pt() }
+                        }
+                    }
+                }
+                image {
+                    filePath = "src/test/resources/kotlin.jpeg"
+                    attributes {
+                        imageStyles()
+                        width { 100.pt() }  // TODO - removing this will cause exception because size is required for background attribute!
+                        height { 100.pt() }
+                        margins {
                             left { 10.pt() }
-                        } //TODO does not work as expected
+                            top { 10.pt() }
+                        }
+                    }
+                }
+                footer {   // TODO - footer renders weirdly now!
+                    text {
+                        value<PageExecutionContext> { "Page ${it.pageNumber}" }
+                        attributes {
+                            height { 20.pt() }
+                            width { 400.pt() }
+                            borders {
+                                all {
+                                    style = DefaultBorderStyle.SOLID
+                                    width = 1.pt()
+                                }
+                            }
+                            alignment {
+                                vertical = DefaultVerticalAlignment.MIDDLE
+                                horizontal = DefaultHorizontalAlignment.FILL
+                            }
+                        }
                     }
                 }
             }
