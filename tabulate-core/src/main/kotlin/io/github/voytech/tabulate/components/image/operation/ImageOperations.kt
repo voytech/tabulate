@@ -16,7 +16,6 @@ class ImageRenderable internal constructor(val filePath: String, override val at
     override fun Layout<*, *, *>.computeBoundaries(): LayoutElementBoundingBox = query.elementBoundaries(
         x = query.getX(0.asXPosition(), uom),
         y = query.getY(0.asYPosition(), uom),
-        width = query.layout.maxBoundingRectangle?.getWidth(),
     )
 }
 

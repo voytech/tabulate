@@ -66,9 +66,9 @@ class PdfBoxTabulateTests {
         }
         borders {
             all {
-                style = DefaultBorderStyle.DASHED
+                style = DefaultBorderStyle.SOLID
                 width = 2.pt()
-                color = Colors.BLACK
+                color = Colors.LIGHT_GRAY
             }
         }
     }
@@ -541,7 +541,7 @@ class PdfBoxTabulateTests {
         document {
             page {
                 text {
-                    value = "Second line of text"
+                    value = "Page title"
                     attributes {
                         textBoxStyle()
                         margins {
@@ -553,34 +553,41 @@ class PdfBoxTabulateTests {
                     filePath = "src/test/resources/kotlin.jpeg"
                     attributes {
                         imageStyles()
-                        width { 100.pt() }  // TODO - removing this will cause exception because size is required for background attribute!
-                        height { 100.pt() }
                         margins {
                             left { 10.pt() }
                             top { 10.pt() }
                         }
                     }
                 }
-                footer {   // TODO - footer renders weirdly now!
+                image {
+                    filePath = "src/test/resources/kotlin.jpeg"
+                    attributes {
+                        width { 30.pt() }
+                        height { 30.pt() }
+                        borders { all { width = 5.pt() } }
+                        margins {
+                            left { 10.pt() }
+                        }
+                    }
+                }
+                footer {
                     text {
-                        value<PageExecutionContext> { "Page ${it.pageNumber}" }
+                        value<PageExecutionContext> { "Page: ${it.pageNumber}" }
                         attributes {
                             height { 20.pt() }
-                            width { 400.pt() }
                             borders {
-                                all {
-                                    style = DefaultBorderStyle.SOLID
-                                    width = 1.pt()
-                                }
+                                topBorderStyle = DefaultBorderStyle.DASHED
+                                topBorderWidth = 0.5.pt()
+                                topBorderColor = Colors.LIGHT_GRAY
                             }
                             alignment {
                                 vertical = DefaultVerticalAlignment.MIDDLE
-                                horizontal = DefaultHorizontalAlignment.FILL
+                                horizontal = DefaultHorizontalAlignment.CENTER
                             }
                         }
                     }
                 }
             }
-        }.export("textBoxesTest.pdf")
+        }.export("textBoxesAndImages.pdf")
     }
 }

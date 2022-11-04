@@ -8,16 +8,17 @@ import io.github.voytech.tabulate.core.api.builder.dsl.buildModel
 import io.github.voytech.tabulate.core.template.*
 import java.io.File
 
-typealias StandaloneDocumentTemplate = StandaloneExportTemplate<DocumentTemplate,Document,DocumentTemplateContext>
+typealias StandaloneDocumentTemplate = StandaloneExportTemplate<DocumentTemplate, Document, DocumentTemplateContext>
+
 /**
  * Entry point for document exporting.
  * @author Wojciech Mąka
  * @since 0.*.*
  */
-class DocumentTemplate: ExportTemplate<DocumentTemplate, Document, DocumentTemplateContext>()  {
+class DocumentTemplate : ExportTemplate<DocumentTemplate, Document, DocumentTemplateContext>() {
 
     override fun createTemplateContext(parentContext: TemplateContext<*, *>, model: Document): DocumentTemplateContext =
-        DocumentTemplateContext(model,parentContext.services)
+        DocumentTemplateContext(model, parentContext.services)
 
     override fun doExport(templateContext: DocumentTemplateContext) = with(templateContext) {
         createLayoutScope {
@@ -28,7 +29,7 @@ class DocumentTemplate: ExportTemplate<DocumentTemplate, Document, DocumentTempl
             }
         }
     }
-    
+
 }
 
 fun (DocumentBuilderApi.() -> Unit).export(file: File) = file.documentFormat().let { format ->

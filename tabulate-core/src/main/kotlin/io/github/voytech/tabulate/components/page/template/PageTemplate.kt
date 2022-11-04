@@ -12,29 +12,24 @@ class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
     override fun doExport(templateContext: PageTemplateContext) = with(templateContext) {
         resumeAllSuspendedNodes()
         resetLayouts()
-        with(model) {
-            createLayoutScope(orientation = Orientation.VERTICAL) {
-                nextPageNumber()
-                render(newPage(name))
-                exportHeader(templateContext)
-                val size = footerSize(templateContext,this)
-                val leftTop = footerLeftTop(size)
-                exportContent(templateContext, leftTop.contentLayoutContext(this))
-                exportFooter(templateContext, leftTop.footerLayoutContext(size))
-            }
+        stickyHeaderAndFooterWith { layout, leftTop ->
+            model.exportContent(templateContext, leftTop.contentLayoutContext(layout))
         }
     }
 
     override fun doResume(templateContext: PageTemplateContext, resumeNext: ResumeNext) = with(templateContext) {
+        stickyHeaderAndFooterWith { _, _ -> resumeNext() }
+    }
+
+    private fun PageTemplateContext.stickyHeaderAndFooterWith(block: (Layout<*, *, *>, Position?) -> Unit) {
         with(model) {
             createLayoutScope(orientation = Orientation.VERTICAL) {
-                nextPageNumber()
-                render(newPage(name))
-                exportHeader(templateContext)
-                val size = footerSize(templateContext,this)
+                render(newPage(nextPageNumber(), name))
+                exportHeader(this@stickyHeaderAndFooterWith)
+                val size = footerSize(this@stickyHeaderAndFooterWith, this)
                 val leftTop = footerLeftTop(size)
-                resumeNext()
-                exportFooter(templateContext, leftTop.footerLayoutContext(size))
+                block(this, leftTop)
+                exportFooter(this@stickyHeaderAndFooterWith, leftTop.footerLayoutContext(size))
             }
         }
     }
@@ -47,28 +42,28 @@ class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
         nodes?.forEach { it.export(context, layoutContext) }
     }
 
-    private fun Page.footerSize(context: PageTemplateContext,layout: Layout<*,*,*>) = footer?.getSize(context)?.let {
-        Size(it.width ?: Width(layout.maxRightBottom!!.x.value,layout.uom),it.height!!)
+    private fun Page.footerSize(context: PageTemplateContext, layout: Layout<*, *, *>) = footer?.getSize(context)?.let {
+        Size(it.width ?: Width(layout.maxRightBottom!!.x.value, layout.uom), it.height!!)
     }
 
     private fun Layout<*, *, *>.footerLeftTop(size: Size?): Position? =
         maxRightBottom?.let { maxRightBottom ->
             size?.let {
                 Position(
-                    maxRightBottom.x - it.width,
+                    leftTop.x,
                     maxRightBottom.y - it.height
                 )
             }
         }
 
     private fun Position?.contentLayoutContext(layout: Layout<*, *, *>): LayoutContext =
-        LayoutContext(maxRightBottom = this?.let { Position(layout.maxRightBottom!!.x,it.y)})
+        LayoutContext(maxRightBottom = this?.let { Position(layout.maxRightBottom!!.x, it.y) })
 
     private fun Position?.footerLayoutContext(size: Size?): LayoutContext =
-         LayoutContext(
-             leftTop = this,
-             maxRightBottom = size?.let { this?.plus(size)}
-         )
+        LayoutContext(
+            leftTop = this,
+            maxRightBottom = size?.let { this?.plus(size) }
+        )
 
 
     private fun Page.exportFooter(context: PageTemplateContext, layoutContext: LayoutContext?) {
@@ -97,7 +92,7 @@ class PageTemplateContext(
 
     fun nextPageNumber(): Int =
         StateAttributes(stateAttributes).run {
-             ++ ensureExecutionContext { PageExecutionContext() }.pageNumber
+            ++ensureExecutionContext { PageExecutionContext() }.pageNumber
         }
 
 }
