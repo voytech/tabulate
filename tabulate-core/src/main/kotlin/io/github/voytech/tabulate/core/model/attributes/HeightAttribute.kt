@@ -12,7 +12,7 @@ import io.github.voytech.tabulate.core.template.operation.AttributedContext
 data class HeightAttribute(
     val value: Height = Height.zero(UnitsOfMeasure.PX)
 ) : Attribute<HeightAttribute>(),
-    LayoutElement {
+    BoundingBoxModifier {
 
     override fun overrideWith(other: HeightAttribute): HeightAttribute = HeightAttribute(
         value = takeIfChanged(other, HeightAttribute::value)
@@ -32,8 +32,8 @@ data class HeightAttribute(
         override fun provide(): HeightAttribute = HeightAttribute(value)
     }
 
-    override fun Layout<*,*,*>.computeBoundaries(): LayoutElementBoundingBox =
-        query.elementBoundaries(height = value)
+    override fun Layout<*, *, *>.alter(source: LayoutElementBoundingBox): LayoutElementBoundingBox =
+        source.apply { height = value }
 
     companion object {
         @JvmStatic
@@ -42,4 +42,5 @@ data class HeightAttribute(
         @JvmStatic
         inline fun <reified AC: AttributedContext> builder() : Builder = Builder(AC::class.java)
     }
+
 }

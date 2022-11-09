@@ -84,45 +84,48 @@ class EnableAttributeOperationAwareness<CTX : RenderingContext>(private val attr
  * @since 0.2.0
  */
 class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
-    private val delegate: Operation<CTX, E>, private val layout: () -> Layout<*,*,*>,
+    private val delegate: Operation<CTX, E>, private val layout: () -> Layout<*, *, *>,
 ) : Operation<CTX, E> {
 
-    private fun <E : AttributedContext> Layout<*,*,*>.resolveAttributeElementBoundaries(context: E): LayoutElementBoundingBox? {
-        context.attributes?.attributeSet?.forEach {
-            if (it is LayoutElement) {
-                with(it) { computeBoundaries().mergeInto(context) }
+    private fun <E : RenderableContext> Layout<*, *, *>.mergeAttributeElementBoundingBox(
+        context: E, boundingBox: LayoutElementBoundingBox,
+    ): LayoutElementBoundingBox =
+        context.attributes?.attributeSet?.asSequence()?.let { attributes ->
+            attributes.filterIsInstance<BoundingBoxModifier>()
+                .fold(boundingBox) { bbox, next ->
+                    bbox + with(next) { alter(bbox) }
+                }
+        } ?: run { context.boundingBox }
+
+
+    private fun <E : AttributedContext> Layout<*, *, *>.resolveElementBoundingBox(context: E): LayoutElementBoundingBox? =
+        if (context is RenderableContext) {
+            with(context) {
+                initBoundingBox { bbox -> mergeAttributeElementBoundingBox(context, bbox) }
             }
-        }
-        return context.boundingBox()
-    }
+        } else null
 
-    private fun <E : AttributedContext> Layout<*,*,*>.resolveElementBoundaries(context: E): LayoutElementBoundingBox? {
-        if (context is LayoutElement) {
-            with(context) { computeBoundaries().mergeInto(context) }
-        }
-        resolveAttributeElementBoundaries(context)
-        return context.boundingBox()
-    }
-
-    private fun <E : AttributedContext> Layout<*,*,*>.commitBoundaries(
+    private fun <E : AttributedContext> Layout<*, *, *>.commitBoundaries(
         context: E, boundaries: LayoutElementBoundingBox? = null,
     ) {
         if (boundaries != null) {
-            if (context is LayoutElementApply) with(context) { applyBoundaries(boundaries) }
-            context.dropBoundingBox()
+            // TODO !!!!!!!!!!!!!!!!!!!!!!!!!
+            // TODO should not need LayoutElementApply. Layout itself should use boundaries and apply them through its policy.
+            // TODO !!!!!!!!!!!!!!!!!!!!!!!!!
+            if (context is LayoutElementApply) with(context) { applyBoundingBox(boundaries) }
         }
     }
 
     override operator fun invoke(renderingContext: CTX, context: E) {
         with(layout()) {
-            resolveElementBoundaries(context).let { boundaries ->
-                boundaries.checkOverflow()?.let {
+            resolveElementBoundingBox(context).let { bbox ->
+                bbox.checkOverflow()?.let {
                     context.setResult(OverflowResult(it))
                 } ?: run {
                     delegate(renderingContext, context).also {
-                        boundaries?.applyOnLayout()
+                        bbox?.applyOnLayout()
                     }
-                    commitBoundaries(context, boundaries)
+                    commitBoundaries(context, bbox)
                     context.setResult(Success)
                 }
             }
@@ -130,7 +133,7 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
     }
 }
 
-class EnableLayoutsAwareness<CTX : RenderingContext>(private val layout: () -> Layout<*,*,*>) : Enhance<CTX> {
+class EnableLayoutsAwareness<CTX : RenderingContext>(private val layout: () -> Layout<*, *, *>) : Enhance<CTX> {
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> {
         return LayoutAwareOperation(op.delegate, layout)
     }

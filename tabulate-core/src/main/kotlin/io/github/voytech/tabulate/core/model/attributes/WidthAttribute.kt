@@ -12,7 +12,7 @@ import io.github.voytech.tabulate.core.template.operation.AttributedContext
 data class WidthAttribute(
     val auto: Boolean = false,
     val value: Width = Width.zero(UnitsOfMeasure.PX),
-) : Attribute<WidthAttribute>(), LayoutElement {
+) : Attribute<WidthAttribute>(), BoundingBoxModifier {
 
     @TabulateMarker
     class Builder(target: Class<out AttributedContext>) : AttributeBuilder<WidthAttribute>(target) {
@@ -46,9 +46,9 @@ data class WidthAttribute(
             )
         }
 
-    override fun Layout<*,*,*>.computeBoundaries(): LayoutElementBoundingBox =
-        if (!auto) query.elementBoundaries(width = value)
-        else query.elementBoundaries()
+    override fun Layout<*,*,*>.alter(source: LayoutElementBoundingBox): LayoutElementBoundingBox =
+        if (!auto) source.apply { width = value }
+        else source
 
     companion object {
         @JvmStatic

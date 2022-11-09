@@ -7,15 +7,15 @@ import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.layout.Layout
 import io.github.voytech.tabulate.core.template.layout.LayoutElement
 import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
-import io.github.voytech.tabulate.core.template.layout.elementBoundaries
+import io.github.voytech.tabulate.core.template.layout.elementBoundingBox
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import io.github.voytech.tabulate.core.template.operation.Operation
+import io.github.voytech.tabulate.core.template.operation.RenderableContext
 
-class ImageRenderable internal constructor(val filePath: String, override val attributes: Attributes?) : AttributedContext(),
-    LayoutElement  {
-    override fun Layout<*, *, *>.computeBoundaries(): LayoutElementBoundingBox = query.elementBoundaries(
-        x = query.getX(0.asXPosition(), uom),
-        y = query.getY(0.asYPosition(), uom),
+class ImageRenderable internal constructor(val filePath: String, override val attributes: Attributes?) : RenderableContext() {
+    override fun Layout<*, *, *>.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
+        x = policy.getX(0.asXPosition(), uom),
+        y = policy.getY(0.asYPosition(), uom),
     )
 }
 

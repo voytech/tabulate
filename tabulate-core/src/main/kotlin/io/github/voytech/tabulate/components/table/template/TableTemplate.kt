@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.DataSourceBinding
 import io.github.voytech.tabulate.core.template.*
-import io.github.voytech.tabulate.core.template.layout.TableLayoutQueries
+import io.github.voytech.tabulate.core.template.layout.TableLayoutPolicy
 import io.github.voytech.tabulate.core.template.operation.*
 import java.io.File
 import java.io.FileOutputStream
@@ -169,7 +169,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
         }
 
     override fun doExport(templateContext: TableTemplateContext<T>): Unit = with(templateContext) {
-        createLayoutScope(TableLayoutQueries()) {
+        createLayoutScope(TableLayoutPolicy()) {
             val operations = services.getOperations(model)
             templateContext.setupRowResolver(CaptureRowCompletionImpl(renderingContext, operations))
             TabulationApiImpl(renderingContext, templateContext, operations).let { api ->
@@ -183,7 +183,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
     override fun doResume(templateContext: TableTemplateContext<T>, resumeNext: ResumeNext) = with(templateContext) {
         beforeResume()
         createLayoutScope(
-            TableLayoutQueries(templateContext.indices.getIndexValueOnY(), templateContext.indices.getIndexOnX())
+            TableLayoutPolicy(templateContext.indices.getIndexValueOnY(), templateContext.indices.getIndexOnX())
         ) {
             val operations = services.getOperations(model)
             templateContext.setupRowResolver(CaptureRowCompletionImpl(renderingContext, operations))

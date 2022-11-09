@@ -4,6 +4,9 @@ import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.AttributeAware
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
+import io.github.voytech.tabulate.core.template.layout.Layout
+import io.github.voytech.tabulate.core.template.layout.LayoutElement
+import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
 
 
 /**
@@ -63,6 +66,19 @@ abstract class AttributedContext(@JvmSynthetic override val attributes: Attribut
     } else null
 
 }
+
+abstract class RenderableContext(@JvmSynthetic override val attributes: Attributes? = null) : AttributedContext(), LayoutElement {
+    lateinit var boundingBox: LayoutElementBoundingBox
+        private set
+
+    fun Layout<*, *, *>.initBoundingBox(initializer: ((LayoutElementBoundingBox) -> LayoutElementBoundingBox)?): LayoutElementBoundingBox {
+        boundingBox = computeBoundingBox()
+        initializer?.let { boundingBox += it(boundingBox) }
+        return boundingBox
+    }
+}
+
+fun AttributedContext.boundingBox(): LayoutElementBoundingBox? = if (this is RenderableContext) this.boundingBox else null
 
 class AttributesByContexts<T : AttributedModelOrPart<T>>(
     from: T, to: List<Class<out AttributedContext>>,

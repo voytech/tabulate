@@ -9,8 +9,8 @@ import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.layout.boundingBox
 import io.github.voytech.tabulate.core.template.operation.AttributeOperation
+import io.github.voytech.tabulate.core.template.operation.boundingBox
 import io.github.voytech.tabulate.core.template.spi.BuildAttributeOperations
 import io.github.voytech.tabulate.core.template.spi.BuildOperations
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat

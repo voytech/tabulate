@@ -1,9 +1,5 @@
 package io.github.voytech.tabulate.pdf
 
-import io.github.voytech.tabulate.components.table.operation.CellAttributeRenderOperation
-import io.github.voytech.tabulate.components.table.operation.CellContext
-import io.github.voytech.tabulate.components.table.operation.RowAttributeRenderOperation
-import io.github.voytech.tabulate.components.table.operation.RowEnd
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
@@ -22,7 +18,6 @@ import io.github.voytech.tabulate.core.model.color.darken
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.core.template.operation.AttributeOperation
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
-import io.github.voytech.tabulate.core.template.operation.HasText
 import io.github.voytech.tabulate.core.template.operation.HasValue
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.font.PDFont

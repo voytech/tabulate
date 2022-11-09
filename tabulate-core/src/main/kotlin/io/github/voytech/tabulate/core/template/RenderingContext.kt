@@ -1,9 +1,9 @@
 package io.github.voytech.tabulate.core.template
 
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.template.layout.SpreadsheetQueries
-import io.github.voytech.tabulate.core.template.layout.boundingBox
+import io.github.voytech.tabulate.core.template.layout.SpreadsheetPolicy
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
+import io.github.voytech.tabulate.core.template.operation.boundingBox
 
 /**
  * RenderingContext is a marker interface representing entire group of classes implementing low-level rendering logic.
@@ -26,11 +26,11 @@ interface HavingViewportSize {
  */
 abstract class RenderingContextForSpreadsheet: RenderingContext {
 
-    private lateinit var measures: SpreadsheetQueries
+    private lateinit var measures: SpreadsheetPolicy
     //TODO add caching of left top column row indices by layout.
 
     fun setupSpreadsheetLayout(defaultColumnWidth: Float, defaultRowHeight: Float) {
-        measures = SpreadsheetQueries(0,0,defaultColumnWidth,defaultRowHeight)
+        measures = SpreadsheetPolicy(0,0,defaultColumnWidth,defaultRowHeight)
     }
 
     fun AttributedContext.getAbsoluteColumn(column: Int): Int {

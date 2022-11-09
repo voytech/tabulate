@@ -49,7 +49,7 @@ class ExportTemplateServices(
     }
 
     fun TemplateContext<*, *>.createLayoutScope(
-        queries: AbstractLayoutQueries = DefaultLayoutQueries(),
+        queries: AbstractLayoutPolicy = DefaultLayoutPolicy(),
         childLeftTopCorner: Position?,
         maxRightBottom: Position?,
         orientation: Orientation = Orientation.HORIZONTAL,
@@ -77,8 +77,6 @@ class ExportTemplateServices(
         is BranchNode -> (root.activeNode as BranchNode).getWrappingLayoutOrThrow()
         else -> error("No active layout present!")
     }
-
-    fun getActiveLayoutBoundaries(): BoundingRectangle = getActiveLayout().boundingRectangle
 
     private fun viewPortMaxRightBottom(): Position =
         if (renderingContext is HavingViewportSize) {
@@ -292,7 +290,7 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
     }
 
     protected fun C.createLayoutScope(
-        queries: AbstractLayoutQueries = DefaultLayoutQueries(),
+        queries: AbstractLayoutPolicy = DefaultLayoutPolicy(),
         orientation: Orientation = Orientation.HORIZONTAL,
         childLeftTopCorner: Position? = null,
         maxRightBottom: Position? = null,

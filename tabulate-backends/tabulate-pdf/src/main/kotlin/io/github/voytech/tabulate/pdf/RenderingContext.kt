@@ -7,8 +7,8 @@ import io.github.voytech.tabulate.core.model.color.Color
 import io.github.voytech.tabulate.core.template.HavingViewportSize
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
-import io.github.voytech.tabulate.core.template.layout.boundingBox
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
+import io.github.voytech.tabulate.core.template.operation.boundingBox
 import io.github.voytech.tabulate.core.template.result.OutputBinding
 import io.github.voytech.tabulate.core.template.result.OutputStreamOutputBinding
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat

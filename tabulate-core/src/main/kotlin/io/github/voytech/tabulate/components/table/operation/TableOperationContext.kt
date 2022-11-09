@@ -10,6 +10,7 @@ import io.github.voytech.tabulate.core.template.layout.*
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import io.github.voytech.tabulate.core.template.operation.Context
 import io.github.voytech.tabulate.core.template.operation.HasValue
+import io.github.voytech.tabulate.core.template.operation.RenderableContext
 
 /**
  * Basic interface providing custom attributes that are shared throughout entire exporting process.
@@ -43,14 +44,14 @@ interface RowCoordinate {
 }
 
 interface RowLayoutElement : RowCoordinate, LayoutElement, LayoutElementApply {
-    override fun Layout<*,*,*>.computeBoundaries(): LayoutElementBoundingBox = query.elementBoundaries(
-        x = query.getX(0.asXPosition(), uom),
-        y = query.getY(getRow().asYPosition(), uom),
-        width = query.getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
-        height = (query as? TableLayoutQueries)?.getRowHeight(getRow(), uom)
+    override fun Layout<*,*,*>.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
+        x = policy.getX(0.asXPosition(), uom),
+        y = policy.getY(getRow().asYPosition(), uom),
+        width = policy.getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
+        height = (policy as? TableLayoutPolicy)?.getRowHeight(getRow(), uom)
     )
 
-    override fun Layout<*,*,*>.applyBoundaries(context: LayoutElementBoundingBox): Unit = with(query as TableLayoutQueries) {
+    override fun Layout<*,*,*>.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as TableLayoutPolicy) {
         context.height?.let { setRowHeight(getRow(), it) }
     }
 }
@@ -65,11 +66,11 @@ interface ColumnCoordinate {
 }
 
 interface ColumnLayoutElement : ColumnCoordinate, LayoutElement, LayoutElementApply {
-    override fun Layout<*,*,*>.computeBoundaries(): LayoutElementBoundingBox = query.elementBoundaries(
-        x = query.getX(getColumn().asXPosition(), uom),
+    override fun Layout<*,*,*>.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
+        x = policy.getX(getColumn().asXPosition(), uom), y = policy.getY(0.asYPosition(), uom)
     )
 
-    override fun Layout<*,*,*>.applyBoundaries(context: LayoutElementBoundingBox): Unit = with(query as TableLayoutQueries) {
+    override fun Layout<*,*,*>.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as TableLayoutPolicy) {
         context.width?.let { setColumnWidth(getColumn(), it) }
     }
 }
@@ -82,14 +83,14 @@ interface ColumnLayoutElement : ColumnCoordinate, LayoutElement, LayoutElementAp
 interface RowCellCoordinate : RowCoordinate, ColumnCoordinate
 
 interface RowCellLayoutElement : RowCellCoordinate, LayoutElement, LayoutElementApply {
-    override fun Layout<*,*,*>.computeBoundaries(): LayoutElementBoundingBox = query.elementBoundaries(
-        x = query.getX(getColumn().asXPosition(), uom),
-        y = query.getY(getRow().asYPosition(), uom),
-        width = (query as? TableLayoutQueries)?.getColumnWidth(getColumn(),uom),
-        height = (query as? TableLayoutQueries)?.getRowHeight(getRow(),uom)
+    override fun Layout<*,*,*>.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
+        x = policy.getX(getColumn().asXPosition(), uom),
+        y = policy.getY(getRow().asYPosition(), uom),
+        width = (policy as? TableLayoutPolicy)?.getColumnWidth(getColumn(),uom),
+        height = (policy as? TableLayoutPolicy)?.getRowHeight(getRow(),uom)
     )
 
-    override fun Layout<*,*,*>.applyBoundaries(context: LayoutElementBoundingBox): Unit = with(query as TableLayoutQueries) {
+    override fun Layout<*,*,*>.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as TableLayoutPolicy) {
         context.width?.let { setColumnWidth(getColumn(), it) }
         context.height?.let { setRowHeight(getRow(), it) }
     }
@@ -129,7 +130,7 @@ sealed class TableContext(
  */
 sealed class ColumnContext(
     attributes: Attributes?,
-) : AttributedContext(attributes)
+) : RenderableContext(attributes)
 
 /**
  * Row operation context with additional model attributes applicable on table level.
@@ -138,7 +139,7 @@ sealed class ColumnContext(
  */
 sealed class RowContext(
     attributes: Attributes?,
-) : AttributedContext(attributes)
+) : RenderableContext(attributes)
 
 /**
  * Table operation context with additional model attributes applicable on table level.
@@ -270,7 +271,7 @@ class CellContext(
     val rowIndex: Int,
     val columnIndex: Int,
     override val value: Any = cellValue.value,
-) : AttributedContext(attributes), RowCellLayoutElement, HasValue<Any> {
+) : RenderableContext(attributes), RowCellLayoutElement, HasValue<Any> {
     override fun getRow(): Int = rowIndex
     override fun getColumn(): Int = columnIndex
 }
