@@ -8,8 +8,7 @@ import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.layout.Overflow
 
-fun interface Operation<CTX : RenderingContext, E : AttributedContext> :
-    InvokeWithTwoParams<CTX, E> {
+fun interface Operation<CTX : RenderingContext, E : AttributedContext> : InvokeWithTwoParams<CTX, E> {
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     override operator fun invoke(renderingContext: CTX, context: E)
@@ -19,7 +18,6 @@ typealias ReifiedOperation<CTX, E> = ReifiedInvocation<Operation<CTX, E>, TwoPar
 
 sealed interface OperationResult
 open class OverflowResult(val overflow: Overflow) : OperationResult
-interface QueryResult: OperationResult
 object Success: OperationResult
 
 fun OperationResult?.isXOverflow(): Boolean = this is OverflowResult && overflow == Overflow.X
@@ -37,7 +35,7 @@ value class Operations<CTX : RenderingContext>(private val dispatch: TwoParamsBa
         renderingContext: CTX, context: E
     ): OperationResult = invoke(renderingContext, context).let { context.getResult() ?: Success }
 
-    fun <A : Attribute<*>, E : AttributedContext> render(renderingContext: CTX, context: E): OperationResult? =
+    operator fun <A : Attribute<*>, E : AttributedContext> invoke(renderingContext: CTX, context: E): OperationResult? =
         (dispatch[renderingContext, context] as? Operation<CTX, E>)?.invokeWithResult(renderingContext, context)
 
 }
@@ -47,6 +45,7 @@ interface Enhance<CTX : RenderingContext> {
 }
 
 class OperationsBuilder<CTX : RenderingContext>(val renderingContext: Class<CTX>) {
+
     private val dispatch: TwoParamsBasedDispatch = TwoParamsBasedDispatch()
 
     fun <E : AttributedContext> addOperation(clazz: Class<E>, op: Operation<CTX, E>) {
@@ -60,7 +59,7 @@ class OperationsBuilder<CTX : RenderingContext>(val renderingContext: Class<CTX>
     @Suppress("UNCHECKED_CAST")
     private fun List<Enhance<CTX>>.applyEnhancers(delegate: ReifiedInvocation<*, *>) =
         fold(delegate as ReifiedOperation<CTX, AttributedContext>) { op, transformer ->
-            ReifiedOperation(op.meta, transformer.invoke(op))
+            ReifiedOperation(op.meta, transformer(op))
         }.delegate
 
     @JvmSynthetic

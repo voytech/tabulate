@@ -46,7 +46,7 @@ data class WidthAttribute(
             )
         }
 
-    override fun Layout<*,*,*>.alter(source: LayoutElementBoundingBox): LayoutElementBoundingBox =
+    override fun Layout.alter(source: LayoutElementBoundingBox): LayoutElementBoundingBox =
         if (!auto) source.apply { width = value }
         else source
 

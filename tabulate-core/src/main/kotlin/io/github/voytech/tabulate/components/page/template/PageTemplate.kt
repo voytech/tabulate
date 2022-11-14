@@ -5,7 +5,7 @@ import io.github.voytech.tabulate.components.commons.operation.newPage
 import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.template.*
-import io.github.voytech.tabulate.core.template.layout.Layout
+import io.github.voytech.tabulate.core.template.layout.AttachedLayout
 
 class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
 
@@ -21,7 +21,7 @@ class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
         stickyHeaderAndFooterWith { _, _ -> resumeNext() }
     }
 
-    private fun PageTemplateContext.stickyHeaderAndFooterWith(block: (Layout<*, *, *>, Position?) -> Unit) {
+    private fun PageTemplateContext.stickyHeaderAndFooterWith(block: (AttachedLayout<*, *, *>, Position?) -> Unit) {
         with(model) {
             createLayoutScope(orientation = Orientation.VERTICAL) {
                 render(newPage(nextPageNumber(), name))
@@ -42,11 +42,11 @@ class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
         nodes?.forEach { it.export(context, layoutContext) }
     }
 
-    private fun Page.footerSize(context: PageTemplateContext, layout: Layout<*, *, *>) = footer?.getSize(context)?.let {
+    private fun Page.footerSize(context: PageTemplateContext, layout: AttachedLayout<*, *, *>) = footer?.measure(context)?.let {
         Size(it.width ?: Width(layout.maxRightBottom!!.x.value, layout.uom), it.height!!)
     }
 
-    private fun Layout<*, *, *>.footerLeftTop(size: Size?): Position? =
+    private fun AttachedLayout<*, *, *>.footerLeftTop(size: Size?): Position? =
         maxRightBottom?.let { maxRightBottom ->
             size?.let {
                 Position(
@@ -56,7 +56,7 @@ class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
             }
         }
 
-    private fun Position?.contentLayoutContext(layout: Layout<*, *, *>): LayoutContext =
+    private fun Position?.contentLayoutContext(layout: AttachedLayout<*, *, *>): LayoutContext =
         LayoutContext(maxRightBottom = this?.let { Position(layout.maxRightBottom!!.x, it.y) })
 
     private fun Position?.footerLayoutContext(size: Size?): LayoutContext =
@@ -76,7 +76,7 @@ class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
     ): PageTemplateContext = PageTemplateContext(
         model,
         parentContext.stateAttributes,
-        parentContext.services
+        parentContext.instance
     )
 
 }
@@ -84,7 +84,7 @@ class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
 class PageTemplateContext(
     model: Page,
     stateAttributes: MutableMap<String, Any>,
-    services: ExportTemplateServices,
+    services: ExportInstance,
 ) : TemplateContext<PageTemplateContext, Page>(model, stateAttributes, services) {
     init {
         stateAttributes["_sheetName"] = model.name

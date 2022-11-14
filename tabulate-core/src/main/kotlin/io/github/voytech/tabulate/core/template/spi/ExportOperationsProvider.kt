@@ -16,7 +16,7 @@ interface ExportOperationsProvider<CTX: RenderingContext, M: UnconstrainedModel<
 
     /**
      * Creates export operations working on attributed contexts (table, row, column, cell).
-     * Those export operations communicates with third party exporter via rendering context.
+     * Those export operations communicates with 3rd party library via rendering context.
      * @author Wojciech Mąka
      * @since 0.1.0
      */

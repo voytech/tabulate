@@ -3,9 +3,9 @@ package io.github.voytech.tabulate.components.table.template
 import io.github.voytech.tabulate.components.table.model.ColumnDef
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.RowEnd
-import io.github.voytech.tabulate.core.template.ExportTemplateServices
+import io.github.voytech.tabulate.core.template.ExportInstance
 import io.github.voytech.tabulate.core.template.TemplateContext
-import io.github.voytech.tabulate.core.template.TemplateStatus
+import io.github.voytech.tabulate.core.template.ExportStatus
 
 /**
  * Represents entire state produced throughout exporting process. State itself is separated from [TabulationTemplate].
@@ -23,10 +23,10 @@ import io.github.voytech.tabulate.core.template.TemplateStatus
 class TableTemplateContext<T : Any>(
     tableModel: Table<T>,
     stateAttributes: MutableMap<String, Any>,
-    services: ExportTemplateServices,
+    instance: ExportInstance,
     val dataSource: Iterable<T>? = null,
     private var remainingRecords: Iterable<T>? = dataSource,
-) : TemplateContext<TableTemplateContext<T>, Table<T>>(tableModel, stateAttributes, services) {
+) : TemplateContext<TableTemplateContext<T>, Table<T>>(tableModel, stateAttributes, instance) {
 
     private lateinit var rowContextResolver: AccumulatingRowContextResolver<T>
 
@@ -78,24 +78,24 @@ class TableTemplateContext<T : Any>(
 data class OverflowOffsets(
     val xOffsets: XOffsets = XOffsets(),
     val yOffsets: YOffsets = YOffsets(),
-    var partialStatus: TemplateStatus = TemplateStatus.ACTIVE,
+    var partialStatus: ExportStatus = ExportStatus.ACTIVE,
 ) {
-    fun keepStatus(status: TemplateStatus) {
+    fun keepStatus(status: ExportStatus) {
         partialStatus = status
     }
 
     fun onResume() {
         when (partialStatus) {
-            TemplateStatus.PARTIAL_X, TemplateStatus.PARTIAL_XY -> {
+            ExportStatus.PARTIAL_X, ExportStatus.PARTIAL_XY -> {
                 yOffsets.reset()
                 xOffsets.onResume()
             }
 
-            TemplateStatus.PARTIAL_Y, TemplateStatus.PARTIAL_YX -> {
+            ExportStatus.PARTIAL_Y, ExportStatus.PARTIAL_YX -> {
                 xOffsets.reset()
                 yOffsets.onResume()
             }
-            TemplateStatus.ACTIVE, TemplateStatus.FINISHED -> {}
+            ExportStatus.ACTIVE, ExportStatus.FINISHED -> {}
         }
     }
 

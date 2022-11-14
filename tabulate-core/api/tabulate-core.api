@@ -2765,7 +2765,7 @@ public final class io/github/voytech/tabulate/core/template/operation/Operations
 	public static final fun equals-impl0 (Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;)Z
 	public fun hashCode ()I
 	public static fun hashCode-impl (Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;)I
-	public static final fun render-impl (Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)Lio/github/voytech/tabulate/core/template/operation/OperationResult;
+	public static final fun invoke-impl (Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;Lio/github/voytech/tabulate/core/template/RenderingContext;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)Lio/github/voytech/tabulate/core/template/operation/OperationResult;
 	public fun toString ()Ljava/lang/String;
 	public static fun toString-impl (Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;)Ljava/lang/String;
 	public final synthetic fun unbox-impl ()Lio/github/voytech/tabulate/core/TwoParamsBasedDispatch;

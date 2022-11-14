@@ -44,14 +44,14 @@ interface RowCoordinate {
 }
 
 interface RowLayoutElement : RowCoordinate, LayoutElement, LayoutElementApply {
-    override fun Layout<*,*,*>.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
+    override fun Layout.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
         x = policy.getX(0.asXPosition(), uom),
         y = policy.getY(getRow().asYPosition(), uom),
         width = policy.getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
         height = (policy as? TableLayoutPolicy)?.getRowHeight(getRow(), uom)
     )
 
-    override fun Layout<*,*,*>.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as TableLayoutPolicy) {
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as TableLayoutPolicy) {
         context.height?.let { setRowHeight(getRow(), it) }
     }
 }
@@ -66,11 +66,11 @@ interface ColumnCoordinate {
 }
 
 interface ColumnLayoutElement : ColumnCoordinate, LayoutElement, LayoutElementApply {
-    override fun Layout<*,*,*>.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
+    override fun Layout.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
         x = policy.getX(getColumn().asXPosition(), uom), y = policy.getY(0.asYPosition(), uom)
     )
 
-    override fun Layout<*,*,*>.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as TableLayoutPolicy) {
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as TableLayoutPolicy) {
         context.width?.let { setColumnWidth(getColumn(), it) }
     }
 }
@@ -83,14 +83,14 @@ interface ColumnLayoutElement : ColumnCoordinate, LayoutElement, LayoutElementAp
 interface RowCellCoordinate : RowCoordinate, ColumnCoordinate
 
 interface RowCellLayoutElement : RowCellCoordinate, LayoutElement, LayoutElementApply {
-    override fun Layout<*,*,*>.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
+    override fun Layout.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
         x = policy.getX(getColumn().asXPosition(), uom),
         y = policy.getY(getRow().asYPosition(), uom),
         width = (policy as? TableLayoutPolicy)?.getColumnWidth(getColumn(),uom),
         height = (policy as? TableLayoutPolicy)?.getRowHeight(getRow(),uom)
     )
 
-    override fun Layout<*,*,*>.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as TableLayoutPolicy) {
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as TableLayoutPolicy) {
         context.width?.let { setColumnWidth(getColumn(), it) }
         context.height?.let { setRowHeight(getRow(), it) }
     }

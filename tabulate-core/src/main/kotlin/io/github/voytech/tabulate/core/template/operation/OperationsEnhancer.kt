@@ -84,10 +84,10 @@ class EnableAttributeOperationAwareness<CTX : RenderingContext>(private val attr
  * @since 0.2.0
  */
 class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
-    private val delegate: Operation<CTX, E>, private val layout: () -> Layout<*, *, *>,
+    private val delegate: Operation<CTX, E>, private val layout: () -> Layout,
 ) : Operation<CTX, E> {
 
-    private fun <E : RenderableContext> Layout<*, *, *>.mergeAttributeElementBoundingBox(
+    private fun <E : RenderableContext> Layout.mergeAttributeElementBoundingBox(
         context: E, boundingBox: LayoutElementBoundingBox,
     ): LayoutElementBoundingBox =
         context.attributes?.attributeSet?.asSequence()?.let { attributes ->
@@ -98,14 +98,14 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
         } ?: run { context.boundingBox }
 
 
-    private fun <E : AttributedContext> Layout<*, *, *>.resolveElementBoundingBox(context: E): LayoutElementBoundingBox? =
+    private fun <E : AttributedContext> Layout.resolveElementBoundingBox(context: E): LayoutElementBoundingBox? =
         if (context is RenderableContext) {
             with(context) {
                 initBoundingBox { bbox -> mergeAttributeElementBoundingBox(context, bbox) }
             }
         } else null
 
-    private fun <E : AttributedContext> Layout<*, *, *>.commitBoundaries(
+    private fun <E : AttributedContext> Layout.commitBoundaries(
         context: E, boundaries: LayoutElementBoundingBox? = null,
     ) {
         if (boundaries != null) {
@@ -133,9 +133,27 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
     }
 }
 
-class EnableLayoutsAwareness<CTX : RenderingContext>(private val layout: () -> Layout<*, *, *>) : Enhance<CTX> {
+class EnableLayoutsAwareness<CTX : RenderingContext>(private val layout: () -> Layout) : Enhance<CTX> {
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> {
         return LayoutAwareOperation(op.delegate, layout)
     }
+}
 
+class SkipRedundantMeasurements<CTX : RenderingContext> : Enhance<CTX> {
+    override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
+        Operation { renderingContext, context ->
+            if (!context.boundingBox().isDefined()) {
+                op(renderingContext, context)
+            }
+        }
+}
+
+class JoinOperations<CTX : RenderingContext>(private val other: Operations<CTX>,private val predicate: (AttributedContext) -> Boolean) : Enhance<CTX> {
+    override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
+        Operation { renderingContext, context ->
+            if (predicate(context)) {
+                other(renderingContext, context)
+            }
+            op(renderingContext,context)
+        }
 }

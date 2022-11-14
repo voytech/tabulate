@@ -32,7 +32,7 @@ data class HeightAttribute(
         override fun provide(): HeightAttribute = HeightAttribute(value)
     }
 
-    override fun Layout<*, *, *>.alter(source: LayoutElementBoundingBox): LayoutElementBoundingBox =
+    override fun Layout.alter(source: LayoutElementBoundingBox): LayoutElementBoundingBox =
         source.apply { height = value }
 
     companion object {

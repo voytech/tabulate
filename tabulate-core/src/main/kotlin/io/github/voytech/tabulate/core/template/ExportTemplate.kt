@@ -3,31 +3,50 @@ package io.github.voytech.tabulate.core.template
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.template.exception.OutputBindingResolvingException
 import io.github.voytech.tabulate.core.template.layout.*
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
-import io.github.voytech.tabulate.core.template.operation.EnableLayoutsAwareness
-import io.github.voytech.tabulate.core.template.operation.Operations
-import io.github.voytech.tabulate.core.template.operation.factories.ExportOperationsFactory
+import io.github.voytech.tabulate.core.template.operation.*
+import io.github.voytech.tabulate.core.template.operation.factories.OperationsFactory
 import io.github.voytech.tabulate.core.template.result.OutputBinding
 import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
 
 typealias ResumeNext = () -> Unit
 
-class ExportTemplateServices(
+typealias  OperationsMap = MutableMap<Model<*, *>, Operations<RenderingContext>>
+
+class ExportInstance(
     format: DocumentFormat,
-    private val operationsFactory: ExportOperationsFactory<RenderingContext> = ExportOperationsFactory(format),
+    private val operationsFactory: OperationsFactory<RenderingContext> = OperationsFactory(format),
     internal val renderingContext: RenderingContext = operationsFactory.renderingContext.newInstance(),
 ) {
     private val uom: UnitsOfMeasure = UnitsOfMeasure.PT
     private lateinit var root: RootNode<*, *, *>
-    private val exportOperations: MutableMap<Model<*, *>, Operations<RenderingContext>> = mutableMapOf()
+    private val exportOperations: OperationsMap = mutableMapOf()
+    private val measureOperations: OperationsMap = mutableMapOf()
+    private lateinit var measurementLayout: BasicLayout
 
-    fun <M : UnconstrainedModel<M>> getOperations(model: M): Operations<RenderingContext> =
+    fun <M : UnconstrainedModel<M>> getExportOperations(model: M): Operations<RenderingContext> =
         exportOperations.computeIfAbsent(model) {
-            operationsFactory.createExportOperations(model, EnableLayoutsAwareness { getActiveLayout() })
+            operationsFactory.createMeasureOperations(model).let { measuringOperations ->
+                operationsFactory.createExportOperations(model,
+                    JoinOperations(measuringOperations) { !it.boundingBox().isDefined() },
+                    EnableLayoutsAwareness { getActiveLayout() }
+                )
+            }
+        }
+
+    fun <M : UnconstrainedModel<M>> getMeasureOperations(model: M): Operations<RenderingContext> =
+        measureOperations.computeIfAbsent(model) {
+            operationsFactory.createMeasureOperations(model,
+                SkipRedundantMeasurements(),
+                EnableLayoutsAwareness { measurementLayout }
+            )
         }
 
     fun <M : UnconstrainedModel<M>> M.render(context: AttributedContext) {
-        getOperations(this).render(renderingContext, context)
+        getExportOperations(this).invoke(renderingContext, context)
+    }
+
+    fun <M : UnconstrainedModel<M>> M.measure(context: AttributedContext) {
+        getMeasureOperations(this).invoke(renderingContext, context)
     }
 
     private fun TemplateContext<*, *>.node(): TreeNode<*, *, *> =
@@ -53,32 +72,33 @@ class ExportTemplateServices(
         childLeftTopCorner: Position?,
         maxRightBottom: Position?,
         orientation: Orientation = Orientation.HORIZONTAL,
-        block: Layout<*, *, *>.() -> Unit,
+        block: AttachedLayout<*, *, *>.() -> Unit,
     ): Unit = when (val current = node()) {
         is BranchNode -> {
             ensureRootLayout()
             current.createLayoutScope(
                 queries,
-                childLeftTopCorner?:layoutContext?.leftTop,
-                maxRightBottom?:layoutContext?.maxRightBottom,
+                childLeftTopCorner ?: layoutContext?.leftTop,
+                maxRightBottom ?: layoutContext?.maxRightBottom,
                 orientation, block
             )
         }
 
         is RootNode -> current.setLayout(
             queries, uom,
-            childLeftTopCorner?:layoutContext?.leftTop.orStart(uom),
+            childLeftTopCorner ?: layoutContext?.leftTop.orStart(uom),
             viewPortMaxRightBottom(),
             orientation
         ).let(block)
     }
 
-    private fun getActiveLayout(): Layout<*, *, *> = root.activeNode.layout ?: when (root.activeNode) {
+    private fun getActiveLayout(): AttachedLayout<*, *, *> = root.activeNode.layout ?: when (root.activeNode) {
         is BranchNode -> (root.activeNode as BranchNode).getWrappingLayoutOrThrow()
         else -> error("No active layout present!")
     }
 
-    private fun viewPortMaxRightBottom(): Position =
+
+    internal fun viewPortMaxRightBottom(): Position =
         if (renderingContext is HavingViewportSize) {
             Position(
                 X(renderingContext.getWidth().orMax(uom).value, uom),
@@ -96,12 +116,30 @@ class ExportTemplateServices(
         root.activeNode.appendChild(context)
     }
 
-    fun <E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>, M : AbstractModel<E, M, C>> inNewScope(
-        template: E, context: C, block: TreeNode<*, *, *>.() -> Unit,
-    ) = createNode(template, context).let {
-        it.setActive()
-        it.apply(block)
-        it.endActive()
+    @Suppress("UNCHECKED_CAST")
+    private fun <E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>, M : AbstractModel<E, M, C>> M.node(): TreeNode<M, E, C>? =
+        if (::root.isInitialized) {
+            root.nodes[this]?.let { (it as TreeNode<M, E, C>) }
+        } else null
+
+    fun <E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>, M : AbstractModel<E, M, C>, R> M.inNodeScope(
+        template: E, contextProvider: () -> C, block: TreeNode<M, E, C>.() -> R,
+    ) = (node() ?: createNode(template, contextProvider())).runActiveNode(block)
+
+    private fun <E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>, M : AbstractModel<E, M, C>, R> TreeNode<M, E, C>.runActiveNode(
+        block: TreeNode<M, E, C>.() -> R,
+    ): R {
+        setActive()
+        return run(block).also {
+            endActive()
+        }
+    }
+
+    fun <R> setMeasurementLayout(policy: AbstractLayoutPolicy, block: (Layout) -> R): R {
+        measurementLayout = BasicLayout(
+            UnitsOfMeasure.PT, Orientation.HORIZONTAL, Position(X.zero(), Y.zero()), viewPortMaxRightBottom(), policy
+        )
+        return block(measurementLayout)
     }
 
     fun resetLayouts() = with(root) {
@@ -142,7 +180,7 @@ class ExportTemplateServices(
 
 }
 
-enum class TemplateStatus {
+enum class ExportStatus {
     ACTIVE,
     PARTIAL_X,
     PARTIAL_Y,
@@ -168,82 +206,82 @@ data class LayoutContext(
 @JvmInline
 value class StateAttributes(val stateAttributes: MutableMap<String, Any>) {
 
-    inline fun <reified E: ExecutionContext> addExecutionContext(executionContext: E) {
+    inline fun <reified E : ExecutionContext> addExecutionContext(executionContext: E) {
         stateAttributes["executionContext-${E::class.java.canonicalName}"] = executionContext
     }
 
-    inline fun <reified E: ExecutionContext> getExecutionContext(): E? = getExecutionContext(E::class.java)
+    inline fun <reified E : ExecutionContext> getExecutionContext(): E? = getExecutionContext(E::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    fun <E: ExecutionContext> getExecutionContext(_class: Class<E>): E? =
+    fun <E : ExecutionContext> getExecutionContext(_class: Class<E>): E? =
         stateAttributes["executionContext-${_class.canonicalName}"] as E?
 
-    inline fun <reified E: ExecutionContext> ensureExecutionContext(provider: () -> E): E =
+    inline fun <reified E : ExecutionContext> ensureExecutionContext(provider: () -> E): E =
         getExecutionContext() ?: run { addExecutionContext(provider()); getExecutionContext()!! }
 
-    inline fun <reified E: ExecutionContext> removeExecutionContext(): E? =
+    inline fun <reified E : ExecutionContext> removeExecutionContext(): E? =
         stateAttributes.remove("executionContext-${E::class.java.canonicalName}") as E?
 
-    inline fun <reified C: Any> getCustomAttribute(key: String): C? = stateAttributes[key] as C?
+    inline fun <reified C : Any> getCustomAttribute(key: String): C? = stateAttributes[key] as C?
 
-    inline fun <reified C: Any> removeCustomAttribute(key: String): C? = stateAttributes.remove(key) as C?
+    inline fun <reified C : Any> removeCustomAttribute(key: String): C? = stateAttributes.remove(key) as C?
 
     @Suppress("UNCHECKED_CAST")
-    fun <C: ExecutionContext,R: Any> ReifiedValueSupplier<C,R>.value(): R? =
+    fun <C : ExecutionContext, R : Any> ReifiedValueSupplier<C, R>.value(): R? =
         getExecutionContext(inClass)?.let { ctx -> this(ctx as C) }
 }
 
 open class TemplateContext<C : TemplateContext<C, M>, M : AbstractModel<*, M, C>>(
     val model: M,
     val stateAttributes: MutableMap<String, Any>,
-    val services: ExportTemplateServices,
+    val instance: ExportInstance,
     val parentAttributes: Attributes? = null,
     val modelAttributes: Attributes? = null,
-    var status: TemplateStatus = TemplateStatus.ACTIVE,
+    var status: ExportStatus = ExportStatus.ACTIVE,
 ) {
     val renderingContext: RenderingContext
-        get() = services.renderingContext
+        get() = instance.renderingContext
 
     internal var layoutContext: LayoutContext? = null
 
     fun getCustomAttributes(): MutableMap<String, Any> = stateAttributes
 
-    fun ExportTemplateServices.getOperations(): Operations<RenderingContext> = getOperations(model)
+    fun ExportInstance.getOperations(): Operations<RenderingContext> = getExportOperations(model)
 
-    fun suspendX() = with(services) {
+    fun suspendX() = with(instance) {
         status = when (status) {
-            TemplateStatus.ACTIVE,
-            TemplateStatus.PARTIAL_X,
-            -> TemplateStatus.PARTIAL_X
+            ExportStatus.ACTIVE,
+            ExportStatus.PARTIAL_X,
+            -> ExportStatus.PARTIAL_X
 
-            TemplateStatus.PARTIAL_Y -> TemplateStatus.PARTIAL_YX
-            TemplateStatus.PARTIAL_XY -> TemplateStatus.PARTIAL_XY
-            TemplateStatus.PARTIAL_YX -> TemplateStatus.PARTIAL_YX
-            TemplateStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
+            ExportStatus.PARTIAL_Y -> ExportStatus.PARTIAL_YX
+            ExportStatus.PARTIAL_XY -> ExportStatus.PARTIAL_XY
+            ExportStatus.PARTIAL_YX -> ExportStatus.PARTIAL_YX
+            ExportStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
         }
         bubblePartialStatus()
     }
 
-    fun suspendY() = with(services) {
+    fun suspendY() = with(instance) {
         status = when (status) {
-            TemplateStatus.ACTIVE,
-            TemplateStatus.PARTIAL_Y,
-            -> TemplateStatus.PARTIAL_Y
+            ExportStatus.ACTIVE,
+            ExportStatus.PARTIAL_Y,
+            -> ExportStatus.PARTIAL_Y
 
-            TemplateStatus.PARTIAL_X -> TemplateStatus.PARTIAL_XY
-            TemplateStatus.PARTIAL_XY -> TemplateStatus.PARTIAL_XY
-            TemplateStatus.PARTIAL_YX -> TemplateStatus.PARTIAL_YX
-            TemplateStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
+            ExportStatus.PARTIAL_X -> ExportStatus.PARTIAL_XY
+            ExportStatus.PARTIAL_XY -> ExportStatus.PARTIAL_XY
+            ExportStatus.PARTIAL_YX -> ExportStatus.PARTIAL_YX
+            ExportStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
         }
         bubblePartialStatus()
     }
 
-    fun finishOrSuspend() = with(services) {
+    fun finishOrSuspend() = with(instance) {
         if (status.isPartlyExported()) {
             setSuspended()
         } else {
             setResumed()
-            status = TemplateStatus.FINISHED
+            status = ExportStatus.FINISHED
         }
     }
 
@@ -255,31 +293,37 @@ open class TemplateContext<C : TemplateContext<C, M>, M : AbstractModel<*, M, C>
 
 }
 
-fun <C : ExecutionContext, R: Any> TemplateContext<*, *>.value(supplier: ReifiedValueSupplier<C,R>): R? =
+fun <C : ExecutionContext, R : Any> TemplateContext<*, *>.value(supplier: ReifiedValueSupplier<C, R>): R? =
     with(StateAttributes(getCustomAttributes())) { supplier.value() }
 
 abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, M, C>, C : TemplateContext<C, M>> {
 
     internal fun export(parentContext: TemplateContext<*, *>, model: M, layoutContext: LayoutContext? = null) =
-        with(parentContext.services) {
-            createTemplateContext(parentContext, model).let { templateContext ->
-                inNewScope(self(), templateContext) {
-                    templateContext.layoutContext = layoutContext
-                    doExport(templateContext)
-                    templateContext.finishOrSuspend()
-                }
+        with(parentContext.instance) {
+            model.inNodeScope(self(), { createTemplateContext(parentContext, model) }) {
+                context.layoutContext = layoutContext
+                doExport(context)
+                context.finishOrSuspend()
             }
         }
 
     internal fun onResume(context: C, resumeNext: ResumeNext) {
         if (context.isPartlyExported()) {
-            context.status = TemplateStatus.ACTIVE
+            context.status = ExportStatus.ACTIVE
             doResume(context, resumeNext)
             context.finishOrSuspend()
         }
     }
 
-    open fun computeSize(parentContext: TemplateContext<*, *>, model: M): SomeSize? = null
+    internal fun onMeasure(parentContext: TemplateContext<*, *>, model: M): SomeSize? = with(parentContext.instance) {
+        model.inNodeScope(self(), { createTemplateContext(parentContext, model) }) {
+            setMeasurementLayout(createLayoutPolicy(context)) {
+                doMeasures(context)
+            }
+        }
+    }
+
+    protected open fun doMeasures(context: C): SomeSize? = null
 
     protected abstract fun createTemplateContext(parentContext: TemplateContext<*, *>, model: M): C
 
@@ -289,23 +333,30 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
         resumeNext()
     }
 
+    protected open fun createLayoutPolicy(templateContext: C): AbstractLayoutPolicy = DefaultLayoutPolicy()
+
     protected fun C.createLayoutScope(
-        queries: AbstractLayoutPolicy = DefaultLayoutPolicy(),
         orientation: Orientation = Orientation.HORIZONTAL,
         childLeftTopCorner: Position? = null,
         maxRightBottom: Position? = null,
-        block: Layout<*, *, *>.() -> Unit,
-    ) = with(services) {
-        createLayoutScope(queries, childLeftTopCorner, maxRightBottom, orientation, block)
+        block: AttachedLayout<*, *, *>.() -> Unit,
+    ) = with(instance) {
+        createLayoutScope(
+            createLayoutPolicy(this@createLayoutScope), childLeftTopCorner, maxRightBottom, orientation, block
+        )
     }
 
-    protected fun C.render(context: AttributedContext) = with(services) {
+    protected fun C.render(context: AttributedContext) = with(instance) {
         model.render(context)
     }
 
-    protected fun C.resetLayouts() = services.resetLayouts()
+    protected fun C.measure(context: RenderableContext) = with(instance) {
+        model.measure(context)
+    }
 
-    fun C.resumeAllSuspendedNodes() = with(services) {
+    protected fun C.resetLayouts() = instance.resetLayouts()
+
+    fun C.resumeAllSuspendedNodes() = with(instance) {
         resumeAllSuspendedNodes()
     }
 
@@ -326,7 +377,7 @@ class StandaloneExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E,
         loadFirstByDocumentFormat<OutputBindingsProvider<RenderingContext>, RenderingContext>(format)!!
     }
 
-    fun <O : Any> export(model: M, output: O) = with(ExportTemplateServices(format)) {
+    fun <O : Any> export(model: M, output: O) = with(ExportInstance(format)) {
         resolveOutputBinding(output).run {
             setOutput(renderingContext, output)
             model.template.export(TemplateContext(model, mutableMapOf(), this@with), model)
@@ -336,7 +387,7 @@ class StandaloneExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E,
     }
 
     fun <O : Any, T : Any> export(model: M, output: O, dataSource: Iterable<T> = emptyList()) =
-        with(ExportTemplateServices(format)) {
+        with(ExportInstance(format)) {
             resolveOutputBinding(output).run {
                 val templateContext = TemplateContext(model, dataSource.asStateAttributes(), this@with)
                 setOutput(renderingContext, output)

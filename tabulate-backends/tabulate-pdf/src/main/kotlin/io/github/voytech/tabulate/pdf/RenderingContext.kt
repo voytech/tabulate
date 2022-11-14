@@ -110,7 +110,7 @@ class PdfBoxRenderingContext(val document: PDDocument = PDDocument()) : Renderin
         with(getCurrentContentStream()) {
             saveGraphicsState()
             setNonStrokingColor(color.awtColor())
-            addRect(absoluteX?.value ?: 0F, absoluteY?.value ?: 0F, width?.value ?: 0f, height?.value ?: 0f)
+            addRect(absoluteX.value, absoluteY.value, width?.value ?: 0f, height?.value ?: 0f)
             fill()
             restoreGraphicsState()
         }
@@ -182,15 +182,15 @@ data class BoxLayout(
     private val pageHeight = Height(context.getCurrentPage().mediaBox.height, UnitsOfMeasure.PT)
     val outer: LayoutElementBoundingBox by lazy {
         // move to PDFBox origin. X,Y is bottomLeft corner not topLeft one.
-        source.copy(absoluteY = pageHeight.asY() - (source.absoluteY!!.value.plus(source.height!!.value)))
+        source.copy(absoluteY = pageHeight.asY() - (source.absoluteY.value.plus(source.height!!.value)))
     }
     val inner: LayoutElementBoundingBox by lazy {
         computeContentBoundingBox()
     }
-    val innerX: Float = inner.absoluteX?.value ?: 0F
-    val innerY: Float = inner.absoluteY?.value ?: 0F
-    val outerX: Float = outer.absoluteX?.value ?: 0F
-    val outerY: Float = outer.absoluteY?.value ?: 0F
+    val innerX: Float = inner.absoluteX.value
+    val innerY: Float = inner.absoluteY.value
+    val outerX: Float = outer.absoluteX.value
+    val outerY: Float = outer.absoluteY.value
 
     private fun computeContentBoundingBox(): LayoutElementBoundingBox =
         if (borders != null) {
@@ -208,8 +208,8 @@ data class BoxLayout(
             } else 0F
             if (left != 0F || right != 0F || top != 0F || bottom != 0F) {
                 outer.copy(
-                    absoluteX = (outer.absoluteX ?: X(0F, UnitsOfMeasure.PT)) + X(left, UnitsOfMeasure.PT),
-                    absoluteY = (outer.absoluteY ?: Y(0F, UnitsOfMeasure.PT)) + Y(bottom, UnitsOfMeasure.PT),
+                    absoluteX = outer.absoluteX + X(left, UnitsOfMeasure.PT),
+                    absoluteY = outer.absoluteY + Y(bottom, UnitsOfMeasure.PT),
                     width = Width(outer.width?.value?.minus(left + right) ?: 0F, UnitsOfMeasure.PT),
                     height = Height(outer.height?.value?.minus(top + bottom) ?: 0F, UnitsOfMeasure.PT)
                 )
@@ -223,10 +223,6 @@ fun Color?.awtColor(): AwtColor =
 
 fun Pair<PDFont, Int>.measureTextHeight(): Float =
     first.fontDescriptor.capHeight / 1000 * second
-
-
-fun Pair<PDFont, Int>.measureTextWidth(context: CellContext): Float =
-    first.getStringWidth(context.value.toString()) / 1000 * second
 
 fun Pair<PDFont, Int>.measureTextWidth(string: String): Float =
     first.getStringWidth(string) / 1000 * second

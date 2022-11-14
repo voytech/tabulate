@@ -18,7 +18,7 @@ typealias StandaloneDocumentTemplate = StandaloneExportTemplate<DocumentTemplate
 class DocumentTemplate : ExportTemplate<DocumentTemplate, Document, DocumentTemplateContext>() {
 
     override fun createTemplateContext(parentContext: TemplateContext<*, *>, model: Document): DocumentTemplateContext =
-        DocumentTemplateContext(model, parentContext.services)
+        DocumentTemplateContext(model, parentContext.instance)
 
     override fun doExport(templateContext: DocumentTemplateContext) = with(templateContext) {
         createLayoutScope {

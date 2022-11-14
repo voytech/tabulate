@@ -33,8 +33,8 @@ abstract class AbstractModel<E : ExportTemplate<E, M, C>, M : AbstractModel<E, M
         template.export(parentContext, this as M, layoutContext)
     }
 
-    fun getSize(parentContext: TemplateContext<*, *>): SomeSize? =
-        template.computeSize(parentContext, this as M)
+    fun measure(parentContext: TemplateContext<*, *>): SomeSize? =
+        template.onMeasure(parentContext, this as M)
 }
 
 abstract class ModelWithAttributes<E : ExportTemplate<E, M, C>, M : ModelWithAttributes<E, M, C>, C : TemplateContext<C, M>> :

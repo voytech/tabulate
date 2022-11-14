@@ -8,6 +8,7 @@ import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.DataSourceBinding
 import io.github.voytech.tabulate.core.template.*
+import io.github.voytech.tabulate.core.template.layout.AbstractLayoutPolicy
 import io.github.voytech.tabulate.core.template.layout.TableLayoutPolicy
 import io.github.voytech.tabulate.core.template.operation.*
 import java.io.File
@@ -93,7 +94,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
         override fun finish() {
             renderRemainingBufferedRows(templateContext)
             renderingContext.renderColumnEnds(columnAttributes, operations, templateContext)
-            operations.render(
+            operations.invoke(
                 renderingContext,
                 templateContext.model.asTableEnd(templateContext.getCustomAttributes())
             )
@@ -106,13 +107,13 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
     ) : CaptureRowCompletion<T> {
 
         override fun onRowStartResolved(row: RowStart): OperationResult? =
-            operations.render(renderingContext, row)
+            operations.invoke(renderingContext, row)
 
         override fun onCellResolved(cell: CellContext): OperationResult? =
-            operations.render(renderingContext, cell)
+            operations.invoke(renderingContext, cell)
 
         override fun onRowEndResolved(row: RowEnd<T>): OperationResult? =
-            operations.render(renderingContext, row)
+            operations.invoke(renderingContext, row)
 
     }
 
@@ -140,7 +141,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
             val context = column.asColumnStart(
                 model, columnAttributes[column]?.start ?: Attributes(), getCustomAttributes()
             )
-            status = operations.render(this@renderColumnStarts, context)
+            status = operations.invoke(this@renderColumnStarts, context)
         }
         if (status.isXOverflow()) {
             templateContext.suspendX()
@@ -155,7 +156,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
         templateContext: TableTemplateContext<T>,
     ) = with(templateContext) {
         model.columns.forEach { column: ColumnDef<T> ->
-            operations.render(
+            operations.invoke(
                 this@renderColumnEnds,
                 column.asColumnEnd(model, columnAttributes[column]?.end ?: Attributes(), getCustomAttributes())
             )
@@ -169,8 +170,8 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
         }
 
     override fun doExport(templateContext: TableTemplateContext<T>): Unit = with(templateContext) {
-        createLayoutScope(TableLayoutPolicy()) {
-            val operations = services.getOperations(model)
+        createLayoutScope {
+            val operations = instance.getExportOperations(model)
             templateContext.setupRowResolver(CaptureRowCompletionImpl(renderingContext, operations))
             TabulationApiImpl(renderingContext, templateContext, operations).let { api ->
                 dataSource.exportRows(api)
@@ -182,10 +183,8 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
 
     override fun doResume(templateContext: TableTemplateContext<T>, resumeNext: ResumeNext) = with(templateContext) {
         beforeResume()
-        createLayoutScope(
-            TableLayoutPolicy(templateContext.indices.getIndexValueOnY(), templateContext.indices.getIndexOnX())
-        ) {
-            val operations = services.getOperations(model)
+        createLayoutScope {
+            val operations = instance.getExportOperations(model)
             templateContext.setupRowResolver(CaptureRowCompletionImpl(renderingContext, operations))
             TabulationApiImpl(renderingContext, templateContext, operations).let { api ->
                 cropDataSource().exportRows(api)
@@ -202,10 +201,13 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
         val binding = parentContext.stateAttributes["_dataSourceOverride"] as? DataSourceBinding<T>
         return TableTemplateContext(
             model, parentContext.stateAttributes,
-            parentContext.services,
+            parentContext.instance,
             model.dataSource?.dataSource ?: binding?.dataSource
         )
     }
+
+    override fun createLayoutPolicy(templateContext: TableTemplateContext<T>): AbstractLayoutPolicy =
+        TableLayoutPolicy(templateContext.indices.getIndexValueOnY(), templateContext.indices.getIndexOnX())
 
 
     fun <O : Any> export(format: DocumentFormat, source: Iterable<T>, output: O, table: Table<T>) =

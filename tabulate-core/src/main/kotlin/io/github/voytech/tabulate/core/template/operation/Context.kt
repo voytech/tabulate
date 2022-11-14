@@ -4,6 +4,7 @@ import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.AttributeAware
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
+import io.github.voytech.tabulate.core.template.layout.AttachedLayout
 import io.github.voytech.tabulate.core.template.layout.Layout
 import io.github.voytech.tabulate.core.template.layout.LayoutElement
 import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
@@ -71,7 +72,7 @@ abstract class RenderableContext(@JvmSynthetic override val attributes: Attribut
     lateinit var boundingBox: LayoutElementBoundingBox
         private set
 
-    fun Layout<*, *, *>.initBoundingBox(initializer: ((LayoutElementBoundingBox) -> LayoutElementBoundingBox)?): LayoutElementBoundingBox {
+    fun Layout.initBoundingBox(initializer: ((LayoutElementBoundingBox) -> LayoutElementBoundingBox)?): LayoutElementBoundingBox {
         boundingBox = computeBoundingBox()
         initializer?.let { boundingBox += it(boundingBox) }
         return boundingBox

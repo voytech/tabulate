@@ -574,7 +574,6 @@ class PdfBoxTabulateTests {
                     text {
                         value<PageExecutionContext> { "Page: ${it.pageNumber}" }
                         attributes {
-                            height { 20.pt() }
                             borders {
                                 topBorderStyle = DefaultBorderStyle.DASHED
                                 topBorderWidth = 0.5.pt()

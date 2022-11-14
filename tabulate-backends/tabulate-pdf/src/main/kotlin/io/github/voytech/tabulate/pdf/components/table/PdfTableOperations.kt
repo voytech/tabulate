@@ -46,6 +46,10 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
         operation(EndTableOperation { _, _ -> })
     }
 
+    override fun provideMeasureOperations(): BuildOperations<PdfBoxRenderingContext> = {
+        TODO("Implement!")
+    }
+
     override fun getDocumentFormat(): DocumentFormat<PdfBoxRenderingContext> = DocumentFormat.format("pdf", "pdfbox")
 
     override fun getModelClass(): Class<Table<Any>> = reify()

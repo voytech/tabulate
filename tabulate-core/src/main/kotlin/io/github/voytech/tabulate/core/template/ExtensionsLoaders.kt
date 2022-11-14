@@ -3,7 +3,8 @@ package io.github.voytech.tabulate.core.template
 import io.github.voytech.tabulate.core.model.AttributeConstraintsBuilder
 import io.github.voytech.tabulate.core.model.AttributeConstraintsProvider
 import io.github.voytech.tabulate.core.model.AttributesConstraints
-import io.github.voytech.tabulate.core.template.operation.factories.DiscoveredExportOperationFactories
+import io.github.voytech.tabulate.core.template.operation.factories.DiscoveredExportOperationProviders
+import io.github.voytech.tabulate.core.template.operation.factories.DiscoveredMeasureOperationProviders
 import io.github.voytech.tabulate.core.template.spi.*
 import java.util.*
 
@@ -75,8 +76,18 @@ inline fun <reified E : RenderingContextAware<CTX>, CTX : RenderingContext> load
  * @author Wojciech Mąka
  * @since 0.*.*
  */
-internal fun <R: RenderingContext> loadExportOperationProviders(format: DocumentFormat): DiscoveredExportOperationFactories<R> =
+internal fun <R: RenderingContext> loadExportOperationProviders(format: DocumentFormat): DiscoveredExportOperationProviders<R> =
     loadAllByDocumentFormat<ExportOperationsProvider<R, *>, R>(format).groupBy {
+        it.getModelClass()
+    }
+
+/**
+ * Top level method that loads instances of [MeasureOperationsProvider] associated by [DocumentFormat] compatible [RenderingContext] class.
+ * @author Wojciech Mąka
+ * @since 0.*.*
+ */
+internal fun <R: RenderingContext> loadMeasureOperationProviders(format: DocumentFormat): DiscoveredMeasureOperationProviders<R> =
+    loadAllByDocumentFormat<MeasureOperationsProvider<R, *>, R>(format).groupBy {
         it.getModelClass()
     }
 

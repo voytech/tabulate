@@ -5,14 +5,11 @@ import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.components.table.model.attributes.table.template
-import io.github.voytech.tabulate.components.table.operation.RowEnd
 import io.github.voytech.tabulate.components.table.operation.TableStart
 import io.github.voytech.tabulate.components.table.operation.asTableStart
 import io.github.voytech.tabulate.components.table.template.*
-import io.github.voytech.tabulate.core.template.ExportTemplateServices
 import io.github.voytech.tabulate.core.template.operation.*
 import io.github.voytech.tabulate.support.createTableContext
-import io.github.voytech.tabulate.support.spyExportTemplateServices
 import io.github.voytech.tabulate.support.success
 import io.github.voytech.tabulate.support.successfulRowComplete
 import org.junit.jupiter.api.Test

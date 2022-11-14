@@ -6,6 +6,6 @@ import io.github.voytech.tabulate.core.template.operation.Operation
 
 class NewPage(val pageNumber: Int, val pageName: String) : AttributedContext()
 
-fun interface RenderPageOperation<CTX : RenderingContext> : Operation<CTX, NewPage>
+fun interface PageOperation<CTX : RenderingContext> : Operation<CTX, NewPage>
 
 fun newPage(pageNumber: Int,pageName: String): NewPage = NewPage(pageNumber, pageName)

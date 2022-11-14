@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.core.template
 
 import io.github.voytech.tabulate.core.model.AbstractModel
 import io.github.voytech.tabulate.core.model.Model
-import io.github.voytech.tabulate.core.template.layout.Layout
+import io.github.voytech.tabulate.core.template.layout.AttachedLayout
 
 
 sealed class TreeNode<M : AbstractModel<E, M, C>, E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>>(
@@ -10,7 +10,7 @@ sealed class TreeNode<M : AbstractModel<E, M, C>, E : ExportTemplate<E, M, C>, C
     val context: C,
 ) {
     private val children: MutableList<TreeNode<*, *, *>> = mutableListOf()
-    var layout: Layout<M, E, C>? = null
+    var layout: AttachedLayout<M, E, C>? = null
 
     internal fun dropLayout() {
         layout = null
@@ -65,9 +65,8 @@ class RootNode<M : AbstractModel<E, M, C>, E : ExportTemplate<E, M, C>, C : Temp
         nodes[context.model] = this
     }
 
-    internal fun TemplateContext<*, *>.nodeOrNull(): TreeNode<*, *, *>? = nodes[model]
-
     override fun getRoot(): RootNode<*, *, *> = this
+
     override fun getParent(): TreeNode<*, *, *>? = null
 }
 
@@ -80,18 +79,6 @@ fun TreeNode<*, *, *>.endActive() = with(getRoot()) {
         is BranchNode<*, *, *> -> (activeNode as BranchNode<*, *, *>).parent
         else -> this
     }
-}
-
-fun <E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>, M : Model<M, C>> inScope(
-    template: E, context: C, block: TreeNode<*, *, *>.() -> Unit,
-) {
-    /*createNode(template, context).let {
-        activeNode = it
-        it.apply(block)
-        endScope()
-    }
-
-     */
 }
 
 fun TreeNode<*, *, *>.preserveActive(block: () -> Unit) = with(getRoot()) {

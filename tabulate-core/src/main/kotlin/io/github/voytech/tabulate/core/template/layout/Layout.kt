@@ -45,32 +45,51 @@ interface LayoutPolicy : AbsolutePositionPolicy {
 
 abstract class AbstractLayoutPolicy : LayoutPolicy {
 
-    internal lateinit var layout: Layout<*, *, *>
+    internal lateinit var layout: Layout
 
     override fun getLayoutBoundary(): BoundingRectangle = layout.boundingRectangle
 
 }
 
-abstract class TabularLayoutPolicy(protected open val rowIndex: Int = 0, protected open val columnIndex: Int = 0) :
+abstract class TabularLayoutPolicy(protected open val rowIndex: Int = 0, protected open val columnIndex: Int = 0):
     AbstractLayoutPolicy(), TabularPolicyMethods
 
-sealed class Layout<M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>>(
-    open val node: TreeNode<M,E,C>,
-    val uom: UnitsOfMeasure,
-    internal val orientation: Orientation,
-    val leftTop: Position,
-    val maxRightBottom: Position? = null,
+sealed interface Layout {
+    val uom: UnitsOfMeasure
+    val orientation: Orientation
+    val leftTop: Position
+    val maxRightBottom: Position?
     val policy: AbstractLayoutPolicy
-) {
-
-    internal var rightBottom: Position = leftTop
-
-    internal var nextLayoutLeftTop: Position? = null
-
     val boundingRectangle: BoundingRectangle
+    val maxBoundingRectangle: BoundingRectangle?
+
+    fun LayoutElementBoundingBox?.checkOverflow(): Overflow?
+
+    fun LayoutElementBoundingBox.applyOnLayout() {
+        extend(absoluteX + width.orZero())
+        extend(absoluteY + height.orZero())
+    }
+
+    fun extend(position: Position)
+    fun extend(width: Width)
+    fun extend(x: X)
+    fun extend(height: Height)
+    fun extend(y: Y)
+}
+
+sealed class AbstractLayout(
+    override val uom: UnitsOfMeasure,
+    override val orientation: Orientation,
+    override val leftTop: Position,
+    override val maxRightBottom: Position?,
+    override val policy: AbstractLayoutPolicy = DefaultLayoutPolicy(),
+    internal var rightBottom: Position = leftTop
+): Layout {
+
+    override val boundingRectangle: BoundingRectangle
         get() = BoundingRectangle(leftTop, rightBottom)
 
-    val maxBoundingRectangle: BoundingRectangle?
+    override val maxBoundingRectangle: BoundingRectangle?
         get() = maxRightBottom?.let { BoundingRectangle(leftTop, it) }
 
     private fun LayoutElementBoundingBox.isXOverflow(): Boolean = maxRightBottom?.let {
@@ -81,7 +100,7 @@ sealed class Layout<M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : Tem
         (absoluteY.value + (height.orZero().value)) > it.y.value
     } ?: false
 
-    fun LayoutElementBoundingBox?.checkOverflow(): Overflow? = if (this == null) null else {
+    override fun LayoutElementBoundingBox?.checkOverflow(): Overflow? = if (this == null) null else {
         if (isXOverflow()) {
             Overflow.X
         } else if (isYOverflow()) {
@@ -89,29 +108,49 @@ sealed class Layout<M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : Tem
         } else null
     }
 
-    protected abstract fun extendParent(position: Position)
-
-    internal fun extend(position: Position): Unit = with(node.template) {
-        extendParent(position)
+    override fun extend(position: Position) {
         rightBottom = orMax(rightBottom, position)
     }
 
-    internal fun extend(width: Width) = extend(Position(rightBottom.x + width, rightBottom.y))
+    override fun extend(width: Width) = extend(Position(rightBottom.x + width, rightBottom.y))
 
-    private fun extend(x: X) = extend(Position(x, rightBottom.y))
+    override fun extend(x: X) = extend(Position(x, rightBottom.y))
 
-    internal fun extend(height: Height) = extend(Position(rightBottom.x, rightBottom.y + height))
+    override fun extend(height: Height) = extend(Position(rightBottom.x, rightBottom.y + height))
 
-    private fun extend(y: Y) = extend(Position(rightBottom.x, y))
+    override fun extend(y: Y) = extend(Position(rightBottom.x, y))
 
-    //
-    // context receivers
-    //
-    fun LayoutElementBoundingBox.applyOnLayout() {
-        extend(absoluteX + width.orZero())
-        extend(absoluteY + height.orZero())
+}
+
+class BasicLayout(
+    uom: UnitsOfMeasure,
+    orientation: Orientation,
+    leftTop: Position,
+    maxRightBottom: Position?,
+    query: AbstractLayoutPolicy = DefaultLayoutPolicy(),
+) : AbstractLayout(uom, orientation, leftTop,maxRightBottom,query) {
+    init {
+        query.layout = this
     }
+}
 
+sealed class AttachedLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>>(
+    open val node: TreeNode<M,E,C>,
+    override val uom: UnitsOfMeasure,
+    override val orientation: Orientation,
+    override val leftTop: Position,
+    override val maxRightBottom: Position? = null,
+    override val policy: AbstractLayoutPolicy
+): AbstractLayout(uom,orientation,leftTop, maxRightBottom, policy) {
+
+    protected abstract fun extendParent(position: Position)
+
+    internal var nextLayoutLeftTop: Position? = null
+
+    override fun extend(position: Position) {
+        extendParent(position)
+        super.extend(position)
+    }
 }
 
 class RootLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M,C>, C : TemplateContext<C,M>>(
@@ -121,7 +160,7 @@ class RootLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M,C>, C : Templ
     maxRightBottom: Position?,
     query: AbstractLayoutPolicy = DefaultLayoutPolicy(),
     node: TreeNode<M,E,C>,
-) : Layout<M,E,C>(node, uom, orientation, leftTop, maxRightBottom, query) {
+) : AttachedLayout<M,E,C>(node, uom, orientation, leftTop, maxRightBottom, query) {
 
     init {
         query.layout = this
@@ -137,7 +176,7 @@ class InnerLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M,C>, C : Temp
     maxRightBottom: Position?,
     query: AbstractLayoutPolicy = DefaultLayoutPolicy(),
     override val node: BranchNode<M,E,C>,
-) : Layout<M,E,C>(node, uom, orientation, leftTop,maxRightBottom,query) {
+) : AttachedLayout<M,E,C>(node, uom, orientation, leftTop,maxRightBottom,query) {
 
     init {
         query.layout = this
@@ -159,11 +198,11 @@ class InnerLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M,C>, C : Temp
 
 }
 
-fun TreeNode<*,*,*>.getWrappingLayout(): Layout<*, *, *>? = getParent()?.let { parent ->
+fun TreeNode<*,*,*>.getWrappingLayout(): AttachedLayout<*, *, *>? = getParent()?.let { parent ->
     parent.layout ?: parent.getWrappingLayout()
 }
 
-fun TreeNode<*,*,*>.getWrappingLayoutOrThrow(): Layout<*, *, *> = getWrappingLayout() ?: error("No wrapping layout")
+fun TreeNode<*,*,*>.getWrappingLayoutOrThrow(): AttachedLayout<*, *, *> = getWrappingLayout() ?: error("No wrapping layout")
 
 fun TreeNode<*,*,*>.getEnclosingMaxRightBottom(): Position? = getWrappingLayout()?.let {
     it.maxRightBottom ?: it.node.getEnclosingMaxRightBottom()
@@ -217,15 +256,15 @@ private fun TreeNode<*,*,*>.resolveMargins(sourcePosition: Position): Position {
 }
 
 fun interface LayoutElement {
-    fun Layout<*, *, *>.computeBoundingBox(): LayoutElementBoundingBox
+    fun Layout.computeBoundingBox(): LayoutElementBoundingBox
 }
 
 fun interface BoundingBoxModifier {
-    fun Layout<*, *, *>.alter(source: LayoutElementBoundingBox): LayoutElementBoundingBox
+    fun Layout.alter(source: LayoutElementBoundingBox): LayoutElementBoundingBox
 }
 
 fun interface LayoutElementApply {
-    fun Layout<*, *, *>.applyBoundingBox(context: LayoutElementBoundingBox)
+    fun Layout.applyBoundingBox(context: LayoutElementBoundingBox)
 }
 
 data class LayoutElementBoundingBox(
@@ -237,11 +276,15 @@ data class LayoutElementBoundingBox(
 ) {
     fun unitsOfMeasure(): UnitsOfMeasure = layoutPosition.x.unit
 
+    fun isDefined(): Boolean = width!=null && height!=null
+
     operator fun plus(other: LayoutElementBoundingBox): LayoutElementBoundingBox = copy(
         width = other.width?.switchUnitOfMeasure(unitsOfMeasure()) ?: width,
         height = other.height?.switchUnitOfMeasure(unitsOfMeasure()) ?: height
     )
 }
+
+fun LayoutElementBoundingBox?.isDefined() = this?.isDefined() ?: false
 
 enum class Overflow {
     X,
