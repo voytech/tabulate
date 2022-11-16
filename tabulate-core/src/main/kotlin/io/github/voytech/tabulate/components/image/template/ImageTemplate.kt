@@ -17,7 +17,7 @@ class ImageTemplate : ExportTemplate<ImageTemplate, Image, ImageTemplateContext>
         }
     }
 
-    override fun doMeasures(context: ImageTemplateContext): SomeSize = with(context){
+    override fun takeMeasures(context: ImageTemplateContext): SomeSize = with(context){
         model.asRenderable(context).let { renderable ->
             measure(renderable)
             SomeSize(renderable.boundingBox.width, renderable.boundingBox.height)

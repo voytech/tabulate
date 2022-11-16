@@ -17,7 +17,7 @@ class TextTemplate : ExportTemplate<TextTemplate, Text, TextTemplateContext>() {
         }
     }
 
-    override fun doMeasures(context: TextTemplateContext): SomeSize = with(context) {
+    override fun takeMeasures(context: TextTemplateContext): SomeSize = with(context) {
         model.asRenderable(context).let { renderable ->
             measure(renderable)
             SomeSize(renderable.boundingBox.width, renderable.boundingBox.height)

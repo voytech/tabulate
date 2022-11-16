@@ -38,16 +38,16 @@ class PdfTextOperations : OperationsBundleProvider<PdfBoxRenderingContext, Text>
     }
 
     override fun provideMeasureOperations(): BuildOperations<PdfBoxRenderingContext> = {
-        operation(TextOperation { renderingContext, context ->
-            val bbox = context.boundingBox
-            renderingContext.document
-            val textStyle = context.getModelAttribute<TextStylesAttribute>()
-            val font = textStyle?.pdFont() ?: PDType1Font.HELVETICA
-            val fontSize = textStyle?.fontSize ?: 10
-            val h = (font to fontSize).measureTextHeight()
-            val w = (font to fontSize).measureTextWidth(context.text)
-            bbox.height = bbox.height ?: Height(h,bbox.unitsOfMeasure())
-            bbox.width = bbox.width ?: Width(w,bbox.unitsOfMeasure())
+        operation(TextOperation { _, context ->
+            context.boundingBox.apply {
+                if (!isDefined()) {
+                    val textStyle = context.getModelAttribute<TextStylesAttribute>()
+                    val font = textStyle?.pdFont() ?: PDType1Font.HELVETICA
+                    val fontSize = textStyle?.fontSize ?: 10
+                    height = height ?: Height((font to fontSize).measureTextHeight(), unitsOfMeasure())
+                    width = width ?: Width((font to fontSize).measureTextWidth(context.text), unitsOfMeasure())
+                }
+            }
         })
     }
 

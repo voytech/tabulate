@@ -318,12 +318,12 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
     internal fun onMeasure(parentContext: TemplateContext<*, *>, model: M): SomeSize? = with(parentContext.instance) {
         model.inNodeScope(self(), { createTemplateContext(parentContext, model) }) {
             setMeasurementLayout(createLayoutPolicy(context)) {
-                doMeasures(context)
+                takeMeasures(context)
             }
         }
     }
 
-    protected open fun doMeasures(context: C): SomeSize? = null
+    protected open fun takeMeasures(context: C): SomeSize? = null
 
     protected abstract fun createTemplateContext(parentContext: TemplateContext<*, *>, model: M): C
 

@@ -28,10 +28,13 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
 
         operation(StartRowOperation { _, _ -> })
 
+        // TODO support typeHits
+        // TODO support colspan and rowspan.
         operation(RenderRowCellOperation { renderingContext, context ->
             with(renderingContext) {
                 beginText()
-                val box = renderingContext.boxLayout(context, context.getModelAttribute<BordersAttribute>()) //TODO boxModel should be a part of boundingRectangle coming from core
+                // TODO boxModel should be a part of boundingRectangle from library core
+                val box = renderingContext.boxLayout(context, context.getModelAttribute<BordersAttribute>())
                 setTextPosition(box.innerX + xTextOffset, box.innerY + yTextOffset)
                 showText(context.value.toString())
                 endText()
@@ -47,7 +50,7 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
     }
 
     override fun provideMeasureOperations(): BuildOperations<PdfBoxRenderingContext> = {
-        TODO("Implement!")
+        //TODO  Implement!
     }
 
     override fun getDocumentFormat(): DocumentFormat<PdfBoxRenderingContext> = DocumentFormat.format("pdf", "pdfbox")

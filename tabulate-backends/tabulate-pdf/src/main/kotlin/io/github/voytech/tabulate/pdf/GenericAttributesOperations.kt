@@ -130,7 +130,7 @@ class TextStylesAttributeRenderOperation<CTX: AttributedContext> :
     ) = with(renderingContext) {
         getCurrentContentStream().let { content ->
             val font = attribute.pdFont()
-            val size: Float = attribute.fontSize?.toFloat() ?: 16F
+            val size: Float = attribute.fontSize?.toFloat() ?: 10F
             beginText()
             setFont(font, size)
             content.setNonStrokingColor(attribute.fontColor.awtColor())

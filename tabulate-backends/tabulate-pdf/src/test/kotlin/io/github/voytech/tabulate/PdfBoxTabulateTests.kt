@@ -72,6 +72,7 @@ class PdfBoxTabulateTests {
             }
         }
     }
+
     @Test
     fun `should correctly export two on same sheet, one next to each others`() {
         val tableStyle = table {

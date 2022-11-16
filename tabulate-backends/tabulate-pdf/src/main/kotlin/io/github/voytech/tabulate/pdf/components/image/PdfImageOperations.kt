@@ -43,7 +43,7 @@ class PdfImageOperations : OperationsBundleProvider<PdfBoxRenderingContext, Imag
     override fun provideMeasureOperations(): BuildOperations<PdfBoxRenderingContext> = {
         operation(ImageOperation { renderingContext, context ->
             context.boundingBox()?.let { bbox ->
-                if (bbox.height == null || bbox.width == null) {
+                if (!bbox.isDefined()) {
                     val image = renderingContext.loadImage(context.filePath)
                     bbox.apply {
                         height = height ?: Height(image.height.toFloat(), UnitsOfMeasure.PT)
