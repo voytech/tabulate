@@ -7,9 +7,10 @@ import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.DataSourceBinding
+import io.github.voytech.tabulate.core.model.SomeSize
 import io.github.voytech.tabulate.core.template.*
 import io.github.voytech.tabulate.core.template.layout.AbstractLayoutPolicy
-import io.github.voytech.tabulate.core.template.layout.TableLayoutPolicy
+import io.github.voytech.tabulate.core.template.layout.GridLayoutPolicy
 import io.github.voytech.tabulate.core.template.operation.*
 import java.io.File
 import java.io.FileOutputStream
@@ -194,6 +195,10 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
         keepStatus()
     }
 
+    override fun takeMeasures(context: TableTemplateContext<T>): SomeSize? {
+        return super.takeMeasures(context)
+    }
+
     override fun createTemplateContext(
         parentContext: TemplateContext<*, *>,
         model: Table<T>,
@@ -207,7 +212,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
     }
 
     override fun createLayoutPolicy(templateContext: TableTemplateContext<T>): AbstractLayoutPolicy =
-        TableLayoutPolicy(templateContext.indices.getIndexValueOnY(), templateContext.indices.getIndexOnX())
+        GridLayoutPolicy(templateContext.indices.getIndexValueOnY(), templateContext.indices.getIndexOnX())
 
 
     fun <O : Any> export(format: DocumentFormat, source: Iterable<T>, output: O, table: Table<T>) =

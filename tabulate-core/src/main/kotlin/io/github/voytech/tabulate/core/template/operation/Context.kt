@@ -4,7 +4,6 @@ import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.AttributeAware
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.template.layout.AttachedLayout
 import io.github.voytech.tabulate.core.template.layout.Layout
 import io.github.voytech.tabulate.core.template.layout.LayoutElement
 import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox

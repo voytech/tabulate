@@ -5,7 +5,7 @@ import io.github.voytech.tabulate.components.commons.operation.newPage
 import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.template.*
-import io.github.voytech.tabulate.core.template.layout.AttachedLayout
+import io.github.voytech.tabulate.core.template.layout.Layout
 
 class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
 
@@ -21,7 +21,7 @@ class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
         stickyHeaderAndFooterWith { _, _ -> resumeNext() }
     }
 
-    private fun PageTemplateContext.stickyHeaderAndFooterWith(block: (AttachedLayout<*, *, *>, Position?) -> Unit) {
+    private fun PageTemplateContext.stickyHeaderAndFooterWith(block: (Layout, Position?) -> Unit) {
         with(model) {
             createLayoutScope(orientation = Orientation.VERTICAL) {
                 render(newPage(nextPageNumber(), name))
@@ -42,11 +42,11 @@ class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
         nodes?.forEach { it.export(context, layoutContext) }
     }
 
-    private fun Page.footerSize(context: PageTemplateContext, layout: AttachedLayout<*, *, *>) = footer?.measure(context)?.let {
+    private fun Page.footerSize(context: PageTemplateContext, layout: Layout) = footer?.measure(context)?.let {
         Size(it.width ?: Width(layout.maxRightBottom!!.x.value, layout.uom), it.height!!)
     }
 
-    private fun AttachedLayout<*, *, *>.footerLeftTop(size: Size?): Position? =
+    private fun Layout.footerLeftTop(size: Size?): Position? =
         maxRightBottom?.let { maxRightBottom ->
             size?.let {
                 Position(
@@ -56,7 +56,7 @@ class PageTemplate : ExportTemplate<PageTemplate, Page, PageTemplateContext>() {
             }
         }
 
-    private fun Position?.contentLayoutContext(layout: AttachedLayout<*, *, *>): LayoutContext =
+    private fun Position?.contentLayoutContext(layout: Layout): LayoutContext =
         LayoutContext(maxRightBottom = this?.let { Position(layout.maxRightBottom!!.x, it.y) })
 
     private fun Position?.footerLayoutContext(size: Size?): LayoutContext =

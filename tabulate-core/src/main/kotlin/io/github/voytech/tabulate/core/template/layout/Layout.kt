@@ -1,8 +1,6 @@
 package io.github.voytech.tabulate.core.template.layout
 
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.model.attributes.MarginsAttribute
-import io.github.voytech.tabulate.core.template.*
 
 interface AbsolutePositionPolicy {
 
@@ -22,11 +20,11 @@ interface AbsolutePositionPolicy {
     fun getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y
 }
 
-interface TabularPolicyMethods : AbsolutePositionPolicy {
+interface GridPolicyMethods : AbsolutePositionPolicy {
     fun setColumnWidth(column: Int, width: Width)
     fun setRowHeight(row: Int, height: Height)
-    fun getColumnWidth(column: Int, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width
-    fun getRowHeight(row: Int, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height
+    fun getColumnWidth(column: Int, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width?
+    fun getRowHeight(row: Int, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height?
 }
 
 interface LayoutPolicy : AbsolutePositionPolicy {
@@ -51,10 +49,10 @@ abstract class AbstractLayoutPolicy : LayoutPolicy {
 
 }
 
-abstract class TabularLayoutPolicy(protected open val rowIndex: Int = 0, protected open val columnIndex: Int = 0):
-    AbstractLayoutPolicy(), TabularPolicyMethods
+abstract class AbstractGridLayoutPolicy(protected open val rowIndex: Int = 0, protected open val columnIndex: Int = 0) :
+    AbstractLayoutPolicy(), GridPolicyMethods
 
-sealed interface Layout {
+interface Layout {
     val uom: UnitsOfMeasure
     val orientation: Orientation
     val leftTop: Position
@@ -83,8 +81,10 @@ sealed class AbstractLayout(
     override val leftTop: Position,
     override val maxRightBottom: Position?,
     override val policy: AbstractLayoutPolicy = DefaultLayoutPolicy(),
-    internal var rightBottom: Position = leftTop
-): Layout {
+    internal var rightBottom: Position = leftTop,
+) : Layout {
+
+    internal var measured: Boolean = false
 
     override val boundingRectangle: BoundingRectangle
         get() = BoundingRectangle(leftTop, rightBottom)
@@ -122,137 +122,18 @@ sealed class AbstractLayout(
 
 }
 
-class BasicLayout(
+fun Layout.isMeasured(): Boolean = this is AbstractLayout && measured
+
+class DefaultLayout(
     uom: UnitsOfMeasure,
     orientation: Orientation,
     leftTop: Position,
     maxRightBottom: Position?,
-    query: AbstractLayoutPolicy = DefaultLayoutPolicy(),
-) : AbstractLayout(uom, orientation, leftTop,maxRightBottom,query) {
+    policy: AbstractLayoutPolicy = DefaultLayoutPolicy(),
+) : AbstractLayout(uom, orientation, leftTop, maxRightBottom, policy) {
     init {
-        query.layout = this
+        policy.layout = this
     }
-}
-
-sealed class AttachedLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>>(
-    open val node: TreeNode<M,E,C>,
-    override val uom: UnitsOfMeasure,
-    override val orientation: Orientation,
-    override val leftTop: Position,
-    override val maxRightBottom: Position? = null,
-    override val policy: AbstractLayoutPolicy
-): AbstractLayout(uom,orientation,leftTop, maxRightBottom, policy) {
-
-    protected abstract fun extendParent(position: Position)
-
-    internal var nextLayoutLeftTop: Position? = null
-
-    override fun extend(position: Position) {
-        extendParent(position)
-        super.extend(position)
-    }
-}
-
-class RootLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M,C>, C : TemplateContext<C,M>>(
-    uom: UnitsOfMeasure,
-    orientation: Orientation,
-    leftTop: Position,
-    maxRightBottom: Position?,
-    query: AbstractLayoutPolicy = DefaultLayoutPolicy(),
-    node: TreeNode<M,E,C>,
-) : AttachedLayout<M,E,C>(node, uom, orientation, leftTop, maxRightBottom, query) {
-
-    init {
-        query.layout = this
-    }
-
-    override fun extendParent(position: Position) {}
-}
-
-class InnerLayout<M: AbstractModel<E, M, C>,E : ExportTemplate<E, M,C>, C : TemplateContext<C,M>>(
-    uom: UnitsOfMeasure,
-    orientation: Orientation,
-    leftTop: Position,
-    maxRightBottom: Position?,
-    query: AbstractLayoutPolicy = DefaultLayoutPolicy(),
-    override val node: BranchNode<M,E,C>,
-) : AttachedLayout<M,E,C>(node, uom, orientation, leftTop,maxRightBottom,query) {
-
-    init {
-        query.layout = this
-    }
-
-    override fun extendParent(position: Position) {
-        node.getWrappingLayoutOrThrow().extend(position)
-    }
-
-    internal fun finish() {
-        node.getWrappingLayoutOrThrow().let { parentLayout ->
-            parentLayout.nextLayoutLeftTop = if (parentLayout.orientation == Orientation.HORIZONTAL) {
-                Position(parentLayout.rightBottom.x + EPSILON, parentLayout.leftTop.y)
-            } else {
-                Position(parentLayout.leftTop.x, parentLayout.rightBottom.y + EPSILON)
-            }
-        }
-    }
-
-}
-
-fun TreeNode<*,*,*>.getWrappingLayout(): AttachedLayout<*, *, *>? = getParent()?.let { parent ->
-    parent.layout ?: parent.getWrappingLayout()
-}
-
-fun TreeNode<*,*,*>.getWrappingLayoutOrThrow(): AttachedLayout<*, *, *> = getWrappingLayout() ?: error("No wrapping layout")
-
-fun TreeNode<*,*,*>.getEnclosingMaxRightBottom(): Position? = getWrappingLayout()?.let {
-    it.maxRightBottom ?: it.node.getEnclosingMaxRightBottom()
-}
-
-fun <M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> RootNode<M,E,C>.setLayout(
-    queries: AbstractLayoutPolicy = DefaultLayoutPolicy(),
-    uom: UnitsOfMeasure = UnitsOfMeasure.PT,
-    leftTop: Position = Position.start(uom),
-    maxRightBottom: Position? = null,
-    orientation: Orientation = Orientation.HORIZONTAL
-): RootLayout<M,E,C> =
-    RootLayout(
-        uom = uom,
-        orientation = orientation,
-        leftTop = resolveMargins(leftTop),
-        maxRightBottom = maxRightBottom,
-        query = queries,
-        node = this
-    ).also { layout = it }
-
-fun <M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> BranchNode<M,E,C>.setLayout(
-    queries: AbstractLayoutPolicy,
-    childLeftTop: Position? = null,
-    maxRightBottom: Position? = null,
-    orientation: Orientation? = null,
-): InnerLayout<M,E,C> = getWrappingLayoutOrThrow().let { wrapping ->
-    InnerLayout(
-        uom = wrapping.uom,
-        orientation= orientation ?: Orientation.HORIZONTAL,
-        leftTop = resolveMargins(childLeftTop ?: wrapping.nextLayoutLeftTop ?: wrapping.leftTop),
-        maxRightBottom = maxRightBottom ?: getEnclosingMaxRightBottom(),
-        query = queries,
-        node = this
-    ).also { layout = it }
-}
-
-fun <M: AbstractModel<E, M, C>,E : ExportTemplate<E,M,C>, C : TemplateContext<C,M>> BranchNode<M,E,C>.createLayoutScope(
-    queries: AbstractLayoutPolicy,
-    childLeftTop: Position? = null,
-    maxRightBottom: Position? = null,
-    orientation: Orientation? = null,
-    block: InnerLayout<M,E,C>.() -> Unit,
-) = setLayout(queries, childLeftTop, maxRightBottom, orientation).apply(block).finish()
-
-private fun TreeNode<*,*,*>.resolveMargins(sourcePosition: Position): Position {
-    val model = (context.model as? AttributedModelOrPart<*>)
-    return model?.attributes?.get(MarginsAttribute::class.java)?.let {
-        Position(it.left + sourcePosition.x, it.top + sourcePosition.y)
-    } ?: sourcePosition
 }
 
 fun interface LayoutElement {
@@ -276,7 +157,7 @@ data class LayoutElementBoundingBox(
 ) {
     fun unitsOfMeasure(): UnitsOfMeasure = layoutPosition.x.unit
 
-    fun isDefined(): Boolean = width!=null && height!=null
+    fun isDefined(): Boolean = width != null && height != null
 
     operator fun plus(other: LayoutElementBoundingBox): LayoutElementBoundingBox = copy(
         width = other.width?.switchUnitOfMeasure(unitsOfMeasure()) ?: width,
@@ -344,7 +225,7 @@ class SpreadsheetPolicy(
     private val defaultWidthInPt: Float = 56.25f,
     private val defaultHeightInPt: Float = 15f,
     val standardUnit: StandardUnits = StandardUnits.PT,
-) : TabularPolicyMethods {
+) : GridPolicyMethods {
 
     private val rows: MutableMap<Int, PositionAndLength> = mutableMapOf()
     private val columns: MutableMap<Int, PositionAndLength> = mutableMapOf()
@@ -429,7 +310,7 @@ class SpreadsheetPolicy(
         return findPosition(index, defaultMeasure).let { posLen ->
             length.unit.switchUnitOfMeasure(length.value, standardUnit.asUnitsOfMeasure()).let { measure ->
                 val oldLength = this[index]?.length ?: 0f
-                if (oldLength != measure) {
+                if (oldLength < measure) {
                     this[index] = PositionAndLength(posLen.position, measure)
                     this.keys.forEach {
                         if (it > index) this[it] = this[it]!!.move(measure - oldLength)
@@ -451,9 +332,9 @@ class SpreadsheetPolicy(
 
 }
 
-class TableLayoutPolicy(
+class GridLayoutPolicy(
     override val rowIndex: Int = 0, override val columnIndex: Int = 0,
-) : TabularLayoutPolicy(rowIndex, columnIndex) {
+) : AbstractGridLayoutPolicy(rowIndex, columnIndex) {
 
     private val delegate = SpreadsheetPolicy(rowIndex, columnIndex)
 
@@ -466,6 +347,7 @@ class TableLayoutPolicy(
 
     override fun getX(relativeX: X, targetUnit: UnitsOfMeasure): X {
         assert(relativeX.unit == UnitsOfMeasure.NU) { "input coordinate must be expressed in ordinal numeric units" }
+        //TODO getX method should be allowed ONLY to return relative position. SUMMING with absolutePosition should be encapsulated in AbstractLayoutPolicy.
         val absoluteXPosition = getLayoutBoundary().leftTop.x.switchUnitOfMeasure(targetUnit)
         val currentLayoutRelativeX = delegate.getX(relativeX, targetUnit)
         return absoluteXPosition + currentLayoutRelativeX
@@ -494,8 +376,10 @@ class TableLayoutPolicy(
         delegate.setRowHeight(row, height)
     }
 
-    override fun getColumnWidth(column: Int, uom: UnitsOfMeasure): Width = delegate.getColumnWidth(column, uom)
+    override fun getColumnWidth(column: Int, uom: UnitsOfMeasure): Width? =
+        if (layout.isMeasured()) delegate.getColumnWidth(column, uom) else null
 
-    override fun getRowHeight(row: Int, uom: UnitsOfMeasure): Height = delegate.getRowHeight(row, uom)
+    override fun getRowHeight(row: Int, uom: UnitsOfMeasure): Height? =
+        if (layout.isMeasured()) delegate.getRowHeight(row, uom) else null
 
 }

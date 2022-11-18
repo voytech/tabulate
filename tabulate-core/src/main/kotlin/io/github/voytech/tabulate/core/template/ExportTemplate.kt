@@ -21,7 +21,6 @@ class ExportInstance(
     private lateinit var root: RootNode<*, *, *>
     private val exportOperations: OperationsMap = mutableMapOf()
     private val measureOperations: OperationsMap = mutableMapOf()
-    private lateinit var measurementLayout: BasicLayout
 
     fun <M : UnconstrainedModel<M>> getExportOperations(model: M): Operations<RenderingContext> =
         exportOperations.computeIfAbsent(model) {
@@ -33,11 +32,11 @@ class ExportInstance(
             }
         }
 
-    fun <M : UnconstrainedModel<M>> getMeasureOperations(model: M): Operations<RenderingContext> =
+    fun <M : UnconstrainedModel<M>> getMeasuringOperations(model: M): Operations<RenderingContext> =
         measureOperations.computeIfAbsent(model) {
             operationsFactory.createMeasureOperations(model,
                 SkipRedundantMeasurements(),
-                EnableLayoutsAwareness { measurementLayout }
+                EnableLayoutsAwareness { getActiveMeasuringLayout() }
             )
         }
 
@@ -46,7 +45,7 @@ class ExportInstance(
     }
 
     fun <M : UnconstrainedModel<M>> M.measure(context: AttributedContext) {
-        getMeasureOperations(this).invoke(renderingContext, context)
+        getMeasuringOperations(this).invoke(renderingContext, context)
     }
 
     private fun TemplateContext<*, *>.node(): TreeNode<*, *, *> =
@@ -72,8 +71,9 @@ class ExportInstance(
         childLeftTopCorner: Position?,
         maxRightBottom: Position?,
         orientation: Orientation = Orientation.HORIZONTAL,
-        block: AttachedLayout<*, *, *>.() -> Unit,
+        block: Layout.() -> Unit,
     ): Unit = when (val current = node()) {
+
         is BranchNode -> {
             ensureRootLayout()
             current.createLayoutScope(
@@ -89,14 +89,30 @@ class ExportInstance(
             childLeftTopCorner ?: layoutContext?.leftTop.orStart(uom),
             viewPortMaxRightBottom(),
             orientation
-        ).let(block)
+        ).let { block(it) }
+
     }
 
-    private fun getActiveLayout(): AttachedLayout<*, *, *> = root.activeNode.layout ?: when (root.activeNode) {
-        is BranchNode -> (root.activeNode as BranchNode).getWrappingLayoutOrThrow()
+    fun <R> TreeNode<*, *, *>.setMeasuringLayout(policy: AbstractLayoutPolicy, block: (DefaultLayout) -> R): R {
+        measuringGrid = DefaultLayout(
+            UnitsOfMeasure.PT,
+            Orientation.HORIZONTAL,
+            Position(X.zero(), Y.zero()),
+            viewPortMaxRightBottom(), //TODO this is not viewPortMaxRightBottom but relative to parent.
+            policy
+        )
+        return block(measuringGrid!!)
+    }
+
+    private fun getActiveLayout(): Layout = root.activeNode.layout ?: when (root.activeNode) {
+        is BranchNode -> (root.activeNode as BranchNode).getClosestAncestorLayout()!!
         else -> error("No active layout present!")
     }
 
+    private fun getActiveMeasuringLayout(): Layout = root.activeNode.measuringGrid ?: when (root.activeNode) {
+        is BranchNode -> (root.activeNode as BranchNode).getClosestLayoutAwareAncestor().measuringGrid!!
+        else -> error("No active measuring layout to perform measures on!")
+    }
 
     internal fun viewPortMaxRightBottom(): Position =
         if (renderingContext is HavingViewportSize) {
@@ -133,13 +149,6 @@ class ExportInstance(
         return run(block).also {
             endActive()
         }
-    }
-
-    fun <R> setMeasurementLayout(policy: AbstractLayoutPolicy, block: (Layout) -> R): R {
-        measurementLayout = BasicLayout(
-            UnitsOfMeasure.PT, Orientation.HORIZONTAL, Position(X.zero(), Y.zero()), viewPortMaxRightBottom(), policy
-        )
-        return block(measurementLayout)
     }
 
     fun resetLayouts() = with(root) {
@@ -315,10 +324,11 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
         }
     }
 
+    //TODO on measure - should call probably the same logic as export and resumption but should inject measurement operations instead of export operations. We should not be able to use different exporting logic for those two paths.
     internal fun onMeasure(parentContext: TemplateContext<*, *>, model: M): SomeSize? = with(parentContext.instance) {
         model.inNodeScope(self(), { createTemplateContext(parentContext, model) }) {
-            setMeasurementLayout(createLayoutPolicy(context)) {
-                takeMeasures(context)
+            setMeasuringLayout(createLayoutPolicy(context)) { measuringLayout ->
+                takeMeasures(context).also { measuringLayout.measured = true }
             }
         }
     }
@@ -339,7 +349,7 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
         orientation: Orientation = Orientation.HORIZONTAL,
         childLeftTopCorner: Position? = null,
         maxRightBottom: Position? = null,
-        block: AttachedLayout<*, *, *>.() -> Unit,
+        block: Layout.() -> Unit,
     ) = with(instance) {
         createLayoutScope(
             createLayoutPolicy(this@createLayoutScope), childLeftTopCorner, maxRightBottom, orientation, block
