@@ -20,6 +20,7 @@ import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.text.DefaultFonts
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
+import io.github.voytech.tabulate.test.sampledata.SampleCustomer
 import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -36,6 +37,74 @@ class PdfBoxTabulateTests {
                 "${(it.record?.let { obj -> (prop.get(obj) as BigDecimal).setScale(2, RoundingMode.HALF_UP) } ?: 0)} $"
             }
         }
+
+    val tableTextStyle = table {
+        attributes {
+            text { fontSize = 8 }
+            alignment {
+                vertical = DefaultVerticalAlignment.BOTTOM
+                horizontal = DefaultHorizontalAlignment.LEFT
+            }
+        }
+    }
+
+    val tableBorderStyle = table {
+        attributes {
+            borders {
+                leftBorderColor = Colors.LIGHT_GRAY
+                leftBorderStyle = DefaultBorderStyle.DOTTED
+                leftBorderWidth = 1f.pt()
+                rightBorderColor = Colors.LIGHT_GRAY
+                rightBorderStyle = DefaultBorderStyle.SOLID
+                rightBorderWidth = 2f.pt()
+                topBorderColor = Colors.LIGHT_GRAY
+                topBorderStyle = DefaultBorderStyle.DASHED
+                topBorderWidth = 2f.pt()
+                bottomBorderColor = Colors.LIGHT_GRAY
+                bottomBorderStyle = DefaultBorderStyle.SOLID
+                bottomBorderWidth = 2.pt()
+            }
+        }
+    }
+
+    val tableSize = table {
+        attributes {
+            columnWidth { 110.px() }
+            rowHeight { 20.px() }
+        }
+    }
+
+    val tableHeaderStyle = table {
+        rows {
+            header {
+                attributes {
+                    text {
+                        fontColor = Colors.WHITE
+                        italic = true
+                        weight = DefaultWeightStyle.BOLD
+                    }
+                    background {
+                        color = Colors.BLACK
+                    }
+                    rowBorders {// TODO - simplify border API. Add builder methods like 'horizontalBorders', 'verticalBorders', 'allBorders'
+                        leftBorderColor = Colors.RED
+                        leftBorderStyle = DefaultBorderStyle.SOLID
+                        leftBorderWidth = 1f.pt()
+                        rightBorderColor = Colors.RED
+                        rightBorderStyle = DefaultBorderStyle.SOLID
+                        rightBorderWidth = 1f.pt()
+                        topBorderColor = Colors.RED
+                        topBorderWidth = 1f.pt()
+                        topBorderStyle = DefaultBorderStyle.SOLID
+                        bottomBorderColor = Colors.RED
+                        bottomBorderWidth = 1f.pt()
+                        bottomBorderStyle = DefaultBorderStyle.SOLID
+                    }
+                }
+            }
+        }
+    }
+
 
     val textBoxStyle : TextAttributesBuilderApi.() -> Unit = {
         height { 20.pt() }
@@ -74,76 +143,7 @@ class PdfBoxTabulateTests {
     }
 
     @Test
-    fun `should correctly export two on same sheet, one next to each others`() {
-        val tableStyle = table {
-            attributes {
-                columnWidth { 110.px() }
-                rowHeight { 20.px() }
-                text { fontSize = 8 }
-                alignment {
-                    vertical = DefaultVerticalAlignment.BOTTOM
-                    horizontal = DefaultHorizontalAlignment.LEFT
-                }
-                borders {
-                    leftBorderColor = Colors.LIGHT_GRAY
-                    leftBorderStyle = DefaultBorderStyle.DOTTED
-                    leftBorderWidth = 1f.pt()
-                    rightBorderColor = Colors.LIGHT_GRAY
-                    rightBorderStyle = DefaultBorderStyle.SOLID
-                    rightBorderWidth = 2f.pt()
-                    topBorderColor = Colors.LIGHT_GRAY
-                    topBorderStyle = DefaultBorderStyle.DASHED
-                    topBorderWidth = 2f.pt()
-                    bottomBorderColor = Colors.LIGHT_GRAY
-                    bottomBorderStyle = DefaultBorderStyle.SOLID
-                    bottomBorderWidth = 2.pt()
-                }
-            }
-            columns {
-                /*   column(0) { //TODO add support when overriding builder are defining columns - to lookup this column when generated only by index.
-                       attributes {
-                           text { fontColor = Colors.RED }
-                           alignment {
-                               horizontal = DefaultHorizontalAlignment.LEFT
-                               vertical = DefaultVerticalAlignment.MIDDLE
-                           }
-                           borders { leftBorderWidth = 10f.pt() }
-                       }
-                   } */
-            }
-        }
-        val tableHeaderStyle = table {
-            rows {
-                header {
-                    attributes {
-                        text {
-                            fontColor = Colors.WHITE
-                            italic = true
-                            weight = DefaultWeightStyle.BOLD
-                        }
-                        background {
-                            color = Colors.BLACK
-                        }
-                        rowBorders {// TODO - simplify border API. Add builder methods like 'horizontalBorders', 'verticalBorders', 'allBorders'
-                            leftBorderColor = Colors.RED
-                            leftBorderStyle = DefaultBorderStyle.SOLID
-                            leftBorderWidth = 1f.pt()
-                            rightBorderColor = Colors.RED
-                            rightBorderStyle = DefaultBorderStyle.SOLID
-                            rightBorderWidth = 1f.pt()
-                            topBorderColor = Colors.RED
-                            topBorderWidth = 1f.pt()
-                            topBorderStyle = DefaultBorderStyle.SOLID
-                            bottomBorderColor = Colors.RED
-                            bottomBorderWidth = 1f.pt()
-                            bottomBorderStyle = DefaultBorderStyle.SOLID
-                        }
-                    }
-                }
-            }
-        }
-
-
+    fun `should correctly export single table on multiple pages`() {
         val firstPage: (PageBuilderApi.()->Unit) = {
             header {
                 text {
@@ -153,29 +153,30 @@ class PdfBoxTabulateTests {
                     }
                 }
             }
-            footer {
-                text {
-                    value<PageExecutionContext> { ctx -> "Page number: ${ctx.pageNumber}" }
-                    attributes {
-                        textBoxStyle()
-                        height { 30.pt() }
-                    }
-                }
-            }
-            table(tableStyle + tableHeaderStyle + typedTable<SampleProduct> {
+            table( tableHeaderStyle + typedTable<SampleProduct> {
                 attributes {
                     margins {
                         top { 10.pt() }
                         left { 10.pt() }
+                    }
+                    borders {
+                        all {
+                            width = 1.pt()
+                            color = Colors.LIGHT_GRAY
+                            style = DefaultBorderStyle.SOLID
+                        }
+                    }
+                    text {
+                        fontSize = 10
                     }
                 }
                 columns {
                     column(SampleProduct::code) {
                         attributes {
                             text {
-                                fontColor = Colors.RED
                                 weight = DefaultWeightStyle.BOLD
                                 fontFamily = DefaultFonts.COURIER_NEW // TODO make accessing model enumerations easier by providing them into scope of the builder.
+                                fontSize = 10
                             }
                             alignment {
                                 horizontal = DefaultHorizontalAlignment.LEFT
@@ -214,7 +215,6 @@ class PdfBoxTabulateTests {
                             colSpan = 2
                             value = "Mid row"
                         }
-                        //cell(SampleProduct::name) { value = "Mid row" }
                         cell(SampleProduct::description) { value = "Mid row" }
                         cell(SampleProduct::price) {  }
                     }
@@ -234,90 +234,221 @@ class PdfBoxTabulateTests {
                 }
                 dataSource(SampleProduct.create(154))
             })
-            table(tableHeaderStyle + typedTable<SampleProduct> {
-                attributes {
-                    margins {
-                        left { 15.pt() }
-                        top { 25.pt() }
-                    }
-                    alignment {
-                        horizontal = DefaultHorizontalAlignment.LEFT
-                        vertical = DefaultVerticalAlignment.MIDDLE
-                    }
-                    borders {
-                        topBorderWidth = 0.5f.pt()
-                        topBorderColor = Colors.LIGHT_GRAY
-                        topBorderStyle = DefaultBorderStyle.SOLID
-                    }
-                    text {
-                        fontColor = Colors.BLACK
-                        fontFamily = DefaultFonts.COURIER_NEW
-                        fontSize = 7
+            footer {
+                text {
+                    value<PageExecutionContext> { ctx -> "Page number: ${ctx.pageNumber}" }
+                    attributes {
+                        textBoxStyle()
+                        height { 30.pt() }
                     }
                 }
-                columns {
-                    column(SampleProduct::price)
-                    column(SampleProduct::name)
-                    column(SampleProduct::description) { attributes { width { 100.pt() } } }
-                    column(SampleProduct::code) { attributes { width { 50.pt() } } }
-                }
-                rows {
-                    header("Id", "Name", "Description", "price")
-                    matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
-                }
-                dataSource(SampleProduct.create(125))
-            })
+            }
         }
+        document { page(firstPage) }.export("single_table.pdf")
+    }
 
+    @Test
+    fun `should correctly export two on same sheet, first above second`() {
         document {
-            page(firstPage)
             page {
-                name = "second"
-                footer {
-                    text {
-                        value<PageExecutionContext> { "Page number: ${it.pageNumber}" }
-                        attributes { textBoxStyle() }
-                    }
-                }
-                table {
+                table( tableHeaderStyle + typedTable<SampleProduct> {
                     attributes {
                         margins {
-                            left { 10.pt() }
                             top { 10.pt() }
+                            left { 10.pt() }
                         }
-                        columnWidth { 50.pt() }
+                        borders {
+                            all {
+                                width = 1.pt()
+                                color = Colors.LIGHT_GRAY
+                                style = DefaultBorderStyle.SOLID
+                            }
+                        }
                         text {
-                            fontSize = 4
+                            fontSize = 10
                         }
                     }
-                    dataSource(SampleProduct.create(10))
                     columns {
-                        column(SampleProduct::code) { attributes { text { ident = 3 } } }
+                        column(SampleProduct::code)
                         column(SampleProduct::name)
                         column(SampleProduct::description)
                         column(SampleProduct::price)
                     }
                     rows {
-                        matching { gt(0) } assign {
-                            attributes {
-                                borders {
-                                    bottomBorderStyle = DefaultBorderStyle.DOUBLE
-                                    bottomBorderWidth = 1.pt()
-                                    bottomBorderColor = Colors.LIGHT_GRAY
-                                }
+                        header("Id", "Name", "Description", "Price")
+                        matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
+                        matching { odd() } assign { attributes { background { color = Colors.YELLOW } } }
+                        footer {
+                            cell(SampleProduct::code) { value = "." }
+                            cell(SampleProduct::name) { value = "." }
+                            cell(SampleProduct::description) { value = "." }
+                            cell(SampleProduct::price) { value = "." }
+                        }
+                    }
+                    dataSource(SampleProduct.create(55))
+                })
+                table( tableHeaderStyle + typedTable<SampleCustomer> {
+                    attributes {
+                        margins {
+                            top { 10.pt() }
+                            left { 10.pt() }
+                        }
+                        borders {
+                            all {
+                                width = 1.pt()
+                                color = Colors.LIGHT_GRAY
+                                style = DefaultBorderStyle.SOLID
                             }
                         }
-                        header {
-                            columnTitles("Id 2", "Name 2", "Description 2", "Price 2")
-                            attributes {
-                                alignment {
-                                    horizontal = DefaultHorizontalAlignment.LEFT
-                                }
-                            }
+                        text {
+                            fontSize = 10
                         }
-                        matching { all() } assign { dollarColumn(SampleProduct::price) }
+                    }
+                    columns {
+                        column(SampleCustomer::firstName)
+                        column(SampleCustomer::lastName)
+                        column(SampleCustomer::country)
+                        column(SampleCustomer::city)
+                        column(SampleCustomer::street)
+                        column(SampleCustomer::houseNumber)
+                        column(SampleCustomer::flat)
+                    }
+                    rows {
+                        header("First Name", "Last Name", "Country", "City","Street","House Number","Flat")
+                    }
+                    dataSource(SampleCustomer.create(55))
+                })
+            }
+        }.export("two_tables.pdf")
+    }
+
+
+    @Test
+    fun `should correctly export overflowing table with footer and headers`() {
+        document {
+            page {
+                header {
+                    text {
+                        value = "Some heading."
+                        attributes {
+                            textBoxStyle()
+                        }
                     }
                 }
+                footer {
+                    text {
+                        value<PageExecutionContext> { ctx -> "Page number: ${ctx.pageNumber}" }
+                        attributes {
+                            textBoxStyle()
+                            height { 30.pt() }
+                        }
+                    }
+                }
+                table(tableHeaderStyle + typedTable<SampleProduct> {
+                    attributes {
+                        margins {
+                            top { 10.pt() }
+                            left { 10.pt() }
+                        }
+                    }
+                    columns {
+                        column(SampleProduct::code) {
+                            attributes {
+                                text {
+                                    fontColor = Colors.RED
+                                    weight = DefaultWeightStyle.BOLD
+                                    fontFamily = DefaultFonts.COURIER_NEW
+                                }
+                                alignment {
+                                    horizontal = DefaultHorizontalAlignment.LEFT
+                                    vertical = DefaultVerticalAlignment.MIDDLE
+                                }
+                                borders { leftBorderWidth = 2f.pt() }
+                            }
+                        }
+                        column(SampleProduct::name) {
+                            attributes {
+                                width { 100.pt() }
+                                alignment {
+                                    horizontal = DefaultHorizontalAlignment.CENTER
+                                }
+                            }
+                        }
+                        column(SampleProduct::description)
+                        column(SampleProduct::price) {
+                            attributes {
+
+                            }
+                        }
+                    }
+                    rows {
+                        header("Id", "Name", "Description", "Price")
+                        matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
+                        matching { odd() } assign { attributes { background { color = Colors.YELLOW } } }
+                        footer {
+                            cell(SampleProduct::code) { value = "." }
+                            cell(SampleProduct::name) { value = "." }
+                            cell(SampleProduct::description) { value = "." }
+                            cell(SampleProduct::price) { value = "." }
+                        }
+                        newRow(AdditionalSteps.TRAILING_ROWS) {
+                            attributes {
+                                background { color = Colors.RED }
+                                borders {
+                                    all {
+                                        style = DefaultBorderStyle.NONE
+                                    }
+                                }
+                            }
+                            cell(SampleProduct::code) { value = "" }
+                            cell(SampleProduct::name) { value = "" }
+                            cell(SampleProduct::description) { value = "" }
+                            cell(SampleProduct::price) { }
+                        }
+                    }
+                    dataSource(SampleProduct.create(154))
+                })
+                table(tableHeaderStyle + typedTable<SampleProduct> {
+                    attributes {
+                        margins {
+                            left { 15.pt() }
+                            top { 25.pt() }
+                        }
+                        alignment {
+                            horizontal = DefaultHorizontalAlignment.LEFT
+                            vertical = DefaultVerticalAlignment.MIDDLE
+                        }
+                        borders {
+                            topBorderWidth = 0.5f.pt()
+                            topBorderColor = Colors.LIGHT_GRAY
+                            topBorderStyle = DefaultBorderStyle.SOLID
+                        }
+                        text {
+                            fontColor = Colors.BLACK
+                            fontFamily = DefaultFonts.COURIER_NEW
+                            fontSize = 7
+                        }
+                    }
+                    columns {
+                        column(SampleProduct::code) { attributes { width { 50.pt() } } }
+                        column(SampleProduct::price)
+                        column(SampleProduct::name)
+                        column(SampleProduct::description) { attributes { width { 100.pt() } } }
+                    }
+                    rows {
+                        header("Id", "Name", "Description", "price")
+                        matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
+                    }
+                    dataSource(SampleProduct.create(125))
+                })
+            }
+        }.export("multiple_pages_plus_header_and_footer.pdf")
+    }
+
+    @Test
+    fun `should correctly export border configurations`() {
+        document {
+             page {
                 table {
                     attributes {
                         margins {
@@ -325,6 +456,7 @@ class PdfBoxTabulateTests {
                             top { 5.pt() }
                         }
                         columnWidth { 80.pt() }
+                        rowHeight { 20.pt() }
                     }
                     columns {
                         column(0) {}
@@ -534,7 +666,7 @@ class PdfBoxTabulateTests {
                     }
                 }
             }
-        }.export("test.pdf")
+        }.export("borders_configurations.pdf")
     }
 
     @Test

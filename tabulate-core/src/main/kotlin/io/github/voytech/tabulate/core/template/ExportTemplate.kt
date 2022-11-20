@@ -36,7 +36,7 @@ class ExportInstance(
         measureOperations.computeIfAbsent(model) {
             operationsFactory.createMeasureOperations(model,
                 SkipRedundantMeasurements(),
-                EnableLayoutsAwareness { getActiveMeasuringLayout() }
+                EnableLayoutsAwareness(checkOverflows = false) { getActiveMeasuringLayout() }
             )
         }
 
@@ -94,27 +94,27 @@ class ExportInstance(
     }
 
     fun <R> TreeNode<*, *, *>.setMeasuringLayout(policy: AbstractLayoutPolicy, block: (DefaultLayout) -> R): R {
-        measuringGrid = DefaultLayout(
-            UnitsOfMeasure.PT,
+        measuringLayout = DefaultLayout(
+            uom,
             Orientation.HORIZONTAL,
-            Position(X.zero(), Y.zero()),
-            viewPortMaxRightBottom(), //TODO this is not viewPortMaxRightBottom but relative to parent.
+            Position.start(uom),
+            getClosestAncestorLayout().maxRightBottom,
             policy
         )
-        return block(measuringGrid!!)
+        return block(measuringLayout!!)
     }
 
     private fun getActiveLayout(): Layout = root.activeNode.layout ?: when (root.activeNode) {
-        is BranchNode -> (root.activeNode as BranchNode).getClosestAncestorLayout()!!
+        is BranchNode -> (root.activeNode as BranchNode).getClosestAncestorLayout()
         else -> error("No active layout present!")
     }
 
-    private fun getActiveMeasuringLayout(): Layout = root.activeNode.measuringGrid ?: when (root.activeNode) {
-        is BranchNode -> (root.activeNode as BranchNode).getClosestLayoutAwareAncestor().measuringGrid!!
+    private fun getActiveMeasuringLayout(): Layout = root.activeNode.measuringLayout ?: when (root.activeNode) {
+        is BranchNode -> (root.activeNode as BranchNode).getClosestLayoutAwareAncestor().measuringLayout!!
         else -> error("No active measuring layout to perform measures on!")
     }
 
-    internal fun viewPortMaxRightBottom(): Position =
+    private fun viewPortMaxRightBottom(): Position =
         if (renderingContext is HavingViewportSize) {
             Position(
                 X(renderingContext.getWidth().orMax(uom).value, uom),
@@ -307,8 +307,11 @@ fun <C : ExecutionContext, R : Any> TemplateContext<*, *>.value(supplier: Reifie
 
 abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, M, C>, C : TemplateContext<C, M>> {
 
+    open val requiresMeasurements: Boolean = false
+
     internal fun export(parentContext: TemplateContext<*, *>, model: M, layoutContext: LayoutContext? = null) =
         with(parentContext.instance) {
+            if (requiresMeasurements) onMeasure(parentContext,model)
             model.inNodeScope(self(), { createTemplateContext(parentContext, model) }) {
                 context.layoutContext = layoutContext
                 doExport(context)
@@ -325,15 +328,18 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
     }
 
     //TODO on measure - should call probably the same logic as export and resumption but should inject measurement operations instead of export operations. We should not be able to use different exporting logic for those two paths.
-    internal fun onMeasure(parentContext: TemplateContext<*, *>, model: M): SomeSize? = with(parentContext.instance) {
+    internal fun onMeasure(parentContext: TemplateContext<*, *>, model: M): SomeSize = with(parentContext.instance) {
         model.inNodeScope(self(), { createTemplateContext(parentContext, model) }) {
             setMeasuringLayout(createLayoutPolicy(context)) { measuringLayout ->
                 takeMeasures(context).also { measuringLayout.measured = true }
+                measuringLayout.boundingRectangle.let {
+                    SomeSize(it.getWidth(),it.getHeight())
+                }
             }
         }
     }
 
-    protected open fun takeMeasures(context: C): SomeSize? = null
+    protected open fun takeMeasures(context: C) {}
 
     protected abstract fun createTemplateContext(parentContext: TemplateContext<*, *>, model: M): C
 
@@ -352,6 +358,7 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
         block: Layout.() -> Unit,
     ) = with(instance) {
         createLayoutScope(
+            // TODO layoutPolicy may not be required (e.g. when measuringLayout where used, exportLayout takes its policy!)
             createLayoutPolicy(this@createLayoutScope), childLeftTopCorner, maxRightBottom, orientation, block
         )
     }

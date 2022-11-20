@@ -56,6 +56,14 @@ data class Width(override val value: Float, override val unit: UnitsOfMeasure) :
         Width(unit.switchUnitOfMeasure(value, targetUnit), targetUnit)
     } else this
 
+    operator fun plus(other: Width): Width = copy(
+        value = other.switchUnitOfMeasure(unit).value + value
+    )
+
+    operator fun plus(other: Float): Width = copy(
+        value = other + value
+    )
+
     companion object {
         fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Width(0.0f, uom)
         fun max(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Width(Int.MAX_VALUE.toFloat(), uom)
@@ -72,6 +80,14 @@ data class Height(override val value: Float, override val unit: UnitsOfMeasure) 
 
     fun asY(): Y = Y(value, unit)
 
+    operator fun plus(other: Height): Height = copy(
+        value = other.switchUnitOfMeasure(unit).value + value
+    )
+
+    operator fun plus(other: Float): Height = copy(
+        value = other + value
+    )
+
     companion object {
         fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Height(0.0f, uom)
         fun max(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Height(Int.MAX_VALUE.toFloat(), uom)
@@ -82,7 +98,12 @@ fun Height?.orZero(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = this ?: Height.zer
 fun Height?.orMax(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = this ?: Height.max(uom)
 
 
-data class Size(val width: Width, val height: Height)
+data class Size(val width: Width, val height: Height) {
+    operator fun plus(other: Size): Size = copy(
+        width = width + other.width,
+        height = height + other.height
+    )
+}
 
 data class SomeSize(val width: Width? = null, val height: Height? = null)
 
@@ -183,6 +204,7 @@ data class Position(val x: X, val y: Y) {
 
     companion object {
         fun start(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Position(X.zero(uom), Y.zero(uom))
+        fun max(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Position(X.max(uom), Y.max(uom))
     }
 }
 

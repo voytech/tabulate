@@ -17,11 +17,8 @@ class TextTemplate : ExportTemplate<TextTemplate, Text, TextTemplateContext>() {
         }
     }
 
-    override fun takeMeasures(context: TextTemplateContext): SomeSize = with(context) {
-        model.asRenderable(context).let { renderable ->
-            measure(renderable)
-            SomeSize(renderable.boundingBox.width, renderable.boundingBox.height)
-        }
+    override fun takeMeasures(context: TextTemplateContext) {
+        with(context) { measure(model.asRenderable(context)) }
     }
 
     private fun TemplateContext<*,*>.getTextValue(model: Text): String = model.valueSupplier?.let { value(it) } ?: model.value

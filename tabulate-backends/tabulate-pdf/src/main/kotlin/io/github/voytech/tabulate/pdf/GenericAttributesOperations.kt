@@ -1,5 +1,7 @@
 package io.github.voytech.tabulate.pdf
 
+import io.github.voytech.tabulate.core.model.Height
+import io.github.voytech.tabulate.core.model.Size
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
@@ -16,9 +18,8 @@ import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.color.Color
 import io.github.voytech.tabulate.core.model.color.darken
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
-import io.github.voytech.tabulate.core.template.operation.AttributeOperation
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
-import io.github.voytech.tabulate.core.template.operation.HasValue
+import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
+import io.github.voytech.tabulate.core.template.operation.*
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType1Font
@@ -61,14 +62,8 @@ fun TextStylesAttribute.pdFont(): PDFont =
     } else default()
 
 class AlignmentAttributeRenderOperation<CTX> :
-    AttributeOperation<PdfBoxRenderingContext, AlignmentAttribute, CTX> where CTX : AttributedContext, CTX: HasValue<*> {
+    AttributeOperation<PdfBoxRenderingContext, AlignmentAttribute, CTX> where CTX : AttributedContext, CTX : HasValue<*> {
 
-    private fun fontAndSize(context: CTX): Pair<PDFont, Int> =
-        context.getModelAttribute<TextStylesAttribute>().let {
-            val font = it?.pdFont() ?: PDType1Font.HELVETICA
-            val size: Int = it?.fontSize ?: 16
-            return font to size
-        }
 
     private fun PdfBoxRenderingContext.applyTextAlignment(
         context: CTX,
@@ -78,9 +73,9 @@ class AlignmentAttributeRenderOperation<CTX> :
         val bbox = boxLayout(context, context.getModelAttribute<BordersAttribute>())
         var xOffset = 0.0F
         var yOffset = 0.0F
-        val params = fontAndSize(context)
+        val fontAndSize = context.fontAndSize()
         if (vertical != null) {
-            val textHeight = params.measureTextHeight()
+            val textHeight = fontAndSize.measureTextHeight()
             when (vertical) {
                 DefaultVerticalAlignment.TOP -> {
                     yOffset += (bbox.inner.height?.value ?: 0f) - textHeight
@@ -93,7 +88,7 @@ class AlignmentAttributeRenderOperation<CTX> :
             }
         }
         if (horizontal != null) {
-            val textWidth = params.measureTextWidth(context.value.toString())
+            val textWidth = fontAndSize.measureTextWidth(context.value.toString())
             when (horizontal) {
                 DefaultHorizontalAlignment.LEFT -> {}
                 DefaultHorizontalAlignment.CENTER -> {
@@ -120,8 +115,8 @@ class AlignmentAttributeRenderOperation<CTX> :
 
 }
 
-class TextStylesAttributeRenderOperation<CTX: AttributedContext> :
-    AttributeOperation<PdfBoxRenderingContext,TextStylesAttribute,CTX> {
+class TextStylesAttributeRenderOperation<CTX : AttributedContext> :
+    AttributeOperation<PdfBoxRenderingContext, TextStylesAttribute, CTX> {
 
     override operator fun invoke(
         renderingContext: PdfBoxRenderingContext,
@@ -129,20 +124,20 @@ class TextStylesAttributeRenderOperation<CTX: AttributedContext> :
         attribute: TextStylesAttribute,
     ) = with(renderingContext) {
         getCurrentContentStream().let { content ->
-            val font = attribute.pdFont()
-            val size: Float = attribute.fontSize?.toFloat() ?: 10F
             beginText()
-            setFont(font, size)
-            content.setNonStrokingColor(attribute.fontColor.awtColor())
-            val ident: Int = attribute.ident?.toInt() ?: 0
-            val identWidth =
-                if (ident > 0) (font to size.toInt()).measureTextWidth((1..ident).fold("") { agg, _ -> "$agg " }) else 0F
-            xTextOffset += identWidth
+            context.fontAndSize().let { fontAndSize ->
+                setFont(fontAndSize.font(), fontAndSize.size().toFloat())
+                content.setNonStrokingColor(attribute.fontColor.awtColor())
+                val ident: Int = attribute.ident?.toInt() ?: 0
+                val identWidth =
+                    if (ident > 0) fontAndSize.measureTextWidth((1..ident).fold("") { agg, _ -> "$agg " }) else 0F
+                xTextOffset += identWidth
+            }
         }
     }
 }
 
-class BackgroundAttributeRenderOperation<CTX: AttributedContext> :
+class BackgroundAttributeRenderOperation<CTX : AttributedContext> :
     AttributeOperation<PdfBoxRenderingContext, BackgroundAttribute, CTX> {
     override fun invoke(
         renderingContext: PdfBoxRenderingContext,
@@ -157,7 +152,9 @@ class BackgroundAttributeRenderOperation<CTX: AttributedContext> :
 fun BorderStyle?.leftTopPrimaryColor(original: Color?): Color? =
     when (this?.getBorderStyleId()) {
         DefaultBorderStyle.INSET.name,
-        DefaultBorderStyle.GROOVE.name -> original?.darken(1.2F)
+        DefaultBorderStyle.GROOVE.name,
+        -> original?.darken(1.2F)
+
         else -> original
     }
 
@@ -176,24 +173,30 @@ fun BorderStyle?.leftTopSecondaryColor(original: Color?): Color? =
 fun BorderStyle?.rightBottomSecondaryColor(original: Color?): Color? =
     when (this?.getBorderStyleId()) {
         DefaultBorderStyle.OUTSET.name,
-        DefaultBorderStyle.GROOVE.name-> original?.darken(1.2F)
+        DefaultBorderStyle.GROOVE.name,
+        -> original?.darken(1.2F)
+
         else -> original
     }
 
 fun <A : AttributedContext> PdfBoxRenderingContext.drawBorders(context: A, borders: Borders) {
-    topBorder(context, borders,
+    topBorder(
+        context, borders,
         borders.topBorderStyle?.leftTopPrimaryColor(borders.topBorderColor),
         borders.topBorderStyle?.leftTopSecondaryColor(borders.topBorderColor),
     )
-    leftBorder(context, borders,
+    leftBorder(
+        context, borders,
         borders.leftBorderStyle?.leftTopPrimaryColor(borders.leftBorderColor),
         borders.leftBorderStyle?.leftTopSecondaryColor(borders.leftBorderColor),
     )
-    rightBorder(context, borders,
+    rightBorder(
+        context, borders,
         borders.rightBorderStyle?.rightBottomPrimaryColor(borders.rightBorderColor),
         borders.rightBorderStyle?.rightBottomSecondaryColor(borders.rightBorderColor),
     )
-    bottomBorder(context, borders,
+    bottomBorder(
+        context, borders,
         borders.bottomBorderStyle?.rightBottomPrimaryColor(borders.bottomBorderColor),
         borders.bottomBorderStyle?.rightBottomSecondaryColor(borders.bottomBorderColor),
     )
@@ -438,7 +441,7 @@ private fun <A : AttributedContext> PdfBoxRenderingContext.leftBorder(
     if (borders.leftBorderStyle.hasBorder()) {
         boxLayout(context, borders).let {
             if (borders.leftBorderStyle.hasComplexBorder()) {
-                leftCompositeBorder(it, context, borders,primaryColor,secondaryColor)
+                leftCompositeBorder(it, context, borders, primaryColor, secondaryColor)
             } else {
                 setBorderStyle(borders.leftBorderStyle, borders.leftBorderColor, borders.leftBorderWidth)
                 val x1 = it.outerX + borders.leftBorderWidth.value / 2
@@ -513,3 +516,48 @@ fun BorderStyle?.hasComplexBorder(): Boolean = this != null && (
                 getBorderStyleId() == DefaultBorderStyle.OUTSET.name ||
                 getBorderStyleId() == DefaultBorderStyle.GROOVE.name
         )
+
+fun <A, V> A.resolveTextBoundingBox(): LayoutElementBoundingBox? where A : AttributedContext, A : HasValue<V> {
+    return boundingBox()?.apply {
+        if (!isDefined()) {
+            (this@resolveTextBoundingBox.measureText(unitsOfMeasure()) +
+                    this@resolveTextBoundingBox.measureBorders(unitsOfMeasure())).let { measured ->
+                height = height ?: measured.height
+                width = width ?: measured.width
+            }
+        }
+    }
+}
+
+@JvmInline
+value class FontAndSize(private val inner: Pair<PDFont, Int>) {
+    fun font(): PDFont = inner.first
+    fun size(): Int = inner.second
+}
+
+fun <A : AttributedContext> A.fontAndSize(): FontAndSize =
+    getModelAttribute<TextStylesAttribute>().let {
+        FontAndSize((it?.pdFont() ?: PDType1Font.HELVETICA) to (it?.fontSize ?: 10))
+    }
+
+fun <A, V> A.measureText(uom: UnitsOfMeasure): Size where A : AttributedContext, A : HasValue<V> =
+    fontAndSize().let {
+        Size(
+            Width(it.measureTextWidth(this.value.toString()), UnitsOfMeasure.PT),
+            Height(it.measureTextHeight(), UnitsOfMeasure.PT) // ???
+        )
+    }
+
+fun <A : AttributedContext> A.measureBorders(uom: UnitsOfMeasure): Size =
+    getModelAttribute<BordersAttribute>()?.let { borders ->
+        Size(
+            (borders.leftBorderWidth + borders.rightBorderWidth).switchUnitOfMeasure(uom),
+            Height((borders.bottomBorderWidth + borders.topBorderWidth).switchUnitOfMeasure(uom).value, uom)
+        )
+    } ?: Size(Width.zero(uom), Height.zero(uom))
+
+fun FontAndSize.measureTextHeight(): Float =
+    (font().fontDescriptor.capHeight - font().fontDescriptor.descent) / 1000 * size()
+
+fun FontAndSize.measureTextWidth(string: String): Float =
+    font().getStringWidth(string) / 1000 * size()

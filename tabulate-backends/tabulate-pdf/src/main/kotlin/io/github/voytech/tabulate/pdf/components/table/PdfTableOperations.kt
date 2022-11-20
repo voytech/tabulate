@@ -1,7 +1,6 @@
 package io.github.voytech.tabulate.pdf.components.table
 
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.reify
@@ -51,10 +50,13 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
     }
 
     override fun provideMeasureOperations(): BuildOperations<PdfBoxRenderingContext> = {
+        operation(StartTableOperation { _, _ -> }) // TODO fix table template to make it not requiring empty operations.
         operation(StartColumnOperation { _, _ -> })
-        operation(RenderRowCellOperation { _, _ -> })
+        operation(StartRowOperation { _, _ -> })
+        operation(RenderRowCellOperation { _, context -> context.resolveTextBoundingBox() })
         operation(EndRowOperation<PdfBoxRenderingContext, Table<Any>> { _, _ -> })
-    }
+        operation(EndColumnOperation { _, _ -> })
+        operation(EndTableOperation { _, _ -> })    }
 
     override fun getDocumentFormat(): DocumentFormat<PdfBoxRenderingContext> = DocumentFormat.format("pdf", "pdfbox")
 

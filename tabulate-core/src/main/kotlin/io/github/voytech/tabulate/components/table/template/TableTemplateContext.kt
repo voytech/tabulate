@@ -32,7 +32,7 @@ class TableTemplateContext<T : Any>(
 
     private lateinit var rowContextIterator: RowContextIterator<T>
 
-    val indices = OverflowOffsets()
+    val indices = OverflowOffsets() //TODO rename to  PaginationProgress ?
 
     fun cropDataSource(): Iterable<T>? = with(indices) {
         remainingRecords?.crop().also { remainingRecords = it }
@@ -73,6 +73,10 @@ class TableTemplateContext<T : Any>(
     fun next(): ContextResult<RowEnd<T>>? {
         return if (rowContextIterator.hasNext()) rowContextIterator.next() else null
     }
+
+    fun reset() {
+        indices.reset()
+    }
 }
 
 data class OverflowOffsets(
@@ -80,6 +84,16 @@ data class OverflowOffsets(
     val yOffsets: YOffsets = YOffsets(),
     var partialStatus: ExportStatus = ExportStatus.ACTIVE,
 ) {
+
+    fun reset() {
+        xOffsets.index = 0
+        xOffsets.nextIndex = 0
+        yOffsets.index = RowIndex(0)
+        yOffsets.nextIndex = RowIndex(0)
+        yOffsets.recordIndex = 0
+        yOffsets.nextRecordIndex = 0
+    }
+
     fun keepStatus(status: ExportStatus) {
         partialStatus = status
     }

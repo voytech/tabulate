@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.pdf
 
-import io.github.voytech.tabulate.components.table.operation.CellContext
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.border.Borders
 import io.github.voytech.tabulate.core.model.color.Color
@@ -220,9 +219,3 @@ data class BoxLayout(
 
 fun Color?.awtColor(): AwtColor =
     this?.let { AwtColor(it.r, it.g, it.b) } ?: AwtColor.BLACK
-
-fun Pair<PDFont, Int>.measureTextHeight(): Float =
-    first.fontDescriptor.capHeight / 1000 * second
-
-fun Pair<PDFont, Int>.measureTextWidth(string: String): Float =
-    first.getStringWidth(string) / 1000 * second

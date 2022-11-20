@@ -84,7 +84,9 @@ class EnableAttributeOperationAwareness<CTX : RenderingContext>(private val attr
  * @since 0.2.0
  */
 class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
-    private val delegate: Operation<CTX, E>, private val layout: () -> Layout,
+    private val delegate: Operation<CTX, E>,
+    private val checkOverflows: Boolean = true,
+    private val layout: () -> Layout,
 ) : Operation<CTX, E> {
 
     private fun <E : RenderableContext> Layout.mergeAttributeElementBoundingBox(
@@ -119,7 +121,7 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
     override operator fun invoke(renderingContext: CTX, context: E) {
         with(layout()) {
             resolveElementBoundingBox(context).let { bbox ->
-                bbox.checkOverflow()?.let {
+                ifEnabled { bbox.checkOverflow() }?.let {
                     context.setResult(OverflowResult(it))
                 } ?: run {
                     delegate(renderingContext, context).also {
@@ -131,11 +133,17 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
             }
         }
     }
+
+    private fun ifEnabled(provider: () -> Overflow?): Overflow? =
+        if (checkOverflows) provider() else null
+
 }
 
-class EnableLayoutsAwareness<CTX : RenderingContext>(private val layout: () -> Layout) : Enhance<CTX> {
+class EnableLayoutsAwareness<CTX : RenderingContext>(
+    private val checkOverflows: Boolean = true, private val layout: () -> Layout,
+) : Enhance<CTX> {
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> {
-        return LayoutAwareOperation(op.delegate, layout)
+        return LayoutAwareOperation(op.delegate, checkOverflows, layout)
     }
 }
 
@@ -148,12 +156,15 @@ class SkipRedundantMeasurements<CTX : RenderingContext> : Enhance<CTX> {
         }
 }
 
-class JoinOperations<CTX : RenderingContext>(private val other: Operations<CTX>,private val predicate: (AttributedContext) -> Boolean) : Enhance<CTX> {
+class JoinOperations<CTX : RenderingContext>(
+    private val other: Operations<CTX>,
+    private val predicate: (AttributedContext) -> Boolean,
+) : Enhance<CTX> {
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
         Operation { renderingContext, context ->
             if (predicate(context)) {
                 other(renderingContext, context)
             }
-            op(renderingContext,context)
+            op(renderingContext, context)
         }
 }

@@ -7,7 +7,6 @@ import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.DataSourceBinding
-import io.github.voytech.tabulate.core.model.SomeSize
 import io.github.voytech.tabulate.core.template.*
 import io.github.voytech.tabulate.core.template.layout.AbstractLayoutPolicy
 import io.github.voytech.tabulate.core.template.layout.GridLayoutPolicy
@@ -16,7 +15,8 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 
-typealias StandaloneTableTemplate<T> = StandaloneExportTemplate<TableTemplate<T>,Table<T>,TableTemplateContext<T>>
+typealias StandaloneTableTemplate<T> = StandaloneExportTemplate<TableTemplate<T>, Table<T>, TableTemplateContext<T>>
+
 /**
  * [TabulationApi] An API enabling interactive table export.
  * Allows to:
@@ -167,7 +167,8 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
     @Suppress("ControlFlowWithEmptyBody")
     private fun Iterable<T>?.exportRows(api: TabulationApiImpl) =
         this?.iterator()?.let { iterator ->
-            while (iterator.hasNext() && api.exportNextRecord(iterator.next()) !is OverflowResult) { }
+            while (iterator.hasNext() && api.exportNextRecord(iterator.next()) !is OverflowResult) {
+            }
         }
 
     override fun doExport(templateContext: TableTemplateContext<T>): Unit = with(templateContext) {
@@ -185,6 +186,11 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
     override fun doResume(templateContext: TableTemplateContext<T>, resumeNext: ResumeNext) = with(templateContext) {
         beforeResume()
         createLayoutScope {
+            // TODO - drop casting - should TableTemplate have generic type policy ?
+            (policy as GridLayoutPolicy).setOffsets(
+                this@with.indices.getIndexValueOnY(),
+                this@with.indices.getIndexOnX()
+            )
             val operations = instance.getExportOperations(model)
             templateContext.setupRowResolver(CaptureRowCompletionImpl(renderingContext, operations))
             TabulationApiImpl(renderingContext, templateContext, operations).let { api ->
@@ -195,8 +201,20 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
         keepStatus()
     }
 
-    override fun takeMeasures(context: TableTemplateContext<T>): SomeSize? {
-        return super.takeMeasures(context)
+    override val requiresMeasurements = true
+
+    //TODO in case of table it is required first pass to measure column and row widths.
+    //TODO TableTemplate should be aware of multiple passes and be able to cache some computations.
+    override fun takeMeasures(context: TableTemplateContext<T>) {
+        with(context) {
+            val operations = instance.getMeasuringOperations(model)
+            context.setupRowResolver(CaptureRowCompletionImpl(renderingContext, operations))
+            TabulationApiImpl(renderingContext, context, operations).let { api ->
+                dataSource.exportRows(api)
+                api.finish()
+            }
+            context.reset()
+        }
     }
 
     override fun createTemplateContext(
@@ -211,9 +229,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
         )
     }
 
-    override fun createLayoutPolicy(templateContext: TableTemplateContext<T>): AbstractLayoutPolicy =
-        GridLayoutPolicy(templateContext.indices.getIndexValueOnY(), templateContext.indices.getIndexOnX())
-
+    override fun createLayoutPolicy(templateContext: TableTemplateContext<T>): AbstractLayoutPolicy = GridLayoutPolicy()
 
     fun <O : Any> export(format: DocumentFormat, source: Iterable<T>, output: O, table: Table<T>) =
         StandaloneTableTemplate<T>(format).export(table, output, source)

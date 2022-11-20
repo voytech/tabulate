@@ -17,14 +17,11 @@ class ImageTemplate : ExportTemplate<ImageTemplate, Image, ImageTemplateContext>
         }
     }
 
-    override fun takeMeasures(context: ImageTemplateContext): SomeSize = with(context){
-        model.asRenderable(context).let { renderable ->
-            measure(renderable)
-            SomeSize(renderable.boundingBox.width, renderable.boundingBox.height)
-        }
+    override fun takeMeasures(context: ImageTemplateContext) {
+        with(context) { measure(model.asRenderable(context)) }
     }
 
-    private fun Image.asRenderable(context: ImageTemplateContext): ImageRenderable  =
+    private fun Image.asRenderable(context: ImageTemplateContext): ImageRenderable =
         ImageRenderable(filePath, attributes.orEmpty().forContext<ImageRenderable>())
 
     override fun createTemplateContext(parentContext: TemplateContext<*, *>, model: Image): ImageTemplateContext =

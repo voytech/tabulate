@@ -19,6 +19,7 @@ typealias ReifiedOperation<CTX, E> = ReifiedInvocation<Operation<CTX, E>, TwoPar
 sealed interface OperationResult
 open class OverflowResult(val overflow: Overflow) : OperationResult
 object Success: OperationResult
+object NOOP: OperationResult
 
 fun OperationResult?.isXOverflow(): Boolean = this is OverflowResult && overflow == Overflow.X
 

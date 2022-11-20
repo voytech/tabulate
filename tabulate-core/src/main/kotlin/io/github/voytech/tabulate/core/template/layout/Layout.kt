@@ -25,6 +25,7 @@ interface GridPolicyMethods : AbsolutePositionPolicy {
     fun setRowHeight(row: Int, height: Height)
     fun getColumnWidth(column: Int, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width?
     fun getRowHeight(row: Int, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height?
+    fun setOffsets(row: Int, column: Int)
 }
 
 interface LayoutPolicy : AbsolutePositionPolicy {
@@ -134,6 +135,7 @@ class DefaultLayout(
     init {
         policy.layout = this
     }
+
 }
 
 fun interface LayoutElement {
@@ -220,12 +222,15 @@ class DefaultLayoutPolicy : AbstractLayoutPolicy() {
 }
 
 class SpreadsheetPolicy(
-    private val rowIndex: Int = 0,
-    private val columnIndex: Int = 0,
-    private val defaultWidthInPt: Float = 56.25f,
-    private val defaultHeightInPt: Float = 15f,
+    private val defaultWidthInPt: Float = 0f,
+    private val defaultHeightInPt: Float = 0f,
     val standardUnit: StandardUnits = StandardUnits.PT,
 ) : GridPolicyMethods {
+
+    private var rowIndex: Int = 0
+    private var columnIndex: Int = 0
+    private var firstRowPosition: PositionAndLength = PositionAndLength.zero()
+    private var firstColumnPosition: PositionAndLength = PositionAndLength.zero()
 
     private val rows: MutableMap<Int, PositionAndLength> = mutableMapOf()
     private val columns: MutableMap<Int, PositionAndLength> = mutableMapOf()
@@ -235,6 +240,10 @@ class SpreadsheetPolicy(
             position.compareTo(value) <= 0 && (position + length).compareTo(value) >= 0
 
         fun move(offset: Float) = PositionAndLength(position + offset, length)
+
+        companion object {
+            fun zero(): PositionAndLength = PositionAndLength(0F, 0F)
+        }
     }
 
     override fun getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position = Position(
@@ -278,7 +287,9 @@ class SpreadsheetPolicy(
         } else {
             if (targetUnit != UnitsOfMeasure.NU) {
                 columns.findPosition(relativeX.value.toInt(), defaultWidthInPt).let {
-                    X(it.position, standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(targetUnit)
+                    X(it.position - firstColumnPosition.position, standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(
+                        targetUnit
+                    )
                 }
             } else relativeX
         }
@@ -296,7 +307,9 @@ class SpreadsheetPolicy(
         } else {
             if (targetUnit != UnitsOfMeasure.NU) {
                 rows.findPosition(relativeY.value.toInt(), defaultHeightInPt).let {
-                    Y(it.position, standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(targetUnit)
+                    Y(it.position - firstRowPosition.position, standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(
+                        targetUnit
+                    )
                 }
             } else relativeY
         }
@@ -330,13 +343,18 @@ class SpreadsheetPolicy(
     override fun getRowHeight(row: Int, uom: UnitsOfMeasure): Height =
         Height(rows[row]?.length ?: defaultHeightInPt, standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(uom)
 
+    override fun setOffsets(row: Int, column: Int) {
+        rowIndex = row
+        columnIndex = column
+        firstRowPosition = rows.findPosition(rowIndex, defaultHeightInPt)
+        firstColumnPosition = columns.findPosition(columnIndex, defaultWidthInPt)
+    }
+
 }
 
-class GridLayoutPolicy(
-    override val rowIndex: Int = 0, override val columnIndex: Int = 0,
-) : AbstractGridLayoutPolicy(rowIndex, columnIndex) {
+class GridLayoutPolicy : AbstractGridLayoutPolicy() {
 
-    private val delegate = SpreadsheetPolicy(rowIndex, columnIndex)
+    private val delegate = SpreadsheetPolicy()
 
     override fun getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position {
         return Position(
@@ -377,9 +395,17 @@ class GridLayoutPolicy(
     }
 
     override fun getColumnWidth(column: Int, uom: UnitsOfMeasure): Width? =
-        if (layout.isMeasured()) delegate.getColumnWidth(column, uom) else null
+        if (layout.isMeasured()) {
+            delegate.getColumnWidth(column, uom)
+        } else null
 
     override fun getRowHeight(row: Int, uom: UnitsOfMeasure): Height? =
-        if (layout.isMeasured()) delegate.getRowHeight(row, uom) else null
+        if (layout.isMeasured()) {
+            delegate.getRowHeight(row, uom)
+        } else null
+
+    override fun setOffsets(row: Int, column: Int) {
+        delegate.setOffsets(row, column)
+    }
 
 }

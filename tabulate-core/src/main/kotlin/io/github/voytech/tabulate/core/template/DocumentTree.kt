@@ -12,11 +12,10 @@ sealed class TreeNode<M : AbstractModel<E, M, C>, E : ExportTemplate<E, M, C>, C
 
     var layout: AttachedLayout<M, E, C>? = null
 
-    var measuringGrid: DefaultLayout? = null
+    var measuringLayout: DefaultLayout? = null
 
     internal fun dropLayout() {
         layout = null
-        measuringGrid = null
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -38,9 +37,9 @@ sealed class TreeNode<M : AbstractModel<E, M, C>, E : ExportTemplate<E, M, C>, C
             parent.takeIf { parent.layout != null } ?: parent.getClosestLayoutAwareAncestor()
         } ?: this
 
-    fun getClosestAncestorLayout(): AttachedLayout<*, *, *>? = getClosestLayoutAwareAncestor().layout
+    fun getClosestAncestorLayout(): AttachedLayout<*, *, *> = getClosestLayoutAwareAncestor().layout!!
 
-    fun getClosestAncestorMeasuringLayout(): DefaultLayout? = getClosestLayoutAwareAncestor().measuringGrid
+    fun getClosestAncestorMeasuringLayout(): DefaultLayout? = getClosestLayoutAwareAncestor().measuringLayout
 
     internal fun traverse(action: (TreeNode<*, *, *>) -> Unit) {
         action(this).also {
@@ -62,6 +61,7 @@ class BranchNode<M : AbstractModel<E, M, C>, E : ExportTemplate<E, M, C>, C : Te
 ) : TreeNode<M, E, C>(template, context) {
 
     override fun getRoot(): RootNode<*, *, *> = root
+
     override fun getParent(): TreeNode<*, *, *> = parent
 
 }
@@ -166,7 +166,7 @@ fun <M : AbstractModel<E, M, C>, E : ExportTemplate<E, M, C>, C : TemplateContex
     childLeftTop: Position? = null,
     maxRightBottom: Position? = null,
     orientation: Orientation? = null,
-): AttachedLayout<M, E, C> = getClosestLayoutAwareAncestor().layout!!.let { wrapping ->
+): AttachedLayout<M, E, C> = getClosestAncestorLayout()!!.let { wrapping ->
     attachLayout(
         uom = wrapping.uom,
         orientation = orientation ?: Orientation.HORIZONTAL,
@@ -187,9 +187,9 @@ private fun <M : AbstractModel<E, M, C>, E : ExportTemplate<E, M, C>, C : Templa
     orientation = orientation,
     leftTop = resolveMargins(leftTop),
     maxRightBottom = maxRightBottom,
-    policy = measuringGrid?.policy ?: policy
+    policy = measuringLayout?.policy ?: policy
 ).let { AttachedLayout(this, it) }.also {
-    it.measured = measuringGrid?.measured ?: false
+    it.measured = measuringLayout?.measured ?: false
     layout = it
 }
 

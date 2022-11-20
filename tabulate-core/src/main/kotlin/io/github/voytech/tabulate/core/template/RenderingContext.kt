@@ -30,7 +30,7 @@ abstract class RenderingContextForSpreadsheet: RenderingContext {
     //TODO add caching of left top column row indices by layout.
 
     fun setupSpreadsheetLayout(defaultColumnWidth: Float, defaultRowHeight: Float) {
-        measures = SpreadsheetPolicy(0,0,defaultColumnWidth,defaultRowHeight)
+        measures = SpreadsheetPolicy(defaultColumnWidth,defaultRowHeight)
     }
 
     fun AttributedContext.getAbsoluteColumn(column: Int): Int {
