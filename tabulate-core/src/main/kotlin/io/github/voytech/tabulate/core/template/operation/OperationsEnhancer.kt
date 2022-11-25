@@ -107,7 +107,7 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
             }
         } else null
 
-    private fun <E : AttributedContext> Layout.commitBoundaries(
+    private fun <E : AttributedContext> Layout.commitBoundingBox(
         context: E, boundaries: LayoutElementBoundingBox? = null,
     ) {
         if (boundaries != null) {
@@ -121,20 +121,20 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
     override operator fun invoke(renderingContext: CTX, context: E) {
         with(layout()) {
             resolveElementBoundingBox(context).let { bbox ->
-                ifEnabled { bbox.checkOverflow() }?.let {
+                ifOverflowCheckEnabled { bbox.checkOverflow() }?.let {
                     context.setResult(OverflowResult(it))
                 } ?: run {
                     delegate(renderingContext, context).also {
                         bbox?.applyOnLayout()
                     }
-                    commitBoundaries(context, bbox)
+                    commitBoundingBox(context, bbox)
                     context.setResult(Success)
                 }
             }
         }
     }
 
-    private fun ifEnabled(provider: () -> Overflow?): Overflow? =
+    private fun ifOverflowCheckEnabled(provider: () -> Overflow?): Overflow? =
         if (checkOverflows) provider() else null
 
 }
@@ -142,9 +142,8 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
 class EnableLayoutsAwareness<CTX : RenderingContext>(
     private val checkOverflows: Boolean = true, private val layout: () -> Layout,
 ) : Enhance<CTX> {
-    override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> {
-        return LayoutAwareOperation(op.delegate, checkOverflows, layout)
-    }
+    override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
+        LayoutAwareOperation(op.delegate, checkOverflows, layout)
 }
 
 class SkipRedundantMeasurements<CTX : RenderingContext> : Enhance<CTX> {

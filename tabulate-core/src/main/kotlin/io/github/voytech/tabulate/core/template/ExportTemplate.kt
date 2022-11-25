@@ -10,15 +10,15 @@ import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
 
 typealias ResumeNext = () -> Unit
 
-typealias  OperationsMap = MutableMap<Model<*, *>, Operations<RenderingContext>>
+typealias OperationsMap = MutableMap<Model<*, *>, Operations<RenderingContext>>
 
 class ExportInstance(
     format: DocumentFormat,
     private val operationsFactory: OperationsFactory<RenderingContext> = OperationsFactory(format),
     internal val renderingContext: RenderingContext = operationsFactory.renderingContext.newInstance(),
 ) {
-    private val uom: UnitsOfMeasure = UnitsOfMeasure.PT
-    private lateinit var root: RootNode<*, *, *>
+    internal val uom: UnitsOfMeasure = UnitsOfMeasure.PT
+    internal lateinit var root: RootNode<*, *, *>
     private val exportOperations: OperationsMap = mutableMapOf()
     private val measureOperations: OperationsMap = mutableMapOf()
 
@@ -36,8 +36,32 @@ class ExportInstance(
         measureOperations.computeIfAbsent(model) {
             operationsFactory.createMeasureOperations(model,
                 SkipRedundantMeasurements(),
+                //TODO is this Enhancer required ? Consider not enhancing each operation, but instead create single operation which internally delegates operations returned from createMeasureOperations
+                //TODO this will allow to enable measuring without single third-party rendering-context specific measuring operations.
                 EnableLayoutsAwareness(checkOverflows = false) { getActiveMeasuringLayout() }
             )
+        }
+
+    private fun getActiveLayout(): Layout = root.activeNode.layout ?: when (root.activeNode) {
+        is BranchNode -> (root.activeNode as BranchNode).getClosestAncestorLayout()
+            ?: error("No active layout present!")
+
+        else -> error("No active layout present!")
+    }
+
+    private fun getActiveMeasuringLayout(): Layout = root.activeNode.measuringLayout ?: when (root.activeNode) {
+        is BranchNode -> (root.activeNode as BranchNode).getClosestLayoutAwareAncestor().measuringLayout!!
+        else -> error("No active measuring layout to perform measures on!")
+    }
+
+    internal fun getViewPortMaxRightBottom(): Position =
+        if (renderingContext is HavingViewportSize) {
+            Position(
+                X(renderingContext.getWidth().orMax(uom).value, uom),
+                Y(renderingContext.getHeight().orMax(uom).value, uom)
+            )
+        } else {
+            Position(X.max(uom), Y.max(uom)) //TODO instead make it nullable - when null - renderer does not clip
         }
 
     fun <M : UnconstrainedModel<M>> M.render(context: AttributedContext) {
@@ -48,81 +72,9 @@ class ExportInstance(
         getMeasuringOperations(this).invoke(renderingContext, context)
     }
 
-    private fun TemplateContext<*, *>.node(): TreeNode<*, *, *> =
+    internal fun TemplateContext<*, *>.node(): TreeNode<*, *, *> =
         root.nodes[model] ?: error("Could not find node by context")
 
-    fun TemplateContext<*, *>.bubblePartialStatus() {
-        node().getParent()?.let {
-            if (status.isPartlyExported()) {
-                it.context.status = status
-                it.context.bubblePartialStatus()
-            }
-        }
-    }
-
-    private fun ensureRootLayout() {
-        if (root.layout == null) {
-            root.setLayout(maxRightBottom = viewPortMaxRightBottom())
-        }
-    }
-
-    fun TemplateContext<*, *>.createLayoutScope(
-        queries: AbstractLayoutPolicy = DefaultLayoutPolicy(),
-        childLeftTopCorner: Position?,
-        maxRightBottom: Position?,
-        orientation: Orientation = Orientation.HORIZONTAL,
-        block: Layout.() -> Unit,
-    ): Unit = when (val current = node()) {
-
-        is BranchNode -> {
-            ensureRootLayout()
-            current.createLayoutScope(
-                queries,
-                childLeftTopCorner ?: layoutContext?.leftTop,
-                maxRightBottom ?: layoutContext?.maxRightBottom,
-                orientation, block
-            )
-        }
-
-        is RootNode -> current.setLayout(
-            queries, uom,
-            childLeftTopCorner ?: layoutContext?.leftTop.orStart(uom),
-            viewPortMaxRightBottom(),
-            orientation
-        ).let { block(it) }
-
-    }
-
-    fun <R> TreeNode<*, *, *>.setMeasuringLayout(policy: AbstractLayoutPolicy, block: (DefaultLayout) -> R): R {
-        measuringLayout = DefaultLayout(
-            uom,
-            Orientation.HORIZONTAL,
-            Position.start(uom),
-            getClosestAncestorLayout().maxRightBottom,
-            policy
-        )
-        return block(measuringLayout!!)
-    }
-
-    private fun getActiveLayout(): Layout = root.activeNode.layout ?: when (root.activeNode) {
-        is BranchNode -> (root.activeNode as BranchNode).getClosestAncestorLayout()
-        else -> error("No active layout present!")
-    }
-
-    private fun getActiveMeasuringLayout(): Layout = root.activeNode.measuringLayout ?: when (root.activeNode) {
-        is BranchNode -> (root.activeNode as BranchNode).getClosestLayoutAwareAncestor().measuringLayout!!
-        else -> error("No active measuring layout to perform measures on!")
-    }
-
-    private fun viewPortMaxRightBottom(): Position =
-        if (renderingContext is HavingViewportSize) {
-            Position(
-                X(renderingContext.getWidth().orMax(uom).value, uom),
-                Y(renderingContext.getHeight().orMax(uom).value, uom)
-            )
-        } else {
-            Position(X.max(uom), Y.max(uom)) //TODO instead make it nullable - when null - renderer does not clip
-        }
 
     private fun <E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>, M : AbstractModel<E, M, C>> createNode(
         template: E, context: C,
@@ -138,11 +90,11 @@ class ExportInstance(
             root.nodes[this]?.let { (it as TreeNode<M, E, C>) }
         } else null
 
-    fun <E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>, M : AbstractModel<E, M, C>, R> M.inNodeScope(
-        template: E, contextProvider: () -> C, block: TreeNode<M, E, C>.() -> R,
-    ) = (node() ?: createNode(template, contextProvider())).runActiveNode(block)
+    fun <E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>, M : AbstractModel<E, M, C>, R> inScope(
+        template: E, model: M, templateContext: () -> C, block: TreeNode<M, E, C>.() -> R,
+    ) = (model.node() ?: createNode(template, templateContext())).withActiveNode(block)
 
-    private fun <E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>, M : AbstractModel<E, M, C>, R> TreeNode<M, E, C>.runActiveNode(
+    private fun <E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>, M : AbstractModel<E, M, C>, R> TreeNode<M, E, C>.withActiveNode(
         block: TreeNode<M, E, C>.() -> R,
     ): R {
         setActive()
@@ -152,7 +104,7 @@ class ExportInstance(
     }
 
     fun resetLayouts() = with(root) {
-        traverse { it.dropLayout() }.also { ensureRootLayout() }
+        traverse { it.dropLayout() }.also { resetLayout(getViewPortMaxRightBottom()) }
     }
 
     fun resumeAllSuspendedNodes() = with(root) {
@@ -177,14 +129,6 @@ class ExportInstance(
 
     private fun <M : AbstractModel<E, M, C>, E : ExportTemplate<E, M, C>, C : TemplateContext<C, M>> resumeTemplate(node: TreeNode<M, E, C>) {
         node.template.onResume(node.context) { resumeChildren(node) }
-    }
-
-    fun TemplateContext<*, *>.setSuspended() = with(root) {
-        suspendedNodes.add(this@setSuspended)
-    }
-
-    fun TemplateContext<*, *>.setResumed() = with(root) {
-        suspendedNodes.remove(this@setResumed)
     }
 
 }
@@ -255,8 +199,6 @@ open class TemplateContext<C : TemplateContext<C, M>, M : AbstractModel<*, M, C>
 
     fun getCustomAttributes(): MutableMap<String, Any> = stateAttributes
 
-    fun ExportInstance.getOperations(): Operations<RenderingContext> = getExportOperations(model)
-
     fun suspendX() = with(instance) {
         status = when (status) {
             ExportStatus.ACTIVE,
@@ -287,9 +229,9 @@ open class TemplateContext<C : TemplateContext<C, M>, M : AbstractModel<*, M, C>
 
     fun finishOrSuspend() = with(instance) {
         if (status.isPartlyExported()) {
-            setSuspended()
+            root.suspendedNodes.add(this@TemplateContext)
         } else {
-            setResumed()
+            root.suspendedNodes.remove(this@TemplateContext)
             status = ExportStatus.FINISHED
         }
     }
@@ -300,6 +242,14 @@ open class TemplateContext<C : TemplateContext<C, M>, M : AbstractModel<*, M, C>
 
     fun isXOverflow(): Boolean = status.isXOverflow()
 
+    private fun bubblePartialStatus() = with(instance) {
+        var current = node().getParent()
+        while (current != null && status.isPartlyExported()) {
+            current.context.status = status
+            current = current.getParent()
+        }
+    }
+
 }
 
 fun <C : ExecutionContext, R : Any> TemplateContext<*, *>.value(supplier: ReifiedValueSupplier<C, R>): R? =
@@ -307,12 +257,19 @@ fun <C : ExecutionContext, R : Any> TemplateContext<*, *>.value(supplier: Reifie
 
 abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, M, C>, C : TemplateContext<C, M>> {
 
-    open val requiresMeasurements: Boolean = false
+    open val planSpaceOnExport: Boolean = false
+
+    private fun ExportInstance.shouldMeasure(model: M): Boolean {
+        return planSpaceOnExport && !getMeasuringOperations(model).isEmpty()
+    }
+
+    private fun <R> inScope(parentContext: TemplateContext<*, *>, model: M, block: TreeNode<M, E, C>.() -> R): R =
+        parentContext.instance.inScope(self(), model, { createTemplateContext(parentContext, model) }, block)
 
     internal fun export(parentContext: TemplateContext<*, *>, model: M, layoutContext: LayoutContext? = null) =
         with(parentContext.instance) {
-            if (requiresMeasurements) onMeasure(parentContext,model)
-            model.inNodeScope(self(), { createTemplateContext(parentContext, model) }) {
+            if (shouldMeasure(model)) onMeasure(parentContext, model)
+            inScope(parentContext, model) {
                 context.layoutContext = layoutContext
                 doExport(context)
                 context.finishOrSuspend()
@@ -329,11 +286,11 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
 
     //TODO on measure - should call probably the same logic as export and resumption but should inject measurement operations instead of export operations. We should not be able to use different exporting logic for those two paths.
     internal fun onMeasure(parentContext: TemplateContext<*, *>, model: M): SomeSize = with(parentContext.instance) {
-        model.inNodeScope(self(), { createTemplateContext(parentContext, model) }) {
-            setMeasuringLayout(createLayoutPolicy(context)) { measuringLayout ->
-                takeMeasures(context).also { measuringLayout.measured = true }
+        inScope(self(), model, { createTemplateContext(parentContext, model) }) {
+            setMeasuringLayout(createLayoutPolicy(context), uom) { measuringLayout ->
+                takeMeasures(context).also { measuringLayout.spacePlanned = true }
                 measuringLayout.boundingRectangle.let {
-                    SomeSize(it.getWidth(),it.getHeight())
+                    SomeSize(it.getWidth(), it.getHeight())
                 }
             }
         }
@@ -351,16 +308,21 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
 
     protected open fun createLayoutPolicy(templateContext: C): AbstractLayoutPolicy = DefaultLayoutPolicy()
 
-    protected fun C.createLayoutScope(
+    fun C.createLayoutScope(
         orientation: Orientation = Orientation.HORIZONTAL,
         childLeftTopCorner: Position? = null,
         maxRightBottom: Position? = null,
         block: Layout.() -> Unit,
     ) = with(instance) {
-        createLayoutScope(
-            // TODO layoutPolicy may not be required (e.g. when measuringLayout where used, exportLayout takes its policy!)
-            createLayoutPolicy(this@createLayoutScope), childLeftTopCorner, maxRightBottom, orientation, block
-        )
+        val ctx = this@createLayoutScope
+        node().let { currentNode ->
+            currentNode.createLayoutScope(
+                { createLayoutPolicy(ctx) }, uom,
+                childLeftTopCorner ?: layoutContext?.leftTop,
+                maxRightBottom ?: layoutContext?.maxRightBottom ?: getViewPortMaxRightBottom(),
+                orientation, block
+            )
+        }
     }
 
     protected fun C.render(context: AttributedContext) = with(instance) {
@@ -375,6 +337,14 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
 
     fun C.resumeAllSuspendedNodes() = with(instance) {
         resumeAllSuspendedNodes()
+    }
+
+    fun C.getExportOperations(): Operations<RenderingContext> = with(instance) {
+        getExportOperations(model)
+    }
+
+    fun C.getMeasuringOperations(): Operations<RenderingContext> = with(instance) {
+        getMeasuringOperations(model)
     }
 
     @Suppress("UNCHECKED_CAST")

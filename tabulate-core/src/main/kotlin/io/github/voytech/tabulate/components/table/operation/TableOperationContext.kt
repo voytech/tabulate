@@ -48,7 +48,7 @@ interface RowLayoutElement : RowCoordinate, LayoutElement, LayoutElementApply {
         x = policy.getX(0.asXPosition(), uom),
         y = policy.getY(getRow().asYPosition(), uom),
         width = policy.getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
-        height = (policy as? GridPolicyMethods)?.getRowHeight(getRow(), uom)
+        height = (policy as? GridPolicyMethods)?.getRowHeight(getRow(),1, uom)
     )
 
     override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as GridPolicyMethods) {
@@ -87,8 +87,8 @@ interface RowCellLayoutElement : RowCellCoordinate, LayoutElement, LayoutElement
     override fun Layout.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
         x = policy.getX(getColumn().asXPosition(), uom),
         y = policy.getY(getRow().asYPosition(), uom),
-        width = (policy as? GridPolicyMethods)?.getColumnWidth(getColumn(),uom),
-        height = (policy as? GridPolicyMethods)?.getRowHeight(getRow(),uom)
+        width = (policy as? GridPolicyMethods)?.getColumnWidth(getColumn(),1,uom),
+        height = (policy as? GridPolicyMethods)?.getRowHeight(getRow(),1, uom)
     )
 
     override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as GridPolicyMethods) {

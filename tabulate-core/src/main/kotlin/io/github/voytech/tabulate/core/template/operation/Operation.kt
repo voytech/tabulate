@@ -39,6 +39,8 @@ value class Operations<CTX : RenderingContext>(private val dispatch: TwoParamsBa
     operator fun <A : Attribute<*>, E : AttributedContext> invoke(renderingContext: CTX, context: E): OperationResult? =
         (dispatch[renderingContext, context] as? Operation<CTX, E>)?.invokeWithResult(renderingContext, context)
 
+    fun isEmpty(): Boolean = dispatch.isEmpty()
+
 }
 
 interface Enhance<CTX : RenderingContext> {

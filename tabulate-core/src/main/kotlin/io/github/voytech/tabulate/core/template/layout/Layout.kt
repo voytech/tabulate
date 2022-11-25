@@ -23,8 +23,8 @@ interface AbsolutePositionPolicy {
 interface GridPolicyMethods : AbsolutePositionPolicy {
     fun setColumnWidth(column: Int, width: Width)
     fun setRowHeight(row: Int, height: Height)
-    fun getColumnWidth(column: Int, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width?
-    fun getRowHeight(row: Int, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height?
+    fun getColumnWidth(column: Int, colSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width?
+    fun getRowHeight(row: Int, rowSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height?
     fun setOffsets(row: Int, column: Int)
 }
 
@@ -55,7 +55,6 @@ abstract class AbstractGridLayoutPolicy(protected open val rowIndex: Int = 0, pr
 
 interface Layout {
     val uom: UnitsOfMeasure
-    val orientation: Orientation
     val leftTop: Position
     val maxRightBottom: Position?
     val policy: AbstractLayoutPolicy
@@ -78,14 +77,13 @@ interface Layout {
 
 sealed class AbstractLayout(
     override val uom: UnitsOfMeasure,
-    override val orientation: Orientation,
     override val leftTop: Position,
     override val maxRightBottom: Position?,
     override val policy: AbstractLayoutPolicy = DefaultLayoutPolicy(),
     internal var rightBottom: Position = leftTop,
 ) : Layout {
 
-    internal var measured: Boolean = false
+    internal var spacePlanned: Boolean = false
 
     override val boundingRectangle: BoundingRectangle
         get() = BoundingRectangle(leftTop, rightBottom)
@@ -123,19 +121,17 @@ sealed class AbstractLayout(
 
 }
 
-fun Layout.isMeasured(): Boolean = this is AbstractLayout && measured
+fun Layout.isSpacePlanned(): Boolean = this is AbstractLayout && spacePlanned
 
 class DefaultLayout(
     uom: UnitsOfMeasure,
-    orientation: Orientation,
     leftTop: Position,
     maxRightBottom: Position?,
     policy: AbstractLayoutPolicy = DefaultLayoutPolicy(),
-) : AbstractLayout(uom, orientation, leftTop, maxRightBottom, policy) {
+) : AbstractLayout(uom, leftTop, maxRightBottom, policy) {
     init {
         policy.layout = this
     }
-
 }
 
 fun interface LayoutElement {
@@ -337,10 +333,10 @@ class SpreadsheetPolicy(
 
     override fun setRowHeight(row: Int, height: Height) = rows.setLengthAtIndex(row, height, defaultHeightInPt)
 
-    override fun getColumnWidth(column: Int, uom: UnitsOfMeasure): Width =
+    override fun getColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width =
         Width(columns[column]?.length ?: defaultWidthInPt, standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(uom)
 
-    override fun getRowHeight(row: Int, uom: UnitsOfMeasure): Height =
+    override fun getRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height =
         Height(rows[row]?.length ?: defaultHeightInPt, standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(uom)
 
     override fun setOffsets(row: Int, column: Int) {
@@ -394,14 +390,14 @@ class GridLayoutPolicy : AbstractGridLayoutPolicy() {
         delegate.setRowHeight(row, height)
     }
 
-    override fun getColumnWidth(column: Int, uom: UnitsOfMeasure): Width? =
-        if (layout.isMeasured()) {
-            delegate.getColumnWidth(column, uom)
+    override fun getColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width? =
+        if (layout.isSpacePlanned()) {
+            delegate.getColumnWidth(column, colSpan, uom)
         } else null
 
-    override fun getRowHeight(row: Int, uom: UnitsOfMeasure): Height? =
-        if (layout.isMeasured()) {
-            delegate.getRowHeight(row, uom)
+    override fun getRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height? =
+        if (layout.isSpacePlanned()) {
+            delegate.getRowHeight(row, rowSpan, uom)
         } else null
 
     override fun setOffsets(row: Int, column: Int) {

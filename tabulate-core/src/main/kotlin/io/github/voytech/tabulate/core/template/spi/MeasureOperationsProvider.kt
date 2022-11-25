@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.core.model.UnconstrainedModel
 import io.github.voytech.tabulate.core.template.RenderingContext
 
 /**
- * Service provider interface enabling third party table exporters.
+ * Service provider interface enabling measuring operations provided by third-party [RenderingContext].
  * @author Wojciech Mąka
  * @since 0.2.0
  */

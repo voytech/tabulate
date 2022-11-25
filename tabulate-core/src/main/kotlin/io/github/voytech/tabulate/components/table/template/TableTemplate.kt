@@ -173,7 +173,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
 
     override fun doExport(templateContext: TableTemplateContext<T>): Unit = with(templateContext) {
         createLayoutScope {
-            val operations = instance.getExportOperations(model)
+            val operations = getExportOperations()
             templateContext.setupRowResolver(CaptureRowCompletionImpl(renderingContext, operations))
             TabulationApiImpl(renderingContext, templateContext, operations).let { api ->
                 dataSource.exportRows(api)
@@ -191,7 +191,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
                 this@with.indices.getIndexValueOnY(),
                 this@with.indices.getIndexOnX()
             )
-            val operations = instance.getExportOperations(model)
+            val operations = getExportOperations()
             templateContext.setupRowResolver(CaptureRowCompletionImpl(renderingContext, operations))
             TabulationApiImpl(renderingContext, templateContext, operations).let { api ->
                 cropDataSource().exportRows(api)
@@ -201,13 +201,13 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
         keepStatus()
     }
 
-    override val requiresMeasurements = true
+    override val planSpaceOnExport = true
 
     //TODO in case of table it is required first pass to measure column and row widths.
     //TODO TableTemplate should be aware of multiple passes and be able to cache some computations.
     override fun takeMeasures(context: TableTemplateContext<T>) {
         with(context) {
-            val operations = instance.getMeasuringOperations(model)
+            val operations = getMeasuringOperations()
             context.setupRowResolver(CaptureRowCompletionImpl(renderingContext, operations))
             TabulationApiImpl(renderingContext, context, operations).let { api ->
                 dataSource.exportRows(api)

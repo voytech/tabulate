@@ -232,7 +232,7 @@ class PdfBoxTabulateTests {
                         cell(SampleProduct::price) {  }
                     }
                 }
-                dataSource(SampleProduct.create(154))
+                dataSource(SampleProduct.create(111154))
             })
             footer {
                 text {
