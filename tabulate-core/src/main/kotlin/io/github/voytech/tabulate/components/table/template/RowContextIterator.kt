@@ -10,7 +10,7 @@ import io.github.voytech.tabulate.components.table.operation.RowEnd
  */
 internal class RowContextIterator<T: Any>(
     private val resolver: IndexedContextResolver<RowEnd<T>>,
-    private val templateContext: TableTemplateContext<T>
+    private val templateContext: TableModelExportContext<T>
 ) : AbstractIterator<ContextResult<RowEnd<T>>>() {
 
     private var sourceRecordIndex: Int? = null

@@ -2,15 +2,13 @@ package io.github.voytech.tabulate.core.api.builder
 
 import io.github.voytech.tabulate.components.table.api.builder.exception.BuilderException
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.template.TemplateContext
 import io.github.voytech.tabulate.core.template.loadAttributeConstraints
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import kotlin.properties.ObservableProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-typealias BuiltModel<T> = AbstractModel<*,T,out TemplateContext<*,T>>
-
+typealias BuiltModel<T> = AbstractModel<T>
 
 typealias DslBlock<T> = (T) -> Unit
 

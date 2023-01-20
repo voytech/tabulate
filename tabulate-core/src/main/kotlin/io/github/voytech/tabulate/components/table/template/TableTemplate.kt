@@ -15,7 +15,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 
-typealias StandaloneTableTemplate<T> = StandaloneExportTemplate<TableTemplate<T>, Table<T>, TableTemplateContext<T>>
+typealias StandaloneTableTemplate<T> = StandaloneExportTemplate<Table<T>>
 
 /**
  * [TabulationApi] An API enabling interactive table export.
@@ -60,13 +60,13 @@ interface TabulationApi<T> {
  * @author Wojciech Mąka
  */
 
-class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableTemplateContext<T>>() {
+class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableModelExportContext<T>>() {
 
     data class ColumnContextAttributes(val start: Attributes, val end: Attributes)
 
     private inner class TabulationApiImpl(
         private val renderingContext: RenderingContext,
-        private val templateContext: TableTemplateContext<T>,
+        private val templateContext: TableModelExportContext<T>,
         private val operations: Operations<RenderingContext>,
     ) : TabulationApi<T> {
         private val columnContextAttributes = templateContext.model.distributeAttributesForContexts(
@@ -119,11 +119,11 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
     }
 
     private fun <T : Any> captureRecordAndRenderRow(
-        state: TableTemplateContext<T>,
+        state: TableModelExportContext<T>,
         record: T,
     ): ContextResult<RowEnd<T>>? = state.capture(record)
 
-    private fun <T : Any> renderRemainingBufferedRows(state: TableTemplateContext<T>) {
+    private fun <T : Any> renderRemainingBufferedRows(state: TableModelExportContext<T>) {
         if (state.isYOverflow()) return
         @Suppress("ControlFlowWithEmptyBody")
         while (state.next()?.let { it is SuccessResult } == true);
@@ -132,7 +132,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
     private fun <T : Any> RenderingContext.renderColumnStarts(
         columnAttributes: Map<ColumnDef<T>, ColumnContextAttributes>,
         operations: Operations<RenderingContext>,
-        templateContext: TableTemplateContext<T>,
+        templateContext: TableModelExportContext<T>,
     ): OperationResult? = with(templateContext) {
         val iterator = with(templateContext.indices) { model.columns.crop().iterator() }
         var status: OperationResult? = Success
@@ -154,7 +154,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
     private fun <T : Any> RenderingContext.renderColumnEnds(
         columnAttributes: Map<ColumnDef<T>, ColumnContextAttributes>,
         operations: Operations<RenderingContext>,
-        templateContext: TableTemplateContext<T>,
+        templateContext: TableModelExportContext<T>,
     ) = with(templateContext) {
         model.columns.forEach { column: ColumnDef<T> ->
             operations.invoke(
@@ -171,7 +171,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
             }
         }
 
-    override fun doExport(templateContext: TableTemplateContext<T>): Unit = with(templateContext) {
+    override fun doExport(templateContext: TableModelExportContext<T>): Unit = with(templateContext) {
         createLayoutScope {
             val operations = getExportOperations()
             templateContext.setupRowResolver(CaptureRowCompletionImpl(renderingContext, operations))
@@ -183,7 +183,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
         keepStatus()
     }
 
-    override fun doResume(templateContext: TableTemplateContext<T>, resumeNext: ResumeNext) = with(templateContext) {
+    override fun doResume(templateContext: TableModelExportContext<T>, resumeNext: ResumeNext) = with(templateContext) {
         beforeResume()
         createLayoutScope {
             // TODO - drop casting - should TableTemplate have generic type policy ?
@@ -205,7 +205,7 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
 
     //TODO in case of table it is required first pass to measure column and row widths.
     //TODO TableTemplate should be aware of multiple passes and be able to cache some computations.
-    override fun takeMeasures(context: TableTemplateContext<T>) {
+    override fun takeMeasures(context: TableModelExportContext<T>) {
         with(context) {
             val operations = getMeasuringOperations()
             context.setupRowResolver(CaptureRowCompletionImpl(renderingContext, operations))
@@ -218,18 +218,18 @@ class TableTemplate<T : Any> : ExportTemplate<TableTemplate<T>, Table<T>, TableT
     }
 
     override fun createTemplateContext(
-        parentContext: TemplateContext<*, *>,
+        parentContext: ModelExportContext<*, *>,
         model: Table<T>,
-    ): TableTemplateContext<T> {
+    ): TableModelExportContext<T> {
         val binding = parentContext.stateAttributes["_dataSourceOverride"] as? DataSourceBinding<T>
-        return TableTemplateContext(
+        return TableModelExportContext(
             model, parentContext.stateAttributes,
             parentContext.instance,
             model.dataSource?.dataSource ?: binding?.dataSource
         )
     }
 
-    override fun createLayoutPolicy(templateContext: TableTemplateContext<T>): AbstractLayoutPolicy = GridLayoutPolicy()
+    override fun createLayoutPolicy(templateContext: TableModelExportContext<T>): AbstractLayoutPolicy = GridLayoutPolicy()
 
     fun <O : Any> export(format: DocumentFormat, source: Iterable<T>, output: O, table: Table<T>) =
         StandaloneTableTemplate<T>(format).export(table, output, source)

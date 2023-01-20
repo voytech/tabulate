@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.components.table.model.ColumnDef
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.RowEnd
 import io.github.voytech.tabulate.core.template.ExportInstance
-import io.github.voytech.tabulate.core.template.TemplateContext
+import io.github.voytech.tabulate.core.template.ModelExportContext
 import io.github.voytech.tabulate.core.template.ExportStatus
 
 /**
@@ -20,13 +20,13 @@ import io.github.voytech.tabulate.core.template.ExportStatus
  * @since 0.1.0
  * @author Wojciech Mąka
  */
-class TableTemplateContext<T : Any>(
+class TableModelExportContext<T : Any>(
     tableModel: Table<T>,
     stateAttributes: MutableMap<String, Any>,
     instance: ExportInstance,
     val dataSource: Iterable<T>? = null,
     private var remainingRecords: Iterable<T>? = dataSource,
-) : TemplateContext<TableTemplateContext<T>, Table<T>>(tableModel, stateAttributes, instance) {
+) : ModelExportContext<TableModelExportContext<T>, Table<T>>(tableModel, stateAttributes, instance) {
 
     private lateinit var rowContextResolver: AccumulatingRowContextResolver<T>
 

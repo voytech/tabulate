@@ -1,9 +1,8 @@
 package io.github.voytech.tabulate.components.table.model
 
-import io.github.voytech.tabulate.components.table.template.TableTemplate
-import io.github.voytech.tabulate.components.table.template.TableTemplateContext
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.DataSourceBinding
+import io.github.voytech.tabulate.core.model.ModelExportContext
 import io.github.voytech.tabulate.core.model.ModelWithAttributes
 import io.github.voytech.tabulate.core.reify
 
@@ -48,12 +47,14 @@ class Table<T: Any> internal constructor(
 
     override val attributes: Attributes?
 
-) : ModelWithAttributes<TableTemplate<T>,Table<T>, TableTemplateContext<T>>() {
-
-    override fun getExportTemplate(): TableTemplate<T> = TableTemplate()
+) : ModelWithAttributes<Table<T>>() {
 
     companion object {
         @JvmStatic
         fun <T: Any> jclass() : Class<Table<T>> = reify()
+    }
+
+    override fun doExport(templateContext: ModelExportContext<Table<T>>) {
+        TODO("Not yet implemented")
     }
 }

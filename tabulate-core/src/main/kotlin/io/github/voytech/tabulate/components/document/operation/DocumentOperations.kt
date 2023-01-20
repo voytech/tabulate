@@ -1,16 +1,15 @@
 package io.github.voytech.tabulate.components.document.operation
 
-import io.github.voytech.tabulate.components.document.template.DocumentTemplateContext
-import io.github.voytech.tabulate.core.template.RenderingContext
+import io.github.voytech.tabulate.components.document.model.Document
+import io.github.voytech.tabulate.core.model.ModelExportContext
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
-import io.github.voytech.tabulate.core.template.operation.Operation
 
-sealed class DocumentContext(templateContext: DocumentTemplateContext) : AttributedContext() {
+sealed class DocumentContext(templateContext: ModelExportContext<Document>) : AttributedContext() {
     init {
         additionalAttributes = templateContext.stateAttributes
     }
 }
 
-class DocumentStart(templateContext: DocumentTemplateContext) : DocumentContext(templateContext)
+class DocumentStart(templateContext: ModelExportContext<Document>) : DocumentContext(templateContext)
 
-class DocumentEnd(templateContext: DocumentTemplateContext) : DocumentContext(templateContext)
+class DocumentEnd(templateContext: ModelExportContext<Document>) : DocumentContext(templateContext)

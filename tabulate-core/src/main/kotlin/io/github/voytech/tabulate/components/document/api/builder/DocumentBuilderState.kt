@@ -1,9 +1,10 @@
 package io.github.voytech.tabulate.components.document.api.builder
 
 import io.github.voytech.tabulate.components.document.model.Document
-import io.github.voytech.tabulate.core.api.builder.*
-import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.Model
+import io.github.voytech.tabulate.core.api.builder.AttributesAwareBuilder
+import io.github.voytech.tabulate.core.api.builder.BuiltModel
+import io.github.voytech.tabulate.core.api.builder.CompositeModelBuilderState
+import io.github.voytech.tabulate.core.api.builder.ModelBuilderState
 import io.github.voytech.tabulate.core.reify
 
 
