@@ -266,12 +266,11 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
     private fun <R> inScope(parentContext: TemplateContext<*, *>, model: M, block: TreeNode<M, E, C>.() -> R): R =
         parentContext.instance.inScope(self(), model, { createTemplateContext(parentContext, model) }, block)
 
-    internal fun export(parentContext: TemplateContext<*, *>, model: M, layoutContext: LayoutContext? = null) =
+    internal fun export(parentContext: TemplateContext<*, *>, model: M, layoutCxt: LayoutContext? = null) =
         with(parentContext.instance) {
             if (shouldMeasure(model)) onMeasure(parentContext, model)
             inScope(parentContext, model) {
-                context.layoutContext = layoutContext
-                doExport(context)
+                doExport(context.apply { layoutContext = layoutCxt })
                 context.finishOrSuspend()
             }
         }
@@ -286,7 +285,7 @@ abstract class ExportTemplate<E : ExportTemplate<E, M, C>, M : AbstractModel<E, 
 
     //TODO on measure - should call probably the same logic as export and resumption but should inject measurement operations instead of export operations. We should not be able to use different exporting logic for those two paths.
     internal fun onMeasure(parentContext: TemplateContext<*, *>, model: M): SomeSize = with(parentContext.instance) {
-        inScope(self(), model, { createTemplateContext(parentContext, model) }) {
+        inScope(parentContext, model) {
             setMeasuringLayout(createLayoutPolicy(context), uom) { measuringLayout ->
                 takeMeasures(context).also { measuringLayout.spacePlanned = true }
                 measuringLayout.boundingRectangle.let {

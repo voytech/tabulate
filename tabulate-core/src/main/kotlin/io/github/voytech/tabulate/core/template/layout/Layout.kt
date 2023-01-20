@@ -333,11 +333,14 @@ class SpreadsheetPolicy(
 
     override fun setRowHeight(row: Int, height: Height) = rows.setLengthAtIndex(row, height, defaultHeightInPt)
 
+    private fun MutableMap<Int,PositionAndLength>.spannedWidth(index: Int, span: Int): MeasuredValue =
+        MeasuredValue(0.until(span).sumOf { (this[index+it]?.length ?: defaultWidthInPt).toDouble() }.toFloat(), standardUnit.asUnitsOfMeasure())
+
     override fun getColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width =
-        Width(columns[column]?.length ?: defaultWidthInPt, standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(uom)
+        columns.spannedWidth(column, colSpan).width().switchUnitOfMeasure(uom)
 
     override fun getRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height =
-        Height(rows[row]?.length ?: defaultHeightInPt, standardUnit.asUnitsOfMeasure()).switchUnitOfMeasure(uom)
+        rows.spannedWidth(row,rowSpan).height().switchUnitOfMeasure(uom)
 
     override fun setOffsets(row: Int, column: Int) {
         rowIndex = row
@@ -383,10 +386,12 @@ class GridLayoutPolicy : AbstractGridLayoutPolicy() {
     }
 
     override fun setColumnWidth(column: Int, width: Width) {
+        if (layout.isSpacePlanned()) return
         delegate.setColumnWidth(column, width)
     }
 
     override fun setRowHeight(row: Int, height: Height) {
+        if (layout.isSpacePlanned()) return
         delegate.setRowHeight(row, height)
     }
 

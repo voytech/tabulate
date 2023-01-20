@@ -48,7 +48,7 @@ interface RowLayoutElement : RowCoordinate, LayoutElement, LayoutElementApply {
         x = policy.getX(0.asXPosition(), uom),
         y = policy.getY(getRow().asYPosition(), uom),
         width = policy.getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
-        height = (policy as? GridPolicyMethods)?.getRowHeight(getRow(),1, uom)
+        height = (policy as? GridPolicyMethods)?.getRowHeight(getRow(), 1, uom)
     )
 
     override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as GridPolicyMethods) {
@@ -83,13 +83,6 @@ interface ColumnLayoutElement : ColumnCoordinate, LayoutElement, LayoutElementAp
 interface RowCellCoordinate : RowCoordinate, ColumnCoordinate
 
 interface RowCellLayoutElement : RowCellCoordinate, LayoutElement, LayoutElementApply {
-
-    override fun Layout.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
-        x = policy.getX(getColumn().asXPosition(), uom),
-        y = policy.getY(getRow().asYPosition(), uom),
-        width = (policy as? GridPolicyMethods)?.getColumnWidth(getColumn(),1,uom),
-        height = (policy as? GridPolicyMethods)?.getRowHeight(getRow(),1, uom)
-    )
 
     override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as GridPolicyMethods) {
         context.width?.let { setColumnWidth(getColumn(), it) }
@@ -203,10 +196,13 @@ class RowEnd<T>(
 
 }
 
-internal fun  <T : Any> SyntheticRow<T>.createRowEnd(rowStart: RowStart, rowCellValues: Map<ColumnKey<T>, CellContext>): RowEnd<T> =
+internal fun <T : Any> SyntheticRow<T>.createRowEnd(
+    rowStart: RowStart,
+    rowCellValues: Map<ColumnKey<T>, CellContext>,
+): RowEnd<T> =
     RowEnd(
         rowIndex = rowStart.rowIndex,
-        attributes =  rowEndAttributes,
+        attributes = rowEndAttributes,
         rowCellValues = rowCellValues
     ).apply { additionalAttributes = rowStart.additionalAttributes }
 
@@ -275,6 +271,13 @@ class CellContext(
 ) : RenderableContext(attributes), RowCellLayoutElement, HasValue<Any> {
     override fun getRow(): Int = rowIndex
     override fun getColumn(): Int = columnIndex
+
+    override fun Layout.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
+        x = policy.getX(getColumn().asXPosition(), uom),
+        y = policy.getY(getRow().asYPosition(), uom),
+        width = (policy as? GridPolicyMethods)?.getColumnWidth(getColumn(), cellValue.colSpan, uom),
+        height = (policy as? GridPolicyMethods)?.getRowHeight(getRow(), cellValue.rowSpan, uom)
+    )
 }
 
 internal fun <T : Any> SyntheticRow<T>.createCellContext(

@@ -201,6 +201,7 @@ class PdfBoxTabulateTests {
                     header("Id", "Name", "Description", "Price")
                     matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
                     matching { odd() } assign { attributes { background { color = Colors.YELLOW } } }
+                    //newRow(20)  { cell(SampleProduct::code) { rowSpan = 6} }
                     newRow(25) {
                         attributes {
                             borders { all { style = DefaultBorderStyle.NONE } } //TODO BUG FIX. borders on cell level dont apply here.
@@ -213,9 +214,9 @@ class PdfBoxTabulateTests {
                         }
                         cell(SampleProduct::code) {
                             colSpan = 2
-                            value = "Mid row"
+                            value = "Mid row col span = 2"
                         }
-                        cell(SampleProduct::description) { value = "Mid row" }
+                        cell(SampleProduct::description) { value = "Mid row Description" }
                         cell(SampleProduct::price) {  }
                     }
                     footer {
@@ -232,7 +233,7 @@ class PdfBoxTabulateTests {
                         cell(SampleProduct::price) {  }
                     }
                 }
-                dataSource(SampleProduct.create(111154))
+                dataSource(SampleProduct.create(154))
             })
             footer {
                 text {
