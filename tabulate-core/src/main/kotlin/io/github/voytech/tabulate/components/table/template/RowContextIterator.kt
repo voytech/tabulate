@@ -1,6 +1,8 @@
 package io.github.voytech.tabulate.components.table.template
 
+import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.RowEnd
+import io.github.voytech.tabulate.core.model.ModelExportContext
 
 /**
  * An iterator providing instance of [RowEnd] applicable for requested row index.
@@ -10,13 +12,14 @@ import io.github.voytech.tabulate.components.table.operation.RowEnd
  */
 internal class RowContextIterator<T: Any>(
     private val resolver: IndexedContextResolver<RowEnd<T>>,
-    private val templateContext: TableModelExportContext<T>
+    private val overflowOffsets: OverflowOffsets,
+    private val templateContext: ModelExportContext<Table<T>>
 ) : AbstractIterator<ContextResult<RowEnd<T>>>() {
 
     private var sourceRecordIndex: Int? = null
 
     private val indexIncrement = MutableRowIndex().apply {
-        set(templateContext.indices.getIndexOnY())
+        set(overflowOffsets.getIndexOnY())
     }
 
     private fun IndexedResult<RowEnd<T>>.setProcessedSourceRecordIndex() {
@@ -37,8 +40,8 @@ internal class RowContextIterator<T: Any>(
                     }
                     is OverflowResult -> {
                         suspendY()
-                        indices.setNextIndexOnY(it.rowIndex)
-                        indices.setNextRecordIndex(sourceRecordIndex ?: 0)
+                        overflowOffsets.setNextIndexOnY(it.rowIndex)
+                        overflowOffsets.setNextRecordIndex(sourceRecordIndex ?: 0)
                         setNext(it.result)
                     }
                 }

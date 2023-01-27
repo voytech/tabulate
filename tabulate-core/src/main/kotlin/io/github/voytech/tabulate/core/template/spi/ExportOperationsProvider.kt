@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.core.template.spi
 
-import io.github.voytech.tabulate.core.model.UnconstrainedModel
+import io.github.voytech.tabulate.core.model.AbstractModel
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.operation.OperationsBuilder
 
@@ -12,7 +12,7 @@ typealias BuildOperations<CTX> = OperationsBuilder<CTX>.() -> Unit
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-interface ExportOperationsProvider<CTX: RenderingContext, M: UnconstrainedModel<M>> : Identifiable<CTX>, ModelAware<M> {
+interface ExportOperationsProvider<CTX: RenderingContext, M: AbstractModel<M>> : Identifiable<CTX>, ModelAware<M> {
 
     /**
      * Creates export operations working on attributed contexts (table, row, column, cell).

@@ -113,25 +113,23 @@ class ExportInstance(
     }
 
     private fun resumeAll() = with(root) {
-        preserveActive { resume(root) }
+        preserveActive { resumeNode(root) }
     }
 
     private fun resumeChildren(node: TreeNode<*>) {
-        node.forChildren { resume(it) }
+        node.forChildren { resumeNode(it) }
     }
 
-    private fun resume(node: TreeNode<*>) = with(root) {
+    private fun resumeNode(node: TreeNode<*>) = with(root) {
         activeNode = node
-        resumeTemplate(node)
+        resumeModelExport(node)
     }
 
-    private fun <M : AbstractModel<M>> resumeTemplate(node: TreeNode<M>) {
+    private fun <M : AbstractModel<M>> resumeModelExport(node: TreeNode<M>) {
         node.context.model.resume(node.context) { resumeChildren(node) }
     }
 
 }
-
-
 
 
 /**
@@ -150,7 +148,7 @@ class StandaloneExportTemplate<M : AbstractModel<M>>(
     fun <O : Any> export(model: M, output: O) = with(ExportInstance(format)) {
         resolveOutputBinding(output).run {
             setOutput(renderingContext, output)
-            model.export(ModelExportContext(model, mutableMapOf(), this@with))
+            model.export(ModelExportContext(model, StateAttributes(mutableMapOf()), this@with))
             resumeAllSuspendedNodes()
             flush()
         }
@@ -176,8 +174,8 @@ class StandaloneExportTemplate<M : AbstractModel<M>>(
             .firstOrNull() ?: throw OutputBindingResolvingException()
     }
 
-    private fun <T : Any> Iterable<T>.asStateAttributes(): MutableMap<String, Any> = if (iterator().hasNext()) {
+    private fun <T : Any> Iterable<T>.asStateAttributes(): StateAttributes = StateAttributes(if (iterator().hasNext()) {
         mutableMapOf("_dataSourceOverride" to DataSourceBinding(this))
-    } else mutableMapOf()
+    } else mutableMapOf())
 
 }

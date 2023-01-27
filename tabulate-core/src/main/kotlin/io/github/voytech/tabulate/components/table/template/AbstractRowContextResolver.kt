@@ -4,6 +4,7 @@ import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
+import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.model.orEmpty
 import io.github.voytech.tabulate.core.template.operation.*
 
@@ -131,7 +132,7 @@ interface CaptureRowCompletion<T> {
  */
 internal abstract class AbstractRowContextResolver<T : Any>(
     tableModel: Table<T>,
-    private val customAttributes: MutableMap<String, Any>,
+    private val state: StateAttributes,
     private val offsets: OverflowOffsets,
     private val listener: CaptureRowCompletion<T>? = null,
 ) : IndexedContextResolver<RowEnd<T>> {
@@ -153,7 +154,7 @@ internal abstract class AbstractRowContextResolver<T : Any>(
 
     private fun offsetAwareCellContext(sourceRow: SourceRow<T>) = ProvideCellContext { row, column ->
         if (offsets.isValid(column.index)) {
-            row.createCellContext(row = sourceRow, column = column, customAttributes)?.render()
+            row.createCellContext(row = sourceRow, column = column, state.data)?.render()
         } else null
     }
 
@@ -164,7 +165,7 @@ internal abstract class AbstractRowContextResolver<T : Any>(
         return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
             with(rows.findQualifying(sourceRow)) {
                 val provideCell = offsetAwareCellContext(sourceRow)
-                createRowStart(rowIndex = tableRowIndex.value, customAttributes = customAttributes).let { rowStart ->
+                createRowStart(rowIndex = tableRowIndex.value, customAttributes = state.data).let { rowStart ->
                     when (val status = rowStart.render()) {
                         Success -> SuccessResult(createRowEnd(rowStart, mapEachCell(provideCell)).also { it.render() })
                         else -> OverflowResult(status as io.github.voytech.tabulate.core.template.operation.OverflowResult)

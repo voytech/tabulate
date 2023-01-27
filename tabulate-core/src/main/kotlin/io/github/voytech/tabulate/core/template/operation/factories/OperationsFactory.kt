@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.core.template.operation.factories
 
-import io.github.voytech.tabulate.core.model.UnconstrainedModel
+import io.github.voytech.tabulate.core.model.Model
 import io.github.voytech.tabulate.core.template.DocumentFormat
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.loadExportOperationProviders
@@ -13,9 +13,9 @@ import io.github.voytech.tabulate.core.template.spi.ExportOperationsProvider
 import io.github.voytech.tabulate.core.template.spi.MeasureOperationsProvider
 import io.github.voytech.tabulate.core.template.spi.getRenderingContextClass
 
-typealias DiscoveredExportOperationProviders<R> = Map<Class<out UnconstrainedModel<*>>, List<ExportOperationsProvider<R, *>>>
+typealias DiscoveredExportOperationProviders<R> = Map<Class<out Model<*>>, List<ExportOperationsProvider<R, *>>>
 
-typealias DiscoveredMeasureOperationProviders<R> = Map<Class<out UnconstrainedModel<*>>, List<MeasureOperationsProvider<R, *>>>
+typealias DiscoveredMeasureOperationProviders<R> = Map<Class<out Model<*>>, List<MeasureOperationsProvider<R, *>>>
 
 
 private fun <R : RenderingContext> DiscoveredExportOperationProviders<R>.getRenderingContextClass(): Class<R> =
@@ -46,7 +46,7 @@ class OperationsFactory<CTX : RenderingContext>(private val documentFormat: Docu
         AttributeOperationsFactory(renderingContext)
     }
 
-    fun <M : UnconstrainedModel<M>> createExportOperations(model: M, vararg customEnhancers: Enhance<CTX>): Operations<CTX> =
+    fun <M : Model<M>> createExportOperations(model: M, vararg customEnhancers: Enhance<CTX>): Operations<CTX> =
         (exportOperationProviders[model.javaClass]?: emptyList()).fold(OperationsBuilder(renderingContext)) { builder, provider ->
             builder.apply(provider.provideExportOperations())
         }.build(
@@ -54,7 +54,7 @@ class OperationsFactory<CTX : RenderingContext>(private val documentFormat: Docu
             *customEnhancers
         )
 
-    fun <M : UnconstrainedModel<M>> createMeasureOperations(model: M, vararg customEnhancers: Enhance<CTX>): Operations<CTX> =
+    fun <M : Model<M>> createMeasureOperations(model: M, vararg customEnhancers: Enhance<CTX>): Operations<CTX> =
         (measureOperationProviders[model.javaClass]?: emptyList()).fold(OperationsBuilder(renderingContext)) { builder, provider ->
             builder.apply(provider.provideMeasureOperations())
         }.build(*customEnhancers)

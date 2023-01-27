@@ -24,27 +24,38 @@ interface AttributedModelOrPart<A : AttributedModelOrPart<A>> : AttributeAware, 
 
 
 @JvmInline
-value class StateAttributes(val stateAttributes: MutableMap<String, Any>) {
+value class StateAttributes(val data: MutableMap<String, Any>) {
 
-    inline fun <reified E : ExecutionContext> addExecutionContext(executionContext: E) {
-        stateAttributes["executionContext-${E::class.java.canonicalName}"] = executionContext
+    @Suppress("UNCHECKED_CAST")
+    fun <S : Any> get(_class: Class<S>): S? = data["state-${_class.canonicalName}"] as S?
+
+    inline fun <reified S : Any> set(state: S) {
+        data["state-${S::class.java.canonicalName}"] = state
     }
 
-    inline fun <reified E : ExecutionContext> getExecutionContext(): E? = getExecutionContext(E::class.java)
+    inline fun <reified S : Any> get(): S? = get(S::class.java)
+
+    inline operator fun <reified S : Any> get(key: String): S? = data[key] as S?
+
+    inline operator fun <reified S : Any> set(key: String, state: S) {
+        data[key] = state
+    }
+
+    inline fun <reified E : ExecutionContext> addExecutionContext(executionContext: E) {
+        data["executionContext-${E::class.java.canonicalName}"] = executionContext
+    }
 
     @Suppress("UNCHECKED_CAST")
     fun <E : ExecutionContext> getExecutionContext(_class: Class<E>): E? =
-        stateAttributes["executionContext-${_class.canonicalName}"] as E?
+        data["executionContext-${_class.canonicalName}"] as E?
+
+    inline fun <reified E : ExecutionContext> getExecutionContext(): E? = getExecutionContext(E::class.java)
 
     inline fun <reified E : ExecutionContext> ensureExecutionContext(provider: () -> E): E =
         getExecutionContext() ?: run { addExecutionContext(provider()); getExecutionContext()!! }
 
     inline fun <reified E : ExecutionContext> removeExecutionContext(): E? =
-        stateAttributes.remove("executionContext-${E::class.java.canonicalName}") as E?
-
-    inline fun <reified C : Any> getCustomAttribute(key: String): C? = stateAttributes[key] as C?
-
-    inline fun <reified C : Any> removeCustomAttribute(key: String): C? = stateAttributes.remove(key) as C?
+        data.remove("executionContext-${E::class.java.canonicalName}") as E?
 
     @Suppress("UNCHECKED_CAST")
     fun <C : ExecutionContext, R : Any> ReifiedValueSupplier<C, R>.value(): R? =
@@ -76,18 +87,19 @@ data class LayoutContext(
 
 class ModelExportContext<M : AbstractModel<M>>(
     val model: M,
-    val stateAttributes: MutableMap<String, Any>,
+    val stateAttributes: StateAttributes,
     val instance: ExportInstance,
     val parentAttributes: Attributes? = null,
     val modelAttributes: Attributes? = null,
     var status: ExportStatus = ExportStatus.ACTIVE,
 ) {
+
     val renderingContext: RenderingContext
         get() = instance.renderingContext
 
     internal var layoutContext: LayoutContext? = null
 
-    fun getCustomAttributes(): MutableMap<String, Any> = stateAttributes
+    fun getCustomAttributes(): MutableMap<String, Any> = stateAttributes.data
 
     fun suspendX() = with(instance) {
         status = when (status) {
@@ -143,11 +155,11 @@ class ModelExportContext<M : AbstractModel<M>>(
 }
 
 fun <C : ExecutionContext, R : Any> ModelExportContext<*>.value(supplier: ReifiedValueSupplier<C, R>): R? =
-    with(StateAttributes(getCustomAttributes())) { supplier.value() }
+    with(stateAttributes) { supplier.value() }
 
 
 @Suppress("UNCHECKED_CAST")
-abstract class AbstractModel<SELF: AbstractModel<SELF>>(
+abstract class AbstractModel<SELF : AbstractModel<SELF>>(
     override val id: String = UUID.randomUUID().toString(),
 ) : Model<SELF> {
 
@@ -197,15 +209,16 @@ abstract class AbstractModel<SELF: AbstractModel<SELF>>(
             parentContext.parentAttributes
         )
 
-    protected open fun takeMeasures(context: ModelExportContext<SELF>) {}
+    protected open fun takeMeasures(exportContext: ModelExportContext<SELF>) {}
 
-    protected abstract fun doExport(templateContext: ModelExportContext<SELF>)
+    protected abstract fun doExport(exportContext: ModelExportContext<SELF>)
 
-    protected open fun doResume(templateContext: ModelExportContext<SELF>, resumeNext: ResumeNext) {
+    protected open fun doResume(exportContext: ModelExportContext<SELF>, resumeNext: ResumeNext) {
         resumeNext()
     }
 
-    protected open fun createLayoutPolicy(templateContext: ModelExportContext<SELF>): AbstractLayoutPolicy = DefaultLayoutPolicy()
+    protected open fun createLayoutPolicy(exportContext: ModelExportContext<SELF>): AbstractLayoutPolicy =
+        DefaultLayoutPolicy()
 
     fun ModelExportContext<SELF>.createLayoutScope(
         orientation: Orientation = Orientation.HORIZONTAL,
@@ -225,11 +238,11 @@ abstract class AbstractModel<SELF: AbstractModel<SELF>>(
     }
 
     protected fun ModelExportContext<SELF>.render(context: AttributedContext) {
-        instance.render(model,context)
+        instance.render(model, context)
     }
 
     protected fun ModelExportContext<SELF>.measure(context: RenderableContext) {
-        instance.measure(model,context)
+        instance.measure(model, context)
     }
 
     protected fun ModelExportContext<SELF>.resetLayouts() = instance.resetLayouts()
@@ -250,17 +263,17 @@ abstract class AbstractModel<SELF: AbstractModel<SELF>>(
     private fun self(): SELF = (this as SELF)
 }
 
-abstract class ModelWithAttributes<SELF: ModelWithAttributes<SELF>> :
+abstract class ModelWithAttributes<SELF : ModelWithAttributes<SELF>> :
     AttributedModelOrPart<SELF>, AbstractModel<SELF>()
 
 interface ExecutionContext
 
-fun interface ValueSupplier<C: ExecutionContext,V: Any>: (C) -> V
+fun interface ValueSupplier<C : ExecutionContext, V : Any> : (C) -> V
 
-data class ReifiedValueSupplier<C: ExecutionContext,V : Any>(
+data class ReifiedValueSupplier<C : ExecutionContext, V : Any>(
     val inClass: Class<out ExecutionContext>,
     val retClass: Class<V>,
-    val delegate: ValueSupplier<C,V>
-): ValueSupplier<C,V> {
+    val delegate: ValueSupplier<C, V>,
+) : ValueSupplier<C, V> {
     override fun invoke(context: C): V = delegate(context)
 }

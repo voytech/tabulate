@@ -8,6 +8,7 @@ import io.github.voytech.tabulate.components.table.model.attributes.table.templa
 import io.github.voytech.tabulate.components.table.operation.TableStart
 import io.github.voytech.tabulate.components.table.operation.asTableStart
 import io.github.voytech.tabulate.components.table.template.*
+import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.template.operation.*
 import io.github.voytech.tabulate.support.createTableContext
 import io.github.voytech.tabulate.support.success
@@ -83,8 +84,8 @@ class AttributeSetCacheTest {
         val firstTableContext = firstTable.createTableContext(customAttributes)
         val iterator = RowContextIterator(
             AccumulatingRowContextResolver(
-                firstTable, customAttributes, firstTableContext.indices, successfulRowComplete()
-            ), firstTableContext
+                firstTable, StateAttributes(customAttributes), OverflowOffsets(), successfulRowComplete()
+            ), OverflowOffsets(),firstTableContext
         )
         val attributedCell = iterator.next().success().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
@@ -97,8 +98,8 @@ class AttributeSetCacheTest {
         val secondTableContext = secondTable.createTableContext(customAttributes)
         val secondIterator = RowContextIterator(
             AccumulatingRowContextResolver(
-                secondTable, customAttributes, secondTableContext.indices, successfulRowComplete()
-            ), secondTableContext
+                secondTable, StateAttributes(customAttributes), OverflowOffsets(), successfulRowComplete()
+            ), OverflowOffsets(),secondTableContext
         )
         val secondAttributedCell = secondIterator.next().success().rowCellValues.firstNotNullOf { it.value }
         secondAttributedCell.withAttributeSetBasedCache {
@@ -135,9 +136,9 @@ class AttributeSetCacheTest {
         val firstTableContext = firstTable.createTableContext(customAttributes)
         val iterator = RowContextIterator(
             AccumulatingRowContextResolver(
-                firstTable, customAttributes, firstTableContext.indices,
+                firstTable, StateAttributes(customAttributes),OverflowOffsets(),
                 successfulRowComplete()
-            ), firstTableContext
+            ),OverflowOffsets(), firstTableContext
         )
         val attributedCell = iterator.next().success().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
@@ -155,8 +156,8 @@ class AttributeSetCacheTest {
         val secondTableContext = secondTable.createTableContext(customAttributes)
         val secondIterator = RowContextIterator(
             AccumulatingRowContextResolver(
-                secondTable, customAttributes, secondTableContext.indices, successfulRowComplete()
-            ), secondTableContext
+                secondTable, StateAttributes(customAttributes), OverflowOffsets(), successfulRowComplete()
+            ), OverflowOffsets(),secondTableContext
         )
         val secondAttributedCell = secondIterator.next().success().rowCellValues.firstNotNullOf { it.value }
         secondAttributedCell.withAttributeSetBasedCache {

@@ -106,7 +106,7 @@ class PdfBoxTabulateTests {
     }
 
 
-    val textBoxStyle : TextAttributesBuilderApi.() -> Unit = {
+    val textBoxStyle: TextAttributesBuilderApi.() -> Unit = {
         height { 20.pt() }
         text {
             fontFamily = DefaultFonts.COURIER_NEW
@@ -128,7 +128,7 @@ class PdfBoxTabulateTests {
         }
     }
 
-    val imageStyles : ImageAttributesBuilderApi.() -> Unit = {
+    val imageStyles: ImageAttributesBuilderApi.() -> Unit = {
         background {
             color = Colors.LIGHT_GRAY
             fill = DefaultFillType.SOLID
@@ -144,7 +144,7 @@ class PdfBoxTabulateTests {
 
     @Test
     fun `should correctly export single table on multiple pages`() {
-        val firstPage: (PageBuilderApi.()->Unit) = {
+        val firstPage: (PageBuilderApi.() -> Unit) = {
             header {
                 text {
                     value = "Some heading."
@@ -153,7 +153,7 @@ class PdfBoxTabulateTests {
                     }
                 }
             }
-            table( tableHeaderStyle + typedTable<SampleProduct> {
+            table(tableHeaderStyle + typedTable<SampleProduct> {
                 attributes {
                     margins {
                         top { 10.pt() }
@@ -175,7 +175,8 @@ class PdfBoxTabulateTests {
                         attributes {
                             text {
                                 weight = DefaultWeightStyle.BOLD
-                                fontFamily = DefaultFonts.COURIER_NEW // TODO make accessing model enumerations easier by providing them into scope of the builder.
+                                fontFamily =
+                                    DefaultFonts.COURIER_NEW // TODO make accessing model enumerations easier by providing them into scope of the builder.
                                 fontSize = 10
                             }
                             alignment {
@@ -204,7 +205,11 @@ class PdfBoxTabulateTests {
                     //newRow(20)  { cell(SampleProduct::code) { rowSpan = 6} }
                     newRow(25) {
                         attributes {
-                            borders { all { style = DefaultBorderStyle.NONE } } //TODO BUG FIX. borders on cell level dont apply here.
+                            borders {
+                                all {
+                                    style = DefaultBorderStyle.NONE
+                                }
+                            } //TODO BUG FIX. borders on cell level dont apply here.
                             rowBorders {
                                 all {
                                     color = Colors.RED
@@ -217,7 +222,7 @@ class PdfBoxTabulateTests {
                             value = "Mid row col span = 2"
                         }
                         cell(SampleProduct::description) { value = "Mid row Description" }
-                        cell(SampleProduct::price) {  }
+                        cell(SampleProduct::price) { }
                     }
                     footer {
                         cell(SampleProduct::code) { value = "." }
@@ -226,11 +231,17 @@ class PdfBoxTabulateTests {
                         cell(SampleProduct::price) { value = "." }
                     }
                     newRow(AdditionalSteps.TRAILING_ROWS) {
-                        attributes { background { color = Colors.RED } ; borders { all { style = DefaultBorderStyle.NONE } } }
+                        attributes {
+                            background { color = Colors.RED }; borders {
+                            all {
+                                style = DefaultBorderStyle.NONE
+                            }
+                        }
+                        }
                         cell(SampleProduct::code) { value = "" }
                         cell(SampleProduct::name) { value = "" }
                         cell(SampleProduct::description) { value = "" }
-                        cell(SampleProduct::price) {  }
+                        cell(SampleProduct::price) { }
                     }
                 }
                 dataSource(SampleProduct.create(154))
@@ -252,7 +263,7 @@ class PdfBoxTabulateTests {
     fun `should correctly export two on same sheet, first above second`() {
         document {
             page {
-                table( tableHeaderStyle + typedTable<SampleProduct> {
+                table(tableHeaderStyle + typedTable<SampleProduct> {
                     attributes {
                         margins {
                             top { 10.pt() }
@@ -288,7 +299,7 @@ class PdfBoxTabulateTests {
                     }
                     dataSource(SampleProduct.create(55))
                 })
-                table( tableHeaderStyle + typedTable<SampleCustomer> {
+                table(tableHeaderStyle + typedTable<SampleCustomer> {
                     attributes {
                         margins {
                             top { 10.pt() }
@@ -315,7 +326,7 @@ class PdfBoxTabulateTests {
                         column(SampleCustomer::flat)
                     }
                     rows {
-                        header("First Name", "Last Name", "Country", "City","Street","House Number","Flat")
+                        header("First Name", "Last Name", "Country", "City", "Street", "House Number", "Flat")
                     }
                     dataSource(SampleCustomer.create(55))
                 })
@@ -449,7 +460,7 @@ class PdfBoxTabulateTests {
     @Test
     fun `should correctly export border configurations`() {
         document {
-             page {
+            page {
                 table {
                     attributes {
                         margins {
@@ -722,5 +733,17 @@ class PdfBoxTabulateTests {
                 }
             }
         }.export("textBoxesAndImages.pdf")
+    }
+
+    @Test
+    fun `should correctly export two pages`() {
+        document {
+            page {
+                text { value = "First page" }
+            }
+            page {
+                text { value = "Second page" }
+            }
+        }.export("explicitPages.pdf")
     }
 }

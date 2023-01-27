@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.core.template.spi
 
-import io.github.voytech.tabulate.core.model.UnconstrainedModel
+import io.github.voytech.tabulate.core.model.AbstractModel
 import io.github.voytech.tabulate.core.template.RenderingContext
 
 /**
@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.core.template.RenderingContext
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-interface MeasureOperationsProvider<CTX: RenderingContext, M: UnconstrainedModel<M>> : Identifiable<CTX>, ModelAware<M> {
+interface MeasureOperationsProvider<CTX: RenderingContext, M: AbstractModel<M>> : Identifiable<CTX>, ModelAware<M> {
 
     /**
      * Creates measure operations working on attributed renderable contexts.

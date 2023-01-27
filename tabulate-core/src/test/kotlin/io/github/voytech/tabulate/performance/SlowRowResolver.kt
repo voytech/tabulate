@@ -8,13 +8,14 @@ import io.github.voytech.tabulate.components.table.operation.createRowEnd
 import io.github.voytech.tabulate.components.table.operation.createCellContext
 import io.github.voytech.tabulate.components.table.operation.createRowStart
 import io.github.voytech.tabulate.components.table.template.*
+import io.github.voytech.tabulate.core.model.StateAttributes
 
 internal class SlowRowResolver<T: Any>(
     private val tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
     offsets: OverflowOffsets = OverflowOffsets(),
     listener: CaptureRowCompletion<T>? = null
-): AbstractRowContextResolver<T>(tableModel, customAttributes, offsets, listener) {
+): AbstractRowContextResolver<T>(tableModel, StateAttributes(customAttributes), offsets, listener) {
 
     private val customRows = tableModel.rows?.filter { it.qualifier.index != null }
     private val rowsWithPredicates = tableModel.rows?.filter { it.qualifier.matching != null }

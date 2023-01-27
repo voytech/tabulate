@@ -27,8 +27,7 @@ fun OperationResult?.isYOverflow(): Boolean = this is OverflowResult && overflow
 
 fun <E : AttributedContext> E.setResult(result: OperationResult) = setContextAttribute("result",result)
 
-@JvmInline
-value class Operations<CTX : RenderingContext>(private val dispatch: TwoParamsBasedDispatch) {
+class Operations<CTX : RenderingContext>(private val dispatch: TwoParamsBasedDispatch) {
 
     private fun <E : AttributedContext> E.getResult(): OperationResult? = removeContextAttribute("result")
 

@@ -2,9 +2,9 @@ package io.github.voytech.tabulate.components.document.api.builder
 
 import io.github.voytech.tabulate.components.document.model.Document
 import io.github.voytech.tabulate.core.api.builder.AttributesAwareBuilder
-import io.github.voytech.tabulate.core.api.builder.BuiltModel
 import io.github.voytech.tabulate.core.api.builder.CompositeModelBuilderState
 import io.github.voytech.tabulate.core.api.builder.ModelBuilderState
+import io.github.voytech.tabulate.core.model.AbstractModel
 import io.github.voytech.tabulate.core.reify
 
 
@@ -24,7 +24,7 @@ class DocumentBuilderState : CompositeModelBuilderState<Document>, AttributesAwa
     internal var name: String = "untitled document"
 
     @JvmSynthetic
-    override fun <E : BuiltModel<E>> bind(node: ModelBuilderState<E>) {
+    override fun <E : AbstractModel<E>> bind(node: ModelBuilderState<E>) {
         nodeBuilders.add(node)
     }
 

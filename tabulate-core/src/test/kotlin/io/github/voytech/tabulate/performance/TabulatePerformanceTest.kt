@@ -6,6 +6,7 @@ import io.github.voytech.tabulate.components.table.template.AbstractRowContextRe
 import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
 import io.github.voytech.tabulate.components.table.template.OverflowOffsets
 import io.github.voytech.tabulate.components.table.template.RowContextIterator
+import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.support.createTableContext
 import io.github.voytech.tabulate.support.successfulRowComplete
 import org.junit.jupiter.api.Disabled
@@ -25,7 +26,7 @@ class TabulatePerformanceTest {
             it to SlowRowResolver(table, it)
         }.let {
             Wrapper(
-                iterator = RowContextIterator(it.second,table.createTableContext(it.first)),
+                iterator = RowContextIterator(it.second,OverflowOffsets(),table.createTableContext(it.first)),
                 resolver = it.second,
                 customAttributes = it.first
             )
@@ -33,10 +34,10 @@ class TabulatePerformanceTest {
 
     private fun <T: Any> createFastIterator(table: Table<T>): Wrapper<T> =
         mutableMapOf<String, Any>().let {
-            it to AccumulatingRowContextResolver(table, it, OverflowOffsets(), successfulRowComplete())
+            it to AccumulatingRowContextResolver(table, StateAttributes(it), OverflowOffsets(), successfulRowComplete())
         }.let {
             Wrapper(
-                iterator = RowContextIterator(it.second, table.createTableContext(it.first)),
+                iterator = RowContextIterator(it.second, OverflowOffsets(),table.createTableContext(it.first)),
                 resolver = it.second,
                 customAttributes = it.first
             )

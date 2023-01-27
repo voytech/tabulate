@@ -28,7 +28,9 @@ class CsvTabulateTest {
                 CellPosition(0, 3) to AssertCellValue(expectedValue = "manufacturer 0"),
             ),
             file = File("test.csv")
-        ).perform().also { it.cleanup() }
+        ).perform().also {
+            it.cleanup()
+        }
     }
 
     @Test
@@ -55,6 +57,8 @@ class CsvTabulateTest {
             ),
             file = File("test.csv"),
             separator = ";"
-        ).perform().also { it.cleanup() }
+        ).perform().also {
+            it.cleanup()
+        }
     }
 }

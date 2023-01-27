@@ -8,8 +8,6 @@ import kotlin.properties.ObservableProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-typealias BuiltModel<T> = AbstractModel<T>
-
 typealias DslBlock<T> = (T) -> Unit
 
 sealed interface BuilderInterface<T> {
@@ -31,10 +29,10 @@ abstract class InternalBuilder<T> : BuilderInterface<T> {
     abstract override fun build(): T
 }
 
-interface ModelBuilderState<T : BuiltModel<T>> : BuilderInterface<T>
+interface ModelBuilderState<T : AbstractModel<T>> : BuilderInterface<T>
 
-interface CompositeModelBuilderState<T : BuiltModel<T>> : ModelBuilderState<T> {
-    fun <E : BuiltModel<E>> bind(node: ModelBuilderState<E>)
+interface CompositeModelBuilderState<T : AbstractModel<T>> : ModelBuilderState<T> {
+    fun <E : AbstractModel<E>> bind(node: ModelBuilderState<E>)
 }
 
 /**

@@ -353,7 +353,7 @@ class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingConte
     }
 }
 ----
-<1> The `.onBind` method is called internally by `TableTemplate` as soon as both: output and rendering context instances are available. It connects rendering context with particular output and allows implementing flush logic.
+<1> The `.onBind` method is called internally by `TableExport` as soon as both: output and rendering context instances are available. It connects rendering context with particular output and allows implementing flush logic.
 <2> The `.flush` dumps in-memory rendering context into given output.
 
 Then You need to define provider exposing all compatible OutputBindings instances.
@@ -561,7 +561,7 @@ List<Employee> employeeList = Collections.singletonList(new Employee("#00010", "
 new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream("employees.xlsx"), employeeTable);
 ----
 <1> As a first step, You have to declare table definition using Java `FluentTableBuilderApi`
-<2> Now You have to pass table definition into `TableTemplate` in order to export data with declared tabular layout.
+<2> Now You have to pass table definition into `TableExport` in order to export data with declared tabular layout.
 
 <<<
 == Library of attributes.
@@ -673,7 +673,7 @@ This section does not cover consumer API, but instead focuses entirely on intern
 === `Template and operations` pattern.
 
 Library sole purpose is to provide means for data exporting. This goal is achieved through simple, intuitive pattern of a template class dispatching workload to managed, pluggable operations.
-A template which is referred to as `TableTemplate` iterates lazily through `RowContextResolver` progressing each time, when next row context is requested by `TabulationApi`.
+A template which is referred to as `TableExport` iterates lazily through `RowContextResolver` progressing each time, when next row context is requested by `TabulationApi`.
 
 Consumer interaction with library may go through `TabulationApi` and then it looks as follows:
 
@@ -683,7 +683,7 @@ Consumer interaction with library may go through `TabulationApi` and then it loo
  - *request next row rendering*. As mentioned above, each time next row is requested, `RowContextResolver` takes row coordinates as well as additional properties and attributes, then it computes *row context* that is immediately rendered by specific operation implementation. There are certain rules regarding *row context* computation that forms unique algorithm which will be explained in following sections in more details.
 
 Consumer interaction may be also simplified by using extension method on exported collection or custom table builder.
-In fact this should be leading usage scenario. In this scenario `TabulationApi` calls are wrapped by extension method on `TableTemplate`.
+In fact this should be leading usage scenario. In this scenario `TabulationApi` calls are wrapped by extension method on `TableExport`.
 
 <<<
 === Builder materialization.
@@ -720,8 +720,8 @@ Please note that during `SyntheticRow` resolution only row level cell and row at
 === Row context resolution.  [[row_context_resolution]]
 Row context resolution is the final step of completing row data before dispatching to third party operation code. During this step, couple of intermediate contexts are produced:
 
- - `RowStart` - a context containing row coordinate (only row index) plus associated row attributes. 'AbstractRowContextResolver' notifies `TableTemplate` about completing `RowStart` using `RowCompletionListener`. Specific operation implementation associated with this type of context (`RowStart`) can be invoked even before having all row associated data.
- - `CellContext` - a context holding `CellValue` with all associated cell attributes (merged all level attributes: table, column, row and cell). Similarly to `RowStart` - `AbstractRowContextResolver` uses `RowCompletionListener` in order to notify `TableTemplate` about each `CellContext` when it is ready for rendering by corresponding operation implementation.
+ - `RowStart` - a context containing row coordinate (only row index) plus associated row attributes. 'AbstractRowContextResolver' notifies `TableExport` about completing `RowStart` using `RowCompletionListener`. Specific operation implementation associated with this type of context (`RowStart`) can be invoked even before having all row associated data.
+ - `CellContext` - a context holding `CellValue` with all associated cell attributes (merged all level attributes: table, column, row and cell). Similarly to `RowStart` - `AbstractRowContextResolver` uses `RowCompletionListener` in order to notify `TableExport` about each `CellContext` when it is ready for rendering by corresponding operation implementation.
  - `RowEnd` - a context with complete row data. It contains all row attributes together with all cell values (also with attributes). As long as `RowEnd` is the last step it is also the value returned from `AbstractRowContextResolver.resolve(...)` method.
 
 <<<

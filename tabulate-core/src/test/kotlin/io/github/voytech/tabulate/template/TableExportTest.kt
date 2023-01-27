@@ -20,7 +20,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
-class TableTemplateTest {
+class TableExportTest {
 
     @Test
     fun `should tabulate elements collection without additional features`() {

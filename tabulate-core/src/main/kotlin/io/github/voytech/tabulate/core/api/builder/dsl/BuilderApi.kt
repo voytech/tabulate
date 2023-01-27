@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.core.api.builder.dsl
 
 import io.github.voytech.tabulate.core.api.builder.*
+import io.github.voytech.tabulate.core.model.AbstractModel
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 
@@ -9,22 +10,22 @@ annotation class TabulateMarker
 
 
 @TabulateMarker
-abstract class ModelBuilderApi<T : BuiltModel<T>, B : ModelBuilderState<T>> internal constructor(
+abstract class ModelBuilderApi<T : AbstractModel<T>, B : ModelBuilderState<T>> internal constructor(
     internal val builder: B,
 ) {
     protected fun getBuilder() = builder
 }
 
 @TabulateMarker
-abstract class CompositeModelBuilderApi<T : BuiltModel<T>, B : CompositeModelBuilderState<T>> internal constructor(
+abstract class CompositeModelBuilderApi<T : AbstractModel<T>, B : CompositeModelBuilderState<T>> internal constructor(
     builder: B,
 ) : ModelBuilderApi<T, B>(builder) {
 
-    fun <E : BuiltModel<E>, R : ModelBuilderApi<E, *>> bind(other: R) = builder.bind(other.builder)
+    fun <E : AbstractModel<E>, R : ModelBuilderApi<E, *>> bind(other: R) = builder.bind(other.builder)
 
 }
 
-fun <T : BuiltModel<T>, B : ModelBuilderState<T>> buildModel(api: ModelBuilderApi<T, B>): T =
+fun <T : AbstractModel<T>, B : ModelBuilderState<T>> buildModel(api: ModelBuilderApi<T, B>): T =
     api.builder.build()
 
 

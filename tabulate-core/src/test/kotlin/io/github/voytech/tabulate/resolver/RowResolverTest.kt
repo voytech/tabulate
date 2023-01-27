@@ -9,6 +9,7 @@ import io.github.voytech.tabulate.components.table.template.AccumulatingRowConte
 import io.github.voytech.tabulate.components.table.template.OverflowOffsets
 import io.github.voytech.tabulate.components.table.template.RowIndex
 import io.github.voytech.tabulate.components.table.template.Step
+import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.support.success
 import io.github.voytech.tabulate.support.successfulRowComplete
 import org.junit.jupiter.api.Assertions.*
@@ -24,7 +25,7 @@ class RowResolverTest {
     fun `should resolve AttributedRow to null if no table definition nor data is provided`() {
         val resolver = AccumulatingRowContextResolver(
             createTableBuilder<Product> {  }.build(),
-            mutableMapOf(), OverflowOffsets(), successfulRowComplete()
+            StateAttributes(mutableMapOf()), OverflowOffsets(), successfulRowComplete()
         )
         val resolvedIndexedAttributedRow = resolver.resolve(RowIndex(0))
         assertNull(resolvedIndexedAttributedRow)
@@ -47,7 +48,7 @@ class RowResolverTest {
                     }
                 }
             }.build(),
-            mutableMapOf(),
+            StateAttributes(mutableMapOf()),
             OverflowOffsets(),
             successfulRowComplete()
         )
@@ -65,7 +66,7 @@ class RowResolverTest {
             createTableBuilder<Product> {
                 columns { column(Product::code) }
             }.build(),
-            mutableMapOf(),
+            StateAttributes(mutableMapOf()),
             OverflowOffsets(),
             successfulRowComplete()
         )
@@ -99,7 +100,7 @@ class RowResolverTest {
                     }
                 }
             }.build(),
-            mutableMapOf(),
+            StateAttributes(mutableMapOf()),
             OverflowOffsets(),
             successfulRowComplete()
         )

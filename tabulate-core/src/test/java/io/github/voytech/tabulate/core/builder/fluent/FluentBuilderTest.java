@@ -4,13 +4,14 @@ import io.github.voytech.tabulate.components.table.api.builder.fluent.FluentTabl
 import io.github.voytech.tabulate.components.table.api.builder.fluent.TableAttributes;
 import io.github.voytech.tabulate.components.table.api.builder.fluent.TableBuilder;
 import io.github.voytech.tabulate.components.table.model.SourceRow;
+import io.github.voytech.tabulate.components.table.model.Table;
 import io.github.voytech.tabulate.components.table.model.attributes.table.TemplateFileAttribute;
-import io.github.voytech.tabulate.components.table.template.TableTemplate;
 import io.github.voytech.tabulate.core.model.Height;
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure;
 import io.github.voytech.tabulate.core.model.Width;
 import io.github.voytech.tabulate.core.model.color.Colors;
 import io.github.voytech.tabulate.core.model.text.DefaultFonts;
+import io.github.voytech.tabulate.core.template.StandaloneExportTemplate;
 import io.github.voytech.tabulate.support.Spy;
 import kotlin.Unit;
 import org.junit.jupiter.api.AfterEach;
@@ -54,7 +55,7 @@ public class FluentBuilderTest {
 		final List<Employee> employeeList = Collections.singletonList(new Employee(
 				"firstName", "lastName", 25, BigDecimal.ZERO, "id"
 		));
-		new TableTemplate<Employee>().export(format("spy"),employeeList, Unit.INSTANCE, fluentBuilder.build());
+		new StandaloneExportTemplate<Table<Employee>>(format("spy")).export(fluentBuilder.build(),Unit.INSTANCE,employeeList);
 		assertTrue(true);
 	}
 
@@ -108,7 +109,7 @@ public class FluentBuilderTest {
 		final List<Employee> employeeList = Collections.singletonList(new Employee(
 				"firstName", "lastName", 25, BigDecimal.ZERO, "id"
 		));
-		new TableTemplate<Employee>().export(format("spy"),employeeList, Unit.INSTANCE, fluentBuilder.build());
+		new StandaloneExportTemplate<Table<Employee>>(format("spy")).export(fluentBuilder.build(),Unit.INSTANCE,employeeList);
 	}
 
 }

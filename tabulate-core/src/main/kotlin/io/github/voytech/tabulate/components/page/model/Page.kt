@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.components.page.model
 
 import io.github.voytech.tabulate.components.commons.operation.newPage
 import io.github.voytech.tabulate.core.model.*
+import io.github.voytech.tabulate.core.template.ResumeNext
 import io.github.voytech.tabulate.core.template.layout.Layout
 
 class Page internal constructor(
@@ -13,16 +14,20 @@ class Page internal constructor(
     internal val footer: AbstractModel<*>? = null,
 ) : AbstractModel<Page>() {
 
-    override fun doExport(templateContext: ModelExportContext<Page>) = with(templateContext) {
+    override fun doExport(exportContext: ModelExportContext<Page>) = with(exportContext) {
         resumeAllSuspendedNodes()
         resetLayouts()
         stickyHeaderAndFooterWith { layout, leftTop ->
-            model.exportContent(templateContext, leftTop.contentLayoutContext(layout))
+            model.exportContent(exportContext, leftTop.contentLayoutContext(layout))
         }
     }
 
+    override fun doResume(exportContext: ModelExportContext<Page>, resumeNext: ResumeNext) = with(exportContext) {
+        stickyHeaderAndFooterWith { _, _ -> resumeNext() }
+    }
+
     private fun ModelExportContext<Page>.nextPageNumber(): Int =
-        StateAttributes(stateAttributes).run {
+        stateAttributes.run {
             ++ensureExecutionContext { PageExecutionContext() }.pageNumber
         }
 

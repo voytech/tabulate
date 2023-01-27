@@ -6,7 +6,6 @@ import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHin
 import io.github.voytech.tabulate.components.table.operation.CellContext
 import io.github.voytech.tabulate.components.table.operation.ColumnContext
 import io.github.voytech.tabulate.components.table.operation.RowContext
-import io.github.voytech.tabulate.components.table.template.TableTemplate
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.attributes.*

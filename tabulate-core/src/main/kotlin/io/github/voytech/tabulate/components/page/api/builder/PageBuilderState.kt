@@ -1,9 +1,9 @@
 package io.github.voytech.tabulate.components.page.api.builder
 
 import io.github.voytech.tabulate.components.page.model.Page
-import io.github.voytech.tabulate.core.api.builder.BuiltModel
 import io.github.voytech.tabulate.core.api.builder.CompositeModelBuilderState
 import io.github.voytech.tabulate.core.api.builder.ModelBuilderState
+import io.github.voytech.tabulate.core.model.AbstractModel
 
 
 /**
@@ -30,7 +30,7 @@ class PageBuilderState : CompositeModelBuilderState<Page> {
     internal var footer: ModelBuilderState<*>? = null
 
     @JvmSynthetic
-    override fun <E : BuiltModel<E>> bind(node: ModelBuilderState<E>) {
+    override fun <E : AbstractModel<E>> bind(node: ModelBuilderState<E>) {
         nodes.add(node)
     }
 

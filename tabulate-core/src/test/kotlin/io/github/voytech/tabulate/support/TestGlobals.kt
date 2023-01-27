@@ -7,7 +7,8 @@ import io.github.voytech.tabulate.components.table.operation.RowStart
 import io.github.voytech.tabulate.components.table.template.CaptureRowCompletion
 import io.github.voytech.tabulate.components.table.template.ContextResult
 import io.github.voytech.tabulate.components.table.template.SuccessResult
-import io.github.voytech.tabulate.components.table.template.TableModelExportContext
+import io.github.voytech.tabulate.core.model.ModelExportContext
+import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.template.DocumentFormat
 import io.github.voytech.tabulate.core.template.ExportInstance
 import io.github.voytech.tabulate.core.template.operation.ContextData
@@ -22,8 +23,8 @@ val spyExportInstance: ExportInstance  = ExportInstance(
     OperationsFactory(spyDocumentFormat),
 )
 
-fun <T: Any> Table<T>.createTableContext(customAttributes: MutableMap<String, Any>): TableModelExportContext<T> =
-    TableModelExportContext(this,customAttributes, spyExportInstance, emptyList())
+fun <T: Any> Table<T>.createTableContext(customAttributes: MutableMap<String, Any>): ModelExportContext<Table<T>> =
+    ModelExportContext(this, StateAttributes(customAttributes), spyExportInstance)
 
 fun <CTX: ContextData> ContextResult<CTX>.success() : CTX = (this as SuccessResult<CTX>).context
 

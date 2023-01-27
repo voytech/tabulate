@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.components.table.template
 
 import io.github.voytech.tabulate.components.table.model.Table
+import io.github.voytech.tabulate.core.model.StateAttributes
 import java.util.*
 
 /**
@@ -12,10 +13,10 @@ import java.util.*
  */
 internal class AccumulatingRowContextResolver<T: Any>(
     tableModel: Table<T>,
-    customAttributes: MutableMap<String, Any>,
+    state: StateAttributes,
     offsets: OverflowOffsets,
     listener: CaptureRowCompletion<T>
-) : AbstractRowContextResolver<T>(tableModel, customAttributes, offsets, listener) {
+) : AbstractRowContextResolver<T>(tableModel, state, offsets, listener) {
 
     private var pollIndex: Int = 0
     private val dataSourceBuffer: Queue<T> = LinkedList()
