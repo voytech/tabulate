@@ -1,13 +1,9 @@
 package io.github.voytech.tabulate.components.table.model
 
 import io.github.voytech.tabulate.components.table.template.TableExport
-import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.model.DataSourceBinding
-import io.github.voytech.tabulate.core.model.ModelExportContext
-import io.github.voytech.tabulate.core.model.ModelWithAttributes
+import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.ResumeNext
-import io.github.voytech.tabulate.core.template.layout.AbstractLayoutPolicy
 import io.github.voytech.tabulate.core.template.layout.GridLayoutPolicy
 
 /**
@@ -51,12 +47,14 @@ class Table<T : Any> internal constructor(
 
     override val attributes: Attributes?,
 
-    ) : ModelWithAttributes<Table<T>>() {
+    ) : ModelWithAttributes<Table<T>>(), LayoutPolicyProvider<GridLayoutPolicy> {
 
     companion object {
         @JvmStatic
         fun <T : Any> jclass(): Class<Table<T>> = reify()
     }
+
+    override val policy: GridLayoutPolicy = GridLayoutPolicy()
 
     override val planSpaceOnExport = true
 
@@ -66,13 +64,10 @@ class Table<T : Any> internal constructor(
         return super.createExportContext(parentContext).also { ctx ->
             ctx.stateAttributes["_sheetName"] = name
             export = TableExport(
-                ctx, (dataSource ?: ctx.stateAttributes["_dataSourceOverride"])?.dataSource ?: emptyList()
+                ctx, policy, (dataSource ?: ctx.stateAttributes["_dataSourceOverride"])?.dataSource ?: emptyList()
             )
         }
     }
-
-    override fun createLayoutPolicy(exportContext: ModelExportContext<Table<T>>): AbstractLayoutPolicy =
-        GridLayoutPolicy()
 
     override fun doExport(exportContext: ModelExportContext<Table<T>>) =
         exportContext.exportOrResume()
@@ -85,8 +80,8 @@ class Table<T : Any> internal constructor(
 
     private fun ModelExportContext<Table<T>>.exportOrResume() {
         createLayoutScope {
-            export.exportOrResume(this)
+            export.exportOrResume()
         }
     }
-    
+
 }

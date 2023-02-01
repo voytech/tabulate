@@ -7,6 +7,7 @@ import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.template.layout.Layout
 import io.github.voytech.tabulate.core.template.layout.LayoutElement
 import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
+import io.github.voytech.tabulate.core.template.layout.LayoutPolicy
 
 
 /**
@@ -25,12 +26,15 @@ sealed interface Context {
  * @since 0.1.0
  */
 sealed class ContextData : Context {
+
     var additionalAttributes: MutableMap<String, Any> = mutableMapOf()
+
     override fun getCustomAttributes(): MutableMap<String, Any>? = additionalAttributes
 
     inline fun <reified C: Any> getCustomAttribute(key: String): C? = additionalAttributes[key] as C?
 
     inline fun <reified C: Any> removeCustomAttribute(key: String): C? = additionalAttributes.remove(key) as C?
+
 }
 
 /**
@@ -67,18 +71,18 @@ abstract class AttributedContext(@JvmSynthetic override val attributes: Attribut
 
 }
 
-abstract class RenderableContext(@JvmSynthetic override val attributes: Attributes? = null) : AttributedContext(), LayoutElement {
+abstract class RenderableContext<EL: LayoutPolicy>(@JvmSynthetic override val attributes: Attributes? = null) : AttributedContext(), LayoutElement<EL> {
     lateinit var boundingBox: LayoutElementBoundingBox
         private set
 
-    fun Layout.initBoundingBox(initializer: ((LayoutElementBoundingBox) -> LayoutElementBoundingBox)?): LayoutElementBoundingBox {
-        boundingBox = computeBoundingBox()
+    fun Layout.initBoundingBox(policy: EL,initializer: ((LayoutElementBoundingBox) -> LayoutElementBoundingBox)?): LayoutElementBoundingBox {
+        boundingBox = computeBoundingBox(policy)
         initializer?.let { boundingBox += it(boundingBox) }
         return boundingBox
     }
 }
 
-fun AttributedContext.boundingBox(): LayoutElementBoundingBox? = if (this is RenderableContext) this.boundingBox else null
+fun AttributedContext.boundingBox(): LayoutElementBoundingBox? = if (this is RenderableContext<*>) this.boundingBox else null
 
 class AttributesByContexts<T : AttributedModelOrPart<T>>(
     from: T, to: List<Class<out AttributedContext>>,

@@ -16,7 +16,7 @@ class Page internal constructor(
 
     override fun doExport(exportContext: ModelExportContext<Page>) = with(exportContext) {
         resumeAllSuspendedNodes()
-        resetLayouts()
+        clearLayouts()
         stickyHeaderAndFooterWith { layout, leftTop ->
             model.exportContent(exportContext, leftTop.contentLayoutContext(layout))
         }

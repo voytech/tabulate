@@ -42,17 +42,16 @@ class ExportInstance(
             )
         }
 
-    private fun getActiveLayout(): Layout = root.activeNode.layout ?: when (root.activeNode) {
+    private fun getActiveLayout(): LayoutWithPolicy = (root.activeNode.layout ?: when (root.activeNode) {
         is BranchNode -> (root.activeNode as BranchNode).getClosestAncestorLayout()
             ?: error("No active layout present!")
-
         else -> error("No active layout present!")
-    }
+    }).let { LayoutWithPolicy(it,root.activeNode.layoutPolicy!!) }
 
-    private fun getActiveMeasuringLayout(): Layout = root.activeNode.measuringLayout ?: when (root.activeNode) {
+    private fun getActiveMeasuringLayout(): LayoutWithPolicy = (root.activeNode.measuringLayout ?: when (root.activeNode) {
         is BranchNode -> (root.activeNode as BranchNode).getClosestLayoutAwareAncestor().measuringLayout!!
         else -> error("No active measuring layout to perform measures on!")
-    }
+    }).let { LayoutWithPolicy(it, root.activeNode.layoutPolicy!!) }
 
     internal fun getViewPortMaxRightBottom(): Position =
         if (renderingContext is HavingViewportSize) {
@@ -101,13 +100,13 @@ class ExportInstance(
         }
     }
 
-    fun resetLayouts() = with(root) {
-        traverse { it.dropLayout() }.also { resetLayout(getViewPortMaxRightBottom()) }
+    fun clearLayouts() = with(root) {
+        traverse { it.dropLayout() }.also { clearLayout(getViewPortMaxRightBottom()) }
     }
 
     fun resumeAllSuspendedNodes() = with(root) {
         while (suspendedNodes.isNotEmpty()) {
-            resetLayouts()
+            clearLayouts()
             resumeAll()
         }
     }

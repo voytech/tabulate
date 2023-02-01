@@ -9,7 +9,6 @@ import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.ModelExportContext
 import io.github.voytech.tabulate.core.template.*
 import io.github.voytech.tabulate.core.template.layout.GridLayoutPolicy
-import io.github.voytech.tabulate.core.template.layout.Layout
 import io.github.voytech.tabulate.core.template.operation.*
 import java.io.File
 import java.io.FileOutputStream
@@ -34,7 +33,8 @@ typealias StandaloneTableTemplate<T> = StandaloneExportTemplate<Table<T>>
 
 internal class TableExport<T : Any>(
     private val exportContext: ModelExportContext<Table<T>>,
-    private val dataSource: Iterable<T>?,
+    private val policy: GridLayoutPolicy,
+    dataSource: Iterable<T>?,
     private val renderingContext: RenderingContext = exportContext.renderingContext,
 ) {
 
@@ -163,13 +163,9 @@ internal class TableExport<T : Any>(
         }
     }
 
-    fun exportOrResume(layout: Layout) = with(exportContext) {
+    fun exportOrResume() = with(exportContext) {
         overflowOffsets.align()
-        // TODO - drop casting - should TableTemplate have generic type policy ?
-        (layout.policy as GridLayoutPolicy).setOffsets(
-            overflowOffsets.getIndexValueOnY(),
-            overflowOffsets.getIndexOnX()
-        )
+        policy.setOffsets(overflowOffsets.getIndexValueOnY(), overflowOffsets.getIndexOnX())
         setup(instance.getExportOperations(model))
         cropDataSource()
         start()

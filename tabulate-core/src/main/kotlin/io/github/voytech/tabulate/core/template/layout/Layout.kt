@@ -20,7 +20,7 @@ interface AbsolutePositionPolicy {
     fun getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y
 }
 
-interface GridPolicyMethods : AbsolutePositionPolicy {
+interface GridPolicyMethods {
     fun setColumnWidth(column: Int, width: Width)
     fun setRowHeight(row: Int, height: Height)
     fun getColumnWidth(column: Int, colSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width?
@@ -28,36 +28,56 @@ interface GridPolicyMethods : AbsolutePositionPolicy {
     fun setOffsets(row: Int, column: Int)
 }
 
-interface LayoutPolicy : AbsolutePositionPolicy {
-    fun getLayoutBoundary(): BoundingRectangle
+interface LayoutPolicy {
+
+    var isSpacePlanned: Boolean
+    /**
+     * Query for absolute position expressed in [targetUnit] by using current layout relative position.
+     */
+    fun Layout.getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position
+
+    /**
+     * Query for absolute X axis position expressed in [targetUnit] by using current layout relative X position.
+     */
+    fun Layout.getX(relativeX: X, targetUnit: UnitsOfMeasure): X
+
+    /**
+     * Query for absolute Y axis position expressed in [targetUnit] by using current layout relative Y position.
+     */
+    fun Layout.getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y
 
     /**
      * Extend layout rendered space by specific [Width].
      */
-    fun extend(width: Width)
+    fun Layout.extend(width: Width)
 
     /**
      * Extend layout rendered space by specific [Height].
      */
-    fun extend(height: Height)
-}
+    fun Layout.extend(height: Height)
 
-abstract class AbstractLayoutPolicy : LayoutPolicy {
+    fun Layout.getLayoutBoundary(): BoundingRectangle = boundingRectangle
 
-    internal lateinit var layout: Layout
-
-    override fun getLayoutBoundary(): BoundingRectangle = layout.boundingRectangle
+    fun Layout.elementBoundingBox(x: X, y: Y, width: Width? = null, height: Height? = null, ): LayoutElementBoundingBox {
+        val uom = getLayoutBoundary().leftTop.x.unit
+        return LayoutElementBoundingBox(
+            layoutPosition = getLayoutBoundary().leftTop,
+            absoluteX = x.switchUnitOfMeasure(uom),
+            absoluteY = y.switchUnitOfMeasure(uom),
+            width = width?.switchUnitOfMeasure(uom),
+            height = height?.switchUnitOfMeasure(uom)
+        )
+    }
 
 }
 
 abstract class AbstractGridLayoutPolicy(protected open val rowIndex: Int = 0, protected open val columnIndex: Int = 0) :
-    AbstractLayoutPolicy(), GridPolicyMethods
+    LayoutPolicy, GridPolicyMethods
 
 interface Layout {
     val uom: UnitsOfMeasure
     val leftTop: Position
     val maxRightBottom: Position?
-    val policy: AbstractLayoutPolicy
     val boundingRectangle: BoundingRectangle
     val maxBoundingRectangle: BoundingRectangle?
 
@@ -79,11 +99,8 @@ sealed class AbstractLayout(
     override val uom: UnitsOfMeasure,
     override val leftTop: Position,
     override val maxRightBottom: Position?,
-    override val policy: AbstractLayoutPolicy = DefaultLayoutPolicy(),
     internal var rightBottom: Position = leftTop,
 ) : Layout {
-
-    internal var spacePlanned: Boolean = false
 
     override val boundingRectangle: BoundingRectangle
         get() = BoundingRectangle(leftTop, rightBottom)
@@ -121,29 +138,22 @@ sealed class AbstractLayout(
 
 }
 
-fun Layout.isSpacePlanned(): Boolean = this is AbstractLayout && spacePlanned
-
 class DefaultLayout(
     uom: UnitsOfMeasure,
     leftTop: Position,
-    maxRightBottom: Position?,
-    policy: AbstractLayoutPolicy = DefaultLayoutPolicy(),
-) : AbstractLayout(uom, leftTop, maxRightBottom, policy) {
-    init {
-        policy.layout = this
-    }
-}
+    maxRightBottom: Position?
+) : AbstractLayout(uom, leftTop, maxRightBottom)
 
-fun interface LayoutElement {
-    fun Layout.computeBoundingBox(): LayoutElementBoundingBox
+fun interface LayoutElement<PL: LayoutPolicy> {
+    fun Layout.computeBoundingBox(policy: PL): LayoutElementBoundingBox
 }
 
 fun interface BoundingBoxModifier {
     fun Layout.alter(source: LayoutElementBoundingBox): LayoutElementBoundingBox
 }
 
-fun interface LayoutElementApply {
-    fun Layout.applyBoundingBox(context: LayoutElementBoundingBox)
+fun interface LayoutElementApply<PL: LayoutPolicy> {
+    fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: PL)
 }
 
 data class LayoutElementBoundingBox(
@@ -170,33 +180,22 @@ enum class Overflow {
     Y
 }
 
-fun AbstractLayoutPolicy.elementBoundingBox(
-    x: X,
-    y: Y,
-    width: Width? = null,
-    height: Height? = null,
-): LayoutElementBoundingBox {
-    val uom = getLayoutBoundary().leftTop.x.unit
-    return LayoutElementBoundingBox(
-        layoutPosition = getLayoutBoundary().leftTop,
-        absoluteX = x.switchUnitOfMeasure(uom),
-        absoluteY = y.switchUnitOfMeasure(uom),
-        width = width?.switchUnitOfMeasure(uom),
-        height = height?.switchUnitOfMeasure(uom)
-    )
-}
 
-class DefaultLayoutPolicy : AbstractLayoutPolicy() {
-    override fun getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position = Position(
+
+class DefaultLayoutPolicy : LayoutPolicy {
+
+    override var isSpacePlanned: Boolean = false
+
+    override fun Layout.getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position = Position(
         getX(relativePosition.x, targetUnit), getY(relativePosition.y, targetUnit)
     )
 
-    override fun getX(relativeX: X, targetUnit: UnitsOfMeasure): X {
+    override fun Layout.getX(relativeX: X, targetUnit: UnitsOfMeasure): X {
         val absoluteX = getLayoutBoundary().leftTop.x.switchUnitOfMeasure(targetUnit)
         return X(absoluteX.value + relativeX.value, targetUnit)
     }
 
-    override fun getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y {
+    override fun Layout.getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y {
         val absoluteY = getLayoutBoundary().leftTop.y.switchUnitOfMeasure(targetUnit)
         return Y(absoluteY.value + relativeY.value, targetUnit)
     }
@@ -204,15 +203,15 @@ class DefaultLayoutPolicy : AbstractLayoutPolicy() {
     /**
      * Extend layout rendered space by specific [Width].
      */
-    override fun extend(width: Width) {
-        layout.extend(width)
+    override fun Layout.extend(width: Width) {
+        extend(width)
     }
 
     /**
      * Extend layout rendered space by specific [Height].
      */
-    override fun extend(height: Height) {
-        layout.extend(height)
+    override fun Layout.extend(height: Height) {
+        extend(height)
     }
 
 }
@@ -221,7 +220,7 @@ class SpreadsheetPolicy(
     private val defaultWidthInPt: Float = 0f,
     private val defaultHeightInPt: Float = 0f,
     val standardUnit: StandardUnits = StandardUnits.PT,
-) : GridPolicyMethods {
+) : GridPolicyMethods, AbsolutePositionPolicy {
 
     private var rowIndex: Int = 0
     private var columnIndex: Int = 0
@@ -355,14 +354,16 @@ class GridLayoutPolicy : AbstractGridLayoutPolicy() {
 
     private val delegate = SpreadsheetPolicy()
 
-    override fun getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position {
+    override var isSpacePlanned: Boolean = false
+
+    override fun Layout.getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position {
         return Position(
             getX(relativePosition.x, targetUnit),
             getY(relativePosition.y, targetUnit)
         )
     }
 
-    override fun getX(relativeX: X, targetUnit: UnitsOfMeasure): X {
+    override fun Layout.getX(relativeX: X, targetUnit: UnitsOfMeasure): X {
         assert(relativeX.unit == UnitsOfMeasure.NU) { "input coordinate must be expressed in ordinal numeric units" }
         //TODO getX method should be allowed ONLY to return relative position. SUMMING with absolutePosition should be encapsulated in AbstractLayoutPolicy.
         val absoluteXPosition = getLayoutBoundary().leftTop.x.switchUnitOfMeasure(targetUnit)
@@ -370,38 +371,38 @@ class GridLayoutPolicy : AbstractGridLayoutPolicy() {
         return absoluteXPosition + currentLayoutRelativeX
     }
 
-    override fun getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y {
+    override fun Layout.getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y {
         assert(relativeY.unit == UnitsOfMeasure.NU) { "input coordinate must be expressed in ordinal numeric units" }
         val absoluteYPosition = getLayoutBoundary().leftTop.y.switchUnitOfMeasure(targetUnit)
         val currentLayoutRelativeY = delegate.getY(relativeY, targetUnit)
         return absoluteYPosition + currentLayoutRelativeY
     }
 
-    override fun extend(width: Width) {
-        layout.extend(width)
+    override fun Layout.extend(width: Width) {
+        extend(width)
     }
 
-    override fun extend(height: Height) {
-        layout.extend(height)
+    override fun Layout.extend(height: Height) {
+        extend(height)
     }
 
     override fun setColumnWidth(column: Int, width: Width) {
-        if (layout.isSpacePlanned()) return
+        if (isSpacePlanned) return
         delegate.setColumnWidth(column, width)
     }
 
     override fun setRowHeight(row: Int, height: Height) {
-        if (layout.isSpacePlanned()) return
+        if (isSpacePlanned) return
         delegate.setRowHeight(row, height)
     }
 
     override fun getColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width? =
-        if (layout.isSpacePlanned()) {
+        if (isSpacePlanned) {
             delegate.getColumnWidth(column, colSpan, uom)
         } else null
 
     override fun getRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height? =
-        if (layout.isSpacePlanned()) {
+        if (isSpacePlanned) {
             delegate.getRowHeight(row, rowSpan, uom)
         } else null
 

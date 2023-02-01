@@ -86,11 +86,11 @@ class EnableAttributeOperationAwareness<CTX : RenderingContext>(private val attr
 class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
     private val delegate: Operation<CTX, E>,
     private val checkOverflows: Boolean = true,
-    private val layout: () -> Layout,
+    private val layoutWithPolicy: () -> LayoutWithPolicy,
 ) : Operation<CTX, E> {
 
-    private fun <E : RenderableContext> Layout.mergeAttributeElementBoundingBox(
-        context: E, boundingBox: LayoutElementBoundingBox,
+    private fun <R: RenderableContext<*>> Layout.mergeAttributeElementBoundingBox(
+        context: R, boundingBox: LayoutElementBoundingBox,
     ): LayoutElementBoundingBox =
         context.attributes?.attributeSet?.asSequence()?.let { attributes ->
             attributes.filterIsInstance<BoundingBoxModifier>()
@@ -100,35 +100,40 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
         } ?: run { context.boundingBox }
 
 
-    private fun <E : AttributedContext> Layout.resolveElementBoundingBox(context: E): LayoutElementBoundingBox? =
-        if (context is RenderableContext) {
-            with(context) {
-                initBoundingBox { bbox -> mergeAttributeElementBoundingBox(context, bbox) }
+    private fun  LayoutWithPolicy.resolveElementBoundingBox(context: E): LayoutElementBoundingBox? =
+        if (context is RenderableContext<*>) {
+            @Suppress("UNCHECKED_CAST")
+            with(context as RenderableContext<LayoutPolicy>) {
+                layout.initBoundingBox(policy) { bbox -> layout.mergeAttributeElementBoundingBox(context, bbox) }
             }
         } else null
 
-    private fun <E : AttributedContext> Layout.commitBoundingBox(
+
+
+    private fun LayoutWithPolicy.commitBoundingBox(
         context: E, boundaries: LayoutElementBoundingBox? = null,
     ) {
-        if (boundaries != null) {
-            // TODO !!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO should not need LayoutElementApply. Layout itself should use boundaries and apply them through its policy.
-            // TODO !!!!!!!!!!!!!!!!!!!!!!!!!
-            if (context is LayoutElementApply) with(context) { applyBoundingBox(boundaries) }
+        if (boundaries != null && context is LayoutElementApply<*>) {
+            @Suppress("UNCHECKED_CAST")
+            with(context as LayoutElementApply<LayoutPolicy>) {
+                layout.applyBoundingBox(boundaries, policy)
+            }
         }
     }
 
     override operator fun invoke(renderingContext: CTX, context: E) {
-        with(layout()) {
-            resolveElementBoundingBox(context).let { bbox ->
-                ifOverflowCheckEnabled { bbox.checkOverflow() }?.let {
-                    context.setResult(OverflowResult(it))
-                } ?: run {
-                    delegate(renderingContext, context).also {
-                        bbox?.applyOnLayout()
+        with(layoutWithPolicy()) {
+            with(layout) {
+                resolveElementBoundingBox(context).let { bbox ->
+                    ifOverflowCheckEnabled { bbox.checkOverflow() }?.let {
+                        context.setResult(OverflowResult(it))
+                    } ?: run {
+                        delegate(renderingContext, context).also {
+                            bbox?.applyOnLayout()
+                        }
+                        commitBoundingBox(context, bbox)
+                        context.setResult(Success)
                     }
-                    commitBoundingBox(context, bbox)
-                    context.setResult(Success)
                 }
             }
         }
@@ -139,8 +144,10 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
 
 }
 
+data class LayoutWithPolicy(val layout: Layout, val policy: LayoutPolicy)
+
 class EnableLayoutsAwareness<CTX : RenderingContext>(
-    private val checkOverflows: Boolean = true, private val layout: () -> Layout,
+    private val checkOverflows: Boolean = true, private val layout: () -> LayoutWithPolicy,
 ) : Enhance<CTX> {
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
         LayoutAwareOperation(op.delegate, checkOverflows, layout)

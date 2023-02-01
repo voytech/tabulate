@@ -13,6 +13,8 @@ sealed class TreeNode<M : AbstractModel<M>>(
 
     var measuringLayout: DefaultLayout? = null
 
+    var layoutPolicy: LayoutPolicy? = null
+
     internal fun dropLayout() {
         layout = null
     }
@@ -20,7 +22,7 @@ sealed class TreeNode<M : AbstractModel<M>>(
     @Suppress("UNCHECKED_CAST")
     fun <ML : AbstractModel<ML>> appendChild(ctx: ModelExportContext<ML>): TreeNode<ML> =
         getRoot().let { rootNode ->
-            BranchNode(ctx,this, rootNode).let { newNode ->
+            BranchNode(ctx, this, rootNode).let { newNode ->
                 rootNode.nodes[ctx.model] = newNode
                 children.add(newNode)
                 newNode
@@ -79,7 +81,7 @@ class RootNode<M : AbstractModel<M>>(
 
     override fun getParent(): TreeNode<*>? = null
 
-    fun resetLayout(maxRightBottom: Position? = null) {
+    fun clearLayout(maxRightBottom: Position? = null) {
         with(context.model) { preserveActive { context.createLayoutScope(maxRightBottom = maxRightBottom) { } } }
     }
 }
@@ -108,7 +110,7 @@ class AttachedLayout<M : AbstractModel<M>>(
 ) : Layout by layout {
 
     private var rightBottom: Position by layout::rightBottom
-    internal var measured: Boolean by layout::spacePlanned
+
     internal var nextLayoutLeftTop: Position? = null
 
     private fun extendParent(position: Position) {
@@ -149,35 +151,31 @@ class AttachedLayout<M : AbstractModel<M>>(
     }
 }
 
-fun <R> TreeNode<*>.setMeasuringLayout(
-    policy: AbstractLayoutPolicy,
-    uom: UnitsOfMeasure,
-    block: (DefaultLayout) -> R,
-): R =
-    DefaultLayout(uom, Position.start(uom), getClosestAncestorLayout()?.maxRightBottom, policy).let {
+fun <R> TreeNode<*>.setMeasuringLayout(uom: UnitsOfMeasure, policy: LayoutPolicy, block: (DefaultLayout) -> R): R =
+    DefaultLayout(uom, Position.start(uom), getClosestAncestorLayout()?.maxRightBottom).let {
         measuringLayout = it
+        layoutPolicy = policy
         block(it)
     }
 
 fun <M : AbstractModel<M>> TreeNode<M>.setLayout(
-    lazyPolicy: () -> AbstractLayoutPolicy,
     uom: UnitsOfMeasure = UnitsOfMeasure.PT,
     leftTop: Position? = null,
     maxRightBottom: Position? = null,
     orientation: Orientation? = null,
+    policy: LayoutPolicy? = null,
 ): AttachedLayout<M> = getClosestLayoutAwareAncestor().let { ancestor ->
     val wrapping = ancestor.layout
+    layoutPolicy = policy
     attachLayout(
         uom = wrapping?.uom ?: uom,
         orientation = orientation ?: Orientation.HORIZONTAL,
         leftTop = leftTop ?: wrapping?.nextLayoutLeftTop ?: wrapping?.leftTop ?: Position.start(uom),
         maxRightBottom = maxRightBottom ?: getEnclosingMaxRightBottom(),
-        lazyPolicy = lazyPolicy
     )
 }
 
 private fun <M : AbstractModel<M>> TreeNode<M>.attachLayout(
-    lazyPolicy: () -> AbstractLayoutPolicy,
     uom: UnitsOfMeasure,
     leftTop: Position,
     maxRightBottom: Position?,
@@ -185,21 +183,19 @@ private fun <M : AbstractModel<M>> TreeNode<M>.attachLayout(
 ): AttachedLayout<M> = DefaultLayout(
     uom = uom,
     leftTop = resolveMargins(leftTop),
-    maxRightBottom = maxRightBottom,
-    policy = measuringLayout?.policy ?: lazyPolicy()
+    maxRightBottom = maxRightBottom
 ).let { AttachedLayout(this, it, orientation) }.also {
-    it.measured = measuringLayout?.spacePlanned ?: false
     layout = it
 }
 
 fun <M : AbstractModel<M>> TreeNode<M>.createLayoutScope(
-    lazyPolicy: () -> AbstractLayoutPolicy,
     uom: UnitsOfMeasure = UnitsOfMeasure.PT,
     childLeftTop: Position? = null,
     maxRightBottom: Position? = null,
     orientation: Orientation? = null,
+    policy: LayoutPolicy? = null,
     block: Layout.() -> Unit,
-) = setLayout(lazyPolicy, uom, childLeftTop, maxRightBottom, orientation).apply(block).finish()
+) = setLayout(uom, childLeftTop, maxRightBottom, orientation, policy).apply(block).finish()
 
 private fun TreeNode<*>.resolveMargins(sourcePosition: Position): Position {
     val model = (context.model as? AttributedModelOrPart<*>)

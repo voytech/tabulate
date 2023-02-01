@@ -1,12 +1,10 @@
 package io.github.voytech.tabulate.core.model
 
 import io.github.voytech.tabulate.core.template.*
-import io.github.voytech.tabulate.core.template.layout.AbstractLayoutPolicy
 import io.github.voytech.tabulate.core.template.layout.DefaultLayoutPolicy
 import io.github.voytech.tabulate.core.template.layout.Layout
+import io.github.voytech.tabulate.core.template.layout.LayoutPolicy
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
-import io.github.voytech.tabulate.core.template.operation.Operations
-import io.github.voytech.tabulate.core.template.operation.RenderableContext
 import java.util.*
 
 interface Model<M : AbstractModel<M>> {
@@ -62,7 +60,7 @@ value class StateAttributes(val data: MutableMap<String, Any>) {
         getExecutionContext(inClass)?.let { ctx -> this(ctx as C) }
 }
 
-enum class ExportStatus {
+enum class ModelExportStatus {
     ACTIVE,
     PARTIAL_X,
     PARTIAL_Y,
@@ -91,7 +89,7 @@ class ModelExportContext<M : AbstractModel<M>>(
     val instance: ExportInstance,
     val parentAttributes: Attributes? = null,
     val modelAttributes: Attributes? = null,
-    var status: ExportStatus = ExportStatus.ACTIVE,
+    var status: ModelExportStatus = ModelExportStatus.ACTIVE,
 ) {
 
     val renderingContext: RenderingContext
@@ -103,28 +101,28 @@ class ModelExportContext<M : AbstractModel<M>>(
 
     fun suspendX() = with(instance) {
         status = when (status) {
-            ExportStatus.ACTIVE,
-            ExportStatus.PARTIAL_X,
-            -> ExportStatus.PARTIAL_X
+            ModelExportStatus.ACTIVE,
+            ModelExportStatus.PARTIAL_X,
+            -> ModelExportStatus.PARTIAL_X
 
-            ExportStatus.PARTIAL_Y -> ExportStatus.PARTIAL_YX
-            ExportStatus.PARTIAL_XY -> ExportStatus.PARTIAL_XY
-            ExportStatus.PARTIAL_YX -> ExportStatus.PARTIAL_YX
-            ExportStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
+            ModelExportStatus.PARTIAL_Y -> ModelExportStatus.PARTIAL_YX
+            ModelExportStatus.PARTIAL_XY -> ModelExportStatus.PARTIAL_XY
+            ModelExportStatus.PARTIAL_YX -> ModelExportStatus.PARTIAL_YX
+            ModelExportStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
         }
         bubblePartialStatus()
     }
 
     fun suspendY() = with(instance) {
         status = when (status) {
-            ExportStatus.ACTIVE,
-            ExportStatus.PARTIAL_Y,
-            -> ExportStatus.PARTIAL_Y
+            ModelExportStatus.ACTIVE,
+            ModelExportStatus.PARTIAL_Y,
+            -> ModelExportStatus.PARTIAL_Y
 
-            ExportStatus.PARTIAL_X -> ExportStatus.PARTIAL_XY
-            ExportStatus.PARTIAL_XY -> ExportStatus.PARTIAL_XY
-            ExportStatus.PARTIAL_YX -> ExportStatus.PARTIAL_YX
-            ExportStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
+            ModelExportStatus.PARTIAL_X -> ModelExportStatus.PARTIAL_XY
+            ModelExportStatus.PARTIAL_XY -> ModelExportStatus.PARTIAL_XY
+            ModelExportStatus.PARTIAL_YX -> ModelExportStatus.PARTIAL_YX
+            ModelExportStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
         }
         bubblePartialStatus()
     }
@@ -134,7 +132,7 @@ class ModelExportContext<M : AbstractModel<M>>(
             root.suspendedNodes.add(this@ModelExportContext)
         } else {
             root.suspendedNodes.remove(this@ModelExportContext)
-            status = ExportStatus.FINISHED
+            status = ModelExportStatus.FINISHED
         }
     }
 
@@ -145,10 +143,10 @@ class ModelExportContext<M : AbstractModel<M>>(
     fun isXOverflow(): Boolean = status.isXOverflow()
 
     private fun bubblePartialStatus() = with(instance) {
-        var current = node().getParent()
-        while (current != null && status.isPartlyExported()) {
-            current.context.status = status
-            current = current.getParent()
+        var parent = node().getParent()
+        while (parent != null && status.isPartlyExported()) {
+            parent.context.status = status
+            parent = parent.getParent()
         }
     }
 
@@ -157,6 +155,9 @@ class ModelExportContext<M : AbstractModel<M>>(
 fun <C : ExecutionContext, R : Any> ModelExportContext<*>.value(supplier: ReifiedValueSupplier<C, R>): R? =
     with(stateAttributes) { supplier.value() }
 
+interface LayoutPolicyProvider<LP: LayoutPolicy> {
+    val policy: LP
+}
 
 @Suppress("UNCHECKED_CAST")
 abstract class AbstractModel<SELF : AbstractModel<SELF>>(
@@ -164,6 +165,8 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
 ) : Model<SELF> {
 
     open val planSpaceOnExport: Boolean = false
+
+    private val layoutPolicyRef: LayoutPolicy by lazy { layoutPolicy() }
 
     private fun ExportInstance.shouldMeasure(): Boolean {
         return planSpaceOnExport && !getMeasuringOperations(self()).isEmpty()
@@ -184,8 +187,8 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
     //TODO on measure - should call probably the same logic as export and resumption but should inject measurement operations instead of export operations. We should not be able to use different exporting logic for those two paths.
     fun measure(parentContext: ModelExportContext<*>): SomeSize = with(parentContext.instance) {
         inScope(parentContext) {
-            setMeasuringLayout(createLayoutPolicy(context), uom) { measuringLayout ->
-                takeMeasures(context).also { measuringLayout.spacePlanned = true }
+            setMeasuringLayout(uom,layoutPolicyRef) { measuringLayout ->
+                takeMeasures(context).also { layoutPolicyRef.isSpacePlanned = true }
                 measuringLayout.boundingRectangle.let {
                     SomeSize(it.getWidth(), it.getHeight())
                 }
@@ -195,7 +198,7 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
 
     internal fun resume(context: ModelExportContext<SELF>, resumeNext: ResumeNext) {
         if (context.isPartlyExported()) {
-            context.status = ExportStatus.ACTIVE
+            context.status = ModelExportStatus.ACTIVE
             doResume(context, resumeNext)
             context.finishOrSuspend()
         }
@@ -209,7 +212,9 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
             parentContext.parentAttributes
         )
 
-    protected open fun takeMeasures(exportContext: ModelExportContext<SELF>) {}
+    protected open fun takeMeasures(exportContext: ModelExportContext<SELF>) {
+        // method is not mandatory and should not provide default implementation
+    }
 
     protected abstract fun doExport(exportContext: ModelExportContext<SELF>)
 
@@ -217,46 +222,36 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
         resumeNext()
     }
 
-    protected open fun createLayoutPolicy(exportContext: ModelExportContext<SELF>): AbstractLayoutPolicy =
-        DefaultLayoutPolicy()
-
     fun ModelExportContext<SELF>.createLayoutScope(
         orientation: Orientation = Orientation.HORIZONTAL,
         childLeftTopCorner: Position? = null,
         maxRightBottom: Position? = null,
         block: Layout.() -> Unit,
     ) = with(instance) {
-        val ctx = this@createLayoutScope
-        node().let { currentNode ->
-            currentNode.createLayoutScope(
-                { createLayoutPolicy(ctx) }, uom,
-                childLeftTopCorner ?: layoutContext?.leftTop,
-                maxRightBottom ?: layoutContext?.maxRightBottom ?: getViewPortMaxRightBottom(),
-                orientation, block
-            )
-        }
+        node().createLayoutScope(
+            uom,
+            childLeftTopCorner ?: layoutContext?.leftTop,
+            maxRightBottom ?: layoutContext?.maxRightBottom ?: getViewPortMaxRightBottom(),
+            orientation,
+            layoutPolicyRef,
+            block
+        )
     }
+
+    private fun layoutPolicy(): LayoutPolicy = if (this is LayoutPolicyProvider<*>) policy else DefaultLayoutPolicy()
 
     protected fun ModelExportContext<SELF>.render(context: AttributedContext) {
         instance.render(model, context)
     }
 
-    protected fun ModelExportContext<SELF>.measure(context: RenderableContext) {
+    protected fun ModelExportContext<SELF>.measure(context: AttributedContext) {
         instance.measure(model, context)
     }
 
-    protected fun ModelExportContext<SELF>.resetLayouts() = instance.resetLayouts()
+    protected fun ModelExportContext<SELF>.clearLayouts() = instance.clearLayouts()
 
     fun ModelExportContext<SELF>.resumeAllSuspendedNodes() = with(instance) {
         resumeAllSuspendedNodes()
-    }
-
-    fun ModelExportContext<SELF>.getExportOperations(): Operations<RenderingContext> = with(instance) {
-        getExportOperations(model)
-    }
-
-    fun ModelExportContext<SELF>.getMeasuringOperations(): Operations<RenderingContext> = with(instance) {
-        getMeasuringOperations(model)
     }
 
     @Suppress("UNCHECKED_CAST")

@@ -43,17 +43,20 @@ interface RowCoordinate {
     fun getRow(): Int
 }
 
-interface RowLayoutElement : RowCoordinate, LayoutElement, LayoutElementApply {
-    override fun Layout.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
-        x = policy.getX(0.asXPosition(), uom),
-        y = policy.getY(getRow().asYPosition(), uom),
-        width = policy.getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
-        height = (policy as? GridPolicyMethods)?.getRowHeight(getRow(), 1, uom)
-    )
-
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as GridPolicyMethods) {
-        context.height?.let { setRowHeight(getRow(), it) }
+interface RowLayoutElement : RowCoordinate, LayoutElement<GridLayoutPolicy>, LayoutElementApply<GridLayoutPolicy> {
+    override fun Layout.computeBoundingBox(policy: GridLayoutPolicy): LayoutElementBoundingBox = with(policy) {
+        elementBoundingBox(
+            x = getX(0.asXPosition(), uom),
+            y = getY(getRow().asYPosition(), uom),
+            width = getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
+            height = getRowHeight(getRow(), 1, uom)
+        )
     }
+
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy): Unit =
+        with(policy) {
+            context.height?.let { setRowHeight(getRow(), it) }
+        }
 }
 
 /**
@@ -65,14 +68,16 @@ interface ColumnCoordinate {
     fun getColumn(): Int
 }
 
-interface ColumnLayoutElement : ColumnCoordinate, LayoutElement, LayoutElementApply {
-    override fun Layout.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
-        x = policy.getX(getColumn().asXPosition(), uom), y = policy.getY(0.asYPosition(), uom)
-    )
-
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as GridLayoutPolicy) {
-        context.width?.let { setColumnWidth(getColumn(), it) }
+interface ColumnLayoutElement : ColumnCoordinate, LayoutElement<GridLayoutPolicy>,
+    LayoutElementApply<GridLayoutPolicy> {
+    override fun Layout.computeBoundingBox(policy: GridLayoutPolicy): LayoutElementBoundingBox = with(policy) {
+        elementBoundingBox(x = getX(getColumn().asXPosition(), uom), y = getY(0.asYPosition(), uom))
     }
+
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy): Unit =
+        with(policy) {
+            context.width?.let { setColumnWidth(getColumn(), it) }
+        }
 }
 
 /**
@@ -82,12 +87,14 @@ interface ColumnLayoutElement : ColumnCoordinate, LayoutElement, LayoutElementAp
  */
 interface RowCellCoordinate : RowCoordinate, ColumnCoordinate
 
-interface RowCellLayoutElement : RowCellCoordinate, LayoutElement, LayoutElementApply {
+interface RowCellLayoutElement : RowCellCoordinate, LayoutElement<GridLayoutPolicy>,
+    LayoutElementApply<GridLayoutPolicy> {
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox): Unit = with(policy as GridPolicyMethods) {
-        context.width?.let { setColumnWidth(getColumn(), it) }
-        context.height?.let { setRowHeight(getRow(), it) }
-    }
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy): Unit =
+        with(policy) {
+            context.width?.let { setColumnWidth(getColumn(), it) }
+            context.height?.let { setRowHeight(getRow(), it) }
+        }
 }
 
 data class Coordinates(
@@ -124,7 +131,7 @@ sealed class TableContext(
  */
 sealed class ColumnContext(
     attributes: Attributes?,
-) : RenderableContext(attributes)
+) : RenderableContext<GridLayoutPolicy>(attributes)
 
 /**
  * Row operation context with additional model attributes applicable on table level.
@@ -133,7 +140,7 @@ sealed class ColumnContext(
  */
 sealed class RowContext(
     attributes: Attributes?,
-) : RenderableContext(attributes)
+) : RenderableContext<GridLayoutPolicy>(attributes)
 
 /**
  * Table operation context with additional model attributes applicable on table level.
@@ -190,6 +197,7 @@ class RowEnd<T>(
     val rowCellValues: Map<ColumnKey<T>, CellContext>,
     val rowIndex: Int,
 ) : RowContext(attributes), RowLayoutElement {
+
     override fun getRow(): Int = rowIndex
 
     fun getCells(): Map<ColumnKey<T>, CellContext> = rowCellValues
@@ -268,16 +276,18 @@ class CellContext(
     val rowIndex: Int,
     val columnIndex: Int,
     override val value: Any = cellValue.value,
-) : RenderableContext(attributes), RowCellLayoutElement, HasValue<Any> {
+) : RenderableContext<GridLayoutPolicy>(attributes), RowCellLayoutElement, HasValue<Any> {
     override fun getRow(): Int = rowIndex
     override fun getColumn(): Int = columnIndex
 
-    override fun Layout.computeBoundingBox(): LayoutElementBoundingBox = policy.elementBoundingBox(
-        x = policy.getX(getColumn().asXPosition(), uom),
-        y = policy.getY(getRow().asYPosition(), uom),
-        width = (policy as? GridPolicyMethods)?.getColumnWidth(getColumn(), cellValue.colSpan, uom),
-        height = (policy as? GridPolicyMethods)?.getRowHeight(getRow(), cellValue.rowSpan, uom)
-    )
+    override fun Layout.computeBoundingBox(policy: GridLayoutPolicy): LayoutElementBoundingBox = with(policy) {
+        elementBoundingBox(
+            x = getX(getColumn().asXPosition(), uom), //TODO getAbsoluteColumnPosition(getColumn())
+            y = getY(getRow().asYPosition(), uom),
+            width = getColumnWidth(getColumn(), cellValue.colSpan, uom),
+            height = getRowHeight(getRow(), cellValue.rowSpan, uom)
+        )
+    }
 }
 
 internal fun <T : Any> SyntheticRow<T>.createCellContext(

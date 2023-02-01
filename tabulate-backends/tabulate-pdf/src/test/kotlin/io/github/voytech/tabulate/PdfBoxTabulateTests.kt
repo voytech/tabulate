@@ -38,42 +38,6 @@ class PdfBoxTabulateTests {
             }
         }
 
-    val tableTextStyle = table {
-        attributes {
-            text { fontSize = 8 }
-            alignment {
-                vertical = DefaultVerticalAlignment.BOTTOM
-                horizontal = DefaultHorizontalAlignment.LEFT
-            }
-        }
-    }
-
-    val tableBorderStyle = table {
-        attributes {
-            borders {
-                leftBorderColor = Colors.LIGHT_GRAY
-                leftBorderStyle = DefaultBorderStyle.DOTTED
-                leftBorderWidth = 1f.pt()
-                rightBorderColor = Colors.LIGHT_GRAY
-                rightBorderStyle = DefaultBorderStyle.SOLID
-                rightBorderWidth = 2f.pt()
-                topBorderColor = Colors.LIGHT_GRAY
-                topBorderStyle = DefaultBorderStyle.DASHED
-                topBorderWidth = 2f.pt()
-                bottomBorderColor = Colors.LIGHT_GRAY
-                bottomBorderStyle = DefaultBorderStyle.SOLID
-                bottomBorderWidth = 2.pt()
-            }
-        }
-    }
-
-    val tableSize = table {
-        attributes {
-            columnWidth { 110.px() }
-            rowHeight { 20.px() }
-        }
-    }
-
     val tableHeaderStyle = table {
         rows {
             header {

@@ -1,12 +1,12 @@
 package io.github.voytech.tabulate.components.table.template
 
 import io.github.voytech.tabulate.components.table.model.ColumnDef
-import io.github.voytech.tabulate.core.model.ExportStatus
+import io.github.voytech.tabulate.core.model.ModelExportStatus
 
 data class OverflowOffsets(
     val xOffsets: XOffsets = XOffsets(),
     val yOffsets: YOffsets = YOffsets(),
-    var partialStatus: ExportStatus = ExportStatus.ACTIVE,
+    var partialStatus: ModelExportStatus = ModelExportStatus.ACTIVE,
 ) {
 
     fun reset() {
@@ -18,22 +18,22 @@ data class OverflowOffsets(
         yOffsets.nextRecordIndex = 0
     }
 
-    fun save(status: ExportStatus) {
+    fun save(status: ModelExportStatus) {
         partialStatus = status
     }
 
     fun align() {
         when (partialStatus) {
-            ExportStatus.PARTIAL_X, ExportStatus.PARTIAL_XY -> {
+            ModelExportStatus.PARTIAL_X, ModelExportStatus.PARTIAL_XY -> {
                 yOffsets.reset()
                 xOffsets.onResume()
             }
 
-            ExportStatus.PARTIAL_Y, ExportStatus.PARTIAL_YX -> {
+            ModelExportStatus.PARTIAL_Y, ModelExportStatus.PARTIAL_YX -> {
                 xOffsets.reset()
                 yOffsets.onResume()
             }
-            ExportStatus.ACTIVE, ExportStatus.FINISHED -> {}
+            ModelExportStatus.ACTIVE, ModelExportStatus.FINISHED -> {}
         }
     }
 
