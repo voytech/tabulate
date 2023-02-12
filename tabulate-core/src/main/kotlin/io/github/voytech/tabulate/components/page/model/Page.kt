@@ -27,7 +27,7 @@ class Page internal constructor(
     }
 
     private fun ModelExportContext<Page>.nextPageNumber(): Int =
-        stateAttributes.run {
+        customStateAttributes.run {
             ++ensureExecutionContext { PageExecutionContext() }.pageNumber
         }
 

@@ -62,9 +62,9 @@ class Table<T : Any> internal constructor(
 
     override fun createExportContext(parentContext: ModelExportContext<*>): ModelExportContext<Table<T>> {
         return super.createExportContext(parentContext).also { ctx ->
-            ctx.stateAttributes["_sheetName"] = name
+            ctx.customStateAttributes["_sheetName"] = name
             export = TableExport(
-                ctx, policy, (dataSource ?: ctx.stateAttributes["_dataSourceOverride"])?.dataSource ?: emptyList()
+                ctx, policy, (dataSource ?: ctx.customStateAttributes["_dataSourceOverride"])?.dataSource ?: emptyList()
             )
         }
     }

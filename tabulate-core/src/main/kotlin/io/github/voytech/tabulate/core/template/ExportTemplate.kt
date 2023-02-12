@@ -18,9 +18,11 @@ class ExportInstance(
     internal val renderingContext: RenderingContext = operationsFactory.renderingContext.newInstance(),
 ) {
     internal val uom: UnitsOfMeasure = UnitsOfMeasure.PT
-    internal lateinit var root: RootNode<*>
+    internal lateinit var root: ModelExportContext
+    internal lateinit var active: ModelExportContext
     private val exportOperations: OperationsMap = mutableMapOf()
     private val measureOperations: OperationsMap = mutableMapOf()
+
 
     fun <M : Model<M>> getExportOperations(model: M): Operations<RenderingContext> =
         exportOperations.computeIfAbsent(model) {
@@ -42,13 +44,13 @@ class ExportInstance(
             )
         }
 
-    private fun getActiveLayout(): LayoutWithPolicy = (root.activeNode.layout ?: when (root.activeNode) {
+    private fun getActiveLayout(): LayoutWithPolicy = (active.layouts.renderingLayout ?: if (root != active) {
         is BranchNode -> (root.activeNode as BranchNode).getClosestAncestorLayout()
             ?: error("No active layout present!")
         else -> error("No active layout present!")
     }).let { LayoutWithPolicy(it,root.activeNode.layoutPolicy!!) }
 
-    private fun getActiveMeasuringLayout(): LayoutWithPolicy = (root.activeNode.measuringLayout ?: when (root.activeNode) {
+    private fun getActiveMeasuringLayout(): LayoutWithPolicy = (active.layouts.measuringLayout ?: when (root.activeNode) {
         is BranchNode -> (root.activeNode as BranchNode).getClosestLayoutAwareAncestor().measuringLayout!!
         else -> error("No active measuring layout to perform measures on!")
     }).let { LayoutWithPolicy(it, root.activeNode.layoutPolicy!!) }
@@ -71,32 +73,10 @@ class ExportInstance(
         getMeasuringOperations(model).invoke(renderingContext, context)
     }
 
-    internal fun ModelExportContext<*>.node(): TreeNode<*> =
-        root.nodes[model] ?: error("Could not find node by context")
-
-
-    private fun <M : AbstractModel<M>> createNode(context: ModelExportContext<M>): TreeNode<M> = if (!::root.isInitialized) {
-        RootNode(context).apply { root = this }
-    } else {
-        root.activeNode.appendChild(context)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun <M : AbstractModel<M>> M.node(): TreeNode<M>? =
-        if (::root.isInitialized) {
-            root.nodes[this]?.let { (it as TreeNode<M>) }
-        } else null
-
-    fun <M : AbstractModel<M>, R> inScope(
-        model: M, templateContext: () -> ModelExportContext<M>, block: TreeNode<M>.() -> R,
-    ) = (model.node() ?: createNode(templateContext())).withActiveNode(block)
-
-    private fun <M : AbstractModel<M>, R> TreeNode<M>.withActiveNode(
-        block: TreeNode<M>.() -> R,
-    ): R {
-        setActive()
+    fun <R> setActive(ctx: ModelExportContext, block: () -> R): R {
+        active = ctx
         return run(block).also {
-            endActive()
+            ctx.navigation.parentContext?.let { active = it }
         }
     }
 
@@ -147,7 +127,7 @@ class StandaloneExportTemplate<M : AbstractModel<M>>(
     fun <O : Any> export(model: M, output: O) = with(ExportInstance(format)) {
         resolveOutputBinding(output).run {
             setOutput(renderingContext, output)
-            model.export(ModelExportContext(model, StateAttributes(mutableMapOf()), this@with))
+            model.export(ModelExportContext(this@with,navigation, layouts, StateAttributes(mutableMapOf())))
             resumeAllSuspendedNodes()
             flush()
         }

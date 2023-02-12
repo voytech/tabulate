@@ -83,7 +83,7 @@ internal class TableExport<T : Any>(
     private fun setup(ops: Operations<RenderingContext>) {
         operations = ops
         rowContextResolver = AccumulatingRowContextResolver(
-            exportContext.model, exportContext.stateAttributes, overflowOffsets,
+            exportContext.model, exportContext.customStateAttributes, overflowOffsets,
             CaptureRowCompletionImpl(renderingContext, operations)
         )
         rowContextIterator = RowContextIterator(rowContextResolver, overflowOffsets, exportContext)

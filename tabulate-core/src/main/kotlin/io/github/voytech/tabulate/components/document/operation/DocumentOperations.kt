@@ -6,7 +6,7 @@ import io.github.voytech.tabulate.core.template.operation.AttributedContext
 
 sealed class DocumentContext(templateContext: ModelExportContext<Document>) : AttributedContext() {
     init {
-        additionalAttributes = templateContext.stateAttributes.data
+        additionalAttributes = templateContext.customStateAttributes.data
     }
 }
 

@@ -83,10 +83,11 @@ data class LayoutContext(
     val orientation: Orientation = Orientation.HORIZONTAL,
 )
 
-class ModelExportContext<M : AbstractModel<M>>(
-    val model: M,
-    val stateAttributes: StateAttributes,
+class ModelExportContext(
     val instance: ExportInstance,
+    val navigation: Navigation,
+    val layouts: Layouts,
+    val customStateAttributes: StateAttributes,
     val parentAttributes: Attributes? = null,
     val modelAttributes: Attributes? = null,
     var status: ModelExportStatus = ModelExportStatus.ACTIVE,
@@ -97,7 +98,7 @@ class ModelExportContext<M : AbstractModel<M>>(
 
     internal var layoutContext: LayoutContext? = null
 
-    fun getCustomAttributes(): MutableMap<String, Any> = stateAttributes.data
+    fun getCustomAttributes(): MutableMap<String, Any> = customStateAttributes.data
 
     fun suspendX() = with(instance) {
         status = when (status) {
@@ -143,19 +144,19 @@ class ModelExportContext<M : AbstractModel<M>>(
     fun isXOverflow(): Boolean = status.isXOverflow()
 
     private fun bubblePartialStatus() = with(instance) {
-        var parent = node().getParent()
+        var parent = navigation.parent
         while (parent != null && status.isPartlyExported()) {
             parent.context.status = status
-            parent = parent.getParent()
+            parent = parent.context.navigation.parent
         }
     }
 
 }
 
-fun <C : ExecutionContext, R : Any> ModelExportContext<*>.value(supplier: ReifiedValueSupplier<C, R>): R? =
-    with(stateAttributes) { supplier.value() }
+fun <C : ExecutionContext, R : Any> ModelExportContext.value(supplier: ReifiedValueSupplier<C, R>): R? =
+    with(customStateAttributes) { supplier.value() }
 
-interface LayoutPolicyProvider<LP: LayoutPolicy> {
+interface LayoutPolicyProvider<LP : LayoutPolicy> {
     val policy: LP
 }
 
@@ -166,29 +167,31 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
 
     open val planSpaceOnExport: Boolean = false
 
-    private val layoutPolicyRef: LayoutPolicy by lazy { layoutPolicy() }
+    private val layoutPolicyHandle: LayoutPolicy by lazy { layoutPolicy() }
+
+    internal lateinit var context: ModelExportContext
 
     private fun ExportInstance.shouldMeasure(): Boolean {
         return planSpaceOnExport && !getMeasuringOperations(self()).isEmpty()
     }
 
-    private fun <R> inScope(parentContext: ModelExportContext<*>, block: TreeNode<SELF>.() -> R): R =
-        parentContext.instance.inScope(self(), { createExportContext(parentContext) }, block)
+    private fun <R> withinInitializedContext(parent: ModelExportContext, block: () -> R): R =
+        parent.instance.setActive(ensuringExportContext(parent), block)
 
-    fun export(parentContext: ModelExportContext<*>, layoutCxt: LayoutContext? = null) =
+    fun export(parentContext: ModelExportContext, layoutCxt: LayoutContext? = null) =
         with(parentContext.instance) {
             if (shouldMeasure()) measure(parentContext)
-            inScope(parentContext) {
+            withinInitializedContext(parentContext) {
                 doExport(context.apply { layoutContext = layoutCxt })
                 context.finishOrSuspend()
             }
         }
 
     //TODO on measure - should call probably the same logic as export and resumption but should inject measurement operations instead of export operations. We should not be able to use different exporting logic for those two paths.
-    fun measure(parentContext: ModelExportContext<*>): SomeSize = with(parentContext.instance) {
-        inScope(parentContext) {
-            setMeasuringLayout(uom,layoutPolicyRef) { measuringLayout ->
-                takeMeasures(context).also { layoutPolicyRef.isSpacePlanned = true }
+    fun measure(parentContext: ModelExportContext): SomeSize = with(parentContext.instance) {
+        withinInitializedContext(parentContext) {
+            context.setMeasuringLayout(uom) { measuringLayout ->
+                takeMeasures(context).also { layoutPolicyHandle.isSpacePlanned = true }
                 measuringLayout.boundingRectangle.let {
                     SomeSize(it.getWidth(), it.getHeight())
                 }
@@ -196,7 +199,7 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
         }
     }
 
-    internal fun resume(context: ModelExportContext<SELF>, resumeNext: ResumeNext) {
+    internal fun resume(context: ModelExportContext, resumeNext: ResumeNext) {
         if (context.isPartlyExported()) {
             context.status = ModelExportStatus.ACTIVE
             doResume(context, resumeNext)
@@ -204,53 +207,59 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
         }
     }
 
-    protected open fun createExportContext(parentContext: ModelExportContext<*>): ModelExportContext<SELF> =
-        ModelExportContext(
-            self(),
-            parentContext.stateAttributes,
-            parentContext.instance,
-            parentContext.parentAttributes
-        )
+    private fun createExportContext(parentContext: ModelExportContext): ModelExportContext =
+        with(parentContext) {
+            navigation.addChild(self())
+            ModelExportContext(instance,
+                Navigation(navigation.root, navigation.active, self()),
+                Layouts(layoutPolicyHandle),
+                customStateAttributes,
+                parentAttributes
+            )
+        }
 
-    protected open fun takeMeasures(exportContext: ModelExportContext<SELF>) {
+    private fun ensuringExportContext(parentContext: ModelExportContext): ModelExportContext =
+        if (::context.isInitialized) context else run { context = createExportContext(parentContext);context }
+
+
+    protected open fun takeMeasures(exportContext: ModelExportContext) {
         // method is not mandatory and should not provide default implementation
     }
 
-    protected abstract fun doExport(exportContext: ModelExportContext<SELF>)
+    protected abstract fun doExport(exportContext: ModelExportContext)
 
-    protected open fun doResume(exportContext: ModelExportContext<SELF>, resumeNext: ResumeNext) {
+    protected open fun doResume(exportContext: ModelExportContext, resumeNext: ResumeNext) {
         resumeNext()
     }
 
-    fun ModelExportContext<SELF>.createLayoutScope(
+    fun createLayoutScope(
         orientation: Orientation = Orientation.HORIZONTAL,
         childLeftTopCorner: Position? = null,
         maxRightBottom: Position? = null,
         block: Layout.() -> Unit,
-    ) = with(instance) {
-        node().createLayoutScope(
+    ) = with(context.instance) {
+        context.createLayoutScope(
             uom,
-            childLeftTopCorner ?: layoutContext?.leftTop,
-            maxRightBottom ?: layoutContext?.maxRightBottom ?: getViewPortMaxRightBottom(),
+            childLeftTopCorner ?: context.layoutContext?.leftTop,
+            maxRightBottom ?: context.layoutContext?.maxRightBottom ?: getViewPortMaxRightBottom(),
             orientation,
-            layoutPolicyRef,
             block
         )
     }
 
     private fun layoutPolicy(): LayoutPolicy = if (this is LayoutPolicyProvider<*>) policy else DefaultLayoutPolicy()
 
-    protected fun ModelExportContext<SELF>.render(context: AttributedContext) {
-        instance.render(model, context)
+    protected fun ModelExportContext.render(context: AttributedContext) {
+        instance.render(self(), context)
     }
 
-    protected fun ModelExportContext<SELF>.measure(context: AttributedContext) {
-        instance.measure(model, context)
+    protected fun ModelExportContext.measure(context: AttributedContext) {
+        instance.measure(self(), context)
     }
 
-    protected fun ModelExportContext<SELF>.clearLayouts() = instance.clearLayouts()
+    protected fun ModelExportContext.clearLayouts() = instance.clearLayouts()
 
-    fun ModelExportContext<SELF>.resumeAllSuspendedNodes() = with(instance) {
+    fun ModelExportContext.resumeAllSuspendedNodes() = with(instance) {
         resumeAllSuspendedNodes()
     }
 
