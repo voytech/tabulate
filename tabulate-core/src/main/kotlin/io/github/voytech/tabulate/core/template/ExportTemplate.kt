@@ -1,6 +1,8 @@
 package io.github.voytech.tabulate.core.template
 
 import io.github.voytech.tabulate.core.model.*
+import io.github.voytech.tabulate.core.template.Layouts.Companion.rootLayouts
+import io.github.voytech.tabulate.core.template.Navigation.Companion.rootNavigation
 import io.github.voytech.tabulate.core.template.exception.OutputBindingResolvingException
 import io.github.voytech.tabulate.core.template.layout.*
 import io.github.voytech.tabulate.core.template.operation.*
@@ -14,12 +16,17 @@ typealias OperationsMap = MutableMap<Model<*>, Operations<RenderingContext>>
 
 class ExportInstance(
     format: DocumentFormat,
+    rootModel: AbstractModel<*>,
+    stateAttributes: StateAttributes? = null,
     private val operationsFactory: OperationsFactory<RenderingContext> = OperationsFactory(format),
     internal val renderingContext: RenderingContext = operationsFactory.renderingContext.newInstance(),
 ) {
     internal val uom: UnitsOfMeasure = UnitsOfMeasure.PT
-    internal lateinit var root: ModelExportContext
-    internal lateinit var active: ModelExportContext
+    internal val root: ModelExportContext = ModelExportContext(
+        this, rootNavigation(rootModel), rootLayouts(), stateAttributes.orEmpty()
+    )
+    internal var active: ModelExportContext = root
+    internal val suspendedModels: MutableSet<AbstractModel<*>> = mutableSetOf()
     private val exportOperations: OperationsMap = mutableMapOf()
     private val measureOperations: OperationsMap = mutableMapOf()
 
@@ -44,16 +51,13 @@ class ExportInstance(
             )
         }
 
-    private fun getActiveLayout(): LayoutWithPolicy = (active.layouts.renderingLayout ?: if (root != active) {
-        is BranchNode -> (root.activeNode as BranchNode).getClosestAncestorLayout()
-            ?: error("No active layout present!")
-        else -> error("No active layout present!")
-    }).let { LayoutWithPolicy(it,root.activeNode.layoutPolicy!!) }
+    private fun getActiveLayout(): LayoutWithPolicy =
+        (active.layouts.renderingLayout ?: active.getClosestAncestorLayout())
+            ?.let { LayoutWithPolicy(it, active.layouts.layoutPolicy) } ?: error("No active rendering layout!")
 
-    private fun getActiveMeasuringLayout(): LayoutWithPolicy = (active.layouts.measuringLayout ?: when (root.activeNode) {
-        is BranchNode -> (root.activeNode as BranchNode).getClosestLayoutAwareAncestor().measuringLayout!!
-        else -> error("No active measuring layout to perform measures on!")
-    }).let { LayoutWithPolicy(it, root.activeNode.layoutPolicy!!) }
+    private fun getActiveMeasuringLayout(): LayoutWithPolicy =
+        (active.layouts.measuringLayout ?: active.getClosestLayoutAwareAncestor()?.layouts?.measuringLayout)
+            ?.let { LayoutWithPolicy(it, active.layouts.layoutPolicy) } ?: error("No active rendering layout!")
 
     internal fun getViewPortMaxRightBottom(): Position =
         if (renderingContext is HavingViewportSize) {
@@ -65,11 +69,11 @@ class ExportInstance(
             Position(X.max(uom), Y.max(uom)) //TODO instead make it nullable - when null - renderer does not clip
         }
 
-    fun <M : Model<M>> render(model: M,context: AttributedContext) {
+    fun <M : Model<M>> render(model: M, context: AttributedContext) {
         getExportOperations(model).invoke(renderingContext, context)
     }
 
-    fun <M : Model<M>> measure(model: M,context: AttributedContext) {
+    fun <M : Model<M>> measure(model: M, context: AttributedContext) {
         getMeasuringOperations(model).invoke(renderingContext, context)
     }
 
@@ -80,36 +84,44 @@ class ExportInstance(
         }
     }
 
-    fun clearLayouts() = with(root) {
-        traverse { it.dropLayout() }.also { clearLayout(getViewPortMaxRightBottom()) }
+    fun clearLayouts() {
+        root.navigation.traverse {
+            it.context.layouts.drop()
+        }.also { root.setLayout(maxRightBottom = getViewPortMaxRightBottom()) }
     }
 
-    fun resumeAllSuspendedNodes() = with(root) {
-        while (suspendedNodes.isNotEmpty()) {
+    fun resumeAllSuspendedNodes() {
+        // it may happen that particular model can be suspended multiple times, that is why we need to repeat resumption till no suspended models exist.
+        while (suspendedModels.isNotEmpty()) {
             clearLayouts()
             resumeAll()
         }
     }
 
-    private fun resumeAll() = with(root) {
-        preserveActive { resumeNode(root) }
+    private fun preserveCurrentlyActive(block: () -> Unit) {
+        val tmp = active
+        block()
+        active = tmp
     }
 
-    private fun resumeChildren(node: TreeNode<*>) {
-        node.forChildren { resumeNode(it) }
+    private fun resumeAll() {
+        preserveCurrentlyActive { resumeModel(root.navigation.active) }
     }
 
-    private fun resumeNode(node: TreeNode<*>) = with(root) {
-        activeNode = node
-        resumeModelExport(node)
+    private fun resumeChildren(model: AbstractModel<*>) {
+        model.context.navigation.onEachChild { resumeModel(it) }
     }
 
-    private fun <M : AbstractModel<M>> resumeModelExport(node: TreeNode<M>) {
-        node.context.model.resume(node.context) { resumeChildren(node) }
+    private fun resumeModel(model: AbstractModel<*>) = with(root) {
+        active = model.context
+        resumeModelExport(model)
+    }
+
+    private fun resumeModelExport(model: AbstractModel<*>) {
+        model.resume(model.context) { resumeChildren(model) }
     }
 
 }
-
 
 /**
  * Class wrapping ExportOperations into standalone ExportOperations.
@@ -124,21 +136,20 @@ class StandaloneExportTemplate<M : AbstractModel<M>>(
         loadFirstByDocumentFormat<OutputBindingsProvider<RenderingContext>, RenderingContext>(format)!!
     }
 
-    fun <O : Any> export(model: M, output: O) = with(ExportInstance(format)) {
+    fun <O : Any> export(model: M, output: O) = with(ExportInstance(format, model)) {
         resolveOutputBinding(output).run {
             setOutput(renderingContext, output)
-            model.export(ModelExportContext(this@with,navigation, layouts, StateAttributes(mutableMapOf())))
+            model.export(this@with.root)
             resumeAllSuspendedNodes()
             flush()
         }
     }
 
     fun <O : Any, T : Any> export(model: M, output: O, dataSource: Iterable<T> = emptyList()) =
-        with(ExportInstance(format)) {
+        with(ExportInstance(format, model, dataSource.asStateAttributes())) {
             resolveOutputBinding(output).run {
-                val modelExportContext = ModelExportContext(model, dataSource.asStateAttributes(), this@with)
                 setOutput(renderingContext, output)
-                model.export(modelExportContext)
+                model.export(this@with.root)
                 resumeAllSuspendedNodes()
                 flush()
             }
@@ -153,8 +164,10 @@ class StandaloneExportTemplate<M : AbstractModel<M>>(
             .firstOrNull() ?: throw OutputBindingResolvingException()
     }
 
-    private fun <T : Any> Iterable<T>.asStateAttributes(): StateAttributes = StateAttributes(if (iterator().hasNext()) {
-        mutableMapOf("_dataSourceOverride" to DataSourceBinding(this))
-    } else mutableMapOf())
+    private fun <T : Any> Iterable<T>.asStateAttributes(): StateAttributes = StateAttributes(
+        if (iterator().hasNext()) {
+            mutableMapOf("_dataSourceOverride" to DataSourceBinding(this))
+        } else mutableMapOf()
+    )
 
 }

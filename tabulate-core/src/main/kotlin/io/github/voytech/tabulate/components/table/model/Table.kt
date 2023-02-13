@@ -60,25 +60,24 @@ class Table<T : Any> internal constructor(
 
     private lateinit var export: TableExport<T>
 
-    override fun createExportContext(parentContext: ModelExportContext<*>): ModelExportContext<Table<T>> {
-        return super.createExportContext(parentContext).also { ctx ->
-            ctx.customStateAttributes["_sheetName"] = name
-            export = TableExport(
-                ctx, policy, (dataSource ?: ctx.customStateAttributes["_dataSourceOverride"])?.dataSource ?: emptyList()
-            )
-        }
+    override fun initialize(exportContext: ModelExportContext) {
+        exportContext.customStateAttributes["_sheetName"] = name
+        export = TableExport(
+            exportContext, policy,
+            (dataSource ?: exportContext.customStateAttributes["_dataSourceOverride"])?.dataSource ?: emptyList()
+        )
     }
 
-    override fun doExport(exportContext: ModelExportContext<Table<T>>) =
+    override fun doExport(exportContext: ModelExportContext) =
         exportContext.exportOrResume()
 
-    override fun doResume(exportContext: ModelExportContext<Table<T>>, resumeNext: ResumeNext) =
+    override fun doResume(exportContext: ModelExportContext, resumeNext: ResumeNext) =
         exportContext.exportOrResume()
 
-    override fun takeMeasures(exportContext: ModelExportContext<Table<T>>) =
+    override fun takeMeasures(exportContext: ModelExportContext) =
         export.takeMeasures()
 
-    private fun ModelExportContext<Table<T>>.exportOrResume() {
+    private fun ModelExportContext.exportOrResume() {
         createLayoutScope {
             export.exportOrResume()
         }

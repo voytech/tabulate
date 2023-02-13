@@ -13,7 +13,7 @@ import io.github.voytech.tabulate.core.model.ModelExportContext
 internal class RowContextIterator<T: Any>(
     private val resolver: IndexedContextResolver<RowEnd<T>>,
     private val overflowOffsets: OverflowOffsets,
-    private val templateContext: ModelExportContext<Table<T>>
+    private val templateContext: ModelExportContext
 ) : AbstractIterator<ContextResult<RowEnd<T>>>() {
 
     private var sourceRecordIndex: Int? = null

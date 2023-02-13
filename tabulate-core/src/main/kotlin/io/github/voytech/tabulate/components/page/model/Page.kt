@@ -14,24 +14,24 @@ class Page internal constructor(
     internal val footer: AbstractModel<*>? = null,
 ) : AbstractModel<Page>() {
 
-    override fun doExport(exportContext: ModelExportContext<Page>) = with(exportContext) {
+    override fun doExport(exportContext: ModelExportContext) = with(exportContext) {
         resumeAllSuspendedNodes()
         clearLayouts()
         stickyHeaderAndFooterWith { layout, leftTop ->
-            model.exportContent(exportContext, leftTop.contentLayoutContext(layout))
+            exportContent(exportContext, leftTop.contentLayoutContext(layout))
         }
     }
 
-    override fun doResume(exportContext: ModelExportContext<Page>, resumeNext: ResumeNext) = with(exportContext) {
+    override fun doResume(exportContext: ModelExportContext, resumeNext: ResumeNext) = with(exportContext) {
         stickyHeaderAndFooterWith { _, _ -> resumeNext() }
     }
 
-    private fun ModelExportContext<Page>.nextPageNumber(): Int =
+    private fun ModelExportContext.nextPageNumber(): Int =
         customStateAttributes.run {
             ++ensureExecutionContext { PageExecutionContext() }.pageNumber
         }
 
-    private fun ModelExportContext<Page>.stickyHeaderAndFooterWith(block: (Layout, Position?) -> Unit) {
+    private fun ModelExportContext.stickyHeaderAndFooterWith(block: (Layout, Position?) -> Unit) {
         createLayoutScope(orientation = Orientation.VERTICAL) {
             render(newPage(nextPageNumber(), name))
             exportHeader(this@stickyHeaderAndFooterWith)
@@ -42,15 +42,15 @@ class Page internal constructor(
         }
     }
 
-    private fun exportHeader(templateContext: ModelExportContext<Page>) {
+    private fun exportHeader(templateContext: ModelExportContext) {
         header?.export(templateContext)
     }
 
-    private fun exportContent(templateContext: ModelExportContext<Page>, layoutContext: LayoutContext) {
+    private fun exportContent(templateContext: ModelExportContext, layoutContext: LayoutContext) {
         nodes?.forEach { it.export(templateContext, layoutContext) }
     }
 
-    private fun footerSize(templateContext: ModelExportContext<Page>, layout: Layout) =
+    private fun footerSize(templateContext: ModelExportContext, layout: Layout) =
         footer?.measure(templateContext)?.let {
             Size(it.width ?: Width(layout.maxRightBottom!!.x.value, layout.uom), it.height!!)
         }
@@ -74,7 +74,7 @@ class Page internal constructor(
             maxRightBottom = size?.let { this?.plus(size) }
         )
 
-    private fun exportFooter(templateContext: ModelExportContext<Page>, layoutContext: LayoutContext?) {
+    private fun exportFooter(templateContext: ModelExportContext, layoutContext: LayoutContext?) {
         footer?.export(templateContext, layoutContext)
     }
 

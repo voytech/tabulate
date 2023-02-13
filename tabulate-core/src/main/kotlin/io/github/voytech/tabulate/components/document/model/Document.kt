@@ -11,16 +11,14 @@ class Document internal constructor(
     @get:JvmSynthetic
     internal val nodes: List<AbstractModel<*>>,
     @get:JvmSynthetic override val attributes: Attributes?,
-    override val id: String
+    override val id: String,
 ) : ModelWithAttributes<Document>() {
 
-    override fun doExport(exportContext: ModelExportContext<Document>) = with(exportContext) {
+    override fun doExport(exportContext: ModelExportContext) = with(exportContext) {
         createLayoutScope {
-            with(model) {
-                render(DocumentStart(exportContext))
-                nodes.forEach { it.export(exportContext) }
-                render(DocumentEnd(exportContext))
-            }
+            render(DocumentStart(exportContext))
+            nodes.forEach { it.export(exportContext) }
+            render(DocumentEnd(exportContext))
         }
     }
 }

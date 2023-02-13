@@ -60,6 +60,8 @@ value class StateAttributes(val data: MutableMap<String, Any>) {
         getExecutionContext(inClass)?.let { ctx -> this(ctx as C) }
 }
 
+fun StateAttributes?.orEmpty() = this ?: StateAttributes(mutableMapOf())
+
 enum class ModelExportStatus {
     ACTIVE,
     PARTIAL_X,
@@ -128,11 +130,11 @@ class ModelExportContext(
         bubblePartialStatus()
     }
 
-    fun finishOrSuspend() = with(instance) {
+    fun finishOrSuspend() {
         if (status.isPartlyExported()) {
-            root.suspendedNodes.add(this@ModelExportContext)
+            instance.suspendedModels += navigation.active
         } else {
-            root.suspendedNodes.remove(this@ModelExportContext)
+            instance.suspendedModels -= navigation.active
             status = ModelExportStatus.FINISHED
         }
     }
@@ -146,11 +148,12 @@ class ModelExportContext(
     private fun bubblePartialStatus() = with(instance) {
         var parent = navigation.parent
         while (parent != null && status.isPartlyExported()) {
-            parent.context.status = status
-            parent = parent.context.navigation.parent
+            with(parent) {
+                context.status = status
+                parent = context.navigation.parent
+            }
         }
     }
-
 }
 
 fun <C : ExecutionContext, R : Any> ModelExportContext.value(supplier: ReifiedValueSupplier<C, R>): R? =
@@ -211,28 +214,35 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
         with(parentContext) {
             navigation.addChild(self())
             ModelExportContext(instance,
-                Navigation(navigation.root, navigation.active, self()),
+                Navigation(navigation.root, navigation.active.takeIf { navigation.root != self() }, self()),
                 Layouts(layoutPolicyHandle),
                 customStateAttributes,
                 parentAttributes
-            )
+            ).also(::initialize)
         }
 
     private fun ensuringExportContext(parentContext: ModelExportContext): ModelExportContext =
         if (::context.isInitialized) context else run { context = createExportContext(parentContext);context }
 
+    //TODO make safe scope (when calling within initialize: , doResume, resume, export, and so on should be all forbidden calls)
+    protected open fun initialize(exportContext: ModelExportContext) {
+        // method is not mandatory and should not provide default implementation
+    }
 
+    //TODO make safe scope (when calling within takeMeasures: , doResume, resume, export, and so on should be all forbidden calls)
     protected open fun takeMeasures(exportContext: ModelExportContext) {
         // method is not mandatory and should not provide default implementation
     }
 
+    //TODO make safe scope (when calling within doExport: , doResume, resume, export, and so on should be all forbidden calls)
     protected abstract fun doExport(exportContext: ModelExportContext)
 
+    //TODO make safe scope (when calling within doResume: , resume, export, doExport and so on should be all forbidden calls)
     protected open fun doResume(exportContext: ModelExportContext, resumeNext: ResumeNext) {
         resumeNext()
     }
 
-    fun createLayoutScope(
+    protected fun createLayoutScope(
         orientation: Orientation = Orientation.HORIZONTAL,
         childLeftTopCorner: Position? = null,
         maxRightBottom: Position? = null,

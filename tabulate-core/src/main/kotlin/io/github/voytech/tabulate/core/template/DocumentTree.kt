@@ -5,15 +5,17 @@ import io.github.voytech.tabulate.core.model.attributes.MarginsAttribute
 import io.github.voytech.tabulate.core.template.layout.*
 
 class Navigation(
-    val root: AbstractModel<*>?,
+    val root: AbstractModel<*>,
     val parent: AbstractModel<*>?,
     val active: AbstractModel<*>,
-    val children: MutableList<AbstractModel<*>> = mutableListOf(),
+    private val children: MutableList<AbstractModel<*>> = mutableListOf(),
 ) {
-    val parentContext: ModelExportContext? = parent?.context
+    val parentContext: ModelExportContext? by lazy { parent?.context }
 
     fun addChild(child: AbstractModel<*>) {
-        children += child
+        if (child != active && child != parent && child != root) {
+            children += child
+        }
     }
 
     fun lookupAncestors(predicate: (ModelExportContext) -> Boolean): ModelExportContext? {
@@ -23,11 +25,33 @@ class Navigation(
         }
         return tmp?.context
     }
+
+    fun onEachChild(block: (AbstractModel<*>) -> Unit) {
+        children.forEach(block)
+    }
+
+    fun traverse(block: (AbstractModel<*>) -> Unit) {
+        block(active).also {
+            onEachChild { it.context.navigation.traverse(block) }
+        }
+    }
+
+    companion object {
+        fun rootNavigation(root: AbstractModel<*>) = Navigation(root, null, root)
+    }
 }
 
 class Layouts(val layoutPolicy: LayoutPolicy) {
-    var renderingLayout: NavigableLayout?  = null
+    var renderingLayout: NavigableLayout? = null
     var measuringLayout: DefaultLayout? = null
+
+    fun drop() {
+        renderingLayout = null
+    }
+
+    companion object {
+        fun rootLayouts() = Layouts(DefaultLayoutPolicy())
+    }
 }
 
 class NavigableLayout(
@@ -80,14 +104,15 @@ class NavigableLayout(
     }
 }
 
-fun ModelExportContext.getClosestLayoutAwareAncestor(): ModelExportContext?  =
-    navigation.lookupAncestors { it.layouts.renderingLayout!=null }
+fun ModelExportContext.getClosestLayoutAwareAncestor(): ModelExportContext? =
+    navigation.lookupAncestors { it.layouts.renderingLayout != null }
+
+fun ModelExportContext.getClosestAncestorLayout(): Layout? = getClosestLayoutAwareAncestor()?.layouts?.renderingLayout
 
 fun ModelExportContext.getEnclosingMaxRightBottom(): Position? =
     getClosestLayoutAwareAncestor()?.layouts?.renderingLayout?.maxRightBottom
 
-fun ModelExportContext.getRenderingLayout(): NavigableLayout?  = layouts.renderingLayout
-
+fun ModelExportContext.getRenderingLayout(): NavigableLayout? = layouts.renderingLayout
 
 fun <R> ModelExportContext.setMeasuringLayout(uom: UnitsOfMeasure, block: (DefaultLayout) -> R): R =
     DefaultLayout(uom, Position.start(uom), getClosestLayoutAwareAncestor()?.getRenderingLayout()?.maxRightBottom).let {
@@ -95,7 +120,7 @@ fun <R> ModelExportContext.setMeasuringLayout(uom: UnitsOfMeasure, block: (Defau
         block(it)
     }
 
-fun ModelExportContext.setLayout(
+internal fun ModelExportContext.setLayout(
     uom: UnitsOfMeasure = UnitsOfMeasure.PT,
     leftTop: Position? = null,
     maxRightBottom: Position? = null,

@@ -13,14 +13,14 @@ class Image(
 ): ModelWithAttributes<Image>() {
 
 
-    override fun doExport(exportContext: ModelExportContext<Image>)  = with(exportContext) {
+    override fun doExport(exportContext: ModelExportContext)  = with(exportContext) {
         createLayoutScope {
-            render(model.asRenderable())
+            render(asRenderable())
         }
     }
 
-    override fun takeMeasures(exportContext: ModelExportContext<Image>) {
-        with(exportContext) { measure(model.asRenderable()) }
+    override fun takeMeasures(exportContext: ModelExportContext) {
+        with(exportContext) { measure(asRenderable()) }
     }
 
     private fun asRenderable(): ImageRenderable = ImageRenderable(filePath, attributes.orEmpty().forContext<ImageRenderable>())
