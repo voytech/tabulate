@@ -7,7 +7,7 @@ enum class DefaultTypeHints: CellType {
     STRING,
     BOOLEAN,
     DATE,
-    IMAGE_URL,
+    IMAGE_URI,
     IMAGE_DATA;
 
     override fun getCellTypeId(): String = name

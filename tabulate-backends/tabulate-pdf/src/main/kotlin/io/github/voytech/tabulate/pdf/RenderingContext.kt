@@ -1,13 +1,15 @@
 package io.github.voytech.tabulate.pdf
 
+import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHintAttribute
+import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
 import io.github.voytech.tabulate.core.model.*
+import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.model.border.Borders
 import io.github.voytech.tabulate.core.model.color.Color
 import io.github.voytech.tabulate.core.template.HavingViewportSize
 import io.github.voytech.tabulate.core.template.RenderingContext
 import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
-import io.github.voytech.tabulate.core.template.operation.boundingBox
+import io.github.voytech.tabulate.core.template.operation.*
 import io.github.voytech.tabulate.core.template.result.OutputBinding
 import io.github.voytech.tabulate.core.template.result.OutputStreamOutputBinding
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat
@@ -86,13 +88,31 @@ class PdfBoxRenderingContext(val document: PDDocument = PDDocument()) : Renderin
         getCurrentContentStream().showText(text)
     }
 
-    fun loadImage(filePath: String):PDImageXObject = PDImageXObject.createFromFile(filePath, document)
+    fun loadImage(filePath: String): PDImageXObject = PDImageXObject.createFromFile(filePath, document)
 
     fun PDImageXObject.showImage(x: Float, y: Float, width: Float?, height: Float?) {
-        if (width!=null && height != null) {
+        if (width != null && height != null) {
             getCurrentContentStream().drawImage(this, x, y, width, height)
         } else
             getCurrentContentStream().drawImage(this, x, y)
+    }
+
+    fun RenderableContext<*>.renderImageFromURI(uri: String) {
+        with(boxLayout(this, getModelAttribute<BordersAttribute>())) {
+            loadImage(uri).showImage(innerX, innerY, inner.width?.value, inner.height?.value)
+        }
+    }
+
+    fun RenderableContext<*>.resolveUriImageBoundingBox(uri: String) {
+        boundingBox()?.let { bbox ->
+            if (!bbox.isDefined()) {
+                val image = loadImage(uri)
+                bbox.apply {
+                    height = height ?: Height(image.height.toFloat(), UnitsOfMeasure.PT)
+                    width = width ?: Width(image.width.toFloat(), UnitsOfMeasure.PT)
+                }
+            }
+        }
     }
 
     fun endText() {
@@ -115,29 +135,40 @@ class PdfBoxRenderingContext(val document: PDDocument = PDDocument()) : Renderin
         }
     }
 
-    fun drawRect(x: Float, y: Float, width: Float, height: Float,color: Color? = null) {
+    fun drawRect(x: Float, y: Float, width: Float, height: Float, color: Color? = null) {
         with(getCurrentContentStream()) {
             saveGraphicsState()
             setNonStrokingColor(color.awtColor())
-            addRect(x, y , width, height)
+            addRect(x, y, width, height)
             fill()
             restoreGraphicsState()
         }
     }
 
-    fun fillPolygon(x: Float, y: Float, x2: Float, y2: Float, x3: Float, y3: Float, x4: Float, y4: Float, color: Color? = null) {
+    fun fillPolygon(
+        x: Float,
+        y: Float,
+        x2: Float,
+        y2: Float,
+        x3: Float,
+        y3: Float,
+        x4: Float,
+        y4: Float,
+        color: Color? = null,
+    ) {
         with(getCurrentContentStream()) {
             saveGraphicsState()
             setNonStrokingColor(color.awtColor())
-            moveTo(x,y)
-            lineTo(x2,y2)
-            lineTo(x3,y3)
-            lineTo(x4,y4)
-            lineTo(x,y)
+            moveTo(x, y)
+            lineTo(x2, y2)
+            lineTo(x3, y3)
+            lineTo(x4, y4)
+            lineTo(x, y)
             fill()
             restoreGraphicsState()
         }
     }
+
     //TODO put it into shared attribute map for caching at first boxLayout access.
     fun <A : AttributedContext> boxLayout(context: A, borders: Borders?): BoxLayout =
         context.boundingBox()?.let { bbox ->

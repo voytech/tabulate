@@ -26,7 +26,7 @@ class PdfTextOperations : OperationsBundleProvider<PdfBoxRenderingContext, Text>
             with(renderingContext) {
                 beginText()
                 val box = renderingContext.boxLayout(context, context.getModelAttribute<BordersAttribute>())
-                setTextPosition(box.innerX + xTextOffset, box.innerY + yTextOffset)
+                setTextPosition(box.innerX + xTextOffset, box.innerY + yTextOffset + context.fontSize().descender())
                 showText(context.text)
                 endText()
             }

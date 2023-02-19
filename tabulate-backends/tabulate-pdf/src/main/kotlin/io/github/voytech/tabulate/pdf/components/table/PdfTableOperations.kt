@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.pdf.components.table
 
 import io.github.voytech.tabulate.components.table.model.Table
+import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.reify
@@ -29,15 +30,23 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
         operation(StartRowOperation { _, _ -> })
 
         // TODO support typeHits
-        // TODO support colspan and rowspan.
         operation(RenderRowCellOperation { renderingContext, context ->
             with(renderingContext) {
-                beginText()
-                // TODO boxModel should be a part of boundingRectangle from library core
-                val box = renderingContext.boxLayout(context, context.getModelAttribute<BordersAttribute>())
-                setTextPosition(box.innerX + xTextOffset, box.innerY + yTextOffset)
-                showText(context.value.toString())
-                endText()
+                context.getTypeHint().let {
+                    if (it?.type == DefaultTypeHints.IMAGE_URI) {
+                        context.renderImageFromURI(context.value.toString())
+                    } else {
+                        beginText()
+                        // TODO boxModel should be a part of boundingRectangle from library core
+                        val box = renderingContext.boxLayout(context, context.getModelAttribute<BordersAttribute>())
+                        setTextPosition(
+                            box.innerX + xTextOffset,
+                            box.innerY + yTextOffset + context.fontSize().descender()
+                        )
+                        showText(context.value.toString())
+                        endText()
+                    }
+                }
             }
         })
         operation(EndRowOperation<PdfBoxRenderingContext, Table<Any>> { _, _ ->
@@ -53,10 +62,19 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
         operation(StartTableOperation { _, _ -> }) // TODO fix table template to make it not requiring empty operations.
         operation(StartColumnOperation { _, _ -> })
         operation(StartRowOperation { _, _ -> })
-        operation(RenderRowCellOperation { _, context -> context.resolveTextBoundingBox() })
+        operation(RenderRowCellOperation { renderingContext, context ->
+            with(renderingContext) {
+                context.getTypeHint().let {
+                    if (it?.type == DefaultTypeHints.IMAGE_URI) {
+                        context.resolveUriImageBoundingBox(context.value.toString())
+                    } else context.resolveTextBoundingBox()
+                }
+            }
+        })
         operation(EndRowOperation<PdfBoxRenderingContext, Table<Any>> { _, _ -> })
         operation(EndColumnOperation { _, _ -> })
-        operation(EndTableOperation { _, _ -> })    }
+        operation(EndTableOperation { _, _ -> })
+    }
 
     override fun getDocumentFormat(): DocumentFormat<PdfBoxRenderingContext> = DocumentFormat.format("pdf", "pdfbox")
 

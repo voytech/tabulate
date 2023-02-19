@@ -71,9 +71,9 @@ class AlignmentAttributeRenderOperation<CTX> :
         horizontal: HorizontalAlignment? = DefaultHorizontalAlignment.CENTER,
     ) {
         val bbox = boxLayout(context, context.getModelAttribute<BordersAttribute>())
+        val fontAndSize = context.fontSize()
         var xOffset = 0.0F
         var yOffset = 0.0F
-        val fontAndSize = context.fontAndSize()
         if (vertical != null) {
             val textHeight = fontAndSize.measureTextHeight()
             when (vertical) {
@@ -125,7 +125,7 @@ class TextStylesAttributeRenderOperation<CTX : AttributedContext> :
     ) = with(renderingContext) {
         getCurrentContentStream().let { content ->
             beginText()
-            context.fontAndSize().let { fontAndSize ->
+            context.fontSize().let { fontAndSize ->
                 setFont(fontAndSize.font(), fontAndSize.size().toFloat())
                 content.setNonStrokingColor(attribute.fontColor.awtColor())
                 val ident: Int = attribute.ident?.toInt() ?: 0
@@ -529,19 +529,37 @@ fun <A, V> A.resolveTextBoundingBox(): LayoutElementBoundingBox? where A : Attri
     }
 }
 
+
 @JvmInline
-value class FontAndSize(private val inner: Pair<PDFont, Int>) {
+value class FontMeasurements(private val inner: Pair<PDFont, Int>) {
+
     fun font(): PDFont = inner.first
+
     fun size(): Int = inner.second
+
+    private fun capHeight(): Float = font().fontDescriptor.capHeight
+
+    private fun descent(): Float = font().fontDescriptor.descent * -1
+
+    fun descender(): Float = descent() / 1000 * size()
+
+    fun measureTextHeight(): Float =
+        (capHeight() + (2 * descent())) / 1000 * size()
+
+    fun measureTextWidth(string: String): Float =
+        width(string) / 1000 * size()
+
+    private fun width(string: String): Float = font().getStringWidth(string)
+
 }
 
-fun <A : AttributedContext> A.fontAndSize(): FontAndSize =
+fun <A : AttributedContext> A.fontSize(): FontMeasurements =
     getModelAttribute<TextStylesAttribute>().let {
-        FontAndSize((it?.pdFont() ?: PDType1Font.HELVETICA) to (it?.fontSize ?: 10))
+        FontMeasurements((it?.pdFont() ?: PDType1Font.HELVETICA) to (it?.fontSize ?: 10))
     }
 
 fun <A, V> A.measureText(uom: UnitsOfMeasure): Size where A : AttributedContext, A : HasValue<V> =
-    fontAndSize().let {
+    fontSize().let {
         Size(
             Width(it.measureTextWidth(this.value.toString()), UnitsOfMeasure.PT),
             Height(it.measureTextHeight(), UnitsOfMeasure.PT) // ???
@@ -555,9 +573,3 @@ fun <A : AttributedContext> A.measureBorders(uom: UnitsOfMeasure): Size =
             Height((borders.bottomBorderWidth + borders.topBorderWidth).switchUnitOfMeasure(uom).value, uom)
         )
     } ?: Size(Width.zero(uom), Height.zero(uom))
-
-fun FontAndSize.measureTextHeight(): Float =
-    (font().fontDescriptor.capHeight - font().fontDescriptor.descent) / 1000 * size()
-
-fun FontAndSize.measureTextWidth(string: String): Float =
-    font().getStringWidth(string) / 1000 * size()

@@ -7,10 +7,7 @@ import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.asXPosition
 import io.github.voytech.tabulate.core.model.asYPosition
 import io.github.voytech.tabulate.core.template.layout.*
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
-import io.github.voytech.tabulate.core.template.operation.Context
-import io.github.voytech.tabulate.core.template.operation.HasValue
-import io.github.voytech.tabulate.core.template.operation.RenderableContext
+import io.github.voytech.tabulate.core.template.operation.*
 
 /**
  * Basic interface providing custom attributes that are shared throughout entire exporting process.

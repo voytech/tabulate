@@ -28,14 +28,7 @@ class PdfImageOperations : OperationsBundleProvider<PdfBoxRenderingContext, Imag
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {
         operation(ImageOperation { renderingContext, context ->
             with(renderingContext) {
-                with(renderingContext.boxLayout(context, context.getModelAttribute<BordersAttribute>())) {
-                    loadImage(context.filePath).showImage(
-                        innerX,
-                        innerY,
-                        inner.width?.value,
-                        inner.height?.value
-                    )
-                }
+                context.renderImageFromURI(context.imageUri)
             }
         })
     }

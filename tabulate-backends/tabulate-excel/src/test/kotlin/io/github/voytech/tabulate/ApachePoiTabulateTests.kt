@@ -577,7 +577,7 @@ class ApachePoiTabulateTests {
                     cell { value = "It is : " }
                     cell {
                         value = "src/test/resources/kotlin.jpeg"
-                        typeHint { DefaultTypeHints.IMAGE_URL }
+                        typeHint { DefaultTypeHints.IMAGE_URI }
                     }
                 }
             }

@@ -102,3 +102,7 @@ interface HasValue<V: Any> {
 }
 
 interface HasText: HasValue<String>
+
+interface HasImage {
+    val imageUri: String
+}

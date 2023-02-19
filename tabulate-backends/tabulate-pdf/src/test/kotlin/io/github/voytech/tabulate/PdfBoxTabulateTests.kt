@@ -8,6 +8,7 @@ import io.github.voytech.tabulate.components.page.api.builder.dsl.page
 import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
+import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
 import io.github.voytech.tabulate.components.table.template.AdditionalSteps
 import io.github.voytech.tabulate.components.text.api.builder.dsl.*
 import io.github.voytech.tabulate.components.text.api.builder.dsl.alignment
@@ -107,6 +108,45 @@ class PdfBoxTabulateTests {
     }
 
     @Test
+    fun `should correctly export single table with different cell types`() {
+        document {
+            page {
+                table<Unit> {
+                    attributes {
+                        margins { left { 5.pt() } ; top { 5.pt() } }
+                        borders {
+                            all {
+                                width = 0.5.pt()
+                                style = DefaultBorderStyle.SOLID
+                                color = Colors.LIGHT_GRAY
+                            }
+                        }
+                    }
+                    rows {
+                        newRow {
+                            attributes { alignment { vertical = DefaultVerticalAlignment.MIDDLE } }
+                            cell { value = BigDecimal.valueOf(10.345) }
+                            cell { value = true }
+                            cell { value = 1000 }
+                            cell { value = "text" }
+                            cell { value = 100.34F }
+                            cell { value = 'c' }
+                            cell { value = 34.toUByte() }
+                            cell { value = (-34).toByte() }
+                            cell { value = 34.toUShort() }
+                            cell { value = (-34).toShort() }
+                            cell {
+                                value = "src/test/resources/dot.png"
+                                typeHint { DefaultTypeHints.IMAGE_URI }
+                            }
+                        }
+                    }
+                }
+            }
+        }.export("table_cell_types.pdf")
+    }
+
+    @Test
     fun `should correctly export single table on multiple pages`() {
         val firstPage: (PageBuilderApi.() -> Unit) = {
             header {
@@ -184,6 +224,11 @@ class PdfBoxTabulateTests {
                         cell(SampleProduct::code) {
                             colSpan = 2
                             value = "Mid row col span = 2"
+                            attributes {
+                                alignment {
+                                    horizontal = DefaultHorizontalAlignment.CENTER
+                                }
+                            }
                         }
                         cell(SampleProduct::description) { value = "Mid row Description" }
                         cell(SampleProduct::price) { }
@@ -703,6 +748,7 @@ class PdfBoxTabulateTests {
     fun `should correctly export two pages`() {
         document {
             page {
+                text { value = "First page" }
                 text { value = "First page" }
             }
             page {
