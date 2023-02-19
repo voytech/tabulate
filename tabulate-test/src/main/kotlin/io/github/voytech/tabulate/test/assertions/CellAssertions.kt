@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.test.assertions
 
-import io.github.voytech.tabulate.template.operations.CellValue
+import io.github.voytech.tabulate.components.table.operation.CellValue
 import io.github.voytech.tabulate.test.ValueTest
 import java.util.zip.CRC32
 import kotlin.test.assertEquals

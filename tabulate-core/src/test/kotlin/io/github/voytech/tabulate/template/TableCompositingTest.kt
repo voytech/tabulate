@@ -1,17 +1,16 @@
 package io.github.voytech.tabulate.template
 
-import io.github.voytech.tabulate.api.builder.dsl.table
-import io.github.voytech.tabulate.api.builder.dsl.plus
-import io.github.voytech.tabulate.api.builder.dsl.typedTable
+import io.github.voytech.tabulate.components.table.api.builder.dsl.*
+import io.github.voytech.tabulate.core.template.DocumentFormat
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
-import io.github.voytech.tabulate.model.attributes.Colors
-import io.github.voytech.tabulate.model.attributes.cell.CellTextStylesAttribute
-import io.github.voytech.tabulate.model.attributes.cell.text
-import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
-import io.github.voytech.tabulate.model.attributes.column.width
+import io.github.voytech.tabulate.core.model.color.Colors
+import io.github.voytech.tabulate.components.table.operation.*
+import io.github.voytech.tabulate.components.table.template.export
+import io.github.voytech.tabulate.components.table.template.tabulate
+import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
+import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
 import io.github.voytech.tabulate.support.Spy
-import io.github.voytech.tabulate.template.operations.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
@@ -30,7 +29,7 @@ class TableCompositingTest {
             columns {
                 column(0) {
                     attributes {
-                        width { px = 45 }
+                        width { 45.px() }
                     }
                 }
             }
@@ -45,25 +44,25 @@ class TableCompositingTest {
                 }
             }
         }
-        (customTable + overrideTable).export(TabulationFormat("spy"), Unit)
+        (customTable + overrideTable).export(DocumentFormat("spy"), Unit)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableStart).getSheetName()) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
         // Column 0 attribute
-        history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("I gave a value.", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("I gave a value.", (context as CellContext).value) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
-        history.next().run { assertTrue(context is RowClosingContext<*>) }
+        history.next().run { assertTrue(context is RowEnd<*>) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertIs<TableClosingContext>(context) }
+        history.next().run { assertEquals(0, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertIs<TableEnd>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -77,7 +76,7 @@ class TableCompositingTest {
             columns {
                 column(0) {
                     attributes {
-                        width { px = 45 }
+                        width { 45.px() }
                     }
                 }
             }
@@ -88,29 +87,29 @@ class TableCompositingTest {
                 column(Product::code)
             }
         }
-        Products.items(1).tabulate(TabulationFormat("spy"), Unit,customTable + overrideTable)
+        Products.items(1).tabulate(DocumentFormat("spy"), Unit,customTable + overrideTable)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableStart).getSheetName()) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
         // Column 0 attribute
-        history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Column 1
-        history.next().run { assertEquals(1, (context as ColumnOpeningContext).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStart).columnIndex) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("code1", (context as CellContext).value) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
-        history.next().run { assertTrue(context is RowClosingContext<*>) }
+        history.next().run { assertTrue(context is RowEnd<*>) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnEnd).columnIndex) }
         // Column 1
-        history.next().run { assertEquals(1, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertIs<TableClosingContext>(context) }
+        history.next().run { assertEquals(1, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertIs<TableEnd>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -124,7 +123,7 @@ class TableCompositingTest {
             columns {
                 column(Product::code) {
                     attributes {
-                        width { px = 45 }
+                        width { 45.px() }
                     }
                 }
             }
@@ -135,34 +134,34 @@ class TableCompositingTest {
                 column(Product::name)
             }
         }
-        Products.items(1).tabulate(TabulationFormat("spy"), Unit,baseTable + overrideTable)
+        Products.items(1).tabulate(DocumentFormat("spy"), Unit,baseTable + overrideTable)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableStart).getSheetName()) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
         // Column 0 attribute
-        history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Column 1
-        history.next().run { assertEquals(1, (context as ColumnOpeningContext).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStart).columnIndex) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("code1", (context as CellContext).value) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
         // Row 0, cell 1
-        history.next().run { assertEquals("name1", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("name1", (context as CellContext).value) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
-        history.next().run { assertTrue(context is RowClosingContext<*>) }
+        history.next().run { assertTrue(context is RowEnd<*>) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnEnd).columnIndex) }
         // Column 1
-        history.next().run { assertEquals(1, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertIs<TableClosingContext>(context) }
+        history.next().run { assertEquals(1, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertIs<TableEnd>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -176,30 +175,30 @@ class TableCompositingTest {
             columns {
                 column(Product::code) {
                     attributes {
-                        width { px = 45 }
+                        width { 45.px() }
                     }
                 }
             }
         }
-        Products.items(1).tabulate(TabulationFormat("spy"), Unit,baseTable + typedTable { name = "Name override" })
+        Products.items(1).tabulate(DocumentFormat("spy"), Unit,baseTable + typedTable { name = "Name override" })
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableOpeningContext).getTableId()) }
+        history.next().run { assertEquals("Name override", (context as TableStart).getSheetName()) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnOpeningContext).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStart).columnIndex) }
         // Column 0 attribute
-        history.next().run { assertEquals(45, (attribute as ColumnWidthAttribute).px) }
+        history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowOpeningContext).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStart).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("code1", (context as CellContext).rawValue) }
+        history.next().run { assertEquals("code1", (context as CellContext).value) }
         history.next().run {
-            assertEquals(Colors.BLACK, (attribute as CellTextStylesAttribute).fontColor)
+            assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
-        history.next().run { assertTrue(context is RowClosingContext<*>) }
+        history.next().run { assertTrue(context is RowEnd<*>) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnClosingContext).columnIndex) }
-        history.next().run { assertIs<TableClosingContext>(context) }
+        history.next().run { assertEquals(0, (context as ColumnEnd).columnIndex) }
+        history.next().run { assertIs<TableEnd>(context) }
         assertFalse(history.hasNext())
     }
 

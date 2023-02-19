@@ -320,7 +320,8 @@ In order to support new tabular file format you will have to:
 
 - Create `RenderingContext` class. It represents internal state and low-level API to communicate with 3rd party library like Apache POI. Object of that class is passed to all table export operations as well as to all attribute rendering operations that are registered by `ServiceLoader` infrastructure. Such common denominator element is required in order to enable table modifications coming from within various render operations.
 - Create `OutputBinding` class. It defines transformation of `RenderingContext` into different kind out outputs. By separating `OutputBinding` from `RenderingContext` we can enable multiple outputs for particular `RenderingContext` class dynamically.
-- Define `ExportOperationsProvider` or `ExportOperationsFactory` depending on your scenario. If You don't need to decouple attribute operations from table export operations (e.g., because supported format does not assumes attributes at all) You can implement `ExportOperationsProvider` interface and define all rendering logic in single class. For cases, where attributes needs to be rendered independently (e.g., because You want to support user-defined attributes) it is advised to extend `ExportOperationsFactory`. For both scenarios You will have to create file `resource/META-INF/io.github.voytech.tabulate.template.spi.ExportOperationsProvider`, and put fully qualified class name of your custom factory in the first line. **This step is required by a template in order to resolve your extension at run-time**.
+- Create `OutputBindingsProvider` that holds set of all supported output bindings. Then put its fully qualified class name into `io.github.voytech.document.template.spi.OutputBindingsProvider`
+- Define `ExportOperationsFactory` and put its fully qualified class name into  `resource/META-INF/io.github.voytech.document.template.spi.ExportOperationsProvider`, and put fully qualified class name of your custom factory in the first line. **This step is required by a template in order to resolve your extension at run-time**.
 
 <<<
 Below, basic CSV export operations implementation:
@@ -352,25 +353,38 @@ class CsvOutputStreamOutputBinding : OutputStreamOutputBinding<CsvRenderingConte
     }
 }
 ----
-<1> The `.onBind` method is called internally by `TabulationTemplate` as soon as both: output and rendering context instances are available. It connects rendering context with particular output and allows implementing flush logic.
+<1> The `.onBind` method is called internally by `TableExport` as soon as both: output and rendering context instances are available. It connects rendering context with particular output and allows implementing flush logic.
 <2> The `.flush` dumps in-memory rendering context into given output.
+
+Then You need to define provider exposing all compatible OutputBindings instances.
+[source,kotlin,options="nowrap"]
+----
+class CsvOutputBindingsProvider : OutputBindingsProvider<CsvRenderingContext> {
+    override fun createOutputBindings(): List<OutputBinding<CsvRenderingContext, *>> = listOf(
+        CsvOutputStreamOutputBinding()
+    )
+
+    override fun getDocumentFormat(): DocumentFormat<CsvRenderingContext> =
+        DocumentFormat.format("csv")
+
+}
+----
 
 <<<
 Finally, we are implementing `ExportOperationsFactory` compatible with `RenderingContext` of choice:
 [source,kotlin,options="nowrap"]
 ----
-class CsvExportOperationsFactory: ExportOperationsFactory<CsvRenderingContext>() {
-    // <1>
-    override fun getTabulationFormat(): TabulationFormat<CsvRenderingContext> =
-        format("csv", CsvRenderingContext::class.java)
+class CsvExportOperationsFactory : ExportOperationsFactory<CsvRenderingContext, Table<*>>() {
+
+    override fun getDocumentFormat(): DocumentFormat<CsvRenderingContext> =
+        format("csv") // <1>
+
     // <2>
-    override fun provideExportOperations(): OperationsBuilder<CsvRenderingContext>.() -> Unit = {
-
-        openRow = OpenRowOperation { renderingContext, _ ->
+    override fun provideExportOperations(): OperationsBuilder<CsvRenderingContext, Table<*>>.() -> Unit = {
+        operation(OpenRowOperation { renderingContext, _ ->
             renderingContext.line.clear()
-        }
-
-        closeRow = CloseRowOperation { renderingContext, context ->
+        })
+        operation(CloseRowOperation { renderingContext, context ->
             val lastIndex = context.rowCellValues.size - 1
             with(renderingContext) {
                 context.rowCellValues.values.forEachIndexed { index, cell ->
@@ -380,19 +394,19 @@ class CsvExportOperationsFactory: ExportOperationsFactory<CsvRenderingContext>()
                 bufferedWriter.write(line.toString())
                 bufferedWriter.newLine()
             }
-        }
-
+        })
     }
+    // <3>
+    override fun getAggregateModelClass(): Class<Table<*>> = reify()
 
     private fun CellContext.getSeparatorCharacter(): String =
         getModelAttribute(CellSeparatorCharacterAttribute::class.java)?.separator ?: ","
-    // <3>
-    override fun createOutputBindings(): List<OutputBinding<CsvRenderingContext, *>> = listOf(CsvOutputStreamOutputBinding())
+
 }
 ----
-<1> Define `TabulationFormat` first. It consists from `RenderingContext` class and provider id string,
-<2> This is the most important step. *Here we implement actual table rendering logic*. We need to provide operations that transform captured context models using `RenderingContext`. We can use only those operation classes that are required by our provider. We can also use all of them: `openTable`, `openColumn`, `openRow`, `renderRowCell`, `closeRow`, `closeColumn`, `closeTable`.
-<3> Finally - we need to provide list of supported outputs. Bare minimum should be at least `OutputStreamOutputBinding`.
+<1> Define `DocumentFormat` first. It consists from `RenderingContext` class and provider id string,
+<2> This is the most important step. *Here we implement actual table rendering logic*. We need to provide operations that transform captured context models using `RenderingContext`.
+<3> Finally - we need to provide class name for supported [AggregateRootModel]. This class is a top level model which is going to be exported by all previously defined operation implementations.
 
 <<<
 If target tabular format supports styles, You may add support for rendering built-in attributes as follows:
@@ -428,7 +442,7 @@ class ExampleExportOperationsConfiguringFactory : ExportOperationsConfiguringFac
 }
 ----
 Factory class `StandardAttributeOperationsFactory` exposes API which assumes specific standard library attributes.
-If your file format allow additional attributes which are not present in standard library (tabulate-core), you may use `AttributeOperationsFactory` interface directly, or fill additional constructor properties on `StandardAttributeOperationsFactory` as below:
+If your file format allow additional attributes which are not present in standard library (tabulate-core), you may use `AttributeOperationsProvider` interface directly, or fill additional constructor properties on `StandardAttributeOperationsFactory` as below:
 
 [source,kotlin,options="nowrap"]
 ----
@@ -457,11 +471,11 @@ data class MarkerCellAttribute(val text: String) : CellAttribute<MarkerCellAttri
     }
 }
 
-class SimpleMarkerCellAttributeRenderOperation  : CellAttributeRenderOperation<ApachePoiRenderingContext, SimpleTestCellAttribute>  {
+class SimpleMarkerCellAttributeRenderOperation  : CellAttributeRenderOperation<ApachePoiRenderingContext, SimpleTestCellAttribute>()  {
 
-    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = ApachePoiRenderingContext::class.java
+    override fun renderingContextClass(): Class<ApachePoiRenderingContext> = reify()
 
-    override fun attributeType(): Class<MarkerCellAttribute> = MarkerCellAttribute::class.java
+    override fun attributeClass(): Class<MarkerCellAttribute> = reify()
 
     override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowCellContext, attribute: MarkerCellAttribute) {
         with(renderingContext.assertCell(context.getTableId(), context.rowIndex, context.columnIndex)) {
@@ -474,7 +488,7 @@ fun <T> CellLevelAttributesBuilderApi<T>.label(block: MarkerCellAttribute.Builde
     attribute(MarkerCellAttribute.Builder().apply(block))
 ----
 
-Finally, You need to create file `resource/META-INF/io.github.voytech.tabulate.template.operations.AttributeOperation`, and put fully qualified class name of your `AttributeOperation` into it.
+At the end, You need to create file `resource/META-INF/io.github.voytech.document.template.operation.AttributeOperation`, and put fully qualified class name of your `AttributeOperation` into it.
 
 === Extending Table DSL API
 
@@ -547,7 +561,7 @@ List<Employee> employeeList = Collections.singletonList(new Employee("#00010", "
 new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream("employees.xlsx"), employeeTable);
 ----
 <1> As a first step, You have to declare table definition using Java `FluentTableBuilderApi`
-<2> Now You have to pass table definition into `TabulationTemplate` in order to export data with declared tabular layout.
+<2> Now You have to pass table definition into `TableExport` in order to export data with declared tabular layout.
 
 <<<
 == Library of attributes.
@@ -659,7 +673,7 @@ This section does not cover consumer API, but instead focuses entirely on intern
 === `Template and operations` pattern.
 
 Library sole purpose is to provide means for data exporting. This goal is achieved through simple, intuitive pattern of a template class dispatching workload to managed, pluggable operations.
-A template which is referred to as `TabulationTemplate` iterates lazily through `RowContextResolver` progressing each time, when next row context is requested by `TabulationApi`.
+A template which is referred to as `TableExport` iterates lazily through `RowContextResolver` progressing each time, when next row context is requested by `TabulationApi`.
 
 Consumer interaction with library may go through `TabulationApi` and then it looks as follows:
 
@@ -669,7 +683,7 @@ Consumer interaction with library may go through `TabulationApi` and then it loo
  - *request next row rendering*. As mentioned above, each time next row is requested, `RowContextResolver` takes row coordinates as well as additional properties and attributes, then it computes *row context* that is immediately rendered by specific operation implementation. There are certain rules regarding *row context* computation that forms unique algorithm which will be explained in following sections in more details.
 
 Consumer interaction may be also simplified by using extension method on exported collection or custom table builder.
-In fact this should be leading usage scenario. In this scenario `TabulationApi` calls are wrapped by extension method on `TabulationTemplate`.
+In fact this should be leading usage scenario. In this scenario `TabulationApi` calls are wrapped by extension method on `TableExport`.
 
 <<<
 === Builder materialization.
@@ -706,9 +720,9 @@ Please note that during `SyntheticRow` resolution only row level cell and row at
 === Row context resolution.  [[row_context_resolution]]
 Row context resolution is the final step of completing row data before dispatching to third party operation code. During this step, couple of intermediate contexts are produced:
 
- - `RowOpeningContext` - a context containing row coordinate (only row index) plus associated row attributes. 'AbstractRowContextResolver' notifies `TabulationTemplate` about completing `RowOpeningContext` using `RowCompletionListener`. Specific operation implementation associated with this type of context (`RowOpeningContext`) can be invoked even before having all row associated data.
- - `CellContext` - a context holding `CellValue` with all associated cell attributes (merged all level attributes: table, column, row and cell). Similarly to `RowOpeningContext` - `AbstractRowContextResolver` uses `RowCompletionListener` in order to notify `TabulationTemplate` about each `CellContext` when it is ready for rendering by corresponding operation implementation.
- - `RowClosingContext` - a context with complete row data. It contains all row attributes together with all cell values (also with attributes). As long as `RowClosingContext` is the last step it is also the value returned from `AbstractRowContextResolver.resolve(...)` method.
+ - `RowStart` - a context containing row coordinate (only row index) plus associated row attributes. 'AbstractRowContextResolver' notifies `TableExport` about completing `RowStart` using `RowCompletionListener`. Specific operation implementation associated with this type of context (`RowStart`) can be invoked even before having all row associated data.
+ - `CellContext` - a context holding `CellValue` with all associated cell attributes (merged all level attributes: table, column, row and cell). Similarly to `RowStart` - `AbstractRowContextResolver` uses `RowCompletionListener` in order to notify `TableExport` about each `CellContext` when it is ready for rendering by corresponding operation implementation.
+ - `RowEnd` - a context with complete row data. It contains all row attributes together with all cell values (also with attributes). As long as `RowEnd` is the last step it is also the value returned from `AbstractRowContextResolver.resolve(...)` method.
 
 <<<
 === Rendering operations dispatching.
@@ -740,13 +754,13 @@ interface AttributeOperation<CTX : RenderingContext, ATTR_CAT : Attribute<*>, AT
     }
 }
 ----
-`AttributeOperation` is next level abstraction. It is used to render each attribute from `AttributedModel` context. The `AttributeOperation` dispatching can be achieved by `AttributesHandlingOperation` wrapper that is responsible for resolving all `AttributeOperations` and matching them with corresponding attributes.
+`AttributeOperation` is next level abstraction. It is used to render each attribute from `AttributedContext` context. The `AttributeOperation` dispatching can be achieved by `AttributesAwareExportOperation` wrapper that is responsible for resolving all `AttributeOperations` and matching them with corresponding attributes.
 
 Now some more words on `operation contexts`.
 
 As can be seen on above code snippets, operation context instance is an object that is passed to operation for rendering purposes. Operation context class determines specific operation applicability, because operation can be invoked only when context is present in scope. In <<row_context_resolution>> You saw that there are three different context classes around row rendering, but in fact there are more context classes present alongside the process.
 
-Have a look at the contract of `OperationsBuilder`. Here we can see all available operation interfaces. Each interface extends base `Operation` interface by filling in corresponding `AttributedModel` context class:
+Have a look at the contract of `OperationsBuilder`. Here we can see all available operation interfaces. Each interface extends base `Operation` interface by filling in corresponding `AttributedContext` context class:
 
 [source,kotlin, options="nowrap"]
 ----
@@ -760,22 +774,22 @@ class OperationsBuilder<CTX : RenderingContext> {
     var renderRowCell: RenderRowCellOperation<CTX>? = RenderRowCellOperation { _, _ -> } // <7>
 }
 ----
-<1> `OpenTableOperation` is defined as: `fun interface OpenTableOperation<CTX : RenderingContext> : Operation<CTX, TableAttribute<*>, TableOpeningContext>`
-<2> `CloseTableOperation` is defined as: `fun interface CloseTableOperation<CTX : RenderingContext> : Operation<CTX, TableAttribute<*>, TableClosingContext>`
-<3> `OpenColumnOperation` is defined as: `fun interface OpenColumnOperation<CTX : RenderingContext> : Operation<CTX, ColumnAttribute<*>, ColumnOpeningContext>`
-<4> `CloseColumnOperation` is defined as: `fun interface CloseColumnOperation<CTX : RenderingContext> : Operation<CTX, ColumnAttribute<*>, ColumnClosingContext>`
-<5> `OpenRowOperation` is defined as: `fun interface OpenRowOperation<CTX : RenderingContext> : Operation<CTX, RowAttribute<*>, RowOpeningContext>`
-<6> `CloseRowOperation` is defined as: `fun interface CloseRowOperation<CTX : RenderingContext> : Operation<CTX, RowAttribute<*>, RowClosingContext<*>>`
+<1> `StartTableOperation` is defined as: `fun interface OpenTableOperation<CTX : RenderingContext> : Operation<CTX, TableAttribute<*>, TableOpeningContext>`
+<2> `EndTableOperation` is defined as: `fun interface CloseTableOperation<CTX : RenderingContext> : Operation<CTX, TableAttribute<*>, TableClosingContext>`
+<3> `StartColumnOperation` is defined as: `fun interface OpenColumnOperation<CTX : RenderingContext> : Operation<CTX, ColumnAttribute<*>, ColumnOpeningContext>`
+<4> `EndColumnOperation` is defined as: `fun interface CloseColumnOperation<CTX : RenderingContext> : Operation<CTX, ColumnAttribute<*>, ColumnClosingContext>`
+<5> `StartRowOperation` is defined as: `fun interface OpenRowOperation<CTX : RenderingContext> : Operation<CTX, RowAttribute<*>, RowOpeningContext>`
+<6> `EndRowOperation` is defined as: `fun interface CloseRowOperation<CTX : RenderingContext> : Operation<CTX, RowAttribute<*>, RowClosingContext<*>>`
 <7> `RenderRowCellOperation` is defined as: `fun interface RenderRowCellOperation<CTX : RenderingContext> : Operation<CTX, CellAttribute<*>, CellContext>`
 
 Order of appearance:
 
- - `TableOpeningContext` and `OpenTableOperation`,
- - `ColumnOpeningContext` and `OpenColumnOperation`,
- - `RowOpeningContext` and `OpenRowOperation`,
+ - `TableStart` and `StartTableOperation`,
+ - `ColumnStart` and `StartColumnOperation`,
+ - `RowStart` and `StartRowOperation`,
  - `CellContext` and `RenderRowCellOperation`,
- - `RowClosingContext` and `CloseRowOperation`,
- - `TableClosingContext` and `CloseTableOperation`.
+ - `RowEnd` and `EndRowOperation`,
+ - `TableEnd` and `EndTableOperation`.
 
 <<<
 == Cookbook recipes.

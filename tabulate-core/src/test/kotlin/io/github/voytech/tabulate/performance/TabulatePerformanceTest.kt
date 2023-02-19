@@ -1,45 +1,49 @@
 package io.github.voytech.tabulate.performance
 
-import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
-import io.github.voytech.tabulate.model.Table
-import io.github.voytech.tabulate.template.iterators.RowContextIterator
-import io.github.voytech.tabulate.template.resolvers.AbstractRowContextResolver
-import io.github.voytech.tabulate.template.resolvers.AccumulatingRowContextResolver
+import io.github.voytech.tabulate.components.table.api.builder.dsl.createTableBuilder
+import io.github.voytech.tabulate.components.table.model.Table
+import io.github.voytech.tabulate.components.table.template.AbstractRowContextResolver
+import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
+import io.github.voytech.tabulate.components.table.template.OverflowOffsets
+import io.github.voytech.tabulate.components.table.template.RowContextIterator
+import io.github.voytech.tabulate.core.model.StateAttributes
+import io.github.voytech.tabulate.support.createTableContext
+import io.github.voytech.tabulate.support.successfulRowComplete
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.system.measureTimeMillis
 
 class TabulatePerformanceTest {
 
-    internal data class Wrapper<T>(
+    internal data class Wrapper<T: Any>(
         val iterator: RowContextIterator<T>,
         val resolver: AbstractRowContextResolver<T>,
         val customAttributes: Map<String, Any>
     )
 
-    private fun <T> createSlowIterator(table: Table<T>): Wrapper<T> =
+    private fun <T: Any> createSlowIterator(table: Table<T>): Wrapper<T> =
         mutableMapOf<String, Any>().let {
             it to SlowRowResolver(table, it)
         }.let {
             Wrapper(
-                iterator = RowContextIterator(it.second),
+                iterator = RowContextIterator(it.second,OverflowOffsets(),table.createTableContext(it.first)),
                 resolver = it.second,
                 customAttributes = it.first
             )
         }
 
-    private fun <T> createFastIterator(table: Table<T>): Wrapper<T> =
+    private fun <T: Any> createFastIterator(table: Table<T>): Wrapper<T> =
         mutableMapOf<String, Any>().let {
-            it to AccumulatingRowContextResolver(table, it)
+            it to AccumulatingRowContextResolver(table, StateAttributes(it), OverflowOffsets(), successfulRowComplete())
         }.let {
             Wrapper(
-                iterator = RowContextIterator(it.second),
+                iterator = RowContextIterator(it.second, OverflowOffsets(),table.createTableContext(it.first)),
                 resolver = it.second,
                 customAttributes = it.first
             )
         }
 
-    private fun <T> createTableDefinition(): Table<T> {
+    private fun <T: Any> createTableDefinition(): Table<T> {
         return createTableBuilder<T> {
             columns {
                 column("c-1")

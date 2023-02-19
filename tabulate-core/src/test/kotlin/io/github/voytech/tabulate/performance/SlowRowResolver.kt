@@ -1,23 +1,21 @@
 package io.github.voytech.tabulate.performance
 
-import io.github.voytech.tabulate.model.RowDef
-import io.github.voytech.tabulate.model.SourceRow
-import io.github.voytech.tabulate.model.Table
-import io.github.voytech.tabulate.template.context.RowIndex
-import io.github.voytech.tabulate.template.operations.RowClosingContext
-import io.github.voytech.tabulate.template.operations.createCellContext
-import io.github.voytech.tabulate.template.operations.createRowOpening
-import io.github.voytech.tabulate.template.operations.asRowClosing
-import io.github.voytech.tabulate.template.resolvers.AbstractRowContextResolver
-import io.github.voytech.tabulate.template.resolvers.IndexedContext
-import io.github.voytech.tabulate.template.resolvers.RowCompletionListener
-import io.github.voytech.tabulate.template.resolvers.SyntheticRow
+import io.github.voytech.tabulate.components.table.model.RowDef
+import io.github.voytech.tabulate.components.table.model.SourceRow
+import io.github.voytech.tabulate.components.table.model.Table
+import io.github.voytech.tabulate.components.table.operation.RowEnd
+import io.github.voytech.tabulate.components.table.operation.createRowEnd
+import io.github.voytech.tabulate.components.table.operation.createCellContext
+import io.github.voytech.tabulate.components.table.operation.createRowStart
+import io.github.voytech.tabulate.components.table.template.*
+import io.github.voytech.tabulate.core.model.StateAttributes
 
-internal class SlowRowResolver<T>(
+internal class SlowRowResolver<T: Any>(
     private val tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
-    listener: RowCompletionListener<T>? = null
-): AbstractRowContextResolver<T>(tableModel, customAttributes, listener) {
+    offsets: OverflowOffsets = OverflowOffsets(),
+    listener: CaptureRowCompletion<T>? = null
+): AbstractRowContextResolver<T>(tableModel, StateAttributes(customAttributes), offsets, listener) {
 
     private val customRows = tableModel.rows?.filter { it.qualifier.index != null }
     private val rowsWithPredicates = tableModel.rows?.filter { it.qualifier.matching != null }
@@ -42,25 +40,23 @@ internal class SlowRowResolver<T>(
     private fun resolveAttributedRow(
         tableRowIndex: RowIndex,
         record: IndexedValue<T>? = null
-    ): RowClosingContext<T> {
+    ): ContextResult<RowEnd<T>> {
         return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
             val rowDefinitions = getRows(sourceRow)
             with(SyntheticRow(tableModel, rowDefinitions)) {
-                createRowOpening(rowIndex = tableRowIndex.value, customAttributes = customAttributes).notify()
-                    .let {
-                        it.asRowClosing(
-                            mapEachCell { row, column ->
-                                row.createCellContext(row = sourceRow, column = column, customAttributes)?.notify()
-                            }
-                        )
-                    }.notify()
+                SuccessResult(createRowEnd(
+                    createRowStart(rowIndex = tableRowIndex.value, customAttributes = customAttributes).also { it.render() },
+                    mapEachCell { row, column ->
+                        row.createCellContext(row = sourceRow, column = column, customAttributes)?.also { it.render() }
+                    }
+                ).also { it.render() })
             }
         }
     }
 
-    override fun resolve(requestedIndex: RowIndex): IndexedContext<RowClosingContext<T>>? {
+    override fun resolve(requestedIndex: RowIndex): IndexedResult<RowEnd<T>>? {
         return if (hasCustomRows(SourceRow(requestedIndex))) {
-            IndexedContext(requestedIndex, resolveAttributedRow(requestedIndex))
+            IndexedResult(requestedIndex, null, resolveAttributedRow(requestedIndex))
         } else null
     }
 

@@ -17,10 +17,6 @@ public class Employee {
         this.id = id;
     }
 
-    public Employee() {
-
-    }
-
     public String getFirstName() {
         return firstName;
     }

@@ -2,7 +2,7 @@
 
 === DSL, model and context processing.
 
-Currently only `table` context is maintained. That means we have table model (table is a root aggregate in here), table operation context, table aggregable attributes, and table `tabulation` state (state will eventually become `AggregateState` or `ScopedState`, `SubState` or something similar)
+Currently only `table` context is maintained. That means we have table model (table is a root aggregate in here), table operation context, table aggregable attributes, and table `tabulation` state (state will eventually become `AggregateState` or `ScopedState`, `ModelExportContext` or something similar)
 
 Table multi-level aggregates:
 (Column) -> (Columns)  ->  ((*Table Model*)) <- (Rows) <- (Row) <- (Cell)
@@ -18,37 +18,37 @@ Table multi-level aggregates:
 | `table { ...`
 | Table
 | `TableAttribute`, `RowAttribute`, `ColumnAttribute`, `CellAttribute`
-| `TableOpeningContext`
+| `TableStart`
 | `TableAttribute`
 
 | `columns { column { ...`
 | Column
 | `ColumnAttribute`, `CellAttribute`
-| `ColumnOpeningContext`
+| `ColumnStart`
 | `ColumnAttribute`
 
 | `rows { row { ...`
 | Row
 | `RowAttribute`, `CellAttribute`
-| `RowOpeningContext`
+| `RowStart`
 | `RowAttribute`
 
 | `row { ... }`
 | Row
 | `RowAttribute`, `CellAttribute`
-| `RowClosingContext`
+| `RowEnd`
 | `RowAttribute`
 
 | `column { ... }`
 | Column
 | `ColumnAttribute`, `CellAttribute`
-| `ColumnClosingContext`
+| `ColumnEnd`
 | `ColumnAttribute`
 
 | `table { ... }`
 | Table
 | `TableAttribute`, ,`ColumnAttribute`, `RowAttribute`, `CellAttribute`
-| `TableClosingContext`
+| `TableEnd`
 | `TableAttribute`
 |===
 
@@ -59,11 +59,11 @@ How columns from above table are related to each other?
 3. `Context` represents model put into rendering operation domain. It differs from model in that it is exposed as public API and it contains attributes reduced by merging from upstream levels.
 4. `Context` carry all attributes matching category from `Context Attribute` column.
 
-When You read above table from left column to right You get all processing steps from build phase until operation invocation that happens later when `Context` (aka `AttributedModel`) is ready.
+When You read above table from left column to right You get all processing steps from build phase until operation invocation that happens later when `Context` (aka `AttributedContext`) is ready.
 
 === Rendering State
 
-Rendering state is currently called `TabulationState` and holds:
+Rendering state is currently called `TypedTableTemplateContext` and holds:
 
 - row context iterator and resolver,
 - mutable row index
@@ -158,7 +158,7 @@ New version of table:
 | `document { ...`
 | `Document`
 | `DocumentAttribute`, `ContainerAttribute`, +All sub models attributes
-| `DocumentOpeningContext`
+| `DocumentStart`
 | `DocumentAttribute`
 
 | `container {`
@@ -176,7 +176,7 @@ New version of table:
 | `document { ... }`
 | `Document`
 | `DocumentAttribute`, `ContainerAttribute`, +All sub models attributes
-| `DocumentClosingContext`
+| `DocumentEnd`
 | `DocumentAttribute`
 |===
 
@@ -187,7 +187,7 @@ New version of table:
 === Introducing new operations
 
 === State hierarchy.
-Introducing `GlobalState` which wraps `TabulationState -> TableState` as `TableState` now binds only to `Table root aggregate`
+Introducing `DocumentModelExportContext` which wraps `TabulationState -> TableState` as `TableState` now binds only to `Table root aggregate`
 
 [source,options="nowrap"]
 ----

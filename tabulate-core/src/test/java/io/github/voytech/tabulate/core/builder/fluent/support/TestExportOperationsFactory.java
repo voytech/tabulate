@@ -1,40 +1,33 @@
 package io.github.voytech.tabulate.core.builder.fluent.support;
 
-import io.github.voytech.tabulate.template.operations.*;
-import io.github.voytech.tabulate.template.result.OutputBinding;
-import io.github.voytech.tabulate.template.spi.ExportOperationsProvider;
-import io.github.voytech.tabulate.template.spi.TabulationFormat;
-import kotlin.collections.MapsKt;
+import io.github.voytech.tabulate.components.table.model.Table;
+import io.github.voytech.tabulate.core.template.operation.OperationsBuilder;
+import io.github.voytech.tabulate.core.template.spi.DocumentFormat;
+import io.github.voytech.tabulate.core.template.spi.ExportOperationsProvider;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
-import java.util.List;
+import static io.github.voytech.tabulate.core.template.spi.DocumentFormat.format;
 
-import static io.github.voytech.tabulate.template.spi.TabulationFormat.format;
-
-public class TestExportOperationsFactory<T> implements ExportOperationsProvider<TestRenderingContext> {
-
+public class TestExportOperationsFactory<T> implements ExportOperationsProvider<TestRenderingContext, Table<T>> {
     @NotNull
     @Override
-    public TestRenderingContext createRenderingContext() {
-        return new TestRenderingContext();
+    public Function1<OperationsBuilder<TestRenderingContext>, Unit> provideExportOperations() {
+        return builder -> null;
     }
 
     @NotNull
     @Override
-    public List<OutputBinding<TestRenderingContext, ?>> createOutputBindings() {
-        return Collections.singletonList(new TestOutputBinding());
-    }
-
-    @NotNull
-    @Override
-    public TabulationFormat<TestRenderingContext> getTabulationFormat() {
+    public DocumentFormat<TestRenderingContext> getDocumentFormat() {
         return format("test", TestRenderingContext.class,"default");
     }
 
     @NotNull
     @Override
-    public Operations<TestRenderingContext> createExportOperations() {
-        return new Operations<TestRenderingContext>(MapsKt.emptyMap());
+    public Class<Table<T>> getModelClass() {
+        return Table.jclass();
     }
+
+
 }

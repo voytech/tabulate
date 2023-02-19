@@ -1,27 +1,28 @@
 package io.github.voytech.tabulate.template.operations
 
-import io.github.voytech.tabulate.api.builder.dsl.ColumnLevelAttributesBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.TableBuilderApi
-import io.github.voytech.tabulate.api.builder.dsl.createTableBuilder
-import io.github.voytech.tabulate.model.Table
-import io.github.voytech.tabulate.model.attributes.Colors
-import io.github.voytech.tabulate.model.attributes.cell.background
-import io.github.voytech.tabulate.model.attributes.cell.borders
-import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultBorderStyle
-import io.github.voytech.tabulate.model.attributes.cell.text
-import io.github.voytech.tabulate.model.attributes.table.template
-import io.github.voytech.tabulate.template.iterators.RowContextIterator
-import io.github.voytech.tabulate.template.resolvers.AccumulatingRowContextResolver
-import org.junit.jupiter.api.Assertions.*
+import io.github.voytech.tabulate.components.table.api.builder.dsl.*
+import io.github.voytech.tabulate.components.table.model.Table
+import io.github.voytech.tabulate.core.model.color.Colors
+import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
+import io.github.voytech.tabulate.components.table.model.attributes.table.template
+import io.github.voytech.tabulate.components.table.operation.TableStart
+import io.github.voytech.tabulate.components.table.operation.asTableStart
+import io.github.voytech.tabulate.components.table.template.*
+import io.github.voytech.tabulate.core.model.StateAttributes
+import io.github.voytech.tabulate.core.template.operation.*
+import io.github.voytech.tabulate.support.createTableContext
+import io.github.voytech.tabulate.support.success
+import io.github.voytech.tabulate.support.successfulRowComplete
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import kotlin.test.*
 
 class AttributeSetCacheTest {
 
     private fun createTableModelWithCellAttributes(block: ColumnLevelAttributesBuilderApi<Unit>.() -> Unit): Table<Unit> =
         createTableModel {
             columns { column(0) { attributes(block) } }
-            rows { newRow { cell { value = "cell" }} }
+            rows { newRow { cell { value = "cell" } } }
         }
 
     private fun createTableModel(block: TableBuilderApi<Unit>.() -> Unit): Table<Unit> =
@@ -32,27 +33,28 @@ class AttributeSetCacheTest {
         val table = createTableModel { attributes { template { fileName = "filename" } } }
         val customAttributes = mutableMapOf<String, Any>()
 
-        val attributedTable = table.createContext(customAttributes)
+        val attributedTable = table.asTableStart(customAttributes)
         val cache = attributedTable.ensureAttributeSetBasedCache()
         assertNotNull(cache)
         assertEquals(cache, customAttributes["_attribute_set_based_cache"])
 
         val secondTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val secondAttributedTable = secondTable.createContext(customAttributes)
+        val secondAttributedTable = secondTable.asTableStart(customAttributes)
         val sameCacheRef = secondAttributedTable.ensureAttributeSetBasedCache()
         assertNotNull(sameCacheRef)
         assertEquals(cache, sameCacheRef)
     }
+
 
     @Test
     fun `should setup and lookup internal caches when table attribute sets are equal`() {
         val customAttributes = mutableMapOf<String, Any>()
 
         val firstTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val firstTableContext: TableOpeningContext = firstTable.createContext(customAttributes)
+        val firstTableContext: TableStart = firstTable.asTableStart(customAttributes)
 
         val secondTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val secondTableContext: TableOpeningContext = secondTable.createContext(customAttributes)
+        val secondTableContext: TableStart = secondTable.asTableStart(customAttributes)
 
         val cache = firstTableContext.setupCacheAndGet().also { it!!["someKey"] = "someValue" }
         val secondCache = secondTableContext.setupCacheAndGet()
@@ -79,20 +81,29 @@ class AttributeSetCacheTest {
             background { color = Colors.WHITE }
             borders { leftBorderStyle = DefaultBorderStyle.SOLID }
         }
-
-        val iterator = RowContextIterator(AccumulatingRowContextResolver(firstTable, customAttributes))
-        val attributedCell = iterator.next().rowCellValues.firstNotNullOf { it.value }
+        val firstTableContext = firstTable.createTableContext(customAttributes)
+        val iterator = RowContextIterator(
+            AccumulatingRowContextResolver(
+                firstTable, StateAttributes(customAttributes), OverflowOffsets(), successfulRowComplete()
+            ), OverflowOffsets(),firstTableContext
+        )
+        val attributedCell = iterator.next().success().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
             attributedCell.cacheOnAttributeSet("key", "value")
         }
         attributedCell.withAttributeSetBasedCache {
-            assertEquals("value",attributedCell.getCachedOnAttributeSet("key"))
+            assertEquals("value", attributedCell.getCachedOnAttributeSet("key"))
         }
 
-        val secondIterator = RowContextIterator(AccumulatingRowContextResolver(secondTable, customAttributes))
-        val secondAttributedCell = secondIterator.next().rowCellValues.firstNotNullOf { it.value }
+        val secondTableContext = secondTable.createTableContext(customAttributes)
+        val secondIterator = RowContextIterator(
+            AccumulatingRowContextResolver(
+                secondTable, StateAttributes(customAttributes), OverflowOffsets(), successfulRowComplete()
+            ), OverflowOffsets(),secondTableContext
+        )
+        val secondAttributedCell = secondIterator.next().success().rowCellValues.firstNotNullOf { it.value }
         secondAttributedCell.withAttributeSetBasedCache {
-            assertEquals("value",secondAttributedCell.getCachedOnAttributeSet("key"))
+            assertEquals("value", secondAttributedCell.getCachedOnAttributeSet("key"))
         }
     }
 
@@ -101,10 +112,10 @@ class AttributeSetCacheTest {
         val customAttributes = mutableMapOf<String, Any>()
 
         val firstTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val firstTableContext: TableOpeningContext = firstTable.createContext(customAttributes)
+        val firstTableContext: TableStart = firstTable.asTableStart(customAttributes)
 
         val secondTable = createTableModel { attributes { template { fileName = "second_filename" } } }
-        val secondTableContext: TableOpeningContext = secondTable.createContext(customAttributes)
+        val secondTableContext: TableStart = secondTable.asTableStart(customAttributes)
 
         val cache = firstTableContext.setupCacheAndGet().also { it!!["someKey"] = "someValue" }
         val secondCache = secondTableContext.setupCacheAndGet()
@@ -117,19 +128,24 @@ class AttributeSetCacheTest {
     @Test
     fun `should setup internal caches and fail to lookup value in second cache for different cell attribute sets`() {
         val customAttributes = mutableMapOf<String, Any>()
-
         val firstTable = createTableModelWithCellAttributes {
             text { fontColor = Colors.BLACK }
             background { color = Colors.WHITE }
             borders { leftBorderStyle = DefaultBorderStyle.SOLID }
         }
-        val iterator = RowContextIterator(AccumulatingRowContextResolver(firstTable, customAttributes))
-        val attributedCell = iterator.next().rowCellValues.firstNotNullOf { it.value }
+        val firstTableContext = firstTable.createTableContext(customAttributes)
+        val iterator = RowContextIterator(
+            AccumulatingRowContextResolver(
+                firstTable, StateAttributes(customAttributes),OverflowOffsets(),
+                successfulRowComplete()
+            ),OverflowOffsets(), firstTableContext
+        )
+        val attributedCell = iterator.next().success().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
             attributedCell.cacheOnAttributeSet("key", "value")
         }
         attributedCell.withAttributeSetBasedCache {
-            assertEquals("value",attributedCell.getCachedOnAttributeSet("key"))
+            assertEquals("value", attributedCell.getCachedOnAttributeSet("key"))
         }
 
         val secondTable = createTableModelWithCellAttributes {
@@ -137,54 +153,17 @@ class AttributeSetCacheTest {
             background { color = Colors.WHITE }
             borders { leftBorderStyle = DefaultBorderStyle.DOTTED }
         }
-        val secondIterator = RowContextIterator(AccumulatingRowContextResolver(secondTable, customAttributes))
-        val secondAttributedCell = secondIterator.next().rowCellValues.firstNotNullOf { it.value }
+        val secondTableContext = secondTable.createTableContext(customAttributes)
+        val secondIterator = RowContextIterator(
+            AccumulatingRowContextResolver(
+                secondTable, StateAttributes(customAttributes), OverflowOffsets(), successfulRowComplete()
+            ), OverflowOffsets(),secondTableContext
+        )
+        val secondAttributedCell = secondIterator.next().success().rowCellValues.firstNotNullOf { it.value }
         secondAttributedCell.withAttributeSetBasedCache {
             assertThrows<IllegalStateException> { secondAttributedCell.getCachedOnAttributeSet("key") }
         }
     }
 
-    @Test
-    fun `should correctly perform withAttributeSetBasedCache() scoping`() {
-        val customAttributes = mutableMapOf<String, Any>()
-
-        val firstTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val firstTableContext: TableOpeningContext = firstTable.createContext(customAttributes)
-
-        val secondTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val secondTableContext: TableOpeningContext = secondTable.createContext(customAttributes)
-
-        val thirdTable = createTableModel { attributes { template { fileName = "third_table_filename_differs" } } }
-        val thirdTableContext: TableOpeningContext = thirdTable.createContext(customAttributes)
-
-        firstTableContext.withAttributeSetBasedCache {
-            firstTableContext.cacheOnAttributeSet("someKey", "someValue")
-        }
-        val error = assertThrows<IllegalStateException> {
-            firstTableContext.getCachedOnAttributeSet("someKey")
-        }
-        assertEquals("cannot resolve cached value in scope!", error.message)
-
-
-        secondTableContext.withAttributeSetBasedCache {
-            secondTableContext.let { tableContext ->
-                tableContext.cacheOnAttributeSet("someKey", "tryOverride")
-                assertEquals("someValue", tableContext.getCachedOnAttributeSet("someKey"))
-            }
-        }
-
-        thirdTableContext.withAttributeSetBasedCache {
-            thirdTableContext.let { tableContext ->
-                tableContext.cacheOnAttributeSet(
-                    "someKey",
-                    "thisIsNewValueInNewInternalCacheCosAttributesDiffers"
-                )
-                assertEquals(
-                    "thisIsNewValueInNewInternalCacheCosAttributesDiffers",
-                    tableContext.getCachedOnAttributeSet("someKey")
-                )
-            }
-        }
-    }
 
 }

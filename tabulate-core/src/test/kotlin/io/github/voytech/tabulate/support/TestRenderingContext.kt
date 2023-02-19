@@ -1,5 +1,5 @@
 package io.github.voytech.tabulate.support
 
-import io.github.voytech.tabulate.template.context.RenderingContext
+import io.github.voytech.tabulate.core.template.RenderingContext
 
 class TestRenderingContext : RenderingContext

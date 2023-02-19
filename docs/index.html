@@ -1033,7 +1033,10 @@ What is more, there is nothing that stops You from using both techniques for sin
 <p>Create <code>OutputBinding</code> class. It defines transformation of <code>RenderingContext</code> into different kind out outputs. By separating <code>OutputBinding</code> from <code>RenderingContext</code> we can enable multiple outputs for particular <code>RenderingContext</code> class dynamically.</p>
 </li>
 <li>
-<p>Define <code>ExportOperationsProvider</code> or <code>ExportOperationsFactory</code> depending on your scenario. If You don&#8217;t need to decouple attribute operations from table export operations (e.g., because supported format does not assumes attributes at all) You can implement <code>ExportOperationsProvider</code> interface and define all rendering logic in single class. For cases, where attributes needs to be rendered independently (e.g., because You want to support user-defined attributes) it is advised to extend <code>ExportOperationsFactory</code>. For both scenarios You will have to create file <code>resource/META-INF/io.github.voytech.tabulate.template.spi.ExportOperationsProvider</code>, and put fully qualified class name of your custom factory in the first line. <strong>This step is required by a template in order to resolve your extension at run-time</strong>.</p>
+<p>Create <code>OutputBindingsProvider</code> that holds set of all supported output bindings. Then put its fully qualified class name into <code>io.github.voytech.document.template.spi.OutputBindingsProvider</code></p>
+</li>
+<li>
+<p>Define <code>ExportOperationsFactory</code> and put its fully qualified class name into  <code>resource/META-INF/io.github.voytech.document.template.spi.ExportOperationsProvider</code>, and put fully qualified class name of your custom factory in the first line. <strong>This step is required by a template in order to resolve your extension at run-time</strong>.</p>
 </li>
 </ul>
 </div>
@@ -1084,7 +1087,7 @@ open class CsvRenderingContext: RenderingContext {
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The <code>.onBind</code> method is called internally by <code>TabulationTemplate</code> as soon as both: output and rendering context instances are available. It connects rendering context with particular output and allows implementing flush logic.</td>
+<td>The <code>.onBind</code> method is called internally by <code>TableTemplate</code> as soon as both: output and rendering context instances are available. It connects rendering context with particular output and allows implementing flush logic.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -1092,24 +1095,39 @@ open class CsvRenderingContext: RenderingContext {
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>Then You need to define provider exposing all compatible OutputBindings instances.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">class CsvOutputBindingsProvider : OutputBindingsProvider&lt;CsvRenderingContext&gt; {
+    override fun createOutputBindings(): List&lt;OutputBinding&lt;CsvRenderingContext, *&gt;&gt; = listOf(
+        CsvOutputStreamOutputBinding()
+    )
+
+    override fun getDocumentFormat(): DocumentFormat&lt;CsvRenderingContext&gt; =
+        DocumentFormat.format("csv")
+
+}</code></pre>
+</div>
+</div>
 <div style="page-break-after: always;"></div>
 <div class="paragraph">
 <p>Finally, we are implementing <code>ExportOperationsFactory</code> compatible with <code>RenderingContext</code> of choice:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">class CsvExportOperationsFactory: ExportOperationsFactory&lt;CsvRenderingContext&gt;() {
-    <i class="conum" data-value="1"></i><b>(1)</b>
-    override fun getTabulationFormat(): TabulationFormat&lt;CsvRenderingContext&gt; =
-        format("csv", CsvRenderingContext::class.java)
+<pre class="highlightjs highlight nowrap"><code class="language-kotlin hljs" data-lang="kotlin">class CsvExportOperationsFactory : ExportOperationsFactory&lt;CsvRenderingContext, Table&lt;*&gt;&gt;() {
+
+    override fun getDocumentFormat(): DocumentFormat&lt;CsvRenderingContext&gt; =
+        format("csv") <i class="conum" data-value="1"></i><b>(1)</b>
+
     <i class="conum" data-value="2"></i><b>(2)</b>
-    override fun provideExportOperations(): OperationsBuilder&lt;CsvRenderingContext&gt;.() -&gt; Unit = {
-
-        openRow = OpenRowOperation { renderingContext, _ -&gt;
+    override fun provideExportOperations(): OperationsBuilder&lt;CsvRenderingContext, Table&lt;*&gt;&gt;.() -&gt; Unit = {
+        operation(OpenRowOperation { renderingContext, _ -&gt;
             renderingContext.line.clear()
-        }
-
-        closeRow = CloseRowOperation { renderingContext, context -&gt;
+        })
+        operation(CloseRowOperation { renderingContext, context -&gt;
             val lastIndex = context.rowCellValues.size - 1
             with(renderingContext) {
                 context.rowCellValues.values.forEachIndexed { index, cell -&gt;
@@ -1119,14 +1137,14 @@ open class CsvRenderingContext: RenderingContext {
                 bufferedWriter.write(line.toString())
                 bufferedWriter.newLine()
             }
-        }
-
+        })
     }
+    <i class="conum" data-value="3"></i><b>(3)</b>
+    override fun getAggregateModelClass(): Class&lt;Table&lt;*&gt;&gt; = reify()
 
     private fun CellContext.getSeparatorCharacter(): String =
         getModelAttribute(CellSeparatorCharacterAttribute::class.java)?.separator ?: ","
-    <i class="conum" data-value="3"></i><b>(3)</b>
-    override fun createOutputBindings(): List&lt;OutputBinding&lt;CsvRenderingContext, *&gt;&gt; = listOf(CsvOutputStreamOutputBinding())
+
 }</code></pre>
 </div>
 </div>
@@ -1134,15 +1152,15 @@ open class CsvRenderingContext: RenderingContext {
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Define <code>TabulationFormat</code> first. It consists from <code>RenderingContext</code> class and provider id string,</td>
+<td>Define <code>DocumentFormat</code> first. It consists from <code>RenderingContext</code> class and provider id string,</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>This is the most important step. <strong>Here we implement actual table rendering logic</strong>. We need to provide operations that transform captured context models using <code>RenderingContext</code>. We can use only those operation classes that are required by our provider. We can also use all of them: <code>openTable</code>, <code>openColumn</code>, <code>openRow</code>, <code>renderRowCell</code>, <code>closeRow</code>, <code>closeColumn</code>, <code>closeTable</code>.</td>
+<td>This is the most important step. <strong>Here we implement actual table rendering logic</strong>. We need to provide operations that transform captured context models using <code>RenderingContext</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Finally - we need to provide list of supported outputs. Bare minimum should be at least <code>OutputStreamOutputBinding</code>.</td>
+<td>Finally - we need to provide class name for supported [AggregateRootModel]. This class is a top level model which is going to be exported by all previously defined operation implementations.</td>
 </tr>
 </table>
 </div>
@@ -1215,11 +1233,11 @@ If your file format allow additional attributes which are not present in standar
     }
 }
 
-class SimpleMarkerCellAttributeRenderOperation  : CellAttributeRenderOperation&lt;ApachePoiRenderingContext, SimpleTestCellAttribute&gt;  {
+class SimpleMarkerCellAttributeRenderOperation  : CellAttributeRenderOperation&lt;ApachePoiRenderingContext, SimpleTestCellAttribute&gt;()  {
 
-    override fun renderingContextClass(): Class&lt;ApachePoiRenderingContext&gt; = ApachePoiRenderingContext::class.java
+    override fun renderingContextClass(): Class&lt;ApachePoiRenderingContext&gt; = reify()
 
-    override fun attributeType(): Class&lt;MarkerCellAttribute&gt; = MarkerCellAttribute::class.java
+    override fun attributeClass(): Class&lt;MarkerCellAttribute&gt; = reify()
 
     override fun renderAttribute(renderingContext: ApachePoiRenderingContext, context: RowCellContext, attribute: MarkerCellAttribute) {
         with(renderingContext.assertCell(context.getTableId(), context.rowIndex, context.columnIndex)) {
@@ -1233,7 +1251,7 @@ fun &lt;T&gt; CellLevelAttributesBuilderApi&lt;T&gt;.label(block: MarkerCellAttr
 </div>
 </div>
 <div class="paragraph">
-<p>Finally, You need to create file <code>resource/META-INF/io.github.voytech.tabulate.template.operations.AttributeOperation</code>, and put fully qualified class name of your <code>AttributeOperation</code> into it.</p>
+<p>At the end, You need to create file <code>resource/META-INF/io.github.voytech.document.template.operation.AttributeOperation</code>, and put fully qualified class name of your <code>AttributeOperation</code> into it.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1325,7 +1343,7 @@ new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Now You have to pass table definition into <code>TabulationTemplate</code> in order to export data with declared tabular layout.</td>
+<td>Now You have to pass table definition into <code>TableTemplate</code> in order to export data with declared tabular layout.</td>
 </tr>
 </table>
 </div>
@@ -1471,7 +1489,7 @@ new TabulationTemplate(format("xlsx")).export(employeeList, new FileOutputStream
 <h3 id="_template_and_operations_pattern"><code>Template and operations</code> pattern.</h3>
 <div class="paragraph">
 <p>Library sole purpose is to provide means for data exporting. This goal is achieved through simple, intuitive pattern of a template class dispatching workload to managed, pluggable operations.
-A template which is referred to as <code>TabulationTemplate</code> iterates lazily through <code>RowContextResolver</code> progressing each time, when next row context is requested by <code>TabulationApi</code>.</p>
+A template which is referred to as <code>TableTemplate</code> iterates lazily through <code>RowContextResolver</code> progressing each time, when next row context is requested by <code>TabulationApi</code>.</p>
 </div>
 <div class="paragraph">
 <p>Consumer interaction with library may go through <code>TabulationApi</code> and then it looks as follows:</p>
@@ -1491,7 +1509,7 @@ A template which is referred to as <code>TabulationTemplate</code> iterates lazi
 </div>
 <div class="paragraph">
 <p>Consumer interaction may be also simplified by using extension method on exported collection or custom table builder.
-In fact this should be leading usage scenario. In this scenario <code>TabulationApi</code> calls are wrapped by extension method on <code>TabulationTemplate</code>.</p>
+In fact this should be leading usage scenario. In this scenario <code>TabulationApi</code> calls are wrapped by extension method on <code>TableTemplate</code>.</p>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
@@ -1566,10 +1584,10 @@ Builders track all attribute property changes (to determine which change - left 
 <div class="ulist">
 <ul>
 <li>
-<p><code>RowOpeningContext</code> - a context containing row coordinate (only row index) plus associated row attributes. 'AbstractRowContextResolver' notifies <code>TabulationTemplate</code> about completing <code>RowOpeningContext</code> using <code>RowCompletionListener</code>. Specific operation implementation associated with this type of context (<code>RowOpeningContext</code>) can be invoked even before having all row associated data.</p>
+<p><code>RowOpeningContext</code> - a context containing row coordinate (only row index) plus associated row attributes. 'AbstractRowContextResolver' notifies <code>TableTemplate</code> about completing <code>RowOpeningContext</code> using <code>RowCompletionListener</code>. Specific operation implementation associated with this type of context (<code>RowOpeningContext</code>) can be invoked even before having all row associated data.</p>
 </li>
 <li>
-<p><code>CellContext</code> - a context holding <code>CellValue</code> with all associated cell attributes (merged all level attributes: table, column, row and cell). Similarly to <code>RowOpeningContext</code> - <code>AbstractRowContextResolver</code> uses <code>RowCompletionListener</code> in order to notify <code>TabulationTemplate</code> about each <code>CellContext</code> when it is ready for rendering by corresponding operation implementation.</p>
+<p><code>CellContext</code> - a context holding <code>CellValue</code> with all associated cell attributes (merged all level attributes: table, column, row and cell). Similarly to <code>RowOpeningContext</code> - <code>AbstractRowContextResolver</code> uses <code>RowCompletionListener</code> in order to notify <code>TableTemplate</code> about each <code>CellContext</code> when it is ready for rendering by corresponding operation implementation.</p>
 </li>
 <li>
 <p><code>RowClosingContext</code> - a context with complete row data. It contains all row attributes together with all cell values (also with attributes). As long as <code>RowClosingContext</code> is the last step it is also the value returned from <code>AbstractRowContextResolver.resolve(&#8230;&#8203;)</code> method.</p>
@@ -2030,7 +2048,7 @@ Please note that <code>Layouts.kt</code> in <code>tabulate-examples</code> proje
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-04-22 23:48:40 +0200
+Last updated 2022-04-28 21:16:50 +0200
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
