@@ -46,12 +46,12 @@ interface RowLayoutElement : RowCoordinate, LayoutElement<GridLayoutPolicy>, Lay
             x = getX(0.asXPosition(), uom),
             y = getY(getRow().asYPosition(), uom),
             width = getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
-            height = getRowHeight(getRow(), 1, uom)
         )
     }
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy): Unit =
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy, flags: BoundingBoxFlags): Unit =
         with(policy) {
+            markHeightForMeasure(getRow(),flags.shouldMeasureHeight)
             context.height?.let { setRowHeight(getRow(), it) }
         }
 }
@@ -71,8 +71,9 @@ interface ColumnLayoutElement : ColumnCoordinate, LayoutElement<GridLayoutPolicy
         elementBoundingBox(x = getX(getColumn().asXPosition(), uom), y = getY(0.asYPosition(), uom))
     }
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy): Unit =
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy, flags: BoundingBoxFlags): Unit =
         with(policy) {
+            markWidthForMeasure(getColumn(),flags.shouldMeasureWidth)
             context.width?.let { setColumnWidth(getColumn(), it) }
         }
 }
@@ -87,7 +88,7 @@ interface RowCellCoordinate : RowCoordinate, ColumnCoordinate
 interface RowCellLayoutElement : RowCellCoordinate, LayoutElement<GridLayoutPolicy>,
     LayoutElementApply<GridLayoutPolicy> {
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy): Unit =
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy, flags: BoundingBoxFlags): Unit =
         with(policy) {
             context.width?.let { setColumnWidth(getColumn(), it) }
             context.height?.let { setRowHeight(getRow(), it) }
@@ -185,7 +186,7 @@ internal fun <T : Any> SyntheticRow<T>.createRowStart(
 
 /**
  * Row operation context with additional model attributes applicable on row level.
- * Additionally it contains also all resolved cell operation context for each contained cell.
+ * Additionally, it contains also all resolved cell operation context for each contained cell.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
@@ -199,6 +200,14 @@ class RowEnd<T>(
 
     fun getCells(): Map<ColumnKey<T>, CellContext> = rowCellValues
 
+    override fun Layout.computeBoundingBox(policy: GridLayoutPolicy): LayoutElementBoundingBox = with(policy) {
+        elementBoundingBox(
+            x = getX(0.asXPosition(), uom),
+            y = getY(getRow().asYPosition(), uom),
+            width = getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
+            height = getRowHeight(getRow(),1, uom)
+        )
+    }
 }
 
 internal fun <T : Any> SyntheticRow<T>.createRowEnd(

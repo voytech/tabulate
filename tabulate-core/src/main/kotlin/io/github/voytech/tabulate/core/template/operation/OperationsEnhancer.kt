@@ -111,12 +111,12 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
 
 
     private fun LayoutWithPolicy.commitBoundingBox(
-        context: E, boundaries: LayoutElementBoundingBox? = null,
+        context: E, boundaries: LayoutElementBoundingBox? = null, flags: BoundingBoxFlags? = null
     ) {
-        if (boundaries != null && context is LayoutElementApply<*>) {
+        if (boundaries != null && flags!= null && context is LayoutElementApply<*>) {
             @Suppress("UNCHECKED_CAST")
             with(context as LayoutElementApply<LayoutPolicy>) {
-                layout.applyBoundingBox(boundaries, policy)
+                layout.applyBoundingBox(boundaries, policy, flags)
             }
         }
     }
@@ -128,10 +128,11 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
                     ifOverflowCheckEnabled { bbox.checkOverflow() }?.let {
                         context.setResult(OverflowResult(it))
                     } ?: run {
+                        val flags = bbox?.currentFlags() //TODO current flags should be resolved only from model properties, but bbox may be produced from LayoutPolicy at this moment.
                         delegate(renderingContext, context).also {
                             bbox?.applyOnLayout()
                         }
-                        commitBoundingBox(context, bbox)
+                        commitBoundingBox(context, bbox, flags)
                         context.setResult(Success)
                     }
                 }

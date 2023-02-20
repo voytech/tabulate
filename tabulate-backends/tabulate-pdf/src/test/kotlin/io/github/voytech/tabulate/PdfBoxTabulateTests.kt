@@ -122,9 +122,17 @@ class PdfBoxTabulateTests {
                             }
                         }
                     }
+                    columns {
+                        column(0) { attributes { width { 100.pt() } }}
+                        (1..9).forEach { column(it) {} } //TODO fix this.
+                        column(10) { attributes { width { 50.pt() } }}
+                    }
                     rows {
                         newRow {
-                            attributes { alignment { vertical = DefaultVerticalAlignment.MIDDLE } }
+                            attributes {
+                                height { 50.pt() }
+                                alignment { vertical = DefaultVerticalAlignment.MIDDLE }
+                            }
                             cell { value = BigDecimal.valueOf(10.345) }
                             cell { value = true }
                             cell { value = 1000 }
@@ -139,6 +147,21 @@ class PdfBoxTabulateTests {
                                 value = "src/test/resources/dot.png"
                                 typeHint { DefaultTypeHints.IMAGE_URI }
                             }
+                        }
+                        newRow {
+                            attributes {
+                                alignment { vertical = DefaultVerticalAlignment.MIDDLE }
+                            }
+                            cell {
+                                value = "src/test/resources/kotlin.jpeg"
+                                typeHint { DefaultTypeHints.IMAGE_URI }
+                            }
+                            cell { value = 'k' }
+                            cell { value = 'o' }
+                            cell { value = 't' }
+                            cell { value = 'l' }
+                            cell { value = 'i' }
+                            cell { value = 'n' }
                         }
                     }
                 }

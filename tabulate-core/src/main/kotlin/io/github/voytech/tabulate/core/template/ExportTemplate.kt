@@ -25,39 +25,40 @@ class ExportInstance(
     internal val root: ModelExportContext = ModelExportContext(
         this, rootNavigation(rootModel), rootLayouts(), stateAttributes.orEmpty()
     )
-    internal var active: ModelExportContext = root
     internal val suspendedModels: MutableSet<AbstractModel<*>> = mutableSetOf()
     private val exportOperations: OperationsMap = mutableMapOf()
     private val measureOperations: OperationsMap = mutableMapOf()
 
 
-    fun <M : Model<M>> getExportOperations(model: M): Operations<RenderingContext> =
+    fun <M : AbstractModel<M>> getExportOperations(model: M): Operations<RenderingContext> =
         exportOperations.computeIfAbsent(model) {
             operationsFactory.createMeasureOperations(model).let { measuringOperations ->
                 operationsFactory.createExportOperations(model,
                     JoinOperations(measuringOperations) { !it.boundingBox().isDefined() },
-                    EnableLayoutsAwareness { getActiveLayout() }
+                    EnableLayoutsAwareness { model.getActiveLayout() }
                 )
             }
         }
 
-    fun <M : Model<M>> getMeasuringOperations(model: M): Operations<RenderingContext> =
+    fun <M : AbstractModel<M>> getMeasuringOperations(model: M): Operations<RenderingContext> =
         measureOperations.computeIfAbsent(model) {
             operationsFactory.createMeasureOperations(model,
                 SkipRedundantMeasurements(),
                 //TODO is this Enhancer required ? Consider not enhancing each operation, but instead create single operation which internally delegates operations returned from createMeasureOperations
                 //TODO this will allow to enable measuring without single third-party rendering-context specific measuring operations.
-                EnableLayoutsAwareness(checkOverflows = false) { getActiveMeasuringLayout() }
+                EnableLayoutsAwareness(checkOverflows = false) { model.getActiveMeasuringLayout() }
             )
         }
 
-    private fun getActiveLayout(): LayoutWithPolicy =
-        (active.layouts.renderingLayout ?: active.getClosestAncestorLayout())
-            ?.let { LayoutWithPolicy(it, active.layouts.layoutPolicy) } ?: error("No active rendering layout!")
+    private fun <M : AbstractModel<M>> M.getActiveLayout(): LayoutWithPolicy = with(context.layouts) {
+        (renderingLayout ?: context.getClosestAncestorLayout())
+            ?.let { LayoutWithPolicy(it, layoutPolicy) } ?: error("No active rendering layout!")
+    }
 
-    private fun getActiveMeasuringLayout(): LayoutWithPolicy =
-        (active.layouts.measuringLayout ?: active.getClosestLayoutAwareAncestor()?.layouts?.measuringLayout)
-            ?.let { LayoutWithPolicy(it, active.layouts.layoutPolicy) } ?: error("No active rendering layout!")
+    private fun <M : AbstractModel<M>> M.getActiveMeasuringLayout(): LayoutWithPolicy = with(context.layouts) {
+        (measuringLayout ?: context.getClosestLayoutAwareAncestor()?.layouts?.measuringLayout)
+            ?.let { LayoutWithPolicy(it, layoutPolicy) } ?: error("No active rendering layout!")
+    }
 
     internal fun getViewPortMaxRightBottom(): Position =
         if (renderingContext is HavingViewportSize) {
@@ -69,19 +70,12 @@ class ExportInstance(
             Position(X.max(uom), Y.max(uom)) //TODO instead make it nullable - when null - renderer does not clip
         }
 
-    fun <M : Model<M>> render(model: M, context: AttributedContext) {
+    fun <M : AbstractModel<M>> render(model: M, context: AttributedContext) {
         getExportOperations(model).invoke(renderingContext, context)
     }
 
-    fun <M : Model<M>> measure(model: M, context: AttributedContext) {
+    fun <M : AbstractModel<M>> measure(model: M, context: AttributedContext) {
         getMeasuringOperations(model).invoke(renderingContext, context)
-    }
-
-    fun <R> setActive(ctx: ModelExportContext, block: () -> R): R {
-        active = ctx
-        return run(block).also {
-            ctx.navigation.parentContext?.let { active = it }
-        }
     }
 
     fun clearLayouts() {
@@ -90,31 +84,19 @@ class ExportInstance(
         }.also { root.setLayout(maxRightBottom = getViewPortMaxRightBottom()) }
     }
 
-    fun resumeAllSuspendedNodes() {
-        // it may happen that particular model can be suspended multiple times, that is why we need to repeat resumption till no suspended models exist.
+    fun resumeAllSuspendedModels() {
         while (suspendedModels.isNotEmpty()) {
             clearLayouts()
             resumeAll()
         }
     }
 
-    private fun preserveCurrentlyActive(block: () -> Unit) {
-        val tmp = active
-        block()
-        active = tmp
-    }
-
     private fun resumeAll() {
-        preserveCurrentlyActive { resumeModel(root.navigation.active) }
+        resumeModelExport(root.navigation.active)
     }
 
     private fun resumeChildren(model: AbstractModel<*>) {
-        model.context.navigation.onEachChild { resumeModel(it) }
-    }
-
-    private fun resumeModel(model: AbstractModel<*>) = with(root) {
-        active = model.context
-        resumeModelExport(model)
+        model.context.navigation.onEachChild { resumeModelExport(it) }
     }
 
     private fun resumeModelExport(model: AbstractModel<*>) {
@@ -140,7 +122,7 @@ class StandaloneExportTemplate<M : AbstractModel<M>>(
         resolveOutputBinding(output).run {
             setOutput(renderingContext, output)
             model.export(this@with.root)
-            resumeAllSuspendedNodes()
+            resumeAllSuspendedModels()
             flush()
         }
     }
@@ -150,7 +132,7 @@ class StandaloneExportTemplate<M : AbstractModel<M>>(
             resolveOutputBinding(output).run {
                 setOutput(renderingContext, output)
                 model.export(this@with.root)
-                resumeAllSuspendedNodes()
+                resumeAllSuspendedModels()
                 flush()
             }
         }

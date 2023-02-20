@@ -30,7 +30,7 @@ interface GridPolicyMethods {
 
 interface LayoutPolicy {
 
-    var isSpacePlanned: Boolean
+    var isSpaceMeasured: Boolean
     /**
      * Query for absolute position expressed in [targetUnit] by using current layout relative position.
      */
@@ -153,7 +153,7 @@ fun interface BoundingBoxModifier {
 }
 
 fun interface LayoutElementApply<PL: LayoutPolicy> {
-    fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: PL)
+    fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: PL, flags: BoundingBoxFlags)
 }
 
 data class LayoutElementBoundingBox(
@@ -163,6 +163,7 @@ data class LayoutElementBoundingBox(
     var width: Width? = null,
     var height: Height? = null,
 ) {
+
     fun unitsOfMeasure(): UnitsOfMeasure = layoutPosition.x.unit
 
     fun isDefined(): Boolean = width != null && height != null
@@ -171,7 +172,11 @@ data class LayoutElementBoundingBox(
         width = other.width?.switchUnitOfMeasure(unitsOfMeasure()) ?: width,
         height = other.height?.switchUnitOfMeasure(unitsOfMeasure()) ?: height
     )
+
+    fun currentFlags(): BoundingBoxFlags = BoundingBoxFlags(width == null, height == null)
 }
+
+data class BoundingBoxFlags(val shouldMeasureWidth: Boolean, val shouldMeasureHeight: Boolean)
 
 fun LayoutElementBoundingBox?.isDefined() = this?.isDefined() ?: false
 
@@ -184,7 +189,7 @@ enum class Overflow {
 
 class DefaultLayoutPolicy : LayoutPolicy {
 
-    override var isSpacePlanned: Boolean = false
+    override var isSpaceMeasured: Boolean = false
 
     override fun Layout.getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position = Position(
         getX(relativePosition.x, targetUnit), getY(relativePosition.y, targetUnit)
@@ -354,7 +359,11 @@ class GridLayoutPolicy : AbstractGridLayoutPolicy() {
 
     private val delegate = SpreadsheetPolicy()
 
-    override var isSpacePlanned: Boolean = false
+    override var isSpaceMeasured: Boolean = false
+
+    private val measurableWidths = mutableMapOf<Int, Boolean>()
+
+    private val measurableHeights = mutableMapOf<Int, Boolean>()
 
     override fun Layout.getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position {
         return Position(
@@ -386,23 +395,33 @@ class GridLayoutPolicy : AbstractGridLayoutPolicy() {
         extend(height)
     }
 
+    fun markWidthForMeasure(column: Int, measured: Boolean = false) {
+        if (isSpaceMeasured) return
+        measurableWidths[column] = measured
+    }
+
     override fun setColumnWidth(column: Int, width: Width) {
-        if (isSpacePlanned) return
+        if (isSpaceMeasured) return
         delegate.setColumnWidth(column, width)
     }
 
+    fun markHeightForMeasure(row: Int, measured: Boolean = false) {
+        if (isSpaceMeasured) return
+        measurableHeights[row] = measured
+    }
+
     override fun setRowHeight(row: Int, height: Height) {
-        if (isSpacePlanned) return
+        if (isSpaceMeasured) return
         delegate.setRowHeight(row, height)
     }
 
     override fun getColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width? =
-        if (isSpacePlanned) {
+        if (isSpaceMeasured || measurableWidths[column] != true) {
             delegate.getColumnWidth(column, colSpan, uom)
         } else null
 
     override fun getRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height? =
-        if (isSpacePlanned) {
+        if (isSpaceMeasured || measurableHeights[row] != true) {
             delegate.getRowHeight(row, rowSpan, uom)
         } else null
 

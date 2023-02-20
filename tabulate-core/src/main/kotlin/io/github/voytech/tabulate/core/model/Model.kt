@@ -20,7 +20,6 @@ interface AttributeAware {
 
 interface AttributedModelOrPart<A : AttributedModelOrPart<A>> : AttributeAware, ModelPart
 
-
 @JvmInline
 value class StateAttributes(val data: MutableMap<String, Any>) {
 
@@ -179,7 +178,7 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
     }
 
     private fun <R> withinInitializedContext(parent: ModelExportContext, block: () -> R): R =
-        parent.instance.setActive(ensuringExportContext(parent), block)
+        ensuringExportContext(parent).run { block() }
 
     fun export(parentContext: ModelExportContext, layoutCxt: LayoutContext? = null) =
         with(parentContext.instance) {
@@ -194,7 +193,7 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
     fun measure(parentContext: ModelExportContext): SomeSize = with(parentContext.instance) {
         withinInitializedContext(parentContext) {
             context.setMeasuringLayout(uom) { measuringLayout ->
-                takeMeasures(context).also { layoutPolicyHandle.isSpacePlanned = true }
+                takeMeasures(context).also { layoutPolicyHandle.isSpaceMeasured = true }
                 measuringLayout.boundingRectangle.let {
                     SomeSize(it.getWidth(), it.getHeight())
                 }
@@ -270,7 +269,7 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
     protected fun ModelExportContext.clearLayouts() = instance.clearLayouts()
 
     fun ModelExportContext.resumeAllSuspendedNodes() = with(instance) {
-        resumeAllSuspendedNodes()
+        resumeAllSuspendedModels()
     }
 
     @Suppress("UNCHECKED_CAST")

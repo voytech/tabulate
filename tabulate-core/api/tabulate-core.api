@@ -99,11 +99,12 @@ public final class io/github/voytech/tabulate/components/image/model/Image : io/
 public abstract interface class io/github/voytech/tabulate/components/image/operation/ImageOperation : io/github/voytech/tabulate/core/template/operation/Operation {
 }
 
-public final class io/github/voytech/tabulate/components/image/operation/ImageRenderable : io/github/voytech/tabulate/core/template/operation/RenderableContext {
+public final class io/github/voytech/tabulate/components/image/operation/ImageRenderable : io/github/voytech/tabulate/core/template/operation/RenderableContext, io/github/voytech/tabulate/core/template/operation/HasImage {
 	public fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/DefaultLayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public synthetic fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public fun getAttributes ()Lio/github/voytech/tabulate/core/model/Attributes;
 	public final fun getFilePath ()Ljava/lang/String;
+	public fun getImageUri ()Ljava/lang/String;
 }
 
 public final class io/github/voytech/tabulate/components/page/api/builder/PageBuilderState : io/github/voytech/tabulate/core/api/builder/CompositeModelBuilderState {
@@ -804,7 +805,7 @@ public final class io/github/voytech/tabulate/components/table/model/attributes/
 	public static final field BOOLEAN Lio/github/voytech/tabulate/components/table/model/attributes/cell/enums/DefaultTypeHints;
 	public static final field DATE Lio/github/voytech/tabulate/components/table/model/attributes/cell/enums/DefaultTypeHints;
 	public static final field IMAGE_DATA Lio/github/voytech/tabulate/components/table/model/attributes/cell/enums/DefaultTypeHints;
-	public static final field IMAGE_URL Lio/github/voytech/tabulate/components/table/model/attributes/cell/enums/DefaultTypeHints;
+	public static final field IMAGE_URI Lio/github/voytech/tabulate/components/table/model/attributes/cell/enums/DefaultTypeHints;
 	public static final field NUMERIC Lio/github/voytech/tabulate/components/table/model/attributes/cell/enums/DefaultTypeHints;
 	public static final field STRING Lio/github/voytech/tabulate/components/table/model/attributes/cell/enums/DefaultTypeHints;
 	public fun getCellTypeId ()Ljava/lang/String;
@@ -852,8 +853,8 @@ public abstract class io/github/voytech/tabulate/components/table/operation/Cell
 public final class io/github/voytech/tabulate/components/table/operation/CellContext : io/github/voytech/tabulate/core/template/operation/RenderableContext, io/github/voytech/tabulate/components/table/operation/RowCellLayoutElement, io/github/voytech/tabulate/core/template/operation/HasValue {
 	public fun <init> (Lio/github/voytech/tabulate/components/table/operation/CellValue;Lio/github/voytech/tabulate/core/model/Attributes;IILjava/lang/Object;)V
 	public synthetic fun <init> (Lio/github/voytech/tabulate/components/table/operation/CellValue;Lio/github/voytech/tabulate/core/model/Attributes;IILjava/lang/Object;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)V
-	public synthetic fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;)V
+	public fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
+	public synthetic fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
 	public fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public synthetic fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public final fun getCellValue ()Lio/github/voytech/tabulate/components/table/operation/CellValue;
@@ -895,8 +896,8 @@ public abstract interface class io/github/voytech/tabulate/components/table/oper
 public final class io/github/voytech/tabulate/components/table/operation/ColumnEnd : io/github/voytech/tabulate/components/table/operation/ColumnContext, io/github/voytech/tabulate/components/table/operation/ColumnLayoutElement {
 	public fun <init> (Lio/github/voytech/tabulate/core/model/Attributes;I)V
 	public synthetic fun <init> (Lio/github/voytech/tabulate/core/model/Attributes;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)V
-	public synthetic fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;)V
+	public fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
+	public synthetic fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
 	public fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public synthetic fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public fun getColumn ()I
@@ -905,12 +906,12 @@ public final class io/github/voytech/tabulate/components/table/operation/ColumnE
 }
 
 public abstract interface class io/github/voytech/tabulate/components/table/operation/ColumnLayoutElement : io/github/voytech/tabulate/components/table/operation/ColumnCoordinate, io/github/voytech/tabulate/core/template/layout/LayoutElement, io/github/voytech/tabulate/core/template/layout/LayoutElementApply {
-	public abstract fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)V
+	public abstract fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
 	public abstract fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 }
 
 public final class io/github/voytech/tabulate/components/table/operation/ColumnLayoutElement$DefaultImpls {
-	public static fun applyBoundingBox (Lio/github/voytech/tabulate/components/table/operation/ColumnLayoutElement;Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)V
+	public static fun applyBoundingBox (Lio/github/voytech/tabulate/components/table/operation/ColumnLayoutElement;Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
 	public static fun computeBoundingBox (Lio/github/voytech/tabulate/components/table/operation/ColumnLayoutElement;Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 }
 
@@ -924,8 +925,8 @@ public final class io/github/voytech/tabulate/components/table/operation/ColumnR
 public final class io/github/voytech/tabulate/components/table/operation/ColumnStart : io/github/voytech/tabulate/components/table/operation/ColumnContext, io/github/voytech/tabulate/components/table/operation/ColumnLayoutElement {
 	public fun <init> (Lio/github/voytech/tabulate/core/model/Attributes;I)V
 	public synthetic fun <init> (Lio/github/voytech/tabulate/core/model/Attributes;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)V
-	public synthetic fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;)V
+	public fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
+	public synthetic fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
 	public fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public synthetic fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public fun getColumn ()I
@@ -967,11 +968,11 @@ public abstract interface class io/github/voytech/tabulate/components/table/oper
 }
 
 public abstract interface class io/github/voytech/tabulate/components/table/operation/RowCellLayoutElement : io/github/voytech/tabulate/components/table/operation/RowCellCoordinate, io/github/voytech/tabulate/core/template/layout/LayoutElement, io/github/voytech/tabulate/core/template/layout/LayoutElementApply {
-	public abstract fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)V
+	public abstract fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
 }
 
 public final class io/github/voytech/tabulate/components/table/operation/RowCellLayoutElement$DefaultImpls {
-	public static fun applyBoundingBox (Lio/github/voytech/tabulate/components/table/operation/RowCellLayoutElement;Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)V
+	public static fun applyBoundingBox (Lio/github/voytech/tabulate/components/table/operation/RowCellLayoutElement;Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
 }
 
 public abstract class io/github/voytech/tabulate/components/table/operation/RowContext : io/github/voytech/tabulate/core/template/operation/RenderableContext {
@@ -984,8 +985,8 @@ public abstract interface class io/github/voytech/tabulate/components/table/oper
 
 public final class io/github/voytech/tabulate/components/table/operation/RowEnd : io/github/voytech/tabulate/components/table/operation/RowContext, io/github/voytech/tabulate/components/table/operation/RowLayoutElement {
 	public fun <init> (Lio/github/voytech/tabulate/core/model/Attributes;Ljava/util/Map;I)V
-	public fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)V
-	public synthetic fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;)V
+	public fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
+	public synthetic fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
 	public fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public synthetic fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public final fun getCells ()Ljava/util/Map;
@@ -995,19 +996,19 @@ public final class io/github/voytech/tabulate/components/table/operation/RowEnd 
 }
 
 public abstract interface class io/github/voytech/tabulate/components/table/operation/RowLayoutElement : io/github/voytech/tabulate/components/table/operation/RowCoordinate, io/github/voytech/tabulate/core/template/layout/LayoutElement, io/github/voytech/tabulate/core/template/layout/LayoutElementApply {
-	public abstract fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)V
+	public abstract fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
 	public abstract fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 }
 
 public final class io/github/voytech/tabulate/components/table/operation/RowLayoutElement$DefaultImpls {
-	public static fun applyBoundingBox (Lio/github/voytech/tabulate/components/table/operation/RowLayoutElement;Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)V
+	public static fun applyBoundingBox (Lio/github/voytech/tabulate/components/table/operation/RowLayoutElement;Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
 	public static fun computeBoundingBox (Lio/github/voytech/tabulate/components/table/operation/RowLayoutElement;Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 }
 
 public final class io/github/voytech/tabulate/components/table/operation/RowStart : io/github/voytech/tabulate/components/table/operation/RowContext, io/github/voytech/tabulate/components/table/operation/RowLayoutElement {
 	public fun <init> (Lio/github/voytech/tabulate/core/model/Attributes;I)V
-	public fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)V
-	public synthetic fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;)V
+	public fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
+	public synthetic fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
 	public fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public synthetic fun computeBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public fun getRow ()I
@@ -2348,12 +2349,11 @@ public final class io/github/voytech/tabulate/core/template/ExportInstance {
 	public synthetic fun <init> (Lio/github/voytech/tabulate/core/template/DocumentFormat;Lio/github/voytech/tabulate/core/model/AbstractModel;Ljava/util/Map;Lio/github/voytech/tabulate/core/template/operation/factories/OperationsFactory;Lio/github/voytech/tabulate/core/template/RenderingContext;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Lio/github/voytech/tabulate/core/template/DocumentFormat;Lio/github/voytech/tabulate/core/model/AbstractModel;Ljava/util/Map;Lio/github/voytech/tabulate/core/template/operation/factories/OperationsFactory;Lio/github/voytech/tabulate/core/template/RenderingContext;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun clearLayouts ()V
-	public final fun getExportOperations (Lio/github/voytech/tabulate/core/model/Model;)Lio/github/voytech/tabulate/core/template/operation/Operations;
-	public final fun getMeasuringOperations (Lio/github/voytech/tabulate/core/model/Model;)Lio/github/voytech/tabulate/core/template/operation/Operations;
-	public final fun measure (Lio/github/voytech/tabulate/core/model/Model;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
-	public final fun render (Lio/github/voytech/tabulate/core/model/Model;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
-	public final fun resumeAllSuspendedNodes ()V
-	public final fun setActive (Lio/github/voytech/tabulate/core/model/ModelExportContext;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
+	public final fun getExportOperations (Lio/github/voytech/tabulate/core/model/AbstractModel;)Lio/github/voytech/tabulate/core/template/operation/Operations;
+	public final fun getMeasuringOperations (Lio/github/voytech/tabulate/core/model/AbstractModel;)Lio/github/voytech/tabulate/core/template/operation/Operations;
+	public final fun measure (Lio/github/voytech/tabulate/core/model/AbstractModel;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
+	public final fun render (Lio/github/voytech/tabulate/core/model/AbstractModel;Lio/github/voytech/tabulate/core/template/operation/AttributedContext;)V
+	public final fun resumeAllSuspendedModels ()V
 }
 
 public abstract interface class io/github/voytech/tabulate/core/template/HavingViewportSize {
@@ -2472,6 +2472,19 @@ public abstract class io/github/voytech/tabulate/core/template/layout/AbstractLa
 	public fun getUom ()Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;
 }
 
+public final class io/github/voytech/tabulate/core/template/layout/BoundingBoxFlags {
+	public fun <init> (ZZ)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun copy (ZZ)Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;
+	public static synthetic fun copy$default (Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;ZZILjava/lang/Object;)Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getShouldMeasureHeight ()Z
+	public final fun getShouldMeasureWidth ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public abstract interface class io/github/voytech/tabulate/core/template/layout/BoundingBoxModifier {
 	public abstract fun alter (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 }
@@ -2489,8 +2502,8 @@ public final class io/github/voytech/tabulate/core/template/layout/DefaultLayout
 	public fun getPosition (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/model/Position;Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;)Lio/github/voytech/tabulate/core/model/Position;
 	public fun getX (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/model/X;Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;)Lio/github/voytech/tabulate/core/model/X;
 	public fun getY (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/model/Y;Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;)Lio/github/voytech/tabulate/core/model/Y;
-	public fun isSpacePlanned ()Z
-	public fun setSpacePlanned (Z)V
+	public fun isSpaceMeasured ()Z
+	public fun setSpaceMeasured (Z)V
 }
 
 public final class io/github/voytech/tabulate/core/template/layout/GridLayoutPolicy : io/github/voytech/tabulate/core/template/layout/AbstractGridLayoutPolicy {
@@ -2502,11 +2515,15 @@ public final class io/github/voytech/tabulate/core/template/layout/GridLayoutPol
 	public fun getRowHeight (IILio/github/voytech/tabulate/core/model/UnitsOfMeasure;)Lio/github/voytech/tabulate/core/model/Height;
 	public fun getX (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/model/X;Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;)Lio/github/voytech/tabulate/core/model/X;
 	public fun getY (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/model/Y;Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;)Lio/github/voytech/tabulate/core/model/Y;
-	public fun isSpacePlanned ()Z
+	public fun isSpaceMeasured ()Z
+	public final fun markHeightForMeasure (IZ)V
+	public static synthetic fun markHeightForMeasure$default (Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;IZILjava/lang/Object;)V
+	public final fun markWidthForMeasure (IZ)V
+	public static synthetic fun markWidthForMeasure$default (Lio/github/voytech/tabulate/core/template/layout/GridLayoutPolicy;IZILjava/lang/Object;)V
 	public fun setColumnWidth (ILio/github/voytech/tabulate/core/model/Width;)V
 	public fun setOffsets (II)V
 	public fun setRowHeight (ILio/github/voytech/tabulate/core/model/Height;)V
-	public fun setSpacePlanned (Z)V
+	public fun setSpaceMeasured (Z)V
 }
 
 public abstract interface class io/github/voytech/tabulate/core/template/layout/GridPolicyMethods {
@@ -2546,7 +2563,7 @@ public abstract interface class io/github/voytech/tabulate/core/template/layout/
 }
 
 public abstract interface class io/github/voytech/tabulate/core/template/layout/LayoutElementApply {
-	public abstract fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;)V
+	public abstract fun applyBoundingBox (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/template/layout/LayoutPolicy;Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;)V
 }
 
 public final class io/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox {
@@ -2559,6 +2576,7 @@ public final class io/github/voytech/tabulate/core/template/layout/LayoutElement
 	public final fun component5 ()Lio/github/voytech/tabulate/core/model/Height;
 	public final fun copy (Lio/github/voytech/tabulate/core/model/Position;Lio/github/voytech/tabulate/core/model/X;Lio/github/voytech/tabulate/core/model/Y;Lio/github/voytech/tabulate/core/model/Width;Lio/github/voytech/tabulate/core/model/Height;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
 	public static synthetic fun copy$default (Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;Lio/github/voytech/tabulate/core/model/Position;Lio/github/voytech/tabulate/core/model/X;Lio/github/voytech/tabulate/core/model/Y;Lio/github/voytech/tabulate/core/model/Width;Lio/github/voytech/tabulate/core/model/Height;ILjava/lang/Object;)Lio/github/voytech/tabulate/core/template/layout/LayoutElementBoundingBox;
+	public final fun currentFlags ()Lio/github/voytech/tabulate/core/template/layout/BoundingBoxFlags;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAbsoluteX ()Lio/github/voytech/tabulate/core/model/X;
 	public final fun getAbsoluteY ()Lio/github/voytech/tabulate/core/model/Y;
@@ -2586,8 +2604,8 @@ public abstract interface class io/github/voytech/tabulate/core/template/layout/
 	public abstract fun getPosition (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/model/Position;Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;)Lio/github/voytech/tabulate/core/model/Position;
 	public abstract fun getX (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/model/X;Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;)Lio/github/voytech/tabulate/core/model/X;
 	public abstract fun getY (Lio/github/voytech/tabulate/core/template/layout/Layout;Lio/github/voytech/tabulate/core/model/Y;Lio/github/voytech/tabulate/core/model/UnitsOfMeasure;)Lio/github/voytech/tabulate/core/model/Y;
-	public abstract fun isSpacePlanned ()Z
-	public abstract fun setSpacePlanned (Z)V
+	public abstract fun isSpaceMeasured ()Z
+	public abstract fun setSpaceMeasured (Z)V
 }
 
 public final class io/github/voytech/tabulate/core/template/layout/LayoutPolicy$DefaultImpls {
@@ -2713,6 +2731,10 @@ public final class io/github/voytech/tabulate/core/template/operation/EnableLayo
 
 public abstract interface class io/github/voytech/tabulate/core/template/operation/Enhance {
 	public abstract fun invoke (Lio/github/voytech/tabulate/core/ReifiedInvocation;)Lio/github/voytech/tabulate/core/template/operation/Operation;
+}
+
+public abstract interface class io/github/voytech/tabulate/core/template/operation/HasImage {
+	public abstract fun getImageUri ()Ljava/lang/String;
 }
 
 public abstract interface class io/github/voytech/tabulate/core/template/operation/HasText : io/github/voytech/tabulate/core/template/operation/HasValue {
