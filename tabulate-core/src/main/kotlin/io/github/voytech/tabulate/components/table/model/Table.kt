@@ -61,7 +61,8 @@ class Table<T : Any> internal constructor(
     private lateinit var export: TableExport<T>
 
     override fun initialize(exportContext: ModelExportContext) {
-        exportContext.customStateAttributes["_sheetName"] = name
+        exportContext.customStateAttributes["_sheetName"] = exportContext.customStateAttributes["_pageName"] ?: name
+        exportContext.customStateAttributes["_tableName"] = name
         export = TableExport(
             exportContext, policy,
             (dataSource ?: exportContext.customStateAttributes["_dataSourceOverride"])?.dataSource ?: emptyList()

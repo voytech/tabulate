@@ -14,6 +14,10 @@ class Page internal constructor(
     internal val footer: AbstractModel<*>? = null,
 ) : AbstractModel<Page>() {
 
+    override fun initialize(exportContext: ModelExportContext) {
+        exportContext.customStateAttributes["_pageName"] = name
+    }
+
     override fun doExport(exportContext: ModelExportContext) = with(exportContext) {
         resumeAllSuspendedNodes()
         clearLayouts()
