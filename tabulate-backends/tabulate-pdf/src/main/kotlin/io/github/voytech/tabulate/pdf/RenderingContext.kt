@@ -1,7 +1,5 @@
 package io.github.voytech.tabulate.pdf
 
-import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHintAttribute
-import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.model.border.Borders
@@ -14,6 +12,8 @@ import io.github.voytech.tabulate.core.template.result.OutputBinding
 import io.github.voytech.tabulate.core.template.result.OutputStreamOutputBinding
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat
 import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
+import io.github.voytech.tabulate.getByteArrayFromUrl
+import io.github.voytech.tabulate.isValidUrl
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -88,7 +88,14 @@ class PdfBoxRenderingContext(val document: PDDocument = PDDocument()) : Renderin
         getCurrentContentStream().showText(text)
     }
 
-    fun loadImage(filePath: String): PDImageXObject = PDImageXObject.createFromFile(filePath, document)
+    fun loadImage(filePath: String): PDImageXObject =
+        if (filePath.isValidUrl()) {
+            loadImage(filePath.getByteArrayFromUrl())
+        } else {
+            PDImageXObject.createFromFile(filePath, document)
+        }
+
+    fun loadImage(binary: ByteArray, name: String = "noname"): PDImageXObject = PDImageXObject.createFromByteArray(document, binary, name)
 
     fun PDImageXObject.showImage(x: Float, y: Float, width: Float?, height: Float?) {
         if (width != null && height != null) {

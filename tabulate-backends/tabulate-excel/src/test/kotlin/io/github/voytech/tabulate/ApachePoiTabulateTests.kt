@@ -2,6 +2,7 @@ package io.github.voytech.tabulate
 
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
+import io.github.voytech.tabulate.components.page.api.builder.dsl.page
 import io.github.voytech.tabulate.components.page.api.builder.dsl.sheet
 import io.github.voytech.tabulate.components.table.api.builder.RowPredicates.all
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
@@ -730,7 +731,7 @@ class ApachePoiTabulateTests {
             }
         }
         document {
-            sheet {
+            page {
                 name = "first"
                 table(tableStyle + headerStyle + typedTable<SampleProduct> {
                     columns {
@@ -746,8 +747,21 @@ class ApachePoiTabulateTests {
                     }
                     dataSource(SampleProduct.create(25))
                 })
+                table<Unit> {
+                    rows {
+                        newRow {
+                            cell { value = "This is next table below.." ; colSpan = 4 }
+                        }
+                        newRow {
+                            cell { value = "1" }
+                            cell { value = "2" }
+                            cell { value = "3" }
+                            cell { value = "4" }
+                        }
+                    }
+                }
             }
-            sheet {
+            page {
                 name = "second"
                 table<SampleProduct>(headerStyle + typedTable {
                     attributes {

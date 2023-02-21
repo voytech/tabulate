@@ -144,7 +144,7 @@ class PdfBoxTabulateTests {
                             cell { value = 34.toUShort() }
                             cell { value = (-34).toShort() }
                             cell {
-                                value = "src/test/resources/dot.png"
+                                value = "https://cdn.pixabay.com/photo/2013/07/12/14/07/basketball-147794_960_720.png"
                                 typeHint { DefaultTypeHints.IMAGE_URI }
                             }
                         }

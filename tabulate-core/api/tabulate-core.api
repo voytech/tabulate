@@ -1,3 +1,8 @@
+public final class io/github/voytech/tabulate/UtilsKt {
+	public static final fun getByteArrayFromUrl (Ljava/lang/String;)[B
+	public static final fun isValidUrl (Ljava/lang/String;)Z
+}
+
 public final class io/github/voytech/tabulate/components/commons/operation/NewPage : io/github/voytech/tabulate/core/template/operation/AttributedContext {
 	public fun <init> (ILjava/lang/String;)V
 	public final fun getPageName ()Ljava/lang/String;
