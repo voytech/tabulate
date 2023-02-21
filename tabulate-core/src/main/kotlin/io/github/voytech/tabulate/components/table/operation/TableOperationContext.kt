@@ -49,9 +49,9 @@ interface RowLayoutElement : RowCoordinate, LayoutElement<GridLayoutPolicy>, Lay
         )
     }
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy, flags: BoundingBoxFlags): Unit =
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy): Unit =
         with(policy) {
-            markHeightForMeasure(getRow(),flags.shouldMeasureHeight)
+            markHeightForMeasure(getRow(),context.flags.shouldMeasureHeight)
             context.height?.let { setRowHeight(getRow(), it) }
         }
 }
@@ -71,9 +71,9 @@ interface ColumnLayoutElement : ColumnCoordinate, LayoutElement<GridLayoutPolicy
         elementBoundingBox(x = getX(getColumn().asXPosition(), uom), y = getY(0.asYPosition(), uom))
     }
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy, flags: BoundingBoxFlags): Unit =
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy): Unit =
         with(policy) {
-            markWidthForMeasure(getColumn(),flags.shouldMeasureWidth)
+            markWidthForMeasure(getColumn(),context.flags.shouldMeasureWidth)
             context.width?.let { setColumnWidth(getColumn(), it) }
         }
 }
@@ -88,7 +88,7 @@ interface RowCellCoordinate : RowCoordinate, ColumnCoordinate
 interface RowCellLayoutElement : RowCellCoordinate, LayoutElement<GridLayoutPolicy>,
     LayoutElementApply<GridLayoutPolicy> {
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy, flags: BoundingBoxFlags): Unit =
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy): Unit =
         with(policy) {
             context.width?.let { setColumnWidth(getColumn(), it) }
             context.height?.let { setRowHeight(getRow(), it) }

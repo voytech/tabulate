@@ -83,13 +83,12 @@ class EnableAttributeOperationAwareness<CTX : RenderingContext>(private val attr
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
-    private val delegate: Operation<CTX, E>,
-    private val checkOverflows: Boolean = true,
-    private val layoutWithPolicy: () -> LayoutWithPolicy,
-) : Operation<CTX, E> {
 
-    private fun <R: RenderableContext<*>> Layout.mergeAttributeElementBoundingBox(
+sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
+    protected val delegate: Operation<CTX, E>,
+    protected val layoutWithPolicy: () -> LayoutWithPolicy,
+): Operation<CTX, E> {
+    private fun <R : RenderableContext<*>> Layout.mergeAttributeElementBoundingBox(
         context: R, boundingBox: LayoutElementBoundingBox,
     ): LayoutElementBoundingBox =
         context.attributes?.attributeSet?.asSequence()?.let { attributes ->
@@ -99,8 +98,7 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
                 }
         } ?: run { context.boundingBox }
 
-
-    private fun  LayoutWithPolicy.resolveElementBoundingBox(context: E): LayoutElementBoundingBox? =
+    protected fun LayoutWithPolicy.createElementBoundingBox(context: E): LayoutElementBoundingBox? =
         if (context is RenderableContext<*>) {
             @Suppress("UNCHECKED_CAST")
             with(context as RenderableContext<LayoutPolicy>) {
@@ -108,59 +106,80 @@ class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
             }
         } else null
 
-
-
-    private fun LayoutWithPolicy.commitBoundingBox(
-        context: E, boundaries: LayoutElementBoundingBox? = null, flags: BoundingBoxFlags? = null
-    ) {
-        if (boundaries != null && flags!= null && context is LayoutElementApply<*>) {
+    protected fun LayoutWithPolicy.commitBoundingBox(context: E, boundaries: LayoutElementBoundingBox? = null) {
+        if (boundaries != null && context is LayoutElementApply<*>) {
             @Suppress("UNCHECKED_CAST")
             with(context as LayoutElementApply<LayoutPolicy>) {
-                layout.applyBoundingBox(boundaries, policy, flags)
+                layout.applyBoundingBox(boundaries, policy)
             }
         }
     }
+}
+
+class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedContext>(
+    delegate: Operation<CTX, E>, layoutWithPolicy: () -> LayoutWithPolicy,
+) : LayoutAwareOperation<CTX, E>(delegate, layoutWithPolicy) {
 
     override operator fun invoke(renderingContext: CTX, context: E) {
         with(layoutWithPolicy()) {
             with(layout) {
-                resolveElementBoundingBox(context).let { bbox ->
-                    ifOverflowCheckEnabled { bbox.checkOverflow() }?.let {
+                createElementBoundingBox(context).let { bbox ->
+                    bbox.checkOverflow()?.let {
                         context.setResult(OverflowResult(it))
-                    } ?: run {
-                        val flags = bbox?.currentFlags() //TODO current flags should be resolved only from model properties, but bbox may be produced from LayoutPolicy at this moment.
+                    }?: run {
+                        bbox?.setFlags()
                         delegate(renderingContext, context).also {
                             bbox?.applyOnLayout()
                         }
-                        commitBoundingBox(context, bbox, flags)
+                        commitBoundingBox(context, bbox)
                         context.setResult(Success)
                     }
                 }
             }
         }
     }
+}
 
-    private fun ifOverflowCheckEnabled(provider: () -> Overflow?): Overflow? =
-        if (checkOverflows) provider() else null
 
+/**
+ * Operations enhancer bringing layout scope into context of an operation. This allows to make use of AttributedModels that
+ * are also LayoutElements producing bounding boxes for lay-outing purposes.
+ * @author Wojciech Mąka
+ * @since 0.2.0
+ */
+class LayoutAwareMeasureOperation<CTX : RenderingContext, E : AttributedContext>(
+    delegate: Operation<CTX, E>, layoutWithPolicy: () -> LayoutWithPolicy,
+) : LayoutAwareOperation<CTX, E>(delegate, layoutWithPolicy) {
+
+    override operator fun invoke(renderingContext: CTX, context: E) {
+        with(layoutWithPolicy()) {
+            with(layout) {
+                createElementBoundingBox(context).let { bbox ->
+                    bbox?.setFlags()
+                    if (!bbox.isDefined()) { delegate(renderingContext, context) }
+                    bbox?.applyOnLayout()
+                    commitBoundingBox(context, bbox)
+                    context.setResult(Success)
+                }
+            }
+        }
+    }
 }
 
 data class LayoutWithPolicy(val layout: Layout, val policy: LayoutPolicy)
 
-class EnableLayoutsAwareness<CTX : RenderingContext>(
-    private val checkOverflows: Boolean = true, private val layout: () -> LayoutWithPolicy,
+class EnableRenderingUsingLayouts<CTX : RenderingContext>(
+    private val layout: () -> LayoutWithPolicy,
 ) : Enhance<CTX> {
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
-        LayoutAwareOperation(op.delegate, checkOverflows, layout)
+        LayoutAwareRenderOperation(op.delegate, layout)
 }
 
-class SkipRedundantMeasurements<CTX : RenderingContext> : Enhance<CTX> {
+class EnableMeasuringForLayouts<CTX : RenderingContext>(
+    private val layout: () -> LayoutWithPolicy,
+) : Enhance<CTX> {
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
-        Operation { renderingContext, context ->
-            if (!context.boundingBox().isDefined()) {
-                op(renderingContext, context)
-            }
-        }
+        LayoutAwareMeasureOperation(op.delegate, layout)
 }
 
 class JoinOperations<CTX : RenderingContext>(

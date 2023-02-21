@@ -35,7 +35,7 @@ class ExportInstance(
             operationsFactory.createMeasureOperations(model).let { measuringOperations ->
                 operationsFactory.createExportOperations(model,
                     JoinOperations(measuringOperations) { !it.boundingBox().isDefined() },
-                    EnableLayoutsAwareness { model.getActiveLayout() }
+                    EnableRenderingUsingLayouts { model.getActiveLayout() }
                 )
             }
         }
@@ -43,10 +43,9 @@ class ExportInstance(
     fun <M : AbstractModel<M>> getMeasuringOperations(model: M): Operations<RenderingContext> =
         measureOperations.computeIfAbsent(model) {
             operationsFactory.createMeasureOperations(model,
-                SkipRedundantMeasurements(),
                 //TODO is this Enhancer required ? Consider not enhancing each operation, but instead create single operation which internally delegates operations returned from createMeasureOperations
                 //TODO this will allow to enable measuring without single third-party rendering-context specific measuring operations.
-                EnableLayoutsAwareness(checkOverflows = false) { model.getActiveMeasuringLayout() }
+                EnableMeasuringForLayouts { model.getActiveMeasuringLayout() }
             )
         }
 

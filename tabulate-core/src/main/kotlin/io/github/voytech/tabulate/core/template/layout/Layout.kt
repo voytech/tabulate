@@ -153,7 +153,7 @@ fun interface BoundingBoxModifier {
 }
 
 fun interface LayoutElementApply<PL: LayoutPolicy> {
-    fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: PL, flags: BoundingBoxFlags)
+    fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: PL)
 }
 
 data class LayoutElementBoundingBox(
@@ -163,20 +163,33 @@ data class LayoutElementBoundingBox(
     var width: Width? = null,
     var height: Height? = null,
 ) {
+    val flags: MeasurementsFlags = MeasurementsFlags()
 
     fun unitsOfMeasure(): UnitsOfMeasure = layoutPosition.x.unit
 
     fun isDefined(): Boolean = width != null && height != null
 
+    fun setFlags() {
+        with(flags) { assignFlags() }
+    }
+
     operator fun plus(other: LayoutElementBoundingBox): LayoutElementBoundingBox = copy(
         width = other.width?.switchUnitOfMeasure(unitsOfMeasure()) ?: width,
         height = other.height?.switchUnitOfMeasure(unitsOfMeasure()) ?: height
     )
-
-    fun currentFlags(): BoundingBoxFlags = BoundingBoxFlags(width == null, height == null)
 }
 
-data class BoundingBoxFlags(val shouldMeasureWidth: Boolean, val shouldMeasureHeight: Boolean)
+class MeasurementsFlags {
+    var shouldMeasureWidth: Boolean = false
+        private set
+    var shouldMeasureHeight: Boolean = false
+        private set
+
+    fun LayoutElementBoundingBox.assignFlags() {
+        shouldMeasureWidth = (width == null)
+        shouldMeasureHeight = (height == null)
+    }
+}
 
 fun LayoutElementBoundingBox?.isDefined() = this?.isDefined() ?: false
 
