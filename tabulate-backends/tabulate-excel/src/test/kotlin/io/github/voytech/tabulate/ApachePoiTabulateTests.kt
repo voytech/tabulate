@@ -3,6 +3,7 @@ package io.github.voytech.tabulate
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
+import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.components.table.api.builder.RowPredicates.all
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
@@ -11,6 +12,9 @@ import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.D
 import io.github.voytech.tabulate.components.table.model.attributes.table.template
 import io.github.voytech.tabulate.components.table.template.export
 import io.github.voytech.tabulate.components.table.template.tabulate
+import io.github.voytech.tabulate.components.text.api.builder.dsl.height
+import io.github.voytech.tabulate.components.text.api.builder.dsl.text
+import io.github.voytech.tabulate.components.text.api.builder.dsl.width
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.Height
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
@@ -776,5 +780,35 @@ class ApachePoiTabulateTests {
                 })
             }
         }.export("test.xlsx")
+    }
+
+    @Test
+    fun `should export document with TextBox`() {
+        document {
+            page {
+                text {
+                    value<PageExecutionContext> { "HEADER: the page number is : ${it.pageNumber} (should be sheet NAME)"  }
+                    attributes {
+                        height { 50.pt() }
+                        width { 200.pt() }
+                    }
+                }
+                table {
+                    dataSource(SampleProduct.create(10))
+                    columns {
+                        column(SampleProduct::code)
+                        column(SampleProduct::name)
+                    }
+                    rows { header("Id", "Name", "Description", "Price") }
+                }
+                text {
+                    value<PageExecutionContext> { "FOOTER: the page number is : ${it.pageNumber}"  }
+                    attributes {
+                        height { 50.pt() }
+                        width { 200.pt() }
+                    }
+                }
+            }
+        }.export(File("test.xlsx"))
     }
 }

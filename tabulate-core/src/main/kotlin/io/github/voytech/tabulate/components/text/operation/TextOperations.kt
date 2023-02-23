@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.components.text.operation
 
 import io.github.voytech.tabulate.core.model.Attributes
+import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.model.asXPosition
 import io.github.voytech.tabulate.core.model.asYPosition
 import io.github.voytech.tabulate.core.template.RenderingContext
@@ -11,7 +12,15 @@ import io.github.voytech.tabulate.core.template.operation.HasText
 import io.github.voytech.tabulate.core.template.operation.Operation
 import io.github.voytech.tabulate.core.template.operation.RenderableContext
 
-class TextRenderable internal constructor(val text: String, override val attributes: Attributes?) : RenderableContext<DefaultLayoutPolicy>(), HasText {
+class TextRenderable internal constructor(
+    val text: String,
+    override val attributes: Attributes?,
+    stateAttributes: StateAttributes,
+) : RenderableContext<DefaultLayoutPolicy>(), HasText {
+
+    init {
+        additionalAttributes = stateAttributes.data
+    }
 
     override fun Layout.computeBoundingBox(policy: DefaultLayoutPolicy): LayoutElementBoundingBox = with(policy) {
         elementBoundingBox(

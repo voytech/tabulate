@@ -23,7 +23,7 @@ class Text(
     }
 
     private fun asRenderable(context: ModelExportContext): TextRenderable = with(context) {
-        TextRenderable(getTextValue(this), attributes.orEmpty().forContext<TextRenderable>())
+        TextRenderable(getTextValue(this), attributes.orEmpty().forContext<TextRenderable>(), customStateAttributes)
     }
 
     private fun getTextValue(context: ModelExportContext): String = valueSupplier?.let { context.value(it) } ?: value

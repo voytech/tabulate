@@ -3,6 +3,7 @@ package io.github.voytech.tabulate.core.template
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.template.layout.SpreadsheetPolicy
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
+import io.github.voytech.tabulate.core.template.operation.RenderableContext
 import io.github.voytech.tabulate.core.template.operation.boundingBox
 
 /**
@@ -18,35 +19,32 @@ interface HavingViewportSize {
     fun getWidth(): Width
     fun getHeight(): Height
 }
+
 /**
  * RenderingContextForSpreadsheet is a base class for all rendering contexts communicating with spreadsheets. It adds
  * capabilities of tracking and accessing spreadsheet cell coordinates related to document root.
  * @since 0.*.0
  * @author Wojciech Mąka
  */
-abstract class RenderingContextForSpreadsheet: RenderingContext {
+abstract class RenderingContextForSpreadsheet : RenderingContext {
 
     private lateinit var measures: SpreadsheetPolicy
     //TODO add caching of left top column row indices by layout.
 
     fun setupSpreadsheetLayout(defaultColumnWidth: Float, defaultRowHeight: Float) {
-        measures = SpreadsheetPolicy(defaultColumnWidth,defaultRowHeight)
+        measures = SpreadsheetPolicy(defaultColumnWidth, defaultRowHeight)
     }
 
-    fun AttributedContext.getAbsoluteColumn(column: Int): Int {
-        return boundingBox()?.layoutPosition?.x?.let {
-            measures.getX(it, UnitsOfMeasure.NU).asColumn() + column
-        } ?: 0
-    }
+    fun AttributedContext.getAbsoluteColumn(column: Int): Int = boundingBox()?.layoutPosition?.x?.let {
+        measures.getX(it, UnitsOfMeasure.NU).asColumn() + column
+    } ?: 0
 
-    fun AttributedContext.getAbsoluteRow(row: Int): Int {
-        return boundingBox()?.layoutPosition?.y?.let {
-            measures.getY(it, UnitsOfMeasure.NU).asRow() + row
-        } ?: 0
-    }
+    fun AttributedContext.getAbsoluteRow(row: Int): Int = boundingBox()?.layoutPosition?.y?.let {
+        measures.getY(it, UnitsOfMeasure.NU).asRow() + row
+    } ?: 0
 
     fun AttributedContext.setColumnWidth(column: Int, width: Width) {
-        setAbsoluteColumnWidth(getAbsoluteColumn(column),width)
+        setAbsoluteColumnWidth(getAbsoluteColumn(column), width)
     }
 
     fun AttributedContext.setRowHeight(row: Int, height: Height) {
@@ -69,4 +67,34 @@ abstract class RenderingContextForSpreadsheet: RenderingContext {
         }
     }
 
+    fun RenderableContext<*>.getAbsoluteLeftTopColumn(): Int = boundingBox.absoluteX.let {
+        measures.getX(it, UnitsOfMeasure.NU).asColumn()
+    } ?: 0
+
+    fun RenderableContext<*>.getAbsoluteLeftTopRow(): Int = boundingBox.absoluteY.let {
+        measures.getY(it, UnitsOfMeasure.NU).asRow()
+    } ?: 0
+
+    fun RenderableContext<*>.getAbsoluteRightBottomColumn(): Int = boundingBox.let {
+        it.absoluteX.let { x -> measures.getX(x + (it.width?.value ?: 0F), UnitsOfMeasure.NU).asColumn() }
+    } ?: 0
+
+    fun RenderableContext<*>.getAbsoluteRightBottomRow(): Int = boundingBox.let {
+        it.absoluteY.let { y -> measures.getY(y + (it.height?.value ?: 0F), UnitsOfMeasure.NU).asRow() }
+    } ?: 0
+
+    fun RenderableContext<*>.createSpreadSheetAnchor(): SpreadSheetAnchor = SpreadSheetAnchor(
+        leftTopColumn = getAbsoluteLeftTopColumn(),
+        leftTopRow = getAbsoluteLeftTopRow(),
+        rightBottomColumn = getAbsoluteRightBottomColumn(),
+        rightBottomRow = getAbsoluteRightBottomRow()
+    )
+
 }
+
+data class SpreadSheetAnchor(
+    val leftTopRow: Int,
+    val leftTopColumn: Int,
+    val rightBottomRow: Int,
+    val rightBottomColumn: Int,
+)

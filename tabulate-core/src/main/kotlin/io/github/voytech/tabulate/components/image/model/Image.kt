@@ -9,11 +9,11 @@ import io.github.voytech.tabulate.core.model.orEmpty
 class Image(
     @get:JvmSynthetic
     internal val filePath: String = "blank",
-    override val attributes: Attributes?
-): ModelWithAttributes<Image>() {
+    override val attributes: Attributes?,
+) : ModelWithAttributes<Image>() {
 
 
-    override fun doExport(exportContext: ModelExportContext)  = with(exportContext) {
+    override fun doExport(exportContext: ModelExportContext) = with(exportContext) {
         createLayoutScope {
             render(asRenderable())
         }
@@ -23,6 +23,7 @@ class Image(
         with(exportContext) { measure(asRenderable()) }
     }
 
-    private fun asRenderable(): ImageRenderable = ImageRenderable(filePath, attributes.orEmpty().forContext<ImageRenderable>())
+    private fun asRenderable(): ImageRenderable =
+        ImageRenderable(filePath, attributes.orEmpty().forContext<ImageRenderable>(), context.customStateAttributes)
 
 }

@@ -91,7 +91,6 @@ class ApachePoiRenderingContext : RenderingContextForSpreadsheet() {
         return cell(sheetName, rowIndex, columnIndex) ?: createCell(sheetName, rowIndex, columnIndex, onCreate)
     }
 
-
     fun provideCellStyle(
         sheetName: String,
         rowIndex: Int,

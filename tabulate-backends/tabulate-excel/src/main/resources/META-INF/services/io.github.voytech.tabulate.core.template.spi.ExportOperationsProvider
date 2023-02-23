@@ -1,2 +1,4 @@
 io.github.voytech.tabulate.excel.components.table.operation.ExcelTableOperations
 io.github.voytech.tabulate.excel.components.sheet.ExcelSheetOperations
+io.github.voytech.tabulate.excel.components.text.ExcelTextOperations
+io.github.voytech.tabulate.excel.components.image.ExcelImageOperations

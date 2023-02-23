@@ -16,6 +16,7 @@ class Page internal constructor(
 
     override fun initialize(exportContext: ModelExportContext) {
         exportContext.customStateAttributes["_pageName"] = name
+        exportContext.customStateAttributes["_sheetName"] = name
     }
 
     override fun doExport(exportContext: ModelExportContext) = with(exportContext) {
