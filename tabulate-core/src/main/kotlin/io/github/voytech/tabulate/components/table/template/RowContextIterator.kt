@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.components.table.template
 
-import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.RowEnd
 import io.github.voytech.tabulate.core.model.ModelExportContext
 
@@ -16,15 +15,15 @@ internal class RowContextIterator<T: Any>(
     private val templateContext: ModelExportContext
 ) : AbstractIterator<ContextResult<RowEnd<T>>>() {
 
-    private var sourceRecordIndex: Int? = null
+    private var nextSourceRecordIndex: Int? = null
 
     private val indexIncrement = MutableRowIndex().apply {
-        set(overflowOffsets.getIndexOnY())
+        set(overflowOffsets.getRowOffset())
     }
 
     private fun IndexedResult<RowEnd<T>>.setProcessedSourceRecordIndex() {
-        if (sourceIndex != null) {
-            sourceRecordIndex = sourceIndex + 1
+        if (sourceRecordIndex != null) {
+            nextSourceRecordIndex = sourceRecordIndex + 1
         }
     }
 
@@ -40,8 +39,8 @@ internal class RowContextIterator<T: Any>(
                     }
                     is OverflowResult -> {
                         suspendY()
-                        overflowOffsets.setNextIndexOnY(it.rowIndex)
-                        overflowOffsets.setNextRecordIndex(sourceRecordIndex ?: 0)
+                        overflowOffsets.setNextRowIndex(it.rowIndex)
+                        overflowOffsets.setNextRecordIndex(nextSourceRecordIndex ?: 0)
                         setNext(it.result)
                     }
                 }

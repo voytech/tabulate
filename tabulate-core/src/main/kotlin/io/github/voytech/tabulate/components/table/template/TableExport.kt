@@ -138,7 +138,7 @@ internal class TableExport<T : Any>(
         }
         if (status.isXOverflow()) {
             exportContext.suspendX()
-            overflowOffsets.setNextIndexOnX(column?.index ?: 0)
+            overflowOffsets.setNextColumnIndex(column?.index ?: 0)
         }
         return status
     }
@@ -167,7 +167,7 @@ internal class TableExport<T : Any>(
 
     fun exportOrResume() = with(exportContext) {
         overflowOffsets.align()
-        policy.setOffsets(overflowOffsets.getIndexValueOnY(), overflowOffsets.getIndexOnX())
+        policy.setOffsets(overflowOffsets.getRowOffsetValue(), overflowOffsets.getColumnOffset())
         setup(instance.getExportOperations(table))
         cropDataSource()
         start()

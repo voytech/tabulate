@@ -400,6 +400,12 @@ class GridLayoutPolicy : AbstractGridLayoutPolicy() {
         return absoluteYPosition + currentLayoutRelativeY
     }
 
+    fun Layout.getAbsoluteColumnPosition(columnIndex: Int, targetUnit: UnitsOfMeasure): X =
+        getX(columnIndex.asXPosition(), uom)
+
+    fun Layout.getAbsoluteRowPosition(rowIndex: Int, targetUnit: UnitsOfMeasure): Y =
+        getY(rowIndex.asYPosition(), uom)
+
     override fun Layout.extend(width: Width) {
         extend(width)
     }

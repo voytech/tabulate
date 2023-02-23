@@ -167,13 +167,23 @@ internal abstract class AbstractRowContextResolver<T : Any>(
                 val provideCell = offsetAwareCellContext(sourceRow)
                 createRowStart(rowIndex = tableRowIndex.value, customAttributes = state.data).let { rowStart ->
                     when (val status = rowStart.render()) {
-                        Success -> SuccessResult(createRowEnd(rowStart, mapEachCell(provideCell)).also { it.render() })
+                        Success -> tryRenderRowEnd(rowStart,mapEachCell(provideCell))
                         else -> OverflowResult(status as io.github.voytech.tabulate.core.template.operation.OverflowResult)
                     }
                 }
             }
         }
     }
+
+    private fun SyntheticRow<T>.tryRenderRowEnd(rowStart: RowStart,cells: Map<ColumnKey<T>,CellContext>): ContextResult<RowEnd<T>> =
+        createRowEnd(rowStart, cells).let { rowEnd ->
+            rowEnd.render().let { result ->
+                when(result) {
+                    null, Success -> SuccessResult(rowEnd)
+                    else -> OverflowResult(result as io.github.voytech.tabulate.core.template.operation.OverflowResult)
+                }
+            }
+        }
 
     private fun resolveRowContext(
         requestedIndex: RowIndex,

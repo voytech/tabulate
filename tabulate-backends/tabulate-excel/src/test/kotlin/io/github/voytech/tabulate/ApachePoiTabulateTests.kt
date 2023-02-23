@@ -3,7 +3,6 @@ package io.github.voytech.tabulate
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
-import io.github.voytech.tabulate.components.page.api.builder.dsl.sheet
 import io.github.voytech.tabulate.components.table.api.builder.RowPredicates.all
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.RowCellExpression

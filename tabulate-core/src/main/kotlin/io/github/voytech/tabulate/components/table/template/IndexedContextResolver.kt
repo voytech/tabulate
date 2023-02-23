@@ -13,6 +13,6 @@ internal interface IndexedContextResolver<CTX : ContextData> {
 
 internal data class IndexedResult<CTX : ContextData>(
     val rowIndex: RowIndex,
-    val sourceIndex: Int? = null,
+    val sourceRecordIndex: Int? = null,
     val result: ContextResult<CTX>
 )

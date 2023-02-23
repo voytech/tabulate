@@ -43,8 +43,8 @@ interface RowCoordinate {
 interface RowLayoutElement : RowCoordinate, LayoutElement<GridLayoutPolicy>, LayoutElementApply<GridLayoutPolicy> {
     override fun Layout.computeBoundingBox(policy: GridLayoutPolicy): LayoutElementBoundingBox = with(policy) {
         elementBoundingBox(
-            x = getX(0.asXPosition(), uom),
-            y = getY(getRow().asYPosition(), uom),
+            x = getAbsoluteColumnPosition(0, uom),
+            y = getAbsoluteRowPosition(getRow(), uom),
             width = getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
         )
     }
@@ -68,7 +68,7 @@ interface ColumnCoordinate {
 interface ColumnLayoutElement : ColumnCoordinate, LayoutElement<GridLayoutPolicy>,
     LayoutElementApply<GridLayoutPolicy> {
     override fun Layout.computeBoundingBox(policy: GridLayoutPolicy): LayoutElementBoundingBox = with(policy) {
-        elementBoundingBox(x = getX(getColumn().asXPosition(), uom), y = getY(0.asYPosition(), uom))
+        elementBoundingBox(x = getAbsoluteColumnPosition(getColumn(),uom), y = getAbsoluteRowPosition(0, uom))
     }
 
     override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy): Unit =
@@ -202,8 +202,8 @@ class RowEnd<T>(
 
     override fun Layout.computeBoundingBox(policy: GridLayoutPolicy): LayoutElementBoundingBox = with(policy) {
         elementBoundingBox(
-            x = getX(0.asXPosition(), uom),
-            y = getY(getRow().asYPosition(), uom),
+            x = getAbsoluteColumnPosition(0, uom),
+            y = getAbsoluteRowPosition(getRow(), uom),
             width = getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
             height = getRowHeight(getRow(),1, uom)
         )
@@ -288,8 +288,8 @@ class CellContext(
 
     override fun Layout.computeBoundingBox(policy: GridLayoutPolicy): LayoutElementBoundingBox = with(policy) {
         elementBoundingBox(
-            x = getX(getColumn().asXPosition(), uom), //TODO getAbsoluteColumnPosition(getColumn())
-            y = getY(getRow().asYPosition(), uom),
+            x = getAbsoluteColumnPosition(getColumn(), uom),
+            y = getAbsoluteRowPosition(getRow(), uom),
             width = getColumnWidth(getColumn(), cellValue.colSpan, uom),
             height = getRowHeight(getRow(), cellValue.rowSpan, uom)
         )

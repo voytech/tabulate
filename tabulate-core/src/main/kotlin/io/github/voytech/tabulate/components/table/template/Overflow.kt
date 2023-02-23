@@ -4,18 +4,18 @@ import io.github.voytech.tabulate.components.table.model.ColumnDef
 import io.github.voytech.tabulate.core.model.ModelExportStatus
 
 data class OverflowOffsets(
-    val xOffsets: XOffsets = XOffsets(),
-    val yOffsets: YOffsets = YOffsets(),
+    val columnOffsets: ColumnOffsets = ColumnOffsets(),
+    val rowOffsets: RowOffsets = RowOffsets(),
     var partialStatus: ModelExportStatus = ModelExportStatus.ACTIVE,
 ) {
 
     fun reset() {
-        xOffsets.index = 0
-        xOffsets.nextIndex = 0
-        yOffsets.index = RowIndex(0)
-        yOffsets.nextIndex = RowIndex(0)
-        yOffsets.recordIndex = 0
-        yOffsets.nextRecordIndex = 0
+        columnOffsets.index = 0
+        columnOffsets.nextIndex = 0
+        rowOffsets.index = RowIndex(0)
+        rowOffsets.nextIndex = RowIndex(0)
+        rowOffsets.recordIndex = 0
+        rowOffsets.nextRecordIndex = 0
     }
 
     fun save(status: ModelExportStatus) {
@@ -25,46 +25,46 @@ data class OverflowOffsets(
     fun align() {
         when (partialStatus) {
             ModelExportStatus.PARTIAL_X, ModelExportStatus.PARTIAL_XY -> {
-                yOffsets.reset()
-                xOffsets.onResume()
+                rowOffsets.reset()
+                columnOffsets.onResume()
             }
 
             ModelExportStatus.PARTIAL_Y, ModelExportStatus.PARTIAL_YX -> {
-                xOffsets.reset()
-                yOffsets.onResume()
+                columnOffsets.reset()
+                rowOffsets.onResume()
             }
             ModelExportStatus.ACTIVE, ModelExportStatus.FINISHED -> {}
         }
     }
 
-    fun isValid(column: Int): Boolean = column >= xOffsets.index
+    fun isValid(column: Int): Boolean = column >= columnOffsets.index
 
     fun <T> Iterable<T>?.crop(): Iterable<T>? =
-        this?.drop(yOffsets.recordIndex)?.asIterable()
+        this?.drop(rowOffsets.recordIndex)?.asIterable()
 
     internal fun <T> List<ColumnDef<T>>.crop(): List<ColumnDef<T>> =
-        drop(xOffsets.index)
+        drop(columnOffsets.index)
 
-    fun getIndexValueOnY(): Int = getIndexOnY().value
+    fun getRowOffsetValue(): Int = getRowOffset().value
 
-    fun getIndexOnY(): RowIndex = yOffsets.index
+    fun getRowOffset(): RowIndex = rowOffsets.index
 
-    fun getIndexOnX(): Int = xOffsets.index
+    fun getColumnOffset(): Int = columnOffsets.index
 
-    fun setNextIndexOnY(rowIndex: RowIndex) {
-        yOffsets.nextIndex = rowIndex
+    fun setNextRowIndex(rowIndex: RowIndex) {
+        rowOffsets.nextIndex = rowIndex
     }
 
-    fun setNextIndexOnX(index: Int) {
-        xOffsets.nextIndex = index
+    fun setNextColumnIndex(index: Int) {
+        columnOffsets.nextIndex = index
     }
 
     fun setNextRecordIndex(record: Int) {
-        yOffsets.nextRecordIndex = record
+        rowOffsets.nextRecordIndex = record
     }
 }
 
-data class XOffsets(
+data class ColumnOffsets(
     var index: Int = 0,
     var nextIndex: Int = 0,
 ) {
@@ -78,7 +78,7 @@ data class XOffsets(
     }
 }
 
-data class YOffsets(
+data class RowOffsets(
     var index: RowIndex = RowIndex(0),
     var recordIndex: Int = 0,
     var nextIndex: RowIndex = RowIndex(0),
