@@ -397,9 +397,8 @@ private fun <A : AttributedContext> PdfBoxRenderingContext.bottomBorder(
     }
 }
 
-private fun <A : AttributedContext> PdfBoxRenderingContext.leftCompositeBorder(
+private fun PdfBoxRenderingContext.leftCompositeBorder(
     boxLayout: BoxLayout,
-    context: A,
     borders: Borders,
     primaryColor: Color? = null,
     secondaryColor: Color? = null,
@@ -441,7 +440,7 @@ private fun <A : AttributedContext> PdfBoxRenderingContext.leftBorder(
     if (borders.leftBorderStyle.hasBorder()) {
         boxLayout(context, borders).let {
             if (borders.leftBorderStyle.hasComplexBorder()) {
-                leftCompositeBorder(it, context, borders, primaryColor, secondaryColor)
+                leftCompositeBorder(it, borders, primaryColor, secondaryColor)
             } else {
                 setBorderStyle(borders.leftBorderStyle, borders.leftBorderColor, borders.leftBorderWidth)
                 val x1 = it.outerX + borders.leftBorderWidth.value / 2
@@ -453,9 +452,8 @@ private fun <A : AttributedContext> PdfBoxRenderingContext.leftBorder(
     }
 }
 
-private fun <A : AttributedContext> PdfBoxRenderingContext.rightCompositeBorder(
+private fun PdfBoxRenderingContext.rightCompositeBorder(
     boxLayout: BoxLayout,
-    context: A,
     borders: Borders,
     primaryColor: Color? = null,
     secondaryColor: Color? = null,
@@ -496,7 +494,7 @@ private fun <A : AttributedContext> PdfBoxRenderingContext.rightBorder(
     if (borders.rightBorderStyle.hasBorder()) {
         boxLayout(context, borders).let {
             if (borders.rightBorderStyle.hasComplexBorder()) {
-                rightCompositeBorder(it, context, borders, primaryColor, secondaryColor)
+                rightCompositeBorder(it, borders, primaryColor, secondaryColor)
             } else {
                 setBorderStyle(borders.rightBorderStyle, borders.rightBorderColor, borders.rightBorderWidth)
                 val x1 = it.outerX + (it.outer.width?.value ?: 0f) - borders.rightBorderWidth.value / 2

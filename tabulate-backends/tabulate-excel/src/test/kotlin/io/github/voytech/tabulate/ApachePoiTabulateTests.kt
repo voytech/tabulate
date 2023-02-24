@@ -12,9 +12,7 @@ import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.D
 import io.github.voytech.tabulate.components.table.model.attributes.table.template
 import io.github.voytech.tabulate.components.table.template.export
 import io.github.voytech.tabulate.components.table.template.tabulate
-import io.github.voytech.tabulate.components.text.api.builder.dsl.height
-import io.github.voytech.tabulate.components.text.api.builder.dsl.text
-import io.github.voytech.tabulate.components.text.api.builder.dsl.width
+import io.github.voytech.tabulate.components.text.api.builder.dsl.*
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.Height
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
@@ -791,12 +789,23 @@ class ApachePoiTabulateTests {
                     attributes {
                         height { 50.pt() }
                         width { 200.pt() }
+                        background { color = Colors.LIGHT_GRAY }
+                        text {
+                            fontFamily = DefaultFonts.COURIER_NEW
+                            fontColor = Colors.RED
+                            fontSize = 10
+                            italic = true
+                            underline = true
+                            weight = DefaultWeightStyle.BOLD
+                        }
                     }
                 }
                 table {
                     dataSource(SampleProduct.create(10))
                     columns {
-                        column(SampleProduct::code)
+                        column(SampleProduct::code) {
+                            attributes { text {  weight = DefaultWeightStyle.BOLD } }
+                        }
                         column(SampleProduct::name)
                     }
                     rows { header("Id", "Name", "Description", "Price") }
@@ -806,6 +815,13 @@ class ApachePoiTabulateTests {
                     attributes {
                         height { 50.pt() }
                         width { 200.pt() }
+                        alignment { vertical = DefaultVerticalAlignment.MIDDLE }
+                        background { color = Colors.BLACK }
+                        text {
+                            fontColor = Colors.WHITE
+                            fontSize = 10
+                            weight = DefaultWeightStyle.BOLD
+                        }
                     }
                 }
             }

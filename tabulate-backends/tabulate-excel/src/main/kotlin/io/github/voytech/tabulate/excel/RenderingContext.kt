@@ -5,6 +5,8 @@ import io.github.voytech.tabulate.core.model.color.Color
 import io.github.voytech.tabulate.components.table.operation.CellValue
 import io.github.voytech.tabulate.components.table.operation.Coordinates
 import io.github.voytech.tabulate.core.template.RenderingContextForSpreadsheet
+import io.github.voytech.tabulate.core.template.operation.AttributedContext
+import io.github.voytech.tabulate.core.template.operation.RenderableContext
 import io.github.voytech.tabulate.core.template.result.OutputBinding
 import io.github.voytech.tabulate.core.template.result.OutputStreamOutputBinding
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat
@@ -14,9 +16,7 @@ import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.util.IOUtils
 import org.apache.poi.util.Units
 import org.apache.poi.xssf.streaming.*
-import org.apache.poi.xssf.usermodel.XSSFCell
-import org.apache.poi.xssf.usermodel.XSSFColor
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.poi.xssf.usermodel.*
 import java.io.FileInputStream
 import java.io.InputStream
 import java.io.OutputStream
@@ -52,6 +52,8 @@ class ApachePoiOutputStreamOutputBinding : OutputStreamOutputBinding<ApachePoiRe
 class ApachePoiRenderingContext : RenderingContextForSpreadsheet() {
 
     private var workbook: SXSSFWorkbook? = null
+
+    private val shapesRegistry: MutableMap<AttributedContext, XSSFShape> = mutableMapOf()
 
     fun provideWorkbook(templateFile: InputStream? = null, forceRecreate: Boolean = false): SXSSFWorkbook {
         if (workbook == null || forceRecreate) {
@@ -166,6 +168,22 @@ class ApachePoiRenderingContext : RenderingContextForSpreadsheet() {
     fun getCreationHelper(): CreationHelper = workbook().creationHelper
 
     fun createClientAnchor(): ClientAnchor = getCreationHelper().createClientAnchor()
+
+    fun <S : XSSFShape, C : AttributedContext> S.bind(context: C): S = apply { shapesRegistry[context] = this }
+
+    fun <S : XSSFShape> AttributedContext.shape(clazz: Class<S>): S = shapesRegistry[this] as S
+
+    inline fun <reified S : XSSFShape> AttributedContext.shape(): S = shape(S::class.java)
+
+    fun RenderableContext<*>.createBoundedClientAnchor(): XSSFClientAnchor =
+        createSpreadSheetAnchor().let { anchor ->
+            (createClientAnchor() as XSSFClientAnchor).apply {
+                setCol1(anchor.leftTopColumn)
+                row1 = anchor.leftTopRow
+                setCol2(anchor.rightBottomColumn)
+                row2 = anchor.rightBottomRow
+            }
+        }
 
     fun mergeCells(
         sheetName: String,

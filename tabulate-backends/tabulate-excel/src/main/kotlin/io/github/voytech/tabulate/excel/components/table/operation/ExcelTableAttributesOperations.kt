@@ -19,6 +19,7 @@ import io.github.voytech.tabulate.excel.components.table.model.attributes.Filter
 import io.github.voytech.tabulate.excel.components.table.model.attributes.PrintingAttribute
 import io.github.voytech.tabulate.excel.components.table.model.resolveBorderStyle
 import io.github.voytech.tabulate.excel.components.table.operation.ExcelTableOperations.Companion.getCachedStyle
+import io.github.voytech.tabulate.excel.createFontFrom
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.FontUnderline
 import org.apache.poi.ss.util.CellRangeAddress
@@ -50,15 +51,7 @@ class CellTextStylesAttributeRenderOperation :
             columnIndex = context.getAbsoluteColumn(context.columnIndex),
             provideCellStyle = { getCachedStyle(renderingContext, context) }
         ).let {
-            val font: XSSFFont = renderingContext.workbook().createFont() as XSSFFont
-            attribute.fontFamily?.run { font.fontName = this.fontName }
-            attribute.fontColor?.run { font.setColor(ApachePoiRenderingContext.color(this)) }
-            attribute.fontSize?.run { font.fontHeightInPoints = toShort() }
-            attribute.italic?.run { font.italic = this }
-            attribute.strikeout?.run { font.strikeout = this }
-            attribute.underline?.run { font.setUnderline(if (this) FontUnderline.SINGLE else FontUnderline.NONE) }
-            attribute.weight?.run { font.bold = this == DefaultWeightStyle.BOLD }
-            it.setFont(font)
+            it.setFont(renderingContext.createFontFrom(attribute))
             it.indention = attribute.ident ?: 0
             it.wrapText = attribute.wrapText ?: false
             it.rotation = attribute.rotation ?: 0
