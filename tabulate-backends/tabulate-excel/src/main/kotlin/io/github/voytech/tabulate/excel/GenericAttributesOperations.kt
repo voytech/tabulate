@@ -1,16 +1,17 @@
 package io.github.voytech.tabulate.excel
 
 import io.github.voytech.tabulate.components.table.operation.getSheetName
+import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
-import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
-import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
-import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
-import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
+import io.github.voytech.tabulate.core.model.attributes.*
+import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.core.template.operation.AttributeOperation
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
+import org.apache.poi.hssf.usermodel.HSSFTextbox
 import org.apache.poi.ss.usermodel.FontUnderline
 import org.apache.poi.ss.usermodel.VerticalAlignment
+import org.apache.poi.xssf.usermodel.TextDirection
 import org.apache.poi.xssf.usermodel.XSSFFont
 
 class XSSFShapeAlignmentAttributeRenderOperation<CTX> :
@@ -22,7 +23,7 @@ class XSSFShapeAlignmentAttributeRenderOperation<CTX> :
         attribute: AlignmentAttribute,
     ) = with(renderingContext) {
         renderingContext.provideSheet(context.getSheetName()).let {
-            context.shape<RichTextBox>().let { shape ->
+            context.shape<SimpleShapeWrapper>().let { shape ->
                 when (attribute.vertical) {
                     DefaultVerticalAlignment.MIDDLE -> shape.verticalAlignment = VerticalAlignment.CENTER
                     null, DefaultVerticalAlignment.BOTTOM -> shape.verticalAlignment = VerticalAlignment.BOTTOM
@@ -42,8 +43,18 @@ class XSSFShapeTextStylesAttributeRenderOperation<CTX : AttributedContext> :
         attribute: TextStylesAttribute,
     ): Unit = with(renderingContext) {
         renderingContext.provideSheet(context.getSheetName()).let {
-            context.shape<RichTextBox>().let { text ->
+            context.shape<SimpleShapeWrapper>().let { text ->
                 text.applyFont(renderingContext) { font -> font.configureWith(attribute) }
+                text.wordWrap = attribute.wrapText ?: false
+                text.textDirection = attribute.rotation?.mod(360)?.let {
+                    when (it) {
+                        in (0..45), in (136..225), in (316..360) -> TextDirection.HORIZONTAL
+                        in (46..135) -> TextDirection.VERTICAL
+                        in (226..315) -> TextDirection.VERTICAL_270
+                        else -> TextDirection.HORIZONTAL
+                    }
+                } ?: TextDirection.HORIZONTAL
+                text.leftInset
             }
         }
     }
@@ -57,7 +68,7 @@ class XSSFShapeBackgroundAttributeRenderOperation<CTX : AttributedContext> :
         attribute: BackgroundAttribute,
     ): Unit = with(renderingContext) {
         renderingContext.provideSheet(context.getSheetName()).let {
-            context.shape<RichTextBox>().let { shape ->
+            context.shape<SimpleShapeWrapper>().let { shape ->
                 attribute.color?.let { color ->
                     shape.setFillColor(color.r, color.g, color.b)
                 } ?: run { shape.isNoFill = true }
@@ -74,11 +85,25 @@ class XSSFBorderAttributeRenderOperation<CTX : AttributedContext> :
         attribute: BordersAttribute,
     ): Unit = with(renderingContext) {
         renderingContext.provideSheet(context.getSheetName()).let {
-            context.shape<RichTextBox>().let { shape ->
-                //attribute.?.let { color ->
-                //textBox.setLineStyleColor(0, 0, 0)
-                //textBox.setLineWidth(2.0)
-                //}
+            context.shape<SimpleShapeWrapper>().let { shape ->
+                if (attribute.areAllEqual()) {
+                    attribute.color()?.let { shape.setLineStyleColor(it.r, it.g, it.b) }
+                    attribute.style()?.let {
+                        shape.setLineStyle(
+                            when (it) {
+                                DefaultBorderStyle.SOLID -> HSSFTextbox.LINESTYLE_SOLID
+                                DefaultBorderStyle.DOUBLE -> HSSFTextbox.LINESTYLE_SOLID
+                                DefaultBorderStyle.DASHED -> HSSFTextbox.LINESTYLE_DASHSYS
+                                DefaultBorderStyle.DOTTED -> HSSFTextbox.LINESTYLE_DOTSYS
+                                DefaultBorderStyle.NONE -> HSSFTextbox.LINESTYLE_NONE
+                                else -> HSSFTextbox.LINESTYLE_DEFAULT
+                            }
+                        )
+                    }
+                    attribute.width().let {
+                        shape.setLineWidth(it.switchUnitOfMeasure(UnitsOfMeasure.PT).value.toDouble())
+                    }
+                }
             }
         }
     }

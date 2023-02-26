@@ -22,8 +22,8 @@ class ExcelTextOperations : OperationsBundleProvider<ApachePoiRenderingContext, 
                     val clientAnchor = context.createBoundedClientAnchor()
                     it.createDrawingPatriarch()
                     val textBox: XSSFTextBox = it.drawingPatriarch.createTextbox(clientAnchor)
-                    val richTextBox = RichTextBox(it.drawingPatriarch, textBox).bind(context)
-                    richTextBox.append(context.text)
+                    val simpleShapeWrapper = SimpleShapeWrapper(it.drawingPatriarch, textBox).bind(context)
+                    simpleShapeWrapper.append(context.text)
                 }
             }
         })

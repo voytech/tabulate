@@ -788,7 +788,7 @@ class ApachePoiTabulateTests {
                     value<PageExecutionContext> { "HEADER: the page number is : ${it.pageNumber} (should be sheet NAME)"  }
                     attributes {
                         height { 50.pt() }
-                        width { 200.pt() }
+                        width { 600.pt() }
                         background { color = Colors.LIGHT_GRAY }
                         text {
                             fontFamily = DefaultFonts.COURIER_NEW
@@ -797,11 +797,21 @@ class ApachePoiTabulateTests {
                             italic = true
                             underline = true
                             weight = DefaultWeightStyle.BOLD
+                            wrapText = true
+                        }
+                        alignment { vertical = DefaultVerticalAlignment.MIDDLE }
+                        borders {
+                            all {
+                                color = Colors.RED
+                                style = DefaultBorderStyle.DOTTED
+                                width = 2.pt()
+                            }
                         }
                     }
                 }
                 table {
-                    dataSource(SampleProduct.create(10))
+                    dataSource(SampleProduct.create(100))
+                    attributes { borders { all { color = Colors.LIGHT_GRAY; width = 0.5F.pt()} } }
                     columns {
                         column(SampleProduct::code) {
                             attributes { text {  weight = DefaultWeightStyle.BOLD } }

@@ -16,25 +16,25 @@ import io.github.voytech.tabulate.core.template.operation.AttributedContext
 data class BordersAttribute(
     override val leftBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
     override val leftBorderColor: Color? = null,
-    override val leftBorderWidth: Width = Width(1F,UnitsOfMeasure.PT),
+    override val leftBorderWidth: Width = Width(1F, UnitsOfMeasure.PT),
 
     override val rightBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
     override val rightBorderColor: Color? = null,
-    override val rightBorderWidth: Width = Width(1F,UnitsOfMeasure.PT),
+    override val rightBorderWidth: Width = Width(1F, UnitsOfMeasure.PT),
 
     override val topBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
     override val topBorderColor: Color? = null,
-    override val topBorderWidth: Width = Width(1F,UnitsOfMeasure.PT),
+    override val topBorderWidth: Width = Width(1F, UnitsOfMeasure.PT),
 
     override val bottomBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
     override val bottomBorderColor: Color? = null,
-    override val bottomBorderWidth: Width = Width(1F,UnitsOfMeasure.PT),
+    override val bottomBorderWidth: Width = Width(1F, UnitsOfMeasure.PT),
 ) : Attribute<BordersAttribute>(), Borders {
 
     @TabulateMarker
     class AllBordersBuilder {
         var style: BorderStyle = DefaultBorderStyle.SOLID
-        var width: Width = Width(1F,UnitsOfMeasure.PT)
+        var width: Width = Width(1F, UnitsOfMeasure.PT)
         var color: Color = Colors.BLACK
         fun Number.pt(): Width = MeasuredValue(toFloat(), UnitsOfMeasure.PT).width()
         fun Number.px(): Width = MeasuredValue(toFloat(), UnitsOfMeasure.PX).width()
@@ -44,16 +44,16 @@ data class BordersAttribute(
     class Builder(target: Class<out AttributedContext>) : AttributeBuilder<BordersAttribute>(target) {
         var leftBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
         var leftBorderColor: Color? by observable(null)
-        var leftBorderWidth: Width by observable(Width(1F,UnitsOfMeasure.PT))
+        var leftBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
         var rightBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
         var rightBorderColor: Color? by observable(null)
-        var rightBorderWidth: Width by observable(Width(1F,UnitsOfMeasure.PT))
+        var rightBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
         var topBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
         var topBorderColor: Color? by observable(null)
-        var topBorderWidth: Width by observable(Width(1F,UnitsOfMeasure.PT))
+        var topBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
         var bottomBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
         var bottomBorderColor: Color? by observable(null)
-        var bottomBorderWidth: Width by observable(Width(1F,UnitsOfMeasure.PT))
+        var bottomBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
 
         fun Number.pt(): Width = MeasuredValue(toFloat(), UnitsOfMeasure.PT).width()
         fun Number.px(): Width = MeasuredValue(toFloat(), UnitsOfMeasure.PX).width()
@@ -100,10 +100,24 @@ data class BordersAttribute(
 
     companion object {
         @JvmStatic
-        fun  builder(target: Class<out AttributedContext>) : Builder = Builder(target)
+        fun builder(target: Class<out AttributedContext>): Builder = Builder(target)
 
         @JvmStatic
-        inline fun <reified AC: AttributedContext> builder() : Builder = Builder(AC::class.java)
+        inline fun <reified AC : AttributedContext> builder(): Builder = Builder(AC::class.java)
     }
 }
 
+fun BordersAttribute.haveEqualColors(): Boolean =
+    (leftBorderColor == rightBorderColor) && (rightBorderColor == topBorderColor) && (topBorderColor == bottomBorderColor)
+
+fun BordersAttribute.haveEqualStyles(): Boolean =
+    (leftBorderStyle == rightBorderStyle) && (rightBorderStyle == topBorderStyle) && (topBorderStyle == bottomBorderStyle)
+
+fun BordersAttribute.haveEqualWidths(): Boolean =
+    (leftBorderWidth == rightBorderWidth) && (rightBorderWidth == topBorderWidth) && (topBorderWidth == bottomBorderWidth)
+
+fun BordersAttribute.areAllEqual(): Boolean = haveEqualStyles() && haveEqualColors() && haveEqualWidths()
+
+fun BordersAttribute.color(): Color? = if (haveEqualColors()) leftBorderColor else error("Cannot determine color of all kinds of borders")
+fun BordersAttribute.width(): Width = if (haveEqualWidths()) leftBorderWidth else error("Cannot determine width of all kinds of borders")
+fun BordersAttribute.style(): BorderStyle? = if (haveEqualStyles()) leftBorderStyle else error("Cannot determine line style of all kinds of borders")
