@@ -27,13 +27,15 @@ fun OperationResult?.isYOverflow(): Boolean = this is OverflowResult && overflow
 
 fun <E : AttributedContext> E.setResult(result: OperationResult) = setContextAttribute("result",result)
 
+fun <E : AttributedContext> E.getResult(): OperationResult? = getContextAttribute("result")
+
 class Operations<CTX : RenderingContext>(private val dispatch: TwoParamsBasedDispatch) {
 
-    private fun <E : AttributedContext> E.getResult(): OperationResult? = removeContextAttribute("result")
+    private fun <E : AttributedContext> E.getAndDropResult(): OperationResult? = removeContextAttribute("result")
 
     private fun <CTX : RenderingContext, E : AttributedContext> Operation<CTX, E>.invokeWithResult(
         renderingContext: CTX, context: E
-    ): OperationResult = invoke(renderingContext, context).let { context.getResult() ?: Success }
+    ): OperationResult = invoke(renderingContext, context).let { context.getAndDropResult() ?: Success }
 
     operator fun <A : Attribute<*>, E : AttributedContext> invoke(renderingContext: CTX, context: E): OperationResult? =
         (dispatch[renderingContext, context] as? Operation<CTX, E>)?.invokeWithResult(renderingContext, context)

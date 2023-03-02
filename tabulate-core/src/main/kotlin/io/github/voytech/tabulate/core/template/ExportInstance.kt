@@ -35,8 +35,7 @@ class ExportInstance(
             operationsFactory.createMeasureOperations(model).let { measuringOperations ->
                 operationsFactory.createExportOperations(model,
                     JoinOperations(measuringOperations) { !it.boundingBox().isDefined() },
-                    EnableRenderingUsingLayouts { model.getActiveLayout() }
-                )
+                    EnableRenderingUsingLayouts(model.context) { model.getActiveLayout() })
             }
         }
 

@@ -5,6 +5,7 @@ import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.ModelExportContext
 import io.github.voytech.tabulate.core.model.ModelWithAttributes
 import io.github.voytech.tabulate.core.model.orEmpty
+import io.github.voytech.tabulate.core.template.ResumeNext
 
 class Image(
     @get:JvmSynthetic
@@ -17,6 +18,11 @@ class Image(
         createLayoutScope {
             render(asRenderable())
         }
+    }
+
+    override fun doResume(exportContext: ModelExportContext, resumeNext: ResumeNext) {
+        doExport(exportContext)
+        resumeNext()
     }
 
     override fun takeMeasures(exportContext: ModelExportContext) {

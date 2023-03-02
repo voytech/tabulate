@@ -147,10 +147,8 @@ class ModelExportContext(
 
     private fun bubblePartialStatus() = with(instance) {
         var parent = navigation.parent
-        val currentLayout = layouts.renderingLayout
         while (parent != null && status.isPartlyExported()) {
             with(parent) {
-                val parentLayout = context.layouts.renderingLayout
                 context.status = status
                 parent = context.navigation.parent
             }
@@ -183,14 +181,13 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
     private fun <R> withinInitializedContext(parent: ModelExportContext, block: () -> R): R =
         ensuringExportContext(parent).run { block() }
 
-    fun export(parentContext: ModelExportContext, layoutCxt: LayoutContext? = null) =
-        with(parentContext.instance) {
+    fun export(parentContext: ModelExportContext, layoutCxt: LayoutContext? = null) = with(parentContext.instance) {
+        withinInitializedContext(parentContext) {
             if (shouldMeasure()) measure(parentContext)
-            withinInitializedContext(parentContext) {
-                doExport(context.apply { layoutContext = layoutCxt })
-                context.finishOrSuspend()
-            }
+            doExport(context.apply { layoutContext = layoutCxt })
+            context.finishOrSuspend()
         }
+    }
 
     //TODO on measure - should call probably the same logic as export and resumption but should inject measurement operations instead of export operations. We should not be able to use different exporting logic for those two paths.
     fun measure(parentContext: ModelExportContext): SomeSize = with(parentContext.instance) {
@@ -215,7 +212,8 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
     private fun createExportContext(parentContext: ModelExportContext): ModelExportContext =
         with(parentContext) {
             navigation.addChild(self())
-            ModelExportContext(instance,
+            ModelExportContext(
+                instance,
                 Navigation(navigation.root, navigation.active.takeIf { navigation.root != self() }, self()),
                 Layouts(layoutPolicyHandle),
                 customStateAttributes,

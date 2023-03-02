@@ -3,7 +3,6 @@ package io.github.voytech.tabulate.components.text.model
 import io.github.voytech.tabulate.components.text.operation.TextRenderable
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.template.ResumeNext
-import io.github.voytech.tabulate.core.template.operation.OverflowResult
 
 class Text(
     @get:JvmSynthetic
@@ -15,7 +14,7 @@ class Text(
     override fun doExport(exportContext: ModelExportContext) = with(exportContext) {
         asRenderable(exportContext).let { renderable ->
             createLayoutScope {
-                if (render(renderable) is OverflowResult) suspendY()
+                render(renderable)
             }
         }
     }
