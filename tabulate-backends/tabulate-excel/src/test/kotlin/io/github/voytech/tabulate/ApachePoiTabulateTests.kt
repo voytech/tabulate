@@ -2,6 +2,9 @@ package io.github.voytech.tabulate
 
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
+import io.github.voytech.tabulate.components.image.api.builder.dsl.height
+import io.github.voytech.tabulate.components.image.api.builder.dsl.image
+import io.github.voytech.tabulate.components.image.api.builder.dsl.width
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
 import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.components.table.api.builder.RowPredicates.all
@@ -809,16 +812,35 @@ class ApachePoiTabulateTests {
                         }
                     }
                 }
+                image {
+                    filePath = "src/test/resources/kotlin.jpeg"
+                    attributes {
+                        width { 100.pt() }
+                        height { 100.pt() }
+                    }
+                }
                 table {
                     dataSource(SampleProduct.create(100))
-                    attributes { borders { all { color = Colors.LIGHT_GRAY; width = 0.5F.pt()} } }
+                    attributes {
+                        borders { all { color = Colors.LIGHT_GRAY; width = 0.5F.pt()} }
+                        columnWidth { auto = true }
+                    }
                     columns {
                         column(SampleProduct::code) {
                             attributes { text {  weight = DefaultWeightStyle.BOLD } }
                         }
                         column(SampleProduct::name)
+                        column("img")
                     }
-                    rows { header("Id", "Name", "Description", "Price") }
+                    rows {
+                        header("Id", "Name", "Image")
+                        matching { gt(0) } assign {
+                            cell("img") {
+                                value = "https://cdn.pixabay.com/photo/2013/07/12/14/07/basketball-147794_960_720.png"
+                                typeHint { DefaultTypeHints.IMAGE_URI }
+                            }
+                        }
+                    }
                 }
                 text {
                     value<PageExecutionContext> { "FOOTER: the page number is : ${it.pageNumber}"  }

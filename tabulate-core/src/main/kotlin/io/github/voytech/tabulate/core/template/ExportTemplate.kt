@@ -69,13 +69,11 @@ class ExportInstance(
             Position(X.max(uom), Y.max(uom)) //TODO instead make it nullable - when null - renderer does not clip
         }
 
-    fun <M : AbstractModel<M>> render(model: M, context: AttributedContext) {
+    fun <M : AbstractModel<M>> render(model: M, context: AttributedContext): OperationResult? =
         getExportOperations(model).invoke(renderingContext, context)
-    }
 
-    fun <M : AbstractModel<M>> measure(model: M, context: AttributedContext) {
+    fun <M : AbstractModel<M>> measure(model: M, context: AttributedContext): OperationResult? =
         getMeasuringOperations(model).invoke(renderingContext, context)
-    }
 
     fun clearLayouts() {
         root.navigation.traverse {

@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.pdf
 
+import io.github.voytech.tabulate.ImageIndex
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.model.border.Borders
@@ -12,8 +13,6 @@ import io.github.voytech.tabulate.core.template.result.OutputBinding
 import io.github.voytech.tabulate.core.template.result.OutputStreamOutputBinding
 import io.github.voytech.tabulate.core.template.spi.DocumentFormat
 import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
-import io.github.voytech.tabulate.getByteArrayFromUrl
-import io.github.voytech.tabulate.isValidUrl
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -45,7 +44,10 @@ class PdfBoxOutputStreamOutputBinding : OutputStreamOutputBinding<PdfBoxRenderin
     }
 }
 
-class PdfBoxRenderingContext(val document: PDDocument = PDDocument()) : RenderingContext, HavingViewportSize {
+class PdfBoxRenderingContext(
+    val document: PDDocument = PDDocument(),
+    val images: ImageIndex = ImageIndex(),
+) : RenderingContext, HavingViewportSize {
 
     private lateinit var pageContentStream: PDPageContentStream
     private lateinit var currentPage: PDPage
@@ -88,14 +90,12 @@ class PdfBoxRenderingContext(val document: PDDocument = PDDocument()) : Renderin
         getCurrentContentStream().showText(text)
     }
 
-    fun loadImage(filePath: String): PDImageXObject =
-        if (filePath.isValidUrl()) {
-            loadImage(filePath.getByteArrayFromUrl())
-        } else {
-            PDImageXObject.createFromFile(filePath, document)
-        }
+    fun loadImage(filePath: String): PDImageXObject = with(images) {
+        createImage(filePath.cacheImageAsByteArray())
+    }
 
-    fun loadImage(binary: ByteArray, name: String = "noname"): PDImageXObject = PDImageXObject.createFromByteArray(document, binary, name)
+    private fun createImage(binary: ByteArray, name: String = "noname"): PDImageXObject =
+        PDImageXObject.createFromByteArray(document, binary, name)
 
     fun PDImageXObject.showImage(x: Float, y: Float, width: Float?, height: Float?) {
         if (width != null && height != null) {

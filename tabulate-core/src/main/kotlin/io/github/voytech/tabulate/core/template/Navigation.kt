@@ -107,7 +107,7 @@ class NavigableLayout(
 fun ModelExportContext.getClosestLayoutAwareAncestor(): ModelExportContext? =
     navigation.lookupAncestors { it.layouts.renderingLayout != null }
 
-fun ModelExportContext.getClosestAncestorLayout(): Layout? = getClosestLayoutAwareAncestor()?.layouts?.renderingLayout
+fun ModelExportContext.getClosestAncestorLayout(): NavigableLayout? = getClosestLayoutAwareAncestor()?.layouts?.renderingLayout
 
 fun ModelExportContext.getEnclosingMaxRightBottom(): Position? =
     getClosestLayoutAwareAncestor()?.layouts?.renderingLayout?.maxRightBottom

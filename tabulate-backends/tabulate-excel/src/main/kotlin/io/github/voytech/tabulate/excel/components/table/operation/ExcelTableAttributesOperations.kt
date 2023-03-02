@@ -10,7 +10,6 @@ import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignmen
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.attributes.*
 import io.github.voytech.tabulate.core.model.background.DefaultFillType
-import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.core.template.operation.*
 import io.github.voytech.tabulate.excel.ApachePoiRenderingContext
 import io.github.voytech.tabulate.excel.components.table.model.attributes.CellCommentAttribute
@@ -21,14 +20,13 @@ import io.github.voytech.tabulate.excel.components.table.model.resolveBorderStyl
 import io.github.voytech.tabulate.excel.components.table.operation.ExcelTableOperations.Companion.getCachedStyle
 import io.github.voytech.tabulate.excel.createFontFrom
 import org.apache.poi.ss.usermodel.FillPatternType
-import org.apache.poi.ss.usermodel.FontUnderline
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.ss.util.CellReference
 import org.apache.poi.ss.util.RegionUtil
 import org.apache.poi.util.Units
 import org.apache.poi.xssf.streaming.SXSSFSheet
 import org.apache.poi.xssf.usermodel.XSSFCellStyle
-import org.apache.poi.xssf.usermodel.XSSFFont
+import org.apache.poi.xssf.usermodel.XSSFRichTextString
 import java.io.FileInputStream
 
 
@@ -389,11 +387,11 @@ class CellCommentAttributeRenderOperation :
             rowIndex = context.getAbsoluteRow(context.rowIndex),
             columnIndex = context.getAbsoluteColumn(context.columnIndex),
         ).let {
-            it.cellComment = renderingContext.getDrawing(context.getSheetName())
+            it.cellComment = renderingContext.ensureDrawingPatriarch(context.getSheetName())
                 .createCellComment(renderingContext.createClientAnchor())
                 .apply {
                     author = attribute.author
-                    string = renderingContext.getCreationHelper().createRichTextString(attribute.comment)
+                    string = renderingContext.getCreationHelper().createRichTextString(attribute.comment) as XSSFRichTextString?
                 }
         }
     }

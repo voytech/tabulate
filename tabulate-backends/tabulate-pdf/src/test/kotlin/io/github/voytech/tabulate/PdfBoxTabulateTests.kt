@@ -804,9 +804,17 @@ class PdfBoxTabulateTests {
                         borders {
                             all {
                                 color = Colors.RED
+                                style = DefaultBorderStyle.DASHED
                                 width = 2.pt()
                             }
                         }
+                    }
+                }
+                image {
+                    filePath = "src/test/resources/kotlin.jpeg"
+                    attributes {
+                        width { 100.pt() }
+                        height { 100.pt() }
                     }
                 }
                 table {
@@ -817,13 +825,23 @@ class PdfBoxTabulateTests {
                             attributes { text {  weight = DefaultWeightStyle.BOLD } }
                         }
                         column(SampleProduct::name)
+                        column("img") { attributes { width { 30.pt() } }}
                     }
-                    rows { header("Id", "Name", "Description", "Price") }
+                    rows {
+                        header("Id", "Name", "Image")
+                        matching { gt(0) } assign {
+                            cell("img") {
+                                value = "src/test/resources/kotlin.jpeg"
+                                typeHint { DefaultTypeHints.IMAGE_URI }
+                            }
+                            attributes { height { 30.pt() } }
+                        }
+                    }
                 }
                 text {
                     value<PageExecutionContext> { "FOOTER: the page number is : ${it.pageNumber}"  }
                     attributes {
-                        height { 50.pt() }
+                        height { 15.pt() }
                         width { 200.pt() }
                         alignment { vertical = DefaultVerticalAlignment.MIDDLE }
                         background { color = Colors.BLACK }

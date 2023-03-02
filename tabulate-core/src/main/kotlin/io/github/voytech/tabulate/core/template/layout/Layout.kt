@@ -108,12 +108,16 @@ sealed class AbstractLayout(
     override val maxBoundingRectangle: BoundingRectangle?
         get() = maxRightBottom?.let { BoundingRectangle(leftTop, it) }
 
-    private fun LayoutElementBoundingBox.isXOverflow(): Boolean = maxRightBottom?.let {
-        (absoluteX.value + (width.orZero().value)) > it.x.value
+     private fun LayoutElementBoundingBox.isXOverflow(): Boolean = maxRightBottom?.let { pos ->
+         ((absoluteX + width.orZero()) > pos.x).also {
+             if (it) extend(pos.x)
+         }
     } ?: false
 
-    private fun LayoutElementBoundingBox.isYOverflow(): Boolean = maxRightBottom?.let {
-        (absoluteY.value + (height.orZero().value)) > it.y.value
+    private fun LayoutElementBoundingBox.isYOverflow(): Boolean = maxRightBottom?.let { pos ->
+        ((absoluteY + height.orZero()) > pos.y).also {
+            if (it) extend(pos.y)
+        }
     } ?: false
 
     override fun LayoutElementBoundingBox?.checkOverflow(): Overflow? = if (this == null) null else {

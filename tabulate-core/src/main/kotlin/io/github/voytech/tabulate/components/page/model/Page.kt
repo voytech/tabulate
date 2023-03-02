@@ -52,7 +52,9 @@ class Page internal constructor(
     }
 
     private fun exportContent(templateContext: ModelExportContext, layoutContext: LayoutContext) {
-        nodes?.forEach { it.export(templateContext, layoutContext) }
+        nodes?.forEach {
+            it.export(templateContext, layoutContext)
+        }
     }
 
     private fun footerSize(templateContext: ModelExportContext, layout: Layout) =

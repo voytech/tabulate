@@ -19,9 +19,8 @@ class ExcelTextOperations : OperationsBundleProvider<ApachePoiRenderingContext, 
         operation(TextOperation { renderingContext, context ->
             with(renderingContext) {
                 renderingContext.provideSheet(context.getSheetName()).let {
-                    val clientAnchor = context.createBoundedClientAnchor()
-                    it.createDrawingPatriarch()
-                    val textBox: XSSFTextBox = it.drawingPatriarch.createTextbox(clientAnchor)
+                    val clientAnchor = context.computeClientAnchor()
+                    val textBox: XSSFTextBox = ensureDrawingPatriarch(it.sheetName).createTextbox(clientAnchor)
                     val simpleShapeWrapper = SimpleShapeWrapper(it.drawingPatriarch, textBox).bind(context)
                     simpleShapeWrapper.append(context.text)
                 }

@@ -9,7 +9,7 @@ import io.github.voytech.tabulate.core.template.operation.boundingBox
 /**
  * RenderingContext is a marker interface representing entire group of classes implementing low-level rendering logic.
  * It is related to specific rendering backend implementation. Implementations of that interface should represent shared state
- * to be accessed and mutated by [ExportTemplate] managed operations.
+ * to be accessed and mutated by [AbstractModel] and its managed rendering/measuring operations.
  * @since 0.1.0
  * @author Wojciech Mąka
  */
@@ -21,8 +21,9 @@ interface HavingViewportSize {
 }
 
 /**
- * RenderingContextForSpreadsheet is a base class for all rendering contexts communicating with spreadsheets. It adds
- * capabilities of tracking and accessing spreadsheet cell coordinates related to document root.
+ * [RenderingContextForSpreadsheet] is a base class for all rendering contexts communicating with 3rd party spreadsheet apis. It adds
+ * capabilities of tracking and accessing spreadsheet cell coordinates related to root spreadsheet-like document. Also tracks
+ * and provides column widths and row heights for nested layouts offsets calculations.
  * @since 0.*.0
  * @author Wojciech Mąka
  */
@@ -69,21 +70,21 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
 
     fun RenderableContext<*>.getAbsoluteLeftTopColumn(): Int = boundingBox.absoluteX.let {
         measures.getX(it, UnitsOfMeasure.NU).asColumn()
-    } ?: 0
+    }
 
     fun RenderableContext<*>.getAbsoluteLeftTopRow(): Int = boundingBox.absoluteY.let {
         measures.getY(it, UnitsOfMeasure.NU).asRow()
-    } ?: 0
+    }
 
     fun RenderableContext<*>.getAbsoluteRightBottomColumn(): Int = boundingBox.let {
         it.absoluteX.let { x -> measures.getX(x + (it.width?.value ?: 0F), UnitsOfMeasure.NU).asColumn() }
-    } ?: 0
+    }
 
     fun RenderableContext<*>.getAbsoluteRightBottomRow(): Int = boundingBox.let {
         it.absoluteY.let { y -> measures.getY(y + (it.height?.value ?: 0F), UnitsOfMeasure.NU).asRow() }
-    } ?: 0
+    }
 
-    fun RenderableContext<*>.createSpreadSheetAnchor(): SpreadSheetAnchor = SpreadSheetAnchor(
+    fun RenderableContext<*>.createSpreadsheetAnchor(): SpreadSheetAnchor = SpreadSheetAnchor(
         leftTopColumn = getAbsoluteLeftTopColumn(),
         leftTopRow = getAbsoluteLeftTopRow(),
         rightBottomColumn = getAbsoluteRightBottomColumn(),

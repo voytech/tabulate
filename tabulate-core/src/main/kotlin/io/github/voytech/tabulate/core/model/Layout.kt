@@ -30,7 +30,12 @@ enum class UnitsOfMeasure {
 sealed class Measure(
     open val value: Float,
     open val unit: UnitsOfMeasure,
-)
+): Comparable<Measure> {
+    override fun compareTo(other: Measure): Int {
+        val otherValue = if (other.unit != unit) other.unit.switchUnitOfMeasure(other.value,unit) else other.value
+        return value.compareTo(otherValue)
+    }
+}
 
 class MeasuredValue(override val value: Float, override val unit: UnitsOfMeasure) : Measure(value, unit) {
     fun width(): Width = Width(value, unit)
@@ -40,7 +45,6 @@ class MeasuredValue(override val value: Float, override val unit: UnitsOfMeasure
     fun x(): X = X(value, unit)
 
     fun y(): Y = Y(value, unit)
-
 }
 
 fun UnitsOfMeasure.switchUnitOfMeasure(value: Float, targetUnit: UnitsOfMeasure): Float = if (targetUnit != this) {

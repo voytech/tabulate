@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.excel
 
 
+import io.github.voytech.tabulate.ImageIndex
 import io.github.voytech.tabulate.core.model.color.Color
 import io.github.voytech.tabulate.components.table.operation.CellValue
 import io.github.voytech.tabulate.components.table.operation.Coordinates
@@ -17,7 +18,6 @@ import org.apache.poi.util.IOUtils
 import org.apache.poi.util.Units
 import org.apache.poi.xssf.streaming.*
 import org.apache.poi.xssf.usermodel.*
-import java.io.FileInputStream
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -49,7 +49,7 @@ class ApachePoiOutputStreamOutputBinding : OutputStreamOutputBinding<ApachePoiRe
  * @author Wojciech Maka
  * @since 0.1.0
  */
-class ApachePoiRenderingContext : RenderingContextForSpreadsheet() {
+class ApachePoiRenderingContext(private val images: ImageIndex = ImageIndex()) : RenderingContextForSpreadsheet() {
 
     private var workbook: SXSSFWorkbook? = null
 
@@ -115,10 +115,8 @@ class ApachePoiRenderingContext : RenderingContextForSpreadsheet() {
         rowSpan: Int,
         colSpan: Int,
         imageUrl: String,
-    ) {
-        FileInputStream(imageUrl).use {
-            createImageCell(sheetName, rowIndex, columnIndex, rowSpan, colSpan, it)
-        }
+    ) = with(images) {
+        createImageCell(sheetName, rowIndex, columnIndex, rowSpan, colSpan, imageUrl.cacheImageAsByteArray())
     }
 
     fun createImageCell(
@@ -146,7 +144,7 @@ class ApachePoiRenderingContext : RenderingContextForSpreadsheet() {
     }
 
     fun getImageAsCellValue(context: Coordinates): CellValue? {
-        return getDrawing(context.tableName).find {
+        return ensureDrawingPatriarch(context.tableName).find {
             if (it?.drawing?.shapes?.size == 1 && it.drawing?.shapes?.get(0) is Picture) {
                 (it.drawing.shapes[0] as Picture).let { picture ->
                     picture.clientAnchor.col1.toInt() == context.columnIndex &&
@@ -163,7 +161,10 @@ class ApachePoiRenderingContext : RenderingContextForSpreadsheet() {
             }
     }
 
-    fun getDrawing(sheetName: String): SXSSFDrawing = provideSheet(sheetName).createDrawingPatriarch()
+    fun ensureDrawingPatriarch(sheetName: String): XSSFDrawing = provideSheet(sheetName).let {
+      if (it.drawingPatriarch == null) it.createDrawingPatriarch()
+      it.drawingPatriarch
+    }
 
     fun getCreationHelper(): CreationHelper = workbook().creationHelper
 
@@ -175,8 +176,8 @@ class ApachePoiRenderingContext : RenderingContextForSpreadsheet() {
 
     inline fun <reified S : XSSFShape> AttributedContext.shape(): S = shape(S::class.java)
 
-    fun RenderableContext<*>.createBoundedClientAnchor(): XSSFClientAnchor =
-        createSpreadSheetAnchor().let { anchor ->
+    fun RenderableContext<*>.computeClientAnchor(): XSSFClientAnchor =
+        createSpreadsheetAnchor().let { anchor ->
             (createClientAnchor() as XSSFClientAnchor).apply {
                 setCol1(anchor.leftTopColumn)
                 row1 = anchor.leftTopRow

@@ -66,7 +66,7 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
                 context.getTypeHint()?.let {
                     when (it.type.getCellTypeId()) {
                         ExcelTypeHints.IMAGE_DATA.getCellTypeId() -> renderImageDataCell(context)
-                        ExcelTypeHints.IMAGE_URL.getCellTypeId() -> renderImageUrlCell(context)
+                        ExcelTypeHints.IMAGE_URI.getCellTypeId() -> renderImageUrlCell(context)
                         ExcelTypeHints.FORMULA.getCellTypeId() -> renderFormulaCell(context)
                         ExcelTypeHints.NUMERIC.getCellTypeId() -> renderNumericCellValue(context)
                         ExcelTypeHints.DATE.getCellTypeId() -> renderDateCellValue(context)

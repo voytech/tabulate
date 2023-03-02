@@ -6,7 +6,6 @@ import io.github.voytech.tabulate.components.image.operation.ImageRenderable
 import io.github.voytech.tabulate.core.model.Height
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
-import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.operation.boundingBox
 import io.github.voytech.tabulate.core.template.spi.BuildAttributeOperations

@@ -14,7 +14,7 @@ enum class ExcelTypeHints : CellType {
     DATE,
     FORMULA,
     ERROR,
-    IMAGE_URL,
+    IMAGE_URI,
     IMAGE_DATA;
     override fun getCellTypeId(): String = name
 

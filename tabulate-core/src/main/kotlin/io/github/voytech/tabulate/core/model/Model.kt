@@ -5,6 +5,7 @@ import io.github.voytech.tabulate.core.template.layout.DefaultLayoutPolicy
 import io.github.voytech.tabulate.core.template.layout.Layout
 import io.github.voytech.tabulate.core.template.layout.LayoutPolicy
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
+import io.github.voytech.tabulate.core.template.operation.OperationResult
 import java.util.*
 
 interface Model<M : AbstractModel<M>> {
@@ -146,8 +147,10 @@ class ModelExportContext(
 
     private fun bubblePartialStatus() = with(instance) {
         var parent = navigation.parent
+        val currentLayout = layouts.renderingLayout
         while (parent != null && status.isPartlyExported()) {
             with(parent) {
+                val parentLayout = context.layouts.renderingLayout
                 context.status = status
                 parent = context.navigation.parent
             }
@@ -258,13 +261,12 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
 
     private fun layoutPolicy(): LayoutPolicy = if (this is LayoutPolicyProvider<*>) policy else DefaultLayoutPolicy()
 
-    protected fun ModelExportContext.render(context: AttributedContext) {
+    protected fun ModelExportContext.render(context: AttributedContext): OperationResult? =
         instance.render(self(), context)
-    }
 
-    protected fun ModelExportContext.measure(context: AttributedContext) {
+
+    protected fun ModelExportContext.measure(context: AttributedContext): OperationResult? =
         instance.measure(self(), context)
-    }
 
     protected fun ModelExportContext.clearLayouts() = instance.clearLayouts()
 
