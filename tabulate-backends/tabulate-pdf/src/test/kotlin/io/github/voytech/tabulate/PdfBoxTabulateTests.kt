@@ -855,4 +855,44 @@ class PdfBoxTabulateTests {
             }
         }.export(File("test.pdf"))
     }
+
+
+    @Test
+    fun `should export document with correctly handled table X overflows`() {
+        document {
+            page {
+                table {
+                    dataSource(SampleProduct.create(1))
+                    attributes { borders { all { color = Colors.LIGHT_GRAY; width = 0.5F.pt()} } }
+                    columns {
+                        column(SampleProduct::code) {
+                            attributes { text {  weight = DefaultWeightStyle.BOLD } }
+                        }
+                        column(SampleProduct::name)
+                        (0..1000).forEach { column("id$it") }
+                        column("img") { attributes { width { 30.pt() } }}
+                    }
+                    rows {
+                        matching { all() } assign {
+                            (0..1000).forEach { cell("id$it") { value = "V$it"} }
+                        }
+                    }
+                }
+                text {
+                    value<PageExecutionContext> { "FOOTER: the page number is : ${it.pageNumber}"  }
+                    attributes {
+                        height { 15.pt() }
+                        width { 200.pt() }
+                        alignment { vertical = DefaultVerticalAlignment.MIDDLE }
+                        background { color = Colors.BLACK }
+                        text {
+                            fontColor = Colors.WHITE
+                            fontSize = 10
+                            weight = DefaultWeightStyle.BOLD
+                        }
+                    }
+                }
+            }
+        }.export(File("table_x_overflow.pdf"))
+    }
 }

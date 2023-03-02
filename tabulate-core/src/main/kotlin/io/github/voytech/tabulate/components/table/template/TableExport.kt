@@ -113,7 +113,7 @@ internal class TableExport<T : Any>(
     private fun start() {
         with(exportContext) {
             operations(renderingContext, table.asTableStart(exportContext.getCustomAttributes()))
-            renderingContext.renderColumnStarts(columnAttributes)
+            renderColumnsStarts()
         }
     }
 
@@ -123,39 +123,42 @@ internal class TableExport<T : Any>(
         while (next()?.let { it is SuccessResult } == true);
     }
 
-    private fun RenderingContext.renderColumnStarts(
-        columnAttributes: Map<ColumnDef<T>, ColumnContextAttributes>,
-    ): OperationResult? = with(exportContext) {
-        val iterator = with(overflowOffsets) { table.columns.crop().iterator() }
-        var status: OperationResult? = Success
-        var column: ColumnDef<T>? = null
-        while (iterator.hasNext() && status == Success) {
-            column = iterator.next()
-            val context = column.asColumnStart(
-                table, columnAttributes[column]?.start ?: Attributes(), getCustomAttributes()
-            )
-            status = operations.invoke(this@renderColumnStarts, context)
+    private fun resolveActiveColumns(): Iterator<ColumnDef<T>> =
+        with(overflowOffsets) { table.columns.crop().iterator() }
+
+    private fun Map<ColumnDef<T>, ColumnContextAttributes>.forStart(def: ColumnDef<T>): Attributes =
+        this[def]?.start ?: Attributes()
+
+    private fun Map<ColumnDef<T>, ColumnContextAttributes>.forEnd(def: ColumnDef<T>): Attributes =
+        this[def]?.end ?: Attributes()
+
+    private fun renderColumns(resolveRenderable: (ColumnDef<T>) -> ColumnContext): OperationResult? =
+        with(exportContext) {
+            var status: OperationResult? = Success
+            resolveActiveColumns().let { iterator ->
+                while (iterator.hasNext()) {
+                    val def = iterator.next()
+                    status = operations.invoke(renderingContext, resolveRenderable(def))
+                    if (status.isXOverflow()) {
+                        overflowOffsets.setResumeFromColumnIndex(def.index)
+                        break
+                    }
+                }
+            }
+            return status
         }
-        if (status.isXOverflow()) {
-            exportContext.suspendX()
-            overflowOffsets.setNextColumnIndex(column?.index ?: 0)
-        }
-        return status
+
+    private fun renderColumnsStarts(): OperationResult? = with(exportContext) {
+        renderColumns { it.asColumnStart(table, columnAttributes.forStart(it), getCustomAttributes()) }
     }
 
-    private fun RenderingContext.renderColumnEnds(columnAttributes: Map<ColumnDef<T>, ColumnContextAttributes>) =
-        with(exportContext) {
-            table.columns.forEach { column: ColumnDef<T> ->
-                operations(
-                    this@renderColumnEnds,
-                    column.asColumnEnd(table, columnAttributes[column]?.end ?: Attributes(), getCustomAttributes())
-                )
-            }
-        }
+    private fun renderColumnEnds(): OperationResult? = with(exportContext) {
+        renderColumns { it.asColumnEnd(table, columnAttributes.forEnd(it), getCustomAttributes()) }
+    }
 
     private fun finish() {
         renderRemainingBufferedRows()
-        renderingContext.renderColumnEnds(columnAttributes)
+        renderColumnEnds()
         operations(renderingContext, table.asTableEnd(exportContext.getCustomAttributes()))
     }
 

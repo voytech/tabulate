@@ -51,15 +51,15 @@ data class OverflowOffsets(
 
     fun getColumnOffset(): Int = columnOffsets.index
 
-    fun setNextRowIndex(rowIndex: RowIndex) {
+    fun setResumeFromRowIndex(rowIndex: RowIndex) {
         rowOffsets.nextIndex = rowIndex
     }
 
-    fun setNextColumnIndex(index: Int) {
+    fun setResumeFromColumnIndex(index: Int) {
         columnOffsets.nextIndex = index
     }
 
-    fun setNextRecordIndex(record: Int) {
+    fun setResumeFromRecordIndex(record: Int) {
         rowOffsets.nextRecordIndex = record
     }
 }

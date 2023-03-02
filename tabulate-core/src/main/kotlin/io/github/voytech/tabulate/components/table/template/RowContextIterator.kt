@@ -38,9 +38,8 @@ internal class RowContextIterator<T: Any>(
                         indexIncrement.inc()
                     }
                     is OverflowResult -> {
-                        suspendY()
-                        overflowOffsets.setNextRowIndex(it.rowIndex)
-                        overflowOffsets.setNextRecordIndex(nextSourceRecordIndex ?: 0)
+                        overflowOffsets.setResumeFromRowIndex(it.rowIndex)
+                        overflowOffsets.setResumeFromRecordIndex(nextSourceRecordIndex ?: 0)
                         setNext(it.result)
                     }
                 }
