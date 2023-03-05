@@ -70,8 +70,9 @@ enum class ModelExportStatus {
     PARTIAL_YX,
     FINISHED;
 
-    internal fun isPartlyExported(): Boolean =
-        PARTIAL_YX == this || PARTIAL_XY == this || PARTIAL_X == this || PARTIAL_Y == this
+    internal fun isExporting(): Boolean = this != FINISHED
+
+    internal fun isPartlyExported(): Boolean = isYOverflow() || isXOverflow()
 
     internal fun isYOverflow(): Boolean = PARTIAL_YX == this || PARTIAL_XY == this || PARTIAL_Y == this
 
@@ -79,7 +80,7 @@ enum class ModelExportStatus {
 
 }
 
-data class LayoutContext(
+data class LayoutConstraints(
     val leftTop: Position? = null,
     val maxRightBottom: Position? = null,
     val orientation: Orientation = Orientation.HORIZONTAL,
@@ -98,11 +99,11 @@ class ModelExportContext(
     val renderingContext: RenderingContext
         get() = instance.renderingContext
 
-    internal var layoutContext: LayoutContext? = null
+    internal var layoutConstraints: LayoutConstraints? = null
 
     fun getCustomAttributes(): MutableMap<String, Any> = customStateAttributes.data
 
-    fun suspendX() = with(instance) {
+    fun suspendX() {
         status = when (status) {
             ModelExportStatus.ACTIVE,
             ModelExportStatus.PARTIAL_X,
@@ -113,10 +114,9 @@ class ModelExportContext(
             ModelExportStatus.PARTIAL_YX -> ModelExportStatus.PARTIAL_YX
             ModelExportStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
         }
-        bubblePartialStatus()
     }
 
-    fun suspendY() = with(instance) {
+    fun suspendY() {
         status = when (status) {
             ModelExportStatus.ACTIVE,
             ModelExportStatus.PARTIAL_Y,
@@ -127,17 +127,21 @@ class ModelExportContext(
             ModelExportStatus.PARTIAL_YX -> ModelExportStatus.PARTIAL_YX
             ModelExportStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
         }
-        bubblePartialStatus()
     }
+
+    private fun hasPartlyExportedChildren(): Boolean =
+        navigation.checkAnyChildren { it.context.isPartlyExported() }
 
     fun finishOrSuspend() {
         if (status.isPartlyExported()) {
             instance.suspendedModels += navigation.active
-        } else {
+        } else if (!hasPartlyExportedChildren()) {
             instance.suspendedModels -= navigation.active
             status = ModelExportStatus.FINISHED
         }
     }
+
+    fun isExporting(): Boolean = status.isExporting()
 
     fun isPartlyExported(): Boolean = status.isPartlyExported()
 
@@ -145,15 +149,6 @@ class ModelExportContext(
 
     fun isXOverflow(): Boolean = status.isXOverflow()
 
-    private fun bubblePartialStatus() = with(instance) {
-        var parent = navigation.parent
-        while (parent != null && status.isPartlyExported()) {
-            with(parent) {
-                context.status = status
-                parent = context.navigation.parent
-            }
-        }
-    }
 }
 
 fun <C : ExecutionContext, R : Any> ModelExportContext.value(supplier: ReifiedValueSupplier<C, R>): R? =
@@ -181,10 +176,17 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
     private fun <R> withinInitializedContext(parent: ModelExportContext, block: () -> R): R =
         ensuringExportContext(parent).run { block() }
 
-    fun export(parentContext: ModelExportContext, layoutCxt: LayoutContext? = null) = with(parentContext.instance) {
+    private fun ModelExportContext.withLayoutConstraints(layoutCxt: LayoutConstraints? = null): ModelExportContext =
+        apply {
+            if (layoutCxt != null) {
+                layoutConstraints = layoutCxt
+            }
+        }
+
+    fun export(parentContext: ModelExportContext, layoutCxt: LayoutConstraints? = null) = with(parentContext.instance) {
         withinInitializedContext(parentContext) {
             if (shouldMeasure()) measure(parentContext)
-            doExport(context.apply { layoutContext = layoutCxt })
+            doExport(context.withLayoutConstraints(layoutCxt))
             context.finishOrSuspend()
         }
     }
@@ -201,10 +203,10 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
         }
     }
 
-    internal fun resume(context: ModelExportContext, resumeNext: ResumeNext) {
-        if (context.isPartlyExported()) {
+    fun resume(layoutCxt: LayoutConstraints? = null) {
+        if (context.isExporting()) {
             context.status = ModelExportStatus.ACTIVE
-            doResume(context, resumeNext)
+            doResume(context.withLayoutConstraints(layoutCxt))
             context.finishOrSuspend()
         }
     }
@@ -238,8 +240,8 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
     protected abstract fun doExport(exportContext: ModelExportContext)
 
     //TODO make safe scope (when calling within doResume: , resume, export, doExport and so on should be all forbidden calls)
-    protected open fun doResume(exportContext: ModelExportContext, resumeNext: ResumeNext) {
-        resumeNext()
+    protected open fun doResume(exportContext: ModelExportContext) {
+        // method is not mandatory and should not provide default implementation
     }
 
     protected fun createLayoutScope(
@@ -250,8 +252,8 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
     ) = with(context.instance) {
         context.createLayoutScope(
             uom,
-            childLeftTopCorner ?: context.layoutContext?.leftTop,
-            maxRightBottom ?: context.layoutContext?.maxRightBottom ?: getViewPortMaxRightBottom(),
+            childLeftTopCorner ?: context.layoutConstraints?.leftTop,
+            maxRightBottom ?: context.layoutConstraints?.maxRightBottom ?: getViewPortMaxRightBottom(),
             orientation,
             block
         )
@@ -275,6 +277,17 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
     @Suppress("UNCHECKED_CAST")
     private fun self(): SELF = (this as SELF)
 }
+
+fun AbstractModel<*>.getPosition(): Position? = context.layouts.renderingLayout?.leftTop
+
+fun AbstractModel<*>.exportWithStatus(
+    parentContext: ModelExportContext,
+    layoutCxt: LayoutConstraints? = null,
+): ModelExportStatus =
+    export(parentContext, layoutCxt).let { context.status }
+
+fun AbstractModel<*>.resumeWithStatus(layoutCxt: LayoutConstraints? = null): ModelExportStatus =
+    resume(layoutCxt).let { context.status }
 
 abstract class ModelWithAttributes<SELF : ModelWithAttributes<SELF>> :
     AttributedModelOrPart<SELF>, AbstractModel<SELF>()

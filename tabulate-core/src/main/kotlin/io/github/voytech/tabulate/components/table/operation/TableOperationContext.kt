@@ -41,8 +41,8 @@ interface RowCoordinate {
     fun getRow(): Int
 }
 
-interface RowLayoutElement : RowCoordinate, LayoutElement<GridLayoutPolicy>, LayoutElementApply<GridLayoutPolicy> {
-    override fun Layout.computeBoundingBox(policy: GridLayoutPolicy): LayoutElementBoundingBox = with(policy) {
+interface RowLayoutElement : RowCoordinate, LayoutElement<TableLayoutPolicy>, LayoutElementApply<TableLayoutPolicy> {
+    override fun Layout.computeBoundingBox(policy: TableLayoutPolicy): LayoutElementBoundingBox = with(policy) {
         elementBoundingBox(
             x = getAbsoluteColumnPosition(0, uom),
             y = getAbsoluteRowPosition(getRow(), uom),
@@ -50,7 +50,7 @@ interface RowLayoutElement : RowCoordinate, LayoutElement<GridLayoutPolicy>, Lay
         )
     }
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy): Unit =
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: TableLayoutPolicy): Unit =
         with(policy) {
             markHeightForMeasure(getRow(),context.flags.shouldMeasureHeight)
             context.height?.let { setRowHeight(getRow(), it) }
@@ -66,13 +66,13 @@ interface ColumnCoordinate {
     fun getColumn(): Int
 }
 
-interface ColumnLayoutElement : ColumnCoordinate, LayoutElement<GridLayoutPolicy>,
-    LayoutElementApply<GridLayoutPolicy> {
-    override fun Layout.computeBoundingBox(policy: GridLayoutPolicy): LayoutElementBoundingBox = with(policy) {
+interface ColumnLayoutElement : ColumnCoordinate, LayoutElement<TableLayoutPolicy>,
+    LayoutElementApply<TableLayoutPolicy> {
+    override fun Layout.computeBoundingBox(policy: TableLayoutPolicy): LayoutElementBoundingBox = with(policy) {
         elementBoundingBox(x = getAbsoluteColumnPosition(getColumn(),uom), y = getAbsoluteRowPosition(0, uom))
     }
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy): Unit =
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: TableLayoutPolicy): Unit =
         with(policy) {
             markWidthForMeasure(getColumn(),context.flags.shouldMeasureWidth)
             context.width?.let { setColumnWidth(getColumn(), it) }
@@ -86,10 +86,10 @@ interface ColumnLayoutElement : ColumnCoordinate, LayoutElement<GridLayoutPolicy
  */
 interface RowCellCoordinate : RowCoordinate, ColumnCoordinate
 
-interface RowCellLayoutElement : RowCellCoordinate, LayoutElement<GridLayoutPolicy>,
-    LayoutElementApply<GridLayoutPolicy> {
+interface RowCellLayoutElement : RowCellCoordinate, LayoutElement<TableLayoutPolicy>,
+    LayoutElementApply<TableLayoutPolicy> {
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: GridLayoutPolicy): Unit =
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: TableLayoutPolicy): Unit =
         with(policy) {
             context.width?.let { setColumnWidth(getColumn(), it) }
             context.height?.let { setRowHeight(getRow(), it) }
@@ -130,7 +130,7 @@ sealed class TableContext(
  */
 sealed class ColumnContext(
     attributes: Attributes?,
-) : RenderableContext<GridLayoutPolicy>(attributes)
+) : RenderableContext<TableLayoutPolicy>(attributes)
 
 /**
  * Row operation context with additional model attributes applicable on table level.
@@ -139,7 +139,7 @@ sealed class ColumnContext(
  */
 sealed class RowContext(
     attributes: Attributes?,
-) : RenderableContext<GridLayoutPolicy>(attributes)
+) : RenderableContext<TableLayoutPolicy>(attributes)
 
 /**
  * Table operation context with additional model attributes applicable on table level.
@@ -201,7 +201,7 @@ class RowEnd<T>(
 
     fun getCells(): Map<ColumnKey<T>, CellContext> = rowCellValues
 
-    override fun Layout.computeBoundingBox(policy: GridLayoutPolicy): LayoutElementBoundingBox = with(policy) {
+    override fun Layout.computeBoundingBox(policy: TableLayoutPolicy): LayoutElementBoundingBox = with(policy) {
         elementBoundingBox(
             x = getAbsoluteColumnPosition(0, uom),
             y = getAbsoluteRowPosition(getRow(), uom),
@@ -283,11 +283,11 @@ class CellContext(
     val rowIndex: Int,
     val columnIndex: Int,
     override val value: Any = cellValue.value,
-) : RenderableContext<GridLayoutPolicy>(attributes), RowCellLayoutElement, HasValue<Any> {
+) : RenderableContext<TableLayoutPolicy>(attributes), RowCellLayoutElement, HasValue<Any> {
     override fun getRow(): Int = rowIndex
     override fun getColumn(): Int = columnIndex
 
-    override fun Layout.computeBoundingBox(policy: GridLayoutPolicy): LayoutElementBoundingBox = with(policy) {
+    override fun Layout.computeBoundingBox(policy: TableLayoutPolicy): LayoutElementBoundingBox = with(policy) {
         elementBoundingBox(
             x = getAbsoluteColumnPosition(getColumn(), uom),
             y = getAbsoluteRowPosition(getRow(), uom),

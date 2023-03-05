@@ -2,7 +2,6 @@ package io.github.voytech.tabulate.components.page.model
 
 import io.github.voytech.tabulate.components.commons.operation.newPage
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.template.ResumeNext
 import io.github.voytech.tabulate.core.template.layout.Layout
 
 class Page internal constructor(
@@ -27,8 +26,10 @@ class Page internal constructor(
         }
     }
 
-    override fun doResume(exportContext: ModelExportContext, resumeNext: ResumeNext) = with(exportContext) {
-        stickyHeaderAndFooterWith { _, _ -> resumeNext() }
+    override fun doResume(exportContext: ModelExportContext) = with(exportContext) {
+        stickyHeaderAndFooterWith { layout, leftTop ->
+            resumeContent(leftTop.contentLayoutContext(layout))
+        }
     }
 
     private fun ModelExportContext.nextPageNumber(): Int =
@@ -51,9 +52,15 @@ class Page internal constructor(
         header?.export(templateContext)
     }
 
-    private fun exportContent(templateContext: ModelExportContext, layoutContext: LayoutContext) {
+    private fun exportContent(templateContext: ModelExportContext, layoutConstraints: LayoutConstraints) {
         nodes?.forEach {
-            it.export(templateContext, layoutContext)
+            it.export(templateContext, layoutConstraints)
+        }
+    }
+
+    private fun resumeContent(layoutConstraints: LayoutConstraints) {
+        nodes?.forEach {
+            it.resume(layoutConstraints)
         }
     }
 
@@ -72,17 +79,17 @@ class Page internal constructor(
             }
         }
 
-    private fun Position?.contentLayoutContext(layout: Layout): LayoutContext =
-        LayoutContext(maxRightBottom = this?.let { Position(layout.maxRightBottom!!.x, it.y) })
+    private fun Position?.contentLayoutContext(layout: Layout): LayoutConstraints =
+        LayoutConstraints(maxRightBottom = this?.let { Position(layout.maxRightBottom!!.x, it.y) })
 
-    private fun Position?.footerLayoutContext(size: Size?): LayoutContext =
-        LayoutContext(
+    private fun Position?.footerLayoutContext(size: Size?): LayoutConstraints =
+        LayoutConstraints(
             leftTop = this,
             maxRightBottom = size?.let { this?.plus(size) }
         )
 
-    private fun exportFooter(templateContext: ModelExportContext, layoutContext: LayoutContext?) {
-        footer?.export(templateContext, layoutContext)
+    private fun exportFooter(templateContext: ModelExportContext, layoutConstraints: LayoutConstraints?) {
+        footer?.export(templateContext, layoutConstraints)
     }
 
 }

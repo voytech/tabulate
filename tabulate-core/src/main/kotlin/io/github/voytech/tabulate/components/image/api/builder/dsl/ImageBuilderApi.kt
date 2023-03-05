@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.components.image.api.builder.dsl
 
+import io.github.voytech.tabulate.components.container.api.builder.dsl.ContainerBuilderApi
 import io.github.voytech.tabulate.components.image.api.builder.ImageBuilderState
 import io.github.voytech.tabulate.components.image.model.Image
 import io.github.voytech.tabulate.components.page.api.builder.dsl.FooterBuilderApi
@@ -47,3 +48,5 @@ fun HeaderBuilderApi.image(block: ImageBuilderApi.() -> Unit) = bind(ImageBuilde
 fun FooterBuilderApi.image(block: ImageBuilderApi.() -> Unit) = bind(ImageBuilderApi().apply(block))
 
 fun PageBuilderApi.image(block: ImageBuilderApi.() -> Unit) = bind(ImageBuilderApi().apply(block))
+
+fun ContainerBuilderApi.image(block: ImageBuilderApi.() -> Unit) = bind(ImageBuilderApi().apply(block))

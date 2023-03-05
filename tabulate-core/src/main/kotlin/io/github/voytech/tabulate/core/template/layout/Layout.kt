@@ -31,6 +31,7 @@ interface GridPolicyMethods {
 interface LayoutPolicy {
 
     var isSpaceMeasured: Boolean
+
     /**
      * Query for absolute position expressed in [targetUnit] by using current layout relative position.
      */
@@ -58,7 +59,12 @@ interface LayoutPolicy {
 
     fun Layout.getLayoutBoundary(): BoundingRectangle = boundingRectangle
 
-    fun Layout.elementBoundingBox(x: X, y: Y, width: Width? = null, height: Height? = null, ): LayoutElementBoundingBox {
+    fun Layout.elementBoundingBox(
+        x: X,
+        y: Y,
+        width: Width? = null,
+        height: Height? = null,
+    ): LayoutElementBoundingBox {
         val uom = getLayoutBoundary().leftTop.x.unit
         return LayoutElementBoundingBox(
             layoutPosition = getLayoutBoundary().leftTop,
@@ -69,9 +75,14 @@ interface LayoutPolicy {
         )
     }
 
+    fun ModelExportContext.onOverflow(overflow: Overflow)
+
 }
 
-abstract class AbstractGridLayoutPolicy(protected open val rowIndex: Int = 0, protected open val columnIndex: Int = 0) :
+abstract class AbstractTableLayoutPolicy(
+    protected open val rowIndex: Int = 0,
+    protected open val columnIndex: Int = 0,
+) :
     LayoutPolicy, GridPolicyMethods
 
 interface Layout {
@@ -93,6 +104,9 @@ interface Layout {
     fun extend(x: X)
     fun extend(height: Height)
     fun extend(y: Y)
+    fun exhaustX() = maxRightBottom?.x?.let { extend(it) }
+    fun exhaustY() = maxRightBottom?.y?.let { extend(it) }
+
 }
 
 sealed class AbstractLayout(
@@ -108,10 +122,10 @@ sealed class AbstractLayout(
     override val maxBoundingRectangle: BoundingRectangle?
         get() = maxRightBottom?.let { BoundingRectangle(leftTop, it) }
 
-     private fun LayoutElementBoundingBox.isXOverflow(): Boolean = maxRightBottom?.let { pos ->
-         ((absoluteX + width.orZero()) > pos.x).also {
-             if (it) extend(pos.x)
-         }
+    private fun LayoutElementBoundingBox.isXOverflow(): Boolean = maxRightBottom?.let { pos ->
+        ((absoluteX + width.orZero()) > pos.x).also {
+            if (it) extend(pos.x)
+        }
     } ?: false
 
     private fun LayoutElementBoundingBox.isYOverflow(): Boolean = maxRightBottom?.let { pos ->
@@ -145,10 +159,10 @@ sealed class AbstractLayout(
 class DefaultLayout(
     uom: UnitsOfMeasure,
     leftTop: Position,
-    maxRightBottom: Position?
+    maxRightBottom: Position?,
 ) : AbstractLayout(uom, leftTop, maxRightBottom)
 
-fun interface LayoutElement<PL: LayoutPolicy> {
+fun interface LayoutElement<PL : LayoutPolicy> {
     fun Layout.computeBoundingBox(policy: PL): LayoutElementBoundingBox
 }
 
@@ -156,7 +170,7 @@ fun interface BoundingBoxModifier {
     fun Layout.alter(source: LayoutElementBoundingBox): LayoutElementBoundingBox
 }
 
-fun interface LayoutElementApply<PL: LayoutPolicy> {
+fun interface LayoutElementApply<PL : LayoutPolicy> {
     fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: PL)
 }
 
@@ -203,7 +217,6 @@ enum class Overflow {
 }
 
 
-
 class DefaultLayoutPolicy : LayoutPolicy {
 
     override var isSpaceMeasured: Boolean = false
@@ -234,6 +247,11 @@ class DefaultLayoutPolicy : LayoutPolicy {
      */
     override fun Layout.extend(height: Height) {
         extend(height)
+    }
+
+    override fun ModelExportContext.onOverflow(overflow: Overflow) = when (overflow) {
+        Overflow.X -> suspendX()
+        Overflow.Y -> suspendY()
     }
 
 }
@@ -354,14 +372,17 @@ class SpreadsheetPolicy(
 
     override fun setRowHeight(row: Int, height: Height) = rows.setLengthAtIndex(row, height, defaultHeightInPt)
 
-    private fun MutableMap<Int,PositionAndLength>.spannedWidth(index: Int, span: Int): MeasuredValue =
-        MeasuredValue(0.until(span).sumOf { (this[index+it]?.length ?: defaultWidthInPt).toDouble() }.toFloat(), standardUnit.asUnitsOfMeasure())
+    private fun MutableMap<Int, PositionAndLength>.spannedWidth(index: Int, span: Int): MeasuredValue =
+        MeasuredValue(
+            0.until(span).sumOf { (this[index + it]?.length ?: defaultWidthInPt).toDouble() }.toFloat(),
+            standardUnit.asUnitsOfMeasure()
+        )
 
     override fun getColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width =
         columns.spannedWidth(column, colSpan).width().switchUnitOfMeasure(uom)
 
     override fun getRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height =
-        rows.spannedWidth(row,rowSpan).height().switchUnitOfMeasure(uom)
+        rows.spannedWidth(row, rowSpan).height().switchUnitOfMeasure(uom)
 
     override fun setOffsets(row: Int, column: Int) {
         rowIndex = row
@@ -372,7 +393,7 @@ class SpreadsheetPolicy(
 
 }
 
-class GridLayoutPolicy : AbstractGridLayoutPolicy() {
+class TableLayoutPolicy : AbstractTableLayoutPolicy() {
 
     private val delegate = SpreadsheetPolicy()
 
@@ -416,6 +437,11 @@ class GridLayoutPolicy : AbstractGridLayoutPolicy() {
 
     override fun Layout.extend(height: Height) {
         extend(height)
+    }
+
+    override fun ModelExportContext.onOverflow(overflow: Overflow) = when (overflow) {
+        Overflow.X -> suspendX().also { layouts.renderingLayout?.exhaustY() }
+        Overflow.Y -> suspendY()
     }
 
     fun markWidthForMeasure(column: Int, measured: Boolean = false) {

@@ -21,4 +21,10 @@ class Document internal constructor(
             render(DocumentEnd(exportContext))
         }
     }
+
+    override fun doResume(exportContext: ModelExportContext) {
+        createLayoutScope {
+            nodes.forEach { it.resume() }
+        }
+    }
 }

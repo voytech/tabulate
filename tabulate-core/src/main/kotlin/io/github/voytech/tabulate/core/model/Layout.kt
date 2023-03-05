@@ -244,6 +244,11 @@ enum class Orientation {
     HORIZONTAL,
 }
 
+fun Orientation.inverse(): Orientation = when (this) {
+    Orientation.VERTICAL -> Orientation.HORIZONTAL
+    Orientation.HORIZONTAL -> Orientation.VERTICAL
+}
+
 fun X.asColumn() = value.toInt()
 fun Y.asRow() = value.toInt()
 

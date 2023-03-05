@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.components.table.api.builder.dsl
 
 import io.github.voytech.tabulate.components.document.api.builder.dsl.DocumentBuilderApi
+import io.github.voytech.tabulate.components.container.api.builder.dsl.ContainerBuilderApi
 import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.*
 import io.github.voytech.tabulate.components.table.model.*
@@ -60,6 +61,8 @@ fun table(block: TableBuilderApi<Unit>.() -> Unit): TableBuilderApi<Unit>.() -> 
 fun <T: Any> DocumentBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
 
 fun <T: Any> PageBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
+
+fun <T: Any> ContainerBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
 
 /**
  * Plus operator for merging multiple table DSL builders.

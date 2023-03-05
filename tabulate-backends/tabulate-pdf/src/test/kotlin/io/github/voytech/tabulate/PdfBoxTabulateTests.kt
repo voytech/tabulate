@@ -2,6 +2,7 @@ package io.github.voytech.tabulate
 
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
+import io.github.voytech.tabulate.components.container.api.builder.dsl.container
 import io.github.voytech.tabulate.components.image.api.builder.dsl.*
 import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
@@ -14,6 +15,7 @@ import io.github.voytech.tabulate.components.text.api.builder.dsl.*
 import io.github.voytech.tabulate.components.text.api.builder.dsl.alignment
 import io.github.voytech.tabulate.components.text.api.builder.dsl.background
 import io.github.voytech.tabulate.components.text.api.builder.dsl.borders
+import io.github.voytech.tabulate.core.model.Orientation
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.background.DefaultFillType
@@ -114,7 +116,7 @@ class PdfBoxTabulateTests {
             page {
                 table<Unit> {
                     attributes {
-                        margins { left { 5.pt() } ; top { 5.pt() } }
+                        margins { left { 5.pt() }; top { 5.pt() } }
                         borders {
                             all {
                                 width = 0.5.pt()
@@ -124,9 +126,9 @@ class PdfBoxTabulateTests {
                         }
                     }
                     columns {
-                        column(0) { attributes { width { 100.pt() } }}
+                        column(0) { attributes { width { 100.pt() } } }
                         (1..9).forEach { column(it) {} } //TODO fix this.
-                        column(10) { attributes { width { 50.pt() } }}
+                        column(10) { attributes { width { 50.pt() } } }
                     }
                     rows {
                         newRow {
@@ -786,7 +788,7 @@ class PdfBoxTabulateTests {
         document {
             page {
                 text {
-                    value<PageExecutionContext> { "HEADER: the page number is : ${it.pageNumber} (should be sheet NAME)"  }
+                    value<PageExecutionContext> { "HEADER: the page number is : ${it.pageNumber} (should be sheet NAME)" }
                     attributes {
                         height { 50.pt() }
                         width { 600.pt() }
@@ -819,13 +821,13 @@ class PdfBoxTabulateTests {
                 }
                 table {
                     dataSource(SampleProduct.create(100))
-                    attributes { borders { all { color = Colors.LIGHT_GRAY; width = 0.5F.pt()} } }
+                    attributes { borders { all { color = Colors.LIGHT_GRAY; width = 0.5F.pt() } } }
                     columns {
                         column(SampleProduct::code) {
-                            attributes { text {  weight = DefaultWeightStyle.BOLD } }
+                            attributes { text { weight = DefaultWeightStyle.BOLD } }
                         }
                         column(SampleProduct::name)
-                        column("img") { attributes { width { 30.pt() } }}
+                        column("img") { attributes { width { 30.pt() } } }
                     }
                     rows {
                         header("Id", "Name", "Image")
@@ -839,7 +841,7 @@ class PdfBoxTabulateTests {
                     }
                 }
                 text {
-                    value<PageExecutionContext> { "FOOTER: the page number is : ${it.pageNumber}"  }
+                    value<PageExecutionContext> { "FOOTER: the page number is : ${it.pageNumber}" }
                     attributes {
                         height { 15.pt() }
                         width { 200.pt() }
@@ -863,23 +865,23 @@ class PdfBoxTabulateTests {
             page {
                 table {
                     dataSource(SampleProduct.create(1))
-                    attributes { borders { all { color = Colors.LIGHT_GRAY; width = 0.5F.pt()} } }
+                    attributes { borders { all { color = Colors.LIGHT_GRAY; width = 0.5F.pt() } } }
                     columns {
                         column(SampleProduct::code) {
-                            attributes { text {  weight = DefaultWeightStyle.BOLD } }
+                            attributes { text { weight = DefaultWeightStyle.BOLD } }
                         }
                         column(SampleProduct::name)
                         (0..1000).forEach { column("id$it") }
-                        column("img") { attributes { width { 30.pt() } }}
+                        column("img") { attributes { width { 30.pt() } } }
                     }
                     rows {
                         matching { all() } assign {
-                            (0..1000).forEach { cell("id$it") { value = "V$it"} }
+                            (0..1000).forEach { cell("id$it") { value = "V$it" } }
                         }
                     }
                 }
                 text {
-                    value<PageExecutionContext> { "FOOTER: the page number is : ${it.pageNumber}"  }
+                    value<PageExecutionContext> { "FOOTER: the page number is : ${it.pageNumber}" }
                     attributes {
                         height { 15.pt() }
                         width { 200.pt() }
@@ -894,5 +896,71 @@ class PdfBoxTabulateTests {
                 }
             }
         }.export(File("table_x_overflow.pdf"))
+    }
+
+    @Test
+    fun `should export document with group of components`() {
+        document {
+            page {
+                container {
+                    orientation = Orientation.HORIZONTAL
+                    (0..10).forEach { index ->
+                        text {
+                            value<PageExecutionContext> { "This is ($index) text in group ${it.pageNumber}" }
+                            attributes {
+                                borders { all { style = DefaultBorderStyle.SOLID } }
+                                margins { left { 1.pt() }; top { 1.pt() } }
+                            }
+                        }
+                    }
+                    image {
+                        filePath = "src/test/resources/kotlin.jpeg"
+                        attributes {
+                            margins { left { 1.pt() }; top { 1.pt() } }
+                            width { 100.pt() }
+                            height { 100.pt() }
+                            borders { all { style = DefaultBorderStyle.SOLID } }
+                        }
+                    }
+                    table {
+                        attributes {
+                            margins { left { 10.pt() }; top { 10.pt() } }
+                            borders {
+                                bottomBorderWidth = 0.2.pt()
+                                bottomBorderStyle = DefaultBorderStyle.SOLID
+                            }
+                        }
+                        columns {
+                            column(SampleCustomer::firstName)
+                            column(SampleCustomer::lastName)
+                            column(SampleCustomer::country)
+                            column(SampleCustomer::city)
+                            column(SampleCustomer::street)
+                            column(SampleCustomer::houseNumber)
+                            column(SampleCustomer::flat)
+                        }
+                        rows {
+                            header {
+                              columnTitles("First Name","Last Name","Country","City","Street","House Nr","Flat Nr")
+                              attributes { text { weight = DefaultWeightStyle.BOLD } }
+                            }
+
+                        }
+                        dataSource(SampleCustomer.create(30))
+                    }
+                    repeat((0..20).count()) {
+                        image {
+                            filePath = "src/test/resources/kotlin.jpeg"
+                            attributes {
+                                margins { left { 1.pt() }; top { 1.pt() } }
+                                width { 50.pt() }
+                                height { 50.pt() }
+                                borders { all { style = DefaultBorderStyle.SOLID } }
+                            }
+                        }
+                    }
+                }
+            }
+        }.export(File("group_test.pdf"))
     }
 }

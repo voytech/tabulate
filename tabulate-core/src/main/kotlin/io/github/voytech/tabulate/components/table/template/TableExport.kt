@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.ModelExportContext
 import io.github.voytech.tabulate.core.template.*
-import io.github.voytech.tabulate.core.template.layout.GridLayoutPolicy
+import io.github.voytech.tabulate.core.template.layout.TableLayoutPolicy
 import io.github.voytech.tabulate.core.template.operation.*
 import java.io.File
 import java.io.FileOutputStream
@@ -33,7 +33,7 @@ typealias StandaloneTableTemplate<T> = StandaloneExportTemplate<Table<T>>
 
 internal class TableExport<T : Any>(
     private val exportContext: ModelExportContext,
-    private val policy: GridLayoutPolicy,
+    private val policy: TableLayoutPolicy,
     dataSource: Iterable<T>?,
     private val renderingContext: RenderingContext = exportContext.renderingContext,
 ) {

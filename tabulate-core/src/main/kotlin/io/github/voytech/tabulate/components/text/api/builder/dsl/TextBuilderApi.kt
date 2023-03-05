@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.components.text.api.builder.dsl
 
+import io.github.voytech.tabulate.components.container.api.builder.dsl.ContainerBuilderApi
 import io.github.voytech.tabulate.components.page.api.builder.dsl.FooterBuilderApi
 import io.github.voytech.tabulate.components.page.api.builder.dsl.HeaderBuilderApi
 import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
@@ -59,3 +60,5 @@ fun HeaderBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderAp
 fun FooterBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
 
 fun PageBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
+
+fun ContainerBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))

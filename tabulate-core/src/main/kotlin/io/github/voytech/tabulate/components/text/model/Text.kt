@@ -2,7 +2,6 @@ package io.github.voytech.tabulate.components.text.model
 
 import io.github.voytech.tabulate.components.text.operation.TextRenderable
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.template.ResumeNext
 
 class Text(
     @get:JvmSynthetic
@@ -19,9 +18,8 @@ class Text(
         }
     }
 
-    override fun doResume(exportContext: ModelExportContext, resumeNext: ResumeNext) {
+    override fun doResume(exportContext: ModelExportContext) {
         doExport(exportContext)
-        resumeNext()
     }
 
     override fun takeMeasures(exportContext: ModelExportContext) {

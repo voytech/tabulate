@@ -88,15 +88,7 @@ class ExportInstance(
     }
 
     private fun resumeAll() {
-        resumeModelExport(root.navigation.active)
-    }
-
-    private fun resumeChildren(model: AbstractModel<*>) {
-        model.context.navigation.onEachChild { resumeModelExport(it) }
-    }
-
-    private fun resumeModelExport(model: AbstractModel<*>) {
-        model.resume(model.context) { resumeChildren(model) }
+        root.navigation.active.resume()
     }
 
 }

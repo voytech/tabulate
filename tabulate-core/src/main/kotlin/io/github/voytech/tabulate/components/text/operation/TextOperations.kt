@@ -26,7 +26,7 @@ class TextRenderable internal constructor(
         elementBoundingBox(
             x = getX(0.asXPosition(), uom),
             y = getY(0.asYPosition(), uom),
-            width = maxBoundingRectangle?.getWidth(),
+            //width = maxBoundingRectangle?.getWidth(),
         )
     }
 

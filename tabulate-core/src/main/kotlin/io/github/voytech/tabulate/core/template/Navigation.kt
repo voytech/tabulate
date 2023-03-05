@@ -30,6 +30,10 @@ class Navigation(
         children.forEach(block)
     }
 
+    fun checkAnyChildren(block: (AbstractModel<*>) -> Boolean): Boolean = children.any {
+            it.context.let { ctx -> block(ctx.navigation.active) || ctx.navigation.checkAnyChildren(block) }
+    }
+
     fun traverse(block: (AbstractModel<*>) -> Unit) {
         block(active).also {
             onEachChild { it.context.navigation.traverse(block) }
@@ -59,6 +63,8 @@ class NavigableLayout(
     private val layout: DefaultLayout,
     private val orientation: Orientation,
 ) : Layout by layout {
+
+    var onFinish: ((NavigableLayout) -> Unit)? = null
 
     private var rightBottom: Position by layout::rightBottom
 
@@ -92,6 +98,7 @@ class NavigableLayout(
     }
 
     internal fun finish() {
+        onFinish?.invoke(this)
         if (navi.active != navi.root) {
             getClosestAncestorLayout()?.let { parentLayout ->
                 parentLayout.nextLayoutLeftTop = if (parentLayout.orientation == Orientation.HORIZONTAL) {

@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.components.table.template.TableExport
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.template.ResumeNext
-import io.github.voytech.tabulate.core.template.layout.GridLayoutPolicy
+import io.github.voytech.tabulate.core.template.layout.TableLayoutPolicy
 
 /**
  * A top-level definition of tabular layout. Aggregates column as well as all row definitions. It can also contain
@@ -47,14 +47,14 @@ class Table<T : Any> internal constructor(
 
     override val attributes: Attributes?,
 
-    ) : ModelWithAttributes<Table<T>>(), LayoutPolicyProvider<GridLayoutPolicy> {
+    ) : ModelWithAttributes<Table<T>>(), LayoutPolicyProvider<TableLayoutPolicy> {
 
     companion object {
         @JvmStatic
         fun <T : Any> jclass(): Class<Table<T>> = reify()
     }
 
-    override val policy: GridLayoutPolicy = GridLayoutPolicy()
+    override val policy: TableLayoutPolicy = TableLayoutPolicy()
 
     override val planSpaceOnExport = true
 
@@ -72,7 +72,7 @@ class Table<T : Any> internal constructor(
     override fun doExport(exportContext: ModelExportContext) =
         exportContext.exportOrResume()
 
-    override fun doResume(exportContext: ModelExportContext, resumeNext: ResumeNext) =
+    override fun doResume(exportContext: ModelExportContext) =
         exportContext.exportOrResume()
 
     override fun takeMeasures(exportContext: ModelExportContext) =

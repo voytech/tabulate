@@ -127,10 +127,7 @@ class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedContext>(
                 createElementBoundingBox(context).let { bbox ->
                     bbox.checkOverflow()?.let {
                         context.setResult(OverflowResult(it))
-                        when (it) {
-                            Overflow.X -> modelContext.suspendX()
-                            Overflow.Y -> modelContext.suspendY()
-                        }
+                        policy.run { modelContext.onOverflow(it) }
                     } ?: run {
                         bbox?.setFlags()
                         delegate(renderingContext, context).also {

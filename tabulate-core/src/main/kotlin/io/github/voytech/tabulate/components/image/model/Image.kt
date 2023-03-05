@@ -20,9 +20,8 @@ class Image(
         }
     }
 
-    override fun doResume(exportContext: ModelExportContext, resumeNext: ResumeNext) {
+    override fun doResume(exportContext: ModelExportContext) {
         doExport(exportContext)
-        resumeNext()
     }
 
     override fun takeMeasures(exportContext: ModelExportContext) {
