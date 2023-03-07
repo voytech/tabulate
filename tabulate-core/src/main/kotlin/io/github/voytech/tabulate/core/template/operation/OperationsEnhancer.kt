@@ -99,7 +99,7 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
                 }
         } ?: run { context.boundingBox }
 
-    protected fun LayoutWithPolicy.createElementBoundingBox(context: E): LayoutElementBoundingBox? =
+    protected fun LayoutWithPolicy.ensureElementBoundingBox(context: E): LayoutElementBoundingBox? =
         if (context is RenderableContext<*>) {
             @Suppress("UNCHECKED_CAST")
             with(context as RenderableContext<LayoutPolicy>) {
@@ -118,16 +118,21 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
 }
 
 class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedContext>(
-    delegate: Operation<CTX, E>, private val modelContext: ModelExportContext, layoutWithPolicy: () -> LayoutWithPolicy,
+    delegate: Operation<CTX, E>,
+    private val modelContext: ModelExportContext, layoutWithPolicy: () -> LayoutWithPolicy,
+    private val measuringOperations: Operations<CTX>,
 ) : LayoutAwareOperation<CTX, E>(delegate, layoutWithPolicy) {
 
     override operator fun invoke(renderingContext: CTX, context: E) {
         with(layoutWithPolicy()) {
             with(layout) {
-                createElementBoundingBox(context).let { bbox ->
+                ensureElementBoundingBox(context).let { bbox ->
+                    if (!bbox.isDefined()) {
+                        measuringOperations(renderingContext, context)
+                    }
                     bbox.checkOverflow()?.let {
                         context.setResult(OverflowResult(it))
-                        policy.run { modelContext.onOverflow(it) }
+                        policy.run { modelContext.setOverflow(it) }
                     } ?: run {
                         bbox?.setFlags()
                         delegate(renderingContext, context).also {
@@ -149,13 +154,14 @@ class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedContext>(
  * @since 0.2.0
  */
 class LayoutAwareMeasureOperation<CTX : RenderingContext, E : AttributedContext>(
-    delegate: Operation<CTX, E>, layoutWithPolicy: () -> LayoutWithPolicy,
+    delegate: Operation<CTX, E>,
+    layoutWithPolicy: () -> LayoutWithPolicy,
 ) : LayoutAwareOperation<CTX, E>(delegate, layoutWithPolicy) {
 
     override operator fun invoke(renderingContext: CTX, context: E) {
         with(layoutWithPolicy()) {
             with(layout) {
-                createElementBoundingBox(context).let { bbox ->
+                ensureElementBoundingBox(context).let { bbox ->
                     bbox?.setFlags()
                     if (!bbox.isDefined()) {
                         delegate(renderingContext, context)
@@ -173,10 +179,11 @@ data class LayoutWithPolicy(val layout: Layout, val policy: LayoutPolicy)
 
 class EnableRenderingUsingLayouts<CTX : RenderingContext>(
     private val modelContext: ModelExportContext,
+    private val measuringOperations: Operations<CTX>,
     private val layout: () -> LayoutWithPolicy,
 ) : Enhance<CTX> {
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
-        LayoutAwareRenderOperation(op.delegate, modelContext, layout)
+        LayoutAwareRenderOperation(op.delegate, modelContext, layout, measuringOperations)
 }
 
 class EnableMeasuringForLayouts<CTX : RenderingContext>(
@@ -184,17 +191,4 @@ class EnableMeasuringForLayouts<CTX : RenderingContext>(
 ) : Enhance<CTX> {
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
         LayoutAwareMeasureOperation(op.delegate, layout)
-}
-
-class JoinOperations<CTX : RenderingContext>(
-    private val other: Operations<CTX>,
-    private val predicate: (AttributedContext) -> Boolean,
-) : Enhance<CTX> {
-    override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
-        Operation { renderingContext, context ->
-            if (predicate(context)) {
-                other(renderingContext, context)
-            }
-            op(renderingContext, context)
-        }
 }

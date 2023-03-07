@@ -24,4 +24,4 @@ class ContainerBuilderApi internal constructor(): CompositeModelBuilderApi<Conta
 
 
 fun PageBuilderApi.container(block: ContainerBuilderApi.() -> Unit) = bind(ContainerBuilderApi().apply(block))
-fun DocumentBuilderApi.container(block: ContainerBuilderApi.() -> Unit) = bind(ContainerBuilderApi().apply(block))
+//fun DocumentBuilderApi.container(block: ContainerBuilderApi.() -> Unit) = bind(ContainerBuilderApi().apply(block))

@@ -29,7 +29,7 @@ class Container(
 
     private fun Layout.exportAndResumeIfNeeded(model: AbstractModel<*>, exportContext: ModelExportContext) {
         val size = model.measure(exportContext)
-        val status = model.exportWithStatus(exportContext, currentPosition())
+        val status = model.exportWithStatus(exportContext,currentPosition())
         // Should call loop in here in order to resume suspended model straight away if space available.
         if (status.isXOverflow() && orientation == Orientation.HORIZONTAL) {
             position = with(boundingRectangle) { Position(leftTop.x, rightBottom.y) }

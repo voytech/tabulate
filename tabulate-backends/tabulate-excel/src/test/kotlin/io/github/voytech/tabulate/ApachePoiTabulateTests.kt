@@ -1,10 +1,9 @@
 package io.github.voytech.tabulate
 
+import io.github.voytech.tabulate.components.container.api.builder.dsl.container
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
-import io.github.voytech.tabulate.components.image.api.builder.dsl.height
-import io.github.voytech.tabulate.components.image.api.builder.dsl.image
-import io.github.voytech.tabulate.components.image.api.builder.dsl.width
+import io.github.voytech.tabulate.components.image.api.builder.dsl.*
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
 import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.components.table.api.builder.RowPredicates.all
@@ -16,10 +15,8 @@ import io.github.voytech.tabulate.components.table.model.attributes.table.templa
 import io.github.voytech.tabulate.components.table.template.export
 import io.github.voytech.tabulate.components.table.template.tabulate
 import io.github.voytech.tabulate.components.text.api.builder.dsl.*
-import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.Height
-import io.github.voytech.tabulate.core.model.UnitsOfMeasure
-import io.github.voytech.tabulate.core.model.Width
+import io.github.voytech.tabulate.components.text.api.builder.dsl.borders
+import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.attributes.*
@@ -32,6 +29,7 @@ import io.github.voytech.tabulate.excel.components.table.model.ExcelBorderStyle
 import io.github.voytech.tabulate.excel.components.table.model.attributes.*
 import io.github.voytech.tabulate.test.*
 import io.github.voytech.tabulate.test.assertions.*
+import io.github.voytech.tabulate.test.sampledata.SampleCustomer
 import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import io.github.voytech.tabulate.testsupport.PoiTableAssert
 import org.apache.poi.openxml4j.util.ZipSecureFile
@@ -897,5 +895,71 @@ class ApachePoiTabulateTests {
                 }
             }
         }.export(File("table_x.xlsx"))
+    }
+
+    @Test
+    fun `should export document with 'container'`() {
+        document {
+            page {
+                container {
+                    orientation = Orientation.HORIZONTAL
+                    (0..10).forEach { index ->
+                        text {
+                            value<PageExecutionContext> { "This is ($index) text in group ${it.pageNumber}" }
+                            attributes {
+                                borders { all { style = DefaultBorderStyle.SOLID } }
+                                margins { left { 1.pt() }; top { 1.pt() } }
+                            }
+                        }
+                    }
+                    image {
+                        filePath = "src/test/resources/kotlin.jpeg"
+                        attributes {
+                            margins { left { 1.pt() }; top { 1.pt() } }
+                            width { 100.pt() }
+                            height { 100.pt() }
+                            borders { all { style = DefaultBorderStyle.SOLID } }
+                        }
+                    }
+                    table {
+                        attributes {
+                            margins { left { 10.pt() }; top { 10.pt() } }
+                            borders {
+                                bottomBorderWidth = 0.2.pt()
+                                bottomBorderStyle = DefaultBorderStyle.SOLID
+                            }
+                        }
+                        columns {
+                            column(SampleCustomer::firstName)
+                            column(SampleCustomer::lastName)
+                            column(SampleCustomer::country)
+                            column(SampleCustomer::city)
+                            column(SampleCustomer::street)
+                            column(SampleCustomer::houseNumber)
+                            column(SampleCustomer::flat)
+                        }
+                        rows {
+                            header {
+                                columnTitles("First Name","Last Name","Country","City","Street","House Nr","Flat Nr")
+                                attributes { text { weight = DefaultWeightStyle.BOLD } }
+                            }
+
+                        }
+                        dataSource(SampleCustomer.create(30))
+                    }
+                    repeat((0..20).count()) {
+                        image {
+                            filePath = "src/test/resources/kotlin.jpeg"
+                            attributes {
+                                margins { left { 1.pt() }; top { 1.pt() } }
+                                width { 50.pt() }
+                                height { 50.pt() }
+                                borders { all { style = DefaultBorderStyle.SOLID } }
+                            }
+                        }
+                    }
+                }
+            }
+        }.export(File("group_test.xlsx"))
     }
 }

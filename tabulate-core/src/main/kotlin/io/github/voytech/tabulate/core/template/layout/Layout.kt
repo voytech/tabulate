@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.core.template.layout
 
 import io.github.voytech.tabulate.core.model.*
+import java.util.UUID
 
 interface AbsolutePositionPolicy {
 
@@ -20,7 +21,17 @@ interface AbsolutePositionPolicy {
     fun getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y
 }
 
-interface GridPolicyMethods {
+data class LayoutItemId<ID : Any>(val id: ID)
+
+interface SizeTrackingPolicyMethods {
+    fun setWidth(index: Int, width: Width)
+    fun setHeight(index: Int, height: Height)
+    fun getWidth(index: Int): Width?
+    fun getHeight(index: Int): Height?
+    fun setOffsets(row: Int, column: Int)
+}
+
+interface TablePolicyMethods {
     fun setColumnWidth(column: Int, width: Width)
     fun setRowHeight(row: Int, height: Height)
     fun getColumnWidth(column: Int, colSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width?
@@ -75,7 +86,7 @@ interface LayoutPolicy {
         )
     }
 
-    fun ModelExportContext.onOverflow(overflow: Overflow)
+    fun ModelExportContext.setOverflow(overflow: Overflow)
 
 }
 
@@ -83,9 +94,10 @@ abstract class AbstractTableLayoutPolicy(
     protected open val rowIndex: Int = 0,
     protected open val columnIndex: Int = 0,
 ) :
-    LayoutPolicy, GridPolicyMethods
+    LayoutPolicy, TablePolicyMethods
 
 interface Layout {
+    val id : String
     val uom: UnitsOfMeasure
     val leftTop: Position
     val maxRightBottom: Position?
@@ -114,6 +126,7 @@ sealed class AbstractLayout(
     override val leftTop: Position,
     override val maxRightBottom: Position?,
     internal var rightBottom: Position = leftTop,
+    override val id: String = UUID.randomUUID().toString()
 ) : Layout {
 
     override val boundingRectangle: BoundingRectangle
@@ -216,6 +229,44 @@ enum class Overflow {
     Y
 }
 
+abstract class SizeTrackingLayoutPolicy : LayoutPolicy, SizeTrackingPolicyMethods {
+
+    override var isSpaceMeasured: Boolean = false
+
+    private val measurableWidths = mutableMapOf<Int, Boolean>()
+
+    private val measurableHeights = mutableMapOf<Int, Boolean>()
+
+    private val measurements: MutableMap<String, PositionAndSize> = mutableMapOf()
+
+    data class PositionAndSize(val relativePosition: Position, var size: Size)
+
+    override fun setWidth(index: Int, width: Width) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getWidth(index: Int): Width? {
+        TODO("Not yet implemented")
+    }
+
+    override fun setHeight(index: Int, height: Height) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getHeight(index: Int): Height? {
+        TODO("Not yet implemented")
+    }
+
+    fun markWidthForMeasure(index: Int, measured: Boolean = false) {
+        if (isSpaceMeasured) return
+        measurableWidths[index] = measured
+    }
+
+    fun markHeightForMeasure(index: Int, measured: Boolean = false) {
+        if (isSpaceMeasured) return
+        measurableHeights[index] = measured
+    }
+}
 
 class DefaultLayoutPolicy : LayoutPolicy {
 
@@ -249,7 +300,7 @@ class DefaultLayoutPolicy : LayoutPolicy {
         extend(height)
     }
 
-    override fun ModelExportContext.onOverflow(overflow: Overflow) = when (overflow) {
+    override fun ModelExportContext.setOverflow(overflow: Overflow) = when (overflow) {
         Overflow.X -> suspendX()
         Overflow.Y -> suspendY()
     }
@@ -260,7 +311,7 @@ class SpreadsheetPolicy(
     private val defaultWidthInPt: Float = 0f,
     private val defaultHeightInPt: Float = 0f,
     val standardUnit: StandardUnits = StandardUnits.PT,
-) : GridPolicyMethods, AbsolutePositionPolicy {
+) : TablePolicyMethods, AbsolutePositionPolicy {
 
     private var rowIndex: Int = 0
     private var columnIndex: Int = 0
@@ -439,7 +490,7 @@ class TableLayoutPolicy : AbstractTableLayoutPolicy() {
         extend(height)
     }
 
-    override fun ModelExportContext.onOverflow(overflow: Overflow) = when (overflow) {
+    override fun ModelExportContext.setOverflow(overflow: Overflow) = when (overflow) {
         Overflow.X -> suspendX().also { layouts.renderingLayout?.exhaustY() }
         Overflow.Y -> suspendY()
     }

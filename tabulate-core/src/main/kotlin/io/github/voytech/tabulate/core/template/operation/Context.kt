@@ -31,9 +31,13 @@ sealed class ContextData : Context {
 
     override fun getCustomAttributes(): MutableMap<String, Any>? = additionalAttributes
 
-    inline fun <reified C: Any> getCustomAttribute(key: String): C? = additionalAttributes[key] as C?
+    inline fun <reified C : Any> getCustomAttribute(key: String): C? = additionalAttributes[key] as C?
 
-    inline fun <reified C: Any> removeCustomAttribute(key: String): C? = additionalAttributes.remove(key) as C?
+    inline fun <reified C : Any> setCustomAttribute(key: String, value: C) {
+        additionalAttributes[key] = value
+    }
+
+    inline fun <reified C : Any> removeCustomAttribute(key: String): C? = additionalAttributes.remove(key) as C?
 
 }
 
@@ -55,34 +59,43 @@ abstract class AttributedContext(@JvmSynthetic override val attributes: Attribut
     inline fun <reified T : Attribute<T>> getModelAttribute(): T? =
         getModelAttribute(T::class.java)
 
-    fun <A: Any> setContextAttribute(key: String, value: A) {
+    fun <A : Any> setContextAttribute(key: String, value: A) {
         additionalAttributes["$id[$key]"] = value
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <A: Any> getContextAttribute(key: String): A? = if (additionalAttributes.containsKey("$id[$key]")) {
+    fun <A : Any> getContextAttribute(key: String): A? = if (additionalAttributes.containsKey("$id[$key]")) {
         additionalAttributes["$id[$key]"] as? A
     } else null
 
     @Suppress("UNCHECKED_CAST")
-    fun <A: Any> removeContextAttribute(key: String): A? = if (additionalAttributes.containsKey("$id[$key]")) {
+    fun <A : Any> removeContextAttribute(key: String): A? = if (additionalAttributes.containsKey("$id[$key]")) {
         additionalAttributes.remove("$id[$key]") as? A
     } else null
 
 }
 
-abstract class RenderableContext<EL: LayoutPolicy>(@JvmSynthetic override val attributes: Attributes? = null) : AttributedContext(), LayoutElement<EL> {
+abstract class RenderableContext<EL : LayoutPolicy>(@JvmSynthetic override val attributes: Attributes? = null) :
+    AttributedContext(), LayoutElement<EL> {
     lateinit var boundingBox: LayoutElementBoundingBox
         private set
 
-    fun Layout.initBoundingBox(policy: EL,initializer: ((LayoutElementBoundingBox) -> LayoutElementBoundingBox)?): LayoutElementBoundingBox {
+    fun hasBoundingBox() = this::boundingBox.isInitialized
+
+    fun Layout.initBoundingBox(
+        policy: EL,
+        initializer: ((LayoutElementBoundingBox) -> LayoutElementBoundingBox)?,
+    ): LayoutElementBoundingBox {
+        if (this@RenderableContext::boundingBox.isInitialized) return boundingBox
         boundingBox = computeBoundingBox(policy)
         initializer?.let { boundingBox += it(boundingBox) }
         return boundingBox
     }
+
 }
 
-fun AttributedContext.boundingBox(): LayoutElementBoundingBox? = if (this is RenderableContext<*>) this.boundingBox else null
+fun AttributedContext.boundingBox(): LayoutElementBoundingBox? =
+    if (this is RenderableContext<*> && hasBoundingBox()) this.boundingBox else null
 
 class AttributesByContexts<T : AttributedModelOrPart<T>>(
     from: T, to: List<Class<out AttributedContext>>,
@@ -97,11 +110,11 @@ fun <T : AttributedModelOrPart<T>> T.distributeAttributesForContexts(
 ): AttributesByContexts<T> = AttributesByContexts(this, listOf(*clazz))
 
 
-interface HasValue<V: Any> {
+interface HasValue<V : Any> {
     val value: V
 }
 
-interface HasText: HasValue<String>
+interface HasText : HasValue<String>
 
 interface HasImage {
     val imageUri: String

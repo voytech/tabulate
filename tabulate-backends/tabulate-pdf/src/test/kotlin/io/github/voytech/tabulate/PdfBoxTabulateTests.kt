@@ -899,14 +899,14 @@ class PdfBoxTabulateTests {
     }
 
     @Test
-    fun `should export document with group of components`() {
+    fun `should export document with 'container'`() {
         document {
             page {
                 container {
                     orientation = Orientation.HORIZONTAL
                     (0..10).forEach { index ->
                         text {
-                            value<PageExecutionContext> { "This is ($index) text in group ${it.pageNumber}" }
+                            value<PageExecutionContext> { "This is ($index) text on page (${it.pageNumber})" }
                             attributes {
                                 borders { all { style = DefaultBorderStyle.SOLID } }
                                 margins { left { 1.pt() }; top { 1.pt() } }
@@ -961,6 +961,6 @@ class PdfBoxTabulateTests {
                     }
                 }
             }
-        }.export(File("group_test.pdf"))
+        }.export(File("container.pdf"))
     }
 }
