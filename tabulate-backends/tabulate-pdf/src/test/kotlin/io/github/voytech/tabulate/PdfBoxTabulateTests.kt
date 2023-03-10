@@ -917,8 +917,8 @@ class PdfBoxTabulateTests {
                         filePath = "src/test/resources/kotlin.jpeg"
                         attributes {
                             margins { left { 1.pt() }; top { 1.pt() } }
-                            width { 100.pt() }
-                            height { 100.pt() }
+                            width { 50.pt() }
+                            height { 50.pt() }
                             borders { all { style = DefaultBorderStyle.SOLID } }
                         }
                     }

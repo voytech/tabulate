@@ -194,9 +194,10 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
     //TODO on measure - should call probably the same logic as export and resumption but should inject measurement operations instead of export operations. We should not be able to use different exporting logic for those two paths.
     fun measure(parentContext: ModelExportContext): SomeSize = with(parentContext.instance) {
         withinInitializedContext(parentContext) {
-            context.setMeasuringLayout(uom) { measuringLayout ->
-                takeMeasures(context).also { layoutPolicyHandle.isSpaceMeasured = true }
-                measuringLayout.boundingRectangle.let {
+            context.setMeasuringLayout(uom) {
+                takeMeasures(context)
+                layoutPolicyHandle.run { setMeasured() }
+                boundingRectangle.let {
                     SomeSize(it.getWidth(), it.getHeight())
                 }
             }

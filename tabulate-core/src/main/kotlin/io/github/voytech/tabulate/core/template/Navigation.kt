@@ -121,7 +121,7 @@ fun ModelExportContext.getEnclosingMaxRightBottom(): Position? =
 
 fun ModelExportContext.getRenderingLayout(): NavigableLayout? = layouts.renderingLayout
 
-fun <R> ModelExportContext.setMeasuringLayout(uom: UnitsOfMeasure, block: (DefaultLayout) -> R): R =
+fun <R> ModelExportContext.setMeasuringLayout(uom: UnitsOfMeasure, block: DefaultLayout.() -> R): R =
     DefaultLayout(uom, Position.start(uom), getClosestLayoutAwareAncestor()?.getRenderingLayout()?.maxRightBottom).let {
         layouts.measuringLayout = it
         block(it)

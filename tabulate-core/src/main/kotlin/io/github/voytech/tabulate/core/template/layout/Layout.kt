@@ -86,6 +86,8 @@ interface LayoutPolicy {
         )
     }
 
+    fun Layout.setMeasured() { isSpaceMeasured = true }
+
     fun ModelExportContext.setOverflow(overflow: Overflow)
 
 }
@@ -93,8 +95,7 @@ interface LayoutPolicy {
 abstract class AbstractTableLayoutPolicy(
     protected open val rowIndex: Int = 0,
     protected open val columnIndex: Int = 0,
-) :
-    LayoutPolicy, TablePolicyMethods
+) : LayoutPolicy, TablePolicyMethods
 
 interface Layout {
     val id : String
@@ -435,6 +436,12 @@ class SpreadsheetPolicy(
     override fun getRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height =
         rows.spannedWidth(row, rowSpan).height().switchUnitOfMeasure(uom)
 
+    fun getWidth(): Width =
+        Width(columns.values.sumOf { it.length.toDouble() }.toFloat(),standardUnit.asUnitsOfMeasure())
+
+    fun getHeight(): Height =
+        Height(rows.values.sumOf { it.length.toDouble() }.toFloat(),standardUnit.asUnitsOfMeasure())
+
     override fun setOffsets(row: Int, column: Int) {
         rowIndex = row
         columnIndex = column
@@ -488,6 +495,13 @@ class TableLayoutPolicy : AbstractTableLayoutPolicy() {
 
     override fun Layout.extend(height: Height) {
         extend(height)
+    }
+
+    override fun Layout.setMeasured() {
+       isSpaceMeasured = true
+       val height = delegate.getHeight()
+       val width = delegate.getWidth()
+       extend(Position(X(width.value,uom),Y(height.value,uom)))
     }
 
     override fun ModelExportContext.setOverflow(overflow: Overflow) = when (overflow) {
