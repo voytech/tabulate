@@ -3,6 +3,7 @@ package io.github.voytech.tabulate.core.template
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.attributes.MarginsAttribute
 import io.github.voytech.tabulate.core.template.layout.*
+import io.github.voytech.tabulate.core.template.layout.policy.SimpleLayoutPolicy
 
 class Navigation(
     val root: AbstractModel<*>,
@@ -54,7 +55,7 @@ class Layouts(val layoutPolicy: LayoutPolicy) {
     }
 
     companion object {
-        fun rootLayouts() = Layouts(DefaultLayoutPolicy())
+        fun rootLayouts() = Layouts(SimpleLayoutPolicy())
     }
 }
 

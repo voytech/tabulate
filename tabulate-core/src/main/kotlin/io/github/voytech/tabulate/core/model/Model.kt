@@ -1,9 +1,9 @@
 package io.github.voytech.tabulate.core.model
 
 import io.github.voytech.tabulate.core.template.*
-import io.github.voytech.tabulate.core.template.layout.DefaultLayoutPolicy
 import io.github.voytech.tabulate.core.template.layout.Layout
 import io.github.voytech.tabulate.core.template.layout.LayoutPolicy
+import io.github.voytech.tabulate.core.template.layout.policy.SimpleLayoutPolicy
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import io.github.voytech.tabulate.core.template.operation.OperationResult
 import java.util.*
@@ -260,7 +260,7 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
         )
     }
 
-    private fun layoutPolicy(): LayoutPolicy = if (this is LayoutPolicyProvider<*>) policy else DefaultLayoutPolicy()
+    private fun layoutPolicy(): LayoutPolicy = if (this is LayoutPolicyProvider<*>) policy else SimpleLayoutPolicy()
 
     protected fun ModelExportContext.render(context: AttributedContext): OperationResult? =
         instance.render(self(), context)

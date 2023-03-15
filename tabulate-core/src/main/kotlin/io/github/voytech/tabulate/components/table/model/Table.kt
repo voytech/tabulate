@@ -3,8 +3,7 @@ package io.github.voytech.tabulate.components.table.model
 import io.github.voytech.tabulate.components.table.template.TableExport
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.ResumeNext
-import io.github.voytech.tabulate.core.template.layout.TableLayoutPolicy
+import io.github.voytech.tabulate.core.template.layout.policy.TableLayoutPolicy
 
 /**
  * A top-level definition of tabular layout. Aggregates column as well as all row definitions. It can also contain

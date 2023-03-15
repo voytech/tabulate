@@ -5,10 +5,10 @@ import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.model.asXPosition
 import io.github.voytech.tabulate.core.model.asYPosition
 import io.github.voytech.tabulate.core.template.RenderingContext
-import io.github.voytech.tabulate.core.template.layout.DefaultLayoutPolicy
 import io.github.voytech.tabulate.core.template.layout.Layout
 import io.github.voytech.tabulate.core.template.layout.LayoutElementApply
 import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
+import io.github.voytech.tabulate.core.template.layout.policy.SimpleLayoutPolicy
 import io.github.voytech.tabulate.core.template.operation.HasText
 import io.github.voytech.tabulate.core.template.operation.Operation
 import io.github.voytech.tabulate.core.template.operation.RenderableContext
@@ -17,13 +17,13 @@ class TextRenderable internal constructor(
     val text: String,
     override val attributes: Attributes?,
     stateAttributes: StateAttributes,
-) : RenderableContext<DefaultLayoutPolicy>(), HasText, LayoutElementApply<DefaultLayoutPolicy> {
+) : RenderableContext<SimpleLayoutPolicy>(), HasText, LayoutElementApply<SimpleLayoutPolicy> {
 
     init {
         additionalAttributes = stateAttributes.data
     }
 
-    override fun Layout.computeBoundingBox(policy: DefaultLayoutPolicy): LayoutElementBoundingBox = with(policy) {
+    override fun Layout.computeBoundingBox(policy: SimpleLayoutPolicy): LayoutElementBoundingBox = with(policy) {
         elementBoundingBox(
             x = getX(START_X, uom),
             y = getY(START_Y, uom),
@@ -34,7 +34,7 @@ class TextRenderable internal constructor(
     override val value: String
         get() = text
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: DefaultLayoutPolicy) {
+    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: SimpleLayoutPolicy) {
         //TODO("Not yet implemented")
     }
 

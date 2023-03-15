@@ -5,6 +5,7 @@ import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHin
 import io.github.voytech.tabulate.components.table.template.SyntheticRow
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.template.layout.*
+import io.github.voytech.tabulate.core.template.layout.policy.TableLayoutPolicy
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import io.github.voytech.tabulate.core.template.operation.Context
 import io.github.voytech.tabulate.core.template.operation.HasValue

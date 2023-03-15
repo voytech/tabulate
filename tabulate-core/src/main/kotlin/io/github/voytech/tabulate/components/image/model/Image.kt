@@ -5,7 +5,6 @@ import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.ModelExportContext
 import io.github.voytech.tabulate.core.model.ModelWithAttributes
 import io.github.voytech.tabulate.core.model.orEmpty
-import io.github.voytech.tabulate.core.template.ResumeNext
 
 class Image(
     @get:JvmSynthetic

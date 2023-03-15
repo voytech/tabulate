@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.core.template
 
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.template.layout.SpreadsheetPolicy
+import io.github.voytech.tabulate.core.template.layout.policy.SpreadsheetPolicy
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import io.github.voytech.tabulate.core.template.operation.RenderableContext
 import io.github.voytech.tabulate.core.template.operation.boundingBox

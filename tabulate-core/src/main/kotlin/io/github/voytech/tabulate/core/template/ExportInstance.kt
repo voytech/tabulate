@@ -10,8 +10,6 @@ import io.github.voytech.tabulate.core.template.operation.factories.OperationsFa
 import io.github.voytech.tabulate.core.template.result.OutputBinding
 import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
 
-typealias ResumeNext = () -> Unit
-
 typealias OperationsMap = MutableMap<Model<*>, Operations<RenderingContext>>
 
 class ExportInstance(

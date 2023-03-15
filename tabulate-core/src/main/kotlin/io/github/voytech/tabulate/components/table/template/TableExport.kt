@@ -8,7 +8,7 @@ import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.ModelExportContext
 import io.github.voytech.tabulate.core.template.*
-import io.github.voytech.tabulate.core.template.layout.TableLayoutPolicy
+import io.github.voytech.tabulate.core.template.layout.policy.TableLayoutPolicy
 import io.github.voytech.tabulate.core.template.operation.*
 import java.io.File
 import java.io.FileOutputStream
