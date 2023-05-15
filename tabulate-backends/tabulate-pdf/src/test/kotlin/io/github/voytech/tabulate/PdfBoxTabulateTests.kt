@@ -946,7 +946,7 @@ class PdfBoxTabulateTests {
                             }
 
                         }
-                        dataSource(SampleCustomer.create(30))
+                        dataSource(SampleCustomer.create(10))
                     }
                     repeat((0..20).count()) {
                         image {

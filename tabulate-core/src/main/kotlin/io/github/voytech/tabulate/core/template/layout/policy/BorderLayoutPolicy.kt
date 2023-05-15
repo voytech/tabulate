@@ -9,5 +9,5 @@ interface BorderLayoutPolicyMethods {
 }
 
 
-class BorderLayout {
+class BorderLayoutPolicy {
 }

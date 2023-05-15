@@ -9,11 +9,8 @@ import io.github.voytech.tabulate.components.table.template.ContextResult
 import io.github.voytech.tabulate.components.table.template.SuccessResult
 import io.github.voytech.tabulate.core.model.AbstractModel
 import io.github.voytech.tabulate.core.model.ModelExportContext
-import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.template.DocumentFormat
 import io.github.voytech.tabulate.core.template.ExportInstance
-import io.github.voytech.tabulate.core.template.Layouts.Companion.rootLayouts
-import io.github.voytech.tabulate.core.template.Navigation.Companion.rootNavigation
 import io.github.voytech.tabulate.core.template.operation.ContextData
 import io.github.voytech.tabulate.core.template.operation.OperationResult
 import io.github.voytech.tabulate.core.template.operation.Success

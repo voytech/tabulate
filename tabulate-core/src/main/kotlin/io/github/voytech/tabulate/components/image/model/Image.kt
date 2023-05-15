@@ -12,15 +12,10 @@ class Image(
     override val attributes: Attributes?,
 ) : ModelWithAttributes<Image>() {
 
-
-    override fun doExport(exportContext: ModelExportContext) = with(exportContext) {
-        createLayoutScope {
-            render(asRenderable())
+    override fun doExport(exportContext: ModelExportContext) {
+        with(exportContext) {
+           render(asRenderable())
         }
-    }
-
-    override fun doResume(exportContext: ModelExportContext) {
-        doExport(exportContext)
     }
 
     override fun takeMeasures(exportContext: ModelExportContext) {

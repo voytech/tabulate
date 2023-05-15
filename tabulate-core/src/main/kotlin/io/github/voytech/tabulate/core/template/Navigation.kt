@@ -1,9 +1,10 @@
 package io.github.voytech.tabulate.core.template
 
+import io.github.voytech.tabulate.DefaultComplexIterator
+import io.github.voytech.tabulate.ResettableComplexIterator
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.attributes.MarginsAttribute
 import io.github.voytech.tabulate.core.template.layout.*
-import io.github.voytech.tabulate.core.template.layout.policy.SimpleLayoutPolicy
 
 class Navigation(
     val root: AbstractModel<*>,
@@ -32,7 +33,7 @@ class Navigation(
     }
 
     fun checkAnyChildren(block: (AbstractModel<*>) -> Boolean): Boolean = children.any {
-            it.context.let { ctx -> block(ctx.navigation.active) || ctx.navigation.checkAnyChildren(block) }
+        it.context.let { ctx -> block(ctx.navigation.active) || ctx.navigation.checkAnyChildren(block) }
     }
 
     fun traverse(block: (AbstractModel<*>) -> Unit) {
@@ -46,17 +47,35 @@ class Navigation(
     }
 }
 
-class Layouts(val layoutPolicy: LayoutPolicy) {
-    var renderingLayout: NavigableLayout? = null
-    var measuringLayout: DefaultLayout? = null
+data class LayoutScope(val layout: NavigableLayout, val policy: LayoutPolicy) {
+    @Suppress("UNCHECKED_CAST")
+    fun <P : LayoutPolicy> policy(): P = policy as P
+}
 
-    fun drop() {
-        renderingLayout = null
+class Layouts(
+    private val policySupplier: () -> LayoutPolicy,
+    private val queue: MutableList<LayoutScope> = mutableListOf(),
+    private val iterators: ResettableComplexIterator<LayoutScope, ExportPhase> = DefaultComplexIterator(queue),
+) {
+
+    operator fun invoke(): ResettableComplexIterator<LayoutScope, ExportPhase> = iterators
+
+    fun size(): Int = queue.size
+
+    fun clear() {
+        queue.clear()
+        iterators.reset(ExportPhase.MEASURING)
+        iterators.reset(ExportPhase.RENDERING)
     }
 
-    companion object {
-        fun rootLayouts() = Layouts(SimpleLayoutPolicy())
+    fun lastScope(): LayoutScope? = queue.lastOrNull()
+
+    fun last(): NavigableLayout? = lastScope()?.layout
+
+    operator fun plusAssign(layout: NavigableLayout) {
+        queue += LayoutScope(layout, policySupplier())
     }
+
 }
 
 class NavigableLayout(
@@ -72,7 +91,7 @@ class NavigableLayout(
     internal var nextLayoutLeftTop: Position? = null
 
     private fun getClosestAncestorLayout(): NavigableLayout? =
-        navi.lookupAncestors { it.layouts.renderingLayout != null }?.layouts?.renderingLayout
+        navi.lookupAncestors { it.layouts.last() != null }?.layouts?.last()
 
     private fun extendParent(position: Position) {
         if (navi.parent != null) {
@@ -113,56 +132,57 @@ class NavigableLayout(
 }
 
 fun ModelExportContext.getClosestLayoutAwareAncestor(): ModelExportContext? =
-    navigation.lookupAncestors { it.layouts.renderingLayout != null }
+    navigation.lookupAncestors { it.layouts.last() != null }
 
-fun ModelExportContext.getClosestAncestorLayout(): NavigableLayout? = getClosestLayoutAwareAncestor()?.layouts?.renderingLayout
+fun ModelExportContext.getClosestAncestorLayout(): NavigableLayout? =
+    getClosestLayoutAwareAncestor()?.layouts?.last()
 
 fun ModelExportContext.getEnclosingMaxRightBottom(): Position? =
-    getClosestLayoutAwareAncestor()?.layouts?.renderingLayout?.maxRightBottom
+    getClosestLayoutAwareAncestor()?.layouts?.last()?.maxRightBottom
 
-fun ModelExportContext.getRenderingLayout(): NavigableLayout? = layouts.renderingLayout
+fun ModelExportContext.getRenderingLayout(): NavigableLayout? = layouts.last()
 
-fun <R> ModelExportContext.setMeasuringLayout(uom: UnitsOfMeasure, block: DefaultLayout.() -> R): R =
-    DefaultLayout(uom, Position.start(uom), getClosestLayoutAwareAncestor()?.getRenderingLayout()?.maxRightBottom).let {
-        layouts.measuringLayout = it
-        block(it)
+internal fun ModelExportContext.createLayout(box: LayoutConstraints): LayoutScope =
+    getClosestLayoutAwareAncestor().let { ancestor ->
+        val wrapping = ancestor?.getRenderingLayout()
+        box.copy(
+            uom = wrapping?.uom ?: box.uom,
+            orientation = box.orientation,
+            leftTop = box.leftTop ?: wrapping?.nextLayoutLeftTop ?: wrapping?.leftTop ?: Position.start(box.uom),
+            maxRightBottom = box.maxRightBottom ?: getEnclosingMaxRightBottom()
+        ).let {
+            DefaultLayout(
+                uom = it.uom,
+                leftTop = resolveMargins(it.leftTop ?: error("leftTop position is required for new layout!")),
+                maxRightBottom = it.maxRightBottom
+            ).let { layout ->
+                layouts += (NavigableLayout(navigation, layout, it.orientation))
+                layouts().next(phase)
+            }
+        }
     }
 
-internal fun ModelExportContext.setLayout(
-    uom: UnitsOfMeasure = UnitsOfMeasure.PT,
-    leftTop: Position? = null,
-    maxRightBottom: Position? = null,
-    orientation: Orientation? = null,
-): NavigableLayout = getClosestLayoutAwareAncestor().let { ancestor ->
-    val wrapping = ancestor?.getRenderingLayout()
-    attachLayout(
-        uom = wrapping?.uom ?: uom,
-        orientation = orientation ?: Orientation.HORIZONTAL,
-        leftTop = leftTop ?: wrapping?.nextLayoutLeftTop ?: wrapping?.leftTop ?: Position.start(uom),
-        maxRightBottom = maxRightBottom ?: getEnclosingMaxRightBottom(),
-    )
-}
 
-private fun ModelExportContext.attachLayout(
-    uom: UnitsOfMeasure,
-    leftTop: Position,
-    maxRightBottom: Position?,
-    orientation: Orientation,
-): NavigableLayout = DefaultLayout(
-    uom = uom,
-    leftTop = resolveMargins(leftTop),
-    maxRightBottom = maxRightBottom
-).let { NavigableLayout(navigation, it, orientation) }.also {
-    layouts.renderingLayout = it
-}
+fun ModelExportContext.shouldCreateLayout(): Boolean =
+    layouts.size() == 0 || (layouts().currentIndex(phase) + 1 == layouts.size())
 
-fun ModelExportContext.createLayoutScope(
-    uom: UnitsOfMeasure = UnitsOfMeasure.PT,
-    childLeftTop: Position? = null,
-    maxRightBottom: Position? = null,
-    orientation: Orientation? = null,
-    block: Layout.() -> Unit,
-) = setLayout(uom, childLeftTop, maxRightBottom, orientation).apply(block).finish()
+
+fun <R> ModelExportContext.withinLayoutScope(
+    constraints: LayoutConstraints, block: LayoutScope.() -> R,
+): R = if (shouldCreateLayout()) {
+    createLayout(constraints).run {
+        block(this).also {
+            layout.finish()
+        }
+    }
+} else {
+    layouts().next(phase).run {
+        layout.collapse()
+        block(this).also {
+            layout.finish()
+        }
+    }
+}
 
 private fun ModelExportContext.resolveMargins(sourcePosition: Position): Position {
     val model = (navigation.active as? AttributedModelOrPart<*>)

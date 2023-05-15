@@ -63,24 +63,15 @@ class Table<T : Any> internal constructor(
         exportContext.customStateAttributes["_sheetName"] = exportContext.customStateAttributes["_pageName"] ?: name
         exportContext.customStateAttributes["_tableName"] = name
         export = TableExport(
-            exportContext, policy,
+            exportContext,
             (dataSource ?: exportContext.customStateAttributes["_dataSourceOverride"])?.dataSource ?: emptyList()
         )
     }
 
     override fun doExport(exportContext: ModelExportContext) =
-        exportContext.exportOrResume()
-
-    override fun doResume(exportContext: ModelExportContext) =
-        exportContext.exportOrResume()
+        export.exportOrResume()
 
     override fun takeMeasures(exportContext: ModelExportContext) =
         export.takeMeasures()
-
-    private fun ModelExportContext.exportOrResume() {
-        createLayoutScope {
-            export.exportOrResume()
-        }
-    }
 
 }

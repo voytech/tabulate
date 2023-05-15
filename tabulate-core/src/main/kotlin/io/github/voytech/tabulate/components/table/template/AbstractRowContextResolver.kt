@@ -133,7 +133,7 @@ interface CaptureRowCompletion<T> {
 internal abstract class AbstractRowContextResolver<T : Any>(
     tableModel: Table<T>,
     private val state: StateAttributes,
-    private val offsets: OverflowOffsets,
+    private val continuations: TableContinuations,
     private val listener: CaptureRowCompletion<T>? = null,
 ) : IndexedContextResolver<RowEnd<T>> {
 
@@ -153,7 +153,7 @@ internal abstract class AbstractRowContextResolver<T : Any>(
         also { listener?.onCellResolved(it) }
 
     private fun offsetAwareCellContext(sourceRow: SourceRow<T>) = ProvideCellContext { row, column ->
-        if (offsets.isValid(column.index)) {
+        if (continuations.isValid(column.index)) {
             row.createCellContext(row = sourceRow, column = column, state.data)?.render()
         } else null
     }

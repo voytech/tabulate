@@ -14,17 +14,12 @@ class Document internal constructor(
     override val id: String,
 ) : ModelWithAttributes<Document>() {
 
-    override fun doExport(exportContext: ModelExportContext) = with(exportContext) {
-        createLayoutScope {
+    override fun doExport(exportContext: ModelExportContext) {
+        with(exportContext) {
             render(DocumentStart(exportContext))
             nodes.forEach { it.export(exportContext) }
             render(DocumentEnd(exportContext))
         }
     }
 
-    override fun doResume(exportContext: ModelExportContext) {
-        createLayoutScope {
-            nodes.forEach { it.resume() }
-        }
-    }
 }
