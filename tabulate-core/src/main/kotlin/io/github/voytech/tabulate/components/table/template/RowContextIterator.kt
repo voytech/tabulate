@@ -11,14 +11,14 @@ import io.github.voytech.tabulate.core.model.ModelExportContext
  */
 internal class RowContextIterator<T: Any>(
     private val resolver: IndexedContextResolver<RowEnd<T>>,
-    private val overflowOffsets: OverflowOffsets,
+    private val tableContinuations: TableContinuations,
     private val templateContext: ModelExportContext
 ) : AbstractIterator<ContextResult<RowEnd<T>>>() {
 
     private var nextSourceRecordIndex: Int? = null
 
     private val indexIncrement = MutableRowIndex().apply {
-        set(overflowOffsets.getRowOffset())
+        tableContinuations.getContinuationRowIndex()?.let { set(it) }
     }
 
     private fun IndexedResult<RowEnd<T>>.setProcessedSourceRecordIndex() {
@@ -38,8 +38,7 @@ internal class RowContextIterator<T: Any>(
                         indexIncrement.inc()
                     }
                     is OverflowResult -> {
-                        overflowOffsets.setResumeFromRowIndex(it.rowIndex)
-                        overflowOffsets.setResumeFromRecordIndex(nextSourceRecordIndex ?: 0)
+                        tableContinuations.newContinuation(it.rowIndex, nextSourceRecordIndex ?: 0)
                         setNext(it.result)
                     }
                 }

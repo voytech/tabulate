@@ -13,7 +13,7 @@ import io.github.voytech.tabulate.core.model.StateAttributes
 internal class SlowRowResolver<T: Any>(
     private val tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
-    offsets: OverflowOffsets = OverflowOffsets(),
+    offsets: TableContinuations = TableContinuations(),
     listener: CaptureRowCompletion<T>? = null
 ): AbstractRowContextResolver<T>(tableModel, StateAttributes(customAttributes), offsets, listener) {
 

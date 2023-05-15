@@ -216,9 +216,9 @@ class TableLayoutPolicy : AbstractTableLayoutPolicy() {
         extend(Position(X(width.value,uom), Y(height.value,uom)))
     }
 
-    override fun ModelExportContext.setOverflow(overflow: Overflow) = when (overflow) {
-        Overflow.X -> suspendX().also { layouts.renderingLayout?.exhaustY() }
-        Overflow.Y -> suspendY()
+    override fun ModelExportContext.overflow(overflow: Overflow) = when (overflow) {
+        Overflow.X -> { status = ExportStatus.OVERFLOWED }
+        Overflow.Y -> { status = ExportStatus.OVERFLOWED }
     }
 
     fun markWidthForMeasure(column: Int, measured: Boolean = false) {

@@ -10,16 +10,10 @@ class Text(
     override val attributes: Attributes?,
 ) : ModelWithAttributes<Text>() {
 
-    override fun doExport(exportContext: ModelExportContext) = with(exportContext) {
-        asRenderable(exportContext).let { renderable ->
-            createLayoutScope {
-                render(renderable)
-            }
+    override fun doExport(exportContext: ModelExportContext) {
+        with(exportContext) {
+            render(asRenderable(exportContext))
         }
-    }
-
-    override fun doResume(exportContext: ModelExportContext) {
-        doExport(exportContext)
     }
 
     override fun takeMeasures(exportContext: ModelExportContext) {

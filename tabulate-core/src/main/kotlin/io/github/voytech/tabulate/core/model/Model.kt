@@ -1,11 +1,15 @@
 package io.github.voytech.tabulate.core.model
 
+import io.github.voytech.tabulate.DefaultComplexIterator
+import io.github.voytech.tabulate.ResettableComplexIterator
 import io.github.voytech.tabulate.core.template.*
-import io.github.voytech.tabulate.core.template.layout.Layout
+import io.github.voytech.tabulate.core.template.Navigation.Companion.rootNavigation
+import io.github.voytech.tabulate.core.template.layout.LayoutConstraints
 import io.github.voytech.tabulate.core.template.layout.LayoutPolicy
 import io.github.voytech.tabulate.core.template.layout.policy.SimpleLayoutPolicy
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import io.github.voytech.tabulate.core.template.operation.OperationResult
+import mu.KLogging
 import java.util.*
 
 interface Model<M : AbstractModel<M>> {
@@ -22,7 +26,7 @@ interface AttributeAware {
 interface AttributedModelOrPart<A : AttributedModelOrPart<A>> : AttributeAware, ModelPart
 
 @JvmInline
-value class StateAttributes(val data: MutableMap<String, Any>) {
+value class StateAttributes(val data: MutableMap<String, Any> = mutableMapOf()) {
 
     @Suppress("UNCHECKED_CAST")
     fun <S : Any> get(_class: Class<S>): S? = data["state-${_class.canonicalName}"] as S?
@@ -62,29 +66,52 @@ value class StateAttributes(val data: MutableMap<String, Any>) {
 
 fun StateAttributes?.orEmpty() = this ?: StateAttributes(mutableMapOf())
 
-enum class ModelExportStatus {
+interface ContinuationAttributes
+
+data class SimpleContinuationAttributes(
+    private val attributes: MutableMap<String, Any> = mutableMapOf(),
+) : ContinuationAttributes {
+
+    operator fun set(key: String, value: Any) {
+        attributes[key] = value
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    operator fun <T> get(key: String): T? = attributes[key] as T?
+}
+
+class ExportContinuationQueue<ATTR : ContinuationAttributes>(
+    private val continuations: MutableList<ATTR> = mutableListOf(),
+    private val iterators: ResettableComplexIterator<ATTR, ExportPhase> = DefaultComplexIterator(continuations),
+) {
+    operator fun plusAssign(element: ATTR) {
+        continuations += element
+    }
+
+    operator fun invoke(): ResettableComplexIterator<ATTR, ExportPhase> = iterators
+
+    operator fun get(phase: ExportPhase): ATTR? = iterators.nextOrNull(phase)
+
+}
+
+enum class ExportPhase {
+    MEASURING,
+    RENDERING
+}
+
+enum class ExportStatus {
     ACTIVE,
-    PARTIAL_X,
-    PARTIAL_Y,
-    PARTIAL_XY,
-    PARTIAL_YX,
+    OVERFLOWED,
+    SUSPENDED,
     FINISHED;
 
     internal fun isExporting(): Boolean = this != FINISHED
 
-    internal fun isPartlyExported(): Boolean = isYOverflow() || isXOverflow()
+    internal fun isPartlyExported(): Boolean = this == SUSPENDED || this == OVERFLOWED
 
-    internal fun isYOverflow(): Boolean = PARTIAL_YX == this || PARTIAL_XY == this || PARTIAL_Y == this
-
-    internal fun isXOverflow(): Boolean = PARTIAL_YX == this || PARTIAL_XY == this || PARTIAL_X == this
+    fun isXOverflow(): Boolean = this == OVERFLOWED
 
 }
-
-data class LayoutConstraints(
-    val leftTop: Position? = null,
-    val maxRightBottom: Position? = null,
-    val orientation: Orientation = Orientation.HORIZONTAL,
-)
 
 class ModelExportContext(
     val instance: ExportInstance,
@@ -93,7 +120,9 @@ class ModelExportContext(
     val customStateAttributes: StateAttributes,
     val parentAttributes: Attributes? = null,
     val modelAttributes: Attributes? = null,
-    var status: ModelExportStatus = ModelExportStatus.ACTIVE,
+    val continuations: ExportContinuationQueue<SimpleContinuationAttributes> = ExportContinuationQueue(),
+    var status: ExportStatus = ExportStatus.ACTIVE,
+    var phase: ExportPhase = ExportPhase.RENDERING,
 ) {
 
     val renderingContext: RenderingContext
@@ -103,51 +132,21 @@ class ModelExportContext(
 
     fun getCustomAttributes(): MutableMap<String, Any> = customStateAttributes.data
 
-    fun suspendX() {
-        status = when (status) {
-            ModelExportStatus.ACTIVE,
-            ModelExportStatus.PARTIAL_X,
-            -> ModelExportStatus.PARTIAL_X
 
-            ModelExportStatus.PARTIAL_Y -> ModelExportStatus.PARTIAL_YX
-            ModelExportStatus.PARTIAL_XY -> ModelExportStatus.PARTIAL_XY
-            ModelExportStatus.PARTIAL_YX -> ModelExportStatus.PARTIAL_YX
-            ModelExportStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
-        }
-    }
-
-    fun suspendY() {
-        status = when (status) {
-            ModelExportStatus.ACTIVE,
-            ModelExportStatus.PARTIAL_Y,
-            -> ModelExportStatus.PARTIAL_Y
-
-            ModelExportStatus.PARTIAL_X -> ModelExportStatus.PARTIAL_XY
-            ModelExportStatus.PARTIAL_XY -> ModelExportStatus.PARTIAL_XY
-            ModelExportStatus.PARTIAL_YX -> ModelExportStatus.PARTIAL_YX
-            ModelExportStatus.FINISHED -> error("Cannot suspend model exporting when it has finished.")
-        }
-    }
+    fun currentLayout(): NavigableLayout = layouts().current(phase).layout
 
     private fun hasPartlyExportedChildren(): Boolean =
         navigation.checkAnyChildren { it.context.isPartlyExported() }
 
     fun finishOrSuspend() {
-        if (status.isPartlyExported()) {
-            instance.suspendedModels += navigation.active
-        } else if (!hasPartlyExportedChildren()) {
-            instance.suspendedModels -= navigation.active
-            status = ModelExportStatus.FINISHED
+        if (!status.isExporting() && !hasPartlyExportedChildren()) {
+            status = ExportStatus.FINISHED
         }
     }
 
     fun isExporting(): Boolean = status.isExporting()
 
     fun isPartlyExported(): Boolean = status.isPartlyExported()
-
-    fun isYOverflow(): Boolean = status.isYOverflow()
-
-    fun isXOverflow(): Boolean = status.isXOverflow()
 
 }
 
@@ -165,52 +164,77 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
 
     open val planSpaceOnExport: Boolean = false
 
-    private val layoutPolicyHandle: LayoutPolicy by lazy { layoutPolicy() }
-
     internal lateinit var context: ModelExportContext
 
     private fun ExportInstance.shouldMeasure(): Boolean {
         return planSpaceOnExport && !getMeasuringOperations(self()).isEmpty()
     }
 
-    private fun <R> withinInitializedContext(parent: ModelExportContext, block: () -> R): R =
-        ensuringExportContext(parent).run { block() }
+    private fun <R> withinInitializedContext(parent: ModelExportContext, block: (ModelExportContext) -> R): R =
+        ensuringExportContext(parent).run { block(this) }
 
-    private fun ModelExportContext.withLayoutConstraints(layoutCxt: LayoutConstraints? = null): ModelExportContext =
+    private fun ModelExportContext.withLayoutConstraints(constraints: LayoutConstraints? = null): ModelExportContext =
         apply {
-            if (layoutCxt != null) {
-                layoutConstraints = layoutCxt
+            if (constraints != null) {
+                layoutConstraints = constraints
             }
         }
 
-    fun export(parentContext: ModelExportContext, layoutCxt: LayoutConstraints? = null) = with(parentContext.instance) {
-        withinInitializedContext(parentContext) {
-            if (shouldMeasure()) measure(parentContext)
-            doExport(context.withLayoutConstraints(layoutCxt))
-            context.finishOrSuspend()
+    fun export(parentContext: ModelExportContext, constraints: LayoutConstraints? = null) {
+        with(parentContext.instance) {
+            withinInitializedContext(parentContext) {
+                if (!it.isExporting()) return@withinInitializedContext
+                if (shouldMeasure()) measure(parentContext)
+                it.phase = ExportPhase.RENDERING
+                it.continuations().nextOrNull(it.phase)
+                prepareExport(it)
+                it.withLayoutConstraints(constraints).let { ctx ->
+                    withinLayoutScope {
+                        doExport(ctx)
+                    }
+                }
+                finishExport(it)
+                it.finishOrSuspend()
+            }
         }
+    }
+
+    fun exportResuming(parentContext: ModelExportContext, constraints: LayoutConstraints? = null) {
+        withinInitializedContext(parentContext) {
+            while (it.isExporting()) {
+                export(parentContext, constraints)
+            }
+        }
+    }
+
+    //TODO make safe scope (when calling within doExport:, export, and so on should be all forbidden calls)
+    protected open fun prepareExport(exportContext: ModelExportContext) {
+        logger.warn { "Model.prepareExport hook not implemented" }
+    }
+
+    //TODO make safe scope (when calling within doExport: , export, and so on should be all forbidden calls)
+    protected abstract fun doExport(exportContext: ModelExportContext)
+
+    //TODO make safe scope (when calling within doExport: , export, and so on should be all forbidden calls)
+    protected open fun finishExport(exportContext: ModelExportContext) {
+        logger.warn { "Model.finishExport hook not implemented" }
     }
 
     //TODO on measure - should call probably the same logic as export and resumption but should inject measurement operations instead of export operations. We should not be able to use different exporting logic for those two paths.
-    fun measure(parentContext: ModelExportContext): SomeSize = with(parentContext.instance) {
+    fun measure(parentContext: ModelExportContext, constraints: LayoutConstraints? = null): SomeSize =
         withinInitializedContext(parentContext) {
-            context.setMeasuringLayout(uom) {
-                takeMeasures(context)
-                layoutPolicyHandle.run { setMeasured() }
-                boundingRectangle.let {
-                    SomeSize(it.getWidth(), it.getHeight())
+            it.phase = ExportPhase.MEASURING
+            it.continuations().nextOrNull(it.phase)
+            it.withLayoutConstraints(constraints).let { ctx ->
+                withinLayoutScope {
+                    takeMeasures(ctx)
+                    policy.run { layout.setMeasured() }
+                    layout.boundingRectangle.let { size ->
+                        SomeSize(size.getWidth(), size.getHeight())
+                    }
                 }
             }
         }
-    }
-
-    fun resume(layoutCxt: LayoutConstraints? = null) {
-        if (context.isExporting()) {
-            context.status = ModelExportStatus.ACTIVE
-            doResume(context.withLayoutConstraints(layoutCxt))
-            context.finishOrSuspend()
-        }
-    }
 
     private fun createExportContext(parentContext: ModelExportContext): ModelExportContext =
         with(parentContext) {
@@ -218,77 +242,69 @@ abstract class AbstractModel<SELF : AbstractModel<SELF>>(
             ModelExportContext(
                 instance,
                 Navigation(navigation.root, navigation.active.takeIf { navigation.root != self() }, self()),
-                Layouts(layoutPolicyHandle),
+                Layouts(::layoutPolicy),
                 customStateAttributes,
                 parentAttributes
             ).also(::initialize)
         }
+
+    @JvmSynthetic
+    internal fun createStandaloneExportContext(
+        instance: ExportInstance,
+        attributes: StateAttributes? = null,
+    ): ModelExportContext =
+        ModelExportContext(instance, rootNavigation(this), Layouts(::layoutPolicy), attributes.orEmpty())
 
     private fun ensuringExportContext(parentContext: ModelExportContext): ModelExportContext =
         if (::context.isInitialized) context else run { context = createExportContext(parentContext);context }
 
     //TODO make safe scope (when calling within initialize: , doResume, resume, export, and so on should be all forbidden calls)
     protected open fun initialize(exportContext: ModelExportContext) {
-        // method is not mandatory and should not provide default implementation
+        logger.warn { "Model.initialize not implemented" }
     }
 
     //TODO make safe scope (when calling within takeMeasures: , doResume, resume, export, and so on should be all forbidden calls)
     protected open fun takeMeasures(exportContext: ModelExportContext) {
-        // method is not mandatory and should not provide default implementation
+        logger.warn { "Model.takeMeasures not implemented" }
     }
 
-    //TODO make safe scope (when calling within doExport: , doResume, resume, export, and so on should be all forbidden calls)
-    protected abstract fun doExport(exportContext: ModelExportContext)
-
-    //TODO make safe scope (when calling within doResume: , resume, export, doExport and so on should be all forbidden calls)
-    protected open fun doResume(exportContext: ModelExportContext) {
-        // method is not mandatory and should not provide default implementation
-    }
-
-    protected fun createLayoutScope(
-        orientation: Orientation = Orientation.HORIZONTAL,
-        childLeftTopCorner: Position? = null,
-        maxRightBottom: Position? = null,
-        block: Layout.() -> Unit,
-    ) = with(context.instance) {
-        context.createLayoutScope(
-            uom,
-            childLeftTopCorner ?: context.layoutConstraints?.leftTop,
-            maxRightBottom ?: context.layoutConstraints?.maxRightBottom ?: getViewPortMaxRightBottom(),
-            orientation,
-            block
-        )
-    }
+    private fun <R> withinLayoutScope(constraints: LayoutConstraints? = null, block: LayoutScope.() -> R): R =
+        with(context.instance) {
+            context.withinLayoutScope(
+                LayoutConstraints(
+                    leftTop = constraints?.leftTop ?: context.layoutConstraints?.leftTop,
+                    maxRightBottom = constraints?.maxRightBottom ?: context.layoutConstraints?.maxRightBottom
+                    ?: getViewPortMaxRightBottom(),
+                    orientation = constraints?.orientation ?: context.layoutConstraints?.orientation
+                    ?: Orientation.HORIZONTAL,
+                    uom = uom
+                ), block
+            )
+        }
 
     private fun layoutPolicy(): LayoutPolicy = if (this is LayoutPolicyProvider<*>) policy else SimpleLayoutPolicy()
 
     protected fun ModelExportContext.render(context: AttributedContext): OperationResult? =
         instance.render(self(), context)
 
-
     protected fun ModelExportContext.measure(context: AttributedContext): OperationResult? =
         instance.measure(self(), context)
 
     protected fun ModelExportContext.clearLayouts() = instance.clearLayouts()
 
-    fun ModelExportContext.resumeAllSuspendedNodes() = with(instance) {
-        resumeAllSuspendedModels()
-    }
-
     @Suppress("UNCHECKED_CAST")
     private fun self(): SELF = (this as SELF)
+
+    companion object : KLogging()
 }
 
-fun AbstractModel<*>.getPosition(): Position? = context.layouts.renderingLayout?.leftTop
+fun AbstractModel<*>.getPosition(): Position? = context.layouts.last()?.leftTop
 
 fun AbstractModel<*>.exportWithStatus(
     parentContext: ModelExportContext,
     layoutCxt: LayoutConstraints? = null,
-): ModelExportStatus =
+): ExportStatus =
     export(parentContext, layoutCxt).let { context.status }
-
-fun AbstractModel<*>.resumeWithStatus(layoutCxt: LayoutConstraints? = null): ModelExportStatus =
-    resume(layoutCxt).let { context.status }
 
 abstract class ModelWithAttributes<SELF : ModelWithAttributes<SELF>> :
     AttributedModelOrPart<SELF>, AbstractModel<SELF>()

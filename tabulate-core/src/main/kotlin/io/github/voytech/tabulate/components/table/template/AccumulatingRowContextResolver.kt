@@ -14,9 +14,9 @@ import java.util.*
 internal class AccumulatingRowContextResolver<T: Any>(
     tableModel: Table<T>,
     state: StateAttributes,
-    offsets: OverflowOffsets,
+    continuations: TableContinuations,
     listener: CaptureRowCompletion<T>
-) : AbstractRowContextResolver<T>(tableModel, state, offsets, listener) {
+) : AbstractRowContextResolver<T>(tableModel, state, continuations, listener) {
 
     private var pollIndex: Int = 0
     private val dataSourceBuffer: Queue<T> = LinkedList()

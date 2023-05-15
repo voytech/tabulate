@@ -3,6 +3,7 @@ package io.github.voytech.tabulate.components.page.model
 import io.github.voytech.tabulate.components.commons.operation.newPage
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.template.layout.Layout
+import io.github.voytech.tabulate.core.template.layout.LayoutConstraints
 
 class Page internal constructor(
     @get:JvmSynthetic
@@ -18,17 +19,14 @@ class Page internal constructor(
         exportContext.customStateAttributes["_sheetName"] = name
     }
 
-    override fun doExport(exportContext: ModelExportContext) = with(exportContext) {
-        resumeAllSuspendedNodes()
+    override fun prepareExport(exportContext: ModelExportContext): Unit = with(exportContext) {
         clearLayouts()
-        stickyHeaderAndFooterWith { layout, leftTop ->
-            exportContent(exportContext, leftTop.contentLayoutContext(layout))
-        }
     }
 
-    override fun doResume(exportContext: ModelExportContext) = with(exportContext) {
+    override fun doExport(exportContext: ModelExportContext) = with(exportContext) {
+        render(newPage(nextPageNumber(), name))
         stickyHeaderAndFooterWith { layout, leftTop ->
-            resumeContent(leftTop.contentLayoutContext(layout))
+            exportContent(exportContext, leftTop.contentLayoutContext(layout))
         }
     }
 
@@ -38,14 +36,11 @@ class Page internal constructor(
         }
 
     private fun ModelExportContext.stickyHeaderAndFooterWith(block: (Layout, Position?) -> Unit) {
-        createLayoutScope(orientation = Orientation.VERTICAL) {
-            render(newPage(nextPageNumber(), name))
-            exportHeader(this@stickyHeaderAndFooterWith)
-            val size = footerSize(this@stickyHeaderAndFooterWith, this)
-            val leftTop = footerLeftTop(size)
-            block(this, leftTop)
-            exportFooter(this@stickyHeaderAndFooterWith, leftTop.footerLayoutContext(size))
-        }
+        exportHeader(this@stickyHeaderAndFooterWith)
+        val size = footerSize(this@stickyHeaderAndFooterWith, currentLayout())
+        val leftTop = currentLayout().footerLeftTop(size)
+        block(currentLayout(), leftTop)
+        exportFooter(this@stickyHeaderAndFooterWith, leftTop.footerLayoutContext(size))
     }
 
     private fun exportHeader(templateContext: ModelExportContext) {
@@ -55,12 +50,6 @@ class Page internal constructor(
     private fun exportContent(templateContext: ModelExportContext, layoutConstraints: LayoutConstraints) {
         nodes?.forEach {
             it.export(templateContext, layoutConstraints)
-        }
-    }
-
-    private fun resumeContent(layoutConstraints: LayoutConstraints) {
-        nodes?.forEach {
-            it.resume(layoutConstraints)
         }
     }
 

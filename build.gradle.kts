@@ -1,6 +1,7 @@
 val kotlinVersion: String by project
 val guavaVersion: String by project
 val junitVersion: String by project
+val kotlinLoggingVersion: String by project
 
 plugins {
     java
@@ -47,6 +48,7 @@ configure(
     apply(plugin = "signing")
     dependencies {
         implementation(kotlin("stdlib", kotlinVersion))
+        implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
         testImplementation("org.jetbrains.kotlin","kotlin-test", kotlinVersion)
         testImplementation(platform("org.junit:junit-bom:$junitVersion"))
         testImplementation("org.junit.jupiter","junit-jupiter")

@@ -33,7 +33,6 @@ typealias StandaloneTableTemplate<T> = StandaloneExportTemplate<Table<T>>
 
 internal class TableExport<T : Any>(
     private val exportContext: ModelExportContext,
-    private val policy: TableLayoutPolicy,
     dataSource: Iterable<T>?,
     private val renderingContext: RenderingContext = exportContext.renderingContext,
 ) {
@@ -58,7 +57,7 @@ internal class TableExport<T : Any>(
 
     private lateinit var rowContextIterator: RowContextIterator<T>
 
-    private val overflowOffsets = OverflowOffsets()
+    private val tableContinuations = TableContinuations(exportContext)
 
     private var remainingRecords: Iterable<T>? = dataSource
 
@@ -78,17 +77,17 @@ internal class TableExport<T : Any>(
             }
         }
 
-    private fun cropDataSource(): Iterable<T>? = with(overflowOffsets) {
+    private fun cropDataSource(): Iterable<T>? = with(tableContinuations) {
         remainingRecords?.crop().also { remainingRecords = it }
     }
 
     private fun setup(ops: Operations<RenderingContext>) {
         operations = ops
         rowContextResolver = AccumulatingRowContextResolver(
-            table, exportContext.customStateAttributes, overflowOffsets,
+            table, exportContext.customStateAttributes, tableContinuations,
             CaptureRowCompletionImpl(renderingContext, operations)
         )
-        rowContextIterator = RowContextIterator(rowContextResolver, overflowOffsets, exportContext)
+        rowContextIterator = RowContextIterator(rowContextResolver, tableContinuations, exportContext)
     }
 
     /**
@@ -96,7 +95,7 @@ internal class TableExport<T : Any>(
      * @author Wojciech Mąka
      * @since 0.1.0
      */
-    private fun capture(record: T): ContextResult<RowEnd<T>>? {
+    private fun pushAndNext(record: T): ContextResult<RowEnd<T>>? {
         rowContextResolver.append(record)
         return next()
     }
@@ -110,21 +109,13 @@ internal class TableExport<T : Any>(
         return if (rowContextIterator.hasNext()) rowContextIterator.next() else null
     }
 
-    private fun start() {
-        with(exportContext) {
-            operations(renderingContext, table.asTableStart(exportContext.getCustomAttributes()))
-            renderColumnsStarts()
-        }
-    }
-
-    private fun renderRemainingBufferedRows() {
-        if (exportContext.isYOverflow()) return
-        @Suppress("ControlFlowWithEmptyBody")
-        while (next()?.let { it is SuccessResult } == true);
+    private fun beginTable() = with(exportContext) {
+        operations(renderingContext, table.asTableStart(exportContext.getCustomAttributes()))
+        renderColumnsStarts()
     }
 
     private fun resolveActiveColumns(): Iterator<ColumnDef<T>> =
-        with(overflowOffsets) { table.columns.crop().iterator() }
+        with(tableContinuations) { table.columns.crop().iterator() }
 
     private fun Map<ColumnDef<T>, ColumnContextAttributes>.forStart(def: ColumnDef<T>): Attributes =
         this[def]?.start ?: Attributes()
@@ -132,7 +123,9 @@ internal class TableExport<T : Any>(
     private fun Map<ColumnDef<T>, ColumnContextAttributes>.forEnd(def: ColumnDef<T>): Attributes =
         this[def]?.end ?: Attributes()
 
-    private fun renderColumns(resolveRenderable: (ColumnDef<T>) -> ColumnContext): OperationResult? =
+    private fun renderColumns(
+        addContinuation: Boolean = false, resolveRenderable: (ColumnDef<T>) -> ColumnContext,
+    ): OperationResult? =
         with(exportContext) {
             var status: OperationResult? = Success
             resolveActiveColumns().let { iterator ->
@@ -140,7 +133,7 @@ internal class TableExport<T : Any>(
                     val def = iterator.next()
                     status = operations.invoke(renderingContext, resolveRenderable(def))
                     if (status.isXOverflow()) {
-                        overflowOffsets.setResumeFromColumnIndex(def.index)
+                        if (addContinuation) tableContinuations.newContinuation(def)
                         break
                     }
                 }
@@ -149,45 +142,57 @@ internal class TableExport<T : Any>(
         }
 
     private fun renderColumnsStarts(): OperationResult? = with(exportContext) {
-        renderColumns { it.asColumnStart(table, columnAttributes.forStart(it), getCustomAttributes()) }
+        renderColumns(true) { it.asColumnStart(table, columnAttributes.forStart(it), getCustomAttributes()) }
     }
 
     private fun renderColumnEnds(): OperationResult? = with(exportContext) {
         renderColumns { it.asColumnEnd(table, columnAttributes.forEnd(it), getCustomAttributes()) }
     }
 
-    private fun finish() {
-        renderRemainingBufferedRows()
+    private fun endTable() {
         renderColumnEnds()
         operations(renderingContext, table.asTableEnd(exportContext.getCustomAttributes()))
     }
 
-    @Suppress("ControlFlowWithEmptyBody")
-    private fun processRows() = remainingRecords?.iterator()?.let { iterator ->
-        while (iterator.hasNext() && capture(iterator.next()) !is OverflowResult) {
+    private fun renderRemainingRows() {
+        @Suppress("ControlFlowWithEmptyBody")
+        while (next()?.let { it is SuccessResult } == true);
+    }
+
+    private fun renderRows() {
+        remainingRecords?.iterator()?.let { iterator ->
+            while (iterator.hasNext()) {
+                if (pushAndNext(iterator.next()) is OverflowResult) {
+                    return
+                }
+            }
         }
+        renderRemainingRows()
+    }
+
+    private fun setTableLayoutPolicyProgress() = with(exportContext) {
+        val startFromColumnIndex = tableContinuations.getContinuationColumnIndexOrZero()
+        val startFromRowIndex = tableContinuations.getContinuationRowIndexOrZero()
+        this.layouts().currentOrNull(phase)
+            ?.policy<TableLayoutPolicy>()
+            ?.setOffsets(startFromRowIndex, startFromColumnIndex)
+    }
+
+    private fun renderTable(operations: Operations<RenderingContext>) = with(exportContext) {
+        setTableLayoutPolicyProgress()
+        setup(operations)
+        cropDataSource()
+        beginTable()
+        renderRows()
+        endTable()
     }
 
     fun exportOrResume() = with(exportContext) {
-        overflowOffsets.align()
-        policy.setOffsets(overflowOffsets.getRowOffsetValue(), overflowOffsets.getColumnOffset())
-        setup(instance.getExportOperations(table))
-        cropDataSource()
-        start()
-        processRows()
-        finish()
-        overflowOffsets.save(exportContext.status)
+        renderTable(instance.getExportOperations(table))
     }
 
-
-    //TODO in case of table it is required first pass to measure column and row widths.
-    //TODO TableTemplate should be aware of multiple passes and be able to cache some computations.
     fun takeMeasures() = with(exportContext) {
-        setup(instance.getMeasuringOperations(table))
-        start()
-        processRows()
-        finish()
-        overflowOffsets.reset()
+        renderTable(instance.getMeasuringOperations(table))
     }
 
     fun <O : Any> export(format: DocumentFormat, source: Iterable<T>, output: O, table: Table<T>) =

@@ -24,10 +24,10 @@ interface AbsolutePositionPolicy {
 interface SizeTrackingIteratorPolicyMethods {
     fun setCurrentWidth(width: Width)
     fun setCurrentHeight(height: Height)
-    fun getCurrentWidth(): Width?
-    fun getCurrentHeight(): Height?
-    fun moveNext()
-    fun begin()
+    fun getCurrentWidth(uom: UnitsOfMeasure): Width?
+    fun getCurrentHeight(uom: UnitsOfMeasure): Height?
+    fun next()
+    fun begin(orientation: Orientation,uom: UnitsOfMeasure)
     fun Layout.getCurrentX(): X
     fun Layout.getCurrentY(): Y
 }
@@ -81,8 +81,43 @@ interface LayoutPolicy {
 
     fun Layout.setMeasured() { isSpaceMeasured = true }
 
-    fun ModelExportContext.setOverflow(overflow: Overflow)
+    fun ModelExportContext.overflow(overflow: Overflow)
 
+}
+
+abstract class AbstractLayoutPolicy: LayoutPolicy {
+    override var isSpaceMeasured: Boolean = false
+
+    override fun Layout.getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position = Position(
+        getX(relativePosition.x, targetUnit), getY(relativePosition.y, targetUnit)
+    )
+
+    override fun Layout.getX(relativeX: X, targetUnit: UnitsOfMeasure): X {
+        val absoluteX = getLayoutBoundary().leftTop.x.switchUnitOfMeasure(targetUnit)
+        return X(absoluteX.value + relativeX.value, targetUnit)
+    }
+
+    override fun Layout.getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y {
+        val absoluteY = getLayoutBoundary().leftTop.y.switchUnitOfMeasure(targetUnit)
+        return Y(absoluteY.value + relativeY.value, targetUnit)
+    }
+
+    protected fun measuring(block: () -> Unit) {
+        if (!isSpaceMeasured) block()
+    }
+    /**
+     * Extend layout rendered space by specific [Width].
+     */
+    override fun Layout.extend(width: Width) {
+        extend(width)
+    }
+
+    /**
+     * Extend layout rendered space by specific [Height].
+     */
+    override fun Layout.extend(height: Height) {
+        extend(height)
+    }
 }
 
 interface Layout {
@@ -107,6 +142,7 @@ interface Layout {
     fun extend(y: Y)
     fun exhaustX() = maxRightBottom?.x?.let { extend(it) }
     fun exhaustY() = maxRightBottom?.y?.let { extend(it) }
+    fun collapse()
 
 }
 
@@ -156,6 +192,9 @@ sealed class AbstractLayout(
 
     override fun extend(y: Y) = extend(Position(rightBottom.x, y))
 
+    override fun collapse() {
+        rightBottom = leftTop.copy() // TODO !! Do I need to copy Iam CONFUSED!
+    }
 }
 
 class DefaultLayout(
@@ -218,27 +257,10 @@ enum class Overflow {
     Y
 }
 
-abstract class SizeTrackingLayoutIteratorPolicy : LayoutPolicy, SizeTrackingIteratorPolicyMethods {
+data class LayoutConstraints(
+    val leftTop: Position? = null,
+    val maxRightBottom: Position? = null,
+    val orientation: Orientation = Orientation.HORIZONTAL,
+    val uom: UnitsOfMeasure = UnitsOfMeasure.PT,
+)
 
-    override var isSpaceMeasured: Boolean = false
-
-    private val measurableWidths = mutableMapOf<Int, Boolean>()
-
-    private val measurableHeights = mutableMapOf<Int, Boolean>()
-
-    private val measurements: MutableMap<String, PositionAndSize> = mutableMapOf()
-
-    data class PositionAndSize(val relativePosition: Position, var size: Size)
-
-
-
-    fun markWidthForMeasure(index: Int, measured: Boolean = false) {
-        if (isSpaceMeasured) return
-        measurableWidths[index] = measured
-    }
-
-    fun markHeightForMeasure(index: Int, measured: Boolean = false) {
-        if (isSpaceMeasured) return
-        measurableHeights[index] = measured
-    }
-}

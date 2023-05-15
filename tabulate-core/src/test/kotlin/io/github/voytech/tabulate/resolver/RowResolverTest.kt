@@ -6,7 +6,7 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.header
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.components.table.model.ColumnKey
 import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
-import io.github.voytech.tabulate.components.table.template.OverflowOffsets
+import io.github.voytech.tabulate.components.table.template.TableContinuations
 import io.github.voytech.tabulate.components.table.template.RowIndex
 import io.github.voytech.tabulate.components.table.template.Step
 import io.github.voytech.tabulate.core.model.StateAttributes
@@ -25,7 +25,7 @@ class RowResolverTest {
     fun `should resolve AttributedRow to null if no table definition nor data is provided`() {
         val resolver = AccumulatingRowContextResolver(
             createTableBuilder<Product> {  }.build(),
-            StateAttributes(mutableMapOf()), OverflowOffsets(), successfulRowComplete()
+            StateAttributes(mutableMapOf()), TableContinuations(), successfulRowComplete()
         )
         val resolvedIndexedAttributedRow = resolver.resolve(RowIndex(0))
         assertNull(resolvedIndexedAttributedRow)
@@ -49,7 +49,7 @@ class RowResolverTest {
                 }
             }.build(),
             StateAttributes(mutableMapOf()),
-            OverflowOffsets(),
+            TableContinuations(),
             successfulRowComplete()
         )
         val resolvedIndexedAttributedRow = resolver.resolve(RowIndex(0))
@@ -67,7 +67,7 @@ class RowResolverTest {
                 columns { column(Product::code) }
             }.build(),
             StateAttributes(mutableMapOf()),
-            OverflowOffsets(),
+            TableContinuations(),
             successfulRowComplete()
         )
         resolver.append(Product(
@@ -101,7 +101,7 @@ class RowResolverTest {
                 }
             }.build(),
             StateAttributes(mutableMapOf()),
-            OverflowOffsets(),
+            TableContinuations(),
             successfulRowComplete()
         )
         resolver.append(Product(
