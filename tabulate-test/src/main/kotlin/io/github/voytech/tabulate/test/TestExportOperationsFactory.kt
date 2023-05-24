@@ -3,26 +3,27 @@ package io.github.voytech.tabulate.test
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.RenderingContext
-import io.github.voytech.tabulate.core.template.result.OutputBinding
-import io.github.voytech.tabulate.core.template.spi.BuildOperations
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat
-import io.github.voytech.tabulate.core.template.spi.ExportOperationsProvider
+import io.github.voytech.tabulate.core.RenderingContext
+import io.github.voytech.tabulate.core.operation.VoidOperation
+import io.github.voytech.tabulate.core.result.OutputBinding
+import io.github.voytech.tabulate.core.spi.BuildOperations
+import io.github.voytech.tabulate.core.spi.DocumentFormat
+import io.github.voytech.tabulate.core.spi.ExportOperationsProvider
 import java.io.OutputStream
 import java.util.logging.Logger
 
 class TestRenderingContext: RenderingContext
 
 fun interface RowCellTest {
-    fun test(context: CellContext)
+    fun test(context: CellRenderable)
 }
 
 interface CloseRowTest {
-    fun <T> test(context: RowEnd<T>) { }
+    fun <T> test(context: RowEndRenderable<T>) { }
 }
 
 fun interface OpenRowTest {
-    fun test(context: ColumnStart)
+    fun test(context: ColumnStartRenderable)
 }
 
 class TestOutputBinding: OutputBinding<TestRenderingContext, Unit> {
@@ -59,12 +60,12 @@ class OutputStreamTestOutputBinding: OutputBinding<TestRenderingContext, OutputS
 
 class TestExportOperationsFactory: ExportOperationsProvider<TestRenderingContext, Table<Any>> {
 
-    override fun getDocumentFormat(): DocumentFormat<TestRenderingContext>  = DocumentFormat.format("test")
+    override fun getDocumentFormat(): DocumentFormat<TestRenderingContext> = DocumentFormat.format("test")
 
     override fun provideExportOperations(): BuildOperations<TestRenderingContext> = {
         operation(StartColumnOperation { _, context ->  columnTest?.test(context) })
         operation(EndRowOperation<TestRenderingContext,Table<Any>> { _, context ->  rowTest?.test(context) })
-        operation(RenderRowCellOperation { _, context ->  cellTest?.test(context) })
+        operation(VoidOperation<TestRenderingContext,CellRenderable> { _, context ->  cellTest?.test(context) })
     }
 
     override fun getModelClass(): Class<Table<Any>> = reify()

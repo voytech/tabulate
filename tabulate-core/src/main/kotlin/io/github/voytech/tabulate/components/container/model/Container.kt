@@ -1,44 +1,51 @@
 package io.github.voytech.tabulate.components.container.model
 
+import io.github.voytech.tabulate.components.container.opration.ContainerRenderable
+import io.github.voytech.tabulate.core.layout.LayoutProperties
+import io.github.voytech.tabulate.core.layout.policy.FlowLayout
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.template.layout.Layout
-import io.github.voytech.tabulate.core.template.layout.LayoutConstraints
-import io.github.voytech.tabulate.core.template.layout.policy.FlowLayoutPolicy
+import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
+import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 
 class Container(
     override val attributes: Attributes?,
     @get:JvmSynthetic
-    internal val orientation: Orientation = Orientation.VERTICAL,
+    internal val orientation: Orientation = Orientation.HORIZONTAL,
     @get:JvmSynthetic
-    internal val enableFold: Boolean = true, // when enabled, rendering goes to next line, if disabled - group is overflowed and suspended.
-    @get:JvmSynthetic
-    internal val models: List<AbstractModel<*>> = emptyList(),
-    override val policy: FlowLayoutPolicy = FlowLayoutPolicy(),
-) : ModelWithAttributes<Container>(), LayoutPolicyProvider<FlowLayoutPolicy> {
+    internal val models: List<AbstractModel> = emptyList(),
+) : ModelWithAttributes(), LayoutProvider<FlowLayout> {
 
-    lateinit var position: Position
+    override val needsMeasureBeforeExport = hasRenderableAttributes()
 
-    private fun Layout.currentPosition(): LayoutConstraints =
-        LayoutConstraints(position, maxRightBottom, orientation)
+    override fun doExport(api: ExportApi): Unit = api {
+        if (hasRenderableAttributes()) {
+            render(ContainerRenderable(attributes?.forContext<ContainerRenderable>()))
+        }
+        exportOrMeasure {
+            export()
+        }
+    }
 
-    override fun doExport(exportContext: ModelExportContext) = with(exportContext) {
-        currentLayout().run {
-            position = leftTop
-            models.forEach { model ->
-                exportAndResumeIfNeeded(model, exportContext)
+    override fun takeMeasures(api: ExportApi) = api {
+        exportOrMeasure { measure() }
+    }
+
+    private fun <R> ExportApi.exportOrMeasure(op: AbstractModel.() -> R) {
+        withinCurrentLayout { space ->
+            space.reset()
+            models.forEach { nextModel ->
+                while (nextModel.isRunning() && space.hasSpaceLeft()) { //TODO add continuations
+                    nextModel.op()
+                }
             }
         }
     }
 
-    private fun Layout.exportAndResumeIfNeeded(model: AbstractModel<*>, exportContext: ModelExportContext) {
-        val size = model.measure(exportContext)
-        val status = model.exportWithStatus(exportContext, currentPosition())
-        if (status.isXOverflow() && orientation == Orientation.HORIZONTAL) {
-            position = with(boundingRectangle) { Position(leftTop.x, rightBottom.y) }
-            model.export(exportContext, currentPosition())
-        }
-        val mdlLayoutX = model.getPosition()?.x ?: X.zero(uom)
-        position = Position(mdlLayoutX + size.width.orZero(uom), position.y)
-    }
+    private fun hasRenderableAttributes(): Boolean =
+        attributes?.forContext<ContainerRenderable>()
+            ?.let { it.has<BackgroundAttribute>() || it.has<BordersAttribute>() } ?: false
+
+    override fun createLayout(properties: LayoutProperties): FlowLayout =
+        FlowLayout(properties.copy(orientation = this.orientation))
 
 }

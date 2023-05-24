@@ -3,12 +3,11 @@ package io.github.voytech.tabulate.pdf.components.document
 import io.github.voytech.tabulate.components.document.model.Document
 import io.github.voytech.tabulate.components.commons.operation.PageOperation
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.spi.BuildAttributeOperations
-import io.github.voytech.tabulate.core.template.spi.BuildOperations
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat
-import io.github.voytech.tabulate.core.template.spi.OperationsBundleProvider
+import io.github.voytech.tabulate.core.spi.BuildAttributeOperations
+import io.github.voytech.tabulate.core.spi.BuildOperations
+import io.github.voytech.tabulate.core.spi.DocumentFormat
+import io.github.voytech.tabulate.core.spi.OperationsBundleProvider
 import io.github.voytech.tabulate.pdf.PdfBoxRenderingContext
-
 
 class PdfDocumentOperations : OperationsBundleProvider<PdfBoxRenderingContext, Document> {
 

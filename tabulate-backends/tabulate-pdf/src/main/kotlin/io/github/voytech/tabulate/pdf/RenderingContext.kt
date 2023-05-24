@@ -1,18 +1,20 @@
 package io.github.voytech.tabulate.pdf
 
 import io.github.voytech.tabulate.ImageIndex
-import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.model.border.Borders
 import io.github.voytech.tabulate.core.model.color.Color
-import io.github.voytech.tabulate.core.template.HavingViewportSize
-import io.github.voytech.tabulate.core.template.RenderingContext
-import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
-import io.github.voytech.tabulate.core.template.operation.*
-import io.github.voytech.tabulate.core.template.result.OutputBinding
-import io.github.voytech.tabulate.core.template.result.OutputStreamOutputBinding
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat
-import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
+import io.github.voytech.tabulate.core.HavingViewportSize
+import io.github.voytech.tabulate.core.RenderingContext
+import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
+import io.github.voytech.tabulate.core.model.*
+import io.github.voytech.tabulate.core.operation.AttributedContext
+import io.github.voytech.tabulate.core.operation.Renderable
+import io.github.voytech.tabulate.core.operation.boundingBox
+import io.github.voytech.tabulate.core.result.OutputBinding
+import io.github.voytech.tabulate.core.result.OutputStreamOutputBinding
+import io.github.voytech.tabulate.core.spi.DocumentFormat
+import io.github.voytech.tabulate.core.spi.OutputBindingsProvider
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -46,7 +48,7 @@ class PdfBoxOutputStreamOutputBinding : OutputStreamOutputBinding<PdfBoxRenderin
 
 class PdfBoxRenderingContext(
     val document: PDDocument = PDDocument(),
-    val images: ImageIndex = ImageIndex(),
+    private val images: ImageIndex = ImageIndex(),
 ) : RenderingContext, HavingViewportSize {
 
     private lateinit var pageContentStream: PDPageContentStream
@@ -85,9 +87,19 @@ class PdfBoxRenderingContext(
 
     fun showText(text: String) {
         if (!fontSet) {
-            getCurrentContentStream().setFont(PDType1Font.HELVETICA, 10F)
+            getCurrentContentStream().setFont(defaultFont, 10F)
         }
         getCurrentContentStream().showText(text)
+    }
+
+    fun endText() {
+        textDrawing = false
+        fontSet = false
+        textPositionSet = false
+        xTextOffset = 0F
+        yTextOffset = 0F
+        getCurrentContentStream().setStrokingColor(AwtColor.BLACK)
+        getCurrentContentStream().endText()
     }
 
     fun loadImage(filePath: String): PDImageXObject = with(images) {
@@ -104,13 +116,13 @@ class PdfBoxRenderingContext(
             getCurrentContentStream().drawImage(this, x, y)
     }
 
-    fun RenderableContext<*>.renderImageFromURI(uri: String) {
+    fun Renderable<*>.renderImageFromURI(uri: String) {
         with(boxLayout(this, getModelAttribute<BordersAttribute>())) {
             loadImage(uri).showImage(innerX, innerY, inner.width?.value, inner.height?.value)
         }
     }
 
-    fun RenderableContext<*>.resolveUriImageBoundingBox(uri: String) {
+    fun Renderable<*>.resolveUriImageBoundingBox(uri: String) {
         boundingBox()?.let { bbox ->
             if (!bbox.isDefined()) {
                 val image = loadImage(uri)
@@ -122,17 +134,23 @@ class PdfBoxRenderingContext(
         }
     }
 
-    fun endText() {
-        textDrawing = false
-        fontSet = false
-        textPositionSet = false
-        xTextOffset = 0F
-        yTextOffset = 0F
-        getCurrentContentStream().setStrokingColor(AwtColor.BLACK)
-        getCurrentContentStream().endText()
+    fun <R> Renderable<*>.withinRect(type: BoxLayoutBboxType, action: (RenderableBoundingBox) -> R): R {
+        val bbox = boxLayout(this, getModelAttribute<BordersAttribute>())
+        return (bbox.inner.takeIf { type == BoxLayoutBboxType.INNER } ?: bbox.outer).let { rect ->
+            with(getCurrentContentStream()) {
+                action(rect)
+            }
+        }
     }
 
-    fun LayoutElementBoundingBox.drawRect(color: Color? = null) {
+    fun RenderableBoundingBox.setCuttingEdge() {
+        getCurrentContentStream().addRect(
+            absoluteX.value, absoluteY.value, width?.value ?: 0f, height?.value ?: 0f
+        )
+        getCurrentContentStream().clip()
+    }
+
+    fun RenderableBoundingBox.drawRect(color: Color? = null) {
         with(getCurrentContentStream()) {
             saveGraphicsState()
             setNonStrokingColor(color.awtColor())
@@ -190,8 +208,14 @@ class PdfBoxRenderingContext(
 
     fun getCurrentPage(): PDPage = currentPage
 
-
     private fun PDPage.createContent(): PDPageContentStream = PDPageContentStream(document, this)
+
+    fun Float.intoPdfBoxOrigin(): Float = currentPage.mediaBox.height - this
+
+    fun Position.pdfBoxOrigin(): Position {
+        require(y.unit == UnitsOfMeasure.PT)
+        return copy(y = Y(y.value.intoPdfBoxOrigin(), y.unit))
+    }
 
     override fun getWidth(): Width = if (this@PdfBoxRenderingContext::currentPage.isInitialized) {
         Width(currentPage.mediaBox.width, UnitsOfMeasure.PT)
@@ -204,6 +228,11 @@ class PdfBoxRenderingContext(
 
 }
 
+enum class BoxLayoutBboxType {
+    INNER,
+    OUTER;
+}
+
 /**
  * BoxLayout moves absolute layout coordinates from model origin into PDFBox library origins which are upside-down.
  * In PDFBox page Y coordinates starts from bottom of the screen and are growing to top of the screen.
@@ -213,15 +242,15 @@ class PdfBoxRenderingContext(
  */
 data class BoxLayout(
     private val context: PdfBoxRenderingContext,
-    val source: LayoutElementBoundingBox,
+    val source: RenderableBoundingBox,
     private val borders: Borders?,
 ) {
     private val pageHeight = Height(context.getCurrentPage().mediaBox.height, UnitsOfMeasure.PT)
-    val outer: LayoutElementBoundingBox by lazy {
+    val outer: RenderableBoundingBox by lazy {
         // move to PDFBox origin. X,Y is bottomLeft corner not topLeft one.
         source.copy(absoluteY = pageHeight.asY() - (source.absoluteY.value.plus(source.height!!.value)))
     }
-    val inner: LayoutElementBoundingBox by lazy {
+    val inner: RenderableBoundingBox by lazy {
         computeContentBoundingBox()
     }
     val innerX: Float = inner.absoluteX.value
@@ -229,7 +258,7 @@ data class BoxLayout(
     val outerX: Float = outer.absoluteX.value
     val outerY: Float = outer.absoluteY.value
 
-    private fun computeContentBoundingBox(): LayoutElementBoundingBox =
+    private fun computeContentBoundingBox(): RenderableBoundingBox =
         if (borders != null) {
             val left = if (borders.leftBorderStyle.hasBorder()) {
                 (borders.leftBorderWidth.switchUnitOfMeasure(UnitsOfMeasure.PT).value)

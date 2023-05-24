@@ -2,12 +2,13 @@ package io.github.voytech.tabulate.core.model.attributes
 
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
+import io.github.voytech.tabulate.core.layout.BoundingBoxModifier
+import io.github.voytech.tabulate.core.layout.LayoutSpace
+import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.model.Attribute
+import io.github.voytech.tabulate.core.model.AttributeAware
 import io.github.voytech.tabulate.core.model.Height
-import io.github.voytech.tabulate.core.model.MeasuredValue
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
-import io.github.voytech.tabulate.core.template.layout.*
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
 
 data class HeightAttribute(
     val value: Height = Height.zero(UnitsOfMeasure.PX)
@@ -19,28 +20,32 @@ data class HeightAttribute(
     )
 
     @TabulateMarker
-    class Builder(target: Class<out AttributedContext>) : AttributeBuilder<HeightAttribute>(target) {
+    class Builder(target: Class<out AttributeAware>) : AttributeBuilder<HeightAttribute>(target) {
         var value: Height by observable(Height.zero(UnitsOfMeasure.PX))
 
         fun Number.pt()  {
-            value = MeasuredValue(toFloat(), UnitsOfMeasure.PT).height()
+            value = Height(toFloat(), UnitsOfMeasure.PT)
         }
         fun Number.px() {
-            value = MeasuredValue(toFloat(), UnitsOfMeasure.PX).height()
+            value = Height(toFloat(), UnitsOfMeasure.PX)
+        }
+
+        fun Number.percents() {
+            value = Height(toFloat(), UnitsOfMeasure.PC)
         }
 
         override fun provide(): HeightAttribute = HeightAttribute(value)
     }
 
-    override fun Layout.alter(source: LayoutElementBoundingBox): LayoutElementBoundingBox =
+    override fun LayoutSpace.alter(source: RenderableBoundingBox): RenderableBoundingBox =
         source.apply { height = value }
 
     companion object {
         @JvmStatic
-        fun  builder(target: Class<out AttributedContext>) : Builder = Builder(target)
+        fun  builder(target: Class<out AttributeAware>) : Builder = Builder(target)
 
         @JvmStatic
-        inline fun <reified AC: AttributedContext> builder() : Builder = Builder(AC::class.java)
+        inline fun <reified AC: AttributeAware> builder() : Builder = Builder(AC::class.java)
     }
 
 }

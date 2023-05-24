@@ -5,27 +5,28 @@ import io.github.voytech.tabulate.core.model.AbstractModel
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 
+object DSLCommand
 @DslMarker
 annotation class TabulateMarker
 
 
 @TabulateMarker
-abstract class ModelBuilderApi<T : AbstractModel<T>, B : ModelBuilderState<T>> internal constructor(
+abstract class ModelBuilderApi<T : AbstractModel, B : ModelBuilderState<T>> internal constructor(
     internal val builder: B,
 ) {
     protected fun getBuilder() = builder
 }
 
 @TabulateMarker
-abstract class CompositeModelBuilderApi<T : AbstractModel<T>, B : CompositeModelBuilderState<T>> internal constructor(
+abstract class CompositeModelBuilderApi<T : AbstractModel, B : CompositeModelBuilderState<T>> internal constructor(
     builder: B,
 ) : ModelBuilderApi<T, B>(builder) {
 
-    fun <E : AbstractModel<E>, R : ModelBuilderApi<E, *>> bind(other: R) = builder.bind(other.builder)
+    fun <E : AbstractModel, R : ModelBuilderApi<E, *>> bind(other: R) = builder.bind(other.builder)
 
 }
 
-fun <T : AbstractModel<T>, B : ModelBuilderState<T>> buildModel(api: ModelBuilderApi<T, B>): T =
+fun <T : AbstractModel, B : ModelBuilderState<T>> buildModel(api: ModelBuilderApi<T, B>): T =
     api.builder.build()
 
 
@@ -36,7 +37,7 @@ fun <T : AbstractModel<T>, B : ModelBuilderState<T>> buildModel(api: ModelBuilde
  * @since 0.1.0
  */
 @TabulateMarker
-class AttributesBuilderApi<A: AttributedModelOrPart<A>,T: AttributesAwareBuilder<A>> internal constructor(private val builderState: T) {
+class AttributesBuilderApi<A: AttributedModelOrPart,T: AttributesAwareBuilder<A>> internal constructor(private val builderState: T) {
 
     @JvmSynthetic
     fun <AT: Attribute<AT>,B : AttributeBuilder<AT>> attribute(attributeBuilder: B) {

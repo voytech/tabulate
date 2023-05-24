@@ -2,24 +2,23 @@ package io.github.voytech.tabulate.components.document.model
 
 import io.github.voytech.tabulate.components.document.operation.DocumentEnd
 import io.github.voytech.tabulate.components.document.operation.DocumentStart
-import io.github.voytech.tabulate.core.model.AbstractModel
-import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.model.ModelExportContext
-import io.github.voytech.tabulate.core.model.ModelWithAttributes
+import io.github.voytech.tabulate.core.model.*
 
 class Document internal constructor(
     @get:JvmSynthetic
-    internal val nodes: List<AbstractModel<*>>,
+    internal val nodes: List<AbstractModel>,
     @get:JvmSynthetic override val attributes: Attributes?,
     override val id: String,
-) : ModelWithAttributes<Document>() {
+) : ModelWithAttributes() {
 
-    override fun doExport(exportContext: ModelExportContext) {
-        with(exportContext) {
-            render(DocumentStart(exportContext))
-            nodes.forEach { it.export(exportContext) }
-            render(DocumentEnd(exportContext))
+    override fun doExport(api: ExportApi) = api {
+        render(DocumentStart(api))
+        nodes.forEach { child ->
+            do {
+                child.export()
+            } while (api.continuations().haveChildrenPendingContinuations())
         }
+        render(DocumentEnd(api))
     }
 
 }

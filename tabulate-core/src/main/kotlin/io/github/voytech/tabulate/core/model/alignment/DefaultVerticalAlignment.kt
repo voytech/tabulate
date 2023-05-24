@@ -7,3 +7,5 @@ enum class DefaultVerticalAlignment: VerticalAlignment {
 
     override fun getVerticalAlignmentId(): String = name
 }
+
+fun VerticalAlignment?.orDefault() = this ?: DefaultVerticalAlignment.TOP

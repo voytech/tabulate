@@ -1,10 +1,10 @@
 package io.github.voytech.tabulate.csv
 
-import io.github.voytech.tabulate.core.template.RenderingContext
-import io.github.voytech.tabulate.core.template.result.OutputBinding
-import io.github.voytech.tabulate.core.template.result.OutputStreamOutputBinding
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat
-import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
+import io.github.voytech.tabulate.core.RenderingContext
+import io.github.voytech.tabulate.core.result.OutputBinding
+import io.github.voytech.tabulate.core.result.OutputStreamOutputBinding
+import io.github.voytech.tabulate.core.spi.DocumentFormat
+import io.github.voytech.tabulate.core.spi.OutputBindingsProvider
 import java.io.BufferedWriter
 import java.io.OutputStream
 

@@ -82,7 +82,7 @@ internal data class CellDef<T> internal constructor(
      */
     override val attributes: Attributes?,
 
-) : AttributedModelOrPart<CellDef<T>> {
+) : AttributedModelOrPart {
 
     @JvmSynthetic
     internal fun resolveRawValue(context: SourceRow<T>? = null) : Any? = context?.let { expression?.evaluate(it) } ?: value

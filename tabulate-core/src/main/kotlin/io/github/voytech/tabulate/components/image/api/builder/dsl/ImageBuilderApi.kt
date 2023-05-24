@@ -6,6 +6,8 @@ import io.github.voytech.tabulate.components.image.model.Image
 import io.github.voytech.tabulate.components.page.api.builder.dsl.FooterBuilderApi
 import io.github.voytech.tabulate.components.page.api.builder.dsl.HeaderBuilderApi
 import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
+import io.github.voytech.tabulate.components.text.api.builder.dsl.TextBuilderApi
+import io.github.voytech.tabulate.components.wrapper.api.builder.dsl.WrapperBuilderApi
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.ModelBuilderApi
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
@@ -43,6 +45,8 @@ class ImageAttributesBuilderApi internal constructor(private val builderState: I
     }
 }
 
+//TODO introduce api marker on which API builders below can be installed in one shot
+
 fun HeaderBuilderApi.image(block: ImageBuilderApi.() -> Unit) = bind(ImageBuilderApi().apply(block))
 
 fun FooterBuilderApi.image(block: ImageBuilderApi.() -> Unit) = bind(ImageBuilderApi().apply(block))
@@ -50,3 +54,5 @@ fun FooterBuilderApi.image(block: ImageBuilderApi.() -> Unit) = bind(ImageBuilde
 fun PageBuilderApi.image(block: ImageBuilderApi.() -> Unit) = bind(ImageBuilderApi().apply(block))
 
 fun ContainerBuilderApi.image(block: ImageBuilderApi.() -> Unit) = bind(ImageBuilderApi().apply(block))
+
+infix fun WrapperBuilderApi.image(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))

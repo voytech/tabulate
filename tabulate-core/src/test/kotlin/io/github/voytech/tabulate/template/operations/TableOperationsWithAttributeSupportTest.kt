@@ -10,7 +10,7 @@ import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
 import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
 import io.github.voytech.tabulate.core.model.color.Colors
-import io.github.voytech.tabulate.core.template.DocumentFormat.Companion.format
+import io.github.voytech.tabulate.core.DocumentFormat.Companion.format
 import io.github.voytech.tabulate.support.Spy
 import io.github.voytech.tabulate.support.Spy.Companion.operationPriorities
 import org.junit.jupiter.api.Test
@@ -36,7 +36,7 @@ class TableOperationsWithAttributeSupportTest {
                 newRow {
                     cell { value = "cell" }
                     attributes {
-                        text { fontColor = Colors.BLACK }
+                        text { color = Colors.BLACK }
                         borders { topBorderColor = Colors.WHITE }
                     }
                 }
@@ -45,37 +45,37 @@ class TableOperationsWithAttributeSupportTest {
 
         val history = Spy.spy.readHistory()
         history.next().run {
-            assertTrue { TableStart::class.java == context.javaClass }
+            assertTrue { TableStartRenderable::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { ColumnStart::class.java == context.javaClass }
+            assertTrue { ColumnStartRenderable::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { ColumnStart::class.java == context.javaClass }
+            assertTrue { ColumnStartRenderable::class.java == context.javaClass }
             assertTrue { attribute is WidthAttribute }
         }
         history.next().run {
-            assertTrue { RowStart::class.java == context.javaClass }
+            assertTrue { RowStartRenderable::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { CellContext::class.java == context.javaClass }
+            assertTrue { CellRenderable::class.java == context.javaClass }
             assertTrue { attribute is BordersAttribute }
         }
         history.next().run {
-            assertTrue { CellContext::class.java == context.javaClass }
+            assertTrue { CellRenderable::class.java == context.javaClass }
             assertNull(attribute)
         }
         history.next().run {
-            assertTrue { CellContext::class.java == context.javaClass }
+            assertTrue { CellRenderable::class.java == context.javaClass }
             assertTrue { attribute is TextStylesAttribute }
         }
         history.next().run {
-            assertTrue { RowEnd::class.java == context.javaClass }
+            assertTrue { RowEndRenderable::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { ColumnEnd::class.java == context.javaClass }
+            assertTrue { ColumnEndRenderable::class.java == context.javaClass }
         }
-        history.next().run { assertIs<TableEnd>(context) }
+        history.next().run { assertIs<TableEndRenderable>(context) }
         assertFalse(history.hasNext())
     }
 

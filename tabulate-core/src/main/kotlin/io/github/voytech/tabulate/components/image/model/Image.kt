@@ -1,28 +1,15 @@
 package io.github.voytech.tabulate.components.image.model
 
 import io.github.voytech.tabulate.components.image.operation.ImageRenderable
-import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.model.ModelExportContext
-import io.github.voytech.tabulate.core.model.ModelWithAttributes
-import io.github.voytech.tabulate.core.model.orEmpty
+import io.github.voytech.tabulate.core.model.*
 
 class Image(
     @get:JvmSynthetic
     internal val filePath: String = "blank",
     override val attributes: Attributes?,
-) : ModelWithAttributes<Image>() {
+) : DirectlyRenderableModel<ImageRenderable>() {
 
-    override fun doExport(exportContext: ModelExportContext) {
-        with(exportContext) {
-           render(asRenderable())
-        }
-    }
-
-    override fun takeMeasures(exportContext: ModelExportContext) {
-        with(exportContext) { measure(asRenderable()) }
-    }
-
-    private fun asRenderable(): ImageRenderable =
-        ImageRenderable(filePath, attributes.orEmpty().forContext<ImageRenderable>(), context.customStateAttributes)
+    override fun ExportApi.asRenderable(): ImageRenderable =
+        ImageRenderable(filePath, attributes.orEmpty().forContext<ImageRenderable>(), getCustomAttributes())
 
 }

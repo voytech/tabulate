@@ -3,13 +3,13 @@ package io.github.voytech.tabulate.attributes
 import io.github.voytech.tabulate.components.table.api.builder.dsl.CellLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.operation.CellAttributeRenderOperation
-import io.github.voytech.tabulate.components.table.operation.CellContext
+import io.github.voytech.tabulate.components.table.operation.CellRenderable
 import io.github.voytech.tabulate.components.table.operation.getSheetName
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.spi.AttributeOperationsProvider
-import io.github.voytech.tabulate.core.template.spi.BuildAttributeOperations
+import io.github.voytech.tabulate.core.spi.AttributeOperationsProvider
+import io.github.voytech.tabulate.core.spi.BuildAttributeOperations
 import io.github.voytech.tabulate.excel.ApachePoiRenderingContext
 import io.github.voytech.tabulate.testsupport.TestRenderingContext
 
@@ -38,7 +38,7 @@ class TestAttributeRenderOperationsProvider : AttributeOperationsProvider<Apache
 
 data class SimpleTestCellAttribute(val valueSuffix: String) : Attribute<SimpleTestCellAttribute>() {
 
-    class Builder(var valueSuffix: String = "") : AttributeBuilder<SimpleTestCellAttribute>(CellContext::class.java) {
+    class Builder(var valueSuffix: String = "") : AttributeBuilder<SimpleTestCellAttribute>(CellRenderable::class.java) {
         override fun provide(): SimpleTestCellAttribute = SimpleTestCellAttribute(valueSuffix)
     }
 }
@@ -46,7 +46,7 @@ data class SimpleTestCellAttribute(val valueSuffix: String) : Attribute<SimpleTe
 class SimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<ApachePoiRenderingContext, SimpleTestCellAttribute>() {
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
-        context: CellContext,
+        context: CellRenderable,
         attribute: SimpleTestCellAttribute
     ) {
         with(renderingContext.provideCell(context.getSheetName(), context.getRow(), context.getColumn())) {
@@ -59,7 +59,7 @@ class NoopSimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<
 
     override operator fun invoke(
         renderingContext: TestRenderingContext,
-        context: CellContext,
+        context: CellRenderable,
         attribute: SimpleTestCellAttribute
     ) {}
 }

@@ -1,21 +1,28 @@
 package io.github.voytech.tabulate.performance
 
+import io.github.voytech.tabulate.Either
+import io.github.voytech.tabulate.components.table.model.ColumnKey
 import io.github.voytech.tabulate.components.table.model.RowDef
 import io.github.voytech.tabulate.components.table.model.SourceRow
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.operation.RowEnd
-import io.github.voytech.tabulate.components.table.operation.createRowEnd
+import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.components.table.operation.createCellContext
+import io.github.voytech.tabulate.components.table.operation.createRowEnd
 import io.github.voytech.tabulate.components.table.operation.createRowStart
 import io.github.voytech.tabulate.components.table.template.*
+import io.github.voytech.tabulate.core.layout.CrossedAxis
+import io.github.voytech.tabulate.core.model.ModelExportContext
 import io.github.voytech.tabulate.core.model.StateAttributes
+import io.github.voytech.tabulate.core.operation.Ok
+import io.github.voytech.tabulate.support.createTableContext
 
-internal class SlowRowResolver<T: Any>(
+internal class SlowRowResolver<T : Any>(
     private val tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
-    offsets: TableContinuations = TableContinuations(),
+    val ctx: ModelExportContext = tableModel.createTableContext(customAttributes),
+    offsets: TableContinuations = TableContinuations(ctx),
     listener: CaptureRowCompletion<T>? = null
-): AbstractRowContextResolver<T>(tableModel, StateAttributes(customAttributes), offsets, listener) {
+) : AbstractRowContextResolver<T>(tableModel, StateAttributes(customAttributes), offsets, listener) {
 
     private val customRows = tableModel.rows?.filter { it.qualifier.index != null }
     private val rowsWithPredicates = tableModel.rows?.filter { it.qualifier.matching != null }
@@ -40,21 +47,38 @@ internal class SlowRowResolver<T: Any>(
     private fun resolveAttributedRow(
         tableRowIndex: RowIndex,
         record: IndexedValue<T>? = null
-    ): ContextResult<RowEnd<T>> {
-        return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
-            val rowDefinitions = getRows(sourceRow)
-            with(SyntheticRow(tableModel, rowDefinitions)) {
-                SuccessResult(createRowEnd(
-                    createRowStart(rowIndex = tableRowIndex.value, customAttributes = customAttributes).also { it.render() },
-                    mapEachCell { row, column ->
-                        row.createCellContext(row = sourceRow, column = column, customAttributes)?.also { it.render() }
-                    }
-                ).also { it.render() })
+    ): ContextResult<RowEndRenderable<T>> = SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
+        val rowDefinitions = getRows(sourceRow)
+        with(SyntheticRow(tableModel, rowDefinitions)) {
+            val start = createRowStart(rowIndex = tableRowIndex.value, customAttributes = customAttributes)
+            val maybeCells = mapEachCell({ row, column ->
+                row.createCellContext(row = sourceRow, column = column, customAttributes)
+            }, { _ -> false })
+            return when (maybeCells) {
+                is Either.Left -> tryRenderRowEnd(start, maybeCells.value)
+                is Either.Right -> OverflowResult(
+                    io.github.voytech.tabulate.core.operation.RenderingSkipped(
+                        CrossedAxis.Y
+                    )
+                )
             }
         }
     }
 
-    override fun resolve(requestedIndex: RowIndex): IndexedResult<RowEnd<T>>? {
+    private fun SyntheticRow<T>.tryRenderRowEnd(
+        rowStart: RowStartRenderable,
+        cells: Map<ColumnKey<T>, CellRenderable>
+    ): ContextResult<RowEndRenderable<T>> =
+        createRowEnd(rowStart, cells).let { rowEnd ->
+            rowEnd.render().let { result ->
+                when (result) {
+                    null, Ok -> SuccessResult(rowEnd)
+                    else -> OverflowResult(result as io.github.voytech.tabulate.core.operation.RenderingSkipped)
+                }
+            }
+        }
+
+    override fun resolve(requestedIndex: RowIndex): IndexedResult<RowEndRenderable<T>>? {
         return if (hasCustomRows(SourceRow(requestedIndex))) {
             IndexedResult(requestedIndex, null, resolveAttributedRow(requestedIndex))
         } else null

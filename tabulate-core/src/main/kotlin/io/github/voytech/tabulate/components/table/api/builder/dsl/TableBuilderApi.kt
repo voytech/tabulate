@@ -7,6 +7,7 @@ import io.github.voytech.tabulate.components.table.api.builder.*
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.model.attributes.cell.cellType
 import io.github.voytech.tabulate.components.table.template.AdditionalSteps
+import io.github.voytech.tabulate.components.wrapper.api.builder.dsl.WrapperBuilderApi
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.ModelBuilderApi
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
@@ -58,11 +59,16 @@ fun <T: Any> typedTable(block: TableBuilderApi<T>.() -> Unit): TableBuilderApi<T
  */
 fun table(block: TableBuilderApi<Unit>.() -> Unit): TableBuilderApi<Unit>.() -> Unit = block
 
+//TODO introduce api marker on which API builders below can be installed in one shot
+
 fun <T: Any> DocumentBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
 
 fun <T: Any> PageBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
 
 fun <T: Any> ContainerBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
+
+infix fun <T: Any> WrapperBuilderApi.table(block: TableBuilderApi<T>.() -> Unit) = bind(TableBuilderApi<T>().apply(block))
+
 
 /**
  * Plus operator for merging multiple table DSL builders.

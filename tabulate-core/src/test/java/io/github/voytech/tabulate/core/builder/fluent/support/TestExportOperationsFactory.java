@@ -1,14 +1,14 @@
 package io.github.voytech.tabulate.core.builder.fluent.support;
 
 import io.github.voytech.tabulate.components.table.model.Table;
-import io.github.voytech.tabulate.core.template.operation.OperationsBuilder;
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat;
-import io.github.voytech.tabulate.core.template.spi.ExportOperationsProvider;
+import io.github.voytech.tabulate.core.operation.OperationsBuilder;
+import io.github.voytech.tabulate.core.spi.DocumentFormat;
+import io.github.voytech.tabulate.core.spi.ExportOperationsProvider;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
 
-import static io.github.voytech.tabulate.core.template.spi.DocumentFormat.format;
+import static io.github.voytech.tabulate.core.spi.DocumentFormat.format;
 
 public class TestExportOperationsFactory<T> implements ExportOperationsProvider<TestRenderingContext, Table<T>> {
     @NotNull

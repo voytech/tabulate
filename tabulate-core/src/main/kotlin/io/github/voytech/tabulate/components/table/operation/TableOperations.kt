@@ -1,18 +1,19 @@
 package io.github.voytech.tabulate.components.table.operation
 
-import io.github.voytech.tabulate.core.template.RenderingContext
-import io.github.voytech.tabulate.core.template.operation.Operation
+import io.github.voytech.tabulate.core.RenderingContext
+import io.github.voytech.tabulate.core.operation.Operation
+import io.github.voytech.tabulate.core.operation.VoidOperation
 
-fun interface StartTableOperation<CTX : RenderingContext>: Operation<CTX, TableStart>
+fun interface StartTableOperation<CTX : RenderingContext>: VoidOperation<CTX, TableStartRenderable>
 
-fun interface StartColumnOperation<CTX : RenderingContext>: Operation<CTX, ColumnStart>
+fun interface StartColumnOperation<CTX : RenderingContext>: VoidOperation<CTX, ColumnStartRenderable>
 
-fun interface StartRowOperation<CTX : RenderingContext>: Operation<CTX, RowStart>
+fun interface StartRowOperation<CTX : RenderingContext>: VoidOperation<CTX, RowStartRenderable>
 
-fun interface RenderRowCellOperation<CTX : RenderingContext>: Operation<CTX, CellContext>
+fun interface RenderRowCellOperation<CTX : RenderingContext>: Operation<CTX, CellRenderable>
 
-fun interface EndRowOperation<CTX : RenderingContext, T: Any>: Operation<CTX, RowEnd<T>>
+fun interface EndRowOperation<CTX : RenderingContext, T: Any>: VoidOperation<CTX, RowEndRenderable<T>>
 
-fun interface EndColumnOperation<CTX : RenderingContext>: Operation<CTX, ColumnEnd>
+fun interface EndColumnOperation<CTX : RenderingContext>: VoidOperation<CTX, ColumnEndRenderable>
 
-fun interface EndTableOperation<CTX : RenderingContext>: Operation<CTX, TableEnd>
+fun interface EndTableOperation<CTX : RenderingContext>: VoidOperation<CTX, TableEndRenderable>

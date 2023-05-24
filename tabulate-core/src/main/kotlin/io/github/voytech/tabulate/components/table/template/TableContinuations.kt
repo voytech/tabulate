@@ -1,35 +1,27 @@
 package io.github.voytech.tabulate.components.table.template
 
 import io.github.voytech.tabulate.components.table.model.ColumnDef
-import io.github.voytech.tabulate.core.model.ModelExportContext
-import io.github.voytech.tabulate.core.model.SimpleContinuationAttributes
+import io.github.voytech.tabulate.core.model.ContinuationsApi
 
-data class TableContinuations(val exportContext: ModelExportContext) {
-
-    private val continuationQueue = exportContext.continuations
+data class TableContinuations(val continuations: ContinuationsApi) {
 
     internal fun <T> newContinuation(def: ColumnDef<T>) {
-        continuationQueue += SimpleContinuationAttributes(mutableMapOf(NEXT_COLUMN to def.index))
+        continuations.newContinuation(NEXT_COLUMN to def.index)
     }
 
     internal fun newContinuation(rowIndex: RowIndex, recordIndex: Int) {
-        continuationQueue += SimpleContinuationAttributes(
-            mutableMapOf(NEXT_ROW to rowIndex, NEXT_RECORD to recordIndex)
-        )
+        continuations.newContinuation(NEXT_ROW to rowIndex, NEXT_RECORD to recordIndex)
     }
 
-    private fun getContinuationColumnIndex(): Int? =
-        continuationQueue().currentOrNull(exportContext.phase)?.get<Int>(NEXT_COLUMN)
+    private fun getContinuationColumnIndex(): Int? = continuations.getCurrentContinuationAttributeOrNull(NEXT_COLUMN)
 
     internal fun getContinuationColumnIndexOrZero(): Int = getContinuationColumnIndex() ?: 0
 
-    internal fun getContinuationRowIndex(): RowIndex? =
-        continuationQueue().currentOrNull(exportContext.phase)?.get<RowIndex>(NEXT_ROW)
+    internal fun getContinuationRowIndex(): RowIndex? = continuations.getCurrentContinuationAttributeOrNull(NEXT_ROW)
 
     internal fun getContinuationRowIndexOrZero(): Int = getContinuationRowIndex()?.value ?: 0
 
-    private fun getContinuationRecordIndex(): Int? =
-        continuationQueue().currentOrNull(exportContext.phase)?.get<Int>(NEXT_RECORD)
+    internal fun getContinuationRecordIndex(): Int? = continuations.getCurrentContinuationAttributeOrNull(NEXT_RECORD)
 
     fun isValid(column: Int): Boolean =
         getContinuationColumnIndex()?.let {

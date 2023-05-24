@@ -4,10 +4,10 @@ import io.github.voytech.tabulate.components.table.model.CellDef
 import io.github.voytech.tabulate.components.table.model.ColumnDef
 import io.github.voytech.tabulate.components.table.model.RowDef
 import io.github.voytech.tabulate.components.table.model.attributes.table.TemplateFileAttribute
-import io.github.voytech.tabulate.components.table.operation.*
-import io.github.voytech.tabulate.core.model.AttributeConstraintsProvider
 import io.github.voytech.tabulate.core.model.AttributeConstraintsBuilder
-import io.github.voytech.tabulate.core.model.attributes.*
+import io.github.voytech.tabulate.core.model.AttributeConstraintsProvider
+import io.github.voytech.tabulate.core.model.attributes.HeightAttribute
+import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
 
 class TableAttributesConstraints : AttributeConstraintsProvider {
     override fun defineConstraints(): AttributeConstraintsBuilder.() -> Unit = {

@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate
 
-import io.github.voytech.tabulate.components.container.api.builder.dsl.container
+import io.github.voytech.tabulate.components.container.api.builder.dsl.section
+import io.github.voytech.tabulate.components.container.api.builder.dsl.margins
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.image.api.builder.dsl.*
@@ -44,6 +45,32 @@ import kotlin.system.measureTimeMillis
 
 @DisplayName("Testing various excel exports")
 class ApachePoiTabulateTests {
+
+    private fun defaultTable(data: List<SampleCustomer>): (TableBuilderApi<SampleCustomer>.() -> Unit) = typedTable {
+        attributes {
+            margins { top { 20.pt() } }
+            borders {
+                bottomBorderWidth = 0.2.pt()
+                bottomBorderStyle = DefaultBorderStyle.SOLID
+            }
+        }
+        columns {
+            column(SampleCustomer::firstName)
+            column(SampleCustomer::lastName)
+            column(SampleCustomer::country)
+            column(SampleCustomer::city)
+            column(SampleCustomer::street)
+            column(SampleCustomer::houseNumber)
+            column(SampleCustomer::flat)
+        }
+        rows {
+            header {
+                columnTitles("First Name", "Last Name", "Country", "City", "Street", "House Nr", "Flat Nr")
+                attributes { text { weight = DefaultWeightStyle.BOLD } }
+            }
+        }
+        dataSource(data)
+    }
     @Test
     fun `should correctly override cell borders defined on various levels`() {
         val productList = SampleProduct.create(1)
@@ -158,7 +185,7 @@ class ApachePoiTabulateTests {
                         attributes {
                             text {
                                 fontFamily = DefaultFonts.TIMES_NEW_ROMAN
-                                fontColor = Color(10, 100, 100)
+                                color = Color(10, 100, 100)
                                 fontSize = 12
                                 italic = true
                                 weight = DefaultWeightStyle.BOLD
@@ -171,7 +198,7 @@ class ApachePoiTabulateTests {
                         attributes {
                             text {
                                 fontFamily = DefaultFonts.TIMES_NEW_ROMAN
-                                fontColor = Colors.BLACK
+                                color = Colors.BLACK
                                 fontSize = 12
                             }
                             background { color = Colors.BLUE }
@@ -209,7 +236,7 @@ class ApachePoiTabulateTests {
                             }
                             text {
                                 fontFamily = DefaultFonts.TIMES_NEW_ROMAN
-                                fontColor = Color(90, 100, 100)
+                                color = Color(90, 100, 100)
                                 fontSize = 12
                                 italic = true
                                 weight = DefaultWeightStyle.BOLD
@@ -613,7 +640,7 @@ class ApachePoiTabulateTests {
                             color = Colors.BLACK
                         }
                         text {
-                            fontColor = Colors.WHITE
+                            color = Colors.WHITE
                             weight = DefaultWeightStyle.BOLD
                         }
                     }
@@ -722,7 +749,7 @@ class ApachePoiTabulateTests {
                 header {
                     attributes {
                         text {
-                            fontColor = Colors.WHITE
+                            color = Colors.WHITE
                             weight = DefaultWeightStyle.BOLD
                         }
                         background {
@@ -737,7 +764,7 @@ class ApachePoiTabulateTests {
                 name = "first"
                 table(tableStyle + headerStyle + typedTable<SampleProduct> {
                     columns {
-                        column(SampleProduct::code) { attributes { text { fontColor = Colors.RED } } }
+                        column(SampleProduct::code) { attributes { text { color = Colors.RED } } }
                         column(SampleProduct::name)
                         column(SampleProduct::description)
                         column(SampleProduct::price)
@@ -768,7 +795,7 @@ class ApachePoiTabulateTests {
                 table<SampleProduct>(headerStyle + typedTable {
                     attributes {
                         columnWidth { 100.px() }
-                        text { fontColor = Colors.BLACK }
+                        text { color = Colors.BLACK }
                     }
                     dataSource(SampleProduct.create(10))
                     columns {
@@ -793,7 +820,7 @@ class ApachePoiTabulateTests {
                         background { color = Colors.LIGHT_GRAY }
                         text {
                             fontFamily = DefaultFonts.COURIER_NEW
-                            fontColor = Colors.RED
+                            color = Colors.RED
                             fontSize = 10
                             italic = true
                             underline = true
@@ -805,7 +832,7 @@ class ApachePoiTabulateTests {
                             all {
                                 color = Colors.RED
                                 style = DefaultBorderStyle.DOTTED
-                                width = 2.pt()
+                                2.pt()
                             }
                         }
                     }
@@ -820,7 +847,7 @@ class ApachePoiTabulateTests {
                 table {
                     dataSource(SampleProduct.create(100))
                     attributes {
-                        borders { all { color = Colors.LIGHT_GRAY; width = 0.5F.pt()} }
+                        borders { all { color = Colors.LIGHT_GRAY; 0.5F.pt()} }
                         columnWidth { auto = true }
                     }
                     columns {
@@ -848,7 +875,7 @@ class ApachePoiTabulateTests {
                         alignment { vertical = DefaultVerticalAlignment.MIDDLE }
                         background { color = Colors.BLACK }
                         text {
-                            fontColor = Colors.WHITE
+                            color = Colors.WHITE
                             fontSize = 10
                             weight = DefaultWeightStyle.BOLD
                         }
@@ -862,38 +889,44 @@ class ApachePoiTabulateTests {
     fun `should export document with correctly handled table X`() {
         document {
             page {
-                table {
-                    dataSource(SampleProduct.create(1))
-                    attributes { borders { all { color = Colors.LIGHT_GRAY; width = 0.5F.pt()} } }
-                    columns {
-                        column(SampleProduct::code) {
-                            attributes { text {  weight = DefaultWeightStyle.BOLD } }
+                section {
+                    orientation = Orientation.VERTICAL
+                    section {
+                        orientation = Orientation.HORIZONTAL
+                        (0..10).forEach { index ->
+                            text {
+                                value<PageExecutionContext> { "This is ($index) text on page (${it.pageNumber})" }
+                                attributes {
+                                    borders { all { style = DefaultBorderStyle.SOLID } }
+                                    margins { left { 1.pt() }; top { 1.pt() } }
+                                }
+                            }
                         }
-                        column(SampleProduct::name)
-                        (0..1000).forEach { column("id$it") }
-                        column("img") { attributes { width { 30.pt() } }}
                     }
-                    rows {
-                        matching { all() } assign {
-                            (0..1000).forEach { cell("id$it") { value = "V$it"} }
+                    section {
+                        attributes {
+                            margins {
+                                left { 25.pt() }
+                                top { 20.pt() }
+                            }
                         }
+                        orientation = Orientation.VERTICAL
+                        table(defaultTable(SampleCustomer.create(5)))
+                        table(defaultTable(SampleCustomer.create(5)))
+                        table(defaultTable(SampleCustomer.create(5)))
+                        table(defaultTable(SampleCustomer.create(5)))
+                        table(defaultTable(SampleCustomer.create(5)))
+                        table(defaultTable(SampleCustomer.create(5)))
+                        table(defaultTable(SampleCustomer.create(5)))
+                    }
+                    section {
+                        attributes { margins { top { 10.pt() } } }
+                        text { value<PageExecutionContext> { "This is page ${it.pageNumber}" } }
                     }
                 }
-                text {
-                    value<PageExecutionContext> { "FOOTER: the page number is : ${it.pageNumber}"  }
-                    attributes {
-                        height { 15.pt() }
-                        width { 200.pt() }
-                        alignment { vertical = DefaultVerticalAlignment.MIDDLE }
-                        background { color = Colors.BLACK }
-                        text {
-                            fontColor = Colors.WHITE
-                            fontSize = 10
-                            weight = DefaultWeightStyle.BOLD
-                        }
-                    }
-                }
+
             }
-        }.export(File("table_x.xlsx"))
+        }.export(File("container.xlsx"))
     }
+
 }

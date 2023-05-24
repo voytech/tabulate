@@ -8,22 +8,11 @@ class Text(
     internal val value: String = "blank",
     private val valueSupplier: ReifiedValueSupplier<*, String>?,
     override val attributes: Attributes?,
-) : ModelWithAttributes<Text>() {
+) : DirectlyRenderableModel<TextRenderable>() {
 
-    override fun doExport(exportContext: ModelExportContext) {
-        with(exportContext) {
-            render(asRenderable(exportContext))
-        }
-    }
+    override fun ExportApi.asRenderable(): TextRenderable =
+        TextRenderable(getTextValue(), attributes.orEmpty().forContext<TextRenderable>(), getCustomAttributes())
 
-    override fun takeMeasures(exportContext: ModelExportContext) {
-        with(exportContext) { measure(asRenderable(exportContext)) }
-    }
-
-    private fun asRenderable(context: ModelExportContext): TextRenderable = with(context) {
-        TextRenderable(getTextValue(this), attributes.orEmpty().forContext<TextRenderable>(), customStateAttributes)
-    }
-
-    private fun getTextValue(context: ModelExportContext): String = valueSupplier?.let { context.value(it) } ?: value
+    private fun ExportApi.getTextValue(): String = valueSupplier?.let { value(it) } ?: value
 
 }

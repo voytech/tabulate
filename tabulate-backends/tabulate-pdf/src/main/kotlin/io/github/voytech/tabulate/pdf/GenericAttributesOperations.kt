@@ -1,7 +1,5 @@
 package io.github.voytech.tabulate.pdf
 
-import io.github.voytech.tabulate.core.model.Height
-import io.github.voytech.tabulate.core.model.Size
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
@@ -18,42 +16,47 @@ import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.color.Color
 import io.github.voytech.tabulate.core.model.color.darken
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
-import io.github.voytech.tabulate.core.template.layout.LayoutElementBoundingBox
-import io.github.voytech.tabulate.core.template.operation.*
+import io.github.voytech.tabulate.core.operation.AttributeOperation
+import io.github.voytech.tabulate.core.operation.AttributedContext
+import io.github.voytech.tabulate.core.operation.HasText
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType1Font
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts
+
+val defaultFont: PDFont = PDType1Font(Standard14Fonts.FontName.HELVETICA)
 
 fun TextStylesAttribute.default(): PDFont =
-    if (weight == DefaultWeightStyle.BOLD) {
-        PDType1Font.HELVETICA_BOLD_OBLIQUE.takeIf { italic == true } ?: PDType1Font.HELVETICA_BOLD
+    (if (weight == DefaultWeightStyle.BOLD) {
+        Standard14Fonts.FontName.HELVETICA_BOLD_OBLIQUE.takeIf { italic == true } ?: Standard14Fonts.FontName.HELVETICA_BOLD
     } else if (italic == true) {
-        PDType1Font.HELVETICA_OBLIQUE
+        Standard14Fonts.FontName.HELVETICA_OBLIQUE
     } else {
-        PDType1Font.HELVETICA
-    }
+        Standard14Fonts.FontName.HELVETICA
+    }).let { PDType1Font(it) }
 
 fun TextStylesAttribute.pdFont(): PDFont =
     if (fontFamily != null) {
         when (fontFamily!!.getFontId()) {
             "TIMES_NEW_ROMAN", "TIMES_ROMAN" -> {
-                if (weight == DefaultWeightStyle.BOLD) {
-                    PDType1Font.TIMES_BOLD_ITALIC.takeIf { italic == true } ?: PDType1Font.TIMES_BOLD
+                (if (weight == DefaultWeightStyle.BOLD) {
+                    Standard14Fonts.FontName.TIMES_BOLD_ITALIC.takeIf { italic == true } ?: Standard14Fonts.FontName.TIMES_BOLD
                 } else if (italic == true) {
-                    PDType1Font.TIMES_ITALIC
+                    Standard14Fonts.FontName.TIMES_ITALIC
                 } else {
-                    PDType1Font.TIMES_ROMAN
-                }
+                    Standard14Fonts.FontName.TIMES_ROMAN
+                }).let { PDType1Font(it) }
             }
 
             "COURIER", "COURIER_NEW" -> {
-                if (weight == DefaultWeightStyle.BOLD) {
-                    PDType1Font.COURIER_BOLD_OBLIQUE.takeIf { italic == true } ?: PDType1Font.COURIER_BOLD
+                (if (weight == DefaultWeightStyle.BOLD) {
+                    Standard14Fonts.FontName.COURIER_BOLD_OBLIQUE.takeIf { italic == true }
+                        ?: Standard14Fonts.FontName.COURIER_BOLD
                 } else if (italic == true) {
-                    PDType1Font.COURIER_OBLIQUE
+                    Standard14Fonts.FontName.COURIER_OBLIQUE
                 } else {
-                    PDType1Font.COURIER
-                }
+                    Standard14Fonts.FontName.COURIER
+                }).let { PDType1Font(it) }
             }
 
             "HELVETICA" -> default()
@@ -62,7 +65,7 @@ fun TextStylesAttribute.pdFont(): PDFont =
     } else default()
 
 class AlignmentAttributeRenderOperation<CTX> :
-    AttributeOperation<PdfBoxRenderingContext, AlignmentAttribute, CTX> where CTX : AttributedContext, CTX : HasValue<*> {
+    AttributeOperation<PdfBoxRenderingContext, AlignmentAttribute, CTX> where CTX : AttributedContext {
 
 
     private fun PdfBoxRenderingContext.applyTextAlignment(
@@ -71,37 +74,40 @@ class AlignmentAttributeRenderOperation<CTX> :
         horizontal: HorizontalAlignment? = DefaultHorizontalAlignment.CENTER,
     ) {
         val bbox = boxLayout(context, context.getModelAttribute<BordersAttribute>())
-        val fontAndSize = context.fontSize()
-        var xOffset = 0.0F
-        var yOffset = 0.0F
-        if (vertical != null) {
-            val textHeight = fontAndSize.measureTextHeight()
-            when (vertical) {
-                DefaultVerticalAlignment.TOP -> {
-                    yOffset += (bbox.inner.height?.value ?: 0f) - textHeight
-                }
+        // TODO - all measurable Renderable should be mixed with interface Measurable which adds measuring method in context of this rendering context.
+        if (context is HasText) {
+            val fontAndSize = context.textMeasures() // should add method takeMeasure for all measurable AttributedContext...
+            var xOffset = 0.0F
+            var yOffset = 0.0F
+            if (vertical != null) {
+                val textHeight = fontAndSize.fontHeight()
+                when (vertical) {
+                    DefaultVerticalAlignment.TOP -> {
+                        yOffset += (bbox.inner.height?.value ?: 0f) - textHeight
+                    }
 
-                DefaultVerticalAlignment.BOTTOM -> {}
-                DefaultVerticalAlignment.MIDDLE -> {
-                    yOffset += (bbox.inner.height?.value?.div(2) ?: 0f) - textHeight / 2
+                    DefaultVerticalAlignment.BOTTOM -> {}
+                    DefaultVerticalAlignment.MIDDLE -> {
+                        yOffset += (bbox.inner.height?.value?.div(2) ?: 0f) - textHeight / 2
+                    }
                 }
             }
-        }
-        if (horizontal != null) {
-            val textWidth = fontAndSize.measureTextWidth(context.value.toString())
-            when (horizontal) {
-                DefaultHorizontalAlignment.LEFT -> {}
-                DefaultHorizontalAlignment.CENTER -> {
-                    xOffset += ((bbox.inner.width?.value?.div(2)) ?: 0f) - textWidth / 2
-                }
+            if (horizontal != null) {
+                val textWidth = fontAndSize.measureTextWidth(context.value)
+                when (horizontal) {
+                    DefaultHorizontalAlignment.LEFT -> {}
+                    DefaultHorizontalAlignment.CENTER -> {
+                        xOffset += ((bbox.inner.width?.value?.div(2)) ?: 0f) - textWidth / 2
+                    }
 
-                DefaultHorizontalAlignment.RIGHT -> {
-                    xOffset += (bbox.inner.width?.value ?: 0f) - textWidth
+                    DefaultHorizontalAlignment.RIGHT -> {
+                        xOffset += (bbox.inner.width?.value ?: 0f) - textWidth
+                    }
                 }
             }
+            xTextOffset += xOffset
+            yTextOffset += yOffset
         }
-        xTextOffset += xOffset
-        yTextOffset += yOffset
     }
 
     override fun invoke(
@@ -125,8 +131,8 @@ class TextStylesAttributeRenderOperation<CTX : AttributedContext> :
     ) = with(renderingContext) {
         getCurrentContentStream().let { content ->
             beginText()
-            context.fontSize().let { fontAndSize ->
-                setFont(fontAndSize.font(), fontAndSize.size().toFloat())
+            context.textMeasures().let { fontAndSize ->
+                setFont(fontAndSize.font(), fontAndSize.fontSize().toFloat())
                 content.setNonStrokingColor(attribute.fontColor.awtColor())
                 val ident: Int = attribute.ident?.toInt() ?: 0
                 val identWidth =
@@ -515,59 +521,3 @@ fun BorderStyle?.hasComplexBorder(): Boolean = this != null && (
                 getBorderStyleId() == DefaultBorderStyle.GROOVE.name
         )
 
-fun <A, V> A.resolveTextBoundingBox(): LayoutElementBoundingBox? where A : AttributedContext, A : HasValue<V> {
-    return boundingBox()?.apply {
-        if (!isDefined()) {
-            (this@resolveTextBoundingBox.measureText(unitsOfMeasure()) +
-                    this@resolveTextBoundingBox.measureBorders(unitsOfMeasure())).let { measured ->
-                height = height ?: measured.height
-                width = width ?: measured.width
-            }
-        }
-    }
-}
-
-
-@JvmInline
-value class FontMeasurements(private val inner: Pair<PDFont, Int>) {
-
-    fun font(): PDFont = inner.first
-
-    fun size(): Int = inner.second
-
-    private fun capHeight(): Float = font().fontDescriptor.capHeight
-
-    private fun descent(): Float = font().fontDescriptor.descent * -1
-
-    fun descender(): Float = descent() / 1000 * size()
-
-    fun measureTextHeight(): Float =
-        (capHeight() + (2 * descent())) / 1000 * size()
-
-    fun measureTextWidth(string: String): Float =
-        width(string) / 1000 * size()
-
-    private fun width(string: String): Float = font().getStringWidth(string)
-
-}
-
-fun <A : AttributedContext> A.fontSize(): FontMeasurements =
-    getModelAttribute<TextStylesAttribute>().let {
-        FontMeasurements((it?.pdFont() ?: PDType1Font.HELVETICA) to (it?.fontSize ?: 10))
-    }
-
-fun <A, V> A.measureText(uom: UnitsOfMeasure): Size where A : AttributedContext, A : HasValue<V> =
-    fontSize().let {
-        Size(
-            Width(it.measureTextWidth(this.value.toString()), UnitsOfMeasure.PT),
-            Height(it.measureTextHeight(), UnitsOfMeasure.PT) // ???
-        )
-    }
-
-fun <A : AttributedContext> A.measureBorders(uom: UnitsOfMeasure): Size =
-    getModelAttribute<BordersAttribute>()?.let { borders ->
-        Size(
-            (borders.leftBorderWidth + borders.rightBorderWidth).switchUnitOfMeasure(uom),
-            Height((borders.bottomBorderWidth + borders.topBorderWidth).switchUnitOfMeasure(uom).value, uom)
-        )
-    } ?: Size(Width.zero(uom), Height.zero(uom))

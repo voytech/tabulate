@@ -2,14 +2,14 @@ package io.github.voytech.tabulate.csv.components.table.operation
 
 
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.operation.CellContext
+import io.github.voytech.tabulate.components.table.operation.CellRenderable
 import io.github.voytech.tabulate.components.table.operation.EndRowOperation
 import io.github.voytech.tabulate.components.table.operation.StartRowOperation
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.spi.BuildOperations
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat.Companion.format
-import io.github.voytech.tabulate.core.template.spi.ExportOperationsProvider
+import io.github.voytech.tabulate.core.spi.BuildOperations
+import io.github.voytech.tabulate.core.spi.DocumentFormat
+import io.github.voytech.tabulate.core.spi.DocumentFormat.Companion.format
+import io.github.voytech.tabulate.core.spi.ExportOperationsProvider
 import io.github.voytech.tabulate.csv.CsvRenderingContext
 import io.github.voytech.tabulate.csv.components.table.model.attributes.CellSeparatorCharacterAttribute
 
@@ -19,7 +19,7 @@ import io.github.voytech.tabulate.csv.components.table.model.attributes.CellSepa
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class CsvExportOperationsFactory : ExportOperationsProvider<CsvRenderingContext, Table<Any>>  {
+class CsvExportOperationsFactory : ExportOperationsProvider<CsvRenderingContext, Table<Any>> {
 
     override fun getDocumentFormat(): DocumentFormat<CsvRenderingContext> = format("csv")
 
@@ -43,7 +43,7 @@ class CsvExportOperationsFactory : ExportOperationsProvider<CsvRenderingContext,
 
     override fun getModelClass(): Class<Table<Any>> = reify()
 
-    private fun CellContext.getSeparatorCharacter(): String =
+    private fun CellRenderable.getSeparatorCharacter(): String =
         getModelAttribute(CellSeparatorCharacterAttribute::class.java)?.separator ?: ","
 
 }

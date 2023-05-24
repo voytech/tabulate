@@ -2,8 +2,8 @@ package io.github.voytech.tabulate.core.api.builder
 
 import io.github.voytech.tabulate.components.table.api.builder.exception.BuilderException
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.template.loadAttributeConstraints
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
+import io.github.voytech.tabulate.core.loadAttributeConstraints
+import io.github.voytech.tabulate.core.operation.AttributedContext
 import kotlin.properties.ObservableProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -29,10 +29,10 @@ abstract class InternalBuilder<T> : BuilderInterface<T> {
     abstract override fun build(): T
 }
 
-interface ModelBuilderState<T : AbstractModel<T>> : BuilderInterface<T>
+interface ModelBuilderState<T : AbstractModel> : BuilderInterface<T>
 
-interface CompositeModelBuilderState<T : AbstractModel<T>> : ModelBuilderState<T> {
-    fun <E : AbstractModel<E>> bind(node: ModelBuilderState<E>)
+interface CompositeModelBuilderState<T : AbstractModel> : ModelBuilderState<T> {
+    fun <E : AbstractModel> bind(node: ModelBuilderState<E>)
 }
 
 /**
@@ -107,7 +107,7 @@ abstract class ModelPartBuilderCollection<K : Any, M : ModelPart, P : BuilderInt
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class AttributesAwareBuilder<T : AttributedModelOrPart<T>> : InternalBuilder<T>() {
+abstract class AttributesAwareBuilder<T : AttributedModelOrPart> : InternalBuilder<T>() {
 
     private var attributes: MutableSet<Attribute<*>> = mutableSetOf()
 
@@ -150,7 +150,7 @@ abstract class AttributesAwareBuilder<T : AttributedModelOrPart<T>> : InternalBu
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class AttributeBuilder<T : Attribute<T>>(private val owner: Class<out AttributedContext>) : Builder<T>() {
+abstract class AttributeBuilder<T : Attribute<T>>(private val owner: Class<out AttributeAware>) : Builder<T>() {
     private val propertyChanges = mutableSetOf<KProperty<*>>()
     private val mappings = mutableMapOf<String, String>()
     fun <F> observable(initialValue: F, fieldMapping: Pair<String, String>? = null): ReadWriteProperty<Any?, F> {

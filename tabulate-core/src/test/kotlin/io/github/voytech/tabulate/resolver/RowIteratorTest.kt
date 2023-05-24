@@ -36,11 +36,13 @@ class RowIteratorTest {
 
     private fun <T: Any> createDefaultIterator(block: TableBuilderApi<T>.() -> Unit): Wrapper<T> =
         createTableBuilder(block).build().let { table ->
-            mutableMapOf<String, Any>().let {
-                it to AccumulatingRowContextResolver(table, StateAttributes(it), TableContinuations(), successfulRowComplete())
-            }.let {
+            val attributes = mutableMapOf<String, Any>()
+            val rootCtx = table.createTableContext(attributes)
+            (attributes to AccumulatingRowContextResolver(
+                table, StateAttributes(attributes), TableContinuations(rootCtx), successfulRowComplete()
+            )).let {
                 Wrapper(
-                    iterator = RowContextIterator(it.second, TableContinuations(),table.createTableContext(it.first)),
+                    iterator = RowContextIterator(it.second, TableContinuations(rootCtx)),
                     resolver = it.second,
                     customAttributes = it.first
                 )
@@ -62,7 +64,7 @@ class RowIteratorTest {
             rows {
                 newRow {
                     attributes {
-                        text { fontColor = Colors.WHITE }
+                        text { color = Colors.WHITE }
                     }
                 }
             }

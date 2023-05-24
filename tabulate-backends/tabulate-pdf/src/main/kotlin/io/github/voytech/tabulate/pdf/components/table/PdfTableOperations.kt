@@ -3,58 +3,47 @@ package io.github.voytech.tabulate.pdf.components.table
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
 import io.github.voytech.tabulate.components.table.operation.*
-import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
+import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
+import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
+import io.github.voytech.tabulate.core.operation.Nothing
+import io.github.voytech.tabulate.core.operation.asResult
+import io.github.voytech.tabulate.core.operation.boundingBox
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.spi.BuildAttributeOperations
-import io.github.voytech.tabulate.core.template.spi.BuildOperations
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat
-import io.github.voytech.tabulate.core.template.spi.OperationsBundleProvider
+import io.github.voytech.tabulate.core.spi.BuildAttributeOperations
+import io.github.voytech.tabulate.core.spi.BuildOperations
+import io.github.voytech.tabulate.core.spi.DocumentFormat
+import io.github.voytech.tabulate.core.spi.OperationsBundleProvider
 import io.github.voytech.tabulate.pdf.*
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 
 class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Table<Any>> {
 
     override fun provideAttributeOperations(): BuildAttributeOperations<PdfBoxRenderingContext> = {
-        operation(BackgroundAttributeRenderOperation<CellContext>(), -3)
-        operation(BordersAttributeRenderOperation<CellContext>(), -2)
-        operation(BordersAttributeRenderOperation<RowEnd<Table<*>>>(), -2)
-        operation(TextStylesAttributeRenderOperation<CellContext>(), -1)
-        operation(AlignmentAttributeRenderOperation<CellContext>(), -1)
+        operation(BackgroundAttributeRenderOperation<CellRenderable>(), -3)
+        operation(BordersAttributeRenderOperation<CellRenderable>(), -2)
+        operation(BordersAttributeRenderOperation<RowEndRenderable<Table<*>>>(), -2)
+        operation(TextStylesAttributeRenderOperation<CellRenderable>(), -1)
+        operation(AlignmentAttributeRenderOperation<CellRenderable>(), -1)
+        operation(BordersAttributeRenderOperation<TableStartRenderable>())
     }
 
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {
-
         operation(StartTableOperation { _, _ -> })
-
         operation(StartColumnOperation { _, _ -> })
-
         operation(StartRowOperation { _, _ -> })
-
         // TODO support typeHits
         operation(RenderRowCellOperation { renderingContext, context ->
-            with(renderingContext) {
-                context.getTypeHint().let {
-                    if (it?.type == DefaultTypeHints.IMAGE_URI) {
-                        context.renderImageFromURI(context.value.toString())
-                    } else {
-                        beginText()
-                        // TODO boxModel should be a part of boundingRectangle from library core
-                        val box = renderingContext.boxLayout(context, context.getModelAttribute<BordersAttribute>())
-                        setTextPosition(
-                            box.innerX + xTextOffset,
-                            box.innerY + yTextOffset + context.fontSize().descender()
-                        )
-                        showText(context.value.toString())
-                        endText()
-                    }
+            context.getTypeHint().let {
+                if (it?.type == DefaultTypeHints.IMAGE_URI) {
+                    val image = renderingContext.loadImage(context.value.toString())
+                    context.asPdfBoxImageElement(image).render(renderingContext)
+                } else {
+                    context.asPdfBoxTextElement().render(renderingContext)
                 }
             }
         })
-        operation(EndRowOperation<PdfBoxRenderingContext, Table<Any>> { _, _ ->
-
-        })
-        operation(EndColumnOperation { _, _ ->
-
-        })
+        operation(EndRowOperation<PdfBoxRenderingContext, Table<Any>> { _, _ -> Nothing.asResult() })
+        operation(EndColumnOperation { _, _ -> })
         operation(EndTableOperation { _, _ -> })
     }
 
@@ -63,11 +52,12 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
         operation(StartColumnOperation { _, _ -> })
         operation(StartRowOperation { _, _ -> })
         operation(RenderRowCellOperation { renderingContext, context ->
-            with(renderingContext) {
-                context.getTypeHint().let {
-                    if (it?.type == DefaultTypeHints.IMAGE_URI) {
-                        context.resolveUriImageBoundingBox(context.value.toString())
-                    } else context.resolveTextBoundingBox()
+            context.getTypeHint().let {
+                if (it?.type == DefaultTypeHints.IMAGE_URI) {
+                    val image = renderingContext.loadImage(context.value.toString())
+                    context.asPdfBoxImageElement(image).measure(renderingContext)
+                } else { // suppose this is always text for now
+                    context.asPdfBoxTextElement().measure(renderingContext)
                 }
             }
         })
@@ -83,3 +73,13 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
     override fun getRenderingContextClass(): Class<PdfBoxRenderingContext> = reify()
 
 }
+
+private fun CellRenderable.asPdfBoxTextElement(): PdfBoxText = PdfBoxText(
+    value.toString(), requireNotNull(boundingBox()), textMeasures(), paddings(),
+    getModelAttribute<TextStylesAttribute>(), getModelAttribute<AlignmentAttribute>()
+)
+
+private fun CellRenderable.asPdfBoxImageElement(image: PDImageXObject): PdfBoxImage = PdfBoxImage(
+    image, requireNotNull(boundingBox()), paddings(),
+    getModelAttribute<AlignmentAttribute>()
+)

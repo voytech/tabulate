@@ -6,6 +6,7 @@ import io.github.voytech.tabulate.components.page.api.builder.dsl.HeaderBuilderA
 import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
 import io.github.voytech.tabulate.components.text.api.builder.TextBuilderState
 import io.github.voytech.tabulate.components.text.model.Text
+import io.github.voytech.tabulate.components.wrapper.api.builder.dsl.WrapperBuilderApi
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.ModelBuilderApi
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
@@ -55,6 +56,7 @@ class TextAttributesBuilderApi internal constructor(private val builderState: Te
     }
 }
 
+//TODO introduce api marker on which API builders below can be installed in one shot
 fun HeaderBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
 
 fun FooterBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
@@ -62,3 +64,5 @@ fun FooterBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderAp
 fun PageBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
 
 fun ContainerBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
+
+infix fun WrapperBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))

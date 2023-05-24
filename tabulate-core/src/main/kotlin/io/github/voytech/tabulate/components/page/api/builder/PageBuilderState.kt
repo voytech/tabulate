@@ -30,7 +30,7 @@ class PageBuilderState : CompositeModelBuilderState<Page> {
     internal var footer: ModelBuilderState<*>? = null
 
     @JvmSynthetic
-    override fun <E : AbstractModel<E>> bind(node: ModelBuilderState<E>) {
+    override fun <E : AbstractModel> bind(node: ModelBuilderState<E>) {
         nodes.add(node)
     }
 

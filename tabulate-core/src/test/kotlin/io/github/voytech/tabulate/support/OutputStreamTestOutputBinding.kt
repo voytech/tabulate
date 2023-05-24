@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.support
 
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.result.OutputBinding
+import io.github.voytech.tabulate.core.result.OutputBinding
 import java.io.OutputStream
 import java.util.logging.Logger
 

@@ -1,5 +1,7 @@
 package io.github.voytech.tabulate.core.model.color
 
+import io.github.voytech.tabulate.core.api.builder.dsl.DSLCommand
+
 object Colors {
     @JvmField
     val RED = Color(r = 255, g = 0, b = 0)
@@ -42,6 +44,74 @@ object Colors {
 
 }
 
+interface DefaultColorWords {
+    var color: Color?
+    val red : DSLCommand
+        get() {
+            color = Colors.RED; return DSLCommand
+        }
+
+    val green : DSLCommand
+        get() {
+            color = Colors.GREEN; return DSLCommand
+        }
+
+    val blue : DSLCommand
+        get() {
+            color = Colors.BLUE; return DSLCommand
+        }
+
+    val yellow : DSLCommand
+        get() {
+            color = Colors.YELLOW; return DSLCommand
+        }
+
+    val black : DSLCommand
+        get() {
+            color = Colors.BLACK; return DSLCommand
+        }
+
+    val lightGray : DSLCommand
+        get() {
+            color = Colors.LIGHT_GRAY; return DSLCommand
+        }
+
+    val white : DSLCommand
+        get() {
+            color = Colors.WHITE; return DSLCommand
+        }
+
+    val orange : DSLCommand
+        get() {
+            color = Colors.ORANGE; return DSLCommand
+        }
+
+    val pink : DSLCommand
+        get() {
+            color = Colors.PINK; return DSLCommand
+        }
+
+    val aero : DSLCommand
+        get() {
+            color = Colors.AERO; return DSLCommand
+        }
+
+    val aeroBlue : DSLCommand
+        get() {
+            color = Colors.AERO_BLUE; return DSLCommand
+        }
+
+    val amber : DSLCommand
+        get() {
+            color = Colors.AMBER; return DSLCommand
+        }
+
+    val amaranth : DSLCommand
+        get() {
+            color = Colors.AMARANTH; return DSLCommand
+        }
+
+}
 fun Color.darken(amount: Float): Color = copy(
     r = r.div(amount).toInt(),
     g = g.div(amount).toInt(),
@@ -53,3 +123,5 @@ fun Color.lighten(amount: Float): Color = copy(
     g = (g*amount).toInt().coerceAtMost(255),
     b = (b*amount).toInt().coerceAtMost(255)
 )
+
+
