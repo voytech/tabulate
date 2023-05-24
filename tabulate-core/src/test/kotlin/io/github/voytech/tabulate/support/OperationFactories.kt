@@ -4,12 +4,12 @@ import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.core.model.attributes.*
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.RenderingContext
-import io.github.voytech.tabulate.core.template.operation.AttributeOperationsBuilder
-import io.github.voytech.tabulate.core.template.operation.OperationsBuilder
-import io.github.voytech.tabulate.core.template.result.OutputBinding
-import io.github.voytech.tabulate.core.template.spi.*
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat.Companion.format
+import io.github.voytech.tabulate.core.RenderingContext
+import io.github.voytech.tabulate.core.operation.AttributeOperationsBuilder
+import io.github.voytech.tabulate.core.operation.OperationsBuilder
+import io.github.voytech.tabulate.core.result.OutputBinding
+import io.github.voytech.tabulate.core.spi.*
+import io.github.voytech.tabulate.core.spi.DocumentFormat.Companion.format
 import io.github.voytech.tabulate.support.Spy.Companion.operationPriorities
 
 
@@ -54,12 +54,12 @@ class TestExportOperationsFactory : OperationsBundleProvider<TestRenderingContex
 
 class AlternativeTestRenderingContext : RenderingContext
 
-class AnotherTestExportOperationsFactory : OperationsBundleProvider<AlternativeTestRenderingContext,Table<Any>>  {
+class AnotherTestExportOperationsFactory : OperationsBundleProvider<AlternativeTestRenderingContext, Table<Any>> {
 
     /**
      * atf - Alternative Test Format ;)
      */
-    override fun getDocumentFormat():  DocumentFormat<AlternativeTestRenderingContext> =
+    override fun getDocumentFormat(): DocumentFormat<AlternativeTestRenderingContext> =
         format("atf")
 
     override fun provideAttributeOperations(): AttributeOperationsBuilder<AlternativeTestRenderingContext>.() -> Unit = {

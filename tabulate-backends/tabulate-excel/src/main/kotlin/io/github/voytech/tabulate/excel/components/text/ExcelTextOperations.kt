@@ -4,11 +4,12 @@ import io.github.voytech.tabulate.components.table.operation.getSheetName
 import io.github.voytech.tabulate.components.text.model.Text
 import io.github.voytech.tabulate.components.text.operation.TextOperation
 import io.github.voytech.tabulate.components.text.operation.TextRenderable
+import io.github.voytech.tabulate.core.operation.VoidOperation
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.spi.BuildAttributeOperations
-import io.github.voytech.tabulate.core.template.spi.BuildOperations
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat
-import io.github.voytech.tabulate.core.template.spi.OperationsBundleProvider
+import io.github.voytech.tabulate.core.spi.BuildAttributeOperations
+import io.github.voytech.tabulate.core.spi.BuildOperations
+import io.github.voytech.tabulate.core.spi.DocumentFormat
+import io.github.voytech.tabulate.core.spi.OperationsBundleProvider
 import io.github.voytech.tabulate.excel.*
 import org.apache.poi.xssf.usermodel.XSSFTextBox
 
@@ -16,7 +17,7 @@ import org.apache.poi.xssf.usermodel.XSSFTextBox
 class ExcelTextOperations : OperationsBundleProvider<ApachePoiRenderingContext, Text> {
 
     override fun provideExportOperations(): BuildOperations<ApachePoiRenderingContext> = {
-        operation(TextOperation { renderingContext, context ->
+        operation(VoidOperation<ApachePoiRenderingContext,TextRenderable> { renderingContext, context ->
             with(renderingContext) {
                 renderingContext.provideSheet(context.getSheetName()).let {
                     val clientAnchor = context.computeClientAnchor()
@@ -29,7 +30,7 @@ class ExcelTextOperations : OperationsBundleProvider<ApachePoiRenderingContext, 
     }
 
     override fun provideMeasureOperations(): BuildOperations<ApachePoiRenderingContext> = {
-        operation(TextOperation { _, context -> })
+        operation(VoidOperation<ApachePoiRenderingContext,TextRenderable> { _, _ -> })
     }
 
     override fun provideAttributeOperations(): BuildAttributeOperations<ApachePoiRenderingContext> = {

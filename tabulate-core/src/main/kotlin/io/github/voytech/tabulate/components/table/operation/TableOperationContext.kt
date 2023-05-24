@@ -3,13 +3,15 @@ package io.github.voytech.tabulate.components.table.operation
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHintAttribute
 import io.github.voytech.tabulate.components.table.template.SyntheticRow
-import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.template.layout.*
-import io.github.voytech.tabulate.core.template.layout.policy.TableLayoutPolicy
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
-import io.github.voytech.tabulate.core.template.operation.Context
-import io.github.voytech.tabulate.core.template.operation.HasValue
-import io.github.voytech.tabulate.core.template.operation.RenderableContext
+import io.github.voytech.tabulate.core.layout.LayoutSpace
+import io.github.voytech.tabulate.core.layout.LayoutElement
+import io.github.voytech.tabulate.core.layout.ApplyLayoutElement
+import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
+import io.github.voytech.tabulate.core.layout.policy.TableLayout
+import io.github.voytech.tabulate.core.model.*
+import io.github.voytech.tabulate.core.operation.Context
+import io.github.voytech.tabulate.core.operation.HasValue
+import io.github.voytech.tabulate.core.operation.Renderable
 
 /**
  * Basic interface providing custom attributes that are shared throughout entire exporting process.
@@ -42,16 +44,16 @@ interface RowCoordinate {
     fun getRow(): Int
 }
 
-interface RowLayoutElement : RowCoordinate, LayoutElement<TableLayoutPolicy>, LayoutElementApply<TableLayoutPolicy> {
-    override fun Layout.computeBoundingBox(policy: TableLayoutPolicy): LayoutElementBoundingBox = with(policy) {
+interface RowLayoutElement : RowCoordinate, LayoutElement<TableLayout>, ApplyLayoutElement<TableLayout> {
+    override fun LayoutSpace.defineBoundingBox(policy: TableLayout): RenderableBoundingBox = with(policy) {
         elementBoundingBox(
-            x = getAbsoluteColumnPosition(0, uom),
-            y = getAbsoluteRowPosition(getRow(), uom),
-            width = getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
+            x = getAbsoluteColumnPosition(0),
+            y = getAbsoluteRowPosition(getRow()),
+            width = getBoundingRectangle().getWidth().switchUnitOfMeasure(uom),
         )
     }
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: TableLayoutPolicy): Unit =
+    override fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, policy: TableLayout): Unit =
         with(policy) {
             markHeightForMeasure(getRow(),context.flags.shouldMeasureHeight)
             context.height?.let { setRowHeight(getRow(), it) }
@@ -67,13 +69,13 @@ interface ColumnCoordinate {
     fun getColumn(): Int
 }
 
-interface ColumnLayoutElement : ColumnCoordinate, LayoutElement<TableLayoutPolicy>,
-    LayoutElementApply<TableLayoutPolicy> {
-    override fun Layout.computeBoundingBox(policy: TableLayoutPolicy): LayoutElementBoundingBox = with(policy) {
-        elementBoundingBox(x = getAbsoluteColumnPosition(getColumn(),uom), y = getAbsoluteRowPosition(0, uom))
+interface ColumnLayoutElement : ColumnCoordinate, LayoutElement<TableLayout>,
+    ApplyLayoutElement<TableLayout> {
+    override fun LayoutSpace.defineBoundingBox(policy: TableLayout): RenderableBoundingBox = with(policy) {
+        elementBoundingBox(x = getAbsoluteColumnPosition(getColumn()), y = getAbsoluteRowPosition(0))
     }
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: TableLayoutPolicy): Unit =
+    override fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, policy: TableLayout): Unit =
         with(policy) {
             markWidthForMeasure(getColumn(),context.flags.shouldMeasureWidth)
             context.width?.let { setColumnWidth(getColumn(), it) }
@@ -87,10 +89,10 @@ interface ColumnLayoutElement : ColumnCoordinate, LayoutElement<TableLayoutPolic
  */
 interface RowCellCoordinate : RowCoordinate, ColumnCoordinate
 
-interface RowCellLayoutElement : RowCellCoordinate, LayoutElement<TableLayoutPolicy>,
-    LayoutElementApply<TableLayoutPolicy> {
+interface RowLayoutElementCell : RowCellCoordinate, LayoutElement<TableLayout>,
+    ApplyLayoutElement<TableLayout> {
 
-    override fun Layout.applyBoundingBox(context: LayoutElementBoundingBox, policy: TableLayoutPolicy): Unit =
+    override fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, policy: TableLayout): Unit =
         with(policy) {
             context.width?.let { setColumnWidth(getColumn(), it) }
             context.height?.let { setRowHeight(getRow(), it) }
@@ -122,67 +124,77 @@ internal fun <T : Any> Table<T>.getColumnIndex(columnIndex: Int) = (firstColumn 
  */
 sealed class TableContext(
     attributes: Attributes?,
-) : AttributedContext(attributes)
+) : Renderable<TableLayout>(attributes) {
+    override fun LayoutSpace.defineBoundingBox(policy: TableLayout): RenderableBoundingBox = with(policy) {
+        elementBoundingBox(
+            x = getX(0.asXPosition(), uom),
+            y = getY(0.asYPosition(), uom),
+            width = policy.getMeasuredSize()?.width,
+            height = policy.getMeasuredSize()?.height
+        )
+    }
+
+}
 
 /**
  * Column operation context with additional model attributes applicable on table level.
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-sealed class ColumnContext(
+sealed class ColumnRenderable(
     attributes: Attributes?,
-) : RenderableContext<TableLayoutPolicy>(attributes)
+) : Renderable<TableLayout>(attributes)
 
 /**
  * Row operation context with additional model attributes applicable on table level.
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-sealed class RowContext(
+sealed class RowRenderable(
     attributes: Attributes?,
-) : RenderableContext<TableLayoutPolicy>(attributes)
+) : Renderable<TableLayout>(attributes)
 
 /**
  * Table operation context with additional model attributes applicable on table level.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class TableStart(
+class TableStartRenderable(
     attributes: Attributes?,
 ) : TableContext(attributes)
 
-internal fun <T : Any> Table<T>.asTableStart(customAttributes: MutableMap<String, Any>): TableStart =
-    TableStart(attributes?.forContext<TableStart>()).apply { additionalAttributes = customAttributes }
+internal fun <T : Any> Table<T>.asTableStart(customAttributes: StateAttributes): TableStartRenderable =
+    TableStartRenderable(attributes?.forContext<TableStartRenderable>()).apply { additionalAttributes = customAttributes.data }
 
 /**
  * Table operation context with additional model attributes applicable on table level.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class TableEnd(
+class TableEndRenderable(
     attributes: Attributes?,
 ) : TableContext(attributes)
 
-internal fun <T : Any> Table<T>.asTableEnd(customAttributes: MutableMap<String, Any>): TableEnd =
-    TableEnd(attributes?.forContext<TableEnd>()).apply { additionalAttributes = customAttributes }
+internal fun <T : Any> Table<T>.asTableEnd(customAttributes: StateAttributes): TableEndRenderable =
+    TableEndRenderable(attributes?.forContext<TableEndRenderable>()).apply { additionalAttributes = customAttributes.data }
 
 /**
  * Row operation context with additional model attributes applicable on row level.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class RowStart(
+class RowStartRenderable(
     attributes: Attributes?,
     val rowIndex: Int,
-) : RowContext(attributes), RowLayoutElement {
+) : RowRenderable(attributes), RowLayoutElement {
     override fun getRow(): Int = rowIndex
 }
 
 internal fun <T : Any> SyntheticRow<T>.createRowStart(
     rowIndex: Int,
     customAttributes: MutableMap<String, Any>,
-): RowStart {
-    return RowStart(rowIndex = table.getRowIndex(rowIndex), attributes = rowStartAttributes)
+): RowStartRenderable {
+    return RowStartRenderable(rowIndex = table.getRowIndex(rowIndex), attributes = rowStartAttributes)
         .apply { additionalAttributes = customAttributes }
 }
 
@@ -192,31 +204,31 @@ internal fun <T : Any> SyntheticRow<T>.createRowStart(
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class RowEnd<T>(
+class RowEndRenderable<T>(
     attributes: Attributes?,
-    val rowCellValues: Map<ColumnKey<T>, CellContext>,
+    val rowCellValues: Map<ColumnKey<T>, CellRenderable>,
     val rowIndex: Int,
-) : RowContext(attributes), RowLayoutElement {
+) : RowRenderable(attributes), RowLayoutElement {
 
     override fun getRow(): Int = rowIndex
 
-    fun getCells(): Map<ColumnKey<T>, CellContext> = rowCellValues
+    fun getCells(): Map<ColumnKey<T>, CellRenderable> = rowCellValues
 
-    override fun Layout.computeBoundingBox(policy: TableLayoutPolicy): LayoutElementBoundingBox = with(policy) {
+    override fun LayoutSpace.defineBoundingBox(policy: TableLayout): RenderableBoundingBox = with(policy) {
         elementBoundingBox(
-            x = getAbsoluteColumnPosition(0, uom),
-            y = getAbsoluteRowPosition(getRow(), uom),
-            width = getLayoutBoundary().getWidth().switchUnitOfMeasure(uom),
+            x = getAbsoluteColumnPosition(0),
+            y = getAbsoluteRowPosition(getRow()),
+            width = getBoundingRectangle().getWidth().switchUnitOfMeasure(uom),
             height = getRowHeight(getRow(),1, uom)
         )
     }
 }
 
 internal fun <T : Any> SyntheticRow<T>.createRowEnd(
-    rowStart: RowStart,
-    rowCellValues: Map<ColumnKey<T>, CellContext>,
-): RowEnd<T> =
-    RowEnd(
+    rowStart: RowStartRenderable,
+    rowCellValues: Map<ColumnKey<T>, CellRenderable>,
+): RowEndRenderable<T> =
+    RowEndRenderable(
         rowIndex = rowStart.rowIndex,
         attributes = rowEndAttributes,
         rowCellValues = rowCellValues
@@ -228,10 +240,10 @@ internal fun <T : Any> SyntheticRow<T>.createRowEnd(
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class ColumnStart(
+class ColumnStartRenderable(
     attributes: Attributes? = null,
     val columnIndex: Int,
-) : ColumnContext(attributes), ColumnLayoutElement {
+) : ColumnRenderable(attributes), ColumnLayoutElement {
     val currentPhase: ColumnRenderPhase = ColumnRenderPhase.BEFORE_FIRST_ROW
     override fun getColumn(): Int = columnIndex
 }
@@ -239,11 +251,11 @@ class ColumnStart(
 internal fun <T : Any> ColumnDef<T>.asColumnStart(
     table: Table<T>,
     attributes: Attributes,
-    customAttributes: MutableMap<String, Any>,
-) = ColumnStart(
+    customAttributes: StateAttributes,
+) = ColumnStartRenderable(
     columnIndex = table.getColumnIndex(index),
     attributes = attributes
-).apply { additionalAttributes = customAttributes }
+).apply { additionalAttributes = customAttributes.data }
 
 /**
  * Column operation context with additional model attributes applicable on column level.
@@ -256,10 +268,10 @@ enum class ColumnRenderPhase {
     AFTER_LAST_ROW
 }
 
-class ColumnEnd(
+class ColumnEndRenderable(
     attributes: Attributes? = null,
     val columnIndex: Int,
-) : ColumnContext(attributes), ColumnLayoutElement {
+) : ColumnRenderable(attributes), ColumnLayoutElement {
     val currentPhase: ColumnRenderPhase = ColumnRenderPhase.AFTER_LAST_ROW
     override fun getColumn(): Int = columnIndex
 }
@@ -267,31 +279,31 @@ class ColumnEnd(
 internal fun <T : Any> ColumnDef<T>.asColumnEnd(
     table: Table<T>,
     attributes: Attributes,
-    customAttributes: MutableMap<String, Any>,
-) = ColumnEnd(
+    customAttributes: StateAttributes,
+) = ColumnEndRenderable(
     columnIndex = table.getColumnIndex(index),
     attributes = attributes
-).apply { additionalAttributes = customAttributes }
+).apply { additionalAttributes = customAttributes.data }
 
 /**
  * Cell operation context with additional model attributes applicable on cell level.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class CellContext(
+class CellRenderable(
     val cellValue: CellValue,
     attributes: Attributes?,
     val rowIndex: Int,
     val columnIndex: Int,
     override val value: Any = cellValue.value,
-) : RenderableContext<TableLayoutPolicy>(attributes), RowCellLayoutElement, HasValue<Any> {
+) : Renderable<TableLayout>(attributes), RowLayoutElementCell, HasValue<Any> {
     override fun getRow(): Int = rowIndex
     override fun getColumn(): Int = columnIndex
 
-    override fun Layout.computeBoundingBox(policy: TableLayoutPolicy): LayoutElementBoundingBox = with(policy) {
+    override fun LayoutSpace.defineBoundingBox(policy: TableLayout): RenderableBoundingBox = with(policy) {
         elementBoundingBox(
-            x = getAbsoluteColumnPosition(getColumn(), uom),
-            y = getAbsoluteRowPosition(getRow(), uom),
+            x = getAbsoluteColumnPosition(getColumn()),
+            y = getAbsoluteRowPosition(getRow()),
             width = getColumnWidth(getColumn(), cellValue.colSpan, uom),
             height = getRowHeight(getRow(), cellValue.rowSpan, uom)
         )
@@ -302,9 +314,9 @@ internal fun <T : Any> SyntheticRow<T>.createCellContext(
     row: SourceRow<T>,
     column: ColumnDef<T>,
     customAttributes: MutableMap<String, Any>,
-): CellContext? =
+): CellRenderable? =
     cellDefinitions.resolveCellValue(column, row)?.let { value ->
-        CellContext(
+        CellRenderable(
             cellValue = value,
             attributes = cellContextAttributes[column],
             rowIndex = table.getRowIndex(row.rowIndexValue()),
@@ -312,4 +324,4 @@ internal fun <T : Any> SyntheticRow<T>.createCellContext(
         ).apply { additionalAttributes = customAttributes }
     }
 
-fun CellContext.getTypeHint(): TypeHintAttribute? = getModelAttribute<TypeHintAttribute>()
+fun CellRenderable.getTypeHint(): TypeHintAttribute? = getModelAttribute<TypeHintAttribute>()

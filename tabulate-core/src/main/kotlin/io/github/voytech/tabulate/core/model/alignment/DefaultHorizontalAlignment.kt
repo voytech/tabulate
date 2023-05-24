@@ -10,3 +10,5 @@ enum class DefaultHorizontalAlignment: HorizontalAlignment {
     override fun getHorizontalAlignmentId(): String = name
 
 }
+
+fun HorizontalAlignment?.orDefault() = this ?: DefaultHorizontalAlignment.LEFT

@@ -10,6 +10,7 @@ import io.github.voytech.tabulate.components.table.template.TableContinuations
 import io.github.voytech.tabulate.components.table.template.RowIndex
 import io.github.voytech.tabulate.components.table.template.Step
 import io.github.voytech.tabulate.core.model.StateAttributes
+import io.github.voytech.tabulate.support.createTableContext
 import io.github.voytech.tabulate.support.success
 import io.github.voytech.tabulate.support.successfulRowComplete
 import org.junit.jupiter.api.Assertions.*
@@ -23,9 +24,12 @@ class RowResolverTest {
 
     @Test
     fun `should resolve AttributedRow to null if no table definition nor data is provided`() {
+        val table = createTableBuilder<Product> {  }.build()
+        val attribs = mutableMapOf<String, Any>()
+        val ctx = table.createTableContext(attribs)
         val resolver = AccumulatingRowContextResolver(
-            createTableBuilder<Product> {  }.build(),
-            StateAttributes(mutableMapOf()), TableContinuations(), successfulRowComplete()
+            table,
+            StateAttributes(mutableMapOf()), TableContinuations(ctx), successfulRowComplete()
         )
         val resolvedIndexedAttributedRow = resolver.resolve(RowIndex(0))
         assertNull(resolvedIndexedAttributedRow)
@@ -34,22 +38,24 @@ class RowResolverTest {
     @ParameterizedTest
     @ValueSource(ints =  [0,  1] )
     fun `should resolve AttributedRow from custom row definition`(index: Int) {
-        mutableMapOf<String, Any>()
-        val resolver = AccumulatingRowContextResolver(
-            createTableBuilder<Product> {
-                columns {
-                    column(Product::code)
-                }
-                rows {
-                    newRow(index) {
-                        cell {
-                            value = "CustomProductCode"
-                        }
+        val table =   createTableBuilder<Product> {
+            columns {
+                column(Product::code)
+            }
+            rows {
+                newRow(index) {
+                    cell {
+                        value = "CustomProductCode"
                     }
                 }
-            }.build(),
-            StateAttributes(mutableMapOf()),
-            TableContinuations(),
+            }
+        }.build()
+        val attribs = mutableMapOf<String, Any>()
+        val ctx = table.createTableContext(attribs)
+        val resolver = AccumulatingRowContextResolver(
+            table,
+            StateAttributes(attribs),
+            TableContinuations(ctx),
             successfulRowComplete()
         )
         val resolvedIndexedAttributedRow = resolver.resolve(RowIndex(0))
@@ -62,12 +68,15 @@ class RowResolverTest {
 
     @Test
     fun `should resolve AttributedRow from collection item`() {
+        val table = createTableBuilder {
+            columns { column(Product::code) }
+        }.build()
+        val attribs = mutableMapOf<String, Any>()
+        val ctx = table.createTableContext(attribs)
         val resolver = AccumulatingRowContextResolver(
-            createTableBuilder<Product> {
-                columns { column(Product::code) }
-            }.build(),
-            StateAttributes(mutableMapOf()),
-            TableContinuations(),
+            table,
+            StateAttributes(attribs),
+            TableContinuations(ctx),
             successfulRowComplete()
         )
         resolver.append(Product(
@@ -88,20 +97,23 @@ class RowResolverTest {
 
     @Test
     fun `should resolve AttributedRow from collection item and from custom items`() {
-        val resolver = AccumulatingRowContextResolver(
-            createTableBuilder<Product> {
-                columns { column(Product::code) }
-                rows {
-                    header("CODE")
-                    footer {
-                        cell {
-                            value = "footer"
-                        }
+        val table = createTableBuilder {
+            columns { column(Product::code) }
+            rows {
+                header("CODE")
+                footer {
+                    cell {
+                        value = "footer"
                     }
                 }
-            }.build(),
-            StateAttributes(mutableMapOf()),
-            TableContinuations(),
+            }
+        }.build()
+        val attribs = mutableMapOf<String, Any>()
+        val ctx = table.createTableContext(attribs)
+        val resolver = AccumulatingRowContextResolver(
+            table,
+            StateAttributes(attribs),
+            TableContinuations(ctx),
             successfulRowComplete()
         )
         resolver.append(Product(

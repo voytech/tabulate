@@ -4,8 +4,9 @@ import io.github.voytech.tabulate.components.table.model.attributes.table.Templa
 import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.attributes.*
-import io.github.voytech.tabulate.core.template.operation.AttributeOperation
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
+import io.github.voytech.tabulate.core.operation.AttributeOperation
+import io.github.voytech.tabulate.core.operation.AttributedContext
+import io.github.voytech.tabulate.core.operation.VoidOperation
 import java.util.*
 
 data class InterceptedContext(
@@ -48,43 +49,43 @@ abstract class InterceptedRenderOperation<T : Attribute<T>, E : AttributedContex
 }
 
 class StartTableTestOperation(private val spy: Spy? = null): StartTableOperation<TestRenderingContext>, InterceptedOperation {
-    override operator fun invoke(renderingContext: TestRenderingContext, context: TableStart) {
+    override operator fun invoke(renderingContext: TestRenderingContext, context: TableStartRenderable) {
         spy?.track(this, context)
     }
 }
 
 class StartColumnTestOperation(private val spy: Spy? = null): StartColumnOperation<TestRenderingContext>, InterceptedOperation {
-    override operator fun invoke(renderingContext: TestRenderingContext, context: ColumnStart) {
+    override operator fun invoke(renderingContext: TestRenderingContext, context: ColumnStartRenderable) {
         spy?.track(this, context)
     }
 }
 
 class StartRowTestOperation(private val spy: Spy? = null): StartRowOperation<TestRenderingContext>, InterceptedOperation {
-    override operator fun invoke(renderingContext: TestRenderingContext, context: RowStart) {
+    override operator fun invoke(renderingContext: TestRenderingContext, context: RowStartRenderable) {
         spy?.track(this, context)
     }
 }
 
-class RenderRowCellTestOperation(private val spy: Spy? = null): RenderRowCellOperation<TestRenderingContext>, InterceptedOperation {
-    override operator fun invoke(renderingContext: TestRenderingContext, context: CellContext) {
+class RenderRowCellTestOperation(private val spy: Spy? = null): VoidOperation<TestRenderingContext,CellRenderable>, InterceptedOperation {
+    override operator fun invoke(renderingContext: TestRenderingContext, context: CellRenderable) {
         spy?.track(this, context)
     }
 }
 
 class EndRowTestOperation<T: Any>(private val spy: Spy? = null): EndRowOperation<TestRenderingContext,T>, InterceptedOperation {
-    override operator fun invoke(renderingContext: TestRenderingContext, context: RowEnd<T>) {
+    override operator fun invoke(renderingContext: TestRenderingContext, context: RowEndRenderable<T>) {
         spy?.track(this, context)
     }
 }
 
 class EndColumnTestOperation(private val spy: Spy? = null): EndColumnOperation<TestRenderingContext>, InterceptedOperation {
-    override operator fun invoke(renderingContext: TestRenderingContext, context: ColumnEnd) {
+    override operator fun invoke(renderingContext: TestRenderingContext, context: ColumnEndRenderable) {
         spy?.track(this, context)
     }
 }
 
 class EndTableTestOperation(private val spy: Spy? = null): EndTableOperation<TestRenderingContext>, InterceptedOperation {
-    override operator fun invoke(renderingContext: TestRenderingContext, context: TableEnd) {
+    override operator fun invoke(renderingContext: TestRenderingContext, context: TableEndRenderable) {
         spy?.track(this, context)
     }
 }
@@ -92,23 +93,23 @@ class EndTableTestOperation(private val spy: Spy? = null): EndTableOperation<Tes
 abstract class InterceptedCellAttributeRenderOperation<T : Attribute<T>>(
     spy: Spy? = null,
     clazz: Class<T>
-) : InterceptedRenderOperation<T, CellContext>(spy, clazz, CellContext::class.java)
+) : InterceptedRenderOperation<T, CellRenderable>(spy, clazz, CellRenderable::class.java)
 
 
 abstract class InterceptedRowAttributeRenderOperation<T : Attribute<T>>(
     spy: Spy? = null,
     clazz: Class<T>
-) : InterceptedRenderOperation<T, RowStart>(spy, clazz, RowStart::class.java)
+) : InterceptedRenderOperation<T, RowStartRenderable>(spy, clazz, RowStartRenderable::class.java)
 
 abstract class InterceptedColumnAttributeRenderOperation<T : Attribute<T>>(
     spy: Spy? = null,
     clazz: Class<T>
-) : InterceptedRenderOperation<T, ColumnStart>(spy, clazz, ColumnStart::class.java)
+) : InterceptedRenderOperation<T, ColumnStartRenderable>(spy, clazz, ColumnStartRenderable::class.java)
 
 abstract class InterceptedTableAttributeRenderOperation<T : Attribute<T>>(
     spy: Spy? = null,
     clazz: Class<T>
-) : InterceptedRenderOperation<T, TableStart>(spy, clazz, TableStart::class.java)
+) : InterceptedRenderOperation<T, TableStartRenderable>(spy, clazz, TableStartRenderable::class.java)
 
 class CellTextStylesAttributeTestRenderOperation(spy: Spy? = null) :
     InterceptedCellAttributeRenderOperation<TextStylesAttribute>(spy, TextStylesAttribute::class.java)

@@ -6,8 +6,8 @@ inline fun <reified C : Any> reify(): Class<C> = C::class.java
 
 interface Invoke
 
-fun interface InvokeWithTwoParams<T1, T2> : Invoke {
-    operator fun invoke(t1: T1, t2: T2)
+fun interface InvokeWithTwoParams<T1, T2, R> : Invoke {
+    operator fun invoke(t1: T1, t2: T2): R
 }
 
 fun interface InvokeWithThreeParams<T1, T2, T3> : Invoke {
@@ -28,7 +28,7 @@ data class ThreeParamsTypeInfo<T1, T2, T3>(
 
 class ReifiedInvocation<C : Invoke, P : ParamTypeInfo>(val meta: P, val delegate: C)
 
-operator fun <T1, T2, OP : InvokeWithTwoParams<T1, T2>> ReifiedInvocation<OP, TwoParamsTypeInfo<T1, T2>>.invoke(
+operator fun <T1, T2, OP : InvokeWithTwoParams<T1, T2,*>> ReifiedInvocation<OP, TwoParamsTypeInfo<T1, T2>>.invoke(
     t1: T1, t2: T2
 ) = delegate.invoke(t1, t2)
 
@@ -36,7 +36,7 @@ operator fun <T1, T2, T3, OP : InvokeWithThreeParams<T1, T2, T3>> ReifiedInvocat
     t1: T1, t2: T2, t3: T3
 ) = delegate.invoke(t1, t2, t3)
 
-inline fun <reified T1, reified T2, C2 : InvokeWithTwoParams<T1, T2>> C2.reifyParameters(): ReifiedInvocation<C2, TwoParamsTypeInfo<T1, T2>> =
+inline fun <reified T1, reified T2, C2 : InvokeWithTwoParams<T1, T2,*>> C2.reifyParameters(): ReifiedInvocation<C2, TwoParamsTypeInfo<T1, T2>> =
     ReifiedInvocation(TwoParamsTypeInfo(T1::class.java, T2::class.java), this)
 
 inline fun <reified T1, reified T2, reified T3, C3 : InvokeWithThreeParams<T1, T2, T3>> C3.reifyParameters(): ReifiedInvocation<C3, ThreeParamsTypeInfo<T1, T2, T3>> =
@@ -56,25 +56,25 @@ sealed class GenericParamsBasedDispatch<C : Invoke, P : ParamTypeInfo>(val conta
 }
 
 @Suppress("UNCHECKED_CAST")
-class TwoParamsBasedDispatch : GenericParamsBasedDispatch<InvokeWithTwoParams<*, *>, TwoParamsTypeInfo<*, *>>() {
-    inline fun <reified T1, reified T2> InvokeWithTwoParams<T1, T2>.bind(): Unit =
+class TwoParamsBasedDispatch : GenericParamsBasedDispatch<InvokeWithTwoParams<*, *, *>, TwoParamsTypeInfo<*, *>>() {
+    inline fun <reified T1, reified T2> InvokeWithTwoParams<T1, T2, *>.bind(): Unit =
         reifyParameters().let {
-            container[it.meta] = it as ReifiedInvocation<InvokeWithTwoParams<*, *>, TwoParamsTypeInfo<*, *>>
+            container[it.meta] = it as ReifiedInvocation<InvokeWithTwoParams<*, *, *>, TwoParamsTypeInfo<*, *>>
         }
 
-    fun <T1, T2> InvokeWithTwoParams<T1, T2>.bind(clazz1: Class<T1>, clazz2: Class<T2>): Unit =
+    fun <T1, T2> InvokeWithTwoParams<T1, T2, *>.bind(clazz1: Class<T1>, clazz2: Class<T2>): Unit =
         ReifiedInvocation(TwoParamsTypeInfo(clazz1, clazz2), this).let {
-            container[it.meta] = it as ReifiedInvocation<InvokeWithTwoParams<*, *>, TwoParamsTypeInfo<*, *>>
+            container[it.meta] = it as ReifiedInvocation<InvokeWithTwoParams<*, *, *>, TwoParamsTypeInfo<*, *>>
         }
 
     operator fun <T1 : Any, T2 : Any> invoke(t1: T1, t2: T2) {
         TwoParamsTypeInfo(t1::class.java, t2::class.java).let {
-            (container[it]?.delegate as? InvokeWithTwoParams<T1, T2>)?.invoke(t1, t2)
+            (container[it]?.delegate as? InvokeWithTwoParams<T1, T2, *>)?.invoke(t1, t2)
         }
     }
 
-    operator fun <T1 : Any, T2 : Any> get(t1: T1, t2: T2): InvokeWithTwoParams<T1, T2>? =
-        container[TwoParamsTypeInfo(t1::class.java, t2::class.java)]?.delegate as? InvokeWithTwoParams<T1, T2>
+    operator fun <T1 : Any, T2 : Any> get(t1: T1, t2: T2): InvokeWithTwoParams<T1, T2, *>? =
+        container[TwoParamsTypeInfo(t1::class.java, t2::class.java)]?.delegate as? InvokeWithTwoParams<T1, T2, *>
 
 }
 

@@ -2,83 +2,70 @@ package io.github.voytech.tabulate.components.page.model
 
 import io.github.voytech.tabulate.components.commons.operation.newPage
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.template.layout.Layout
-import io.github.voytech.tabulate.core.template.layout.LayoutConstraints
+import io.github.voytech.tabulate.core.layout.LayoutSpace
+import io.github.voytech.tabulate.core.layout.SpaceConstraints
 
 class Page internal constructor(
     @get:JvmSynthetic
     internal val name: String = "untitled",
     @get:JvmSynthetic
-    internal val nodes: List<AbstractModel<*>>? = null,
-    internal val header: AbstractModel<*>? = null,
-    internal val footer: AbstractModel<*>? = null,
-) : AbstractModel<Page>() {
+    internal val nodes: List<AbstractModel>? = null,
+    internal val header: AbstractModel? = null,
+    internal val footer: AbstractModel? = null,
+) : AbstractModel() {
 
-    override fun initialize(exportContext: ModelExportContext) {
-        exportContext.customStateAttributes["_pageName"] = name
-        exportContext.customStateAttributes["_sheetName"] = name
+    override fun initialize(api: ExportApi) = api {
+        getCustomAttributes()["_pageName"] = name
+        getCustomAttributes()["_sheetName"] = name
     }
 
-    override fun prepareExport(exportContext: ModelExportContext): Unit = with(exportContext) {
+    override fun prepareExport(api: ExportApi): Unit = api {
         clearLayouts()
     }
 
-    override fun doExport(exportContext: ModelExportContext) = with(exportContext) {
+    override fun doExport(api: ExportApi) = api {
         render(newPage(nextPageNumber(), name))
-        stickyHeaderAndFooterWith { layout, leftTop ->
-            exportContent(exportContext, leftTop.contentLayoutContext(layout))
+        stickyHeaderAndFooterWith { layout, footerLeftTop ->
+            exportContent(footerLeftTop.asConstraints(layout))
         }
     }
 
-    private fun ModelExportContext.nextPageNumber(): Int =
-        customStateAttributes.run {
+    private fun ExportApi.nextPageNumber(): Int =
+        getCustomAttributes().run {
             ++ensureExecutionContext { PageExecutionContext() }.pageNumber
         }
 
-    private fun ModelExportContext.stickyHeaderAndFooterWith(block: (Layout, Position?) -> Unit) {
-        exportHeader(this@stickyHeaderAndFooterWith)
-        val size = footerSize(this@stickyHeaderAndFooterWith, currentLayout())
-        val leftTop = currentLayout().footerLeftTop(size)
-        block(currentLayout(), leftTop)
-        exportFooter(this@stickyHeaderAndFooterWith, leftTop.footerLayoutContext(size))
+    private fun ExportApi.stickyHeaderAndFooterWith(renderContents: (LayoutSpace, Position?) -> Unit) {
+        exportHeader()
+        val footerSize = measureFooterSize()
+        val footerLeftTop = currentLayoutSpace().findFooterLeftTop(footerSize)
+        renderContents(currentLayoutSpace(), footerLeftTop)
+        exportFooter(footerLeftTop + footerSize)
     }
 
-    private fun exportHeader(templateContext: ModelExportContext) {
-        header?.export(templateContext)
+    private fun ExportApi.exportHeader() {
+        header?.export(null, true)
     }
 
-    private fun exportContent(templateContext: ModelExportContext, layoutConstraints: LayoutConstraints) {
-        nodes?.forEach {
-            it.export(templateContext, layoutConstraints)
-        }
+    private fun ExportApi.exportContent(spaceConstraints: SpaceConstraints) {
+        nodes?.forEach { it.export(spaceConstraints) }
     }
 
-    private fun footerSize(templateContext: ModelExportContext, layout: Layout) =
-        footer?.measure(templateContext)?.let {
-            Size(it.width ?: Width(layout.maxRightBottom!!.x.value, layout.uom), it.height!!)
-        }
+    private fun ExportApi.measureFooterSize() =
+        footer?.measure(null, true)?.let { Size(it.width, it.height) }
 
-    private fun Layout.footerLeftTop(size: Size?): Position? =
-        maxRightBottom?.let { maxRightBottom ->
-            size?.let {
-                Position(
-                    leftTop.x,
-                    maxRightBottom.y - it.height
-                )
-            }
-        }
+    private fun LayoutSpace.findFooterLeftTop(size: Size?): Position? = maxRightBottom?.let { maxRightBottom ->
+        size?.let { Position(leftTop.x, maxRightBottom.y - it.height) }
+    }
 
-    private fun Position?.contentLayoutContext(layout: Layout): LayoutConstraints =
-        LayoutConstraints(maxRightBottom = this?.let { Position(layout.maxRightBottom!!.x, it.y) })
+    private fun Position?.asConstraints(layoutSpace: LayoutSpace): SpaceConstraints =
+        SpaceConstraints(maxRightBottom = this?.let { Position(layoutSpace.maxRightBottom!!.x, it.y) })
 
-    private fun Position?.footerLayoutContext(size: Size?): LayoutConstraints =
-        LayoutConstraints(
-            leftTop = this,
-            maxRightBottom = size?.let { this?.plus(size) }
-        )
+    private operator fun Position?.plus(size: Size?): SpaceConstraints =
+        SpaceConstraints(leftTop = this, maxRightBottom = size?.let { this?.plus(size) })
 
-    private fun exportFooter(templateContext: ModelExportContext, layoutConstraints: LayoutConstraints?) {
-        footer?.export(templateContext, layoutConstraints)
+    private fun ExportApi.exportFooter(spaceConstraints: SpaceConstraints?) {
+        footer?.export(spaceConstraints, true)
     }
 
 }

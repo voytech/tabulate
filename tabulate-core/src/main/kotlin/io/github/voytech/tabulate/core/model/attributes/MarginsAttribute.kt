@@ -3,7 +3,6 @@ package io.github.voytech.tabulate.core.model.attributes
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
 
 data class MarginsAttribute(
     val left: X = X.zero(UnitsOfMeasure.PT),
@@ -11,19 +10,22 @@ data class MarginsAttribute(
 ) : Attribute<MarginsAttribute>() {
 
     @TabulateMarker
-    class Builder(target: Class<out AttributedContext>) : AttributeBuilder<MarginsAttribute>(target) {
+    class Builder(target: Class<out AttributeAware>) : AttributeBuilder<MarginsAttribute>(target) {
         var left: X by observable(X.zero(UnitsOfMeasure.PT))
         var top: Y by observable(Y.zero(UnitsOfMeasure.PT))
 
-        fun Number.pt(): MeasuredValue = MeasuredValue(toFloat(), UnitsOfMeasure.PT)
-        fun Number.px(): MeasuredValue = MeasuredValue(toFloat(), UnitsOfMeasure.PX)
+        inline fun <reified T : Measure<T>> Number.pt(): T = T::class.java.new(toFloat(), UnitsOfMeasure.PT)
 
-        fun left(block: () -> MeasuredValue) {
-            left = block().x()
+        inline fun <reified T : Measure<T>> Number.px(): T = T::class.java.new(toFloat(), UnitsOfMeasure.PX)
+
+        inline fun <reified T : Measure<T>> Number.percents(): T = T::class.java.new(toFloat(), UnitsOfMeasure.PC)
+
+        fun left(block: () -> X) {
+            left = block()
         }
 
-        fun top(block: () -> MeasuredValue) {
-            top = block().y()
+        fun top(block: () -> Y) {
+            top = block()
         }
 
         override fun provide(): MarginsAttribute = MarginsAttribute(left, top)
@@ -31,11 +33,10 @@ data class MarginsAttribute(
 
     companion object {
         @JvmStatic
-        fun  builder(target: Class<out AttributedContext>) : Builder = Builder(target)
+        fun builder(target: Class<out AttributeAware>): Builder = Builder(target)
 
         @JvmStatic
-        inline fun <reified AC: AttributedContext> builder() : Builder =
-            Builder(AC::class.java)
+        inline fun <reified AC : AttributeAware> builder(): Builder = Builder(AC::class.java)
     }
 
 }

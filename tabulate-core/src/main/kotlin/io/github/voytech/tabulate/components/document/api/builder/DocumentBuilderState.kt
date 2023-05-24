@@ -24,7 +24,7 @@ class DocumentBuilderState : CompositeModelBuilderState<Document>, AttributesAwa
     internal var name: String = "untitled document"
 
     @JvmSynthetic
-    override fun <E : AbstractModel<E>> bind(node: ModelBuilderState<E>) {
+    override fun <E : AbstractModel> bind(node: ModelBuilderState<E>) {
         nodeBuilders.add(node)
     }
 

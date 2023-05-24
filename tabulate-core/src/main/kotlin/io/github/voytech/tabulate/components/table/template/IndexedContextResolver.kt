@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.components.table.template
 
-import io.github.voytech.tabulate.core.template.operation.ContextData
+import io.github.voytech.tabulate.core.operation.ContextData
 
 /**
  * Given requested index from upstream iterator, it resolves [ContextData]

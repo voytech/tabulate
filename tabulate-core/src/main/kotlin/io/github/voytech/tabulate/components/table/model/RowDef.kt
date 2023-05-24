@@ -34,7 +34,7 @@ internal data class RowDef<T> internal constructor(
     @get:JvmSynthetic
     override val attributes: Attributes?,
 
-): AttributedModelOrPart<RowDef<T>> {
+): AttributedModelOrPart {
     @JvmSynthetic
     internal fun shouldApplyWhen(source: SourceRow<T>): Boolean = qualifier.matching?.test(source) ?: false
 

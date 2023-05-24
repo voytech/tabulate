@@ -1,0 +1,6 @@
+io.github.voytech.tabulate.pdf.components.page.PdfPageOperations
+io.github.voytech.tabulate.pdf.components.table.PdfTableOperations
+io.github.voytech.tabulate.pdf.components.document.PdfDocumentOperations
+io.github.voytech.tabulate.pdf.components.text.PdfTextOperations
+io.github.voytech.tabulate.pdf.components.image.PdfImageOperations
+io.github.voytech.tabulate.pdf.components.container.PdfContainerOperations

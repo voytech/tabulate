@@ -33,14 +33,14 @@ class PageBuilderApi internal constructor(): CompositeModelBuilderApi<Page, Page
 
 @TabulateMarker
 class HeaderBuilderApi internal constructor(private val api: PageBuilderApi) {
-    fun <E : AbstractModel<E>, R : ModelBuilderApi<E, *>> bind(other: R) {
+    fun <E : AbstractModel, R : ModelBuilderApi<E, *>> bind(other: R) {
         api.builder.header = other.builder
     }
 }
 
 @TabulateMarker
 class FooterBuilderApi internal constructor(private val api: PageBuilderApi) {
-    fun <E : AbstractModel<E>, R : ModelBuilderApi<E, *>> bind(other: R) {
+    fun <E : AbstractModel, R : ModelBuilderApi<E, *>> bind(other: R) {
         api.builder.footer = other.builder
     }
 }

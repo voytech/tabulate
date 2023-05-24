@@ -21,59 +21,69 @@ class ImageIndex(private val index: MutableMap<String, ByteArray> = mutableMapOf
         index.computeIfAbsent(this) { loadImageAsByteArray() }
 }
 
-interface ResettableIterator<T> {
-    fun reset()
-    fun currentOrNull(): T?
-    fun current(): T
-    fun nextOrNull(): T?
-    fun currentIndex(): Int
-}
-
-interface ResettableComplexIterator<T, E> where E : Enum<E>, T : Any {
+interface CompositeIterator<T, E> where E : Enum<E>, T : Any {
     fun reset(enum: E)
     fun currentOrNull(enum: E): T?
     fun current(enum: E): T
     fun next(enum: E): T
     fun nextOrNull(enum: E): T?
     fun currentIndex(enum: E): Int
+    infix fun E.isAfter(other: E): Boolean
+
+    fun size(): Int
+
+    fun clear()
 }
 
-class DefaultResettableIterator<T>(
-    private val list: MutableList<T>,
-) : AbstractIterator<T>(), ResettableIterator<T> {
+class AdjustingIterator<T>(
+    private val collection: Iterable<T>,
+) : AbstractIterator<T>() {
 
     private var index: Int = -1
 
+    private var view: List<T> = collection.toList()
+
     override fun computeNext() {
-        if (index >= list.size || list.isEmpty()) {
+        require(view.isNotEmpty())
+        if (index >= view.size) {
             done()
         } else {
-            setNext(list[++index])
+            setNext(view[++index])
         }
     }
 
-    override fun reset() {
-        index = -1
+    fun restart(index: Int = -1) {
+        this.index = index
+        rebuild()
     }
 
-    override fun currentOrNull(): T? = list[index]
+    fun rebuild() {
+        view = collection.toList()
+    }
 
-    override fun current(): T = currentOrNull()!!
+    fun currentOrNull(): T? = view.getOrNull(index)
 
-    override fun nextOrNull(): T? = if (hasNext()) next() else null
+    fun current(): T = currentOrNull()!!
 
-    override fun currentIndex(): Int = index
+    fun nextOrNull(): T? = if (view.isNotEmpty() && hasNext()) next() else null
+
+    fun currentIndex(): Int = index
 }
 
-data class DefaultComplexIterator<T, E>(
-    private val list: MutableList<T>,
-) : ResettableComplexIterator<T, E> where E : Enum<E>, T : Any {
+class MultiIterationSet<T, E> : CompositeIterator<T, E> where E : Enum<E>, T : Any {
 
-    private val iterations: MutableMap<E, DefaultResettableIterator<T>> = mutableMapOf()
+    private val collection: MutableCollection<T> = LinkedHashSet()
 
-    private fun <R> usingIteration(enum: E, block: DefaultResettableIterator<T>.() -> R?): R? {
-        iterations.computeIfAbsent(enum) { DefaultResettableIterator(list) }
+    private val iterations: MutableMap<E, AdjustingIterator<T>> = mutableMapOf()
+
+    private fun <R> usingIteration(enum: E, block: AdjustingIterator<T>.() -> R?): R? {
+        iterations.computeIfAbsent(enum) { AdjustingIterator(collection) }
         return iterations[enum]?.run(block)
+    }
+
+    fun add(elem: T) {
+        collection.add(elem)
+        iterations.values.forEach { it.rebuild() }
     }
 
     override fun next(enum: E): T =
@@ -81,7 +91,7 @@ data class DefaultComplexIterator<T, E>(
 
     override fun reset(enum: E) {
         usingIteration(enum) {
-            reset()
+            restart()
         }
     }
 
@@ -95,6 +105,25 @@ data class DefaultComplexIterator<T, E>(
     override fun nextOrNull(enum: E): T? = usingIteration(enum) { nextOrNull() }
 
     override fun currentIndex(enum: E): Int =
-        usingIteration(enum) { currentIndex() } ?: error("No current element for iteration: $enum")
+        usingIteration(enum) { currentIndex() } ?: -1
 
+    override fun E.isAfter(other: E): Boolean = currentIndex(this) <= currentIndex(other)
+    override fun size(): Int = collection.size
+
+    override fun clear() {
+        collection.clear()
+        iterations.values.forEach { it.rebuild() }
+    }
+
+    fun lastOrNull(): T? = collection.lastOrNull()
+
+}
+
+operator fun <T,E> MultiIterationSet<T,E>.plusAssign(element: T)  where E : Enum<E>, T : Any {
+    add(element)
+}
+
+sealed class Either<A, B> {
+    class Left<A, B>(val value: A) : Either<A, B>()
+    class Right<A, B>(val value: B) : Either<A, B>()
 }

@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.core.builder.fluent.support;
 
-import io.github.voytech.tabulate.core.template.result.OutputBinding;
+import io.github.voytech.tabulate.core.result.OutputBinding;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.OutputStream;

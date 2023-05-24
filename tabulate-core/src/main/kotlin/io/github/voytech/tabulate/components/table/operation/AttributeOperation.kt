@@ -1,8 +1,8 @@
 package io.github.voytech.tabulate.components.table.operation
 
 import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.template.RenderingContext
-import io.github.voytech.tabulate.core.template.operation.AttributeOperation
+import io.github.voytech.tabulate.core.RenderingContext
+import io.github.voytech.tabulate.core.operation.AttributeOperation
 
 /**
  * Table attribute operation associated with table rendering context
@@ -17,7 +17,7 @@ abstract class TableAttributeRenderOperation<CTX : RenderingContext, A : Attribu
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class RowAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>, AC : RowContext> :
+abstract class RowAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>, AC : RowRenderable> :
     AttributeOperation<CTX, A, AC>
 
 
@@ -27,13 +27,13 @@ abstract class RowAttributeRenderOperation<CTX : RenderingContext, A : Attribute
  * @since 0.1.0
  */
 abstract class CellAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>> :
-    AttributeOperation<CTX, A, CellContext>
+    AttributeOperation<CTX, A, CellRenderable>
 
 /**
  * Column attribute operation associated with column rendering context
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class ColumnAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>, AC : ColumnContext> :
+abstract class ColumnAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>, AC : ColumnRenderable> :
     AttributeOperation<CTX, A, AC>
 

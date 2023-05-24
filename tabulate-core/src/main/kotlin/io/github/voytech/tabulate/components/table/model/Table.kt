@@ -1,9 +1,10 @@
 package io.github.voytech.tabulate.components.table.model
 
 import io.github.voytech.tabulate.components.table.template.TableExport
+import io.github.voytech.tabulate.core.layout.LayoutProperties
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.layout.policy.TableLayoutPolicy
+import io.github.voytech.tabulate.core.layout.policy.TableLayout
 
 /**
  * A top-level definition of tabular layout. Aggregates column as well as all row definitions. It can also contain
@@ -46,32 +47,32 @@ class Table<T : Any> internal constructor(
 
     override val attributes: Attributes?,
 
-    ) : ModelWithAttributes<Table<T>>(), LayoutPolicyProvider<TableLayoutPolicy> {
+    ) : ModelWithAttributes(), LayoutProvider<TableLayout> {
 
     companion object {
         @JvmStatic
         fun <T : Any> jclass(): Class<Table<T>> = reify()
     }
 
-    override val policy: TableLayoutPolicy = TableLayoutPolicy()
-
-    override val planSpaceOnExport = true
+    override val needsMeasureBeforeExport = true
 
     private lateinit var export: TableExport<T>
 
-    override fun initialize(exportContext: ModelExportContext) {
-        exportContext.customStateAttributes["_sheetName"] = exportContext.customStateAttributes["_pageName"] ?: name
-        exportContext.customStateAttributes["_tableName"] = name
+    override fun initialize(api: ExportApi) = api {
+        getCustomAttributes()["_sheetName"] = getCustomAttributes()["_pageName"] ?: name
+        getCustomAttributes()["_tableName"] = name
         export = TableExport(
-            exportContext,
-            (dataSource ?: exportContext.customStateAttributes["_dataSourceOverride"])?.dataSource ?: emptyList()
+            this@Table, this,
+            (dataSource ?: getCustomAttributes()["_dataSourceOverride"])?.dataSource ?: emptyList()
         )
     }
 
-    override fun doExport(exportContext: ModelExportContext) =
+    override fun doExport(api: ExportApi) =
         export.exportOrResume()
 
-    override fun takeMeasures(exportContext: ModelExportContext) =
+    override fun takeMeasures(api: ExportApi) =
         export.takeMeasures()
+
+    override fun createLayout(properties: LayoutProperties): TableLayout = TableLayout(properties)
 
 }

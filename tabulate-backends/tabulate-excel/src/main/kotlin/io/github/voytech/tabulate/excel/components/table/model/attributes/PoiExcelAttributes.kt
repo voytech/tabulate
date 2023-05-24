@@ -4,14 +4,12 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.CellLevelAttr
 import io.github.voytech.tabulate.components.table.api.builder.dsl.ColumnLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.dsl.RowLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.dsl.TableLevelAttributesBuilderApi
-import io.github.voytech.tabulate.components.table.operation.CellContext
+import io.github.voytech.tabulate.components.table.operation.CellRenderable
 import io.github.voytech.tabulate.components.table.operation.TableContext
-import io.github.voytech.tabulate.components.table.operation.TableStart
+import io.github.voytech.tabulate.components.table.operation.TableStartRenderable
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
 
 /**
  * Excel data format attribute.
@@ -23,7 +21,7 @@ data class CellExcelDataFormatAttribute(
 ) : Attribute<CellExcelDataFormatAttribute>() {
 
     @TabulateMarker
-    class Builder : AttributeBuilder<CellExcelDataFormatAttribute>(CellContext::class.java) {
+    class Builder : AttributeBuilder<CellExcelDataFormatAttribute>(CellRenderable::class.java) {
         var value: String by observable("General", "value" to "dataFormat")
         override fun provide(): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute(value)
     }
@@ -93,7 +91,7 @@ data class CellCommentAttribute(
 ) : Attribute<CellCommentAttribute>() {
 
     @TabulateMarker
-    class Builder() : AttributeBuilder<CellCommentAttribute>(CellContext::class.java) {
+    class Builder() : AttributeBuilder<CellCommentAttribute>(CellRenderable::class.java) {
         var author: String by observable("anonymous")
         var comment: String by observable("Please provide a commentary!")
         override fun provide(): CellCommentAttribute = CellCommentAttribute(author, comment)
@@ -142,7 +140,7 @@ data class PrintingAttribute(
 ) : Attribute<PrintingAttribute>() {
 
     @TabulateMarker
-    class Builder : AttributeBuilder<PrintingAttribute>(TableStart::class.java) {
+    class Builder : AttributeBuilder<PrintingAttribute>(TableStartRenderable::class.java) {
         var numberOfCopies: Short by observable(1)
         var isDraft: Boolean by observable(false)
         var blackAndWhite: Boolean by observable(false)

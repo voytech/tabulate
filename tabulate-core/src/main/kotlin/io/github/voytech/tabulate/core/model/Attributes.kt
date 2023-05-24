@@ -1,33 +1,32 @@
 package io.github.voytech.tabulate.core.model
 
-import io.github.voytech.tabulate.core.template.loadAttributeConstraints
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
+import io.github.voytech.tabulate.core.loadAttributeConstraints
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
 interface AttributeConstraint
 
-data class ModelAttributeConstraint<A : Attribute<A>, MA : AttributedModelOrPart<MA>>(
+data class ModelAttributeConstraint<A : Attribute<A>, MA : AttributedModelOrPart>(
     val model: Class<MA>,
     val attribute: Class<A>,
 ) : AttributeConstraint
 
 data class AttributesConstraints(
     private val disabledOnModelsIn: List<ModelAttributeConstraint<*, *>>,
-    val disabledOnModels: Map<Class<out AttributedModelOrPart<*>>, List<ModelAttributeConstraint<*, *>>> = disabledOnModelsIn.groupBy { it.model },
+    val disabledOnModels: Map<Class<out AttributedModelOrPart>, List<ModelAttributeConstraint<*, *>>> = disabledOnModelsIn.groupBy { it.model },
 )
 
 class AttributeConstraintsBuilder {
     private val modelConstraints: MutableList<ModelAttributeConstraint<*, *>> = mutableListOf()
 
     fun disableOnModel(
-        model: Class<out AttributedModelOrPart<*>>,
+        model: Class<out AttributedModelOrPart>,
         attribute: Class<out Attribute<*>>,
     ) {
         modelConstraints.add(ModelAttributeConstraint(model, attribute))
     }
 
-    inline fun <reified A: Attribute<A>,reified T: AttributedModelOrPart<T>> disable() = disableOnModel(T::class.java,A::class.java)
+    inline fun <reified A: Attribute<A>,reified T: AttributedModelOrPart> disable() = disableOnModel(T::class.java,A::class.java)
 
     @JvmSynthetic
     internal fun build(): AttributesConstraints = AttributesConstraints(modelConstraints)
@@ -110,18 +109,23 @@ class Attributes(
 
     inline fun <reified E : Attribute<E>> get(): E? = get(E::class.java)
 
-    fun <O : AttributedModelOrPart<O>> cast(clazz: Class<O>): Attributes {
+    @Suppress("UNCHECKED_CAST")
+    fun <E : Attribute<E>> has(clazz: Class<E>): Boolean = get(clazz) != null
+
+    inline fun <reified E : Attribute<E>> has(): Boolean = has(E::class.java)
+
+    fun <O : AttributedModelOrPart> cast(clazz: Class<O>): Attributes {
         return constraints.disabledOnModels[clazz]?.map { it.attribute }?.let { incompatibleClasses ->
             Attributes(attributeSet.filter { it.javaClass !in incompatibleClasses }.toSet())
         } ?: Attributes(attributeSet)
     }
 
-    fun <O : AttributedContext> forContext(clazz: Class<O>): Attributes =
+    fun <O : AttributeAware> forContext(clazz: Class<O>): Attributes =
         Attributes(attributeSet.filter { it.ownerClass.isAssignableFrom(clazz) }.toSet())
 
-    inline fun <reified O : AttributedModelOrPart<O>> cast(): Attributes = cast(O::class.java)
+    inline fun <reified O : AttributedModelOrPart> cast(): Attributes = cast(O::class.java)
 
-    inline fun <reified O : AttributedContext> forContext(): Attributes = forContext(O::class.java)
+    inline fun <reified O : AttributeAware> forContext(): Attributes = forContext(O::class.java)
 
     fun isNotEmpty(): Boolean = size > 0
 
@@ -135,12 +139,12 @@ class Attributes(
     override fun hashCode(): Int = attributeSetHashCode
 
     companion object {
-        inline operator fun invoke() = Attributes()
+        operator fun invoke() = Attributes()
     }
 }
 
 
-inline fun Attributes?.orEmpty() = this ?: Attributes(emptySet())
+fun Attributes?.orEmpty() = this ?: Attributes(emptySet())
 
 fun Attributes?.isNullOrEmpty(): Boolean = this?.size == 0
 

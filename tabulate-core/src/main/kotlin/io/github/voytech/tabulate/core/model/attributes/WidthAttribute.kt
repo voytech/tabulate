@@ -2,12 +2,13 @@ package io.github.voytech.tabulate.core.model.attributes
 
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
+import io.github.voytech.tabulate.core.layout.BoundingBoxModifier
+import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
+import io.github.voytech.tabulate.core.layout.LayoutSpace
 import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.MeasuredValue
+import io.github.voytech.tabulate.core.model.AttributeAware
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
-import io.github.voytech.tabulate.core.template.layout.*
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
 
 data class WidthAttribute(
     val auto: Boolean = false,
@@ -15,15 +16,19 @@ data class WidthAttribute(
 ) : Attribute<WidthAttribute>(), BoundingBoxModifier {
 
     @TabulateMarker
-    class Builder(target: Class<out AttributedContext>) : AttributeBuilder<WidthAttribute>(target) {
+    class Builder(target: Class<out AttributeAware>) : AttributeBuilder<WidthAttribute>(target) {
         var auto: Boolean by observable(false)
         var value: Width by observable(Width.zero(UnitsOfMeasure.PX))
 
         fun Number.pt()  {
-            value = MeasuredValue(toFloat(), UnitsOfMeasure.PT).width()
+            value = Width(toFloat(), UnitsOfMeasure.PT)
         }
         fun Number.px() {
-            value = MeasuredValue(toFloat(), UnitsOfMeasure.PX).width()
+            value = Width(toFloat(), UnitsOfMeasure.PX)
+        }
+
+        fun Number.percents() {
+            value = Width(toFloat(), UnitsOfMeasure.PC)
         }
 
         override fun provide(): WidthAttribute = WidthAttribute(auto, value)
@@ -40,22 +45,22 @@ data class WidthAttribute(
         takeIfChanged(other, WidthAttribute::value).let { newWidth ->
             WidthAttribute(
                 value = newWidth,
-                auto = takeIfChanged(other, WidthAttribute::auto).let { _auto ->
-                    if (newWidth != value && newWidth.value > 0 && _auto == auto) false else _auto
+                auto = takeIfChanged(other, WidthAttribute::auto).let {
+                    if (newWidth != value && newWidth.value > 0 && it == auto) false else it
                 }
             )
         }
 
-    override fun Layout.alter(source: LayoutElementBoundingBox): LayoutElementBoundingBox =
+    override fun LayoutSpace.alter(source: RenderableBoundingBox): RenderableBoundingBox =
         if (!auto) source.apply { width = value }
         else source
 
     companion object {
         @JvmStatic
-        fun  builder(target: Class<out AttributedContext>) : Builder = Builder(target)
+        fun  builder(target: Class<out AttributeAware>) : Builder = Builder(target)
 
         @JvmStatic
-        inline fun <reified AC: AttributedContext> builder() : Builder = Builder(AC::class.java)
+        inline fun <reified AC: AttributeAware> builder() : Builder = Builder(AC::class.java)
     }
 
 }

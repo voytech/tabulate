@@ -3,15 +3,16 @@ package io.github.voytech.tabulate.core.model.attributes
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.MeasuredValue
+import io.github.voytech.tabulate.core.model.AttributeAware
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
 import io.github.voytech.tabulate.core.model.border.BorderStyle
 import io.github.voytech.tabulate.core.model.border.Borders
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
+import io.github.voytech.tabulate.core.model.border.DefaultBorderStyleWords
 import io.github.voytech.tabulate.core.model.color.Color
 import io.github.voytech.tabulate.core.model.color.Colors
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
+import io.github.voytech.tabulate.core.model.color.DefaultColorWords
 
 data class BordersAttribute(
     override val leftBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
@@ -32,16 +33,21 @@ data class BordersAttribute(
 ) : Attribute<BordersAttribute>(), Borders {
 
     @TabulateMarker
-    class AllBordersBuilder {
-        var style: BorderStyle = DefaultBorderStyle.SOLID
+    class SingleBorderBuilder : DefaultBorderStyleWords, DefaultColorWords {
+        override var style: BorderStyle = DefaultBorderStyle.SOLID
         var width: Width = Width(1F, UnitsOfMeasure.PT)
-        var color: Color = Colors.BLACK
-        fun Number.pt(): Width = MeasuredValue(toFloat(), UnitsOfMeasure.PT).width()
-        fun Number.px(): Width = MeasuredValue(toFloat(), UnitsOfMeasure.PX).width()
+        override var color: Color? = Colors.BLACK
+
+        fun Number.pt()  {
+            width = Width(toFloat(), UnitsOfMeasure.PT)
+        }
+        fun Number.px() {
+           width = Width(toFloat(), UnitsOfMeasure.PX)
+        }
     }
 
     @TabulateMarker
-    class Builder(target: Class<out AttributedContext>) : AttributeBuilder<BordersAttribute>(target) {
+    class Builder(target: Class<out AttributeAware>) : AttributeBuilder<BordersAttribute>(target) {
         var leftBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
         var leftBorderColor: Color? by observable(null)
         var leftBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
@@ -55,22 +61,44 @@ data class BordersAttribute(
         var bottomBorderColor: Color? by observable(null)
         var bottomBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
 
-        fun Number.pt(): Width = MeasuredValue(toFloat(), UnitsOfMeasure.PT).width()
-        fun Number.px(): Width = MeasuredValue(toFloat(), UnitsOfMeasure.PX).width()
+        fun Number.pt(): Width = Width(toFloat(), UnitsOfMeasure.PT)
+        fun Number.px(): Width = Width(toFloat(), UnitsOfMeasure.PX)
 
-        fun all(block: AllBordersBuilder.() -> Unit) {
-            AllBordersBuilder().apply(block).let {
+        fun all(block: SingleBorderBuilder.() -> Unit) {
+            top(block)
+            left(block)
+            right(block)
+            bottom(block)
+        }
+
+        fun left(block: SingleBorderBuilder.() -> Unit) {
+            SingleBorderBuilder().apply(block).let {
                 leftBorderColor = it.color
-                rightBorderColor = it.color
-                topBorderColor = it.color
-                bottomBorderColor = it.color
                 leftBorderStyle = it.style
-                rightBorderStyle = it.style
-                topBorderStyle = it.style
-                bottomBorderStyle = it.style
                 leftBorderWidth = it.width
+            }
+        }
+
+        fun right(block: SingleBorderBuilder.() -> Unit) {
+            SingleBorderBuilder().apply(block).let {
+                rightBorderColor = it.color
+                rightBorderStyle = it.style
                 rightBorderWidth = it.width
+            }
+        }
+
+        fun top(block: SingleBorderBuilder.() -> Unit) {
+            SingleBorderBuilder().apply(block).let {
+                topBorderColor = it.color
+                topBorderStyle = it.style
                 topBorderWidth = it.width
+            }
+        }
+
+        fun bottom(block: SingleBorderBuilder.() -> Unit) {
+            SingleBorderBuilder().apply(block).let {
+                bottomBorderColor = it.color
+                bottomBorderStyle = it.style
                 bottomBorderWidth = it.width
             }
         }
@@ -100,10 +128,10 @@ data class BordersAttribute(
 
     companion object {
         @JvmStatic
-        fun builder(target: Class<out AttributedContext>): Builder = Builder(target)
+        fun builder(target: Class<out AttributeAware>): Builder = Builder(target)
 
         @JvmStatic
-        inline fun <reified AC : AttributedContext> builder(): Builder = Builder(AC::class.java)
+        inline fun <reified AC : AttributeAware> builder(): Builder = Builder(AC::class.java)
     }
 }
 

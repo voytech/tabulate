@@ -1,15 +1,15 @@
 package io.github.voytech.tabulate.excel
 
-import io.github.voytech.tabulate.components.table.operation.CellContext
+import io.github.voytech.tabulate.components.table.operation.CellRenderable
 import io.github.voytech.tabulate.components.table.operation.getSheetName
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.attributes.*
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
-import io.github.voytech.tabulate.core.template.operation.AttributeOperation
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
-import io.github.voytech.tabulate.core.template.operation.cacheOnAttributeSet
+import io.github.voytech.tabulate.core.operation.AttributeOperation
+import io.github.voytech.tabulate.core.operation.AttributedContext
+import io.github.voytech.tabulate.core.operation.cacheOnAttributeSet
 import org.apache.poi.hssf.usermodel.HSSFTextbox
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.FontUnderline
@@ -116,7 +116,7 @@ private const val CELL_STYLE_CACHE_KEY: String = "cellStyle"
 
 private const val CELL_FONT_CACHE_KEY: String = "font"
 
-fun ApachePoiRenderingContext.getCachedStyle(context: CellContext): CellStyle {
+fun ApachePoiRenderingContext.getCachedStyle(context: CellRenderable): CellStyle {
     return context.cacheOnAttributeSet(CELL_STYLE_CACHE_KEY, this::createCellStyle)  as CellStyle
 }
 
@@ -124,7 +124,7 @@ fun ApachePoiRenderingContext.getCachedFont(context: AttributedContext): XSSFFon
     return context.cacheOnAttributeSet(CELL_FONT_CACHE_KEY, this::createFont) as XSSFFont
 }
 
-fun ApachePoiRenderingContext.createFontFrom(attributedContext: AttributedContext,attribute: TextStylesAttribute): XSSFFont =
+fun ApachePoiRenderingContext.createFontFrom(attributedContext: AttributedContext, attribute: TextStylesAttribute): XSSFFont =
     getCachedFont(attributedContext).configureWith(attribute)
 
 fun XSSFFont.configureWith(attribute: TextStylesAttribute): XSSFFont = apply {

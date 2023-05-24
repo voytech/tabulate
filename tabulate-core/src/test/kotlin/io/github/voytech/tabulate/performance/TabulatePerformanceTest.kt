@@ -26,22 +26,23 @@ class TabulatePerformanceTest {
             it to SlowRowResolver(table, it)
         }.let {
             Wrapper(
-                iterator = RowContextIterator(it.second,TableContinuations(),table.createTableContext(it.first)),
+                iterator = RowContextIterator(it.second, TableContinuations(it.second.ctx)),
                 resolver = it.second,
                 customAttributes = it.first
             )
         }
 
-    private fun <T: Any> createFastIterator(table: Table<T>): Wrapper<T> =
-        mutableMapOf<String, Any>().let {
-            it to AccumulatingRowContextResolver(table, StateAttributes(it), TableContinuations(), successfulRowComplete())
-        }.let {
+    private fun <T: Any> createFastIterator(table: Table<T>): Wrapper<T> {
+        val attributes = mutableMapOf<String, Any>()
+        val ctx = table.createTableContext(attributes)
+        return (attributes to AccumulatingRowContextResolver(table, StateAttributes(attributes), TableContinuations(ctx), successfulRowComplete())).let {
             Wrapper(
-                iterator = RowContextIterator(it.second, TableContinuations(),table.createTableContext(it.first)),
+                iterator = RowContextIterator(it.second, TableContinuations(ctx)),
                 resolver = it.second,
                 customAttributes = it.first
             )
         }
+    }
 
     private fun <T: Any> createTableDefinition(): Table<T> {
         return createTableBuilder<T> {

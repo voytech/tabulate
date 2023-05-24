@@ -5,13 +5,13 @@ import io.github.voytech.tabulate.ImageIndex
 import io.github.voytech.tabulate.core.model.color.Color
 import io.github.voytech.tabulate.components.table.operation.CellValue
 import io.github.voytech.tabulate.components.table.operation.Coordinates
-import io.github.voytech.tabulate.core.template.RenderingContextForSpreadsheet
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
-import io.github.voytech.tabulate.core.template.operation.RenderableContext
-import io.github.voytech.tabulate.core.template.result.OutputBinding
-import io.github.voytech.tabulate.core.template.result.OutputStreamOutputBinding
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat
-import io.github.voytech.tabulate.core.template.spi.OutputBindingsProvider
+import io.github.voytech.tabulate.core.RenderingContextForSpreadsheet
+import io.github.voytech.tabulate.core.operation.AttributedContext
+import io.github.voytech.tabulate.core.operation.Renderable
+import io.github.voytech.tabulate.core.result.OutputBinding
+import io.github.voytech.tabulate.core.result.OutputStreamOutputBinding
+import io.github.voytech.tabulate.core.spi.DocumentFormat
+import io.github.voytech.tabulate.core.spi.OutputBindingsProvider
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.util.IOUtils
@@ -180,7 +180,7 @@ class ApachePoiRenderingContext(private val images: ImageIndex = ImageIndex()) :
 
     inline fun <reified S : XSSFShape> AttributedContext.shape(): S = shape(S::class.java)
 
-    fun RenderableContext<*>.computeClientAnchor(): XSSFClientAnchor =
+    fun Renderable<*>.computeClientAnchor(): XSSFClientAnchor =
         createSpreadsheetAnchor().let { anchor ->
             (createClientAnchor() as XSSFClientAnchor).apply {
                 setCol1(anchor.leftTopColumn)

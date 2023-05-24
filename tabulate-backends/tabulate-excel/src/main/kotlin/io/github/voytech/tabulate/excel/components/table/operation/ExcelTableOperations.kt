@@ -5,21 +5,17 @@ import io.github.voytech.tabulate.components.table.operation.*
 import io.github.voytech.tabulate.core.model.Height
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
+import io.github.voytech.tabulate.core.operation.VoidOperation
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
-import io.github.voytech.tabulate.core.template.operation.cacheOnAttributeSet
-import io.github.voytech.tabulate.core.template.spi.BuildAttributeOperations
-import io.github.voytech.tabulate.core.template.spi.BuildOperations
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat.Companion.format
-import io.github.voytech.tabulate.core.template.spi.OperationsBundleProvider
+import io.github.voytech.tabulate.core.spi.BuildAttributeOperations
+import io.github.voytech.tabulate.core.spi.BuildOperations
+import io.github.voytech.tabulate.core.spi.DocumentFormat
+import io.github.voytech.tabulate.core.spi.DocumentFormat.Companion.format
+import io.github.voytech.tabulate.core.spi.OperationsBundleProvider
 import io.github.voytech.tabulate.excel.ApachePoiRenderingContext
 import io.github.voytech.tabulate.excel.Utils.toDate
 import io.github.voytech.tabulate.excel.components.table.model.ExcelTypeHints
-import org.apache.poi.ss.usermodel.CellStyle
-import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.xssf.streaming.SXSSFCell
-import org.apache.poi.xssf.usermodel.XSSFFont
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -38,7 +34,7 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
     override fun getRenderingContextClass(): Class<ApachePoiRenderingContext> = reify()
 
     override fun provideAttributeOperations(): BuildAttributeOperations<ApachePoiRenderingContext> = {
-        operation(TemplateFileAttributeRenderOperation(),-1)
+        operation(TemplateFileAttributeRenderOperation(), -1)
         operation(ColumnWidthAttributeRenderOperation())
         operation(RowHeightAttributeRenderOperation())
         operation(CellTextStylesAttributeRenderOperation())
@@ -64,7 +60,7 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
                 provideRow(context.getSheetName(), context.getAbsoluteRow(context.getRow()))
             }
         })
-        operation(RenderRowCellOperation { renderingContext, context ->
+        operation(VoidOperation<ApachePoiRenderingContext, CellRenderable> { renderingContext, context ->
             with(renderingContext) {
                 context.getTypeHint()?.let {
                     when (it.type.getCellTypeId()) {
@@ -89,7 +85,7 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
                 }
             }
         })
-        operation(EndRowOperation<ApachePoiRenderingContext,Any> { renderingContext, context ->
+        operation(EndRowOperation<ApachePoiRenderingContext, Any> { renderingContext, context ->
             with(renderingContext) {
                 provideSheet(context.getSheetName()).let { sheet ->
                     val absoluteRowIndex = context.getAbsoluteRow(context.rowIndex)
@@ -114,9 +110,9 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
 
     override fun getModelClass(): Class<Table<Any>> = reify()
 
-    private fun CellContext.hasSpans(): Boolean = cellValue.colSpan > 1 || cellValue.rowSpan > 1
+    private fun CellRenderable.hasSpans(): Boolean = cellValue.colSpan > 1 || cellValue.rowSpan > 1
 
-    private fun ApachePoiRenderingContext.provideCell(context: CellContext, block: (SXSSFCell.() -> Unit)) {
+    private fun ApachePoiRenderingContext.provideCell(context: CellRenderable, block: (SXSSFCell.() -> Unit)) {
         provideCell(
             context.getSheetName(),
             context.getAbsoluteRow(context.getRow()),
@@ -124,7 +120,7 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
         ) { it.apply(block) }
     }
 
-    private fun ApachePoiRenderingContext.renderImageDataCell(context: CellContext) {
+    private fun ApachePoiRenderingContext.renderImageDataCell(context: CellRenderable) {
         createImageCell(
             context.getSheetName(),
             context.getAbsoluteRow(context.getRow()),
@@ -135,7 +131,7 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
         )
     }
 
-    private fun ApachePoiRenderingContext.renderImageUrlCell(context: CellContext) {
+    private fun ApachePoiRenderingContext.renderImageUrlCell(context: CellRenderable) {
         createImageCell(
             context.getSheetName(),
             context.getAbsoluteRow(context.getRow()),
@@ -146,31 +142,31 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
         )
     }
 
-    private fun ApachePoiRenderingContext.renderFormulaCell(context: CellContext) = provideCell(context) {
+    private fun ApachePoiRenderingContext.renderFormulaCell(context: CellRenderable) = provideCell(context) {
         cellFormula = context.value as? String
     }
 
-    private fun ApachePoiRenderingContext.renderErrorCell(context: CellContext) = provideCell(context) {
+    private fun ApachePoiRenderingContext.renderErrorCell(context: CellRenderable) = provideCell(context) {
         setCellErrorValue(context.value as Byte)
     }
 
-    private fun ApachePoiRenderingContext.renderStringCellValue(context: CellContext) = provideCell(context) {
+    private fun ApachePoiRenderingContext.renderStringCellValue(context: CellRenderable) = provideCell(context) {
         setCellValue(context.value.toString())
     }
 
-    private fun ApachePoiRenderingContext.renderNumericCellValue(context: CellContext) = provideCell(context) {
+    private fun ApachePoiRenderingContext.renderNumericCellValue(context: CellRenderable) = provideCell(context) {
         setCellValue((context.value as Number).toDouble())
     }
 
-    private fun ApachePoiRenderingContext.renderBooleanCellValue(context: CellContext) = provideCell(context) {
+    private fun ApachePoiRenderingContext.renderBooleanCellValue(context: CellRenderable) = provideCell(context) {
         setCellValue(context.value as Boolean)
     }
 
-    private fun ApachePoiRenderingContext.renderDateCellValue(context: CellContext) = provideCell(context) {
+    private fun ApachePoiRenderingContext.renderDateCellValue(context: CellRenderable) = provideCell(context) {
         setCellValue(toDate(context.value))
     }
 
-    private fun ApachePoiRenderingContext.castAndRenderCellValue(context: CellContext) =
+    private fun ApachePoiRenderingContext.castAndRenderCellValue(context: CellRenderable) =
         when (context.value) {
             is String -> renderStringCellValue(context)
             is Boolean -> renderBooleanCellValue(context)
@@ -178,6 +174,7 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
             is LocalDateTime,
             is Date,
             -> renderDateCellValue(context)
+
             is Number -> renderNumericCellValue(context)
             else -> renderStringCellValue(context)
         }

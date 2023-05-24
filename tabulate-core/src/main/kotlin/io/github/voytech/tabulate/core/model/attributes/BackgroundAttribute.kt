@@ -3,10 +3,12 @@ package io.github.voytech.tabulate.core.model.attributes
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.model.Attribute
+import io.github.voytech.tabulate.core.model.AttributeAware
+import io.github.voytech.tabulate.core.model.background.DefaultFillStyleWords
 import io.github.voytech.tabulate.core.model.background.DefaultFillType
 import io.github.voytech.tabulate.core.model.background.FillType
 import io.github.voytech.tabulate.core.model.color.Color
-import io.github.voytech.tabulate.core.template.operation.AttributedContext
+import io.github.voytech.tabulate.core.model.color.DefaultColorWords
 
 data class BackgroundAttribute(
     val color: Color? = null,
@@ -14,9 +16,11 @@ data class BackgroundAttribute(
 ) : Attribute<BackgroundAttribute>() {
 
     @TabulateMarker
-    class Builder(target: Class<out AttributedContext>): AttributeBuilder<BackgroundAttribute>(target) {
-        var color: Color? by observable(null)
-        var fill: FillType by observable(DefaultFillType.SOLID)
+    class Builder(target: Class<out AttributeAware>) : AttributeBuilder<BackgroundAttribute>(target),
+        DefaultColorWords, DefaultFillStyleWords {
+        override var color: Color? by observable(null)
+        override var fill: FillType by observable(DefaultFillType.SOLID)
+
         override fun provide(): BackgroundAttribute = BackgroundAttribute(color, fill)
     }
 
@@ -27,9 +31,9 @@ data class BackgroundAttribute(
 
     companion object {
         @JvmStatic
-        fun  builder(target: Class<out AttributedContext>) : Builder = Builder(target)
+        fun builder(target: Class<out AttributeAware>): Builder = Builder(target)
 
         @JvmStatic
-        inline fun <reified AC: AttributedContext> builder() : Builder = Builder(AC::class.java)
+        inline fun <reified AC : AttributeAware> builder(): Builder = Builder(AC::class.java)
     }
 }

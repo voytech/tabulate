@@ -3,18 +3,22 @@ package io.github.voytech.tabulate.pdf.components.image
 import io.github.voytech.tabulate.components.image.model.Image
 import io.github.voytech.tabulate.components.image.operation.ImageOperation
 import io.github.voytech.tabulate.components.image.operation.ImageRenderable
+import io.github.voytech.tabulate.components.text.operation.TextRenderable
 import io.github.voytech.tabulate.core.model.Height
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
+import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
+import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
+import io.github.voytech.tabulate.core.operation.Ok
+import io.github.voytech.tabulate.core.operation.asResult
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.template.operation.boundingBox
-import io.github.voytech.tabulate.core.template.spi.BuildAttributeOperations
-import io.github.voytech.tabulate.core.template.spi.BuildOperations
-import io.github.voytech.tabulate.core.template.spi.DocumentFormat
-import io.github.voytech.tabulate.core.template.spi.OperationsBundleProvider
-import io.github.voytech.tabulate.pdf.BackgroundAttributeRenderOperation
-import io.github.voytech.tabulate.pdf.BordersAttributeRenderOperation
-import io.github.voytech.tabulate.pdf.PdfBoxRenderingContext
+import io.github.voytech.tabulate.core.operation.boundingBox
+import io.github.voytech.tabulate.core.spi.BuildAttributeOperations
+import io.github.voytech.tabulate.core.spi.BuildOperations
+import io.github.voytech.tabulate.core.spi.DocumentFormat
+import io.github.voytech.tabulate.core.spi.OperationsBundleProvider
+import io.github.voytech.tabulate.pdf.*
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 
 
 class PdfImageOperations : OperationsBundleProvider<PdfBoxRenderingContext, Image> {
@@ -26,23 +30,15 @@ class PdfImageOperations : OperationsBundleProvider<PdfBoxRenderingContext, Imag
 
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {
         operation(ImageOperation { renderingContext, context ->
-            with(renderingContext) {
-                context.renderImageFromURI(context.imageUri)
-            }
+            val image = renderingContext.loadImage(context.filePath)
+            context.asPdfBoxElement(image).render(renderingContext)
         })
     }
 
     override fun provideMeasureOperations(): BuildOperations<PdfBoxRenderingContext> = {
         operation(ImageOperation { renderingContext, context ->
-            context.boundingBox()?.let { bbox ->
-                if (!bbox.isDefined()) {
-                    val image = renderingContext.loadImage(context.filePath)
-                    bbox.apply {
-                        height = height ?: Height(image.height.toFloat(), UnitsOfMeasure.PT)
-                        width = width ?: Width(image.width.toFloat(), UnitsOfMeasure.PT)
-                    }
-                }
-            } ?: error("Image renderable context requires bbox in order to render properly.")
+            val image = renderingContext.loadImage(context.filePath)
+            context.asPdfBoxElement(image).measure(renderingContext)
         })
     }
 
@@ -53,3 +49,8 @@ class PdfImageOperations : OperationsBundleProvider<PdfBoxRenderingContext, Imag
     override fun getDocumentFormat(): DocumentFormat<PdfBoxRenderingContext> = DocumentFormat.format("pdf", "pdfbox")
 
 }
+
+private fun ImageRenderable.asPdfBoxElement(image: PDImageXObject): PdfBoxImage = PdfBoxImage(
+    image, requireNotNull(boundingBox()), paddings(),
+    getModelAttribute<AlignmentAttribute>()
+)

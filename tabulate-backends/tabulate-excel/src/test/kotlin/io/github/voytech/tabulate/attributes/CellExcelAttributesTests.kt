@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.attributes
 
 import io.github.voytech.tabulate.components.table.api.builder.dsl.table
-import io.github.voytech.tabulate.components.table.operation.CellContext
+import io.github.voytech.tabulate.components.table.operation.CellRenderable
 import io.github.voytech.tabulate.components.table.template.export
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.model.Attribute
@@ -162,9 +162,9 @@ class CellExcelAttributesTests {
         }
 
         private fun textStyleAttributes(): List<Arguments> = (KNOWN_FONT_FAMILIES.map {
-            TextStylesAttribute.builder<CellContext>().apply { fontFamily = DefaultFonts.valueOf(it.replace(" ","_").uppercase()) }
+            TextStylesAttribute.builder<CellRenderable>().apply { fontFamily = DefaultFonts.valueOf(it.replace(" ","_").uppercase()) }
         } + listOf(
-            TextStylesAttribute.builder<CellContext>().apply {
+            TextStylesAttribute.builder<CellRenderable>().apply {
                 fontFamily = DefaultFonts.TIMES_NEW_ROMAN
                 fontSize = 12
                 italic = true
@@ -172,7 +172,7 @@ class CellExcelAttributesTests {
                 underline = true
                 weight = DefaultWeightStyle.BOLD
             },
-            TextStylesAttribute.builder<CellContext>().apply {
+            TextStylesAttribute.builder<CellRenderable>().apply {
                 fontFamily = DefaultFonts.TIMES_NEW_ROMAN
                 wrapText = true
                 rotation = 90
@@ -190,7 +190,7 @@ class CellExcelAttributesTests {
                 wrapText = it.wrapText,
                 rotation = it.rotation,
                 ident = it.ident,
-                fontColor = it.fontColor
+                fontColor = it.color
             )
         ) }
 
@@ -198,7 +198,7 @@ class CellExcelAttributesTests {
             return DefaultHorizontalAlignment.values().flatMap { horizontal ->
                 DefaultVerticalAlignment.values().map { vertical ->
                     Arguments.of(
-                        AlignmentAttribute.builder<CellContext>().apply {
+                        AlignmentAttribute.builder<CellRenderable>().apply {
                             this.horizontal = horizontal
                             this.vertical = vertical
                         },
@@ -213,15 +213,15 @@ class CellExcelAttributesTests {
 
         private fun cellBackgroundStyles(): List<Arguments> {
             return (KNOWN_COLORS + null).flatMap { color ->
-                DefaultFillType.values().map { fill -> BackgroundAttribute.builder<CellContext>().apply {
+                DefaultFillType.values().map { fill -> BackgroundAttribute.builder<CellRenderable>().apply {
                     this.fill = fill
                     this.color = color
                 } } +
-                ExcelCellFills.values().map { fill -> BackgroundAttribute.builder<CellContext>().apply {
+                ExcelCellFills.values().map { fill -> BackgroundAttribute.builder<CellRenderable>().apply {
                     this.fill = fill
                     this.color = color
                 } } +
-                BackgroundAttribute.builder<CellContext>().apply { this.color = color }
+                BackgroundAttribute.builder<CellRenderable>().apply { this.color = color }
             }.map { Arguments.of(
                 it,
                 BackgroundAttribute(
@@ -234,7 +234,7 @@ class CellExcelAttributesTests {
         private fun cellBorderStyles(): List<Arguments> {
             return (KNOWN_COLORS + null).flatMap { color ->
                 DefaultBorderStyle.values().map { borderStyle ->
-                    BordersAttribute.builder<CellContext>().apply {
+                    BordersAttribute.builder<CellRenderable>().apply {
                         leftBorderStyle = borderStyle
                         leftBorderColor = color
                         rightBorderStyle = borderStyle
