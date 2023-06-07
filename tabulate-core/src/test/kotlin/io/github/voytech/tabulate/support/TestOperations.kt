@@ -30,6 +30,11 @@ class Spy private constructor() {
     fun readHistory(): Iterator<InterceptedContext> =
         LinkedList(visitedOperations).iterator().also { visitedOperations.clear() }
 
+    fun reset() {
+        visitedOperations.clear()
+        operationPriorities.clear()
+    }
+
     companion object {
         val spy: Spy = Spy()
         val operationPriorities: MutableMap<Class<out Attribute<*>>,Int> = mutableMapOf()

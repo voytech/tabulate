@@ -18,12 +18,18 @@ import io.github.voytech.tabulate.support.TestExportOperationsFactory
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.operations.*
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class TabulationTemplateTest {
+
+    @BeforeEach
+    fun setup() {
+        Spy.spy.reset()
+    }
 
     @Test
     fun `should tabulate elements collection without additional features`() {

@@ -14,11 +14,17 @@ import io.github.voytech.tabulate.model.attributes.column.width
 import io.github.voytech.tabulate.support.Spy
 import io.github.voytech.tabulate.template.operations.*
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TableCompositingTest {
+
+    @BeforeEach
+    fun setup() {
+        Spy.spy.reset()
+    }
 
     @Test
     fun `should merge custom table with another custom table`() {

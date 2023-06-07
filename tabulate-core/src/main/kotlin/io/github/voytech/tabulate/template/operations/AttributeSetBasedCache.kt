@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.model.attributes.*
 
 @JvmInline
 internal value class AttributeClassBasedCache<K : Attribute<*>, V>(
-    private val cache: MutableMap<Attributes<K>, V> = mutableMapOf()
+    private val cache: MutableMap<Attributes<K>, V> = mutableMapOf(),
 ) {
     @JvmSynthetic
     operator fun get(key: Attributes<K>): V? = cache[key]
@@ -76,13 +76,30 @@ internal fun ContextData.ensureAttributeSetBasedCache(): AttributeSetBasedCache 
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-inline fun <reified T : Attribute<*>> getAttributeClassId(): String = when {
-    TableAttribute::class.java == T::class.java -> "table"
-    ColumnAttribute::class.java == T::class.java -> "column"
-    RowAttribute::class.java == T::class.java -> "row"
-    CellAttribute::class.java == T::class.java -> "cell"
+inline fun <reified T : Attribute<*>> getAttributeClassId(): String = getAttributeClassId(T::class.java)
+
+/**
+ * Given attribute, resolves attribute category identifier. One of: [table|column|row|cell].
+ * @author Wojciech Mąka
+ * @since 0.1.0
+ */
+fun <T : Attribute<*>> getAttributeClassId(clazz: Class<T>): String = when {
+    TableAttribute::class.java == clazz -> "table"
+    ColumnAttribute::class.java == clazz -> "column"
+    RowAttribute::class.java == clazz -> "row"
+    CellAttribute::class.java == clazz -> "cell"
     else -> error("Requested attribute class is not supported!")
 }
+
+fun <T : ModelAttributeAccessor<*>> getAttributeClassIdByAccessor(clazz: Class<T>): String = when {
+    TableContext::class.java == clazz -> "table"
+    ColumnContext::class.java == clazz -> "column"
+    RowContext::class.java == clazz -> "row"
+    RowContextWithCells::class.java == clazz -> "row"
+    RowCellContext::class.java == clazz -> "cell"
+    else -> error("Requested attribute class is not supported!")
+}
+
 
 /**
  * Given [AttributedModel], resolves mutable map (internal cache). This internal cache is accessed by attribute set
@@ -123,11 +140,11 @@ internal inline fun <reified T : Attribute<*>> AttributedModel<T>.withAttributeS
  * @since 0.1.0
  */
 @Suppress("UNCHECKED_CAST")
-inline fun <reified M : Attribute<*>, T> T.cacheOnAttributeSet(key: String, value: Any): Any
-        where T : ModelAttributeAccessor<M>,
+fun <T> T.cacheOnAttributeSet(key: String, value: () -> Any): Any
+        where T : ModelAttributeAccessor<*>,
               T : Context =
-    (getContextAttributes()?.get("_current_${getAttributeClassId<M>()}_attributes_cache") as? MutableMap<String, Any>)
-        ?.let { it.computeIfAbsent(key) { value } } ?: error("cannot resolve cached value in scope!")
+    (getContextAttributes()?.get("_current_${getAttributeClassIdByAccessor(javaClass)}_attributes_cache") as? MutableMap<String, Any>)
+        ?.let { it.computeIfAbsent(key) { value() } } ?: error("cannot resolve cached value in scope!")
 
 /**
  * Given [ModelAttributeAccessor] (truncated, attribute-set-less [AttributedModel] view), gets cached value stored under given key.

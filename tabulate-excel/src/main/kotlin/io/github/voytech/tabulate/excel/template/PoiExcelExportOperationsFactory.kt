@@ -15,6 +15,7 @@ import io.github.voytech.tabulate.template.spi.TabulationFormat
 import io.github.voytech.tabulate.template.spi.TabulationFormat.Companion.format
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.xssf.streaming.SXSSFCell
+import org.apache.poi.xssf.usermodel.XSSFFont
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.LocalDate
@@ -29,7 +30,7 @@ import java.util.*
 class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<ApachePoiRenderingContext>() {
 
     override fun getTabulationFormat(): TabulationFormat<ApachePoiRenderingContext> =
-        format("xlsx", ApachePoiRenderingContext::class.java,"poi")
+        format("xlsx", ApachePoiRenderingContext::class.java, "poi")
 
     override fun provideExportOperations(): TableExportOperations<ApachePoiRenderingContext> =
         object : TableExportOperations<ApachePoiRenderingContext> {
@@ -120,7 +121,7 @@ class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<Apach
             private fun provideCell(
                 renderingContext: ApachePoiRenderingContext,
                 context: RowCellContext,
-                block: (SXSSFCell.() -> Unit)
+                block: (SXSSFCell.() -> Unit),
             ) {
                 renderingContext.provideCell(context.getTableId(), context.getRow(), context.getColumn()) {
                     it.apply(block)
@@ -165,11 +166,14 @@ class PoiExcelExportOperationsFactory : ExportOperationsConfiguringFactory<Apach
 
         private const val CELL_STYLE_CACHE_KEY: String = "cellStyle"
 
+        private const val FONT_CACHE_KEY: String = "font"
+
         fun getCachedStyle(poi: ApachePoiRenderingContext, context: RowCellContext): CellStyle {
-            return context.cacheOnAttributeSet(
-                CELL_STYLE_CACHE_KEY,
-                poi.workbook().createCellStyle()
-            ) as CellStyle
+            return context.cacheOnAttributeSet(CELL_STYLE_CACHE_KEY, poi::createCellStyle) as CellStyle
+        }
+
+        fun getCachedFont(poi: ApachePoiRenderingContext, context: RowCellContext): XSSFFont {
+            return context.cacheOnAttributeSet(FONT_CACHE_KEY, poi::createFont) as XSSFFont
         }
     }
 

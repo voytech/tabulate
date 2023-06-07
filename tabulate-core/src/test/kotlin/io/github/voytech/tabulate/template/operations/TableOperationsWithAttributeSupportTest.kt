@@ -7,12 +7,18 @@ import io.github.voytech.tabulate.support.Spy.Companion.operationPriorities
 import io.github.voytech.tabulate.support.Spy.Companion.spy
 import io.github.voytech.tabulate.template.TabulationFormat.Companion.format
 import io.github.voytech.tabulate.template.export
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class TableOperationsWithAttributeSupportTest {
+
+    @BeforeEach
+    fun setup() {
+        spy.reset()
+    }
 
     @Test
     fun `should dispatch attributes to corresponding operations`() {

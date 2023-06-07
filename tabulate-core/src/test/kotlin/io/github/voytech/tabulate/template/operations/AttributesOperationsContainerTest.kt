@@ -10,11 +10,17 @@ import io.github.voytech.tabulate.model.attributes.column.ColumnWidthAttribute
 import io.github.voytech.tabulate.model.attributes.row.RowHeightAttribute
 import io.github.voytech.tabulate.model.attributes.table.TemplateFileAttribute
 import io.github.voytech.tabulate.support.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 
 class AttributesOperationsContainerTest {
+
+    @BeforeEach
+    fun setup() {
+        Spy.spy.reset()
+    }
 
     @Test
     fun `should register attributes operations`() {

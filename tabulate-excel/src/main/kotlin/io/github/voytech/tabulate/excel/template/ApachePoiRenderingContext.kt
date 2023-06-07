@@ -58,6 +58,10 @@ class ApachePoiRenderingContext : RenderingContext  {
 
     fun workbook(): SXSSFWorkbook = workbook!!
 
+    fun createCellStyle(): CellStyle = workbook!!.createCellStyle()
+
+    fun createFont(): Font = workbook!!.createFont()
+
     fun provideSheet(sheetName: String): SXSSFSheet = getSheet(sheetName) ?: workbook().createSheet(sheetName)
 
     fun provideRow(tableId: String, rowIndex: Int): SXSSFRow =

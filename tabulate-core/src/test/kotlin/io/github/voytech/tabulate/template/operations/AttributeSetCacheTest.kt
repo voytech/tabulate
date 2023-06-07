@@ -10,13 +10,20 @@ import io.github.voytech.tabulate.model.attributes.cell.borders
 import io.github.voytech.tabulate.model.attributes.cell.enums.DefaultBorderStyle
 import io.github.voytech.tabulate.model.attributes.cell.text
 import io.github.voytech.tabulate.model.attributes.table.template
+import io.github.voytech.tabulate.support.Spy.Companion.spy
 import io.github.voytech.tabulate.template.iterators.RowContextIterator
 import io.github.voytech.tabulate.template.resolvers.AccumulatingRowContextResolver
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class AttributeSetCacheTest {
+
+    @BeforeEach
+    fun setup() {
+        spy.reset()
+    }
 
     private fun createTableModelWithCellAttributes(block: ColumnLevelAttributesBuilderApi<Unit>.() -> Unit): Table<Unit> =
         createTableModel {
@@ -83,7 +90,7 @@ class AttributeSetCacheTest {
         val iterator = RowContextIterator(AccumulatingRowContextResolver(firstTable, customAttributes))
         val attributedCell = iterator.next().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
-            attributedCell.skipAttributes().cacheOnAttributeSet("key", "value")
+            attributedCell.skipAttributes().cacheOnAttributeSet("key") { "value" }
         }
         attributedCell.withAttributeSetBasedCache {
             assertEquals("value",attributedCell.skipAttributes().getCachedOnAttributeSet("key"))
@@ -126,7 +133,7 @@ class AttributeSetCacheTest {
         val iterator = RowContextIterator(AccumulatingRowContextResolver(firstTable, customAttributes))
         val attributedCell = iterator.next().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
-            attributedCell.skipAttributes().cacheOnAttributeSet("key", "value")
+            attributedCell.skipAttributes().cacheOnAttributeSet("key") { "value" }
         }
         attributedCell.withAttributeSetBasedCache {
             assertEquals("value",attributedCell.skipAttributes().getCachedOnAttributeSet("key"))
@@ -158,7 +165,7 @@ class AttributeSetCacheTest {
         val thirdAttributedTable: AttributedTable = thirdTable.createContext(customAttributes)
 
         firstAttributedTable.withAttributeSetBasedCache {
-            firstAttributedTable.skipAttributes().cacheOnAttributeSet("someKey", "someValue")
+            firstAttributedTable.skipAttributes().cacheOnAttributeSet("someKey") { "someValue" }
         }
         val error = assertThrows<IllegalStateException> {
             firstAttributedTable.skipAttributes().getCachedOnAttributeSet("someKey")
@@ -168,7 +175,7 @@ class AttributeSetCacheTest {
 
         secondAttributedTable.withAttributeSetBasedCache {
             secondAttributedTable.skipAttributes().let { tableContext ->
-                tableContext.cacheOnAttributeSet("someKey", "tryOverride")
+                tableContext.cacheOnAttributeSet("someKey") { "tryOverride" }
                 assertEquals("someValue", tableContext.getCachedOnAttributeSet("someKey"))
             }
         }
@@ -176,9 +183,8 @@ class AttributeSetCacheTest {
         thirdAttributedTable.withAttributeSetBasedCache {
             thirdAttributedTable.skipAttributes().let { tableContext ->
                 tableContext.cacheOnAttributeSet(
-                    "someKey",
-                    "thisIsNewValueInNewInternalCacheCosAttributesDiffers"
-                )
+                    "someKey"
+                ) { "thisIsNewValueInNewInternalCacheCosAttributesDiffers" }
                 assertEquals(
                     "thisIsNewValueInNewInternalCacheCosAttributesDiffers",
                     tableContext.getCachedOnAttributeSet("someKey")
