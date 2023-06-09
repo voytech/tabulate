@@ -71,9 +71,9 @@ internal fun <T :  AttributedContext> T.withAttributeSetBasedCache(block: (cache
  * @since 0.1.0
  */
 @Suppress("UNCHECKED_CAST")
-fun <T> T.cacheOnAttributeSet(key: String, value: Any): Any
+fun <T> T.cacheOnAttributeSet(key: String, value: () -> Any): Any
         where T : AttributedContext,
-              T : Context = setupCacheAndGet()?.computeIfAbsent(key) { value } ?: value
+              T : Context = setupCacheAndGet()?.computeIfAbsent(key) { value() } ?: value()
 
 /**
  * Given [ModelAttributeAccessor] (truncated, attribute-set-less [AttributedContext] view), gets cached value stored under given key.

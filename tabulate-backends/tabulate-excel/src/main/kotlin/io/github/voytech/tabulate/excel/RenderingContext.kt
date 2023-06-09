@@ -62,6 +62,10 @@ class ApachePoiRenderingContext(private val images: ImageIndex = ImageIndex()) :
         return workbook!!
     }
 
+    fun createCellStyle(): XSSFCellStyle = workbook().createCellStyle() as XSSFCellStyle
+
+    fun createFont(): XSSFFont = workbook().createFont() as XSSFFont
+
     fun xssfWorkbook(): XSSFWorkbook = workbook().xssfWorkbook
 
     fun xssfCell(coordinates: Coordinates): XSSFCell? =

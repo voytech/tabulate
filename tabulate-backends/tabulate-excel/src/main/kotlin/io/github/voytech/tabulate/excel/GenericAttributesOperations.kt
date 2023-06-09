@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.excel
 
+import io.github.voytech.tabulate.components.table.operation.CellContext
 import io.github.voytech.tabulate.components.table.operation.getSheetName
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
@@ -8,7 +9,9 @@ import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.core.template.operation.AttributeOperation
 import io.github.voytech.tabulate.core.template.operation.AttributedContext
+import io.github.voytech.tabulate.core.template.operation.cacheOnAttributeSet
 import org.apache.poi.hssf.usermodel.HSSFTextbox
+import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.FontUnderline
 import org.apache.poi.ss.usermodel.VerticalAlignment
 import org.apache.poi.xssf.usermodel.TextDirection
@@ -109,8 +112,20 @@ class XSSFBorderAttributeRenderOperation<CTX : AttributedContext> :
     }
 }
 
-fun ApachePoiRenderingContext.createFontFrom(attribute: TextStylesAttribute): XSSFFont =
-    (workbook().createFont() as XSSFFont).configureWith(attribute)
+private const val CELL_STYLE_CACHE_KEY: String = "cellStyle"
+
+private const val CELL_FONT_CACHE_KEY: String = "font"
+
+fun ApachePoiRenderingContext.getCachedStyle(context: CellContext): CellStyle {
+    return context.cacheOnAttributeSet(CELL_STYLE_CACHE_KEY, this::createCellStyle)  as CellStyle
+}
+
+fun ApachePoiRenderingContext.getCachedFont(context: AttributedContext): XSSFFont {
+    return context.cacheOnAttributeSet(CELL_FONT_CACHE_KEY, this::createFont) as XSSFFont
+}
+
+fun ApachePoiRenderingContext.createFontFrom(attributedContext: AttributedContext,attribute: TextStylesAttribute): XSSFFont =
+    getCachedFont(attributedContext).configureWith(attribute)
 
 fun XSSFFont.configureWith(attribute: TextStylesAttribute): XSSFFont = apply {
     attribute.fontFamily?.run { this@apply.fontName = this.fontName }

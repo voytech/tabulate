@@ -89,7 +89,7 @@ class AttributeSetCacheTest {
         )
         val attributedCell = iterator.next().success().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
-            attributedCell.cacheOnAttributeSet("key", "value")
+            attributedCell.cacheOnAttributeSet("key") { "value" }
         }
         attributedCell.withAttributeSetBasedCache {
             assertEquals("value", attributedCell.getCachedOnAttributeSet("key"))
@@ -142,7 +142,7 @@ class AttributeSetCacheTest {
         )
         val attributedCell = iterator.next().success().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
-            attributedCell.cacheOnAttributeSet("key", "value")
+            attributedCell.cacheOnAttributeSet("key") { "value" }
         }
         attributedCell.withAttributeSetBasedCache {
             assertEquals("value", attributedCell.getCachedOnAttributeSet("key"))

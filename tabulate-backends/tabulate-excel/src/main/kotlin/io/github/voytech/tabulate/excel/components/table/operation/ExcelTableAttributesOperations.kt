@@ -17,8 +17,8 @@ import io.github.voytech.tabulate.excel.components.table.model.attributes.CellEx
 import io.github.voytech.tabulate.excel.components.table.model.attributes.FilterAndSortTableAttribute
 import io.github.voytech.tabulate.excel.components.table.model.attributes.PrintingAttribute
 import io.github.voytech.tabulate.excel.components.table.model.resolveBorderStyle
-import io.github.voytech.tabulate.excel.components.table.operation.ExcelTableOperations.Companion.getCachedStyle
 import io.github.voytech.tabulate.excel.createFontFrom
+import io.github.voytech.tabulate.excel.getCachedStyle
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.ss.util.CellReference
@@ -47,9 +47,9 @@ class CellTextStylesAttributeRenderOperation :
             sheetName = context.getSheetName(),
             rowIndex = context.getAbsoluteRow(context.rowIndex),
             columnIndex = context.getAbsoluteColumn(context.columnIndex),
-            provideCellStyle = { getCachedStyle(renderingContext, context) }
+            provideCellStyle = { getCachedStyle(context) }
         ).let {
-            it.setFont(renderingContext.createFontFrom(attribute))
+            it.setFont(createFontFrom(context, attribute))
             it.indention = attribute.ident ?: 0
             it.wrapText = attribute.wrapText ?: false
             it.rotation = attribute.rotation ?: 0
@@ -74,7 +74,7 @@ class CellBackgroundAttributeRenderOperation :
             sheetName = context.getSheetName(),
             rowIndex = context.getAbsoluteRow(context.rowIndex),
             columnIndex = context.getAbsoluteColumn(context.columnIndex),
-            provideCellStyle = { getCachedStyle(renderingContext, context) }
+            provideCellStyle = { getCachedStyle(context) }
         ).let {
             if (attribute.color != null) {
                 (it as XSSFCellStyle).setFillForegroundColor(ApachePoiRenderingContext.color(attribute.color!!))
@@ -118,7 +118,7 @@ class CellBordersAttributeRenderOperation :
             sheetName = context.getSheetName(),
             rowIndex = context.getAbsoluteRow(context.rowIndex),
             columnIndex = context.getAbsoluteColumn(context.columnIndex),
-            provideCellStyle = { getCachedStyle(renderingContext, context) }
+            provideCellStyle = { getCachedStyle(context) }
         ).let {
             attribute.leftBorderColor?.run {
                 (it as XSSFCellStyle).setLeftBorderColor(ApachePoiRenderingContext.color(this))
@@ -202,7 +202,7 @@ class CellAlignmentAttributeRenderOperation :
             sheetName = context.getSheetName(),
             rowIndex = context.getAbsoluteRow(context.rowIndex),
             columnIndex = context.getAbsoluteColumn(context.columnIndex),
-            provideCellStyle = { getCachedStyle(renderingContext, context) }
+            provideCellStyle = { getCachedStyle(context) }
         ).let {
             with(attribute.horizontal) {
                 it.alignment =
@@ -245,7 +245,7 @@ class CellDataFormatAttributeRenderOperation :
             sheetName = context.getSheetName(),
             rowIndex = context.getAbsoluteRow(context.rowIndex),
             columnIndex = context.getAbsoluteColumn(context.columnIndex),
-            provideCellStyle = { getCachedStyle(renderingContext, context) }
+            provideCellStyle = { getCachedStyle(context) }
         ).let {
             it.dataFormat = renderingContext.workbook().createDataFormat().getFormat(attribute.dataFormat)
         }

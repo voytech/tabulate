@@ -6,6 +6,7 @@ import io.github.voytech.tabulate.core.model.Height
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
 import io.github.voytech.tabulate.core.reify
+import io.github.voytech.tabulate.core.template.operation.AttributedContext
 import io.github.voytech.tabulate.core.template.operation.cacheOnAttributeSet
 import io.github.voytech.tabulate.core.template.spi.BuildAttributeOperations
 import io.github.voytech.tabulate.core.template.spi.BuildOperations
@@ -16,7 +17,9 @@ import io.github.voytech.tabulate.excel.ApachePoiRenderingContext
 import io.github.voytech.tabulate.excel.Utils.toDate
 import io.github.voytech.tabulate.excel.components.table.model.ExcelTypeHints
 import org.apache.poi.ss.usermodel.CellStyle
+import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.xssf.streaming.SXSSFCell
+import org.apache.poi.xssf.usermodel.XSSFFont
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -178,17 +181,5 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
             is Number -> renderNumericCellValue(context)
             else -> renderStringCellValue(context)
         }
-
-    companion object {
-
-        private const val CELL_STYLE_CACHE_KEY: String = "cellStyle"
-
-        fun getCachedStyle(poi: ApachePoiRenderingContext, context: CellContext): CellStyle {
-            return context.cacheOnAttributeSet(
-                CELL_STYLE_CACHE_KEY,
-                poi.workbook().createCellStyle()
-            ) as CellStyle
-        }
-    }
 
 }

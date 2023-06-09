@@ -2837,7 +2837,7 @@ public final class io/github/voytech/tabulate/core/template/operation/AttributeO
 }
 
 public final class io/github/voytech/tabulate/core/template/operation/AttributeSetBasedCacheKt {
-	public static final fun cacheOnAttributeSet (Lio/github/voytech/tabulate/core/template/operation/AttributedContext;Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun cacheOnAttributeSet (Lio/github/voytech/tabulate/core/template/operation/AttributedContext;Ljava/lang/String;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
 	public static final fun getCachedOnAttributeSet (Lio/github/voytech/tabulate/core/template/operation/AttributedContext;Ljava/lang/String;)Ljava/lang/Object;
 }
 
