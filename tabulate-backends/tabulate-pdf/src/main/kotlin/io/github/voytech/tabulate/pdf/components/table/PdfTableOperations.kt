@@ -23,7 +23,6 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
         operation(BordersAttributeRenderOperation<CellRenderable>(), -2)
         operation(BordersAttributeRenderOperation<RowEndRenderable<Table<*>>>(), -2)
         operation(TextStylesAttributeRenderOperation<CellRenderable>(), -1)
-        operation(AlignmentAttributeRenderOperation<CellRenderable>(), -1)
         operation(BordersAttributeRenderOperation<TableStartRenderable>())
     }
 
