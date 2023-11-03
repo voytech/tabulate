@@ -1,13 +1,12 @@
 package io.github.voytech.tabulate.components.image.operation
 
-import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.model.StateAttributes
-import io.github.voytech.tabulate.core.model.asXPosition
-import io.github.voytech.tabulate.core.model.asYPosition
 import io.github.voytech.tabulate.core.RenderingContext
+import io.github.voytech.tabulate.core.layout.LayoutBoundaryType
 import io.github.voytech.tabulate.core.layout.LayoutSpace
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.layout.policy.SimpleLayout
+import io.github.voytech.tabulate.core.model.Attributes
+import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.operation.HasImage
 import io.github.voytech.tabulate.core.operation.Operation
 import io.github.voytech.tabulate.core.operation.Renderable
@@ -22,11 +21,18 @@ class ImageRenderable internal constructor(
         additionalAttributes = stateAttributes.data
     }
 
-    override fun LayoutSpace.defineBoundingBox(policy: SimpleLayout): RenderableBoundingBox = with(policy) {
-        elementBoundingBox(
-            x = getX(0.asXPosition(), uom),
-            y = getY(0.asYPosition(), uom),
-        )
+    override val boundaryToFit = LayoutBoundaryType.OUTER
+
+    override fun LayoutSpace.defineBoundingBox(layout: SimpleLayout): RenderableBoundingBox = with(layout) {
+        getCurrentSize().let { currentSize ->
+            elementBoundingBox(
+                x = leftTop.x,
+                y = leftTop.y,
+                width = currentSize?.width.takeIf { properties.declaredWidth },
+                height = currentSize?.height.takeIf { properties.declaredHeight },
+                boundaryToFit
+            )
+        }
     }
 
     override val imageUri: String

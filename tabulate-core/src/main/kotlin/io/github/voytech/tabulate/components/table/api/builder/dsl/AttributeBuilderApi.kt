@@ -23,7 +23,7 @@ fun <T: Any> TableLevelAttributesBuilderApi<T>.borders(block: BordersAttribute.B
     attribute(BordersAttribute.builder<CellRenderable>().apply(block))
 
 fun <T: Any> TableLevelAttributesBuilderApi<T>.tableBorders(block: BordersAttribute.Builder.() -> Unit) =
-    attribute(BordersAttribute.builder<TableStartRenderable>().apply(block))
+    attribute(BordersAttribute.builder(TableStartRenderable::class.java, Table::class.java).apply(block))
 
 fun <T: Any> TableLevelAttributesBuilderApi<T>.background(block: BackgroundAttribute.Builder.() -> Unit) =
     attribute(BackgroundAttribute.builder<CellRenderable>().apply(block))

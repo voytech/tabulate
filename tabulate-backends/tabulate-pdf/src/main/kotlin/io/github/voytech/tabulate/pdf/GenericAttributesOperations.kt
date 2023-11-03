@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.pdf
 
+import io.github.voytech.tabulate.core.model.Measure
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
-import io.github.voytech.tabulate.core.model.Width
 import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
@@ -188,7 +188,7 @@ private fun PdfBoxRenderingContext.drawLine(
     }
 }
 
-private fun PdfBoxRenderingContext.setBorderStyle(style: BorderStyle?, color: Color?, width: Width) {
+private fun PdfBoxRenderingContext.setBorderStyle(style: BorderStyle?, color: Color?, width: Measure<*>) {
     with(getCurrentContentStream()) {
         saveGraphicsState()
         setStrokingColor(color.awtColor())
@@ -197,7 +197,7 @@ private fun PdfBoxRenderingContext.setBorderStyle(style: BorderStyle?, color: Co
     }
 }
 
-private fun BorderStyle?.subLineWidth(width: Width): Float =
+private fun BorderStyle?.subLineWidth(width: Measure<*>): Float =
     if (this != null && hasBorder()) {
         when (getBorderStyleId()) {
             DefaultBorderStyle.DOUBLE.name -> width.value / 3
@@ -212,7 +212,7 @@ private fun BorderStyle?.subLineWidth(width: Width): Float =
 
 typealias SubLineWidthAndOffset = Pair<Float, Float>
 
-private fun BorderStyle?.subLine(width: Width): SubLineWidthAndOffset =
+private fun BorderStyle?.subLine(width: Measure<*>): SubLineWidthAndOffset =
     if (this != null && hasBorder()) {
         when (getBorderStyleId()) {
             DefaultBorderStyle.DOUBLE.name -> (width.value / 3).let { it to (it * 2) }
@@ -232,7 +232,7 @@ private fun <A : AttributedContext> PdfBoxRenderingContext.topCompositeBorder(
     primaryColor: Color? = null,
     secondaryColor: Color? = null,
 ) {
-    val (effectiveWidth, effectiveOffset) = borders.topBorderStyle.subLine(borders.topBorderWidth)
+    val (effectiveWidth, effectiveOffset) = borders.topBorderStyle.subLine(borders.topBorderHeight)
     val minLeftBorderWidth = borders.leftBorderStyle.subLineWidth(borders.leftBorderWidth)
     val minRightBorderWidth = borders.rightBorderStyle.subLineWidth(borders.rightBorderWidth)
 
@@ -271,9 +271,9 @@ private fun <A : AttributedContext> PdfBoxRenderingContext.topBorder(
             if (borders.topBorderStyle.hasComplexBorder()) {
                 topCompositeBorder(it, context, borders, primaryColor, secondaryColor)
             } else {
-                setBorderStyle(borders.topBorderStyle, borders.topBorderColor, borders.topBorderWidth)
+                setBorderStyle(borders.topBorderStyle, borders.topBorderColor, borders.topBorderHeight)
                 val x1 = it.outerX
-                val y1 = it.outerY + (it.outer.height?.value ?: 0f) - borders.topBorderWidth.value / 2
+                val y1 = it.outerY + (it.outer.height?.value ?: 0f) - borders.topBorderHeight.value / 2
                 val x2 = it.outerX + (it.outer.width?.value ?: 0f)
                 drawLine(x1, y1, x2, y1)
             }
@@ -288,7 +288,7 @@ private fun <A : AttributedContext> PdfBoxRenderingContext.bottomCompositeBorder
     primaryColor: Color? = null,
     secondaryColor: Color? = null,
 ) {
-    val (effectiveWidth, effectiveOffset) = borders.bottomBorderStyle.subLine(borders.bottomBorderWidth)
+    val (effectiveWidth, effectiveOffset) = borders.bottomBorderStyle.subLine(borders.bottomBorderHeight)
     val minLeftBorderWidth = borders.leftBorderStyle.subLineWidth(borders.leftBorderWidth)
     val minRightBorderWidth = borders.rightBorderStyle.subLineWidth(borders.rightBorderWidth)
 
@@ -326,9 +326,9 @@ private fun <A : AttributedContext> PdfBoxRenderingContext.bottomBorder(
             if (borders.bottomBorderStyle.hasComplexBorder()) {
                 bottomCompositeBorder(it, context, borders, primaryColor, secondaryColor)
             } else {
-                setBorderStyle(borders.bottomBorderStyle, borders.bottomBorderColor, borders.bottomBorderWidth)
+                setBorderStyle(borders.bottomBorderStyle, borders.bottomBorderColor, borders.bottomBorderHeight)
                 val x1 = it.outerX
-                val y1 = it.outerY + borders.bottomBorderWidth.value / 2
+                val y1 = it.outerY + borders.bottomBorderHeight.value / 2
                 val x2 = x1 + (it.outer.width?.value ?: 0f)
                 drawLine(x1, y1, x2, y1)
             }
@@ -343,8 +343,8 @@ private fun PdfBoxRenderingContext.leftCompositeBorder(
     secondaryColor: Color? = null,
 ) {
     val (effectiveWidth, effectiveOffset) = borders.leftBorderStyle.subLine(borders.leftBorderWidth)
-    val minTopBorderWidth = borders.topBorderStyle.subLineWidth(borders.topBorderWidth)
-    val minBottomBorderWidth = borders.bottomBorderStyle.subLineWidth(borders.bottomBorderWidth)
+    val minTopBorderWidth = borders.topBorderStyle.subLineWidth(borders.topBorderHeight)
+    val minBottomBorderWidth = borders.bottomBorderStyle.subLineWidth(borders.bottomBorderHeight)
 
     val x1 = boxLayout.outerX
     val y1 = boxLayout.outerY
@@ -398,8 +398,8 @@ private fun PdfBoxRenderingContext.rightCompositeBorder(
     secondaryColor: Color? = null,
 ) {
     val (effectiveWidth, effectiveOffset) = borders.rightBorderStyle.subLine(borders.rightBorderWidth)
-    val minTopBorderWidth = borders.topBorderStyle.subLineWidth(borders.topBorderWidth)
-    val minBottomBorderWidth = borders.bottomBorderStyle.subLineWidth(borders.bottomBorderWidth)
+    val minTopBorderWidth = borders.topBorderStyle.subLineWidth(borders.topBorderHeight)
+    val minBottomBorderWidth = borders.bottomBorderStyle.subLineWidth(borders.bottomBorderHeight)
 
     val x1 = boxLayout.outerX + (boxLayout.outer.width?.value ?: 0f) //- effectiveWidth / 2
     val y1 = boxLayout.outerY

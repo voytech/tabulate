@@ -127,6 +127,12 @@ data class Size(val width: Width, val height: Height) {
         width = width + other.width,
         height = height + other.height
     )
+
+    fun nonZero(): Boolean = width.value > 0 || height.value > 0
+
+    companion object {
+        fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT): Size = Size(Width.zero(uom),Height.zero(uom))
+    }
 }
 
 data class X(override val value: Float, override val unit: UnitsOfMeasure) : Measure<X>(value, unit, X::class.java) {
@@ -244,6 +250,12 @@ data class Position(val x: X, val y: Y) {
         x = x + other.width,
         y = y + other.height
     )
+
+    operator fun minus(other: Size): Position = copy(
+        x = x - other.width,
+        y = y - other.height
+    )
+
 
     fun asSize(): Size = Size(Width(x.value,x.unit),Height(y.value,y.unit))
 

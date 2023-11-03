@@ -9,6 +9,7 @@ import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.model.orEmpty
 import io.github.voytech.tabulate.core.layout.CrossedAxis
 import io.github.voytech.tabulate.core.operation.*
+import io.github.voytech.tabulate.core.operation.Nothing
 import io.github.voytech.tabulate.core.operation.RenderingSkipped as OpOverflowResult
 
 internal fun <T : AttributedModelOrPart> T.attributesForAllContexts(): AttributesByContexts<T> =
@@ -170,13 +171,12 @@ internal abstract class AbstractRowContextResolver<T : Any>(
                 val provideCell = offsetAwareCellContext(sourceRow)
                 createRowStart(rowIndex = tableRowIndex.value, customAttributes = state.data).let { rowStart ->
                     when (val status = rowStart.render()?.status) {
-                        Ok -> when (val maybeCells = mapEachCell(provideCell) { cell ->
+                        Ok, Nothing -> when (val maybeCells = mapEachCell(provideCell) { cell ->
                             cell.render()?.status.let { it is OpOverflowResult && it.isSkipped(CrossedAxis.Y) }
                         }) {
                             is Either.Left -> tryRenderRowEnd(rowStart, maybeCells.value)
                             is Either.Right -> OverflowResult(OpOverflowResult(CrossedAxis.Y))
                         }
-
                         else -> OverflowResult(status as InterruptionOnAxis)
                     }
                 }
@@ -191,7 +191,7 @@ internal abstract class AbstractRowContextResolver<T : Any>(
         createRowEnd(rowStart, cells).let { rowEnd ->
             rowEnd.render().let { result ->
                 when (result?.status) {
-                    null, Ok -> SuccessResult(rowEnd)
+                    null, Ok, Nothing -> SuccessResult(rowEnd)
                     else -> OverflowResult(result as OpOverflowResult)
                 }
             }

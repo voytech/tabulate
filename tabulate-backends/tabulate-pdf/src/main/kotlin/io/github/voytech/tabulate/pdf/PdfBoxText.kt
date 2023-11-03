@@ -69,13 +69,10 @@ internal class PdfBoxText(
     }
 
     // Immutable properties
-    val fontHeight = measures.fontHeight()
+    private val fontHeight = measures.fontHeight()
     private val lineHeight = fontHeight * (textStyles?.lineSpacing ?: 1F)
-
-    val textWrap = resolveTextWrap()
-
+    private val textWrap = resolveTextWrap()
     private var measuringResult: RenderingResult? = null
-
     private val currentLine = StringBuilder()
     private val lines = mutableListOf<TextLine>()
 

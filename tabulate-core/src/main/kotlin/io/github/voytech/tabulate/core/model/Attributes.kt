@@ -36,11 +36,11 @@ abstract class Attribute<T : Attribute<T>> {
     @get:JvmSynthetic
     @set:JvmSynthetic
     internal var nonDefaultProps: Set<String> = emptySet()
-    internal lateinit var ownerClass: Class<out AttributeAware>
+    internal lateinit var targets: Set<Class<out AttributeAware>>
 
     protected open fun overrideWith(other: T): T = other
 
-    operator fun plus(other: T): T = overrideWith(other).apply { ownerClass = other.ownerClass }
+    operator fun plus(other: T): T = overrideWith(other).apply { targets = other.targets }
 
     protected fun isModified(property: KProperty<*>): Boolean {
         return nonDefaultProps.contains(property.name)
@@ -49,6 +49,9 @@ abstract class Attribute<T : Attribute<T>> {
     @Suppress("UNCHECKED_CAST")
     protected fun <P> takeIfChanged(other: T, property: KProperty1<T, P>): P =
         if (other.isModified(property)) property.invoke(other) else property.invoke(this as T)
+
+    @JvmSynthetic
+    internal fun hasTarget(clazz: Class<out AttributeAware>): Boolean = targets.find { it.isAssignableFrom(clazz) } != null
 
 }
 
@@ -121,7 +124,7 @@ class Attributes(
     }
 
     fun <O : AttributeAware> forContext(clazz: Class<O>): Attributes =
-        Attributes(attributeSet.filter { it.ownerClass.isAssignableFrom(clazz) }.toSet())
+        Attributes(attributeSet.filter { it.hasTarget(clazz) }.toSet())
 
     inline fun <reified O : AttributedModelOrPart> cast(): Attributes = cast(O::class.java)
 

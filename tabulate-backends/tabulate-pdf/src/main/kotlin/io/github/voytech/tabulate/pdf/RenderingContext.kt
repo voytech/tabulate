@@ -240,13 +240,13 @@ data class BoxLayout(
                 (borders.leftBorderWidth.switchUnitOfMeasure(UnitsOfMeasure.PT).value)
             } else 0F
             val top = if (borders.topBorderStyle.hasBorder()) {
-                (borders.topBorderWidth.switchUnitOfMeasure(UnitsOfMeasure.PT).value)
+                (borders.topBorderHeight.switchUnitOfMeasure(UnitsOfMeasure.PT).value)
             } else 0F
             val right = if (borders.rightBorderStyle.hasBorder()) {
                 (borders.rightBorderWidth.switchUnitOfMeasure(UnitsOfMeasure.PT).value)
             } else 0F
             val bottom = if (borders.bottomBorderStyle.hasBorder()) {
-                (borders.bottomBorderWidth.switchUnitOfMeasure(UnitsOfMeasure.PT).value)
+                (borders.bottomBorderHeight.switchUnitOfMeasure(UnitsOfMeasure.PT).value)
             } else 0F
             if (left != 0F || right != 0F || top != 0F || bottom != 0F) {
                 outer.copy(

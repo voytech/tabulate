@@ -8,6 +8,7 @@ import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.RenderingContext
 import io.github.voytech.tabulate.core.layout.CrossedAxis
 
+@Suppress("MemberVisibilityCanBePrivate")
 data class RenderingResult(
     val attributes: Map<String, Any> = emptyMap(),
     val status: RenderingStatus
@@ -19,6 +20,8 @@ data class RenderingResult(
     fun isOk(): Boolean = status is Ok || status is Nothing
 
     fun isPartlyRendered(): Boolean = !isOk() && (status !is Error)
+
+    fun okOrError(): RenderingStatus = Ok.takeIf { !status.isError() } ?: status
 
 }
 
@@ -45,6 +48,8 @@ object Error: RenderingStatus
 fun RenderingStatus?.isSkipped(axis: CrossedAxis): Boolean = this is RenderingSkipped && crossedAxis == axis
 
 fun RenderingStatus?.isClipped(axis: CrossedAxis): Boolean = this is RenderingClipped && crossedAxis == axis
+
+fun RenderingStatus?.isError(): Boolean = this is Error
 
 
 fun interface Operation<CTX : RenderingContext, E : AttributedContext> : InvokeWithTwoParams<CTX, E, RenderingResult> {

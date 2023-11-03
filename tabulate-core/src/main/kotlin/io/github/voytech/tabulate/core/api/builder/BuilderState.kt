@@ -3,7 +3,6 @@ package io.github.voytech.tabulate.core.api.builder
 import io.github.voytech.tabulate.components.table.api.builder.exception.BuilderException
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.loadAttributeConstraints
-import io.github.voytech.tabulate.core.operation.AttributedContext
 import kotlin.properties.ObservableProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -150,7 +149,9 @@ abstract class AttributesAwareBuilder<T : AttributedModelOrPart> : InternalBuild
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class AttributeBuilder<T : Attribute<T>>(private val owner: Class<out AttributeAware>) : Builder<T>() {
+abstract class AttributeBuilder<T : Attribute<T>>(private val targets: Set<Class<out AttributeAware>>) : Builder<T>() {
+    constructor(target: Class<out AttributeAware>) : this(setOf(target))
+
     private val propertyChanges = mutableSetOf<KProperty<*>>()
     private val mappings = mutableMapOf<String, String>()
     fun <F> observable(initialValue: F, fieldMapping: Pair<String, String>? = null): ReadWriteProperty<Any?, F> {
@@ -169,7 +170,7 @@ abstract class AttributeBuilder<T : Attribute<T>>(private val owner: Class<out A
     @JvmSynthetic
     final override fun build(): T {
         return provide().apply {
-            ownerClass = this@AttributeBuilder.owner
+            targets = this@AttributeBuilder.targets
             nonDefaultProps = propertyChanges.map {
                 if (mappings.containsKey(it.name)) mappings[it.name]!! else it.name
             }.toSet()

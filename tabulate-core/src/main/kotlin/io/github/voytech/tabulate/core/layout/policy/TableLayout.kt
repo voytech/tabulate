@@ -183,19 +183,19 @@ class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties
     override fun LayoutSpace.getX(relativeX: X, targetUnit: UnitsOfMeasure): X {
         assert(relativeX.unit == UnitsOfMeasure.NU) { "input coordinate must be expressed in ordinal numeric units" }
         //TODO getX method should be allowed ONLY to return relative position. SUMMING with absolutePosition should be encapsulated in AbstractLayoutPolicy.
-        val absoluteXPosition = getBoundingRectangle().leftTop.x.switchUnitOfMeasure(targetUnit)
+        val absoluteXPosition = getActiveRectangle().leftTop.x.switchUnitOfMeasure(targetUnit)
         val currentLayoutRelativeX = delegate.getX(relativeX, targetUnit)
         return absoluteXPosition + currentLayoutRelativeX
     }
 
     override fun LayoutSpace.getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y {
         assert(relativeY.unit == UnitsOfMeasure.NU) { "input coordinate must be expressed in ordinal numeric units" }
-        val absoluteYPosition = getBoundingRectangle().leftTop.y.switchUnitOfMeasure(targetUnit)
+        val absoluteYPosition = getActiveRectangle().leftTop.y.switchUnitOfMeasure(targetUnit)
         val currentLayoutRelativeY = delegate.getY(relativeY, targetUnit)
         return absoluteYPosition + currentLayoutRelativeY
     }
 
-    override fun getCurrentSize(): Size = delegate.getSize()
+    override fun getCurrentContentSize(): Size = delegate.getSize()
 
     fun LayoutSpace.getAbsoluteColumnPosition(columnIndex: Int): X =
         getX(columnIndex.asXPosition(), uom)

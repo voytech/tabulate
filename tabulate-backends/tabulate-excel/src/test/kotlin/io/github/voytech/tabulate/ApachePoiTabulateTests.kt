@@ -50,8 +50,7 @@ class ApachePoiTabulateTests {
         attributes {
             margins { top { 20.pt() } }
             borders {
-                bottomBorderWidth = 0.2.pt()
-                bottomBorderStyle = DefaultBorderStyle.SOLID
+                bottom { 0.2.pt(); solid;  }
             }
         }
         columns {

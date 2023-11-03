@@ -46,31 +46,31 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Siz
         whileMeasuring { this@FlowLayout.uom = this@reset.uom }.also {
             localCursor = Position.start(uom)
             if (::absoluteCursor.isInitialized) {
-                absoluteCursor = leftTop
+                absoluteCursor = innerLeftTop
             }
             currentIndex = 0
         }
     }
 
-    override fun LayoutSpace.getSlotX(): X = leftTop.x + slots[currentIndex].position.x
+    override fun LayoutSpace.getSlotX(): X = innerLeftTop.x + slots[currentIndex].position.x
 
-    override fun LayoutSpace.getSlotY(): Y = leftTop.y + slots[currentIndex].position.y
+    override fun LayoutSpace.getSlotY(): Y = innerLeftTop.y + slots[currentIndex].position.y
 
     override fun LayoutSpace.setNextSlot() {
         TODO("Not yet implemented")
     }
 
-    private fun LayoutSpace.rightBottom(): Position = (if (::absoluteCursor.isInitialized) absoluteCursor else rightBottom)
+    private fun LayoutSpace.currentPosition(): Position = (if (::absoluteCursor.isInitialized) absoluteCursor else currentPosition)
 
     private fun LayoutSpace.moveLocalCursor(pos: Position): Position {
         localCursor = pos
         slots += Slot(pos)
         currentIndex++
-        return leftTop + pos
+        return innerLeftTop + pos
     }
 
     override fun LayoutSpace.resolveNextPosition(): Position? {
-        val computedLocCursor = rightBottom() - leftTop
+        val computedLocCursor = currentPosition() - innerLeftTop
         return if (properties.orientation == Orientation.HORIZONTAL) {
             if (hasXSpaceLeft()) {
                 moveLocalCursor(Position(computedLocCursor.x + EPSILON, localCursor.y))
@@ -86,7 +86,7 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Siz
         }
     }
 
-    override fun handleChildExpansion(box: BoundingRectangle) {
+    override fun applyChildRectangle(box: BoundingRectangle) {
         absoluteCursor = if (properties.orientation == Orientation.HORIZONTAL) {
             val ac = if (::absoluteCursor.isInitialized) absoluteCursor.y else Y.zero(uom)
             Position(box.rightBottom.x, box.rightBottom.y.coerceAtLeast(ac))
@@ -97,13 +97,13 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Siz
     }
 
     private fun LayoutSpace.hasXSpaceLeft(): Boolean =
-        maxRightBottom?.let { definedMaxRightBottom ->
-            rightBottom().x < definedMaxRightBottom.x
+        innerMaxRightBottom?.let { definedMaxRightBottom ->
+            currentPosition().x < definedMaxRightBottom.x
         } ?: true
 
     private fun LayoutSpace.hasYSpaceLeft(): Boolean =
-        maxRightBottom?.let { definedMaxRightBottom ->
-            rightBottom().y < definedMaxRightBottom.y
+        innerMaxRightBottom?.let { definedMaxRightBottom ->
+            currentPosition().y < definedMaxRightBottom.y
         } ?: true
 
     override fun LayoutSpace.hasSpaceLeft(): Boolean = hasXSpaceLeft() || hasYSpaceLeft()

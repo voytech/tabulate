@@ -22,9 +22,9 @@ class ContainerTests {
     private fun defaultTable(data: List<SampleCustomer>): (TableBuilderApi<SampleCustomer>.() -> Unit) = typedTable {
         attributes {
             borders {
-                bottomBorderWidth = 0.2.pt()
-                bottomBorderStyle = DefaultBorderStyle.SOLID
+                bottom { 0.2.pt(); solid }
             }
+            text { breakWords; black }
         }
         columns {
             column(SampleCustomer::firstName)
@@ -38,7 +38,7 @@ class ContainerTests {
         rows {
             header {
                 columnTitles("First Name", "Last Name", "Country", "City", "Street", "House Nr", "Flat Nr")
-                attributes { text { weight = DefaultWeightStyle.BOLD } }
+                attributes { text { weight = DefaultWeightStyle.BOLD; black; fontSize = 12 } }
             }
         }
         dataSource(data)
@@ -103,7 +103,7 @@ class ContainerTests {
                     align { left;fullWidth } table (defaultTable(SampleCustomer.create(5)) + {
                         attributes {
                             margins { top { 5.pt() } }
-                            tableBorders { all { 1.pt(); dotted } }
+                            tableBorders { all { 10.pt(); solid } }
                         }
                     })
                     align { right;top;fullWidth } text {
@@ -159,7 +159,6 @@ class ContainerTests {
                                     margins { left { 1.pt() }; top { 1.pt() } }
                                     alignment { center; middle }
                                     width { 33f.percents() }
-                                    height { 3f.percents() }
                                 }
                             }
                         }

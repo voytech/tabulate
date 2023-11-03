@@ -2,9 +2,6 @@ package io.github.voytech.tabulate.core.model.attributes
 
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
-import io.github.voytech.tabulate.core.layout.BoundingBoxModifier
-import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
-import io.github.voytech.tabulate.core.layout.LayoutSpace
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.AttributeAware
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
@@ -13,10 +10,10 @@ import io.github.voytech.tabulate.core.model.Width
 data class WidthAttribute(
     val auto: Boolean = false,
     val value: Width = Width.zero(UnitsOfMeasure.PX),
-) : Attribute<WidthAttribute>(), BoundingBoxModifier {
+) : Attribute<WidthAttribute>() {
 
     @TabulateMarker
-    class Builder(target: Class<out AttributeAware>) : AttributeBuilder<WidthAttribute>(target) {
+    class Builder(vararg target: Class<out AttributeAware>) : AttributeBuilder<WidthAttribute>(setOf(*target)) {
         var auto: Boolean by observable(false)
         var value: Width by observable(Width.zero(UnitsOfMeasure.PX))
 
@@ -50,10 +47,6 @@ data class WidthAttribute(
                 }
             )
         }
-
-    override fun LayoutSpace.alter(source: RenderableBoundingBox): RenderableBoundingBox =
-        if (!auto) source.apply { width = value }
-        else source
 
     companion object {
         @JvmStatic
