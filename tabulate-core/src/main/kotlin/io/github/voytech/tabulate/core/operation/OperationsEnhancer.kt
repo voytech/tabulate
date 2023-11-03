@@ -1,13 +1,13 @@
 package io.github.voytech.tabulate.core.operation
 
-import io.github.voytech.tabulate.core.layout.*
-import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.isNullOrEmpty
 import io.github.voytech.tabulate.core.LayoutApi
 import io.github.voytech.tabulate.core.RenderingContext
+import io.github.voytech.tabulate.core.layout.*
+import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.Orientation
 import io.github.voytech.tabulate.core.model.attributes.ClipAttribute
 import io.github.voytech.tabulate.core.model.clip.DefaultClippingMode
+import io.github.voytech.tabulate.core.model.isNullOrEmpty
 
 /**
  * Operations enhancer bringing attribute-level operations into context of an operation. This allows to delegate each attribute
@@ -94,24 +94,14 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
     protected val layoutApi: () -> LayoutApi,
 ) : Operation<CTX, E> {
 
-    private fun <R : Renderable<*>> LayoutSpace.mergeAttributeDerivedBoundingBoxProperties(
-        context: R, boundingBox: RenderableBoundingBox,
-    ): RenderableBoundingBox =
-        context.attributes?.attributeSet?.asSequence()?.let { attributes ->
-            attributes.filterIsInstance<BoundingBoxModifier>()
-                .fold(boundingBox) { bbox, next ->
-                    bbox + with(next) { alter(bbox) }
-                }
-        } ?: run { context.boundingBox }
-
     protected fun LayoutApi.ensureRenderableBoundingBox(context: E): RenderableBoundingBox? =
         if (context is Renderable<*>) {
-            context.initBoundingBox(this) { bbox -> space.mergeAttributeDerivedBoundingBoxProperties(context, bbox) }
+            context.initBoundingBox(this)
         } else null
 
     protected fun LayoutApi.tryApplyResults(context: E, boundaries: RenderableBoundingBox? = null) = with(layout) {
         if (boundaries != null) {
-            space.expandByRectangle(boundaries)
+            space.reserveByRectangle(boundaries)
             @Suppress("UNCHECKED_CAST")
             if (context is ApplyLayoutElement<*>) {
                 with(context as ApplyLayoutElement<Layout>) {
@@ -146,13 +136,15 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
     protected fun LayoutApi.resolveRenderingStatus(measuringResult: RenderingResult, context: E): RenderingStatus =
         with<Layout, RenderingStatus>(layout) {
             with(space) {
-                val maybeCrossedAxis = isCrossingBounds(context.boundingBox())
+                val maybeCrossedBounds = context.boundingBox()?.let { bbox ->
+                    isCrossingBounds(bbox, context.layoutBoundaryToFit())
+                }
                 val isPartlyRendered = measuringResult.isPartlyRendered()
-                return if ((maybeCrossedAxis != null) || isPartlyRendered) {
+                return if ((maybeCrossedBounds != null) || isPartlyRendered) {
                     if (context.isClippingEnabled()) {
-                        RenderingClipped(maybeCrossedAxis ?: defaultCrossedAxis())
+                        RenderingClipped(maybeCrossedBounds ?: defaultCrossedAxis())
                     } else {
-                        RenderingSkipped(maybeCrossedAxis ?: defaultCrossedAxis())
+                        RenderingSkipped(maybeCrossedBounds ?: defaultCrossedAxis())
                     }
                 } else Ok
             }

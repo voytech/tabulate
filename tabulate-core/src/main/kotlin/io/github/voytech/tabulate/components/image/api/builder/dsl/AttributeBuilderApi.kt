@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.components.image.api.builder.dsl
 
+import io.github.voytech.tabulate.components.image.model.Image
 import io.github.voytech.tabulate.components.image.operation.ImageRenderable
 import io.github.voytech.tabulate.core.model.attributes.*
 
@@ -18,9 +19,9 @@ fun ImageAttributesBuilderApi.background(block: BackgroundAttribute.Builder.() -
     attribute(BackgroundAttribute.builder<ImageRenderable>().apply(block))
 
 fun ImageAttributesBuilderApi.height(block: HeightAttribute.Builder.() -> Unit) {
-    attribute(HeightAttribute.Builder(ImageRenderable::class.java).apply(block))
+    attribute(HeightAttribute.builder<Image>().apply(block))
 }
 
 fun ImageAttributesBuilderApi.width(block: WidthAttribute.Builder.() -> Unit) {
-    attribute(WidthAttribute.Builder(ImageRenderable::class.java).apply(block))
+    attribute(WidthAttribute.builder<Image>().apply(block))
 }

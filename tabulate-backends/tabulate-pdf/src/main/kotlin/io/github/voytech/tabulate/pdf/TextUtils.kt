@@ -20,11 +20,6 @@ class FontMeasurements(private val inner: Pair<PDFont, Int>) {
     fun fontHeight(): Float =
         (capHeight() + (2 * descent())).toPoints()
 
-    fun measureTextWidth(string: String): Float =
-        width(string).toPoints()
-
-    private fun width(string: String): Float = font().getStringWidth(string)
-
     fun Float.toPoints(): Float = this / 1000 * fontSize()
 
     fun Float.toTextUnits(): Float = this * 1000 / fontSize()

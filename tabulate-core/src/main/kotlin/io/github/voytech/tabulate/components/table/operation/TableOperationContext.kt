@@ -3,12 +3,10 @@ package io.github.voytech.tabulate.components.table.operation
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHintAttribute
 import io.github.voytech.tabulate.components.table.template.SyntheticRow
-import io.github.voytech.tabulate.core.layout.LayoutSpace
-import io.github.voytech.tabulate.core.layout.LayoutElement
-import io.github.voytech.tabulate.core.layout.ApplyLayoutElement
-import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
+import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.layout.policy.TableLayout
-import io.github.voytech.tabulate.core.model.*
+import io.github.voytech.tabulate.core.model.Attributes
+import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.operation.Context
 import io.github.voytech.tabulate.core.operation.HasValue
 import io.github.voytech.tabulate.core.operation.Renderable
@@ -45,16 +43,16 @@ interface RowCoordinate {
 }
 
 interface RowLayoutElement : RowCoordinate, LayoutElement<TableLayout>, ApplyLayoutElement<TableLayout> {
-    override fun LayoutSpace.defineBoundingBox(policy: TableLayout): RenderableBoundingBox = with(policy) {
+    override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         elementBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
-            width = getBoundingRectangle().getWidth().switchUnitOfMeasure(uom),
+            width = getMeasuredContentSize()?.width
         )
     }
 
-    override fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, policy: TableLayout): Unit =
-        with(policy) {
+    override fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, layout: TableLayout): Unit =
+        with(layout) {
             markHeightForMeasure(getRow(),context.flags.shouldMeasureHeight)
             context.height?.let { setRowHeight(getRow(), it) }
         }
@@ -71,12 +69,12 @@ interface ColumnCoordinate {
 
 interface ColumnLayoutElement : ColumnCoordinate, LayoutElement<TableLayout>,
     ApplyLayoutElement<TableLayout> {
-    override fun LayoutSpace.defineBoundingBox(policy: TableLayout): RenderableBoundingBox = with(policy) {
+    override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         elementBoundingBox(x = getAbsoluteColumnPosition(getColumn()), y = getAbsoluteRowPosition(0))
     }
 
-    override fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, policy: TableLayout): Unit =
-        with(policy) {
+    override fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, layout: TableLayout): Unit =
+        with(layout) {
             markWidthForMeasure(getColumn(),context.flags.shouldMeasureWidth)
             context.width?.let { setColumnWidth(getColumn(), it) }
         }
@@ -92,8 +90,8 @@ interface RowCellCoordinate : RowCoordinate, ColumnCoordinate
 interface RowLayoutElementCell : RowCellCoordinate, LayoutElement<TableLayout>,
     ApplyLayoutElement<TableLayout> {
 
-    override fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, policy: TableLayout): Unit =
-        with(policy) {
+    override fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, layout: TableLayout): Unit =
+        with(layout) {
             context.width?.let { setColumnWidth(getColumn(), it) }
             context.height?.let { setRowHeight(getRow(), it) }
         }
@@ -125,12 +123,16 @@ internal fun <T : Any> Table<T>.getColumnIndex(columnIndex: Int) = (firstColumn 
 sealed class TableContext(
     attributes: Attributes?,
 ) : Renderable<TableLayout>(attributes) {
-    override fun LayoutSpace.defineBoundingBox(policy: TableLayout): RenderableBoundingBox = with(policy) {
+
+    override val boundaryToFit = LayoutBoundaryType.OUTER
+
+    override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         elementBoundingBox(
-            x = getX(0.asXPosition(), uom),
-            y = getY(0.asYPosition(), uom),
-            width = policy.getMeasuredSize()?.width,
-            height = policy.getMeasuredSize()?.height
+            x = leftTop.x,
+            y = leftTop.y,
+            width = getMeasuredSize()?.width,
+            height = getMeasuredSize()?.height,
+            boundaryToFit
         )
     }
 
@@ -214,11 +216,11 @@ class RowEndRenderable<T>(
 
     fun getCells(): Map<ColumnKey<T>, CellRenderable> = rowCellValues
 
-    override fun LayoutSpace.defineBoundingBox(policy: TableLayout): RenderableBoundingBox = with(policy) {
+    override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         elementBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
-            width = getBoundingRectangle().getWidth().switchUnitOfMeasure(uom),
+            width = getMeasuredContentSize()?.width,
             height = getRowHeight(getRow(),1, uom)
         )
     }
@@ -300,12 +302,13 @@ class CellRenderable(
     override fun getRow(): Int = rowIndex
     override fun getColumn(): Int = columnIndex
 
-    override fun LayoutSpace.defineBoundingBox(policy: TableLayout): RenderableBoundingBox = with(policy) {
+    override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         elementBoundingBox(
             x = getAbsoluteColumnPosition(getColumn()),
             y = getAbsoluteRowPosition(getRow()),
             width = getColumnWidth(getColumn(), cellValue.colSpan, uom),
-            height = getRowHeight(getRow(), cellValue.rowSpan, uom)
+            height = getRowHeight(getRow(), cellValue.rowSpan, uom),
+            boundaryToFit
         )
     }
 }

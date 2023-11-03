@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.core.operation
 
 import io.github.voytech.tabulate.core.LayoutApi
+import io.github.voytech.tabulate.core.layout.LayoutBoundaryType
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.AttributeAware
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
@@ -77,25 +78,35 @@ abstract class AttributedContext(@JvmSynthetic override val attributes: Attribut
 
 abstract class Renderable<EL : Layout>(@JvmSynthetic override val attributes: Attributes? = null) :
     AttributedContext(), LayoutElement<EL> {
+
+    override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
+
     lateinit var boundingBox: RenderableBoundingBox
         private set
 
     fun hasBoundingBox() = this::boundingBox.isInitialized
 
     fun initBoundingBox(
-        scope: LayoutApi, initializer: ((RenderableBoundingBox) -> RenderableBoundingBox)?
+        scope: LayoutApi, initializer: ((RenderableBoundingBox) -> RenderableBoundingBox)? = null
     ): RenderableBoundingBox = with(scope.space) {
         if (this@Renderable::boundingBox.isInitialized) return boundingBox
         boundingBox = defineBoundingBox(scope.layout())
         initializer?.let { boundingBox += it(boundingBox) }
-        boundingBox = boundingBox.uniform(scope.parentLayoutSpace() ?: scope.space)
+        boundingBox = boundingBox.normalize(scope.space, boundaryToFit)
         return boundingBox
     }
 
 }
 
 fun AttributedContext.boundingBox(): RenderableBoundingBox? =
-    if (this is Renderable<*> && hasBoundingBox()) this.boundingBox else null
+    if (this is Renderable<*> && hasBoundingBox()) {
+        this.boundingBox
+    } else null
+
+fun AttributedContext.layoutBoundaryToFit(): LayoutBoundaryType =
+    if (this is Renderable<*>) {
+        boundaryToFit
+    } else LayoutBoundaryType.INNER
 
 class AttributesByContexts<T : AttributedModelOrPart>(
     from: T, to: List<Class<out AttributedContext>>,

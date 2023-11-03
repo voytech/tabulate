@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.core.model.border
 
+import io.github.voytech.tabulate.core.model.Height
 import io.github.voytech.tabulate.core.model.Width
 import io.github.voytech.tabulate.core.model.color.Color
 
@@ -14,9 +15,9 @@ interface Borders {
 
     val topBorderStyle: BorderStyle?
     val topBorderColor: Color?
-    val topBorderWidth: Width
+    val topBorderHeight: Height
 
     val bottomBorderStyle: BorderStyle?
     val bottomBorderColor: Color?
-    val bottomBorderWidth: Width
+    val bottomBorderHeight: Height
 }

@@ -3,16 +3,9 @@ package io.github.voytech.tabulate.pdf.components.image
 import io.github.voytech.tabulate.components.image.model.Image
 import io.github.voytech.tabulate.components.image.operation.ImageOperation
 import io.github.voytech.tabulate.components.image.operation.ImageRenderable
-import io.github.voytech.tabulate.components.text.operation.TextRenderable
-import io.github.voytech.tabulate.core.model.Height
-import io.github.voytech.tabulate.core.model.UnitsOfMeasure
-import io.github.voytech.tabulate.core.model.Width
 import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
-import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
-import io.github.voytech.tabulate.core.operation.Ok
-import io.github.voytech.tabulate.core.operation.asResult
-import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.operation.boundingBox
+import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.spi.BuildAttributeOperations
 import io.github.voytech.tabulate.core.spi.BuildOperations
 import io.github.voytech.tabulate.core.spi.DocumentFormat

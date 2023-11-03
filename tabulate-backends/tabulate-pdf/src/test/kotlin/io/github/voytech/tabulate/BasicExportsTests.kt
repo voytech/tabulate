@@ -69,11 +69,7 @@ class BasicExportsTests {
     val imageStyles: ImageAttributesBuilderApi.() -> Unit = {
         background { lightGray; solid }
         borders {
-            all {
-                style = DefaultBorderStyle.SOLID
-                2.pt()
-                color = Colors.LIGHT_GRAY
-            }
+            all { solid; 2.pt(); lightGray }
         }
     }
 
@@ -318,7 +314,7 @@ class BasicExportsTests {
                         attributes {
                             textBoxStyle()
                             width { 100.percents() }
-
+                            height { 10.pt() }
                         }
                     }
                 }
@@ -439,23 +435,14 @@ class BasicExportsTests {
                         width { 30.pt() }
                         height { 30.pt() }
                         borders { all { 5.pt() } }
-                        margins {
-                            left { 10.pt() }
-                        }
                     }
                 }
                 footer {
                     text {
                         value<PageExecutionContext> { "Page: ${it.pageNumber}" }
                         attributes {
-                            borders {
-                                top {
-                                    dashed; 0.5f.pt(); lightGray
-                                }
-                            }
-                            alignment {
-                                middle; center
-                            }
+                            borders { top { solid; 0.5f.pt(); lightGray } }
+                            alignment { middle; center }
                             width { 100.percents() }
                         }
                     }

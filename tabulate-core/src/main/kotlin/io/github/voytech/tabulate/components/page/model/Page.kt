@@ -48,7 +48,9 @@ class Page internal constructor(
     }
 
     private fun ExportApi.exportContent(spaceConstraints: SpaceConstraints) {
-        nodes?.forEach { it.export(spaceConstraints) }
+        nodes?.forEach {
+            it.export(spaceConstraints)
+        }
     }
 
     private fun ExportApi.measureFooterSize() =

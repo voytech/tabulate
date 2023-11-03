@@ -19,8 +19,8 @@ class TextRenderingTests {
                     section {
                         attributes {
                             width { 50.percents() }
-                            height { 20.percents() }
-                            borders { all { dashed; black; 3.pt() } }
+                            //height { 20.percents() }
+                            borders { all { solid; black; 10.pt() } }
                         }
                         text {
                             value =
@@ -29,10 +29,10 @@ class TextRenderingTests {
                                         "Still some text to write. A little longer words maybe ?. Almost done. I think now the text will finally stop rendering " +
                                         "due to crossing parent layout bounding box boundaries!"
                             attributes {
-                                width { 100.pt() }
+                                width { 150.pt() }
                                 text { breakWords; courierNew; fontSize = 10 }
                                 alignment { justify }
-                                borders { all { solid;red; 5.pt() } }
+                                borders { all { solid; red; 5.pt() } }
                             }
                         }
                         text {

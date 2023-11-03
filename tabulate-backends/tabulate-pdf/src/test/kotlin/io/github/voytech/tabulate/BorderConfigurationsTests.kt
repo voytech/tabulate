@@ -6,7 +6,6 @@ import io.github.voytech.tabulate.components.image.api.builder.dsl.*
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.text.api.builder.dsl.*
-import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.color.Colors
 import org.junit.jupiter.api.DisplayName
@@ -49,18 +48,10 @@ class BorderConfigurationsTests {
                         newRow(2) {
                             attributes {
                                 rowBorders {
-                                    leftBorderStyle = DefaultBorderStyle.DOUBLE
-                                    leftBorderWidth = 2.pt()
-                                    leftBorderColor = Colors.LIGHT_GRAY
-                                    rightBorderStyle = DefaultBorderStyle.DOUBLE
-                                    rightBorderWidth = 3.pt()
-                                    rightBorderColor = Colors.LIGHT_GRAY
-                                    topBorderStyle = DefaultBorderStyle.DOUBLE
-                                    topBorderWidth = 4.pt()
-                                    topBorderColor = Colors.LIGHT_GRAY
-                                    bottomBorderStyle = DefaultBorderStyle.DOUBLE
-                                    bottomBorderWidth = 1.pt()
-                                    bottomBorderColor = Colors.LIGHT_GRAY
+                                    left { double; 2.pt(); lightGray }
+                                    right { double; 3.pt(); lightGray }
+                                    top { double; 4.pt(); lightGray }
+                                    bottom { double; 1.pt(); lightGray }
                                 }
                                 alignment { left }
                             }
@@ -68,18 +59,10 @@ class BorderConfigurationsTests {
                         newRow(4) {
                             attributes {
                                 rowBorders {
-                                    leftBorderStyle = DefaultBorderStyle.DOUBLE
-                                    leftBorderWidth = 2.pt()
-                                    leftBorderColor = Colors.LIGHT_GRAY
-                                    rightBorderStyle = DefaultBorderStyle.DOUBLE
-                                    rightBorderWidth = 4.pt()
-                                    rightBorderColor = Colors.LIGHT_GRAY
-                                    topBorderStyle = DefaultBorderStyle.DOUBLE
-                                    topBorderWidth = 2.pt()
-                                    topBorderColor = Colors.LIGHT_GRAY
-                                    bottomBorderStyle = DefaultBorderStyle.DOUBLE
-                                    bottomBorderWidth = 4.pt()
-                                    bottomBorderColor = Colors.LIGHT_GRAY
+                                    left { double; 2.pt(); lightGray }
+                                    right { double; 4.pt(); lightGray }
+                                    top { double; 2.pt(); lightGray }
+                                    bottom { double; 4.pt(); lightGray }
                                 }
                                 alignment { left }
                             }
@@ -87,12 +70,8 @@ class BorderConfigurationsTests {
                         newRow(6) {
                             attributes {
                                 rowBorders {
-                                    topBorderStyle = DefaultBorderStyle.DOUBLE
-                                    topBorderWidth = 2.pt()
-                                    topBorderColor = Colors.LIGHT_GRAY
-                                    bottomBorderStyle = DefaultBorderStyle.DOUBLE
-                                    bottomBorderWidth = 4.pt()
-                                    bottomBorderColor = Colors.LIGHT_GRAY
+                                    top { double; 2.pt(); lightGray }
+                                    bottom { double; 4.pt(); lightGray }
                                 }
                                 alignment { left }
                             }
@@ -100,15 +79,9 @@ class BorderConfigurationsTests {
                         newRow(8) {
                             attributes {
                                 rowBorders {
-                                    leftBorderStyle = DefaultBorderStyle.DOUBLE
-                                    leftBorderWidth = 2.pt()
-                                    leftBorderColor = Colors.LIGHT_GRAY
-                                    rightBorderStyle = DefaultBorderStyle.DOUBLE
-                                    rightBorderWidth = 4.pt()
-                                    rightBorderColor = Colors.LIGHT_GRAY
-                                    bottomBorderStyle = DefaultBorderStyle.SOLID
-                                    bottomBorderWidth = 0.5.pt()
-                                    bottomBorderColor = Colors.LIGHT_GRAY
+                                    left { double; 2.pt(); lightGray }
+                                    right { double; 4.pt(); lightGray }
+                                    bottom { solid; 0.5.pt(); lightGray }
                                 }
                                 alignment { left }
                             }
@@ -116,15 +89,9 @@ class BorderConfigurationsTests {
                         newRow(10) {
                             attributes {
                                 rowBorders {
-                                    leftBorderStyle = DefaultBorderStyle.DOUBLE
-                                    leftBorderWidth = 2.pt()
-                                    leftBorderColor = Colors.LIGHT_GRAY
-                                    rightBorderStyle = DefaultBorderStyle.DOUBLE
-                                    rightBorderWidth = 4.pt()
-                                    rightBorderColor = Colors.LIGHT_GRAY
-                                    topBorderStyle = DefaultBorderStyle.DOUBLE
-                                    topBorderWidth = 4.pt()
-                                    topBorderColor = Colors.LIGHT_GRAY
+                                    left { double; 2.pt(); lightGray }
+                                    right { double; 4.pt(); lightGray }
+                                    top { double; 4.pt(); lightGray }
                                 }
                                 alignment { left }
                             }
@@ -168,18 +135,10 @@ class BorderConfigurationsTests {
                         newRow(18) {
                             attributes {
                                 rowBorders {
-                                    leftBorderStyle = DefaultBorderStyle.GROOVE
-                                    leftBorderWidth = 2.pt()
-                                    leftBorderColor = Colors.LIGHT_GRAY
-                                    rightBorderStyle = DefaultBorderStyle.GROOVE
-                                    rightBorderWidth = 6.pt()
-                                    rightBorderColor = Colors.LIGHT_GRAY
-                                    topBorderStyle = DefaultBorderStyle.GROOVE
-                                    topBorderWidth = 2.pt()
-                                    topBorderColor = Colors.LIGHT_GRAY
-                                    bottomBorderStyle = DefaultBorderStyle.GROOVE
-                                    bottomBorderWidth = 6.pt()
-                                    bottomBorderColor = Colors.LIGHT_GRAY
+                                    left { groove; 2.pt(); lightGray }
+                                    right { groove; 6.pt(); lightGray }
+                                    top { groove; 2.pt(); lightGray }
+                                    bottom { groove; 6.pt(); lightGray }
                                 }
                                 alignment { left }
                             }

@@ -38,7 +38,7 @@ class CVExample {
                 }
                 skills.forEach {
                     text {
-                        attributes { text { courier }; margins { top { 5.pt() } } }
+                        attributes { text { courier; black }; margins { top { 5.pt() } } }
                         value = it
                     }
                 }
@@ -49,18 +49,18 @@ class CVExample {
     private fun ContainerBuilderApi.contact(firstName: String, lastName: String, email: String, phone: String) {
         vertical {
             text {
-                attributes { text { arialBlack; fontSize = 24 } }
+                attributes { text { arialBlack; fontSize = 24; breakWords } }
                 value = "$firstName $lastName"
             }
             text {
                 attributes {
-                    text { fontSize = 12; arialBlack; lightGray }
+                    text { fontSize = 12; arialBlack; lightGray; breakWords }
                 }
                 value = "email: $email"
             }
             text {
                 attributes {
-                    text { fontSize = 12; arialBlack; lightGray }
+                    text { fontSize = 12; arialBlack; lightGray; breakWords }
                 }
                 value = "tel: $phone"
             }
@@ -80,14 +80,16 @@ class CVExample {
                 attributes { margins { left { 10.pt() } } }
                 text {
                     attributes {
-                        text { arialBlack; black; bold; fontSize = 18; }
-                        background { lightGray }
+                        text { arialBlack; white; bold; fontSize = 18; }
+                        borders { all { 2.pt(); black } }
+                        background { black }
                     }
                     value = customer
                 }
                 text {
                     attributes {
                         margins { top { 5.pt() } }
+                        borders { all { 2.pt(); lightGray } }
                         text { arialBlack; lightGray; bold; fontSize = 16 }
                     }
                     value = "$from - $to"
@@ -95,6 +97,7 @@ class CVExample {
                 text {
                     attributes {
                         margins { top { 5.pt() } }
+                        borders { all { 2.pt(); lightGray } }
                         text { arialBlack; black; bold; fontSize = 14; underline }
                     }
                     value = role
@@ -114,6 +117,7 @@ class CVExample {
                             width { 100.percents() }
                             height { 100.percents() }
                             background { lightGray }
+                            borders { all { red; 20.pt(); solid } }
                         }
                         vertical {
                             attributes { margins { top { 100.pt() } } }
@@ -127,29 +131,33 @@ class CVExample {
                             background { white }
                             width { 100.percents() }
                             height { 100.percents() }
+                            borders { all { green; 20.pt(); solid } }
                         }
                         horizontal {
                             attributes {
-                                width { 96.percents() }
+                                width { 100.percents() }
                                 height { 150.pt() }
                                 margins { left { 10.pt() }; top { 5.pt() } }
+                                borders { all { blue; 15.pt(); solid } }
                             }
                             align { left; middle; halfWidth; fullHeight } vertical {
+                                attributes { borders { all { lightGray; 10.pt(); solid } } }
                                 contact("Firstname", "Lastname", "firstname.lastname@gmail.com", "600 600 600")
                             }
                             align { right; halfWidth } vertical {
                                 attributes {
                                     width { 150.pt() }
                                     height { 150.pt() }
+                                    borders { all { red; 10.pt(); solid } }
                                 }
-                                image {
+                               /* image {
                                     filePath = "src/test/resources/kotlin.jpeg"
                                     attributes {
                                         width { 150.pt() }
                                         height { 150.pt() }
                                         borders { all { 3.pt(); double; lightGray } }
                                     }
-                                }
+                                }*/
                             }
                         }
                         job(LocalDate.of(2016,10,1),LocalDate.of(2017,10,1),"Senior Java Developer", "A SuperHero Company.")
@@ -159,7 +167,7 @@ class CVExample {
                         job(LocalDate.of(2012,10,1),LocalDate.of(2013,10,1),"Java Developer", "Client Of Youth Margins.")
                     }
                 }
-                footer {
+                /*footer {
                     text {
                         attributes {
                             text { black }
@@ -169,7 +177,7 @@ class CVExample {
                         }
                         value<PageExecutionContext> { "Page : ${it.pageNumber}" }
                     }
-                }
+                }*/
             }
         }.export(File("cv.pdf"))
     }

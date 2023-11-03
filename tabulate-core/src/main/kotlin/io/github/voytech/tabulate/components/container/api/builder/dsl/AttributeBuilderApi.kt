@@ -18,9 +18,8 @@ fun ContainerAttributesBuilderApi.width(block: WidthAttribute.Builder.() -> Unit
 fun ContainerAttributesBuilderApi.height(block: HeightAttribute.Builder.() -> Unit) =
     attribute(HeightAttribute.builder<Container>().apply(block))
 
-
 fun ContainerAttributesBuilderApi.borders(block: BordersAttribute.Builder.() -> Unit) =
-    attribute(BordersAttribute.builder<ContainerRenderable>().apply(block))
+    attribute(BordersAttribute.builder(ContainerRenderable::class.java, Container::class.java).apply(block))
 
 fun ContainerAttributesBuilderApi.background(block: BackgroundAttribute.Builder.() -> Unit) =
     attribute(BackgroundAttribute.builder<ContainerRenderable>().apply(block))

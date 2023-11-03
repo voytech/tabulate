@@ -4,6 +4,7 @@ import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
 import io.github.voytech.tabulate.core.operation.Ok
 import io.github.voytech.tabulate.core.operation.RenderingResult
+import io.github.voytech.tabulate.core.operation.RenderingSkipped
 import io.github.voytech.tabulate.core.operation.asResult
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 
@@ -31,6 +32,7 @@ class PdfBoxImage(
         with(renderer) {
             image.showImage(x(), y(), maxWidth.toFloat(), maxHeight.toFloat())
         }
+
         return Ok.asResult()
     }
 }

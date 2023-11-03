@@ -11,18 +11,18 @@ class SimpleLayout(properties: LayoutProperties) : AbstractLayout(properties), I
 
     override fun LayoutSpace.resolveNextPosition(): Position {
         return if (properties.orientation == Orientation.HORIZONTAL) {
-            Position(rightBottom.x + EPSILON, leftTop.y)
+            Position(currentPosition.x + EPSILON, innerLeftTop.y)
         } else {
-            Position(leftTop.x, rightBottom.y + EPSILON)
+            Position(innerLeftTop.x, currentPosition.y + EPSILON)
         }
     }
 
     override fun LayoutSpace.hasSpaceLeft(): Boolean =
-        maxRightBottom?.let { definedMaxRightBottom ->
+        innerMaxRightBottom?.let { definedMaxRightBottom ->
             if (properties.orientation == Orientation.HORIZONTAL) {
-                rightBottom.x < definedMaxRightBottom.x
+                currentPosition.x < definedMaxRightBottom.x
             } else {
-                rightBottom.y < definedMaxRightBottom.y
+                currentPosition.y < definedMaxRightBottom.y
             }
         } ?: true
 

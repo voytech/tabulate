@@ -39,6 +39,11 @@ interface DefaultBorderStyleWords : BorderStyleBuilder {
             style = DefaultBorderStyle.DOUBLE; return DSLCommand
         }
 
+    val groove: DSLCommand
+        get() {
+            style = DefaultBorderStyle.GROOVE; return DSLCommand
+        }
+
     val none: DSLCommand
         get() {
             style = DefaultBorderStyle.NONE; return DSLCommand

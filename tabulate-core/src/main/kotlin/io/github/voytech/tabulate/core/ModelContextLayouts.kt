@@ -4,10 +4,7 @@ import io.github.voytech.tabulate.MultiIterationSet
 import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.alignment.orDefault
-import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
-import io.github.voytech.tabulate.core.model.attributes.HeightAttribute
-import io.github.voytech.tabulate.core.model.attributes.MarginsAttribute
-import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
+import io.github.voytech.tabulate.core.model.attributes.*
 import io.github.voytech.tabulate.plusAssign
 
 
@@ -37,38 +34,30 @@ class NavigableLayout(
 
     private fun onParentScope(block: (LayoutApi) -> Unit) = getParentScope()?.let(block)
 
-    private fun expandParent(position: Position) { // TODO think if we need to expand parent after each renderable ? for some cases like table layouts with column/row auto-sizing this does not allow to reliably compute size of render space (it must be recomputed after full measuring). For now eager layout expanding on each renderable seems to be redundant step.
+    private fun reserveSpaceOnParent(position: Position) { // TODO think if we need to expand parent after each renderable ? for some cases like table layouts with column/row auto-sizing this does not allow to reliably compute size of render space (it must be recomputed after full measuring). For now eager layout expanding on each renderable seems to be redundant step.
         onParentScope { parent ->
             with(parent.layout) {
-                parent.space.expandLayout(position)
+                parent.space.reserveSpace(position)
             }
         }
     }
 
-    override fun LayoutSpace.expandLayout(position: Position) {
-        expandParent(position)
-        with(delegate) { expandLayout(position) }
+    override fun LayoutSpace.reserveSpace(position: Position) {
+        reserveSpaceOnParent(position)
+        with(delegate) { reserveSpace(position) }
     }
 
-    override fun LayoutSpace.expandByRectangle(bbox: RenderableBoundingBox) = with(bbox) {
-        expandLayout(Position(absoluteX + width.orZero(), absoluteY + height.orZero()))
+    override fun LayoutSpace.reserveByRectangle(bbox: RenderableBoundingBox) = with(bbox) {
+        reserveSpace(Position(absoluteX + width.orZero(), absoluteY + height.orZero()))
     }
 
     override fun LayoutSpace.setMeasured() = with(delegate) {
         setMeasured()
-        expandParent(rightBottom)
-        //TODO The below rather does not make sense.
-        /*layouts.context.whenMeasuring {
-            if (getMeasurementResults()?.let { it.heightAligned || it.widthAligned } == true) {
-                layouts.context.navigate {
-                    traverseChildren { it.layouts.recalculateMaxRightBottom() }
-                }
-            }
-        }*/
+        reserveSpaceOnParent(currentPosition)
     }
 
     internal fun LayoutSpace.finish() = onParentScope {
-        it.layout.delegate.handleChildExpansion(getMaxBoundingRectangle())
+        it.layout.delegate.applyChildRectangle(getMaxBoundingRectangle())
     }
 
 }
@@ -153,75 +142,72 @@ class ModelContextLayouts(
             }
         } else {
             requireNextMeasuredLayout {
-                space.restart(resolveEffectiveLeftTop(constraints))
+                space.restart(constraints.resolveEffectiveLeftTop(getParentLayouts()).leftTop)
                 block(this).also { close() }
             }
         }
 
-    private fun resolveEffectiveLeftTop(parent: ModelContextLayouts?, box: SpaceConstraints): Position {
+    private fun SpaceConstraints.resolveEffectiveLeftTop(parent: ModelContextLayouts?): SpaceConstraints {
         val parentSpace = parent?.getCurrentLayoutSpace()
-        return (box.leftTop ?: parent?.nextNodePosition() ?: parentSpace?.leftTop
-        ?: Position.start(uom())).withMargins()
+        return copy(
+            leftTop = leftTop ?: parent?.nextNodePosition() ?: parentSpace?.innerLeftTop ?: Position.start(uom())
+        ).withMargins()
     }
-
-    private fun resolveEffectiveLeftTop(box: SpaceConstraints): Position =
-        resolveEffectiveLeftTop(getParentLayouts(), box)
 
     private fun newLayoutConstraints(box: SpaceConstraints): SpaceAndLayoutProperties =
         getParentLayouts().let {
             withMaxRightBottomResolved(
                 it?.getCurrentLayoutSpace(),
-                box.copy(leftTop = resolveEffectiveLeftTop(it, box))
+                box.resolveEffectiveLeftTop(it).withInnerLeftTop()
             )
         }
 
-    private fun Position.withMargins(): Position = lookupAttribute(MarginsAttribute::class.java)?.let {
-        Position(it.left + x, it.top + y)
+    private fun SpaceConstraints.withInnerLeftTop(): SpaceConstraints =
+        context.padding()?.let {
+            requireNotNull(leftTop)
+            if (innerLeftTop == null) {
+                copy(innerLeftTop = leftTop + Size(it.left, it.top))
+            } else this
+        } ?: copy(innerLeftTop = leftTop)
+
+    private fun SpaceConstraints.withInnerMaxRightBottom(): SpaceConstraints =
+        context.padding()?.let {
+            requireNotNull(maxRightBottom)
+            if (innerMaxRightBottom == null) {
+                copy(innerMaxRightBottom = maxRightBottom - Size(it.right, it.bottom))
+            } else this
+        } ?: copy(innerMaxRightBottom = maxRightBottom)
+
+    private fun SpaceConstraints.withMargins(): SpaceConstraints = lookupAttribute(MarginsAttribute::class.java)?.let {
+        requireNotNull(leftTop)
+        copy(leftTop = Position(it.left + leftTop.x, it.top + leftTop.y))
     } ?: this
 
-    private data class SpaceAndLayoutProperties(val space: SpaceConstraints, val layout: LayoutProperties)
+    private data class SpaceAndLayoutProperties(
+        val space: SpaceConstraints,
+        val layout: LayoutProperties = LayoutProperties()
+    )
 
     private fun withMaxRightBottomResolved(
         parent: LayoutSpace?, constraints: SpaceConstraints
-    ): SpaceAndLayoutProperties =
-        if (constraints.maxRightBottom == null) {
-            requireNotNull(constraints.leftTop)
-            val implicitMaxRightBottom = parent?.maxRightBottom ?: context.instance.getDocumentMaxRightBottom()
-            val explicitWidth = getExplicitWidth(parent)
-            val explicitHeight = getExplicitHeight(parent)
-            SpaceAndLayoutProperties(
-                space = constraints.copy(
-                    maxRightBottom = Position(
-                        x = explicitWidth?.let { constraints.leftTop.x + it } ?: implicitMaxRightBottom.x,
-                        y = explicitHeight?.let { constraints.leftTop.y + it } ?: implicitMaxRightBottom.y
-                    )
-                ),
-                layout = LayoutProperties(
-                    fixedWidth = explicitWidth != null,
-                    fixedHeight = explicitHeight != null,
+    ): SpaceAndLayoutProperties {
+        requireNotNull(constraints.leftTop)
+        val implicitMaxRightBottom =
+            constraints.maxRightBottom ?: parent?.innerMaxRightBottom ?: context.instance.getDocumentMaxRightBottom()
+        val explicitWidth = getExplicitWidth(parent)
+        val explicitHeight = getExplicitHeight(parent)
+        return SpaceAndLayoutProperties(
+            space = constraints.copy(
+                maxRightBottom = Position(
+                    x = explicitWidth?.let { constraints.leftTop.x + it } ?: implicitMaxRightBottom.x,
+                    y = explicitHeight?.let { constraints.leftTop.y + it } ?: implicitMaxRightBottom.y
                 )
+            ).withInnerMaxRightBottom(),
+            layout = LayoutProperties(
+                declaredWidth = explicitWidth != null,
+                declaredHeight = explicitHeight != null,
             )
-        } else SpaceAndLayoutProperties(constraints, LayoutProperties(fixedHeight = true, fixedWidth = true))
-
-    @JvmSynthetic
-    internal fun recalculateMaxRightBottom() = context.whenMeasuring {
-        val height = lookupAttribute(HeightAttribute::class.java)
-        val width = lookupAttribute(WidthAttribute::class.java)
-        val asPercentage = height?.value?.unit == UnitsOfMeasure.PC || width?.value?.unit == UnitsOfMeasure.PC
-        if (asPercentage) {
-            getParentLayouts()?.let { parent ->
-                val recalculatedHeight = height?.switchUnitOfMeasure(uom(), parent.getCurrentLayoutSpace())
-                val recalculatedWidth = width?.switchUnitOfMeasure(uom(), parent.getCurrentLayoutSpace())
-                context.layouts.current().space.let { space ->
-                    space.maxRightBottom?.let { maxRightBottom ->
-                        space.maxRightBottom = Position(
-                            recalculatedWidth?.let { space.leftTop.x + it } ?: maxRightBottom.x,
-                            recalculatedHeight?.let { space.leftTop.y + it } ?: maxRightBottom.y
-                        )
-                    }
-                }
-            }
-        }
+        )
     }
 
     private fun getExplicitHeight(layout: LayoutSpace?): Height? =
@@ -231,10 +217,10 @@ class ModelContextLayouts(
         lookupAttribute(WidthAttribute::class.java)?.switchUnitOfMeasure(uom(), layout)
 
     private fun HeightAttribute.switchUnitOfMeasure(uom: UnitsOfMeasure, layout: LayoutSpace?): Height =
-        value.switchUnitOfMeasure(uom, layout?.maxBoundingRectangle?.getHeight())
+        value.switchUnitOfMeasure(uom, layout?.innerBoundingRectangle?.getHeight())
 
     private fun WidthAttribute.switchUnitOfMeasure(uom: UnitsOfMeasure, layout: LayoutSpace?): Width =
-        value.switchUnitOfMeasure(uom, layout?.maxBoundingRectangle?.getWidth())
+        value.switchUnitOfMeasure(uom, layout?.innerBoundingRectangle?.getWidth())
 
     private fun <A : Attribute<A>> lookupAttribute(attribute: Class<A>): A? =
         (context.model as? AttributedModelOrPart)?.attributes?.forContext(context.model.javaClass)?.get(attribute)
@@ -245,3 +231,30 @@ fun Position.align(attribute: AlignmentAttribute, parentSize: Size, thisSize: Si
     x = x.align(attribute.horizontal.orDefault(), parentSize.width, thisSize.width),
     y = y.align(attribute.vertical.orDefault(), parentSize.height, thisSize.height)
 )
+
+data class Padding(
+    val left: Width,
+    val top: Height,
+    val right: Width,
+    val bottom: Height,
+) {
+    operator fun plus(other: Padding): Padding = copy(
+        left = left + other.left,
+        top = top + other.top,
+        right = right + other.right,
+        bottom = bottom + other.bottom
+    )
+}
+
+fun ModelExportContext.padding(): Padding? =
+    (model as? AttributedModelOrPart)
+        ?.attributes
+        ?.forContext(model.javaClass)
+        ?.get<BordersAttribute>()?.let {
+            Padding(
+                left = it.leftBorderWidth,
+                right = it.rightBorderWidth,
+                bottom = it.bottomBorderHeight,
+                top = it.topBorderHeight
+            )
+        }
