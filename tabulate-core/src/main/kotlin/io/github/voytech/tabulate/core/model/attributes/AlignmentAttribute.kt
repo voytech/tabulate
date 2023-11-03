@@ -24,6 +24,12 @@ data class AlignmentAttribute(
             get() {
                 horizontal = DefaultHorizontalAlignment.CENTER; return DSLCommand
             }
+
+        val justify: DSLCommand
+            get() {
+                horizontal = DefaultHorizontalAlignment.JUSTIFY; return DSLCommand
+            }
+
         val left: DSLCommand
             get() {
                 horizontal = DefaultHorizontalAlignment.LEFT; return DSLCommand

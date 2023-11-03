@@ -2,11 +2,6 @@ package io.github.voytech.tabulate.pdf
 
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
-import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
-import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
-import io.github.voytech.tabulate.core.model.alignment.HorizontalAlignment
-import io.github.voytech.tabulate.core.model.alignment.VerticalAlignment
-import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
 import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
@@ -18,7 +13,6 @@ import io.github.voytech.tabulate.core.model.color.darken
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.core.operation.AttributeOperation
 import io.github.voytech.tabulate.core.operation.AttributedContext
-import io.github.voytech.tabulate.core.operation.HasText
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType1Font
@@ -64,63 +58,6 @@ fun TextStylesAttribute.pdFont(): PDFont =
         }
     } else default()
 
-class AlignmentAttributeRenderOperation<CTX> :
-    AttributeOperation<PdfBoxRenderingContext, AlignmentAttribute, CTX> where CTX : AttributedContext {
-
-
-    private fun PdfBoxRenderingContext.applyTextAlignment(
-        context: CTX,
-        vertical: VerticalAlignment? = DefaultVerticalAlignment.MIDDLE,
-        horizontal: HorizontalAlignment? = DefaultHorizontalAlignment.CENTER,
-    ) {
-        val bbox = boxLayout(context, context.getModelAttribute<BordersAttribute>())
-        // TODO - all measurable Renderable should be mixed with interface Measurable which adds measuring method in context of this rendering context.
-        if (context is HasText) {
-            val fontAndSize = context.textMeasures() // should add method takeMeasure for all measurable AttributedContext...
-            var xOffset = 0.0F
-            var yOffset = 0.0F
-            if (vertical != null) {
-                val textHeight = fontAndSize.fontHeight()
-                when (vertical) {
-                    DefaultVerticalAlignment.TOP -> {
-                        yOffset += (bbox.inner.height?.value ?: 0f) - textHeight
-                    }
-
-                    DefaultVerticalAlignment.BOTTOM -> {}
-                    DefaultVerticalAlignment.MIDDLE -> {
-                        yOffset += (bbox.inner.height?.value?.div(2) ?: 0f) - textHeight / 2
-                    }
-                }
-            }
-            if (horizontal != null) {
-                val textWidth = fontAndSize.measureTextWidth(context.value)
-                when (horizontal) {
-                    DefaultHorizontalAlignment.LEFT -> {}
-                    DefaultHorizontalAlignment.CENTER -> {
-                        xOffset += ((bbox.inner.width?.value?.div(2)) ?: 0f) - textWidth / 2
-                    }
-
-                    DefaultHorizontalAlignment.RIGHT -> {
-                        xOffset += (bbox.inner.width?.value ?: 0f) - textWidth
-                    }
-                }
-            }
-            xTextOffset += xOffset
-            yTextOffset += yOffset
-        }
-    }
-
-    override fun invoke(
-        renderingContext: PdfBoxRenderingContext,
-        context: CTX,
-        attribute: AlignmentAttribute,
-    ) = with(renderingContext) {
-        beginText()
-        applyTextAlignment(context, attribute.vertical, attribute.horizontal)
-    }
-
-}
-
 class TextStylesAttributeRenderOperation<CTX : AttributedContext> :
     AttributeOperation<PdfBoxRenderingContext, TextStylesAttribute, CTX> {
 
@@ -134,10 +71,6 @@ class TextStylesAttributeRenderOperation<CTX : AttributedContext> :
             context.textMeasures().let { fontAndSize ->
                 setFont(fontAndSize.font(), fontAndSize.fontSize().toFloat())
                 content.setNonStrokingColor(attribute.fontColor.awtColor())
-                val ident: Int = attribute.ident?.toInt() ?: 0
-                val identWidth =
-                    if (ident > 0) fontAndSize.measureTextWidth((1..ident).fold("") { agg, _ -> "$agg " }) else 0F
-                xTextOffset += identWidth
             }
         }
     }

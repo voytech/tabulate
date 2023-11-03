@@ -20,7 +20,6 @@ import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.PDFont
-import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import java.io.OutputStream
 import java.awt.Color as AwtColor
@@ -56,8 +55,6 @@ class PdfBoxRenderingContext(
     private var textDrawing: Boolean = false
     private var fontSet: Boolean = false
     private var textPositionSet: Boolean = false
-    var xTextOffset: Float = 0F
-    var yTextOffset: Float = 0F
 
     fun addPage() = PDPage().apply {
         if (this@PdfBoxRenderingContext::pageContentStream.isInitialized) pageContentStream.close()
@@ -92,12 +89,21 @@ class PdfBoxRenderingContext(
         getCurrentContentStream().showText(text)
     }
 
+    fun showTextPartsAtOffsets(textPositions: List<TextPosition>) {
+        if (!fontSet) {
+            getCurrentContentStream().setFont(defaultFont, 10F)
+        }
+        getCurrentContentStream().showTextWithPositioning(Array<Any>(textPositions.size * 2) { i ->
+            textPositions[i / 2].xPositionedText.let { pair ->
+                pair.first.takeIf { i.mod(2) == 0 } ?: pair.second
+            }
+        })
+    }
+
     fun endText() {
         textDrawing = false
         fontSet = false
         textPositionSet = false
-        xTextOffset = 0F
-        yTextOffset = 0F
         getCurrentContentStream().setStrokingColor(AwtColor.BLACK)
         getCurrentContentStream().endText()
     }
@@ -116,24 +122,6 @@ class PdfBoxRenderingContext(
             getCurrentContentStream().drawImage(this, x, y)
     }
 
-    fun Renderable<*>.renderImageFromURI(uri: String) {
-        with(boxLayout(this, getModelAttribute<BordersAttribute>())) {
-            loadImage(uri).showImage(innerX, innerY, inner.width?.value, inner.height?.value)
-        }
-    }
-
-    fun Renderable<*>.resolveUriImageBoundingBox(uri: String) {
-        boundingBox()?.let { bbox ->
-            if (!bbox.isDefined()) {
-                val image = loadImage(uri)
-                bbox.apply {
-                    height = height ?: Height(image.height.toFloat(), UnitsOfMeasure.PT)
-                    width = width ?: Width(image.width.toFloat(), UnitsOfMeasure.PT)
-                }
-            }
-        }
-    }
-
     fun <R> Renderable<*>.withinRect(type: BoxLayoutBboxType, action: (RenderableBoundingBox) -> R): R {
         val bbox = boxLayout(this, getModelAttribute<BordersAttribute>())
         return (bbox.inner.takeIf { type == BoxLayoutBboxType.INNER } ?: bbox.outer).let { rect ->
@@ -141,13 +129,6 @@ class PdfBoxRenderingContext(
                 action(rect)
             }
         }
-    }
-
-    fun RenderableBoundingBox.setCuttingEdge() {
-        getCurrentContentStream().addRect(
-            absoluteX.value, absoluteY.value, width?.value ?: 0f, height?.value ?: 0f
-        )
-        getCurrentContentStream().clip()
     }
 
     fun RenderableBoundingBox.drawRect(color: Color? = null) {
@@ -211,11 +192,6 @@ class PdfBoxRenderingContext(
     private fun PDPage.createContent(): PDPageContentStream = PDPageContentStream(document, this)
 
     fun Float.intoPdfBoxOrigin(): Float = currentPage.mediaBox.height - this
-
-    fun Position.pdfBoxOrigin(): Position {
-        require(y.unit == UnitsOfMeasure.PT)
-        return copy(y = Y(y.value.intoPdfBoxOrigin(), y.unit))
-    }
 
     override fun getWidth(): Width = if (this@PdfBoxRenderingContext::currentPage.isInitialized) {
         Width(currentPage.mediaBox.width, UnitsOfMeasure.PT)
@@ -283,6 +259,9 @@ data class BoxLayout(
         } else outer
 
 }
+
+@JvmInline
+value class TextPosition(val xPositionedText: Pair<Float, String>)
 
 fun Color?.awtColor(): AwtColor =
     this?.let { AwtColor(it.r, it.g, it.b) } ?: AwtColor.BLACK

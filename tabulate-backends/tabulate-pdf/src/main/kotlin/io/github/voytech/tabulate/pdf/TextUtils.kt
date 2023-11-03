@@ -27,6 +27,8 @@ class FontMeasurements(private val inner: Pair<PDFont, Int>) {
 
     fun Float.toPoints(): Float = this / 1000 * fontSize()
 
+    fun Float.toTextUnits(): Float = this * 1000 / fontSize()
+
 }
 
 fun <A : AttributedContext> A.textMeasures(): FontMeasurements =

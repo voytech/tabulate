@@ -528,6 +528,7 @@ class BasicExportsTests {
                 align { fullSize; center; middle } text {
                     attributes {
                         borders { all { red; 6.pt() } }
+                        alignment { justify }
                     }
                     value =
                         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore\n" +
