@@ -7,10 +7,10 @@ import io.github.voytech.tabulate.core.StandaloneExportTemplate
 import io.github.voytech.tabulate.core.documentFormat
 import java.io.File
 
-fun (DocumentBuilderApi.() -> Unit).export(file: File) = file.documentFormat().let { format ->
+fun (DocumentBuilderApi.() -> Unit).export(file: File, params: Map<String, Any> = emptyMap()) = file.documentFormat().let { format ->
     buildModel(DocumentBuilderApi().apply(this)).let { doc ->
-        StandaloneExportTemplate(format).export(doc, file.outputStream())
+        StandaloneExportTemplate(format).export(doc, file.outputStream(), params)
     }
 }
 
-fun (DocumentBuilderApi.() -> Unit).export(file: String) = export(File(file))
+fun (DocumentBuilderApi.() -> Unit).export(file: String, params: Map<String, Any> = emptyMap()) = export(File(file), params)

@@ -111,7 +111,7 @@ class CVExample {
     fun `should export simple CV pdf`() {
         document {
             page {
-                align { center; fullWidth } horizontal {
+                align { center; fullWidth; top } horizontal {
                     align { left; width25 } vertical {
                         attributes {
                             width { 100.percents() }
@@ -120,7 +120,6 @@ class CVExample {
                             borders { all { red; 20.pt(); solid } }
                         }
                         vertical {
-                            attributes { margins { top { 100.pt() } } }
                             textList("Programming Languages:", "Java", "Kotlin", "Typescript", "Python", "JavaScript")
                             textList("Frameworks:", "Spring Boot", "Spring", "Angular", "React", "Backbone.js")
                         }
@@ -137,7 +136,6 @@ class CVExample {
                             attributes {
                                 width { 100.percents() }
                                 height { 150.pt() }
-                                margins { left { 10.pt() }; top { 5.pt() } }
                                 borders { all { blue; 15.pt(); solid } }
                             }
                             align { left; middle; halfWidth; fullHeight } vertical {

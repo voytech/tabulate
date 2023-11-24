@@ -19,7 +19,7 @@ class Container(
 
     override fun doExport(api: ExportApi): Unit = api {
         if (hasRenderableAttributes()) {
-            render(ContainerRenderable(attributes?.forContext<ContainerRenderable>()))
+            render(ContainerRenderable(attributes?.forContext<ContainerRenderable>(), api.getCustomAttributes()))
         }
         exportOrMeasure {
             export()

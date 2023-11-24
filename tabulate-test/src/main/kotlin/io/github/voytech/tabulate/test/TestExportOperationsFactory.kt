@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.test
 
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.operation.*
+import io.github.voytech.tabulate.components.table.rendering.*
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.RenderingContext
 import io.github.voytech.tabulate.core.operation.VoidOperation

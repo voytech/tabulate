@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.components.table.operation
+package io.github.voytech.tabulate.components.table.rendering
 
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.RenderingContext

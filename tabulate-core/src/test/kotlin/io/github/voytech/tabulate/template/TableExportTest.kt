@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.template
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
-import io.github.voytech.tabulate.components.table.operation.*
+import io.github.voytech.tabulate.components.table.rendering.*
 import io.github.voytech.tabulate.components.table.template.export
 import io.github.voytech.tabulate.components.table.template.tabulate
 import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute

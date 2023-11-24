@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.testsupport
 
 import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHintAttribute
-import io.github.voytech.tabulate.components.table.operation.Coordinates
+import io.github.voytech.tabulate.components.table.rendering.Coordinates
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.Height
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
@@ -239,7 +239,7 @@ class PoiColumnWidthAttributeResolver : AttributeResolver<ApachePoiRenderingCont
             val autoSizing = it.isColumnTrackedForAutoSizing(select.columnIndex)
             val pxWidth = it.getColumnWidthInPixels(select.columnIndex).roundToInt()
             return if (autoSizing) {
-                WidthAttribute(auto = true, Width.zero(UnitsOfMeasure.PX))
+                WidthAttribute(Width.zero(UnitsOfMeasure.PX))
             } else {
                 WidthAttribute(value = Width(pxWidth.toFloat(), UnitsOfMeasure.PX))
             }

@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.support
 
 import io.github.voytech.tabulate.components.table.model.attributes.table.TemplateFileAttribute
-import io.github.voytech.tabulate.components.table.operation.*
+import io.github.voytech.tabulate.components.table.rendering.*
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.attributes.*
 import io.github.voytech.tabulate.core.operation.AttributeOperation

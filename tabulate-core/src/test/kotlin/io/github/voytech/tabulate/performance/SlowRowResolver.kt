@@ -5,10 +5,10 @@ import io.github.voytech.tabulate.components.table.model.ColumnKey
 import io.github.voytech.tabulate.components.table.model.RowDef
 import io.github.voytech.tabulate.components.table.model.SourceRow
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.operation.*
-import io.github.voytech.tabulate.components.table.operation.createCellContext
-import io.github.voytech.tabulate.components.table.operation.createRowEnd
-import io.github.voytech.tabulate.components.table.operation.createRowStart
+import io.github.voytech.tabulate.components.table.rendering.*
+import io.github.voytech.tabulate.components.table.rendering.createCellContext
+import io.github.voytech.tabulate.components.table.rendering.createRowEnd
+import io.github.voytech.tabulate.components.table.rendering.createRowStart
 import io.github.voytech.tabulate.components.table.template.*
 import io.github.voytech.tabulate.core.layout.CrossedAxis
 import io.github.voytech.tabulate.core.model.ModelExportContext

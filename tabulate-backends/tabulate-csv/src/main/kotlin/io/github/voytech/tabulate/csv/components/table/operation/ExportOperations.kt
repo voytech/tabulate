@@ -2,9 +2,9 @@ package io.github.voytech.tabulate.csv.components.table.operation
 
 
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.operation.CellRenderable
-import io.github.voytech.tabulate.components.table.operation.EndRowOperation
-import io.github.voytech.tabulate.components.table.operation.StartRowOperation
+import io.github.voytech.tabulate.components.table.rendering.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.EndRowOperation
+import io.github.voytech.tabulate.components.table.rendering.StartRowOperation
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.spi.BuildOperations
 import io.github.voytech.tabulate.core.spi.DocumentFormat

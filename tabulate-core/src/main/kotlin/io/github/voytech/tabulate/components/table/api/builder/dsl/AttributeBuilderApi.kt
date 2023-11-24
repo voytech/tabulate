@@ -2,10 +2,10 @@ package io.github.voytech.tabulate.components.table.api.builder.dsl
 
 
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.operation.CellRenderable
-import io.github.voytech.tabulate.components.table.operation.ColumnRenderable
-import io.github.voytech.tabulate.components.table.operation.RowRenderable
-import io.github.voytech.tabulate.components.table.operation.TableStartRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.ColumnRenderable
+import io.github.voytech.tabulate.components.table.rendering.RowRenderable
+import io.github.voytech.tabulate.components.table.rendering.TableStartRenderable
 import io.github.voytech.tabulate.core.model.attributes.*
 
 

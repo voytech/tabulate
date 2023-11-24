@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.test
 
-import io.github.voytech.tabulate.components.table.operation.CellValue
-import io.github.voytech.tabulate.components.table.operation.Coordinates
+import io.github.voytech.tabulate.components.table.rendering.CellValue
+import io.github.voytech.tabulate.components.table.rendering.Coordinates
 import io.github.voytech.tabulate.core.model.Attribute
 import java.io.File
 

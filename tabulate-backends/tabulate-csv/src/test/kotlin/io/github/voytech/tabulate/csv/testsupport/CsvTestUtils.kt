@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.csv.testsupport
 
 import io.github.voytech.tabulate.csv.CsvRenderingContext
-import io.github.voytech.tabulate.components.table.operation.CellValue
+import io.github.voytech.tabulate.components.table.rendering.CellValue
 import io.github.voytech.tabulate.test.CellPosition
 import io.github.voytech.tabulate.test.StateProvider
 import io.github.voytech.tabulate.test.TableAssert

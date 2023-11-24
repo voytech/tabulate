@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.TableBuilderA
 import io.github.voytech.tabulate.components.table.api.builder.dsl.createTable
 import io.github.voytech.tabulate.components.table.model.ColumnDef
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.operation.*
+import io.github.voytech.tabulate.components.table.rendering.*
 import io.github.voytech.tabulate.core.DocumentFormat
 import io.github.voytech.tabulate.core.StandaloneExportTemplate
 import io.github.voytech.tabulate.core.documentFormat

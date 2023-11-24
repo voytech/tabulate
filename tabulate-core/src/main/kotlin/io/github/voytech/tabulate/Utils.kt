@@ -2,6 +2,7 @@ package io.github.voytech.tabulate
 
 import java.io.FileInputStream
 import java.net.URL
+import kotlin.math.round
 
 fun String.isValidUrl(): Boolean =
     try {
@@ -127,3 +128,5 @@ sealed class Either<A, B> {
     class Left<A, B>(val value: A) : Either<A, B>()
     class Right<A, B>(val value: B) : Either<A, B>()
 }
+
+fun Float.round3(): Float = (round(this*1000))/1000

@@ -9,9 +9,9 @@ class SimpleShapeWrapper(
 
     var font: XSSFFont? = null
 
-    fun append(string: String,font: XSSFFont? = null) {
+    fun append(string: String, font: XSSFFont? = null) {
         XSSFRichTextString().let { richText ->
-            richText.append(string,font)
+            richText.append(string, font)
             shape.setText(richText)
         }
     }
@@ -20,7 +20,7 @@ class SimpleShapeWrapper(
         (font ?: rendering.workbook().createFont() as XSSFFont).apply {
             with(shape.text) {
                 font = apply(block)
-                append(this,font)
+                append(this, font)
             }
         }
 }

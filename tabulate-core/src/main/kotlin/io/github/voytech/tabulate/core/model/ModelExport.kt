@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.core.model
 
 import io.github.voytech.tabulate.MultiIterationSet
 import io.github.voytech.tabulate.core.*
+import io.github.voytech.tabulate.core.InputParams.Companion.allowMeasureBeforeRender
 import io.github.voytech.tabulate.core.layout.LayoutSpace
 import io.github.voytech.tabulate.core.layout.SpaceConstraints
 import io.github.voytech.tabulate.core.operation.*
@@ -25,6 +26,15 @@ value class StateAttributes(val data: MutableMap<String, Any> = mutableMapOf()) 
     inline operator fun <reified S : Any> set(key: String, state: S) {
         data[key] = state
     }
+
+    operator fun plusAssign(other: StateAttributes) = plusAssign(other.data)
+
+    operator fun plusAssign(other: Map<String, Any>) {
+        other.forEach { (key, value) -> data[key] = value }
+    }
+
+    operator fun plus(other: Map<String, Any>): StateAttributes =
+        apply { other.forEach { (key, value) -> this[key] = value } }
 
     inline fun <reified E : ExecutionContext> addExecutionContext(executionContext: E) {
         data["executionContext-${E::class.java.canonicalName}"] = executionContext
@@ -295,7 +305,7 @@ class ExportApi private constructor(private val context: ModelExportContext) {
     }
 
     private fun ModelExportContext.shouldMeasure(): Boolean {
-        return model.needsMeasureBeforeExport && layouts.needsMeasuring() && operations.hasMeasuringOperations()
+        return model.needsMeasureBeforeExport && layouts.needsMeasuring() && customStateAttributes.allowMeasureBeforeRender()
     }
 
     private fun <R> ModelExportContext.inNextLayoutScope(
@@ -306,7 +316,6 @@ class ExportApi private constructor(private val context: ModelExportContext) {
             maxRightBottom = constraints?.maxRightBottom,
         ), block
     )
-
 
     private fun <R> AbstractModel.withinInitializedContext(block: (ModelExportContext) -> R): R =
         block(ensuringExportContext().also { it.phase = context.phase })

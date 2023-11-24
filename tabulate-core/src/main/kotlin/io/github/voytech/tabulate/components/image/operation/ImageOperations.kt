@@ -24,15 +24,13 @@ class ImageRenderable internal constructor(
     override val boundaryToFit = LayoutBoundaryType.OUTER
 
     override fun LayoutSpace.defineBoundingBox(layout: SimpleLayout): RenderableBoundingBox = with(layout) {
-        getCurrentSize().let { currentSize ->
-            elementBoundingBox(
-                x = leftTop.x,
-                y = leftTop.y,
-                width = currentSize?.width.takeIf { properties.declaredWidth },
-                height = currentSize?.height.takeIf { properties.declaredHeight },
-                boundaryToFit
-            )
-        }
+        elementBoundingBox(
+            x = leftTop.x,
+            y = leftTop.y,
+            width = getExplicitWidth(),
+            height = getExplicitHeight(),
+            boundaryToFit
+        )
     }
 
     override val imageUri: String

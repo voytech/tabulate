@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.excel
 
-import io.github.voytech.tabulate.components.table.operation.CellRenderable
-import io.github.voytech.tabulate.components.table.operation.getSheetName
+import io.github.voytech.tabulate.components.table.rendering.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.getSheetName
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.attributes.*

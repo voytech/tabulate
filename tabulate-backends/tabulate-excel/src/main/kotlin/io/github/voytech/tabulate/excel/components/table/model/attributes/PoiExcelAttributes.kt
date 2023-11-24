@@ -4,9 +4,9 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.CellLevelAttr
 import io.github.voytech.tabulate.components.table.api.builder.dsl.ColumnLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.dsl.RowLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.dsl.TableLevelAttributesBuilderApi
-import io.github.voytech.tabulate.components.table.operation.CellRenderable
-import io.github.voytech.tabulate.components.table.operation.TableContext
-import io.github.voytech.tabulate.components.table.operation.TableStartRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.TableContext
+import io.github.voytech.tabulate.components.table.rendering.TableStartRenderable
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.model.Attribute

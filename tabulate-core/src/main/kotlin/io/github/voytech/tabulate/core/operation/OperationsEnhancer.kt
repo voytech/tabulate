@@ -99,7 +99,8 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
             context.initBoundingBox(this)
         } else null
 
-    protected fun LayoutApi.tryApplyResults(context: E, boundaries: RenderableBoundingBox? = null) = with(layout) {
+    protected fun LayoutApi.tryApplyResults(context: E) = with(layout) {
+        val boundaries = context.boundingBox()
         if (boundaries != null) {
             space.reserveByRectangle(boundaries)
             @Suppress("UNCHECKED_CAST")
@@ -157,22 +158,17 @@ class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedContext>(
 ) : LayoutAwareOperation<CTX, E>(delegate, layoutApi) {
 
     override operator fun invoke(renderingContext: CTX, context: E): RenderingResult = with(layoutApi()) {
-        ensureRenderableBoundingBox(context).let { bbox ->
+        ensureRenderableBoundingBox(context).let {
             val measuringResult = measuringOperations.measureRenderableWhenMissingBounds(renderingContext, context)
             val status = resolveRenderingStatus(measuringResult, context)
             val intermediateResult = status.merge(measuringResult)
-            val renderClippingOrFully: (RenderingResult) -> RenderingResult = {
-                bbox?.setFlags()
-                delegate(renderingContext, context)
-            }
+            val renderClippingOrFully: (RenderingResult) -> RenderingResult = { delegate(renderingContext, context) }
             when (status) {
                 is Ok -> renderClippingOrFully(intermediateResult)
                 is RenderingClipped -> renderClippingOrFully(intermediateResult)
                 is RenderingSkipped -> intermediateResult
                 else -> error("This OperationResult: $status is not supported on guarded rendering.")
-            }.also {
-                tryApplyResults(context, bbox)
-            }
+            }.also { tryApplyResults(context) }
         }
     }
 }
@@ -189,8 +185,7 @@ class LayoutAwareMeasureOperation<CTX : RenderingContext, E : AttributedContext>
 ) : LayoutAwareOperation<CTX, E>(delegate, layoutApi) {
 
     override operator fun invoke(renderingContext: CTX, context: E): RenderingResult = with(layoutApi()) {
-        ensureRenderableBoundingBox(context).let { bbox ->
-            bbox?.setFlags()
+        ensureRenderableBoundingBox(context).let {
             val measuringResult = delegate.measureRenderableWhenMissingBounds(renderingContext, context)
             val status = resolveRenderingStatus(measuringResult, context)
             when (status) {
@@ -198,9 +193,7 @@ class LayoutAwareMeasureOperation<CTX : RenderingContext, E : AttributedContext>
                 is RenderingSkipped -> status
                 is Ok -> status
                 else -> error("This OperationResult: $status is not supported on guarded measuring.")
-            }.merge(measuringResult).also {
-                tryApplyResults(context, bbox)
-            }
+            }.merge(measuringResult).also { tryApplyResults(context) }
         }
     }
 }

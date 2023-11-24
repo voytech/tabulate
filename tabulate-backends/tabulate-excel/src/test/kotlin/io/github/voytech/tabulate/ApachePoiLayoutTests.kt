@@ -32,7 +32,6 @@ class ApachePoiLayoutTests {
                         dataSource(SampleProduct.create(15))
                         attributes {
                             borders { all { lightGray; 1.pt() } }
-                            columnWidth { auto = true }
                         }
                         columns {
                             column(SampleProduct::code) {
@@ -48,7 +47,6 @@ class ApachePoiLayoutTests {
                         dataSource(SampleProduct.create(10))
                         attributes {
                             borders { all { lightGray; 5.pt() } }
-                            columnWidth { auto = true }
                         }
                         columns {
                             column(SampleProduct::code) { attributes { text { bold } } }
@@ -107,7 +105,6 @@ class ApachePoiLayoutTests {
                             dataSource(SampleProduct.create(15))
                             attributes {
                                 borders { all { lightGray; 0.5F.pt() } }
-                                columnWidth { auto = true }
                             }
                             columns {
                                 column(SampleProduct::code) {
@@ -131,7 +128,6 @@ class ApachePoiLayoutTests {
                             dataSource(SampleProduct.create(10))
                             attributes {
                                 borders { all { lightGray; 5.pt() } }
-                                columnWidth { auto = true }
                             }
                             columns {
                                 column(SampleProduct::code) { attributes { text { bold } } }

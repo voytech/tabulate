@@ -1,8 +1,7 @@
 package io.github.voytech.tabulate.excel.components.text
 
-import io.github.voytech.tabulate.components.table.operation.getSheetName
+import io.github.voytech.tabulate.components.table.rendering.getSheetName
 import io.github.voytech.tabulate.components.text.model.Text
-import io.github.voytech.tabulate.components.text.operation.TextOperation
 import io.github.voytech.tabulate.components.text.operation.TextRenderable
 import io.github.voytech.tabulate.core.operation.VoidOperation
 import io.github.voytech.tabulate.core.reify
@@ -17,27 +16,38 @@ import org.apache.poi.xssf.usermodel.XSSFTextBox
 class ExcelTextOperations : OperationsBundleProvider<ApachePoiRenderingContext, Text> {
 
     override fun provideExportOperations(): BuildOperations<ApachePoiRenderingContext> = {
-        operation(VoidOperation<ApachePoiRenderingContext,TextRenderable> { renderingContext, context ->
+        operation(VoidOperation<ApachePoiRenderingContext, TextRenderable> { renderingContext, context ->
             with(renderingContext) {
-                renderingContext.provideSheet(context.getSheetName()).let {
-                    val clientAnchor = context.computeClientAnchor()
-                    val textBox: XSSFTextBox = ensureDrawingPatriarch(it.sheetName).createTextbox(clientAnchor)
-                    val simpleShapeWrapper = SimpleShapeWrapper(it.drawingPatriarch, textBox).bind(context)
-                    simpleShapeWrapper.append(context.text)
+                renderingContext.provideSheet(context.getSheetName()).let { sheet ->
+                    context.checkSizeDeclarations()
+                    context.measureText()
+                    val clientAnchor = context.createApachePoiSpreadsheetAnchor()
+                    val textBox: XSSFTextBox = ensureDrawingPatriarch(sheet.sheetName).createTextbox(clientAnchor)
+                    SimpleShapeWrapper(sheet.drawingPatriarch, textBox).bind(context).append(context.text)
+                    context.applySpreadsheetAnchor()
                 }
             }
         })
     }
 
     override fun provideMeasureOperations(): BuildOperations<ApachePoiRenderingContext> = {
-        operation(VoidOperation<ApachePoiRenderingContext,TextRenderable> { _, _ -> })
+        operation(VoidOperation<ApachePoiRenderingContext, TextRenderable> { renderingContext, context ->
+            with(renderingContext) {
+                renderingContext.provideSheet(context.getSheetName()).let {
+                    context.checkSizeDeclarations()
+                    context.measureText()
+                    context.createSpreadsheetAnchor()
+                    context.applySpreadsheetAnchor()
+                }
+            }
+        })
     }
 
     override fun provideAttributeOperations(): BuildAttributeOperations<ApachePoiRenderingContext> = {
-         operation(XSSFShapeAlignmentAttributeRenderOperation<TextRenderable>())
-         operation(XSSFShapeTextStylesAttributeRenderOperation<TextRenderable>())
-         operation(XSSFShapeBackgroundAttributeRenderOperation<TextRenderable>())
-         operation(XSSFBorderAttributeRenderOperation<TextRenderable>())
+        operation(XSSFShapeAlignmentAttributeRenderOperation<TextRenderable>())
+        operation(XSSFShapeTextStylesAttributeRenderOperation<TextRenderable>())
+        operation(XSSFShapeBackgroundAttributeRenderOperation<TextRenderable>())
+        operation(XSSFBorderAttributeRenderOperation<TextRenderable>())
     }
 
     override fun getDocumentFormat(): DocumentFormat<ApachePoiRenderingContext> = DocumentFormat.format("xlsx", "poi")

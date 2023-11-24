@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.pdf.components.table
 
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
-import io.github.voytech.tabulate.components.table.operation.*
+import io.github.voytech.tabulate.components.table.rendering.*
 import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
 import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
 import io.github.voytech.tabulate.core.operation.Nothing
