@@ -128,6 +128,15 @@ interface Layout {
      */
     fun LayoutSpace.getCurrentSize(): Size?
 
+    /**
+     * Gets the width declared by API (by WidthAttribute and HeightAttribute)
+     */
+    fun LayoutSpace.getExplicitWidth(): Width?
+    /**
+     * Gets the height declared by API (by WidthAttribute and HeightAttribute)
+     */
+    fun LayoutSpace.getExplicitHeight(): Height?
+
     fun getMeasurementResults(): MeasurementResults? = null
 
     fun LayoutSpace.setMeasured() {
@@ -201,6 +210,13 @@ abstract class AbstractLayout(override val properties: LayoutProperties) : Layou
 
     override fun LayoutSpace.getCurrentSize(): Size? = maxBoundingRectangle?.size()
 
+    override fun LayoutSpace.getExplicitWidth(): Width? = if (properties.declaredWidth) {
+        maxBoundingRectangle?.size()?.width
+    } else null
+
+    override fun LayoutSpace.getExplicitHeight(): Height? = if (properties.declaredHeight) {
+        maxBoundingRectangle?.size()?.height
+    } else null
     /**
      * Wraps a code block and executes only if [isSpaceMeasured] flag is set to false
      * (meaning that policy is used not for eventual guidance while rendering but only for measurements)
@@ -351,15 +367,10 @@ data class RenderableBoundingBox(
     // maxHeight - maximal allowed height, as constrained by enclosing model in model hierarchy
     var maxHeight: Height? = null
 ) {
-    val flags: MeasurementsFlags = MeasurementsFlags()
 
     fun unitsOfMeasure(): UnitsOfMeasure = layoutPosition.x.unit
 
     fun isDefined(): Boolean = width != null && height != null
-
-    fun setFlags() {
-        with(flags) { assignFlags() }
-    }
 
     operator fun plus(other: RenderableBoundingBox): RenderableBoundingBox = copy(
         width = other.width?.switchUnitOfMeasure(unitsOfMeasure()) ?: width,

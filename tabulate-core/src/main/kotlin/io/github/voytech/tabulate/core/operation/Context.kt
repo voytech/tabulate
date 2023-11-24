@@ -60,6 +60,9 @@ abstract class AttributedContext(@JvmSynthetic override val attributes: Attribut
     inline fun <reified T : Attribute<T>> getModelAttribute(): T? =
         getModelAttribute(T::class.java)
 
+    inline fun <reified T : Attribute<T>> hasModelAttribute(): Boolean =
+        getModelAttribute(T::class.java) != null
+
     fun <A : Any> setContextAttribute(key: String, value: A) {
         additionalAttributes["$id[$key]"] = value
     }
@@ -82,7 +85,7 @@ abstract class Renderable<EL : Layout>(@JvmSynthetic override val attributes: At
     override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
     lateinit var boundingBox: RenderableBoundingBox
-        private set
+        internal set
 
     fun hasBoundingBox() = this::boundingBox.isInitialized
 

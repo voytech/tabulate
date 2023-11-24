@@ -2,10 +2,17 @@ package io.github.voytech.tabulate.core.layout.policy
 
 import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.model.*
+import io.github.voytech.tabulate.round3
 
-interface TablePolicyMethods {
-    fun setColumnWidth(column: Int, width: Width)
-    fun setRowHeight(row: Int, height: Height)
+enum class SizingOptions {
+    SET,
+    SET_IF_GREATER,
+    SET_LOCKED
+}
+
+interface TableSizingMethods {
+    fun setColumnWidth(column: Int, width: Width, options: SizingOptions = SizingOptions.SET)
+    fun setRowHeight(row: Int, height: Height, options: SizingOptions = SizingOptions.SET)
     fun getColumnWidth(column: Int, colSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width?
     fun getRowHeight(row: Int, rowSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height?
     fun setOffsets(row: Int, column: Int)
@@ -15,26 +22,44 @@ abstract class AbstractTableLayout(
     properties: LayoutProperties,
     protected open val rowIndex: Int = 0,
     protected open val columnIndex: Int = 0,
-) : AbstractLayout(properties), TablePolicyMethods
+) : AbstractLayout(properties), TableSizingMethods
 
 
-class SpreadsheetPolicy(
+class NonUniformCartesianGrid(
     private val defaultWidthInPt: Float = 0f,
     private val defaultHeightInPt: Float = 0f,
     val standardUnit: StandardUnits = StandardUnits.PT,
-) : TablePolicyMethods, AbsolutePositionMethods {
+) : TableSizingMethods, AbsolutePositionMethods {
 
     private var rowOffsetIndex: Int = 0
     private var columnOffsetIndex: Int = 0
 
     private val rows: MutableMap<Int, PositionAndLength> = mutableMapOf()
     private val columns: MutableMap<Int, PositionAndLength> = mutableMapOf()
+    private val lockedRows: MutableMap<Int, Boolean> = mutableMapOf()
+    private val lockedColumns: MutableMap<Int, Boolean> = mutableMapOf()
+
+    enum class IndexRoundMode {
+        HALF_UP,
+        HALF_DOWN,
+        CEILING,
+        FLOOR
+    }
 
     data class PositionAndLength(val position: Float, val length: Float) {
-        fun contains(value: Float): Boolean =
-            position.compareTo(value) <= 0 && (position + length).compareTo(value) >= 0
+        fun indexOffsetOrNull(value: Float, mode: IndexRoundMode = IndexRoundMode.FLOOR): Int? {
+            val end = position + length
+            return if (value in position..end) {
+                when (mode) {
+                    IndexRoundMode.FLOOR -> if (value.toInt() < end.toInt()) 0 else 1
+                    IndexRoundMode.CEILING -> if (value.toInt() > position.toInt()) 1 else 0
+                    IndexRoundMode.HALF_UP -> 1.takeIf { value - position >= end - value } ?: 0
+                    IndexRoundMode.HALF_DOWN -> 1.takeIf { value - position > end - value } ?: 0
+                }
+            } else null
+        }
 
-        fun move(offset: Float) = PositionAndLength(position + offset, length)
+        fun move(offset: Float) = PositionAndLength(position + offset.round3(), length)
 
         companion object {
             fun zero(): PositionAndLength = PositionAndLength(0F, 0F)
@@ -53,22 +78,32 @@ class SpreadsheetPolicy(
 
     private fun MutableMap<Int, PositionAndLength>.ofLocal(index: Int): Int = index - offsetIndex()
 
-    private fun MutableMap<Int, PositionAndLength>.findIndex(position: Float, defMeasure: Float): Int {
+    private fun MutableMap<Int, PositionAndLength>.findIndex(
+        position: Float, defMeasure: Float, mode: IndexRoundMode = IndexRoundMode.FLOOR
+    ): Int {
+        val start = position.round3()
         var entry: PositionAndLength? = null
-        return (0..Int.MAX_VALUE).find { index ->
-            val pos = entry?.let { it.position + it.length + EPSILON } ?: 0.0f
-            val resolved = this[index] ?: PositionAndLength(pos, defMeasure)
+        for (index in 0..Int.MAX_VALUE) {
+            val resolved = this[index] ?: run {
+                val pos = entry?.let { it.position + it.length + EPSILON } ?: 0.0f
+                PositionAndLength(pos.round3(), defMeasure.round3())
+            }
             entry = resolved
-            resolved.contains(position)
-        } ?: 0
+            val maybeOffset = entry.indexOffsetOrNull(start, mode)
+            if (maybeOffset != null) {
+                return index + maybeOffset
+            } else continue
+        }
+        return 0
     }
 
     private fun MutableMap<Int, PositionAndLength>.findPosition(index: Int, defMeasure: Float): PositionAndLength =
         ofLocal(index).let { effectiveIndex ->
+            val defMeasure3 = defMeasure.round3()
             return this[effectiveIndex] ?: run {
-                val first = this[0] ?: PositionAndLength(0.0f, defMeasure)
+                val first = this[0] ?: PositionAndLength(0.000f, defMeasure3)
                 return (1..effectiveIndex).fold(first) { agg, idx ->
-                    this[idx] ?: PositionAndLength(agg.position + agg.length + EPSILON, defMeasure)
+                    this[idx] ?: PositionAndLength((agg.position + agg.length + EPSILON).round3(), defMeasure3)
                 }.also { this[effectiveIndex] = it }
             }
         }
@@ -91,6 +126,14 @@ class SpreadsheetPolicy(
         }
     }
 
+    fun getColumnIndexAtPosition(x: X, mode: IndexRoundMode): Int {
+        val ptX = x.switchUnitOfMeasure(standardUnit.asUnitsOfMeasure())
+        return columns.findIndex(ptX.value, defaultWidthInPt, mode)
+    }
+
+    fun getColumnPositionAtIndex(index: Int): X =
+        X(columns.findPosition(index, defaultWidthInPt).position, standardUnit.asUnitsOfMeasure())
+
     override fun getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y {
         return if (relativeY.unit != UnitsOfMeasure.NU) {
             if (targetUnit == UnitsOfMeasure.NU) {
@@ -111,44 +154,86 @@ class SpreadsheetPolicy(
         }
     }
 
+    fun getRowIndexAtPosition(y: Y, mode: IndexRoundMode): Int {
+        val ptX = y.switchUnitOfMeasure(standardUnit.asUnitsOfMeasure())
+        return rows.findIndex(ptX.value, defaultHeightInPt, mode)
+    }
+
+    fun getRowPositionAtIndex(index: Int): Y =
+        Y(rows.findPosition(index, defaultHeightInPt).position, standardUnit.asUnitsOfMeasure())
+
+
     private fun <T : Measure<T>> MutableMap<Int, PositionAndLength>.setLengthAtIndex(
-        index: Int,
-        length: T,
-        defaultMeasure: Float,
+        index: Int, length: T, defaultMeasure: Float, setOnlyGreater: Boolean = false
     ) {
         return findPosition(index, defaultMeasure).let { posLen ->
             length.switchUnitOfMeasure(standardUnit.asUnitsOfMeasure()).let { measure ->
+                val measure3 = measure.value.round3()
                 val localIndex = ofLocal(index)
-                val oldLength = this[localIndex]?.length ?: 0f
-                if (oldLength < measure.value) {
-                    this[localIndex] = PositionAndLength(posLen.position, measure.value)
-                    this.keys.forEach {
-                        if (it > localIndex) this[it] = this[it]!!.move(measure.value - oldLength)
+                val diff = measure3 - (this[localIndex]?.length ?: 0f)
+                if (diff > 0 || !setOnlyGreater) {
+                    this[localIndex] = PositionAndLength(posLen.position, measure3)
+                    keys.forEach {
+                        if (it > localIndex) this[it] = this[it]!!.move(diff)
                     }
                 }
             }
         }
     }
 
-    override fun setColumnWidth(column: Int, width: Width) = columns.setLengthAtIndex(column, width, defaultWidthInPt)
+    private fun MutableMap<Int, Boolean>.lock(index: Int) {
+        this[index] = true
+    }
 
-    override fun setRowHeight(row: Int, height: Height) = rows.setLengthAtIndex(row, height, defaultHeightInPt)
+    private fun MutableMap<Int, Boolean>.isLocked(index: Int): Boolean = this[index] ?: false
+
+    private fun <T : Measure<T>> setLengthWithOptions(
+        measures: MutableMap<Int, PositionAndLength>, locks: MutableMap<Int, Boolean>,
+        index: Int, measure: T, defMeasure: Float, options: SizingOptions
+    ) {
+        if (!locks.isLocked(index)) {
+            when (options) {
+                SizingOptions.SET ->
+                    measures.setLengthAtIndex(index, measure, defMeasure)
+
+                SizingOptions.SET_IF_GREATER ->
+                    measures.setLengthAtIndex(index, measure, defMeasure, true)
+
+                SizingOptions.SET_LOCKED -> {
+                    measures.setLengthAtIndex(index, measure, defMeasure); locks.lock(index)
+                }
+            }
+        }
+    }
+
+    override fun setColumnWidth(column: Int, width: Width, options: SizingOptions) {
+        setLengthWithOptions(columns, lockedColumns, column, width, defaultWidthInPt, options)
+    }
+
+    override fun setRowHeight(row: Int, height: Height, options: SizingOptions) {
+        setLengthWithOptions(rows, lockedRows, row, height, defaultHeightInPt, options)
+    }
 
     private fun <T : Measure<T>> MutableMap<Int, PositionAndLength>.spannedMeasure(
         index: Int,
         span: Int,
-        clazz: Class<T>
+        clazz: Class<T>,
+        defMeasure: Float
     ): T =
         clazz.new(
-            0.until(span).sumOf { (this[ofLocal(index + it)]?.length ?: defaultWidthInPt).toDouble() }.toFloat(),
+            0.until(span).sumOf { (this[ofLocal(index + it)]?.length ?: defMeasure).toDouble() }.toFloat(),
             standardUnit.asUnitsOfMeasure()
         )
 
     override fun getColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width =
-        columns.spannedMeasure(column, colSpan, Width::class.java).switchUnitOfMeasure(uom)
+        columns.spannedMeasure(column, colSpan, Width::class.java, defaultWidthInPt).switchUnitOfMeasure(uom)
 
     override fun getRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height =
-        rows.spannedMeasure(row, rowSpan, Height::class.java).switchUnitOfMeasure(uom)
+        rows.spannedMeasure(row, rowSpan, Height::class.java, defaultHeightInPt).switchUnitOfMeasure(uom)
+
+    internal fun isRowLocked(row: Int): Boolean = lockedRows[row] ?: false
+
+    internal fun isColumnLocked(column: Int): Boolean = lockedColumns[column] ?: false
 
     private fun getWidth(): Width =
         Width(columns.values.sumOf { it.length.toDouble() }.toFloat(), standardUnit.asUnitsOfMeasure())
@@ -167,11 +252,7 @@ class SpreadsheetPolicy(
 
 class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties) {
 
-    private val delegate = SpreadsheetPolicy()
-
-    private val measurableWidths = mutableMapOf<Int, Boolean>()
-
-    private val measurableHeights = mutableMapOf<Int, Boolean>()
+    private val delegate = NonUniformCartesianGrid()
 
     override fun LayoutSpace.getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position {
         return Position(
@@ -203,33 +284,25 @@ class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties
     fun LayoutSpace.getAbsoluteRowPosition(rowIndex: Int): Y =
         getY(rowIndex.asYPosition(), uom)
 
-    fun markWidthForMeasure(column: Int, measured: Boolean = false) {
-        if (isSpaceMeasured) return
-        measurableWidths[column] = measured
+    override fun setColumnWidth(column: Int, width: Width, options: SizingOptions) {
+        whileMeasuring {
+            delegate.setColumnWidth(column, width, options)
+        }
     }
 
-    override fun setColumnWidth(column: Int, width: Width) {
-        if (isSpaceMeasured) return
-        delegate.setColumnWidth(column, width)
-    }
-
-    fun markHeightForMeasure(row: Int, measured: Boolean = false) {
-        if (isSpaceMeasured) return
-        measurableHeights[row] = measured
-    }
-
-    override fun setRowHeight(row: Int, height: Height) {
-        if (isSpaceMeasured) return
-        delegate.setRowHeight(row, height)
+    override fun setRowHeight(row: Int, height: Height, options: SizingOptions) {
+        whileMeasuring {
+            delegate.setRowHeight(row, height, options)
+        }
     }
 
     override fun getColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width? =
-        if (isSpaceMeasured || measurableWidths[column] != true) {
+        if (isSpaceMeasured || delegate.isColumnLocked(column)) {
             delegate.getColumnWidth(column, colSpan, uom)
         } else null
 
     override fun getRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height? =
-        if (isSpaceMeasured || measurableHeights[row] != true) {
+        if (isSpaceMeasured || delegate.isRowLocked(row)) {
             delegate.getRowHeight(row, rowSpan, uom)
         } else null
 

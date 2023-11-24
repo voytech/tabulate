@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.components.table.model.attributes.table
 
 import io.github.voytech.tabulate.components.table.api.builder.dsl.TableLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.exception.BuilderException
-import io.github.voytech.tabulate.components.table.operation.TableContext
+import io.github.voytech.tabulate.components.table.rendering.TableContext
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.model.Attribute

@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.components.table.template
 
-import io.github.voytech.tabulate.components.table.operation.RowEndRenderable
+import io.github.voytech.tabulate.components.table.rendering.RowEndRenderable
 
 /**
  * An iterator providing instance of [RowEndRenderable] applicable for requested row index.

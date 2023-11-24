@@ -2,10 +2,7 @@ package io.github.voytech.tabulate.excel.components.table.operation
 
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.*
 import io.github.voytech.tabulate.components.table.model.attributes.table.TemplateFileAttribute
-import io.github.voytech.tabulate.components.table.operation.*
-import io.github.voytech.tabulate.core.model.Height
-import io.github.voytech.tabulate.core.model.UnitsOfMeasure
-import io.github.voytech.tabulate.core.model.Width
+import io.github.voytech.tabulate.components.table.rendering.*
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.attributes.*
@@ -22,8 +19,6 @@ import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.ss.util.CellReference
 import org.apache.poi.ss.util.RegionUtil
-import org.apache.poi.util.Units
-import org.apache.poi.xssf.streaming.SXSSFSheet
 import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import org.apache.poi.xssf.usermodel.XSSFRichTextString
 import java.io.FileInputStream
@@ -249,78 +244,6 @@ class CellDataFormatAttributeRenderOperation :
             it.dataFormat = renderingContext.workbook().createDataFormat().getFormat(attribute.dataFormat)
         }
     }
-}
-
-/**
- * Apache POI [ColumnWidthAttribute] renderer.
- * @author Wojciech Mąka
- * @since 0.1.0
- */
-class ColumnWidthAttributeRenderOperation :
-    ColumnAttributeRenderOperation<ApachePoiRenderingContext, WidthAttribute, ColumnEndRenderable>() {
-
-    override operator fun invoke(
-        renderingContext: ApachePoiRenderingContext,
-        context: ColumnEndRenderable,
-        attribute: WidthAttribute,
-    ): Unit = with(renderingContext) {
-        provideSheet(context.getSheetName()).let {
-            val absoluteColumn = context.getAbsoluteColumn(context.getColumn())
-            if (attribute.auto) {
-                if (!it.isColumnTrackedForAutoSizing(absoluteColumn)) {
-                    it.trackColumnForAutoSizing(absoluteColumn)
-                }
-                it.autoSizeColumn(absoluteColumn)
-            } else if (attribute.value.value > 0) {
-                it.setColumnWidth(absoluteColumn, widthFromPixels(attribute.value.switchUnitOfMeasure(UnitsOfMeasure.PX)))
-            }
-            interceptMeasures(it, context, absoluteColumn)
-        }
-    }
-
-    private fun ApachePoiRenderingContext.interceptMeasures(
-        sheet: SXSSFSheet,
-        context: ColumnEndRenderable,
-        absoluteColumn: Int,
-    ) {
-        sheet.getColumnWidthInPixels(absoluteColumn).run {
-            context.setAbsoluteColumnWidth(absoluteColumn, Width(this, UnitsOfMeasure.PX))
-        }
-    }
-
-    companion object {
-        private const val EXCEL_COLUMN_WIDTH_FACTOR: Short = 256
-        private const val UNIT_OFFSET_LENGTH = 7
-        private val UNIT_OFFSET_MAP = intArrayOf(0, 36, 73, 109, 146, 182, 219)
-
-        fun widthFromPixels(pxs: Width): Int {
-            var widthUnits = EXCEL_COLUMN_WIDTH_FACTOR * (pxs.value.toInt() / UNIT_OFFSET_LENGTH)
-            widthUnits += UNIT_OFFSET_MAP[pxs.value.toInt() % UNIT_OFFSET_LENGTH]
-            return widthUnits
-        }
-    }
-}
-
-/**
- * Apache POI [RowHeightAttribute] renderer.
- * @author Wojciech Mąka
- * @since 0.1.0
- */
-class RowHeightAttributeRenderOperation :
-    RowAttributeRenderOperation<ApachePoiRenderingContext, HeightAttribute, RowStartRenderable>() {
-
-    override operator fun invoke(
-        renderingContext: ApachePoiRenderingContext,
-        context: RowStartRenderable,
-        attribute: HeightAttribute,
-    ): Unit = with(renderingContext) {
-        val absoluteRow = context.getAbsoluteColumn(context.getRow())
-        renderingContext.provideRow(context.getSheetName(), absoluteRow).heightInPoints =
-            Units.pixelToPoints(attribute.value.switchUnitOfMeasure(UnitsOfMeasure.PX).value.toDouble()).toFloat().also {
-                context.setAbsoluteRowHeight(absoluteRow, Height(it, UnitsOfMeasure.PT))
-            }
-    }
-
 }
 
 /**

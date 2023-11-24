@@ -23,8 +23,8 @@ class PdfTextOperations : OperationsBundleProvider<PdfBoxRenderingContext, Text>
     }
 
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {
-        operation(TextOperation { renderingContext, context ->
-            context.asPdfBoxElement().render(renderingContext)
+        operation(TextOperation { rendering, context ->
+            context.asPdfBoxElement().render(rendering)
         })
     }
 

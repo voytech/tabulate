@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.borders
 import io.github.voytech.tabulate.components.table.api.builder.dsl.table
 import io.github.voytech.tabulate.components.table.api.builder.dsl.text
 import io.github.voytech.tabulate.components.table.api.builder.dsl.width
-import io.github.voytech.tabulate.components.table.operation.*
+import io.github.voytech.tabulate.components.table.rendering.*
 import io.github.voytech.tabulate.components.table.template.export
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute

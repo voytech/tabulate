@@ -5,8 +5,8 @@ import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.components.table.model.attributes.table.template
-import io.github.voytech.tabulate.components.table.operation.TableStartRenderable
-import io.github.voytech.tabulate.components.table.operation.asTableStart
+import io.github.voytech.tabulate.components.table.rendering.TableStartRenderable
+import io.github.voytech.tabulate.components.table.rendering.asTableStart
 import io.github.voytech.tabulate.components.table.template.*
 import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.operation.*

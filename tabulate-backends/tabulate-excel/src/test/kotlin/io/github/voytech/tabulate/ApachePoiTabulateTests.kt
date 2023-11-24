@@ -1,9 +1,7 @@
 package io.github.voytech.tabulate
 
-import io.github.voytech.tabulate.components.container.api.builder.dsl.horizontal
-import io.github.voytech.tabulate.components.container.api.builder.dsl.section
 import io.github.voytech.tabulate.components.container.api.builder.dsl.margins
-import io.github.voytech.tabulate.components.container.api.builder.dsl.vertical
+import io.github.voytech.tabulate.components.container.api.builder.dsl.section
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.image.api.builder.dsl.*
@@ -18,7 +16,6 @@ import io.github.voytech.tabulate.components.table.model.attributes.table.templa
 import io.github.voytech.tabulate.components.table.template.export
 import io.github.voytech.tabulate.components.table.template.tabulate
 import io.github.voytech.tabulate.components.text.api.builder.dsl.*
-import io.github.voytech.tabulate.components.text.api.builder.dsl.borders
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
@@ -78,7 +75,6 @@ class ApachePoiTabulateTests {
         productList.tabulate("test.xlsx") {
             name = "Products table"
             attributes {
-                columnWidth { auto = true }
                 borders {
                     leftBorderStyle = ExcelBorderStyle.HAIR
                     leftBorderColor = Colors.BLACK
@@ -631,9 +627,6 @@ class ApachePoiTabulateTests {
     @Test
     fun `should export table using shared table template`() {
         val sharedStyleTemplate = table {
-            attributes {
-                columnWidth { auto = true }
-            }
             rows {
                 header {
                     attributes {

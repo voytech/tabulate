@@ -3,8 +3,8 @@ package io.github.voytech.tabulate.excel
 
 import io.github.voytech.tabulate.ImageIndex
 import io.github.voytech.tabulate.core.model.color.Color
-import io.github.voytech.tabulate.components.table.operation.CellValue
-import io.github.voytech.tabulate.components.table.operation.Coordinates
+import io.github.voytech.tabulate.components.table.rendering.CellValue
+import io.github.voytech.tabulate.components.table.rendering.Coordinates
 import io.github.voytech.tabulate.core.RenderingContextForSpreadsheet
 import io.github.voytech.tabulate.core.operation.AttributedContext
 import io.github.voytech.tabulate.core.operation.Renderable
@@ -12,6 +12,7 @@ import io.github.voytech.tabulate.core.result.OutputBinding
 import io.github.voytech.tabulate.core.result.OutputStreamOutputBinding
 import io.github.voytech.tabulate.core.spi.DocumentFormat
 import io.github.voytech.tabulate.core.spi.OutputBindingsProvider
+import io.github.voytech.tabulate.round3
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.util.IOUtils
@@ -80,9 +81,14 @@ class ApachePoiRenderingContext(private val images: ImageIndex = ImageIndex()) :
         it.setupSpreadsheetLayout()
     }
 
+    fun removeSheet(sheetName: String) {
+        val sheet = getSheet(sheetName)
+        workbook().removeSheetAt(workbook().indexOf(sheet))
+    }
+
     private fun Sheet.setupSpreadsheetLayout() = setupSpreadsheetLayout(
-        Units.pixelToPoints(getColumnWidthInPixels(0).toDouble()).toFloat(),
-        defaultRowHeightInPoints
+        Units.pixelToPoints(getColumnWidthInPixels(0).toDouble()).toFloat().round3(),
+        defaultRowHeightInPoints.round3()
     )
 
     fun provideRow(sheetName: String, rowIndex: Int): SXSSFRow =
@@ -180,7 +186,8 @@ class ApachePoiRenderingContext(private val images: ImageIndex = ImageIndex()) :
 
     inline fun <reified S : XSSFShape> AttributedContext.shape(): S = shape(S::class.java)
 
-    fun Renderable<*>.computeClientAnchor(): XSSFClientAnchor =
+    // TODO focus now on getting client anchors right. They need to correctly convert from point/inch/pixels to nominals.
+    fun Renderable<*>.createApachePoiSpreadsheetAnchor(): XSSFClientAnchor =
         createSpreadsheetAnchor().let { anchor ->
             (createClientAnchor() as XSSFClientAnchor).apply {
                 setCol1(anchor.leftTopColumn)

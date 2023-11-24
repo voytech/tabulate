@@ -2,9 +2,9 @@ package io.github.voytech.tabulate.attributes
 
 import io.github.voytech.tabulate.components.table.api.builder.dsl.CellLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.operation.CellAttributeRenderOperation
-import io.github.voytech.tabulate.components.table.operation.CellRenderable
-import io.github.voytech.tabulate.components.table.operation.getSheetName
+import io.github.voytech.tabulate.components.table.rendering.CellAttributeRenderOperation
+import io.github.voytech.tabulate.components.table.rendering.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.getSheetName
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.reify

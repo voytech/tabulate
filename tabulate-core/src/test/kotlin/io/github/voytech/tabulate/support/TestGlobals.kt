@@ -1,9 +1,9 @@
 package io.github.voytech.tabulate.support
 
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.operation.CellRenderable
-import io.github.voytech.tabulate.components.table.operation.RowEndRenderable
-import io.github.voytech.tabulate.components.table.operation.RowStartRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.RowEndRenderable
+import io.github.voytech.tabulate.components.table.rendering.RowStartRenderable
 import io.github.voytech.tabulate.components.table.template.CaptureRowCompletion
 import io.github.voytech.tabulate.components.table.template.ContextResult
 import io.github.voytech.tabulate.components.table.template.SuccessResult

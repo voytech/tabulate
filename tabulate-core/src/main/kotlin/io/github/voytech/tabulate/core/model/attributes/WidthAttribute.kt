@@ -8,13 +8,11 @@ import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.Width
 
 data class WidthAttribute(
-    val auto: Boolean = false,
     val value: Width = Width.zero(UnitsOfMeasure.PX),
 ) : Attribute<WidthAttribute>() {
 
     @TabulateMarker
     class Builder(vararg target: Class<out AttributeAware>) : AttributeBuilder<WidthAttribute>(setOf(*target)) {
-        var auto: Boolean by observable(false)
         var value: Width by observable(Width.zero(UnitsOfMeasure.PX))
 
         fun Number.pt()  {
@@ -28,7 +26,7 @@ data class WidthAttribute(
             value = Width(toFloat(), UnitsOfMeasure.PC)
         }
 
-        override fun provide(): WidthAttribute = WidthAttribute(auto, value)
+        override fun provide(): WidthAttribute = WidthAttribute(value)
     }
 
     /**
@@ -39,14 +37,7 @@ data class WidthAttribute(
      * should force automatic width resolution.
      */
     override fun overrideWith(other: WidthAttribute): WidthAttribute =
-        takeIfChanged(other, WidthAttribute::value).let { newWidth ->
-            WidthAttribute(
-                value = newWidth,
-                auto = takeIfChanged(other, WidthAttribute::auto).let {
-                    if (newWidth != value && newWidth.value > 0 && it == auto) false else it
-                }
-            )
-        }
+        WidthAttribute(value = takeIfChanged(other, WidthAttribute::value))
 
     companion object {
         @JvmStatic

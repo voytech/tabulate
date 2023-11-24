@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.CellLevelAttr
 import io.github.voytech.tabulate.components.table.api.builder.dsl.ColumnLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.contract.CellType
-import io.github.voytech.tabulate.components.table.operation.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderable
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.model.Attribute

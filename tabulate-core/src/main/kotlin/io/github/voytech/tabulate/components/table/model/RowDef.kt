@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.components.table.model
 
-import io.github.voytech.tabulate.components.table.operation.CellValue
+import io.github.voytech.tabulate.components.table.rendering.CellValue
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
 

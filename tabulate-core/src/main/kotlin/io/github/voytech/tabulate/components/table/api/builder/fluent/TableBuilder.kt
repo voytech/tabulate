@@ -3,9 +3,9 @@ package io.github.voytech.tabulate.components.table.api.builder.fluent
 import io.github.voytech.tabulate.components.table.api.builder.*
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHintAttribute
-import io.github.voytech.tabulate.components.table.operation.CellRenderable
-import io.github.voytech.tabulate.components.table.operation.ColumnRenderable
-import io.github.voytech.tabulate.components.table.operation.RowRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.ColumnRenderable
+import io.github.voytech.tabulate.components.table.rendering.RowRenderable
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.attributes.*

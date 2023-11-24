@@ -6,12 +6,18 @@ import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.layout.LayoutSpace
 import io.github.voytech.tabulate.core.layout.policy.FlowLayout
 import io.github.voytech.tabulate.core.model.Attributes
+import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.operation.Renderable
 import io.github.voytech.tabulate.core.operation.VoidOperation
 
 class ContainerRenderable internal constructor(
     override val attributes: Attributes?,
+    stateAttributes: StateAttributes,
 ) : Renderable<FlowLayout>() {
+
+    init {
+        additionalAttributes = stateAttributes.data
+    }
 
     override val boundaryToFit = LayoutBoundaryType.OUTER
 

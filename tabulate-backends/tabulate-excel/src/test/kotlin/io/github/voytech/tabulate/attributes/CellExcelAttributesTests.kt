@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.attributes
 
 import io.github.voytech.tabulate.components.table.api.builder.dsl.table
-import io.github.voytech.tabulate.components.table.operation.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderable
 import io.github.voytech.tabulate.components.table.template.export
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.model.Attribute

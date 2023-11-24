@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.components.table.template
 
 import io.github.voytech.tabulate.Either
 import io.github.voytech.tabulate.components.table.model.*
-import io.github.voytech.tabulate.components.table.operation.*
+import io.github.voytech.tabulate.components.table.rendering.*
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.StateAttributes
