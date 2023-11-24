@@ -106,7 +106,6 @@ class OperationsInContext(private val ctx: ModelExportContext) {
     fun measure(context: AttributedContext): RenderingResult =
         measure(ctx.instance.renderingContext, context).trySetOverflowsFlag()
 
-
     fun renderOrMeasure(context: AttributedContext): RenderingResult =
         if (ctx.phase == ExportPhase.MEASURING) measure(context) else render(context)
 
@@ -296,7 +295,7 @@ class ExportApi private constructor(private val context: ModelExportContext) {
     }
 
     private fun ModelExportContext.shouldMeasure(): Boolean {
-        return model.needsMeasureBeforeExport && layouts.needsMeasuring()
+        return model.needsMeasureBeforeExport && layouts.needsMeasuring() && operations.hasMeasuringOperations()
     }
 
     private fun <R> ModelExportContext.inNextLayoutScope(

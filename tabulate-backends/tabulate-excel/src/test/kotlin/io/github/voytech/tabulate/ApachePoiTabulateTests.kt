@@ -1,7 +1,9 @@
 package io.github.voytech.tabulate
 
+import io.github.voytech.tabulate.components.container.api.builder.dsl.horizontal
 import io.github.voytech.tabulate.components.container.api.builder.dsl.section
 import io.github.voytech.tabulate.components.container.api.builder.dsl.margins
+import io.github.voytech.tabulate.components.container.api.builder.dsl.vertical
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.image.api.builder.dsl.*
@@ -807,82 +809,6 @@ class ApachePoiTabulateTests {
         }.export("test.xlsx")
     }
 
-    @Test
-    fun `should export document with TextBox`() {
-        document {
-            page {
-                text {
-                    value<PageExecutionContext> { "HEADER: the page number is : ${it.pageNumber} (should be sheet NAME)"  }
-                    attributes {
-                        height { 50.pt() }
-                        width { 600.pt() }
-                        background { color = Colors.LIGHT_GRAY }
-                        text {
-                            fontFamily = DefaultFonts.COURIER_NEW
-                            color = Colors.RED
-                            fontSize = 10
-                            italic = true
-                            underline = true
-                            weight = DefaultWeightStyle.BOLD
-                            wrapText = true
-                        }
-                        alignment { vertical = DefaultVerticalAlignment.MIDDLE }
-                        borders {
-                            all {
-                                color = Colors.RED
-                                style = DefaultBorderStyle.DOTTED
-                                2.pt()
-                            }
-                        }
-                    }
-                }
-                image {
-                    filePath = "src/test/resources/kotlin.jpeg"
-                    attributes {
-                        width { 100.pt() }
-                        height { 100.pt() }
-                    }
-                }
-                table {
-                    dataSource(SampleProduct.create(100))
-                    attributes {
-                        borders { all { color = Colors.LIGHT_GRAY; 0.5F.pt()} }
-                        columnWidth { auto = true }
-                    }
-                    columns {
-                        column(SampleProduct::code) {
-                            attributes { text {  weight = DefaultWeightStyle.BOLD } }
-                        }
-                        column(SampleProduct::name)
-                        column("img")
-                    }
-                    rows {
-                        header("Id", "Name", "Image")
-                        matching { gt(0) } assign {
-                            cell("img") {
-                                value = "https://cdn.pixabay.com/photo/2013/07/12/14/07/basketball-147794_960_720.png"
-                                typeHint { DefaultTypeHints.IMAGE_URI }
-                            }
-                        }
-                    }
-                }
-                text {
-                    value<PageExecutionContext> { "FOOTER: the page number is : ${it.pageNumber}"  }
-                    attributes {
-                        height { 50.pt() }
-                        width { 200.pt() }
-                        alignment { vertical = DefaultVerticalAlignment.MIDDLE }
-                        background { color = Colors.BLACK }
-                        text {
-                            color = Colors.WHITE
-                            fontSize = 10
-                            weight = DefaultWeightStyle.BOLD
-                        }
-                    }
-                }
-            }
-        }.export(File("test.xlsx"))
-    }
 
     @Test
     fun `should export document with correctly handled table X`() {
