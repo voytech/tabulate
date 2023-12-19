@@ -1,7 +1,10 @@
 package io.github.voytech.tabulate
 
+import java.awt.image.BufferedImage
+import java.io.File
 import java.io.FileInputStream
 import java.net.URL
+import javax.imageio.ImageIO
 import kotlin.math.round
 
 fun String.isValidUrl(): Boolean =
@@ -16,6 +19,9 @@ fun String.getByteArrayFromUrl(): ByteArray = URL(this).readBytes()
 
 fun String.loadImageAsByteArray(): ByteArray =
     if (isValidUrl()) getByteArrayFromUrl() else FileInputStream(this).use { it.readBytes() }
+
+fun String.loadBufferedImage(): BufferedImage =
+    if (isValidUrl()) ImageIO.read(URL(this)) else ImageIO.read(File(this))
 
 class ImageIndex(private val index: MutableMap<String, ByteArray> = mutableMapOf()) {
     fun String.cacheImageAsByteArray(): ByteArray =

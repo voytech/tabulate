@@ -132,8 +132,7 @@ class CommonTests {
                                 matching { all() } assign { attributes { height { 30.pt() } } }
                                 matching { gt(0) } assign {
                                     cell("img") {
-                                        value =
-                                            "https://cdn.pixabay.com/photo/2013/07/12/14/07/basketball-147794_960_720.png"
+                                        value = "src/test/resources/basketball.png"
                                         typeHint { DefaultTypeHints.IMAGE_URI }
                                     }
                                 }
@@ -410,7 +409,7 @@ class CommonTests {
                                         "due to crossing parent layout bounding box boundaries!"
                             attributes {
                                 text { breakLines; courierNew; fontSize = 10 }
-                                alignment { justify }
+                                //alignment { justify }
                                 borders { all { solid; red; 5.pt() } }
                             }
                         }
@@ -418,7 +417,7 @@ class CommonTests {
                 }
             }
         }
-        doc.export(File("text_measures.pdf"))
+        //doc.export(File("text_measures.pdf"))
         doc.export(File("text_measures.xlsx"))
     }
 }

@@ -277,6 +277,12 @@ fun orMin(left: Position, right: Position) = Position(
     Y(min(left.y.value, right.y.switchUnitOfMeasure(left.y.unit).value), left.y.unit)
 )
 
+inline fun <reified T: Measure<T>> orMin(left: T, right: T) =
+    T::class.java.new(min(left.value, right.switchUnitOfMeasure(left.unit).value), left.unit)
+
+inline fun <reified T: Measure<T>> orMax(left: T, right: T) =
+    T::class.java.new(max(left.value, right.switchUnitOfMeasure(left.unit).value), left.unit)
+
 data class BoundingRectangle(
     val leftTop: Position,
     val rightBottom: Position = leftTop,

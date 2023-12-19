@@ -287,6 +287,8 @@ class ExcelTableOperations : OperationsBundleProvider<ApachePoiRenderingContext,
     }
 
     override fun provideMeasureOperations(): BuildOperations<ApachePoiRenderingContext> = {
+        operation(StartColumnOperation { _, _ ->}) //TODO this should not be required in order to invoke LayoutAware(Render|Measure)Operation logic.
+        operation(StartRowOperation { _, _ ->}) //TODO this should not be required in order to invoke LayoutAware(Render|Measure)Operation logic.
         operation(ApachePoiMeasureRowCellOperation)
         operation(ApachePoiEndRowMeasureOperation)
         operation(ApachePoiEndColumnMeasureOperation)

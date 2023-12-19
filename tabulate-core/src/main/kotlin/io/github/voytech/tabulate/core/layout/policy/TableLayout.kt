@@ -26,10 +26,13 @@ abstract class AbstractTableLayout(
 
 
 class NonUniformCartesianGrid(
-    private val defaultWidthInPt: Float = 0f,
-    private val defaultHeightInPt: Float = 0f,
+    defaultUnscaledWidthInPt: Float = 0f,
+    defaultUnscaledHeightInPt: Float = 0f,
     val standardUnit: StandardUnits = StandardUnits.PT,
 ) : TableSizingMethods, AbsolutePositionMethods {
+
+    private val defaultWidthInPt: Float = defaultUnscaledWidthInPt.round3()
+    private val defaultHeightInPt: Float = defaultUnscaledHeightInPt.round3()
 
     private var rowOffsetIndex: Int = 0
     private var columnOffsetIndex: Int = 0
@@ -48,7 +51,7 @@ class NonUniformCartesianGrid(
 
     data class PositionAndLength(val position: Float, val length: Float) {
         fun indexOffsetOrNull(value: Float, mode: IndexRoundMode = IndexRoundMode.FLOOR): Int? {
-            val end = position + length
+            val end = (position + length).round3()
             return if (value in position..end) {
                 when (mode) {
                     IndexRoundMode.FLOOR -> if (value.toInt() < end.toInt()) 0 else 1

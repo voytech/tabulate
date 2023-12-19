@@ -1,10 +1,8 @@
 package io.github.voytech.tabulate.excel
 
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
-import io.github.voytech.tabulate.core.model.Height
-import io.github.voytech.tabulate.core.model.Size
-import io.github.voytech.tabulate.core.model.UnitsOfMeasure
-import io.github.voytech.tabulate.core.model.Width
+import io.github.voytech.tabulate.core.model.*
+import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
 import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
 import io.github.voytech.tabulate.core.model.text.DefaultFonts
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
@@ -18,6 +16,7 @@ import kotlin.Double
 import kotlin.Float
 import kotlin.String
 import kotlin.let
+import kotlin.math.min
 
 
 class TextMeasurements(
@@ -66,14 +65,11 @@ class TextMeasurements(
 
     fun measure(): RenderingResult {
         createAttributedString().measure().let {
-            boundingBox.width = boundingBox.width ?: it.width
-            boundingBox.height = boundingBox.height ?: it.height
+            boundingBox.width =
+                boundingBox.width ?: boundingBox.maxWidth ?: it.width
+            boundingBox.height =
+                boundingBox.height ?: boundingBox.maxHeight ?: it.height
         }
         return Ok.asResult()
     }
 }
-
-fun <E> E.measureText(): RenderingResult where E : HasValue<*>, E : Renderable<*> =
-    if (!boundingBox.isDefined()) {
-        TextMeasurements(value.toString(), boundingBox, getModelAttribute<TextStylesAttribute>()).measure()
-    } else Nothing.asResult()

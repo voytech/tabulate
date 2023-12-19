@@ -6,6 +6,9 @@ import io.github.voytech.tabulate.components.table.model.ColumnDef
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.rendering.*
 import io.github.voytech.tabulate.core.DocumentFormat
+import io.github.voytech.tabulate.core.InputParams
+import io.github.voytech.tabulate.core.InputParams.Companion.allowMeasureBeforeRender
+import io.github.voytech.tabulate.core.InputParams.Companion.params
 import io.github.voytech.tabulate.core.StandaloneExportTemplate
 import io.github.voytech.tabulate.core.documentFormat
 import io.github.voytech.tabulate.core.layout.CrossedAxis
@@ -199,11 +202,11 @@ internal class TableExport<T : Any>(
  * @receiver collection of records to be rendered into file.
  */
 fun <T : Any, O : Any> Iterable<T>.tabulate(format: DocumentFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
-    StandaloneExportTemplate(format).export(createTable(block), output, this)
+    StandaloneExportTemplate(format).export(createTable(block), output, this,  params().allowMeasureBeforeRender(false))
 }
 
 fun <T : Any, O : Any> Table<T>.export(format: DocumentFormat, output: O) {
-    StandaloneExportTemplate(format).export(this, output, emptyList<T>())
+    StandaloneExportTemplate(format).export(this, output, emptyList<T>(), params().allowMeasureBeforeRender(false))
 }
 
 fun <T : Any, O : Any> export(
@@ -211,7 +214,7 @@ fun <T : Any, O : Any> export(
     source: Iterable<T>,
     output: O,
     block: TableBuilderApi<T>.() -> Unit,
-) = StandaloneExportTemplate(format).export(createTable(block), output, source)
+) = StandaloneExportTemplate(format).export(createTable(block), output, source, params().allowMeasureBeforeRender(false))
 
 
 /**

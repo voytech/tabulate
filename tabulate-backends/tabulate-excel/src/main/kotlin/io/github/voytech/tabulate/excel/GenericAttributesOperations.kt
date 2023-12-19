@@ -3,9 +3,11 @@ package io.github.voytech.tabulate.excel
 import io.github.voytech.tabulate.components.table.rendering.CellRenderable
 import io.github.voytech.tabulate.components.table.rendering.getSheetName
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
+import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.attributes.*
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
+import io.github.voytech.tabulate.core.model.text.DefaultTextWrap
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.core.operation.AttributeOperation
 import io.github.voytech.tabulate.core.operation.AttributedContext
@@ -48,7 +50,13 @@ class XSSFShapeTextStylesAttributeRenderOperation<CTX : AttributedContext> :
         renderingContext.provideSheet(context.getSheetName()).let {
             context.shape<SimpleShapeWrapper>().let { text ->
                 text.applyFont(renderingContext) { font -> font.configureWith(attribute) }
-                text.wordWrap = attribute.wrapText ?: false
+                attribute.textWrap?.let {
+                    when (it.getId()) {
+                        DefaultTextWrap.BREAK_WORDS.getId(),
+                        DefaultTextWrap.BREAK_LINES.getId() -> text.wordWrap = true
+                        DefaultTextWrap.NO_WRAP.getId() -> text.wordWrap = false
+                    }
+                }
                 text.textDirection = attribute.rotation?.mod(360)?.let {
                     when (it) {
                         in (0..45), in (136..225), in (316..360) -> TextDirection.HORIZONTAL

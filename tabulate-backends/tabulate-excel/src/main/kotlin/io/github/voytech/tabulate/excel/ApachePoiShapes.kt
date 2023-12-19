@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.excel
 
+import org.apache.poi.ss.usermodel.VerticalAlignment
 import org.apache.poi.xssf.usermodel.*
 
 class SimpleShapeWrapper(
@@ -7,12 +8,15 @@ class SimpleShapeWrapper(
     private val shape: XSSFSimpleShape,
 ) : XSSFSimpleShape(drawing, shape.ctShape) {
 
-    var font: XSSFFont? = null
+    private var font: XSSFFont? = null
 
     fun append(string: String, font: XSSFFont? = null) {
         XSSFRichTextString().let { richText ->
             richText.append(string, font)
             shape.setText(richText)
+            shape.textHorizontalOverflow = TextHorizontalOverflow.CLIP
+            shape.textVerticalOverflow = TextVerticalOverflow.CLIP
+            shape.verticalAlignment = VerticalAlignment.TOP
         }
     }
 
