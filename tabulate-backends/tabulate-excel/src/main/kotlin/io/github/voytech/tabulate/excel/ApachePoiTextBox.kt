@@ -8,6 +8,7 @@ import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
 import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
 import io.github.voytech.tabulate.core.model.text.DefaultFonts
 import io.github.voytech.tabulate.core.model.text.DefaultTextWrap
+import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.core.model.text.TextWrap
 import io.github.voytech.tabulate.core.operation.*
 import io.github.voytech.tabulate.core.operation.Nothing
@@ -79,8 +80,6 @@ class ApachePoiTextBox(
     private var textLineBreakOffset = -1
     private var currentLineBreakOffset = -1
     private var widthTillBreakLine = 0F
-    //private val spaceCharTextUnitsWidth = with(measures) { font().getWidth(" ".codePointAt(0)) }
-
     private val maxWidth
         get() = resolveMaxWidth()
     private val maxHeight
@@ -105,24 +104,32 @@ class ApachePoiTextBox(
     private val fontHeightInPoints: Float = textStyles?.fontSize?.toFloat() ?: 12F
 
     private val fontName: String = textStyles?.fontFamily?.fontName ?: DefaultFonts.ARIAL.fontName
+    private val font = Font(fontName, fontStyle(), fontHeightInPoints.toInt())
 
-    private val font = Font(fontName, Font.PLAIN, fontHeightInPoints.toInt())
-    private val graphics = graphics(font)
+    private val offScreenBuffer = BufferedImage(
+        maxWidth.coerceAtMost(2000),
+        maxHeight.coerceAtMost(2000),
+        BufferedImage.TYPE_BYTE_BINARY
+    )
+    private val graphics = offScreenBuffer.graphics(font)
     private val metrics = graphics.fontMetrics
-    private val fontHeight = metrics.ascent
+    private val fontHeight = metrics.height
     private val lineHeight = fontHeight * (textStyles?.lineSpacing ?: 1F)
-    private val textWrap = resolveTextWrap()
     private val spaceCharTextUnitsWidth = with(metrics) { charWidth(" ".codePointAt(0)) }
+
+    private val textWrap = resolveTextWrap()
     private val currentLine = StringBuilder()
     private val lines = mutableListOf<TextLine>()
-    private fun graphics(font: Font): Graphics2D =
-        BufferedImage(
-            maxWidth.coerceAtMost(10000),
-            maxHeight.coerceAtMost(10000),
-            BufferedImage.TYPE_INT_ARGB
-        ).createGraphics().also {
-            it.font = font
-        }
+
+    private fun BufferedImage.graphics(font: Font): Graphics2D =
+        createGraphics().also { it.font = font }
+
+    private fun fontStyle(): Int = textStyles?.run {
+        var bitmask = Font.PLAIN
+        if (weight?.getWeightStyleId() == DefaultWeightStyle.BOLD.getWeightStyleId()) bitmask = Font.BOLD
+        if (italic == true) bitmask = bitmask or Font.ITALIC
+        return bitmask
+    } ?: Font.PLAIN
 
     private fun resolveTextWrap(): TextWrap =
         textStyles?.textWrap ?: DefaultTextWrap.NO_WRAP
@@ -149,10 +156,8 @@ class ApachePoiTextBox(
     }
 
     private fun handleAndClearCurrentLine(lineWidth: Float) {
-        val pdfBoxOriginY = (topLeftY + currentY + lineHeight)
-        val pdfBoxOriginX = topLeftX
         TextLine(
-            lineWidth, pdfBoxOriginX, pdfBoxOriginY + metrics.descent,
+            lineWidth, topLeftX, topLeftY + currentY + lineHeight,
             currentLine.toString(), lines.size
         ).also {
             lines.add(it)
@@ -213,6 +218,8 @@ class ApachePoiTextBox(
             handleAndClearCurrentLine(currentX)
         }
         applySize(measuredWidth, currentY + lineHeight)
+        offScreenBuffer.flush()
+        graphics.dispose()
         return Ok.asResult()
     }
 

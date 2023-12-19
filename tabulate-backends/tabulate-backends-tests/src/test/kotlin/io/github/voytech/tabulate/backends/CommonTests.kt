@@ -9,11 +9,6 @@ import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
 import io.github.voytech.tabulate.components.text.api.builder.dsl.*
-import io.github.voytech.tabulate.components.text.api.builder.dsl.alignment
-import io.github.voytech.tabulate.components.text.api.builder.dsl.background
-import io.github.voytech.tabulate.components.text.api.builder.dsl.borders
-import io.github.voytech.tabulate.core.InputParams.Companion.allowMeasureBeforeRender
-import io.github.voytech.tabulate.core.InputParams.Companion.params
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
@@ -71,7 +66,7 @@ class CommonTests {
                 }
             }
         }
-        doc.export(File("two_tables.pdf"))
+        //doc.export(File("two_tables.pdf"))
         doc.export(File("two_tables.xlsx"))
     }
 
@@ -329,7 +324,7 @@ class CommonTests {
             page {
                 horizontal {
                     attributes {
-                        width { 500.pt() }
+                        width { 1000.pt() }
                         height { 700.pt() }
                     }
                     vertical {
