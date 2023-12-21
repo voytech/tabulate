@@ -27,8 +27,17 @@ abstract class PdfBoxElement(
     protected val topLeftY = boundingBox.absoluteY.value + paddings.top
     protected val maxWidth
         get() = resolveMaxWidth()
+
+    protected val bboxWidth: Int?
+        get() = boundingBox.width?.let { it.value - paddings.width }?.toInt()
+
     protected val maxHeight
         get() = resolveMaxHeight()
+
+    protected val bboxHeight: Int?
+        get() = boundingBox.height?.let { it.value - paddings.height }?.toInt()
+
+    protected var contentHeight: Float = 0F
 
     protected fun x(): Float = topLeftX
     protected fun PdfBoxRenderingContext.y(): Float = (topLeftY + maxHeight).intoPdfBoxOrigin()
@@ -48,7 +57,8 @@ abstract class PdfBoxElement(
         }
     } ?: 0f) - paddings.height).roundToInt()
 
-    protected fun applySize(measuredWidth: Float, measuredHeight: Float) {
+    protected fun adjustRenderableBoundingBox(measuredWidth: Float, measuredHeight: Float) {
+        contentHeight = measuredHeight
         boundingBox.apply {
             width = width ?: (measuredWidth.asWidth() + paddings.width)
             height = height ?: (measuredHeight.asHeight() + paddings.height)

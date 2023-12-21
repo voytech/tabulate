@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.pdf
 
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
+import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
 import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
 import io.github.voytech.tabulate.core.model.text.DefaultTextWrap
@@ -24,12 +25,18 @@ internal class PdfBoxText(
     alignment: AlignmentAttribute? = null
 ) : PdfBoxElement(boundingBox, paddings, alignment), PdfBoxRenderable, PdfBoxMeasurable {
 
+    private val requiredBboxWidth
+        get() = bboxWidth?.toFloat() ?: measuredWidth
+
+    private val requiredBboxHeight
+        get() = requireNotNull(bboxHeight)
+
     inner class TextLine(
         val width: Float,
         var bottomLeftX: Float,
         val bottomLeftY: Float,
         val text: String,
-        val lineIndex: Int,
+        val lineIndex: Int
     ) : PdfBoxRenderable {
 
         private val words by lazy { text.split(SPACE_CHAR) }
@@ -39,14 +46,6 @@ internal class PdfBoxText(
         private val isLast
             get() = lineIndex == lines.size - 1
 
-        private fun getAlignmentPadding(lineWidth: Float): Float = alignment?.horizontal?.let {
-            when (it) {
-                DefaultHorizontalAlignment.RIGHT -> measuredWidth - lineWidth
-                DefaultHorizontalAlignment.CENTER -> measuredWidth / 2 - lineWidth / 2
-                else -> 0F
-            }
-        } ?: 0F
-
         private fun PdfBoxRenderingContext.justifyAndShowText() {
             val newWordGap = lineWidthComplement / (words.size - 1)
             showTextPartsAtOffsets(words.indices.map { i ->
@@ -55,9 +54,26 @@ internal class PdfBoxText(
             })
         }
 
+        private fun getHorizontalAlignmentPadding(lineWidth: Float): Float = alignment?.horizontal?.let {
+            when (it) {
+                DefaultHorizontalAlignment.RIGHT -> requiredBboxWidth - lineWidth
+                DefaultHorizontalAlignment.CENTER -> requiredBboxWidth / 2 - lineWidth / 2
+                else -> 0F
+            }
+        } ?: 0F
+
+        private fun getVerticalAlignmentPadding(): Float = alignment?.vertical?.let {
+            when (it) {
+                DefaultVerticalAlignment.BOTTOM -> (requiredBboxHeight - contentHeight)
+                DefaultVerticalAlignment.MIDDLE -> (requiredBboxHeight / 2 - contentHeight / 2)
+                else -> 0F
+            }
+        } ?: 0F
+
         override fun render(renderer: PdfBoxRenderingContext): RenderingResult {
-            val computedLeft = bottomLeftX + getAlignmentPadding(width)
-            renderer.getCurrentContentStream().setTextMatrix(Matrix.getTranslateInstance(computedLeft, bottomLeftY))
+            val computedLeftX = bottomLeftX + getHorizontalAlignmentPadding(width)
+            val computedLeftY = bottomLeftY - getVerticalAlignmentPadding()
+            renderer.getCurrentContentStream().setTextMatrix(Matrix.getTranslateInstance(computedLeftX, computedLeftY))
             if (alignment?.horizontal == DefaultHorizontalAlignment.JUSTIFY && !isLast) {
                 renderer.justifyAndShowText()
             } else {
@@ -136,7 +152,7 @@ internal class PdfBoxText(
             with(measures) {
                 while (offset < text.length) {
                     if ((currentY + lineHeight).roundToInt() > maxHeight) {
-                        applySize(measuredWidth, currentY)
+                        adjustRenderableBoundingBox(measuredWidth, currentY)
                         return RenderedPartly.asResult()
                     }
                     val codePoint: Int = text.codePointAt(offset)
@@ -169,7 +185,7 @@ internal class PdfBoxText(
                             moveToNextLine()
                         } else {
                             renderer.handleAndClearCurrentLine(currentX)
-                            applySize(measuredWidth, currentY + lineHeight)
+                            adjustRenderableBoundingBox(measuredWidth, currentY + lineHeight)
                             return RenderedPartly.asResult()
                         }
                     }
@@ -177,7 +193,7 @@ internal class PdfBoxText(
                 if (currentLine.isNotEmpty()) {
                     renderer.handleAndClearCurrentLine(currentX)
                 }
-                applySize(measuredWidth, currentY + lineHeight)
+                adjustRenderableBoundingBox(measuredWidth, currentY + lineHeight)
                 return Ok.asResult()
             }
         }

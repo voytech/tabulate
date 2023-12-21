@@ -173,6 +173,13 @@ class ApachePoiTextBox(
         widthTillBreakLine = 0F
     }
 
+    private fun applySize(measuredWidth: Float, measuredHeight: Float) {
+        boundingBox.apply {
+            width = width ?: (measuredWidth.asWidth())
+            height = height ?: (measuredHeight.asHeight())
+        }
+    }
+
     fun measure(): RenderingResult {
         while (offset < text.length) {
             if ((currentY + lineHeight).roundToInt() > maxHeight) {
@@ -223,12 +230,10 @@ class ApachePoiTextBox(
         return Ok.asResult()
     }
 
-    private fun applySize(measuredWidth: Float, measuredHeight: Float) {
-        boundingBox.apply {
-            width = width ?: (measuredWidth.asWidth())
-            height = height ?: (measuredHeight.asHeight())
-        }
+    fun render() {
+
     }
+
 }
 
 fun <E> E.measureText(): RenderingResult where E : HasValue<*>, E : Renderable<*> =

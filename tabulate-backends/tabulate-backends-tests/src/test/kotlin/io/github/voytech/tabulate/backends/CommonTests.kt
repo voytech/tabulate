@@ -87,7 +87,7 @@ class CommonTests {
                                 italic = true
                                 underline = true
                             }
-                            alignment { middle }
+                            alignment { middle; center }
                             borders {
                                 all { red; solid; 2.pt() }
                             }
@@ -164,7 +164,7 @@ class CommonTests {
                 }
             }
         }
-        doc.export(File("test.xlsx"))
+        //doc.export(File("test.xlsx"))
         doc.export(File("test.pdf"))
     }
 

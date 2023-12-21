@@ -4,7 +4,6 @@ import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
 import io.github.voytech.tabulate.core.operation.Ok
 import io.github.voytech.tabulate.core.operation.RenderingResult
-import io.github.voytech.tabulate.core.operation.RenderingSkipped
 import io.github.voytech.tabulate.core.operation.asResult
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 
@@ -19,7 +18,7 @@ class PdfBoxImage(
 
     override fun measure(renderer: PdfBoxRenderingContext): RenderingResult {
         if (!boundingBox.isDefined()) {
-            applySize(image.width.toFloat(), image.height.toFloat())
+            adjustRenderableBoundingBox(image.width.toFloat(), image.height.toFloat())
         }
         measured = true
         return Ok.asResult()
