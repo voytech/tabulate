@@ -1,8 +1,8 @@
 package io.github.voytech.tabulate.core
 
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.layout.policy.NonUniformCartesianGrid
-import io.github.voytech.tabulate.core.layout.policy.SizingOptions
+import io.github.voytech.tabulate.core.layout.impl.NonUniformCartesianGrid
+import io.github.voytech.tabulate.core.layout.impl.SizingOptions
 import io.github.voytech.tabulate.core.operation.AttributedContext
 import io.github.voytech.tabulate.core.operation.Renderable
 import io.github.voytech.tabulate.core.operation.boundingBox
@@ -33,16 +33,16 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
     private lateinit var grid: NonUniformCartesianGrid
     //TODO add caching of left top column row indices by layout.
 
-    fun setupSpreadsheetLayout(defaultColumnWidth: Float, defaultRowHeight: Float) {
+    fun createSpreadsheetGrid(defaultColumnWidth: Float, defaultRowHeight: Float) {
         grid = NonUniformCartesianGrid(defaultColumnWidth, defaultRowHeight)
     }
 
-    fun AttributedContext.getAbsoluteColumn(column: Int): Int = boundingBox()?.layoutPosition?.x?.let {
-        grid.getColumnIndexAtPosition(it, NonUniformCartesianGrid.IndexRoundMode.FLOOR) + column
+    fun AttributedContext.getAbsoluteColumn(): Int = boundingBox()?.let {
+        grid.getColumnIndexAtPosition(it.absoluteX, NonUniformCartesianGrid.IndexRoundMode.HALF_UP)
     } ?: 0
 
-    fun AttributedContext.getAbsoluteRow(row: Int): Int = boundingBox()?.layoutPosition?.y?.let {
-        grid.getRowIndexAtPosition(it, NonUniformCartesianGrid.IndexRoundMode.FLOOR) + row
+    fun AttributedContext.getAbsoluteRow(): Int = boundingBox()?.let {
+        grid.getRowIndexAtPosition(it.absoluteY, NonUniformCartesianGrid.IndexRoundMode.HALF_UP)
     } ?: 0
 
     fun AttributedContext.trySetAndSyncAbsoluteColumnWidth(column: Int, width: Width, colSpan: Int = 1): Width? = boundingBox()?.let {

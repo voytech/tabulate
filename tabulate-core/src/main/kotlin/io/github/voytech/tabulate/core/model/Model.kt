@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.core.layout.Layout
 import io.github.voytech.tabulate.core.layout.LayoutProperties
 import io.github.voytech.tabulate.core.layout.SpaceConstraints
 import io.github.voytech.tabulate.core.layout.LayoutSpace
-import io.github.voytech.tabulate.core.layout.policy.SimpleLayout
+import io.github.voytech.tabulate.core.layout.impl.SimpleLayout
 import mu.KLogging
 import java.util.*
 
@@ -49,17 +49,17 @@ abstract class AbstractModel(
     @JvmSynthetic
     internal operator fun invoke(method: Method, exportContext: ModelExportContext) = exportContext.scope {
         when (method) {
-            Method.PREPARE -> prepareExport(this)
+            Method.INITIALIZE -> exportContextCreated(this)
             Method.MEASURE -> takeMeasures(this)
-            Method.INITIALIZE -> initialize(this)
+            Method.PREPARE -> beforeLayoutCreated(this)
             Method.EXPORT -> doExport(this)
             Method.FINISH -> finishExport(this)
         }
     }
 
 
-    protected open fun prepareExport(api: ExportApi) {
-        logger.warn { "Model.prepareExport hook not implemented" }
+    protected open fun beforeLayoutCreated(api: ExportApi) {
+        logger.warn { "Model.beforeLayoutCreated hook not implemented" }
     }
 
     protected abstract fun doExport(api: ExportApi)
@@ -68,8 +68,8 @@ abstract class AbstractModel(
         logger.warn { "Model.finishExport hook not implemented" }
     }
 
-    protected open fun initialize(api: ExportApi) {
-        logger.warn { "Model.initialize not implemented" }
+    protected open fun exportContextCreated(api: ExportApi) {
+        logger.warn { "Model.exportContextCreated not implemented" }
     }
 
     protected open fun takeMeasures(api: ExportApi) {

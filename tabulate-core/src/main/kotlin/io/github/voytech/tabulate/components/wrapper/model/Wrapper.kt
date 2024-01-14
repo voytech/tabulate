@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.components.wrapper.model
 import io.github.voytech.tabulate.core.align
 import io.github.voytech.tabulate.core.layout.LayoutProperties
 import io.github.voytech.tabulate.core.layout.SpaceConstraints
-import io.github.voytech.tabulate.core.layout.policy.SimpleLayout
+import io.github.voytech.tabulate.core.layout.impl.SimpleLayout
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
 import io.github.voytech.tabulate.core.model.attributes.MarginsAttribute

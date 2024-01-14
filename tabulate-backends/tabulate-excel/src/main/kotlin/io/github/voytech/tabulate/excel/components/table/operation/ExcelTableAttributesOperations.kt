@@ -39,8 +39,8 @@ class CellTextStylesAttributeRenderOperation :
     ) = with(renderingContext) {
         provideCellStyle(
             sheetName = context.getSheetName(),
-            rowIndex = context.getAbsoluteRow(context.rowIndex),
-            columnIndex = context.getAbsoluteColumn(context.columnIndex),
+            rowIndex = context.getAbsoluteRow(),
+            columnIndex = context.getAbsoluteColumn(),
             provideCellStyle = { getCachedStyle(context) }
         ).let {
             it.setFont(createFontFrom(context, attribute))
@@ -66,8 +66,8 @@ class CellBackgroundAttributeRenderOperation :
     ) = with(renderingContext) {
         provideCellStyle(
             sheetName = context.getSheetName(),
-            rowIndex = context.getAbsoluteRow(context.rowIndex),
-            columnIndex = context.getAbsoluteColumn(context.columnIndex),
+            rowIndex = context.getAbsoluteRow(),
+            columnIndex = context.getAbsoluteColumn(),
             provideCellStyle = { getCachedStyle(context) }
         ).let {
             if (attribute.color != null) {
@@ -110,8 +110,8 @@ class CellBordersAttributeRenderOperation :
     ): Unit = with(renderingContext) {
         renderingContext.provideCellStyle(
             sheetName = context.getSheetName(),
-            rowIndex = context.getAbsoluteRow(context.rowIndex),
-            columnIndex = context.getAbsoluteColumn(context.columnIndex),
+            rowIndex = context.getAbsoluteRow(),
+            columnIndex = context.getAbsoluteColumn(),
             provideCellStyle = { getCachedStyle(context) }
         ).let {
             attribute.leftBorderColor?.run {
@@ -149,9 +149,9 @@ class RowBordersAttributeRenderOperation<T: Any> :
     ): Unit = with(renderingContext) {
         provideSheet(context.getSheetName()).let { sheet ->
             context.rowCellValues.values.let {
-                val absoluteRow = context.getAbsoluteRow(context.rowIndex)
-                val absoluteColumnStart = context.getAbsoluteColumn(it.first().columnIndex)
-                val absoluteColumnEnd = context.getAbsoluteColumn(it.last().columnIndex)
+                val absoluteRow = context.getAbsoluteRow()
+                val absoluteColumnStart = context.getAbsoluteColumn()
+                val absoluteColumnEnd = context.getAbsoluteColumn()
                 val region = CellRangeAddress(absoluteRow, absoluteRow, absoluteColumnStart, absoluteColumnEnd)
                 attribute.bottomBorderStyle?.run { RegionUtil.setBorderBottom(resolveBorderStyle(), region, sheet) }
                 attribute.bottomBorderColor?.run {
@@ -194,8 +194,8 @@ class CellAlignmentAttributeRenderOperation :
     ) = with(renderingContext) {
         provideCellStyle(
             sheetName = context.getSheetName(),
-            rowIndex = context.getAbsoluteRow(context.rowIndex),
-            columnIndex = context.getAbsoluteColumn(context.columnIndex),
+            rowIndex = context.getAbsoluteRow(),
+            columnIndex = context.getAbsoluteColumn(),
             provideCellStyle = { getCachedStyle(context) }
         ).let {
             with(attribute.horizontal) {
@@ -237,8 +237,8 @@ class CellDataFormatAttributeRenderOperation :
     ) = with(renderingContext) {
         provideCellStyle(
             sheetName = context.getSheetName(),
-            rowIndex = context.getAbsoluteRow(context.rowIndex),
-            columnIndex = context.getAbsoluteColumn(context.columnIndex),
+            rowIndex = context.getAbsoluteRow(),
+            columnIndex = context.getAbsoluteColumn(),
             provideCellStyle = { getCachedStyle(context) }
         ).let {
             it.dataFormat = renderingContext.workbook().createDataFormat().getFormat(attribute.dataFormat)
@@ -306,8 +306,8 @@ class CellCommentAttributeRenderOperation :
     ) = with(renderingContext) {
         provideCell(
             sheetName = context.getSheetName(),
-            rowIndex = context.getAbsoluteRow(context.rowIndex),
-            columnIndex = context.getAbsoluteColumn(context.columnIndex),
+            rowIndex = context.getAbsoluteRow(),
+            columnIndex = context.getAbsoluteColumn(),
         ).let {
             it.cellComment = renderingContext.ensureDrawingPatriarch(context.getSheetName())
                 .createCellComment(renderingContext.createClientAnchor())

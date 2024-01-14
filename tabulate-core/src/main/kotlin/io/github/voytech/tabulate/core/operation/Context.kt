@@ -17,7 +17,7 @@ import io.github.voytech.tabulate.core.layout.Layout
  * @since 0.1.0
  */
 sealed interface Context {
-    fun getCustomAttributes(): MutableMap<String, Any>?
+    fun getCustomAttributes(): MutableMap<String, Any>
 }
 
 /**
@@ -30,7 +30,7 @@ sealed class ContextData : Context {
 
     var additionalAttributes: MutableMap<String, Any> = mutableMapOf()
 
-    override fun getCustomAttributes(): MutableMap<String, Any>? = additionalAttributes
+    override fun getCustomAttributes(): MutableMap<String, Any> = additionalAttributes
 
     inline fun <reified C : Any> getCustomAttribute(key: String): C? = additionalAttributes[key] as C?
 

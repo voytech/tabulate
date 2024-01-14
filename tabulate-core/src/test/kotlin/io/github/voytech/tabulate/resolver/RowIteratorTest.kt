@@ -9,7 +9,7 @@ import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
 import io.github.voytech.tabulate.core.model.background.DefaultFillType
 import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
-import io.github.voytech.tabulate.components.table.template.TableContinuations
+import io.github.voytech.tabulate.components.table.template.TableRenderIterations
 import io.github.voytech.tabulate.components.table.template.RowContextIterator
 import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.data.Product
@@ -39,10 +39,10 @@ class RowIteratorTest {
             val attributes = mutableMapOf<String, Any>()
             val rootCtx = table.createTableContext(attributes)
             (attributes to AccumulatingRowContextResolver(
-                table, StateAttributes(attributes), TableContinuations(rootCtx), successfulRowComplete()
+                table, StateAttributes(attributes), TableRenderIterations(rootCtx), successfulRowComplete()
             )).let {
                 Wrapper(
-                    iterator = RowContextIterator(it.second, TableContinuations(rootCtx)),
+                    iterator = RowContextIterator(it.second, TableRenderIterations(rootCtx)),
                     resolver = it.second,
                     customAttributes = it.first
                 )

@@ -85,8 +85,8 @@ class AttributeSetCacheTest {
         val firstTableContext = firstTable.createTableContext(customAttributes)
         val iterator = RowContextIterator(
             AccumulatingRowContextResolver(
-                firstTable, StateAttributes(customAttributes), TableContinuations(firstTableContext), successfulRowComplete()
-            ), TableContinuations(firstTableContext)
+                firstTable, StateAttributes(customAttributes), TableRenderIterations(firstTableContext), successfulRowComplete()
+            ), TableRenderIterations(firstTableContext)
         )
         val attributedCell = iterator.next().success().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
@@ -98,8 +98,8 @@ class AttributeSetCacheTest {
         val secondTableContext = secondTable.createTableContext(customAttributes)
         val secondIterator = RowContextIterator(
             AccumulatingRowContextResolver(
-                secondTable, StateAttributes(customAttributes), TableContinuations(secondTableContext), successfulRowComplete()
-            ), TableContinuations(secondTableContext)
+                secondTable, StateAttributes(customAttributes), TableRenderIterations(secondTableContext), successfulRowComplete()
+            ), TableRenderIterations(secondTableContext)
         )
         val secondAttributedCell = secondIterator.next().success().rowCellValues.firstNotNullOf { it.value }
         secondAttributedCell.withAttributeSetBasedCache {
@@ -136,9 +136,9 @@ class AttributeSetCacheTest {
         val firstTableContext = firstTable.createTableContext(customAttributes)
         val iterator = RowContextIterator(
             AccumulatingRowContextResolver(
-                firstTable, StateAttributes(customAttributes),TableContinuations(firstTableContext),
+                firstTable, StateAttributes(customAttributes),TableRenderIterations(firstTableContext),
                 successfulRowComplete()
-            ), TableContinuations(firstTableContext)
+            ), TableRenderIterations(firstTableContext)
         )
         val attributedCell = iterator.next().success().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
@@ -156,8 +156,8 @@ class AttributeSetCacheTest {
         val secondTableContext = secondTable.createTableContext(customAttributes)
         val secondIterator = RowContextIterator(
             AccumulatingRowContextResolver(
-                secondTable, StateAttributes(customAttributes), TableContinuations(secondTableContext), successfulRowComplete()
-            ), TableContinuations(secondTableContext)
+                secondTable, StateAttributes(customAttributes), TableRenderIterations(secondTableContext), successfulRowComplete()
+            ), TableRenderIterations(secondTableContext)
         )
         val secondAttributedCell = secondIterator.next().success().rowCellValues.firstNotNullOf { it.value }
         secondAttributedCell.withAttributeSetBasedCache {

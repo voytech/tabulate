@@ -6,14 +6,14 @@ import io.github.voytech.tabulate.components.table.model.ColumnDef
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.rendering.*
 import io.github.voytech.tabulate.core.DocumentFormat
-import io.github.voytech.tabulate.core.InputParams
 import io.github.voytech.tabulate.core.InputParams.Companion.allowMeasureBeforeRender
 import io.github.voytech.tabulate.core.InputParams.Companion.params
 import io.github.voytech.tabulate.core.StandaloneExportTemplate
 import io.github.voytech.tabulate.core.documentFormat
 import io.github.voytech.tabulate.core.layout.CrossedAxis
 import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.layout.policy.TableLayout
+import io.github.voytech.tabulate.core.layout.impl.TableLayout
+import io.github.voytech.tabulate.core.model.DataSourceBinding
 import io.github.voytech.tabulate.core.model.ExportApi
 import io.github.voytech.tabulate.core.operation.*
 import java.io.File
@@ -38,8 +38,11 @@ import java.util.*
 internal class TableExport<T : Any>(
     private val table: Table<T>,
     private val scope: ExportApi,
-    private val dataSource: Iterable<T>?,
+    data: Iterable<T>?
 ) {
+
+    private val dataSource: Iterable<T> =
+        data ?: scope.getCustomAttributes().get<DataSourceBinding<T>>("_dataSourceOverride")?.dataSource ?: emptyList()
 
     data class ColumnContextAttributes(val start: Attributes, val end: Attributes)
 
@@ -56,9 +59,9 @@ internal class TableExport<T : Any>(
 
     private lateinit var rowContextIterator: RowContextIterator<T>
 
-    private val tableContinuations = TableContinuations(scope.continuations())
+    private val tableIterations = TableRenderIterations(scope.continuations())
 
-    private var croppedDatasource: Iterable<T>? = null
+    private var dataSourceActiveWindow: Iterable<T>? = null
 
     private val columnContextAttributes = table.distributeAttributesForContexts(
         ColumnStartRenderable::class.java, ColumnEndRenderable::class.java
@@ -66,24 +69,26 @@ internal class TableExport<T : Any>(
 
     private val columnAttributes: Map<ColumnDef<T>, ColumnContextAttributes> =
         table.columns.associateWith { column ->
-            column.distributeAttributesForContexts(ColumnStartRenderable::class.java, ColumnEndRenderable::class.java).let {
-                ColumnContextAttributes(
-                    columnContextAttributes.get<ColumnStartRenderable>() + it.get<ColumnStartRenderable>(),
-                    columnContextAttributes.get<ColumnEndRenderable>() + it.get<ColumnEndRenderable>()
-                )
-            }
+            column.distributeAttributesForContexts(ColumnStartRenderable::class.java, ColumnEndRenderable::class.java)
+                .let {
+                    ColumnContextAttributes(
+                        columnContextAttributes.get<ColumnStartRenderable>() + it.get<ColumnStartRenderable>(),
+                        columnContextAttributes.get<ColumnEndRenderable>() + it.get<ColumnEndRenderable>()
+                    )
+                }
         }
 
-    private fun cropDataSource(): Iterable<T>? = with(tableContinuations) {
-        dataSource?.crop().also { croppedDatasource = it }
+    private fun adjustDataSourceRenderWindow(): Iterable<T>? = with(tableIterations) {
+        dataSourceActiveWindow = dataSource.adjustRenderWindow()
+        return dataSourceActiveWindow
     }
 
     private fun setup() {
         rowContextResolver = AccumulatingRowContextResolver(
-            table, scope.getCustomAttributes(), tableContinuations,
+            table, scope.getCustomAttributes(), tableIterations,
             CaptureRowCompletionImpl(scope)
         )
-        rowContextIterator = RowContextIterator(rowContextResolver, tableContinuations)
+        rowContextIterator = RowContextIterator(rowContextResolver, tableIterations)
     }
 
     /**
@@ -111,7 +116,7 @@ internal class TableExport<T : Any>(
     }
 
     private fun resolveActiveColumns(): Iterator<ColumnDef<T>> =
-        with(tableContinuations) { table.columns.crop().iterator() }
+        with(tableIterations) { table.columns.adjustRenderWindow().iterator() }
 
     private fun Map<ColumnDef<T>, ColumnContextAttributes>.forStart(def: ColumnDef<T>): Attributes =
         this[def]?.start ?: Attributes()
@@ -121,14 +126,14 @@ internal class TableExport<T : Any>(
 
     private fun renderColumns(
         addContinuation: Boolean = false, resolveRenderable: (ColumnDef<T>) -> ColumnRenderable,
-    ): RenderingStatus?  {
+    ): RenderingStatus? {
         var status: RenderingStatus? = Ok
         resolveActiveColumns().let { iterator ->
             while (iterator.hasNext()) {
                 val def = iterator.next()
                 status = scope.renderOrMeasure(resolveRenderable(def)).status
                 if (status.isSkipped(CrossedAxis.X)) {
-                    if (addContinuation) tableContinuations.newContinuation(def)
+                    if (addContinuation) tableIterations.pushNewIteration(def)
                     break
                 }
             }
@@ -154,7 +159,7 @@ internal class TableExport<T : Any>(
     }
 
     private fun renderRows() {
-        croppedDatasource?.iterator()?.let { iterator ->
+        dataSourceActiveWindow?.iterator()?.let { iterator ->
             while (iterator.hasNext()) {
                 if (pushAndNext(iterator.next()) is OverflowResult) {
                     return
@@ -165,28 +170,20 @@ internal class TableExport<T : Any>(
     }
 
     private fun setTableLayoutPolicyProgress() {
-        val startFromColumnIndex = tableContinuations.getContinuationColumnIndexOrZero()
-        val startFromRowIndex = tableContinuations.getContinuationRowIndexOrZero()
+        val startFromColumnIndex = tableIterations.getStartColumnIndexOrZero()
+        val startFromRowIndex = tableIterations.getStartRowIndexOrZero()
         scope.currentLayoutScope()
             .layout<TableLayout>()
             .setOffsets(startFromRowIndex, startFromColumnIndex)
     }
 
-    private fun renderTable() {
+    fun renderTable() {
         setTableLayoutPolicyProgress()
         setup()
-        cropDataSource()
+        adjustDataSourceRenderWindow()
         beginTable()
         renderRows()
         endTable()
-    }
-
-    fun exportOrResume() {
-        renderTable()
-    }
-
-    fun takeMeasures() {
-        renderTable()
     }
 
     fun <O : Any> export(format: DocumentFormat, source: Iterable<T>, output: O, table: Table<T>) =
@@ -202,7 +199,7 @@ internal class TableExport<T : Any>(
  * @receiver collection of records to be rendered into file.
  */
 fun <T : Any, O : Any> Iterable<T>.tabulate(format: DocumentFormat, output: O, block: TableBuilderApi<T>.() -> Unit) {
-    StandaloneExportTemplate(format).export(createTable(block), output, this,  params().allowMeasureBeforeRender(false))
+    StandaloneExportTemplate(format).export(createTable(block), output, this, params().allowMeasureBeforeRender(false))
 }
 
 fun <T : Any, O : Any> Table<T>.export(format: DocumentFormat, output: O) {
@@ -214,7 +211,12 @@ fun <T : Any, O : Any> export(
     source: Iterable<T>,
     output: O,
     block: TableBuilderApi<T>.() -> Unit,
-) = StandaloneExportTemplate(format).export(createTable(block), output, source, params().allowMeasureBeforeRender(false))
+) = StandaloneExportTemplate(format).export(
+    createTable(block),
+    output,
+    source,
+    params().allowMeasureBeforeRender(false)
+)
 
 
 /**

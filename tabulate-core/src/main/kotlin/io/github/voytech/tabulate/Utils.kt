@@ -52,10 +52,12 @@ class AdjustingIterator<T>(
 
     override fun computeNext() {
         require(view.isNotEmpty())
-        if (index >= view.size) {
+        val nextIndex = index + 1
+        if (nextIndex >= view.size) {
             done()
         } else {
-            setNext(view[++index])
+            setNext(view[nextIndex])
+            index = nextIndex
         }
     }
 
@@ -83,7 +85,7 @@ class MultiIterationSet<T, E> : CompositeIterator<T, E> where E : Enum<E>, T : A
 
     private val iterations: MutableMap<E, AdjustingIterator<T>> = mutableMapOf()
 
-    private fun <R> usingIteration(enum: E, block: AdjustingIterator<T>.() -> R?): R? {
+    private fun <R> usingCategory(enum: E, block: AdjustingIterator<T>.() -> R?): R? {
         iterations.computeIfAbsent(enum) { AdjustingIterator(collection) }
         return iterations[enum]?.run(block)
     }
@@ -94,25 +96,25 @@ class MultiIterationSet<T, E> : CompositeIterator<T, E> where E : Enum<E>, T : A
     }
 
     override fun next(enum: E): T =
-        usingIteration(enum) { next() } ?: error("No next element for iteration: $enum")
+        usingCategory(enum) { next() } ?: error("No next element for iteration: $enum")
 
     override fun reset(enum: E) {
-        usingIteration(enum) {
+        usingCategory(enum) {
             restart()
         }
     }
 
-    override fun currentOrNull(enum: E): T? = usingIteration(enum) {
+    override fun currentOrNull(enum: E): T? = usingCategory(enum) {
         currentOrNull()
     }
 
     override fun current(enum: E): T =
-        usingIteration(enum) { current() } ?: error("No current element for iteration: $enum")
+        usingCategory(enum) { current() } ?: error("No current element for iteration: $enum")
 
-    override fun nextOrNull(enum: E): T? = usingIteration(enum) { nextOrNull() }
+    override fun nextOrNull(enum: E): T? = usingCategory(enum) { nextOrNull() }
 
     override fun currentIndex(enum: E): Int =
-        usingIteration(enum) { currentIndex() } ?: -1
+        usingCategory(enum) { currentIndex() } ?: -1
 
     override fun E.isAfter(other: E): Boolean = currentIndex(this) <= currentIndex(other)
     override fun size(): Int = collection.size
@@ -126,7 +128,7 @@ class MultiIterationSet<T, E> : CompositeIterator<T, E> where E : Enum<E>, T : A
 
 }
 
-operator fun <T,E> MultiIterationSet<T,E>.plusAssign(element: T)  where E : Enum<E>, T : Any {
+operator fun <T, E> MultiIterationSet<T, E>.plusAssign(element: T) where E : Enum<E>, T : Any {
     add(element)
 }
 
@@ -135,4 +137,4 @@ sealed class Either<A, B> {
     class Right<A, B>(val value: B) : Either<A, B>()
 }
 
-fun Float.round3(): Float = (round(this*1000))/1000
+fun Float.round3(): Float = (round(this * 1000)) / 1000

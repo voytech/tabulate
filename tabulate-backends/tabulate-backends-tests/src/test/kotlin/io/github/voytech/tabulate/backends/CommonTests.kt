@@ -2,21 +2,31 @@ package io.github.voytech.tabulate.backends
 
 import io.github.voytech.tabulate.components.container.api.builder.dsl.*
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
+import io.github.voytech.tabulate.components.document.api.builder.dsl.height
+import io.github.voytech.tabulate.components.document.api.builder.dsl.width
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.image.api.builder.dsl.*
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
 import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
+import io.github.voytech.tabulate.components.table.model.RowCellExpression
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
+import io.github.voytech.tabulate.components.table.template.AdditionalSteps
 import io.github.voytech.tabulate.components.text.api.builder.dsl.*
+import io.github.voytech.tabulate.core.InputParams
+import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
+import io.github.voytech.tabulate.excel.setXlsxRowsCountInWindow
 import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.io.File
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
+import kotlin.reflect.KProperty1
 
 @DisplayName("Regression testing all backends")
 class CommonTests {
@@ -143,7 +153,7 @@ class CommonTests {
                                 column(SampleProduct::name)
                             }
                             rows {
-                                header("Id", "Name")
+                                header("Id2", "Name2")
                             }
                         }
                     }
@@ -164,8 +174,8 @@ class CommonTests {
                 }
             }
         }
-        //doc.export(File("test.xlsx"))
-        doc.export(File("test.pdf"))
+        doc.export(File("test.xlsx"))
+        //doc.export(File("test.pdf"))
     }
 
     private fun ContainerBuilderApi.textList(type: String, vararg skills: String) {
@@ -314,7 +324,7 @@ class CommonTests {
                 }
             }
         }
-        doc.export(File("cv.pdf"))
+        //doc.export(File("cv.pdf"))
         doc.export(File("cv.xlsx"))
     }
 
@@ -328,9 +338,6 @@ class CommonTests {
                         height { 700.pt() }
                     }
                     vertical {
-                        attributes {
-                            margins { top { 15.pt() }; }
-                        }
                         text {
                             attributes {
                                 text { arialBlack; white; bold; fontSize = 18; }
@@ -412,7 +419,89 @@ class CommonTests {
                 }
             }
         }
-        //doc.export(File("text_measures.pdf"))
+        doc.export(File("text_measures.pdf"))
         doc.export(File("text_measures.xlsx"))
+    }
+
+
+    private fun <T : Any> RowBuilderApi<T>.dollarColumn(prop: KProperty1<T, Any?>) =
+        cell(prop) {
+            expression = RowCellExpression {
+                "${(it.record?.let { obj -> (prop.get(obj) as BigDecimal).setScale(2, RoundingMode.HALF_UP) } ?: 0)} $"
+            }
+        }
+
+    @Test
+    fun multiplePages() {
+        document {
+            attributes {
+                width { 800.pt() }
+                height { 300.pt() }
+            }
+            page {
+                header {
+                    text {
+                        value = "Some heading."
+                        attributes {
+                            width { 100.percents() }
+                            height { 20.pt() }
+                        }
+                    }
+                }
+                footer {
+                    text {
+                        value<PageExecutionContext> { ctx -> "Page number: ${ctx.pageNumber}" }
+                        attributes {
+                            height { 30.pt() }
+                            width { 100.percents() }
+                        }
+                    }
+                }
+                horizontal {
+                    attributes { borders { all { lightGray; solid; 3.pt() } } }
+                    table(typedTable<SampleProduct> {
+                        columns {
+                            column(SampleProduct::code) {
+                                attributes {
+                                    text { red; bold; courierNew }
+                                    alignment { left; middle }
+                                    borders { left { 2f.pt() } }
+                                }
+                            }
+                            column(SampleProduct::name) {
+                                attributes {
+                                    width { 100.pt() }
+                                    alignment { center }
+                                }
+                            }
+                            column(SampleProduct::description)
+                            column(SampleProduct::price) {}
+                        }
+                        rows {
+                            header("Id", "Name", "Description", "Price")
+                            matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
+                            matching { odd() } assign { attributes { background { yellow } } }
+                            footer {
+                                cell(SampleProduct::code) { value = "." }
+                                cell(SampleProduct::name) { value = "." }
+                                cell(SampleProduct::description) { value = "." }
+                                cell(SampleProduct::price) { value = "." }
+                            }
+                            newRow(AdditionalSteps.TRAILING_ROWS) {
+                                attributes {
+                                    background { red }
+                                    borders { all { none } }
+                                }
+                                cell(SampleProduct::code) { value = "" }
+                                cell(SampleProduct::name) { value = "" }
+                                cell(SampleProduct::description) { value = "" }
+                                cell(SampleProduct::price) { }
+                            }
+                        }
+                        dataSource(SampleProduct.create(150))
+                    })
+                }
+            }
+        }.export("multiple_pages_plus_header_and_footer.xlsx",InputParams.params().setXlsxRowsCountInWindow(300))
     }
 }

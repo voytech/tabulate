@@ -14,25 +14,27 @@ class Page internal constructor(
     internal val footer: AbstractModel? = null,
 ) : AbstractModel() {
 
-    override fun initialize(api: ExportApi) = api {
+    override fun exportContextCreated(api: ExportApi) = api {
         getCustomAttributes()["_pageName"] = name
         getCustomAttributes()["_sheetName"] = name
+        getCustomAttributes().ensureExecutionContext { PageExecutionContext() }.pageTitle = name
     }
 
-    override fun prepareExport(api: ExportApi): Unit = api {
-        clearLayouts()
+    override fun beforeLayoutCreated(api: ExportApi): Unit = api {
+        clearAllLayouts()
     }
 
     override fun doExport(api: ExportApi) = api {
-        render(newPage(nextPageNumber(), name))
+        renderNewPage()
         stickyHeaderAndFooterWith { layout, footerLeftTop ->
             exportContent(footerLeftTop.asConstraints(layout))
         }
     }
 
-    private fun ExportApi.nextPageNumber(): Int =
+    private fun ExportApi.renderNewPage() =
         getCustomAttributes().run {
-            ++ensureExecutionContext { PageExecutionContext() }.pageNumber
+            val execution = ensureExecutionContext { PageExecutionContext() }
+            render(newPage(++execution.pageNumber, execution.currentPageTitleWithNumber(),this))
         }
 
     private fun ExportApi.stickyHeaderAndFooterWith(renderContents: (LayoutSpace, Position?) -> Unit) {

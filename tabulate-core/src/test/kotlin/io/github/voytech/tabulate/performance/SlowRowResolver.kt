@@ -20,7 +20,7 @@ internal class SlowRowResolver<T : Any>(
     private val tableModel: Table<T>,
     private val customAttributes: MutableMap<String, Any>,
     val ctx: ModelExportContext = tableModel.createTableContext(customAttributes),
-    offsets: TableContinuations = TableContinuations(ctx),
+    offsets: TableRenderIterations = TableRenderIterations(ctx),
     listener: CaptureRowCompletion<T>? = null
 ) : AbstractRowContextResolver<T>(tableModel, StateAttributes(customAttributes), offsets, listener) {
 

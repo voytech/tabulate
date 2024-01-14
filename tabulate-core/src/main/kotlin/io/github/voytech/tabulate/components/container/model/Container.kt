@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.components.container.model
 
 import io.github.voytech.tabulate.components.container.opration.ContainerRenderable
 import io.github.voytech.tabulate.core.layout.LayoutProperties
-import io.github.voytech.tabulate.core.layout.policy.FlowLayout
+import io.github.voytech.tabulate.core.layout.impl.FlowLayout
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute

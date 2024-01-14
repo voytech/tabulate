@@ -3,7 +3,6 @@ package io.github.voytech.tabulate.excel
 import io.github.voytech.tabulate.components.table.rendering.CellRenderable
 import io.github.voytech.tabulate.components.table.rendering.getSheetName
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
-import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.attributes.*
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle

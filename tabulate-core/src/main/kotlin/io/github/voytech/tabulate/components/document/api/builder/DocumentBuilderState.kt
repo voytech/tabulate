@@ -30,7 +30,7 @@ class DocumentBuilderState : CompositeModelBuilderState<Document>, AttributesAwa
 
     @JvmSynthetic
     override fun build(): Document = Document(
-        attributes = null,
+        attributes = attributes(),
         nodes = nodeBuilders.map { it.build() },
         id = name
     )

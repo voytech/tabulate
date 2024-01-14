@@ -1,9 +1,9 @@
 package io.github.voytech.tabulate.components.table.rendering
 
+import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHintAttribute
-import io.github.voytech.tabulate.core.layout.*
-import io.github.voytech.tabulate.core.layout.policy.TableLayout
+import io.github.voytech.tabulate.core.model.stateAttributes
 import io.github.voytech.tabulate.core.operation.Context
 
 /**
@@ -11,9 +11,14 @@ import io.github.voytech.tabulate.core.operation.Context
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-fun Context.getSheetName(): String {
-    return (getCustomAttributes()?.get("_sheetName") ?: error("")) as String
-}
+fun Context.getSheetName(): String =
+    getCustomAttributes().stateAttributes().let { attributes ->
+        attributes.getExecutionContext<PageExecutionContext>()
+            ?.currentPageTitleWithNumber()
+            ?: (getCustomAttributes()["_sheetName"] as? String
+                ?: error("Cannot resolve sheet name"))
+    }
+
 
 /**
  * CellValue representing cell associated data exposed by row cell operation.

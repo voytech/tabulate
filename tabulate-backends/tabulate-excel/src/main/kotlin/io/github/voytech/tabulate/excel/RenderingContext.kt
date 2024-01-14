@@ -58,10 +58,24 @@ class ApachePoiRenderingContext(private val images: ImageIndex = ImageIndex()) :
 
     fun provideWorkbook(templateFile: InputStream? = null, forceRecreate: Boolean = false): SXSSFWorkbook {
         if (workbook == null || forceRecreate) {
-            workbook = createWorkbookInternal(templateFile)
+            workbook = createWorkbookInternal(templateFile, 100)
         }
         return workbook!!
     }
+
+    fun provideWorkbook(windowSize: Int = 100): SXSSFWorkbook {
+        if (workbook == null) {
+            workbook = createWorkbookInternal(null, windowSize)
+        }
+        return workbook!!
+    }
+
+    fun workbook(): SXSSFWorkbook = workbook!!
+
+    fun provideSheet(sheetName: String): SXSSFSheet =
+        getSheet(sheetName) ?: createSheet(sheetName).also { it.createGrid() }
+
+    private fun createSheet(sheetName: String): SXSSFSheet = workbook().createSheet(sheetName)
 
     fun createCellStyle(): XSSFCellStyle = workbook().createCellStyle() as XSSFCellStyle
 
@@ -75,21 +89,14 @@ class ApachePoiRenderingContext(private val images: ImageIndex = ImageIndex()) :
             .getRow(coordinates.rowIndex)
             .getCell(coordinates.columnIndex)
 
-    fun workbook(): SXSSFWorkbook = workbook!!
 
-    fun provideSheet(sheetName: String): SXSSFSheet = getSheet(sheetName) ?: workbook().createSheet(sheetName).also {
-        it.setupSpreadsheetLayout()
-    }
+    private fun Sheet.getInitialColumnWidthInPoints(): Float =
+        Units.pixelToPoints(getColumnWidthInPixels(0).toDouble()).toFloat().round3()
 
-    fun removeSheet(sheetName: String) {
-        val sheet = getSheet(sheetName)
-        workbook().removeSheetAt(workbook().indexOf(sheet))
-    }
+    private fun Sheet.getInitialRowHeightInPoints(): Float = defaultRowHeightInPoints.round3()
 
-    private fun Sheet.setupSpreadsheetLayout() = setupSpreadsheetLayout(
-        Units.pixelToPoints(getColumnWidthInPixels(0).toDouble()).toFloat().round3(),
-        defaultRowHeightInPoints.round3()
-    )
+    private fun Sheet.createGrid() =
+        createSpreadsheetGrid(getInitialColumnWidthInPoints(), getInitialRowHeightInPoints())
 
     fun provideRow(sheetName: String, rowIndex: Int): SXSSFRow =
         row(sheetName, rowIndex) ?: createRow(sheetName, rowIndex)
@@ -99,9 +106,8 @@ class ApachePoiRenderingContext(private val images: ImageIndex = ImageIndex()) :
         rowIndex: Int,
         columnIndex: Int,
         onCreate: ((cell: SXSSFCell) -> Unit)? = null,
-    ): SXSSFCell {
-        return cell(sheetName, rowIndex, columnIndex) ?: createCell(sheetName, rowIndex, columnIndex, onCreate)
-    }
+    ): SXSSFCell =
+        cell(sheetName, rowIndex, columnIndex) ?: createCell(sheetName, rowIndex, columnIndex, onCreate)
 
     fun provideCellStyle(
         sheetName: String,
@@ -172,8 +178,8 @@ class ApachePoiRenderingContext(private val images: ImageIndex = ImageIndex()) :
     }
 
     fun ensureDrawingPatriarch(sheetName: String): XSSFDrawing = provideSheet(sheetName).let {
-      if (it.drawingPatriarch == null) it.createDrawingPatriarch()
-      it.drawingPatriarch
+        if (it.drawingPatriarch == null) it.createDrawingPatriarch()
+        it.drawingPatriarch
     }
 
     fun getCreationHelper(): CreationHelper = workbook().creationHelper
@@ -227,10 +233,10 @@ class ApachePoiRenderingContext(private val images: ImageIndex = ImageIndex()) :
     ): SXSSFWorkbook {
         return if (templateFile != null) {
             SXSSFWorkbook(WorkbookFactory.create(templateFile) as XSSFWorkbook?, rowAccessWindowSize).also { workbook ->
-                workbook.sheetIterator().forEachRemaining { it.setupSpreadsheetLayout() }
+                workbook.sheetIterator().forEachRemaining { it.createGrid() }
             }
         } else {
-            SXSSFWorkbook()
+            SXSSFWorkbook(rowAccessWindowSize)
         }
     }
 

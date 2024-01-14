@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.createTableBu
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.template.AbstractRowContextResolver
 import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
-import io.github.voytech.tabulate.components.table.template.TableContinuations
+import io.github.voytech.tabulate.components.table.template.TableRenderIterations
 import io.github.voytech.tabulate.components.table.template.RowContextIterator
 import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.support.createTableContext
@@ -26,7 +26,7 @@ class TabulatePerformanceTest {
             it to SlowRowResolver(table, it)
         }.let {
             Wrapper(
-                iterator = RowContextIterator(it.second, TableContinuations(it.second.ctx)),
+                iterator = RowContextIterator(it.second, TableRenderIterations(it.second.ctx)),
                 resolver = it.second,
                 customAttributes = it.first
             )
@@ -35,9 +35,9 @@ class TabulatePerformanceTest {
     private fun <T: Any> createFastIterator(table: Table<T>): Wrapper<T> {
         val attributes = mutableMapOf<String, Any>()
         val ctx = table.createTableContext(attributes)
-        return (attributes to AccumulatingRowContextResolver(table, StateAttributes(attributes), TableContinuations(ctx), successfulRowComplete())).let {
+        return (attributes to AccumulatingRowContextResolver(table, StateAttributes(attributes), TableRenderIterations(ctx), successfulRowComplete())).let {
             Wrapper(
-                iterator = RowContextIterator(it.second, TableContinuations(ctx)),
+                iterator = RowContextIterator(it.second, TableRenderIterations(ctx)),
                 resolver = it.second,
                 customAttributes = it.first
             )

@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.core.model
 
-import io.github.voytech.tabulate.core.layout.policy.SimpleLayout
+import io.github.voytech.tabulate.core.layout.impl.SimpleLayout
 import io.github.voytech.tabulate.core.operation.Renderable
 
 abstract class DirectlyRenderableModel<R : Renderable<SimpleLayout>> : ModelWithAttributes() {

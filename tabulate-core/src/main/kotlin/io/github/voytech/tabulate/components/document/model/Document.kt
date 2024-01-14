@@ -16,7 +16,7 @@ class Document internal constructor(
         nodes.forEach { child ->
             do {
                 child.export()
-            } while (api.continuations().haveChildrenPendingContinuations())
+            } while (api.continuations().haveChildrenPendingIterations())
         }
         render(DocumentEnd(api))
     }

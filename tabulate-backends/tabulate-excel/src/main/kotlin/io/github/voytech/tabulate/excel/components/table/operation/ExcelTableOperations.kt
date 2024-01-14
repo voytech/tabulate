@@ -37,7 +37,7 @@ private object ApachePoiStartColumnOperation : StartColumnOperation<ApachePoiRen
     override fun invoke(renderingContext: ApachePoiRenderingContext, context: ColumnStartRenderable) {
         with(renderingContext) {
             if (!context.hasWidthDefined()) {
-                val absoluteColumn = context.getAbsoluteColumn(context.getColumn())
+                val absoluteColumn = context.getAbsoluteColumn()
                 provideSheet(context.getSheetName()).trackColumnForAutoSizing(absoluteColumn)
             }
         }
@@ -51,7 +51,7 @@ private object ApachePoiStartRowOperation : StartRowOperation<ApachePoiRendering
     override fun invoke(renderingContext: ApachePoiRenderingContext, context: RowStartRenderable) {
         with(renderingContext) {
             provideSheet(context.getSheetName())
-            provideRow(context.getSheetName(), context.getAbsoluteRow(context.getRow()))
+            provideRow(context.getSheetName(), context.getAbsoluteRow())
         }
     }
 }
@@ -75,10 +75,10 @@ private object ApachePoiMeasureRowCellOperation : RenderRowCellOperation<ApacheP
     private fun CellRenderable.synchronizeMeasuredBoundingBox(renderingContext: ApachePoiRenderingContext): Unit =
         with(renderingContext){
         boundingBox.height?.let { computedHeight ->
-            trySetAndSyncAbsoluteRowHeight(getAbsoluteRow(getRow()), computedHeight, cellValue.rowSpan)
+            trySetAndSyncAbsoluteRowHeight(getAbsoluteRow(), computedHeight, cellValue.rowSpan)
         }
         boundingBox.width?.let { computedWidth ->
-            trySetAndSyncAbsoluteColumnWidth(getAbsoluteColumn(getColumn()), computedWidth, cellValue.colSpan)
+            trySetAndSyncAbsoluteColumnWidth(getAbsoluteColumn(), computedWidth, cellValue.colSpan)
         }
     }
 }
@@ -101,8 +101,8 @@ private object ApachePoiRenderRowCellOperation : RenderRowCellOperation<ApachePo
             if (context.hasSpans()) {
                 mergeCells(
                     context.getSheetName(),
-                    context.getAbsoluteRow(context.getRow()),
-                    context.getAbsoluteColumn(context.getColumn()),
+                    context.getAbsoluteRow(),
+                    context.getAbsoluteColumn(),
                     context.cellValue.rowSpan,
                     context.cellValue.colSpan
                 )
@@ -116,7 +116,7 @@ private object ApachePoiEndRowOperation : EndRowOperation<ApachePoiRenderingCont
     override fun invoke(renderingContext: ApachePoiRenderingContext, context: RowEndRenderable<Any>) {
         with(renderingContext) {
             provideSheet(context.getSheetName()).let {
-                val absoluteRowIndex = context.getAbsoluteRow(context.getRow())
+                val absoluteRowIndex = context.getAbsoluteRow()
                 val row = provideRow(context.getSheetName(), absoluteRowIndex)
                 context.boundingBox.height?.let {
                     context.trySetAndSyncAbsoluteRowHeight(absoluteRowIndex,it)?.let { effectiveHeight ->
@@ -133,7 +133,7 @@ private object ApachePoiEndColumnOperation : EndColumnOperation<ApachePoiRenderi
     override fun invoke(renderingContext: ApachePoiRenderingContext, context: ColumnEndRenderable) {
         with(renderingContext) {
             provideSheet(context.getSheetName()).let { sheet ->
-                val absoluteColumnIndex = context.getAbsoluteColumn(context.getColumn())
+                val absoluteColumnIndex = context.getAbsoluteColumn()
                 if (!context.hasWidthDefined() && sheet.isColumnTrackedForAutoSizing(absoluteColumnIndex)) {
                     sheet.autoSizeColumn(absoluteColumnIndex)
                 } else {
@@ -161,7 +161,7 @@ private object ApachePoiEndRowMeasureOperation : EndRowOperation<ApachePoiRender
     override fun invoke(renderingContext: ApachePoiRenderingContext, context: RowEndRenderable<Any>) {
         with(renderingContext) {
             provideSheet(context.getSheetName()).let {
-                val absoluteRowIndex = context.getAbsoluteRow(context.getRow())
+                val absoluteRowIndex = context.getAbsoluteRow()
                 context.syncAbsoluteRowHeight(absoluteRowIndex)
             }
         }
@@ -173,7 +173,7 @@ private object ApachePoiEndColumnMeasureOperation : EndColumnOperation<ApachePoi
     override fun invoke(renderingContext: ApachePoiRenderingContext, context: ColumnEndRenderable) {
         with(renderingContext) {
             provideSheet(context.getSheetName()).let {
-                val absoluteColumnIndex = context.getAbsoluteColumn(context.getColumn())
+                val absoluteColumnIndex = context.getAbsoluteColumn()
                 context.syncAbsoluteColumnWidth(absoluteColumnIndex)
             }
         }
@@ -184,16 +184,16 @@ private object ApachePoiEndColumnMeasureOperation : EndColumnOperation<ApachePoi
 private fun ApachePoiRenderingContext.provideCell(context: CellRenderable, block: (SXSSFCell.() -> Unit)) {
     provideCell(
         context.getSheetName(),
-        context.getAbsoluteRow(context.getRow()),
-        context.getAbsoluteColumn(context.getColumn())
+        context.getAbsoluteRow(),
+        context.getAbsoluteColumn()
     ) { it.apply(block) }
 }
 
 private fun ApachePoiRenderingContext.renderImageDataCell(context: CellRenderable) {
     createImageCell(
         context.getSheetName(),
-        context.getAbsoluteRow(context.getRow()),
-        context.getAbsoluteColumn(context.getColumn()),
+        context.getAbsoluteRow(),
+        context.getAbsoluteColumn(),
         context.cellValue.rowSpan,
         context.cellValue.colSpan,
         context.value as ByteArray
@@ -203,8 +203,8 @@ private fun ApachePoiRenderingContext.renderImageDataCell(context: CellRenderabl
 private fun ApachePoiRenderingContext.renderImageUrlCell(context: CellRenderable) {
     createImageCell(
         context.getSheetName(),
-        context.getAbsoluteRow(context.getRow()),
-        context.getAbsoluteColumn(context.getColumn()),
+        context.getAbsoluteRow(),
+        context.getAbsoluteColumn(),
         context.cellValue.rowSpan,
         context.cellValue.colSpan,
         context.value as String

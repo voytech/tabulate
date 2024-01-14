@@ -7,13 +7,13 @@ import io.github.voytech.tabulate.core.api.builder.dsl.CompositeModelBuilderApi
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.api.builder.dsl.buildModel
 
-
 /**
  * Kotlin type-safe DSL table builder API for defining entire table.
  * Internally operates on corresponding builder state that is eventually materialized to table model.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
+
 @TabulateMarker
 class DocumentBuilderApi internal constructor() : CompositeModelBuilderApi<Document, DocumentBuilderState>(
     DocumentBuilderState()) {

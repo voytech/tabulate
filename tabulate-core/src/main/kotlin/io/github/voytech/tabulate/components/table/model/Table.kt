@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.components.table.template.TableExport
 import io.github.voytech.tabulate.core.layout.LayoutProperties
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.reify
-import io.github.voytech.tabulate.core.layout.policy.TableLayout
+import io.github.voytech.tabulate.core.layout.impl.TableLayout
 
 /**
  * A top-level definition of tabular layout. Aggregates column as well as all row definitions. It can also contain
@@ -56,22 +56,15 @@ class Table<T : Any> internal constructor(
 
     override val needsMeasureBeforeExport = true
 
-    private lateinit var export: TableExport<T>
-
-    override fun initialize(api: ExportApi) = api {
+    override fun exportContextCreated(api: ExportApi) = api {
         getCustomAttributes()["_sheetName"] = getCustomAttributes()["_pageName"] ?: name
-        getCustomAttributes()["_tableName"] = name
-        export = TableExport(
-            this@Table, this,
-            (dataSource ?: getCustomAttributes()["_dataSourceOverride"])?.dataSource ?: emptyList()
-        )
     }
 
     override fun doExport(api: ExportApi) =
-        export.exportOrResume()
+        TableExport(this, api, dataSource?.dataSource).renderTable()
 
     override fun takeMeasures(api: ExportApi) =
-        export.takeMeasures()
+        TableExport(this, api, dataSource?.dataSource).renderTable()
 
     override fun createLayout(properties: LayoutProperties): TableLayout = TableLayout(properties)
 

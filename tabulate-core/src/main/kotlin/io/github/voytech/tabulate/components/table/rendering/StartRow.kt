@@ -6,8 +6,8 @@ import io.github.voytech.tabulate.core.layout.ApplyLayoutElement
 import io.github.voytech.tabulate.core.layout.LayoutElement
 import io.github.voytech.tabulate.core.layout.LayoutSpace
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
-import io.github.voytech.tabulate.core.layout.policy.SizingOptions
-import io.github.voytech.tabulate.core.layout.policy.TableLayout
+import io.github.voytech.tabulate.core.layout.impl.SizingOptions
+import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.attributes.HeightAttribute
 import io.github.voytech.tabulate.core.operation.Renderable

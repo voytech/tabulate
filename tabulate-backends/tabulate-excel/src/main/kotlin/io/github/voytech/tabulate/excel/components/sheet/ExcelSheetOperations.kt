@@ -7,12 +7,13 @@ import io.github.voytech.tabulate.core.spi.BuildOperations
 import io.github.voytech.tabulate.core.spi.DocumentFormat
 import io.github.voytech.tabulate.core.spi.ExportOperationsProvider
 import io.github.voytech.tabulate.excel.ApachePoiRenderingContext
+import io.github.voytech.tabulate.excel.getXlsxRowsCountInWindow
 
 class ExcelSheetOperations: ExportOperationsProvider<ApachePoiRenderingContext, Page> {
 
     override fun provideExportOperations(): BuildOperations<ApachePoiRenderingContext> = {
         operation(PageOperation { renderingContext, context ->
-            renderingContext.provideWorkbook()
+            renderingContext.provideWorkbook(context.customAttributes.getXlsxRowsCountInWindow())
             renderingContext.provideSheet(context.pageName)
         })
     }

@@ -58,7 +58,7 @@ class ExportInstance(
         nodeMap[model] = value
     }
 
-    fun clearLayouts() = with(root) {
+    fun clearAllLayouts() = with(root) {
         traverse { it.layouts.clear() }
         context.layouts.createLayout(SpaceConstraints(maxRightBottom = getDocumentMaxRightBottom()))
     }

@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.core.layout.policy
+package io.github.voytech.tabulate.core.layout.impl
 
 interface BorderLayoutPolicyMethods {
     fun setLeft()

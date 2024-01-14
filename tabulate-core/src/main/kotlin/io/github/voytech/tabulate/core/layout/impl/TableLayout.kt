@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.core.layout.policy
+package io.github.voytech.tabulate.core.layout.impl
 
 import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.model.*

@@ -17,7 +17,6 @@ class InputParams {
 
         fun StateAttributes.allowMeasureBeforeRender(default: Boolean = true): Boolean = get<Boolean>(ALLOW_MEASURE_BEFORE_RENDER) ?: default
 
-
     }
 
 }

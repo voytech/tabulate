@@ -41,8 +41,8 @@ value class StateAttributes(val data: MutableMap<String, Any> = mutableMapOf()) 
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <E : ExecutionContext> getExecutionContext(_class: Class<E>): E? =
-        data["executionContext-${_class.canonicalName}"] as E?
+    fun <E : ExecutionContext> getExecutionContext(clazz: Class<E>): E? =
+        data["executionContext-${clazz.canonicalName}"] as E?
 
     inline fun <reified E : ExecutionContext> getExecutionContext(): E? = getExecutionContext(E::class.java)
 
@@ -56,6 +56,8 @@ value class StateAttributes(val data: MutableMap<String, Any> = mutableMapOf()) 
     fun <C : ExecutionContext, R : Any> ReifiedValueSupplier<C, R>.value(): R? =
         getExecutionContext(inClass)?.let { ctx -> this(ctx as C) }
 }
+
+fun MutableMap<String, Any>.stateAttributes(): StateAttributes = StateAttributes(this)
 
 fun StateAttributes?.orEmpty() = this ?: StateAttributes(mutableMapOf())
 
@@ -80,29 +82,51 @@ value class StateMap(private val map: MutableMap<ExportPhase, ExportState> = mut
 
 }
 
-data class ExportContinuation(
+data class RenderIteration(
     private val pushOnIteration: Int = 0,
-    internal val attributes: Map<String, Any>,
+    internal val attributes: MutableMap<String, Any>
 ) {
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Any> get(key: String): T? = attributes[key] as T?
 
-    private fun merge(other: Map<String, Any>) = copy(attributes = attributes + other)
+    internal fun merge(other: Map<String, Any>) {
+        attributes += other
+    }
 
 }
 
-class ExportContinuationQueue(
-    private val continuations: MultiIterationSet<ExportContinuation, ExportPhase> = MultiIterationSet(),
+class RenderIterations(
+    private val iterations: MultiIterationSet<RenderIteration, ExportPhase> = MultiIterationSet(),
 ) {
     val size: Int
-        get() = continuations.size()
+        get() = iterations.size()
 
-    operator fun plusAssign(element: ExportContinuation) {
-        continuations += element
+    fun newRenderIteration(phase: ExportPhase, vararg attributes: Pair<String, Any>) = with(iterations) {
+        iterations += RenderIteration(currentIndex(phase) + 1, attributes.toMap().toMutableMap())
     }
 
-    operator fun invoke(): MultiIterationSet<ExportContinuation, ExportPhase> = continuations
-    operator fun get(phase: ExportPhase): ExportContinuation? = continuations.nextOrNull(phase)
+    fun resumeRenderIteration(phase: ExportPhase) {
+        if (size == 0) newRenderIteration(phase)
+        iterations.nextOrNull(phase)
+    }
+
+    fun appendAttributes(phase: ExportPhase, vararg attributes: Pair<String, Any>) {
+        iterations.currentOrNull(phase)?.merge(attributes.toMap())
+    }
+
+    fun <E : Any> getCurrentIterationAttributeOrNull(phase: ExportPhase, key: String): E? =
+        iterations.currentOrNull(phase)?.get(key)
+
+    fun getCurrentIterationAttributesOrNull(phase: ExportPhase): Map<String, Any> =
+        iterations.currentOrNull(phase)?.attributes ?: emptyMap()
+
+    private operator fun plusAssign(element: RenderIteration) {
+        iterations += element
+    }
+
+    operator fun invoke(): MultiIterationSet<RenderIteration, ExportPhase> = iterations
+
+    operator fun get(phase: ExportPhase): RenderIteration? = iterations.nextOrNull(phase)
 
 }
 
@@ -143,7 +167,7 @@ class ModelExportContext(
 
     val operations: OperationsInContext by lazy { OperationsInContext(this) }
 
-    private val continuations: ExportContinuationQueue = ExportContinuationQueue()
+    private val renderIterations: RenderIterations = RenderIterations()
 
     internal var hasOverflows: Boolean = false
 
@@ -151,27 +175,29 @@ class ModelExportContext(
         block(ExportApi(this), this)
     }
 
-    fun newContinuation(vararg attributes: Pair<String, Any>): Unit = with(continuations()) {
-        continuations += ExportContinuation(currentIndex(phase) + 1, attributes.toMap())
+    fun newRenderIteration(vararg attributes: Pair<String, Any>) {
+        renderIterations.newRenderIteration(phase, *attributes)
+    }
+
+    fun appendAttributes(vararg attributes: Pair<String, Any>) {
+        renderIterations.appendAttributes(phase, *attributes)
     }
 
     @JvmSynthetic
-    internal fun resumeContinuation(): Unit = with(continuations()) {
-        if (ExportState.STARTED != state(phase)) nextOrNull(phase)
+    internal fun resumeRenderIteration() {
+        renderIterations.resumeRenderIteration(phase)
     }
 
-    fun <E : Any> getCurrentContinuationAttributeOrNull(key: String): E? = with(continuations()) {
-        currentOrNull(phase)?.get(key)
-    }
+    fun <E : Any> getCurrentIterationAttributeOrNull(key: String): E? =
+        renderIterations.getCurrentIterationAttributeOrNull(phase, key)
 
-    fun getCurrentContinuationAttributesOrNull(key: String): Map<String, Any> = with(continuations()) {
-        currentOrNull(phase)?.attributes ?: emptyMap()
-    }
+    fun getCurrentIterationAttributesOrNull(): Map<String, Any> =
+        renderIterations.getCurrentIterationAttributesOrNull(phase)
 
-    fun hasPendingContinuations(): Boolean = continuations().currentIndex(phase) < continuations.size - 1
+    fun hasPendingIterations(): Boolean = renderIterations().currentIndex(phase) < renderIterations.size - 1
 
-    fun haveChildrenPendingContinuations(): Boolean = navigate {
-        checkAnyChildren { it.hasPendingContinuations() }
+    fun haveChildrenPendingIterations(): Boolean = navigate {
+        checkAnyChildren { it.hasPendingIterations() }
     }
 
     fun getCustomAttributes(): StateAttributes = customStateAttributes
@@ -184,7 +210,7 @@ class ModelExportContext(
         }
     }
 
-    private fun needsToBeContinued(): Boolean = hasPendingContinuations() || haveChildrenPendingContinuations()
+    private fun needsToBeContinued(): Boolean = hasPendingIterations() || haveChildrenPendingIterations()
 
     fun isRunning(): Boolean = (state(phase) == ExportState.STARTED) || hasOverflows || needsToBeContinued()
 
@@ -207,24 +233,29 @@ class ModelExportContext(
 
 }
 
-class ContinuationsApi internal constructor(private val context: ModelExportContext) {
-    fun newContinuation(vararg attributes: Pair<String, Any>) {
-        context.newContinuation(*attributes)
+class RenderIterationsApi internal constructor(private val context: ModelExportContext) {
+    fun newRenderIteration(vararg attributes: Pair<String, Any>) {
+        context.newRenderIteration(*attributes)
     }
 
-    fun <E : Any> getCurrentContinuationAttributeOrNull(key: String): E? =
-        context.getCurrentContinuationAttributeOrNull(key)
+    fun appendAttributes(vararg attributes: Pair<String, Any>) {
+        context.appendAttributes(*attributes)
+    }
 
-    fun getCurrentContinuationAttributesOrNull(key: String): Map<String, Any> =
-        context.getCurrentContinuationAttributesOrNull(key)
+    fun <E : Any> getCurrentIterationAttributeOrNull(key: String): E? =
+        context.getCurrentIterationAttributeOrNull(key)
 
-    fun hasPendingContinuations(): Boolean = context.hasPendingContinuations()
+    fun getCurrentIterationAttributesOrNull(key: String): Map<String, Any> =
+        context.getCurrentIterationAttributesOrNull()
 
-    fun haveChildrenPendingContinuations(): Boolean = context.haveChildrenPendingContinuations()
+    fun hasPendingIterations(): Boolean = context.hasPendingIterations()
+
+    fun haveChildrenPendingIterations(): Boolean = context.haveChildrenPendingIterations()
 
 }
 
 class ExportApi private constructor(private val context: ModelExportContext) {
+
     fun AbstractModel.export(constraints: SpaceConstraints? = null, force: Boolean = false) {
         withinInitializedContext { exportInContext(it, constraints, force) }
     }
@@ -250,9 +281,9 @@ class ExportApi private constructor(private val context: ModelExportContext) {
 
     fun currentLayoutSpace(): LayoutSpace = currentLayoutScope().space
 
-    fun clearLayouts() = with(context.instance) { clearLayouts() }
+    fun clearAllLayouts() = with(context.instance) { clearAllLayouts() }
 
-    fun continuations(): ContinuationsApi = ContinuationsApi(context)
+    fun continuations(): RenderIterationsApi = RenderIterationsApi(context)
 
     fun <A : Attribute<A>> AbstractModel.getAttribute(attribute: Class<A>): A? =
         (this as? AttributeAware)?.attributes?.get(attribute)
@@ -271,7 +302,7 @@ class ExportApi private constructor(private val context: ModelExportContext) {
                     targetContext.setExporting()
                 }
             }
-            resumeContinuation()
+            resumeRenderIteration()
             targetContext.model(Method.PREPARE, targetContext)
             inNextLayoutScope(constraints) { targetContext.model(Method.EXPORT, targetContext) }
             targetContext.model(Method.FINISH, targetContext)
@@ -284,7 +315,7 @@ class ExportApi private constructor(private val context: ModelExportContext) {
     ): Size? = targetContext.setMeasuring().run {
         if (isRunningOrRestarted(force)) {
             inNextLayoutScope(constraints) {
-                resumeContinuation()
+                resumeRenderIteration()
                 targetContext.model(Method.MEASURE, targetContext)
                 setNextState()
             }

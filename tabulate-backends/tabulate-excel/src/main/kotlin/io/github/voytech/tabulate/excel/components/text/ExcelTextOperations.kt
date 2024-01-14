@@ -3,8 +3,6 @@ package io.github.voytech.tabulate.excel.components.text
 import io.github.voytech.tabulate.components.table.rendering.getSheetName
 import io.github.voytech.tabulate.components.text.model.Text
 import io.github.voytech.tabulate.components.text.operation.TextRenderable
-import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
-import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
 import io.github.voytech.tabulate.core.operation.VoidOperation
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.spi.BuildAttributeOperations
@@ -12,9 +10,6 @@ import io.github.voytech.tabulate.core.spi.BuildOperations
 import io.github.voytech.tabulate.core.spi.DocumentFormat
 import io.github.voytech.tabulate.core.spi.OperationsBundleProvider
 import io.github.voytech.tabulate.excel.*
-import org.apache.poi.xssf.usermodel.TextAutofit
-import org.apache.poi.xssf.usermodel.TextHorizontalOverflow
-import org.apache.poi.xssf.usermodel.TextVerticalOverflow
 import org.apache.poi.xssf.usermodel.XSSFTextBox
 
 

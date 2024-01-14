@@ -10,13 +10,13 @@ import io.github.voytech.tabulate.components.table.rendering.RowEndRenderable
  */
 internal class RowContextIterator<T: Any>(
     private val resolver: IndexedContextResolver<RowEndRenderable<T>>,
-    private val tableContinuations: TableContinuations
+    private val tableIterations: TableRenderIterations
 ) : AbstractIterator<ContextResult<RowEndRenderable<T>>>() {
 
-    private var nextSourceRecordIndex: Int = tableContinuations.getContinuationRecordIndex() ?: 0
+    private var nextSourceRecordIndex: Int = tableIterations.getStartRecordIndex() ?: 0
 
     private val indexIncrement = MutableRowIndex().apply {
-        tableContinuations.getContinuationRowIndex()?.let { set(it) }
+        tableIterations.getStartRowIndex()?.let { set(it) }
     }
 
     private fun IndexedResult<RowEndRenderable<T>>.setProcessedSourceRecordIndex() {
@@ -36,7 +36,7 @@ internal class RowContextIterator<T: Any>(
                         indexIncrement.inc()
                     }
                     is OverflowResult -> {
-                        tableContinuations.newContinuation(it.rowIndex, nextSourceRecordIndex)
+                        tableIterations.pushNewIteration(it.rowIndex, nextSourceRecordIndex)
                         setNext(it.result)
                     }
                 }

@@ -6,7 +6,7 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.header
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.components.table.model.ColumnKey
 import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
-import io.github.voytech.tabulate.components.table.template.TableContinuations
+import io.github.voytech.tabulate.components.table.template.TableRenderIterations
 import io.github.voytech.tabulate.components.table.template.RowIndex
 import io.github.voytech.tabulate.components.table.template.Step
 import io.github.voytech.tabulate.core.model.StateAttributes
@@ -29,7 +29,7 @@ class RowResolverTest {
         val ctx = table.createTableContext(attribs)
         val resolver = AccumulatingRowContextResolver(
             table,
-            StateAttributes(mutableMapOf()), TableContinuations(ctx), successfulRowComplete()
+            StateAttributes(mutableMapOf()), TableRenderIterations(ctx), successfulRowComplete()
         )
         val resolvedIndexedAttributedRow = resolver.resolve(RowIndex(0))
         assertNull(resolvedIndexedAttributedRow)
@@ -55,7 +55,7 @@ class RowResolverTest {
         val resolver = AccumulatingRowContextResolver(
             table,
             StateAttributes(attribs),
-            TableContinuations(ctx),
+            TableRenderIterations(ctx),
             successfulRowComplete()
         )
         val resolvedIndexedAttributedRow = resolver.resolve(RowIndex(0))
@@ -76,7 +76,7 @@ class RowResolverTest {
         val resolver = AccumulatingRowContextResolver(
             table,
             StateAttributes(attribs),
-            TableContinuations(ctx),
+            TableRenderIterations(ctx),
             successfulRowComplete()
         )
         resolver.append(Product(
@@ -113,7 +113,7 @@ class RowResolverTest {
         val resolver = AccumulatingRowContextResolver(
             table,
             StateAttributes(attribs),
-            TableContinuations(ctx),
+            TableRenderIterations(ctx),
             successfulRowComplete()
         )
         resolver.append(Product(

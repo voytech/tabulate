@@ -140,7 +140,7 @@ interface CaptureRowCompletion<T> {
 internal abstract class AbstractRowContextResolver<T : Any>(
     tableModel: Table<T>,
     private val state: StateAttributes,
-    private val continuations: TableContinuations,
+    private val renderIterations: TableRenderIterations,
     private val listener: CaptureRowCompletion<T>? = null,
 ) : IndexedContextResolver<RowEndRenderable<T>> {
 
@@ -157,14 +157,13 @@ internal abstract class AbstractRowContextResolver<T : Any>(
         listener?.onCellResolved(this)
 
     private fun offsetAwareCellContext(sourceRow: SourceRow<T>) = ProvideCellContext { row, column ->
-        if (continuations.isValid(column.index)) {
+        if (renderIterations.isValid(column.index)) {
             row.createCellContext(row = sourceRow, column = column, state.data)
         } else null
     }
 
-    private fun orchestrateTableRow(
-        tableRowIndex: RowIndex,
-        record: IndexedValue<T>? = null,
+    private fun resolveAndRenderTableRow(
+        tableRowIndex: RowIndex, record: IndexedValue<T>? = null,
     ): ContextResult<RowEndRenderable<T>> {
         return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
             with(rows.findQualifying(sourceRow)) {
@@ -192,7 +191,7 @@ internal abstract class AbstractRowContextResolver<T : Any>(
             rowEnd.render().let { result ->
                 when (result?.status) {
                     null, Ok, Nothing -> SuccessResult(rowEnd)
-                    else -> OverflowResult(result as OpOverflowResult)
+                    else -> OverflowResult(result.status as InterruptionOnAxis)
                 }
             }
         }
@@ -201,7 +200,7 @@ internal abstract class AbstractRowContextResolver<T : Any>(
         requestedIndex: RowIndex,
         indexedRecord: IndexedValue<T>? = null,
     ): IndexedResult<RowEndRenderable<T>> =
-        IndexedResult(requestedIndex, indexedRecord?.index, orchestrateTableRow(requestedIndex, indexedRecord))
+        IndexedResult(requestedIndex, indexedRecord?.index, resolveAndRenderTableRow(requestedIndex, indexedRecord))
 
 
     /**
@@ -212,6 +211,10 @@ internal abstract class AbstractRowContextResolver<T : Any>(
      * @since 0.1.0
      */
     override fun resolve(requestedIndex: RowIndex): IndexedResult<RowEndRenderable<T>>? {
+        val maxIndex = renderIterations.getEndRowIndex()
+        val minIndex = renderIterations.getStartRowIndex()
+        if (maxIndex != null && requestedIndex.value > maxIndex.value) return null
+        if (minIndex != null && requestedIndex.value < minIndex.value) return null
         return if (indexedTableRows.hasCustomRows(SourceRow(requestedIndex))) {
             resolveRowContext(requestedIndex)
         } else {
@@ -221,7 +224,9 @@ internal abstract class AbstractRowContextResolver<T : Any>(
                 } else {
                     indexedTableRows.getNextCustomRowIndex(requestedIndex)
                         ?.let { nextIndexDef ->
-                            resolveRowContext(requestedIndex + nextIndexDef)
+                            val withOffset = requestedIndex + nextIndexDef
+                            if (maxIndex != null && withOffset.value > maxIndex.value) return null
+                            resolveRowContext(withOffset)
                         }
                 }
             }

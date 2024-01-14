@@ -6,4 +6,6 @@ data class PageExecutionContext(
     var pageNumber: Int = 0,
     var pageTitle: String? = null,
     var pageDescription: String? = null
-): ExecutionContext
+): ExecutionContext {
+    fun currentPageTitleWithNumber(): String = "$pageTitle ($pageNumber)"
+}
