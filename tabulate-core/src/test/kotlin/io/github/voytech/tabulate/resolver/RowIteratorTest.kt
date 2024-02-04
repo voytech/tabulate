@@ -10,7 +10,6 @@ import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
 import io.github.voytech.tabulate.core.model.background.DefaultFillType
 import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
 import io.github.voytech.tabulate.components.table.template.TableRenderIterations
-import io.github.voytech.tabulate.components.table.template.RowContextIterator
 import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.support.createTableContext

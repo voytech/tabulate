@@ -7,6 +7,7 @@ import io.github.voytech.tabulate.core.layout.LayoutSpace
 import io.github.voytech.tabulate.core.layout.SpaceConstraints
 import io.github.voytech.tabulate.core.operation.*
 import io.github.voytech.tabulate.plusAssign
+import java.util.logging.Logger
 
 
 @JvmInline
@@ -83,7 +84,7 @@ value class StateMap(private val map: MutableMap<ExportPhase, ExportState> = mut
 }
 
 data class RenderIteration(
-    private val pushOnIteration: Int = 0,
+    internal val pushOnIteration: Int = 0,
     internal val attributes: MutableMap<String, Any>
 ) {
     @Suppress("UNCHECKED_CAST")
@@ -101,8 +102,25 @@ class RenderIterations(
     val size: Int
         get() = iterations.size()
 
+    private fun findCollision(step: Int, attributes: Map<String, Any>): RenderIteration? = with(iterations) {
+        find { iteration ->
+            iteration.pushOnIteration == step && attributes.any { iteration.attributes.containsKey(it.key) }
+        }
+    }
+
     fun newRenderIteration(phase: ExportPhase, vararg attributes: Pair<String, Any>) = with(iterations) {
-        iterations += RenderIteration(currentIndex(phase) + 1, attributes.toMap().toMutableMap())
+        val step = currentIndex(phase) + 1
+        val attribs = attributes.toMap().toMutableMap()
+        if (findCollision(step, attribs) == null) {
+            iterations += RenderIteration(step, attribs)
+        }
+    }
+
+    fun insertAsNextRenderIteration(phase: ExportPhase, attributes: Map<String, Any>) = with(iterations) {
+        val step = currentIndex(phase) + 1
+        if (findCollision(step, attributes) == null) {
+            iterations.insert(phase, RenderIteration(step, attributes.toMutableMap()))
+        }
     }
 
     fun resumeRenderIteration(phase: ExportPhase) {
@@ -179,6 +197,10 @@ class ModelExportContext(
         renderIterations.newRenderIteration(phase, *attributes)
     }
 
+    fun insertAsNextRenderIteration(attributes: Map<String, Any>) {
+        renderIterations.insertAsNextRenderIteration(phase, attributes)
+    }
+
     fun appendAttributes(vararg attributes: Pair<String, Any>) {
         renderIterations.appendAttributes(phase, *attributes)
     }
@@ -231,11 +253,26 @@ class ModelExportContext(
         }
     }
 
+    object Logging {
+        private val logger: Logger = Logger.getLogger(Logging::class.java.name)
+
+        private fun ModelExportContext.debug() {
+            logger.info("Is Running: ${isRunning()}")
+            logger.info("Render iterations: $renderIterations")
+
+        }
+    }
+
 }
 
 class RenderIterationsApi internal constructor(private val context: ModelExportContext) {
+
     fun newRenderIteration(vararg attributes: Pair<String, Any>) {
         context.newRenderIteration(*attributes)
+    }
+
+    fun insertAsNextRenderIteration(attributes: Map<String, Any>) {
+        context.insertAsNextRenderIteration(attributes)
     }
 
     fun appendAttributes(vararg attributes: Pair<String, Any>) {
@@ -245,8 +282,7 @@ class RenderIterationsApi internal constructor(private val context: ModelExportC
     fun <E : Any> getCurrentIterationAttributeOrNull(key: String): E? =
         context.getCurrentIterationAttributeOrNull(key)
 
-    fun getCurrentIterationAttributesOrNull(key: String): Map<String, Any> =
-        context.getCurrentIterationAttributesOrNull()
+    fun getCurrentIterationAttributesOrNull(): Map<String, Any> = context.getCurrentIterationAttributesOrNull()
 
     fun hasPendingIterations(): Boolean = context.hasPendingIterations()
 
@@ -277,13 +313,15 @@ class ExportApi private constructor(private val context: ModelExportContext) {
         operations.renderOrMeasure(renderable)
     }
 
+    fun isMeasuring(): Boolean = context.phase == ExportPhase.MEASURING
+
     fun currentLayoutScope(): LayoutApi = context.layouts.current()
 
     fun currentLayoutSpace(): LayoutSpace = currentLayoutScope().space
 
     fun clearAllLayouts() = with(context.instance) { clearAllLayouts() }
 
-    fun continuations(): RenderIterationsApi = RenderIterationsApi(context)
+    fun iterations(): RenderIterationsApi = RenderIterationsApi(context)
 
     fun <A : Attribute<A>> AbstractModel.getAttribute(attribute: Class<A>): A? =
         (this as? AttributeAware)?.attributes?.get(attribute)

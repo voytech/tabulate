@@ -51,13 +51,13 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
     }
 
     fun AttributedContext.syncAbsoluteColumnWidth(column: Int) = boundingBox()?.let {
-        it.width = grid.getColumnWidth(column)
+        it.width = grid.getMeasuredColumnWidth(column)
     }
 
     private fun trySetAbsoluteColumnWidth(column: Int, width: Width, colSpan: Int): Width {
         val converted = width.switchUnitOfMeasure(grid.standardUnit.asUnitsOfMeasure())
         grid.setColumnWidth(column, converted, SizingOptions.SET_IF_GREATER)
-        return grid.getColumnWidth(column)
+        return grid.getMeasuredColumnWidth(column)
     }
 
     fun AttributedContext.trySetAndSyncAbsoluteRowHeight(row: Int, height: Height, rowSpan: Int = 1): Height? = boundingBox()?.let {
@@ -66,13 +66,13 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
     }
 
     fun AttributedContext.syncAbsoluteRowHeight(row: Int) = boundingBox()?.let {
-        it.height = grid.getRowHeight(row)
+        it.height = grid.getMeasuredRowHeight(row)
     }
 
     private fun trySetAbsoluteRowHeight(row: Int, height: Height, rowSpan: Int): Height {
         val converted = height.switchUnitOfMeasure(grid.standardUnit.asUnitsOfMeasure())
         grid.setRowHeight(row, converted, SizingOptions.SET_IF_GREATER)
-        return grid.getRowHeight(row)
+        return grid.getMeasuredRowHeight(row)
     }
 
     private fun Renderable<*>.getAbsoluteLeftTopColumn(): Int = boundingBox.absoluteX.let {
@@ -135,14 +135,14 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
             if (!wasWidthDeclared(true)) {
                 var width = 0F
                 (anchor.leftTopColumn until anchor.rightBottomColumn).forEach {
-                    width += grid.getColumnWidth(it, 1).value
+                    width += grid.getMeasuredColumnWidth(it, 1).value
                 }
                 boundingBox.width = Width(width, UnitsOfMeasure.PT)
             }
             if (!wasHeightDeclared(true)) {
                 var height = 0F
                 (anchor.leftTopRow until anchor.rightBottomRow).forEach {
-                    height += grid.getRowHeight(it, 1).value
+                    height += grid.getMeasuredRowHeight(it, 1).value
                 }
                 boundingBox.height = Height(height, UnitsOfMeasure.PT)
             }

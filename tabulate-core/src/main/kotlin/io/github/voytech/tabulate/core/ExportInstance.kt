@@ -30,13 +30,13 @@ class ExportInstance(
             operationsFactory.createExportOperations(model,
                 EnableRenderingUsingLayouts(measuringOperations) {
                     layouts.current(ExportPhase.RENDERING)
-                }
+                },
             )
         }
 
     fun ModelExportContext.getMeasuringOperations(): Operations<RenderingContext> =
         operationsFactory.createMeasureOperations(model,
-            EnableMeasuringForLayouts { layouts.current(ExportPhase.MEASURING) }
+            EnableMeasuringForLayouts { layouts.current(ExportPhase.MEASURING) },
         )
 
 

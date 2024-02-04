@@ -40,8 +40,8 @@ class CellRenderable(
         elementBoundingBox(
             x = getAbsoluteColumnPosition(getColumn()),
             y = getAbsoluteRowPosition(getRow()),
-            width = getColumnWidth(getColumn(), cellValue.colSpan, uom),
-            height = getRowHeight(getRow(), cellValue.rowSpan, uom),
+            width = getMeasuredColumnWidth(getColumn(), cellValue.colSpan, uom),
+            height = getMeasuredRowHeight(getRow(), cellValue.rowSpan, uom),
             boundaryToFit
         )
     }

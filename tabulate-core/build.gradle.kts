@@ -11,5 +11,5 @@ scmVersion {
 }
 
 dependencies {
-
+    implementation("io.github.microutils:kotlin-logging")
 }

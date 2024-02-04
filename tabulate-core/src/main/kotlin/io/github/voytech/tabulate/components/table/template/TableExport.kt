@@ -37,31 +37,20 @@ import java.util.*
 
 internal class TableExport<T : Any>(
     private val table: Table<T>,
-    private val scope: ExportApi,
+    private val api: ExportApi,
     data: Iterable<T>?
 ) {
+    private val tableIterations = TableRenderIterations(api.iterations())
 
-    private val dataSource: Iterable<T> =
-        data ?: scope.getCustomAttributes().get<DataSourceBinding<T>>("_dataSourceOverride")?.dataSource ?: emptyList()
+    private val dataSource: List<T> =
+        data?.toList() ?: api.getCustomAttributes()
+            .get<DataSourceBinding<T>>("_dataSourceOverride")?.dataSource?.toList() ?: emptyList()
+
+    private val lastDataSourceIndex = dataSource.size - 1
+
+    private var dataSourceActiveWindow: Iterable<T> = with(tableIterations) { dataSource.adjustRenderWindow() }
 
     data class ColumnContextAttributes(val start: Attributes, val end: Attributes)
-
-    private class CaptureRowCompletionImpl<T>(private val api: ExportApi) : CaptureRowCompletion<T> {
-
-        override fun onRowStartResolved(row: RowStartRenderable): RenderingResult = api.renderOrMeasure(row)
-
-        override fun onCellResolved(cell: CellRenderable): RenderingResult = api.renderOrMeasure(cell)
-
-        override fun onRowEndResolved(row: RowEndRenderable<T>): RenderingResult = api.renderOrMeasure(row)
-    }
-
-    private lateinit var rowContextResolver: AccumulatingRowContextResolver<T>
-
-    private lateinit var rowContextIterator: RowContextIterator<T>
-
-    private val tableIterations = TableRenderIterations(scope.continuations())
-
-    private var dataSourceActiveWindow: Iterable<T>? = null
 
     private val columnContextAttributes = table.distributeAttributesForContexts(
         ColumnStartRenderable::class.java, ColumnEndRenderable::class.java
@@ -78,40 +67,11 @@ internal class TableExport<T : Any>(
                 }
         }
 
-    private fun adjustDataSourceRenderWindow(): Iterable<T>? = with(tableIterations) {
-        dataSourceActiveWindow = dataSource.adjustRenderWindow()
-        return dataSourceActiveWindow
-    }
-
-    private fun setup() {
-        rowContextResolver = AccumulatingRowContextResolver(
-            table, scope.getCustomAttributes(), tableIterations,
-            CaptureRowCompletionImpl(scope)
-        )
-        rowContextIterator = RowContextIterator(rowContextResolver, tableIterations)
-    }
-
-    /**
-     * Captures next element to be rendered at some point of time.
-     * @author Wojciech Mąka
-     * @since 0.1.0
-     */
-    private fun pushAndNext(record: T): ContextResult<RowEndRenderable<T>>? {
-        rowContextResolver.append(record)
-        return next()
-    }
-
-    /**
-     * Resolves next element.
-     * @author Wojciech Mąka
-     * @since 0.1.0
-     */
-    private fun next(): ContextResult<RowEndRenderable<T>>? {
-        return if (rowContextIterator.hasNext()) rowContextIterator.next() else null
-    }
+    private fun createRowRenderer() =
+        TableRowsRenderer(table, dataSourceActiveWindow, api, lastDataSourceIndex, tableIterations)
 
     private fun beginTable() {
-        scope.renderOrMeasure(table.asTableStart(scope.getCustomAttributes()))
+        api.renderOrMeasure(table.asTableStart(api.getCustomAttributes()))
         renderColumnsStarts()
     }
 
@@ -131,10 +91,19 @@ internal class TableExport<T : Any>(
         resolveActiveColumns().let { iterator ->
             while (iterator.hasNext()) {
                 val def = iterator.next()
-                status = scope.renderOrMeasure(resolveRenderable(def)).status
-                if (status.isSkipped(CrossedAxis.X)) {
-                    if (addContinuation) tableIterations.pushNewIteration(def)
-                    break
+                status = api.renderOrMeasure(resolveRenderable(def)).status
+                when {
+                    status.isSkipped(CrossedAxis.X) -> {
+                        //tableIterations.pushNewIteration(def)
+                        //break
+                    }
+                    /*status.isClipped(CrossedAxis.X) -> {
+                        tableIterations.limitWithEndColumn(def)
+                        if (iterator.hasNext()) {
+                            tableIterations.insertAsNextIteration(iterator.next())
+                        }
+                        break
+                    }*/
                 }
             }
         }
@@ -142,48 +111,31 @@ internal class TableExport<T : Any>(
     }
 
     private fun renderColumnsStarts(): RenderingStatus? =
-        renderColumns(true) { it.asColumnStart(table, columnAttributes.forStart(it), scope.getCustomAttributes()) }
-
+        renderColumns(true) { it.asColumnStart(table, columnAttributes.forStart(it), api.getCustomAttributes()) }
 
     private fun renderColumnEnds(): RenderingStatus? =
-        renderColumns { it.asColumnEnd(table, columnAttributes.forEnd(it), scope.getCustomAttributes()) }
+        renderColumns { it.asColumnEnd(table, columnAttributes.forEnd(it), api.getCustomAttributes()) }
 
     private fun endTable() {
         renderColumnEnds()
-        scope.renderOrMeasure(table.asTableEnd(scope.getCustomAttributes()))
+        api.renderOrMeasure(table.asTableEnd(api.getCustomAttributes()))
     }
 
-    private fun renderRemainingRows() {
-        @Suppress("ControlFlowWithEmptyBody")
-        while (next()?.let { it is SuccessResult } == true);
-    }
-
-    private fun renderRows() {
-        dataSourceActiveWindow?.iterator()?.let { iterator ->
-            while (iterator.hasNext()) {
-                if (pushAndNext(iterator.next()) is OverflowResult) {
-                    return
-                }
-            }
-        }
-        renderRemainingRows()
-    }
-
-    private fun setTableLayoutPolicyProgress() {
+    private fun adjustTableLayoutProgress() {
         val startFromColumnIndex = tableIterations.getStartColumnIndexOrZero()
         val startFromRowIndex = tableIterations.getStartRowIndexOrZero()
-        scope.currentLayoutScope()
+        api.currentLayoutScope()
             .layout<TableLayout>()
             .setOffsets(startFromRowIndex, startFromColumnIndex)
     }
 
     fun renderTable() {
-        setTableLayoutPolicyProgress()
-        setup()
-        adjustDataSourceRenderWindow()
-        beginTable()
-        renderRows()
-        endTable()
+        adjustTableLayoutProgress()
+        createRowRenderer().let {
+            beginTable()
+            it.renderRows()
+            endTable()
+        }
     }
 
     fun <O : Any> export(format: DocumentFormat, source: Iterable<T>, output: O, table: Table<T>) =

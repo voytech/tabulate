@@ -25,7 +25,7 @@ class ColumnEndRenderable(
         elementBoundingBox(
             x = getAbsoluteColumnPosition(getColumn()),
             y = getAbsoluteRowPosition(0),
-            width = getColumnWidth(getColumn(),1),
+            width = getMeasuredColumnWidth(getColumn(),1),
             height = getCurrentContentSize().height
         )
     }

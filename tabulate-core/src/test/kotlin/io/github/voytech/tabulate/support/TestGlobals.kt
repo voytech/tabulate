@@ -27,8 +27,3 @@ fun <T: Any> Table<T>.createTableContext(customAttributes: MutableMap<String, An
 
 fun <CTX: ContextData> ContextResult<CTX>.success() : CTX = (this as SuccessResult<CTX>).context
 
-fun <T: Any> successfulRowComplete() = object: CaptureRowCompletion<T> {
-    override fun onCellResolved(cell: CellRenderable): RenderingResult = Ok.asResult()
-    override fun onRowStartResolved(row: RowStartRenderable): RenderingResult = Ok.asResult()
-    override fun onRowEndResolved(row: RowEndRenderable<T>): RenderingResult = Ok.asResult()
-}

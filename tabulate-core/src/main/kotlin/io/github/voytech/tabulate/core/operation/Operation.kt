@@ -31,7 +31,12 @@ fun RenderingStatus.asResult(): RenderingResult = RenderingResult(status = this)
 
 fun RenderingStatus.merge(original: RenderingResult): RenderingResult = original.copy(status = this)
 
-open class InterruptionOnAxis(val crossedAxis: CrossedAxis): RenderingStatus
+fun RenderingResult.merge(original: RenderingResult): RenderingResult = original.copy(
+    attributes = attributes + original.attributes,
+    status = status
+)
+
+open class InterruptionOnAxis(val crossedAxis: CrossedAxis) : RenderingStatus
 
 class RenderingSkipped(crossedAxis: CrossedAxis) : InterruptionOnAxis(crossedAxis)
 
@@ -41,9 +46,9 @@ object RenderedPartly : RenderingStatus
 
 object Ok : RenderingStatus
 
-object Nothing: RenderingStatus
+object Nothing : RenderingStatus
 
-object Error: RenderingStatus
+object Error : RenderingStatus
 
 fun RenderingStatus?.isSkipped(axis: CrossedAxis): Boolean = this is RenderingSkipped && crossedAxis == axis
 
@@ -55,7 +60,7 @@ fun RenderingStatus?.isError(): Boolean = this is Error
 fun interface Operation<CTX : RenderingContext, E : AttributedContext> : InvokeWithTwoParams<CTX, E, RenderingResult> {
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
-    override operator fun invoke(renderingContext: CTX, context: E) : RenderingResult
+    override operator fun invoke(renderingContext: CTX, context: E): RenderingResult
 
 }
 
@@ -64,7 +69,8 @@ typealias ReifiedOperation<CTX, E> = ReifiedInvocation<Operation<CTX, E>, TwoPar
 class Operations<CTX : RenderingContext>(private val dispatch: TwoParamsBasedDispatch) {
 
     operator fun <A : Attribute<*>, E : AttributedContext> invoke(renderingContext: CTX, context: E): RenderingResult =
-        (dispatch[renderingContext, context] as? Operation<CTX, E>)?.invoke(renderingContext, context) ?: Nothing.asResult()
+        (dispatch[renderingContext, context] as? Operation<CTX, E>)?.invoke(renderingContext, context)
+            ?: Nothing.asResult()
 
     fun isEmpty(): Boolean = dispatch.isEmpty()
 
@@ -78,10 +84,11 @@ fun interface VoidOperation<CTX : RenderingContext, E : AttributedContext> {
     operator fun invoke(renderingContext: CTX, context: E)
 }
 
-class VoidOperationWrapper<CTX : RenderingContext, E : AttributedContext>(val voidOperation: VoidOperation<CTX,E>) : Operation<CTX, E> {
+class VoidOperationWrapper<CTX : RenderingContext, E : AttributedContext>(val voidOperation: VoidOperation<CTX, E>) :
+    Operation<CTX, E> {
     override fun invoke(renderingContext: CTX, context: E): RenderingResult {
-       voidOperation(renderingContext,context)
-       return Ok.asResult()
+        voidOperation(renderingContext, context)
+        return Ok.asResult()
     }
 }
 
@@ -97,7 +104,8 @@ class OperationsBuilder<CTX : RenderingContext>(val renderingContext: Class<CTX>
 
     inline fun <reified E : AttributedContext> operation(op: Operation<CTX, E>) = addOperation(E::class.java, op)
 
-    inline fun <reified E : AttributedContext> operation(op: VoidOperation<CTX, E>) = addOperation(E::class.java, VoidOperationWrapper(op))
+    inline fun <reified E : AttributedContext> operation(op: VoidOperation<CTX, E>) =
+        addOperation(E::class.java, VoidOperationWrapper(op))
 
     @Suppress("UNCHECKED_CAST")
     private fun List<Enhance<CTX>>.applyEnhancers(delegate: ReifiedInvocation<*, *>) =

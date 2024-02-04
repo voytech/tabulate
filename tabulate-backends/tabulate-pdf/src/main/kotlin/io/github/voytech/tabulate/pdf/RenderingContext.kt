@@ -84,14 +84,14 @@ class PdfBoxRenderingContext(
 
     fun showText(text: String) {
         if (!fontSet) {
-            getCurrentContentStream().setFont(defaultFont, 10F)
+            getCurrentContentStream().setFont(defaultFont, defaultFontSize.toFloat())
         }
         getCurrentContentStream().showText(text)
     }
 
     fun showTextPartsAtOffsets(textPositions: List<TextPosition>) {
         if (!fontSet) {
-            getCurrentContentStream().setFont(defaultFont, 10F)
+            getCurrentContentStream().setFont(defaultFont, defaultFontSize.toFloat())
         }
         getCurrentContentStream().showTextWithPositioning(Array<Any>(textPositions.size * 2) { i ->
             textPositions[i / 2].xPositionedText.let { pair ->
@@ -104,7 +104,9 @@ class PdfBoxRenderingContext(
         textDrawing = false
         fontSet = false
         textPositionSet = false
+        getCurrentContentStream().setFont(defaultFont, defaultFontSize.toFloat())
         getCurrentContentStream().setStrokingColor(AwtColor.BLACK)
+        getCurrentContentStream().setNonStrokingColor(AwtColor.BLACK)
         getCurrentContentStream().endText()
     }
 

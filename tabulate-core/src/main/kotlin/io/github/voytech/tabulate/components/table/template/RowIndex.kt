@@ -74,7 +74,7 @@ data class RowIndex(
 }
 
 /**
- * Mutable complex index. Its value is incremented by [RowContextIterator]
+ * Mutable complex index. Its value is incremented by [TableRowsRenderer]
  * @since 0.1.0
  * @author Wojciech Mąka
  */

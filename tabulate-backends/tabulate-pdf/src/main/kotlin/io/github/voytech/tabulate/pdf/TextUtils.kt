@@ -28,6 +28,6 @@ class FontMeasurements(private val inner: Pair<PDFont, Int>) {
 
 fun <A : AttributedContext> A.textMeasures(): FontMeasurements =
     getModelAttribute<TextStylesAttribute>().let {
-        FontMeasurements((it?.pdFont() ?: defaultFont) to (it?.fontSize ?: 10))
+        FontMeasurements((it?.pdFont() ?: defaultFont) to (it?.fontSize ?: defaultFontSize))
     }
 

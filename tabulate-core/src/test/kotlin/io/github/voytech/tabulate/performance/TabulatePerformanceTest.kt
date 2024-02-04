@@ -5,7 +5,6 @@ import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.template.AbstractRowContextResolver
 import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
 import io.github.voytech.tabulate.components.table.template.TableRenderIterations
-import io.github.voytech.tabulate.components.table.template.RowContextIterator
 import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.support.createTableContext
 import io.github.voytech.tabulate.support.successfulRowComplete

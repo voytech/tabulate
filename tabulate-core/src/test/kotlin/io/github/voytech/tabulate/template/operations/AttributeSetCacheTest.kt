@@ -13,7 +13,6 @@ import io.github.voytech.tabulate.core.operation.*
 import io.github.voytech.tabulate.core.operation.withAttributeSetBasedCache
 import io.github.voytech.tabulate.support.createTableContext
 import io.github.voytech.tabulate.support.success
-import io.github.voytech.tabulate.support.successfulRowComplete
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.*

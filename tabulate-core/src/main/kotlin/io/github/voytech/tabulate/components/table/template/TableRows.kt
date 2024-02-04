@@ -3,13 +3,11 @@ package io.github.voytech.tabulate.components.table.template
 import io.github.voytech.tabulate.Either
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.rendering.*
-import io.github.voytech.tabulate.core.model.AttributedModelOrPart
-import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.model.StateAttributes
-import io.github.voytech.tabulate.core.model.orEmpty
 import io.github.voytech.tabulate.core.layout.CrossedAxis
+import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.operation.*
 import io.github.voytech.tabulate.core.operation.Nothing
+import io.github.voytech.tabulate.core.operation.RenderingSkipped
 import io.github.voytech.tabulate.core.operation.RenderingSkipped as OpOverflowResult
 
 internal fun <T : AttributedModelOrPart> T.attributesForAllContexts(): AttributesByContexts<T> =
@@ -47,11 +45,16 @@ internal class IndexedTableRows<T : Any>(
     private fun hasRowsAt(index: RowIndex): Boolean = !getRowsAt(index).isNullOrEmpty()
 
     @JvmSynthetic
-    internal fun getNextCustomRowIndex(index: RowIndex): RowIndexDef? {
+    internal fun getNextCustomRowIndexDefinition(index: RowIndex): RowIndexDef? {
         return indexedCustomRows?.entries
             ?.firstOrNull { it.key > index.asRowIndexDef(stepClass) }
             ?.key
     }
+
+    @JvmSynthetic
+    internal fun getNextCustomRowIndex(index: RowIndex): RowIndex? =
+        getNextCustomRowIndexDefinition(index)?.let { nextIndexDef -> index + nextIndexDef }
+
 
     @JvmSynthetic
     internal fun getRows(sourceRow: SourceRow<T>): Set<RowDef<T>> {
@@ -120,12 +123,6 @@ internal class QualifiedRows<T : Any>(private val indexedTableRows: IndexedTable
         }
 }
 
-interface CaptureRowCompletion<T> {
-    fun onCellResolved(cell: CellRenderable): RenderingResult
-    fun onRowStartResolved(row: RowStartRenderable): RenderingResult
-    fun onRowEndResolved(row: RowEndRenderable<T>): RenderingResult
-}
-
 /**
  * Given requested index, [Table] model, and map of custom attributes, it resolves [RowEndRenderable] (row context) with
  * associated effective index.
@@ -137,45 +134,45 @@ interface CaptureRowCompletion<T> {
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-internal abstract class AbstractRowContextResolver<T : Any>(
+internal class TableRowsRenderer<T : Any>(
     tableModel: Table<T>,
-    private val state: StateAttributes,
+    dataSourceActiveWindow: Iterable<T>,
+    private val api: ExportApi,
+    private val lastRecordIndex: Int,
     private val renderIterations: TableRenderIterations,
-    private val listener: CaptureRowCompletion<T>? = null,
+    private val state: StateAttributes = api.getCustomAttributes()
 ) : IndexedContextResolver<RowEndRenderable<T>> {
+
+    private val iterator = dataSourceActiveWindow.iterator()
+    private var recordIndex = renderIterations.getStartRecordIndex() ?: 0
+    private val indexIncrement = MutableRowIndex().apply { renderIterations.getStartRowIndex()?.let { set(it) } }
 
     private val indexedTableRows: IndexedTableRows<T> = tableModel.indexRows()
     private val rows = QualifiedRows(indexedTableRows)
 
-    protected fun RowStartRenderable.render(): RenderingResult? =
-        listener?.onRowStartResolved(this)
-
-    protected fun RowEndRenderable<T>.render(): RenderingResult? =
-        listener?.onRowEndResolved(this)
-
-    private fun CellRenderable.render(): RenderingResult? =
-        listener?.onCellResolved(this)
-
     private fun offsetAwareCellContext(sourceRow: SourceRow<T>) = ProvideCellContext { row, column ->
-        if (renderIterations.isValid(column.index)) {
+        if (renderIterations.inRenderWindow(column.index)) {
             row.createCellContext(row = sourceRow, column = column, state.data)
         } else null
     }
 
-    private fun resolveAndRenderTableRow(
-        tableRowIndex: RowIndex, record: IndexedValue<T>? = null,
+    private fun resolveAndRenderRow(
+        rowIndex: RowIndex, record: IndexedValue<T>? = null,
     ): ContextResult<RowEndRenderable<T>> {
-        return SourceRow(tableRowIndex, record?.index, record?.value).let { sourceRow ->
+        return SourceRow(rowIndex, record?.index, record?.value).let { sourceRow ->
             with(rows.findQualifying(sourceRow)) {
                 val provideCell = offsetAwareCellContext(sourceRow)
-                createRowStart(rowIndex = tableRowIndex.value, customAttributes = state.data).let { rowStart ->
-                    when (val status = rowStart.render()?.status) {
+                createRowStart(rowIndex = rowIndex.value, customAttributes = state.data).let { rowStart ->
+                    when (val status = api.renderOrMeasure(rowStart).status) {
                         Ok, Nothing -> when (val maybeCells = mapEachCell(provideCell) { cell ->
-                            cell.render()?.status.let { it is OpOverflowResult && it.isSkipped(CrossedAxis.Y) }
+                            api.renderOrMeasure(cell).status.let {
+                                it is OpOverflowResult && it.isSkipped(CrossedAxis.Y)
+                            }
                         }) {
                             is Either.Left -> tryRenderRowEnd(rowStart, maybeCells.value)
                             is Either.Right -> OverflowResult(OpOverflowResult(CrossedAxis.Y))
                         }
+
                         else -> OverflowResult(status as InterruptionOnAxis)
                     }
                 }
@@ -188,19 +185,19 @@ internal abstract class AbstractRowContextResolver<T : Any>(
         cells: Map<ColumnKey<T>, CellRenderable>
     ): ContextResult<RowEndRenderable<T>> =
         createRowEnd(rowStart, cells).let { rowEnd ->
-            rowEnd.render().let { result ->
-                when (result?.status) {
-                    null, Ok, Nothing -> SuccessResult(rowEnd)
+            api.renderOrMeasure(rowEnd).let { result ->
+                when (result.status) {
+                    Ok, Nothing -> SuccessResult(rowEnd)
                     else -> OverflowResult(result.status as InterruptionOnAxis)
                 }
             }
         }
 
-    private fun resolveRowContext(
+    private fun resolveAndRenderRowAtIndex(
         requestedIndex: RowIndex,
         indexedRecord: IndexedValue<T>? = null,
     ): IndexedResult<RowEndRenderable<T>> =
-        IndexedResult(requestedIndex, indexedRecord?.index, resolveAndRenderTableRow(requestedIndex, indexedRecord))
+        IndexedResult(requestedIndex, indexedRecord?.index, resolveAndRenderRow(requestedIndex, indexedRecord))
 
 
     /**
@@ -216,17 +213,16 @@ internal abstract class AbstractRowContextResolver<T : Any>(
         if (maxIndex != null && requestedIndex.value > maxIndex.value) return null
         if (minIndex != null && requestedIndex.value < minIndex.value) return null
         return if (indexedTableRows.hasCustomRows(SourceRow(requestedIndex))) {
-            resolveRowContext(requestedIndex)
+            resolveAndRenderRowAtIndex(requestedIndex)
         } else {
             getNextRecord().let {
                 if (it != null) {
-                    resolveRowContext(requestedIndex, it)
+                    resolveAndRenderRowAtIndex(requestedIndex, it)
                 } else {
                     indexedTableRows.getNextCustomRowIndex(requestedIndex)
-                        ?.let { nextIndexDef ->
-                            val withOffset = requestedIndex + nextIndexDef
-                            if (maxIndex != null && withOffset.value > maxIndex.value) return null
-                            resolveRowContext(withOffset)
+                        ?.let { nextRowIndex ->
+                            if (maxIndex != null && nextRowIndex.value > maxIndex.value) return null
+                            resolveAndRenderRowAtIndex(nextRowIndex)
                         }
                 }
             }
@@ -239,5 +235,49 @@ internal abstract class AbstractRowContextResolver<T : Any>(
      * @author Wojciech Mąka
      * @since 0.1.0
      */
-    protected abstract fun getNextRecord(): IndexedValue<T>?
+    private fun getNextRecord(): IndexedValue<T>? = if (iterator.hasNext()) {
+        IndexedValue(recordIndex++, iterator.next())
+    } else null
+
+    /**
+     * @author Wojciech Mąka
+     */
+    private fun IndexedResult<RowEndRenderable<T>>.startWithSkippedRowOnNextIteration() {
+        renderIterations.pushNewIteration(rowIndex, sourceRecordIndex ?: recordIndex)
+    }
+
+    private fun IndexedResult<RowEndRenderable<T>>.startWithNextExistingRowOnNextIteration() {
+        val nextDefinedRowIndex = indexedTableRows.getNextCustomRowIndex(indexIncrement.getRowIndex())
+        val nextRowIndex = indexIncrement.getRowIndex().inc()
+        if (nextDefinedRowIndex != null) {
+            renderIterations.pushNewIteration(nextRowIndex, recordIndex)
+        } else if (recordIndex <= lastRecordIndex) {
+            renderIterations.pushNewIteration(nextRowIndex, recordIndex)
+        }
+    }
+
+    fun renderRows() {
+        while (true) {
+            val row = resolve(indexIncrement.getRowIndex())
+            if (row != null) {
+                when (row.result) {
+                    is SuccessResult -> indexIncrement.inc()
+                    is OverflowResult -> {
+                        when (row.result.overflow) {
+                            is RenderingSkipped -> {
+                                row.startWithSkippedRowOnNextIteration()
+                                break
+                            }
+
+                            is RenderingClipped -> {
+                                row.startWithNextExistingRowOnNextIteration()
+                                break
+                            }
+                        }
+                    }
+                }
+            } else break
+        }
+    }
+
 }

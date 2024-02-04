@@ -5,6 +5,13 @@ import io.github.voytech.tabulate.core.model.StateAttributes
 class InputParams {
     companion object {
 
+        /**
+         * This parameter is used mostly in following circumstances:
+         *  - when exporting collection of objects directly (call on collection extension function)
+         *  - when layouts are not used, so we export only single component like Table.
+         *  - layout size is not defined by DSL.
+         */
+
         private const val ALLOW_MEASURE_BEFORE_RENDER = "allow-measure-before-render"
 
         fun params() = mapOf<String, Any>()

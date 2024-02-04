@@ -19,6 +19,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts
 
 val defaultFont: PDFont = PDType1Font(Standard14Fonts.FontName.HELVETICA)
+const val defaultFontSize: Int = 10
 
 fun TextStylesAttribute.default(): PDFont =
     (if (weight == DefaultWeightStyle.BOLD) {
@@ -67,7 +68,7 @@ class TextStylesAttributeRenderOperation<CTX : AttributedContext> :
         attribute: TextStylesAttribute,
     ) = with(renderingContext) {
         getCurrentContentStream().let { content ->
-            beginText()
+            beginText() //TODO bullshit. cannot be like that.
             context.textMeasures().let { fontAndSize ->
                 setFont(fontAndSize.font(), fontAndSize.fontSize().toFloat())
                 content.setNonStrokingColor(attribute.fontColor.awtColor())

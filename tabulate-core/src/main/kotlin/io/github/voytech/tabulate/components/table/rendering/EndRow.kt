@@ -34,7 +34,7 @@ class RowEndRenderable<T>(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
             width = getMeasuredContentSize()?.width,
-            height = getRowHeight(getRow(),1, uom)
+            height = getCurrentRowHeight(getRow(),1, uom)
         )
     }
 

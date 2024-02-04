@@ -150,6 +150,7 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
                 } else Ok
             }
         }
+
 }
 
 class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedContext>(
@@ -162,7 +163,9 @@ class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedContext>(
             val measuringResult = measuringOperations.measureRenderableWhenMissingBounds(renderingContext, context)
             val status = resolveRenderingStatus(measuringResult, context)
             val intermediateResult = status.merge(measuringResult)
-            val renderClippingOrFully: (RenderingResult) -> RenderingResult = { delegate(renderingContext, context) }
+            val renderClippingOrFully: (RenderingResult) -> RenderingResult = { intermediate ->
+                intermediate.merge(delegate(renderingContext, context))
+            }
             when (status) {
                 is Ok -> renderClippingOrFully(intermediateResult)
                 is RenderingClipped -> renderClippingOrFully(intermediateResult)
@@ -189,15 +192,14 @@ class LayoutAwareMeasureOperation<CTX : RenderingContext, E : AttributedContext>
             val measuringResult = delegate.measureRenderableWhenMissingBounds(renderingContext, context)
             val status = resolveRenderingStatus(measuringResult, context)
             when (status) {
-                is RenderingClipped -> status
-                is RenderingSkipped -> status
+                is RenderingClipped,
+                is RenderingSkipped,
                 is Ok -> status
                 else -> error("This OperationResult: $status is not supported on guarded measuring.")
             }.merge(measuringResult).also { tryApplyResults(context) }
         }
     }
 }
-
 
 class EnableRenderingUsingLayouts<CTX : RenderingContext>(
     private val measuringOperations: Operations<CTX>,
@@ -213,3 +215,4 @@ class EnableMeasuringForLayouts<CTX : RenderingContext>(
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
         LayoutAwareMeasureOperation(op.delegate, layout)
 }
+

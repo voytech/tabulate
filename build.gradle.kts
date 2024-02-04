@@ -12,7 +12,7 @@ plugins {
     id("maven-publish")
     id("io.github.gradle-nexus.publish-plugin") version("1.0.0")
     id("signing")
-    id("jacoco")
+    //id("jacoco")
 }
 
 scmVersion {
@@ -45,7 +45,7 @@ configure(
     apply(plugin = "maven-publish")
     apply(plugin = "java-library")
     apply(plugin = "org.jetbrains.dokka")
-    apply(plugin = "jacoco")
+    //apply(plugin = "jacoco")
     apply(plugin = "signing")
     dependencies {
         implementation(kotlin("stdlib", kotlinVersion))
@@ -55,15 +55,15 @@ configure(
         testImplementation("org.junit.jupiter","junit-jupiter")
         testRuntimeOnly("org.jetbrains.kotlin","kotlin-reflect", kotlinVersion)
     }
-    jacoco {
-        toolVersion = "0.8.7"
-    }
+    //jacoco {
+    //    toolVersion = "0.8.7"
+    //}
     configurations.all {
         resolutionStrategy {
             eachDependency {
-                if ("org.jacoco" == this.requested.group) {
-                    useVersion("0.8.7")
-                }
+                //if ("org.jacoco" == this.requested.group) {
+                //    useVersion("0.8.7")
+                //}
             }
         }
     }
@@ -73,7 +73,7 @@ configure(
             testLogging {
                 events("passed", "skipped", "failed")
             }
-            finalizedBy(jacocoTestReport) // report is always generated after tests run
+            //finalizedBy(jacocoTestReport) // report is always generated after tests run
         }
 
         register<Jar>("dokkaJavadocJar") {
@@ -81,7 +81,7 @@ configure(
             dependsOn("dokkaJavadoc")
             archiveClassifier.set("javadoc")
         }
-
+/*
         jacocoTestReport {
             dependsOn(test) // tests are required to run before generating the report
             reports {
@@ -90,6 +90,7 @@ configure(
                 html.isEnabled = true
             }
         }
+        */
     }
 
     java {

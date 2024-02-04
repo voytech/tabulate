@@ -81,13 +81,25 @@ class AdjustingIterator<T>(
 
 class MultiIterationSet<T, E> : CompositeIterator<T, E> where E : Enum<E>, T : Any {
 
-    private val collection: MutableCollection<T> = LinkedHashSet()
+    private val collection: LinkedHashSet<T> = LinkedHashSet()
 
     private val iterations: MutableMap<E, AdjustingIterator<T>> = mutableMapOf()
 
     private fun <R> usingCategory(enum: E, block: AdjustingIterator<T>.() -> R?): R? {
         iterations.computeIfAbsent(enum) { AdjustingIterator(collection) }
         return iterations[enum]?.run(block)
+    }
+
+    fun find(pred: (T) -> Boolean): T? = collection.find(pred)
+
+    fun insert(enum: E, elem: T) {
+        usingCategory(enum) {
+            val index = currentIndex()
+            val list = collection.toMutableList().also { it.add(index + 1, elem) }
+            collection.clear()
+            collection.addAll(list)
+            iterations.values.forEach { it.rebuild() }
+        }
     }
 
     fun add(elem: T) {

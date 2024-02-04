@@ -76,8 +76,8 @@ class CommonTests {
                 }
             }
         }
-        //doc.export(File("two_tables.pdf"))
-        doc.export(File("two_tables.xlsx"))
+        doc.export(File("two_tables.pdf"))
+        //doc.export(File("two_tables.xlsx"))
     }
 
     @Test
@@ -174,8 +174,8 @@ class CommonTests {
                 }
             }
         }
-        doc.export(File("test.xlsx"))
-        //doc.export(File("test.pdf"))
+        //doc.export(File("test.xlsx"))
+        doc.export(File("test.pdf"))
     }
 
     private fun ContainerBuilderApi.textList(type: String, vararg skills: String) {
@@ -433,9 +433,9 @@ class CommonTests {
 
     @Test
     fun multiplePages() {
-        document {
+        val doc = document {
             attributes {
-                width { 800.pt() }
+                width { 612.pt() }
                 height { 300.pt() }
             }
             page {
@@ -460,17 +460,17 @@ class CommonTests {
                 horizontal {
                     attributes { borders { all { lightGray; solid; 3.pt() } } }
                     table(typedTable<SampleProduct> {
+                        //attributes { tableBorders { all { 2f.pt() } } }
                         columns {
                             column(SampleProduct::code) {
                                 attributes {
                                     text { red; bold; courierNew }
                                     alignment { left; middle }
-                                    borders { left { 2f.pt() } }
                                 }
                             }
                             column(SampleProduct::name) {
                                 attributes {
-                                    width { 100.pt() }
+                                    //width { 100.pt() }
                                     alignment { center }
                                 }
                             }
@@ -481,27 +481,13 @@ class CommonTests {
                             header("Id", "Name", "Description", "Price")
                             matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
                             matching { odd() } assign { attributes { background { yellow } } }
-                            footer {
-                                cell(SampleProduct::code) { value = "." }
-                                cell(SampleProduct::name) { value = "." }
-                                cell(SampleProduct::description) { value = "." }
-                                cell(SampleProduct::price) { value = "." }
-                            }
-                            newRow(AdditionalSteps.TRAILING_ROWS) {
-                                attributes {
-                                    background { red }
-                                    borders { all { none } }
-                                }
-                                cell(SampleProduct::code) { value = "" }
-                                cell(SampleProduct::name) { value = "" }
-                                cell(SampleProduct::description) { value = "" }
-                                cell(SampleProduct::price) { }
-                            }
                         }
-                        dataSource(SampleProduct.create(150))
+                        dataSource(SampleProduct.create(152))
                     })
                 }
             }
-        }.export("multiple_pages_plus_header_and_footer.xlsx",InputParams.params().setXlsxRowsCountInWindow(300))
+        }
+        //doc.export("multiple_pages_plus_header_and_footer.xlsx",InputParams.params().setXlsxRowsCountInWindow(300))
+        doc.export("multiple_pages_plus_header_and_footer.pdf")
     }
 }

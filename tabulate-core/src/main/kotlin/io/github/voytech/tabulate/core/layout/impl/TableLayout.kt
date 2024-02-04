@@ -13,8 +13,8 @@ enum class SizingOptions {
 interface TableSizingMethods {
     fun setColumnWidth(column: Int, width: Width, options: SizingOptions = SizingOptions.SET)
     fun setRowHeight(row: Int, height: Height, options: SizingOptions = SizingOptions.SET)
-    fun getColumnWidth(column: Int, colSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width?
-    fun getRowHeight(row: Int, rowSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height?
+    fun getMeasuredColumnWidth(column: Int, colSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width?
+    fun getMeasuredRowHeight(row: Int, rowSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height?
     fun setOffsets(row: Int, column: Int)
 }
 
@@ -228,10 +228,10 @@ class NonUniformCartesianGrid(
             standardUnit.asUnitsOfMeasure()
         )
 
-    override fun getColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width =
+    override fun getMeasuredColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width =
         columns.spannedMeasure(column, colSpan, Width::class.java, defaultWidthInPt).switchUnitOfMeasure(uom)
 
-    override fun getRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height =
+    override fun getMeasuredRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height =
         rows.spannedMeasure(row, rowSpan, Height::class.java, defaultHeightInPt).switchUnitOfMeasure(uom)
 
     internal fun isRowLocked(row: Int): Boolean = lockedRows[row] ?: false
@@ -299,15 +299,18 @@ class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties
         }
     }
 
-    override fun getColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width? =
+    override fun getMeasuredColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width? =
         if (isSpaceMeasured || delegate.isColumnLocked(column)) {
-            delegate.getColumnWidth(column, colSpan, uom)
+            delegate.getMeasuredColumnWidth(column, colSpan, uom)
         } else null
 
-    override fun getRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height? =
+    override fun getMeasuredRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height? =
         if (isSpaceMeasured || delegate.isRowLocked(row)) {
-            delegate.getRowHeight(row, rowSpan, uom)
+            delegate.getMeasuredRowHeight(row, rowSpan, uom)
         } else null
+
+    fun getCurrentRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height =
+        delegate.getMeasuredRowHeight(row, rowSpan, uom)
 
     override fun setOffsets(row: Int, column: Int) {
         delegate.setOffsets(row, column)
