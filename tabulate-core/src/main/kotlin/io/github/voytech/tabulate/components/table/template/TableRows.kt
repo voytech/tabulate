@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.components.table.template
 
-import io.github.voytech.tabulate.Either
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.rendering.*
 import io.github.voytech.tabulate.core.layout.CrossedAxis
@@ -71,8 +70,6 @@ internal class IndexedTableRows<T : Any>(
 
 internal fun <T : Any> Table<T>.indexRows(): IndexedTableRows<T> = IndexedTableRows(this)
 
-internal fun interface ProvideCellContext<T : Any> : (SyntheticRow<T>, ColumnDef<T>) -> CellRenderable?
-
 internal class SyntheticRow<T : Any>(
     internal val table: Table<T>,
     private val rowDefinitions: Set<RowDef<T>>,
@@ -88,28 +85,12 @@ internal class SyntheticRow<T : Any>(
 ) {
 
     @Suppress("NOTHING_TO_INLINE")
-    private inline fun mergeCellAttributes(column: ColumnDef<T>): Attributes =
+    internal inline fun mergeCellAttributes(column: ColumnDef<T>): Attributes =
         tableAttributesForContext.get<CellRenderable>().orEmpty() +
                 column.attributes.orEmpty().forContext<CellRenderable>() +
                 rowCellAttributes +
                 cellDefinitions[column.id]?.attributes.orEmpty().forContext<CellRenderable>()
 
-    internal fun mapEachCell(
-        block: ProvideCellContext<T>, operation: (CellRenderable) -> Boolean
-    ): Either<Map<ColumnKey<T>, CellRenderable>, Boolean> {
-        var test = false
-        val cells = if (cellContextAttributes.isEmpty()) {
-            table.columns.mapNotNull { column ->
-                cellContextAttributes[column] = mergeCellAttributes(column)
-                block(this, column)?.let { column.id to it }?.also { if (operation(it.second)) test = true }
-            }.toMap()
-        } else {
-            cellContextAttributes.keys.mapNotNull { column ->
-                block(this, column)?.let { column.id to it }?.also { if (operation(it.second)) test = true }
-            }.toMap()
-        }
-        return if (test) Either.Right(true) else Either.Left(cells)
-    }
 }
 
 internal class QualifiedRows<T : Any>(private val indexedTableRows: IndexedTableRows<T>) {
@@ -150,37 +131,37 @@ internal class TableRowsRenderer<T : Any>(
     private val indexedTableRows: IndexedTableRows<T> = tableModel.indexRows()
     private val rows = QualifiedRows(indexedTableRows)
 
-    private fun offsetAwareCellContext(sourceRow: SourceRow<T>) = ProvideCellContext { row, column ->
+    private fun RenderingResult.isYOverflown(): Boolean = status is OpOverflowResult && status.isSkipped(CrossedAxis.Y)
+
+    data class CellRenderingResult<T>(val isSkipped: Boolean, val key: ColumnKey<T>, val cell: CellRenderable)
+
+    private fun List<CellRenderingResult<T>>.hasYAxisCrossingCells() = firstOrNull { it.isSkipped } != null
+
+    private fun List<CellRenderingResult<T>>.asMap(): Map<ColumnKey<T>, CellRenderable> =
+        associate { it.key to it.cell }
+
+    private fun SyntheticRow<T>.resolveAndRenderCell(
+        sourceRow: SourceRow<T>, column: ColumnDef<T>
+    ): CellRenderingResult<T>? =
         if (renderIterations.inRenderWindow(column.index)) {
-            row.createCellContext(row = sourceRow, column = column, state.data)
+            createCellContext(sourceRow, column, state.data)?.let {
+                CellRenderingResult(api.renderOrMeasure(it).isYOverflown(), column.id, it)
+            }
         } else null
-    }
 
-    private fun resolveAndRenderRow(
-        rowIndex: RowIndex, record: IndexedValue<T>? = null,
-    ): ContextResult<RowEndRenderable<T>> {
-        return SourceRow(rowIndex, record?.index, record?.value).let { sourceRow ->
-            with(rows.findQualifying(sourceRow)) {
-                val provideCell = offsetAwareCellContext(sourceRow)
-                createRowStart(rowIndex = rowIndex.value, customAttributes = state.data).let { rowStart ->
-                    when (val status = api.renderOrMeasure(rowStart).status) {
-                        Ok, Nothing -> when (val maybeCells = mapEachCell(provideCell) { cell ->
-                            api.renderOrMeasure(cell).status.let {
-                                it is OpOverflowResult && it.isSkipped(CrossedAxis.Y)
-                            }
-                        }) {
-                            is Either.Left -> tryRenderRowEnd(rowStart, maybeCells.value)
-                            is Either.Right -> OverflowResult(OpOverflowResult(CrossedAxis.Y))
-                        }
-
-                        else -> OverflowResult(status as InterruptionOnAxis)
-                    }
-                }
+    private fun SyntheticRow<T>.resolveAndRenderCells(sourceRow: SourceRow<T>): List<CellRenderingResult<T>> =
+        if (cellContextAttributes.isEmpty()) {
+            table.columns.mapNotNull { column ->
+                cellContextAttributes[column] = mergeCellAttributes(column)
+                resolveAndRenderCell(sourceRow, column)
+            }
+        } else {
+            cellContextAttributes.keys.mapNotNull { column ->
+                resolveAndRenderCell(sourceRow, column)
             }
         }
-    }
 
-    private fun SyntheticRow<T>.tryRenderRowEnd(
+    private fun SyntheticRow<T>.resolveAndRenderRowEnd(
         rowStart: RowStartRenderable,
         cells: Map<ColumnKey<T>, CellRenderable>
     ): ContextResult<RowEndRenderable<T>> =
@@ -192,6 +173,28 @@ internal class TableRowsRenderer<T : Any>(
                 }
             }
         }
+
+    private fun resolveAndRenderRow(
+        rowIndex: RowIndex, record: IndexedValue<T>? = null,
+    ): ContextResult<RowEndRenderable<T>> {
+        return SourceRow(rowIndex, record?.index, record?.value).let { sourceRow ->
+            with(rows.findQualifying(sourceRow)) {
+                createRowStart(rowIndex = rowIndex.value, customAttributes = state.data).let { rowStart ->
+                    when (val status = api.renderOrMeasure(rowStart).status) {
+                        Ok, Nothing -> resolveAndRenderCells(sourceRow).let {
+                            if (it.hasYAxisCrossingCells()) {
+                                OverflowResult(OpOverflowResult(CrossedAxis.Y))
+                            } else {
+                                resolveAndRenderRowEnd(rowStart, it.asMap())
+                            }
+                        }
+
+                        else -> OverflowResult(status as InterruptionOnAxis)
+                    }
+                }
+            }
+        }
+    }
 
     private fun resolveAndRenderRowAtIndex(
         requestedIndex: RowIndex,
@@ -209,9 +212,6 @@ internal class TableRowsRenderer<T : Any>(
      */
     override fun resolve(requestedIndex: RowIndex): IndexedResult<RowEndRenderable<T>>? {
         val maxIndex = renderIterations.getEndRowIndex()
-        val minIndex = renderIterations.getStartRowIndex()
-        if (maxIndex != null && requestedIndex.value > maxIndex.value) return null
-        if (minIndex != null && requestedIndex.value < minIndex.value) return null
         return if (indexedTableRows.hasCustomRows(SourceRow(requestedIndex))) {
             resolveAndRenderRowAtIndex(requestedIndex)
         } else {
@@ -247,21 +247,28 @@ internal class TableRowsRenderer<T : Any>(
     }
 
     private fun IndexedResult<RowEndRenderable<T>>.startWithNextExistingRowOnNextIteration() {
-        val nextDefinedRowIndex = indexedTableRows.getNextCustomRowIndex(indexIncrement.getRowIndex())
-        val nextRowIndex = indexIncrement.getRowIndex().inc()
-        if (nextDefinedRowIndex != null) {
-            renderIterations.pushNewIteration(nextRowIndex, recordIndex)
-        } else if (recordIndex <= lastRecordIndex) {
+        val nextDefinedRowIndex = indexedTableRows.getNextCustomRowIndex(rowIndex)
+        val nextRowIndex = rowIndex.inc()
+        if (nextDefinedRowIndex != null || recordIndex <= lastRecordIndex) {
             renderIterations.pushNewIteration(nextRowIndex, recordIndex)
         }
     }
 
+    private fun RowIndex.inActiveWindow(): Boolean {
+        val maxIndex = renderIterations.getEndRowIndex()
+        val minIndex = renderIterations.getStartRowIndex()
+        return !(maxIndex != null && value > maxIndex.value || minIndex != null && value < minIndex.value)
+    }
+
     fun renderRows() {
-        while (true) {
+        while (indexIncrement.getRowIndex().inActiveWindow()) {
             val row = resolve(indexIncrement.getRowIndex())
             if (row != null) {
                 when (row.result) {
-                    is SuccessResult -> indexIncrement.inc()
+                    is SuccessResult -> {
+                        indexIncrement.set(row.rowIndex)
+                        indexIncrement.inc()
+                    }
                     is OverflowResult -> {
                         when (row.result.overflow) {
                             is RenderingSkipped -> {
