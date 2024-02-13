@@ -13,6 +13,7 @@ import io.github.voytech.tabulate.components.table.model.RowCellExpression
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
 import io.github.voytech.tabulate.components.table.template.AdditionalSteps
 import io.github.voytech.tabulate.components.text.api.builder.dsl.*
+import io.github.voytech.tabulate.components.wrapper.api.builder.dsl.align
 import io.github.voytech.tabulate.core.InputParams
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
@@ -489,5 +490,51 @@ class CommonTests {
         }
         //doc.export("multiple_pages_plus_header_and_footer.xlsx",InputParams.params().setXlsxRowsCountInWindow(300))
         doc.export("multiple_pages_plus_header_and_footer.pdf")
+    }
+
+
+    @Test
+    fun exportTableWithDeclaredSize() {
+        val doc = document {
+            attributes {
+               // width { 612.pt() }
+               // height { 300.pt() }
+            }
+            page {
+                horizontal {
+                    attributes { borders { all { red; dotted; 1.pt() } } }
+                    align { fullSize; center; middle } table(typedTable<SampleProduct> {
+                        attributes {
+                            width { 70.percents() }
+                            height { 50.percents() }
+                            tableBorders { all { lightGray; solid; 5.pt() } }
+                            borders { all { 5.pt()} }
+                        }
+                        columns {
+                            column(SampleProduct::code) {
+                                attributes {
+                                    text { red; bold; courierNew }
+                                    alignment { left; middle }
+                                }
+                            }
+                            column(SampleProduct::name) {
+                                attributes {
+                                    alignment { center }
+                                }
+                            }
+                            column(SampleProduct::description)
+                            column(SampleProduct::price) {}
+                        }
+                        rows {
+                            header("Id", "Name", "Description", "Price")
+                            matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
+                            matching { odd() } assign { attributes { background { yellow } } }
+                        }
+                        dataSource(SampleProduct.create(20))
+                    })
+                }
+            }
+        }
+        doc.export("table_of_declared_size.pdf")
     }
 }

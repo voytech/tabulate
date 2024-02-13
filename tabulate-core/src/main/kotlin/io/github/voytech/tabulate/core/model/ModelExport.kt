@@ -3,6 +3,8 @@ package io.github.voytech.tabulate.core.model
 import io.github.voytech.tabulate.MultiIterationSet
 import io.github.voytech.tabulate.core.*
 import io.github.voytech.tabulate.core.InputParams.Companion.allowMeasureBeforeRender
+import io.github.voytech.tabulate.core.layout.AutonomousLayout
+import io.github.voytech.tabulate.core.layout.Layout
 import io.github.voytech.tabulate.core.layout.LayoutSpace
 import io.github.voytech.tabulate.core.layout.SpaceConstraints
 import io.github.voytech.tabulate.core.operation.*
@@ -253,16 +255,6 @@ class ModelExportContext(
         }
     }
 
-    object Logging {
-        private val logger: Logger = Logger.getLogger(Logging::class.java.name)
-
-        private fun ModelExportContext.debug() {
-            logger.info("Is Running: ${isRunning()}")
-            logger.info("Render iterations: $renderIterations")
-
-        }
-    }
-
 }
 
 class RenderIterationsApi internal constructor(private val context: ModelExportContext) {
@@ -299,6 +291,11 @@ class ExportApi private constructor(private val context: ModelExportContext) {
     fun AbstractModel.measure(constraints: SpaceConstraints? = null, force: Boolean = false): Size? =
         withinInitializedContext { measureInContext(it, constraints, force) }
 
+    fun AbstractModel.currentSizeOrMeasure(constraints: SpaceConstraints? = null, force: Boolean = false): Size? =
+        withinInitializedContext { getSizeIfMeasured(it) ?: measureInContext(it, constraints, force) }
+
+    fun AbstractModel.getSize(): Size? = withinInitializedContext { getSizeIfMeasured(it) }
+
     fun AbstractModel.isRunning(): Boolean = withinInitializedContext { it.isRunning() }
 
     fun render(renderable: AttributedContext): RenderingResult = with(context) {
@@ -312,8 +309,6 @@ class ExportApi private constructor(private val context: ModelExportContext) {
     fun renderOrMeasure(renderable: AttributedContext): RenderingResult = with(context) {
         operations.renderOrMeasure(renderable)
     }
-
-    fun isMeasuring(): Boolean = context.phase == ExportPhase.MEASURING
 
     fun currentLayoutScope(): LayoutApi = context.layouts.current()
 
@@ -359,6 +354,12 @@ class ExportApi private constructor(private val context: ModelExportContext) {
             }
             targetContext.layouts.getMaxSize()
         } else targetContext.layouts.getMaxSize()
+    }
+
+    private fun getSizeIfMeasured(targetContext: ModelExportContext): Size? {
+        val phase = targetContext.phase
+        targetContext.phase = ExportPhase.MEASURING
+        return targetContext.layouts.getMaxSize().also { targetContext.phase = phase }
     }
 
     private fun ModelExportContext.isRunningOrRestarted(restart: Boolean = false): Boolean {
@@ -416,3 +417,42 @@ class ExportApi private constructor(private val context: ModelExportContext) {
         internal operator fun invoke(context: ModelExportContext): ExportApi = ExportApi(context)
     }
 }
+
+fun <L : Layout> ExportApi.exportWithPostponedContinuations(models: List<AbstractModel>) =
+    traverseAllThenContinue<L>(models) { export() }
+
+fun <L : Layout> ExportApi.measureWithPostponedContinuations(models: List<AbstractModel>) =
+    traverseAllThenContinue<L>(models) { measure() }
+
+private fun <L : Layout> ExportApi.traverseAllThenContinue(models: List<AbstractModel>,  action: AbstractModel.() -> Unit) =
+    currentLayoutScope().layout<L,Unit> { space ->
+        if (this is AutonomousLayout) {
+            var runnables = models
+            while (runnables.isNotEmpty() && space.hasSpaceLeft()) {
+                runnables.forEach {
+                    if (space.hasSpaceLeft()) {
+                        it.action()
+                    }
+                }
+                runnables = runnables.filter { it.isRunning() }
+            }
+        }
+    }
+
+fun <L : Layout> ExportApi.exportWithImmediateContinuations(models: List<AbstractModel>) =
+    traverseWithContinuations<L>(models) { export() }
+
+
+fun <L : Layout> ExportApi.measureWithImmediateContinuation(models: List<AbstractModel>) =
+    traverseWithContinuations<L>(models) { measure() }
+
+private fun <L : Layout> ExportApi.traverseWithContinuations(models: List<AbstractModel>,  action: AbstractModel.() -> Unit) =
+    currentLayoutScope().layout<L,Unit> { space ->
+        if (this is AutonomousLayout) {
+            models.forEach {
+                while (it.isRunning() && space.hasSpaceLeft()) {
+                    it.action()
+                }
+            }
+        }
+    }

@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.core.layout.impl
 import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.model.*
 
-class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), SizeTrackingIterableLayoutMethods {
+class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), AutonomousLayout {
 
     private data class Slot(var position: Position, var width: Width? = null, var height: Height? = null)
 
@@ -19,28 +19,6 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Siz
 
     override var isSpaceMeasured: Boolean = false
 
-    override fun setSlotWidth(width: Width) {
-        whileMeasuring {
-            slots[currentIndex].width = width
-        }
-    }
-
-    override fun setSlotHeight(height: Height) {
-        whileMeasuring {
-            slots[currentIndex].height = height
-        }
-    }
-
-    override fun getSlotWidth(uom: UnitsOfMeasure): Width? =
-        if (currentIndex <= slots.size - 1) {
-            slots[currentIndex].width?.switchUnitOfMeasure(uom)
-        } else null
-
-
-    override fun getSlotHeight(uom: UnitsOfMeasure): Height? =
-        if (currentIndex <= slots.size - 1) {
-            slots[currentIndex].height?.switchUnitOfMeasure(uom)
-        } else null
 
     override fun LayoutSpace.reset() {
         whileMeasuring { this@FlowLayout.uom = this@reset.uom }.also {
@@ -50,14 +28,6 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Siz
             }
             currentIndex = 0
         }
-    }
-
-    override fun LayoutSpace.getSlotX(): X = innerLeftTop.x + slots[currentIndex].position.x
-
-    override fun LayoutSpace.getSlotY(): Y = innerLeftTop.y + slots[currentIndex].position.y
-
-    override fun LayoutSpace.setNextSlot() {
-        TODO("Not yet implemented")
     }
 
     private fun LayoutSpace.currentPosition(): Position = (if (::absoluteCursor.isInitialized) absoluteCursor else currentPosition)

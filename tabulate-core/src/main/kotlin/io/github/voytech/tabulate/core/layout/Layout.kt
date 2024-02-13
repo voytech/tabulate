@@ -26,16 +26,12 @@ interface AbsolutePositionMethods {
     fun getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y
 }
 
-interface SizeTrackingIterableLayoutMethods : IterableLayout {
-    fun setSlotWidth(width: Width)
-    fun setSlotHeight(height: Height)
-    fun getSlotWidth(uom: UnitsOfMeasure): Width?
-    fun getSlotHeight(uom: UnitsOfMeasure): Height?
-    fun LayoutSpace.setNextSlot()
+interface AutonomousLayout {
     fun LayoutSpace.reset()
-    fun LayoutSpace.getSlotX(): X
-    fun LayoutSpace.getSlotY(): Y
 
+    fun LayoutSpace.resolveNextPosition(): Position?
+
+    fun LayoutSpace.hasSpaceLeft(): Boolean
 }
 
 data class MeasurementResults(val widthAligned: Boolean = false, val heightAligned: Boolean)
@@ -131,11 +127,11 @@ interface Layout {
     /**
      * Gets the width declared by API (by WidthAttribute and HeightAttribute)
      */
-    fun LayoutSpace.getExplicitWidth(): Width?
+    fun LayoutSpace.getExplicitWidth(mode: LayoutBoundaryType = LayoutBoundaryType.OUTER): Width?
     /**
      * Gets the height declared by API (by WidthAttribute and HeightAttribute)
      */
-    fun LayoutSpace.getExplicitHeight(): Height?
+    fun LayoutSpace.getExplicitHeight(mode: LayoutBoundaryType = LayoutBoundaryType.OUTER): Height?
 
     fun getMeasurementResults(): MeasurementResults? = null
 
@@ -144,12 +140,6 @@ interface Layout {
     }
 
 }
-
-interface IterableLayout {
-    fun LayoutSpace.resolveNextPosition(): Position?
-    fun LayoutSpace.hasSpaceLeft(): Boolean
-}
-
 
 abstract class AbstractLayout(override val properties: LayoutProperties) : Layout {
     override var isSpaceMeasured: Boolean = false
@@ -210,12 +200,20 @@ abstract class AbstractLayout(override val properties: LayoutProperties) : Layou
 
     override fun LayoutSpace.getCurrentSize(): Size? = maxBoundingRectangle?.size()
 
-    override fun LayoutSpace.getExplicitWidth(): Width? = if (properties.declaredWidth) {
-        maxBoundingRectangle?.size()?.width
+    override fun LayoutSpace.getExplicitWidth(mode: LayoutBoundaryType): Width? = if (properties.declaredWidth) {
+        if (mode == LayoutBoundaryType.OUTER) {
+            maxBoundingRectangle?.size()?.width
+        } else {
+            innerBoundingRectangle?.size()?.width
+        }
     } else null
 
-    override fun LayoutSpace.getExplicitHeight(): Height? = if (properties.declaredHeight) {
-        maxBoundingRectangle?.size()?.height
+    override fun LayoutSpace.getExplicitHeight(mode: LayoutBoundaryType): Height? = if (properties.declaredHeight) {
+        if (mode == LayoutBoundaryType.OUTER) {
+            maxBoundingRectangle?.size()?.height
+        } else {
+            innerBoundingRectangle?.size()?.height
+        }
     } else null
     /**
      * Wraps a code block and executes only if [isSpaceMeasured] flag is set to false
@@ -389,18 +387,6 @@ data class RenderableBoundingBox(
         }
 
 
-}
-
-class MeasurementsFlags {
-    var shouldMeasureWidth: Boolean = false
-        private set
-    var shouldMeasureHeight: Boolean = false
-        private set
-
-    fun RenderableBoundingBox.assignFlags() {
-        shouldMeasureWidth = (width == null)
-        shouldMeasureHeight = (height == null)
-    }
 }
 
 fun RenderableBoundingBox?.isDefined() = this?.isDefined() ?: false

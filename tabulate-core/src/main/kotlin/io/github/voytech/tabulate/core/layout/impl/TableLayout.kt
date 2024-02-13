@@ -13,9 +13,11 @@ enum class SizingOptions {
 interface TableSizingMethods {
     fun setColumnWidth(column: Int, width: Width, options: SizingOptions = SizingOptions.SET)
     fun setRowHeight(row: Int, height: Height, options: SizingOptions = SizingOptions.SET)
+    fun resizeColumnsToFit(width: Width)
+    fun resizeRowsToFit(height: Height)
     fun getMeasuredColumnWidth(column: Int, colSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width?
     fun getMeasuredRowHeight(row: Int, rowSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height?
-    fun setOffsets(row: Int, column: Int)
+    fun startAt(row: Int, column: Int)
 }
 
 abstract class AbstractTableLayout(
@@ -217,6 +219,33 @@ class NonUniformCartesianGrid(
         setLengthWithOptions(rows, lockedRows, row, height, defaultHeightInPt, options)
     }
 
+    override fun resizeColumnsToFit(width: Width) {
+        columns.resizeLengthsToFit(width, defaultWidthInPt, lockedColumns)
+    }
+
+    override fun resizeRowsToFit(height: Height) {
+        rows.resizeLengthsToFit(height, defaultHeightInPt, lockedRows)
+    }
+
+    private fun <T : Measure<T>> MutableMap<Int, PositionAndLength>.resizeLengthsToFit(
+        length: T, defaultLen: Float, locks: MutableMap<Int, Boolean>
+    ) {
+        val targetLength = length.switchUnitOfMeasure(standardUnit.asUnitsOfMeasure()).value
+        val contentWidth = getTotalLength()
+        if (targetLength > contentWidth) {
+            val diff = targetLength - contentWidth
+            val notLockedMeasures = filterKeys { index -> !locks.containsKey(index) }
+            if (notLockedMeasures.isNotEmpty()) {
+                val lengthToAdd = (diff / notLockedMeasures.size).round3()
+                notLockedMeasures.keys.forEach {
+                    val pos = findPosition(it, defaultLen)
+                    val newLen = pos.length + lengthToAdd
+                    setLengthAtIndex(it, newLen.asWidth(standardUnit.asUnitsOfMeasure()), defaultLen)
+                }
+            }
+        }
+    }
+
     private fun <T : Measure<T>> MutableMap<Int, PositionAndLength>.spannedMeasure(
         index: Int,
         span: Int,
@@ -239,14 +268,18 @@ class NonUniformCartesianGrid(
     internal fun isColumnLocked(column: Int): Boolean = lockedColumns[column] ?: false
 
     private fun getWidth(): Width =
-        Width(columns.values.sumOf { it.length.toDouble() }.toFloat(), standardUnit.asUnitsOfMeasure())
+        Width(columns.getTotalLength(), standardUnit.asUnitsOfMeasure())
 
     private fun getHeight(): Height =
-        Height(rows.values.sumOf { it.length.toDouble() }.toFloat(), standardUnit.asUnitsOfMeasure())
+        Height(rows.getTotalLength(), standardUnit.asUnitsOfMeasure())
+
+    private fun MutableMap<Int, PositionAndLength>.getTotalLength(): Float =
+        values.sumOf { it.length.toDouble() }.toFloat()
+
 
     fun getSize(): Size = Size(getWidth(), getHeight())
 
-    override fun setOffsets(row: Int, column: Int) {
+    override fun startAt(row: Int, column: Int) {
         rowOffsetIndex = row
         columnOffsetIndex = column
     }
@@ -299,6 +332,18 @@ class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties
         }
     }
 
+    override fun resizeColumnsToFit(width: Width) {
+        whileMeasuring {
+            delegate.resizeColumnsToFit(width)
+        }
+    }
+
+    override fun resizeRowsToFit(height: Height) {
+        whileMeasuring {
+            delegate.resizeRowsToFit(height)
+        }
+    }
+
     override fun getMeasuredColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width? =
         if (isSpaceMeasured || delegate.isColumnLocked(column)) {
             delegate.getMeasuredColumnWidth(column, colSpan, uom)
@@ -312,8 +357,8 @@ class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties
     fun getCurrentRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height =
         delegate.getMeasuredRowHeight(row, rowSpan, uom)
 
-    override fun setOffsets(row: Int, column: Int) {
-        delegate.setOffsets(row, column)
+    override fun startAt(row: Int, column: Int) {
+        delegate.startAt(row, column)
     }
 
 }

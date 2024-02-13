@@ -1,6 +1,8 @@
 package io.github.voytech.tabulate.components.table.model
 
 import io.github.voytech.tabulate.components.table.template.TableExport
+import io.github.voytech.tabulate.components.table.template.TableRenderIterations
+import io.github.voytech.tabulate.core.layout.LayoutBoundaryType
 import io.github.voytech.tabulate.core.layout.LayoutProperties
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.reify
@@ -47,7 +49,7 @@ class Table<T : Any> internal constructor(
 
     override val attributes: Attributes?,
 
-    ) : ModelWithAttributes(), LayoutProvider<TableLayout> {
+    ) : ModelWithAttributes(), LayoutStrategy<TableLayout> {
 
     companion object {
         @JvmStatic
@@ -60,11 +62,28 @@ class Table<T : Any> internal constructor(
         getCustomAttributes()["_sheetName"] = getCustomAttributes()["_pageName"] ?: name
     }
 
-    override fun doExport(api: ExportApi) =
-        TableExport(this, api, dataSource?.dataSource).renderTable()
+    private fun ExportApi.currentIteration(): TableRenderIterations = TableRenderIterations(iterations())
 
-    override fun takeMeasures(api: ExportApi) =
-        TableExport(this, api, dataSource?.dataSource).renderTable()
+    private fun data(): Iterable<T>? = dataSource?.dataSource
+
+    override fun doExport(api: ExportApi) = api {
+        withinCurrentLayout {
+            val iteration = currentIteration()
+            startAt(iteration.getStartRowIndexOrZero(), iteration.getStartColumnIndexOrZero())
+            TableExport(this@Table, this@api, iteration, data()).renderTable()
+        }
+    }
+
+    override fun takeMeasures(api: ExportApi) = api {
+        withinCurrentLayout {
+            val iteration = currentIteration()
+            startAt(iteration.getStartRowIndexOrZero(), iteration.getStartColumnIndexOrZero())
+            TableExport(this@Table, this@api, iteration, data()).renderTable()
+            //After measuring layout try resize columns to fit explicitly set width
+            it.getExplicitWidth(LayoutBoundaryType.INNER)?.let { explicitWidth -> resizeColumnsToFit(explicitWidth) }
+            it.getExplicitHeight(LayoutBoundaryType.INNER)?.let { explicitHeight -> resizeRowsToFit(explicitHeight) }
+        }
+    }
 
     override fun createLayout(properties: LayoutProperties): TableLayout = TableLayout(properties)
 

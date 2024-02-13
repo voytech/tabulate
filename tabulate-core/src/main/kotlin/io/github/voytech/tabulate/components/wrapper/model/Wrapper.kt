@@ -12,18 +12,18 @@ class Wrapper(
     override val attributes: Attributes?,
     @get:JvmSynthetic
     internal val child: AbstractModel,
-) : ModelWithAttributes(), LayoutProvider<SimpleLayout> {
+) : ModelWithAttributes(), LayoutStrategy<SimpleLayout> {
 
     private val alignments by lazy {
         attributes?.get<AlignmentAttribute>()
     }
     override val needsMeasureBeforeExport: Boolean
-        get() = alignments?.let { it.horizontal != null || it.vertical != null } ?: false
+        get() = false//alignments?.let { it.horizontal != null || it.vertical != null } ?: false
 
     override fun doExport(api: ExportApi) = api {
         withinCurrentLayout {
             alignments?.let { alignment ->
-                child.measure()?.let { childSize ->
+                child.currentSizeOrMeasure()?.let { childSize ->
                     it.maxBoundingRectangle?.size()?.let { size ->
                         val withMarginOrNot = getMarginSize(child)?.let { childSize + it } ?: childSize
                         child.export(SpaceConstraints(leftTop = it.leftTop.align(alignment, size, withMarginOrNot)))
@@ -38,7 +38,10 @@ class Wrapper(
     }
 
     override fun takeMeasures(api: ExportApi) = api {
-        child.measure()
+        withinCurrentLayout {
+            child.measure() // pre-measure all children if this method was invoked eagerly before rendering.
+            it.maxRightBottom?.let { maxRightBottom -> it.reserveSpace(maxRightBottom) }
+        }
     }
 
     override fun createLayout(properties: LayoutProperties): SimpleLayout = SimpleLayout(properties)

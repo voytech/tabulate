@@ -1,13 +1,16 @@
 package io.github.voytech.tabulate.core.layout.impl
 
 import io.github.voytech.tabulate.core.layout.AbstractLayout
-import io.github.voytech.tabulate.core.layout.IterableLayout
+import io.github.voytech.tabulate.core.layout.AutonomousLayout
 import io.github.voytech.tabulate.core.layout.LayoutProperties
 import io.github.voytech.tabulate.core.layout.LayoutSpace
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.EPSILON
 
-class SimpleLayout(properties: LayoutProperties) : AbstractLayout(properties), IterableLayout {
+class SimpleLayout(properties: LayoutProperties) : AbstractLayout(properties), AutonomousLayout {
+    override fun LayoutSpace.reset() {
+
+    }
 
     override fun LayoutSpace.resolveNextPosition(): Position {
         return if (properties.orientation == Orientation.HORIZONTAL) {

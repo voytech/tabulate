@@ -110,7 +110,7 @@ class ModelContextLayouts(
     }
 
     private fun nextNodePosition(): Position? = currentOrNull()?.let {
-        (it.layout.delegate as? IterableLayout)?.run {
+        (it.layout.delegate as? AutonomousLayout)?.run {
             it.space.resolveNextPosition()
         }
     }

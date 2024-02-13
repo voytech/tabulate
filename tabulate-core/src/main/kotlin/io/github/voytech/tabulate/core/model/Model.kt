@@ -24,7 +24,7 @@ interface AttributedModelOrPart : AttributeAware, ModelPart
 fun <C : ExecutionContext, R : Any> ExportApi.value(supplier: ReifiedValueSupplier<C, R>): R? =
     with(getCustomAttributes()) { supplier.value() }
 
-interface LayoutProvider<LP : Layout> {
+interface LayoutStrategy<LP : Layout> {
     fun createLayout(properties: LayoutProperties): LP
 
     fun <R> ExportApi.withinCurrentLayout(block: (LP.(LayoutSpace) -> R)): R =
@@ -79,7 +79,7 @@ abstract class AbstractModel(
     protected open fun getLayoutConstraints(): SpaceConstraints? = null
 
     internal fun resolveLayout(properties: LayoutProperties): Layout =
-        if (this is LayoutProvider<*>) createLayout(properties) else SimpleLayout(properties)
+        if (this is LayoutStrategy<*>) createLayout(properties) else SimpleLayout(properties)
 
     companion object : KLogging()
 }

@@ -13,7 +13,7 @@ class Container(
     internal val orientation: Orientation = Orientation.HORIZONTAL,
     @get:JvmSynthetic
     internal val models: List<AbstractModel> = emptyList(),
-) : ModelWithAttributes(), LayoutProvider<FlowLayout> {
+) : ModelWithAttributes(), LayoutStrategy<FlowLayout> {
 
     override val needsMeasureBeforeExport = hasRenderableAttributes()
 
@@ -21,23 +21,16 @@ class Container(
         if (hasRenderableAttributes()) {
             render(ContainerRenderable(attributes?.forContext<ContainerRenderable>(), api.getCustomAttributes()))
         }
-        exportOrMeasure {
-            export()
+        withinCurrentLayout { space ->
+            space.reset()
+            exportWithPostponedContinuations<FlowLayout>(models)
         }
     }
 
     override fun takeMeasures(api: ExportApi) = api {
-        exportOrMeasure { measure() }
-    }
-
-    private fun <R> ExportApi.exportOrMeasure(op: AbstractModel.() -> R) {
         withinCurrentLayout { space ->
             space.reset()
-            models.forEach { nextModel ->
-                while (nextModel.isRunning() && space.hasSpaceLeft()) { //TODO add continuations
-                    nextModel.op()
-                }
-            }
+            measureWithPostponedContinuations<FlowLayout>(models)
         }
     }
 

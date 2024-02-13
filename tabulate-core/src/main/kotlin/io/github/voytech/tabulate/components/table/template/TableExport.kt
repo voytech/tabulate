@@ -38,10 +38,9 @@ import java.util.*
 internal class TableExport<T : Any>(
     private val table: Table<T>,
     private val api: ExportApi,
+    private val tableIterations: TableRenderIterations,
     data: Iterable<T>?
 ) {
-    private val tableIterations = TableRenderIterations(api.iterations())
-
     private val dataSource: List<T> =
         data?.toList() ?: api.getCustomAttributes()
             .get<DataSourceBinding<T>>("_dataSourceOverride")?.dataSource?.toList() ?: emptyList()
@@ -84,53 +83,51 @@ internal class TableExport<T : Any>(
     private fun Map<ColumnDef<T>, ColumnContextAttributes>.forEnd(def: ColumnDef<T>): Attributes =
         this[def]?.end ?: Attributes()
 
-    private fun renderColumns(
-        addContinuation: Boolean = false, resolveRenderable: (ColumnDef<T>) -> ColumnRenderable,
-    ): RenderingStatus? {
+
+    private fun renderColumnsStarts(): RenderingStatus? {
         var status: RenderingStatus? = Ok
         resolveActiveColumns().let { iterator ->
             while (iterator.hasNext()) {
                 val def = iterator.next()
-                status = api.renderOrMeasure(resolveRenderable(def)).status
+                val renderable = def.asColumnStart(table, columnAttributes.forStart(def), api.getCustomAttributes())
+                api.renderOrMeasure(renderable).status.also { if (it != Ok) status = it }
+            }
+        }
+        return status
+    }
+
+    private fun renderColumnEnds(): RenderingStatus? {
+        var status: RenderingStatus? = Ok
+        resolveActiveColumns().let { iterator ->
+            while (iterator.hasNext()) {
+                val def = iterator.next()
+                val renderable = def.asColumnStart(table, columnAttributes.forEnd(def), api.getCustomAttributes())
+                status = api.renderOrMeasure(renderable).status
                 when {
                     status.isSkipped(CrossedAxis.X) -> {
                         //tableIterations.pushNewIteration(def)
-                        //break
-                    }
-                    /*status.isClipped(CrossedAxis.X) -> {
-                        tableIterations.limitWithEndColumn(def)
-                        if (iterator.hasNext()) {
-                            tableIterations.insertAsNextIteration(iterator.next())
-                        }
+                        //tableIterations.pushNewIteration(def)
                         break
-                    }*/
+                    }
+                    status.isClipped(CrossedAxis.X) -> {
+                        //tableIterations.limitWithEndColumn(def)
+                        //if (iterator.hasNext()) {
+                        //    tableIterations.insertAsNextIteration(iterator.next())
+                        //}
+                        break
+                    }
                 }
             }
         }
         return status
     }
 
-    private fun renderColumnsStarts(): RenderingStatus? =
-        renderColumns(true) { it.asColumnStart(table, columnAttributes.forStart(it), api.getCustomAttributes()) }
-
-    private fun renderColumnEnds(): RenderingStatus? =
-        renderColumns { it.asColumnEnd(table, columnAttributes.forEnd(it), api.getCustomAttributes()) }
-
     private fun endTable() {
         renderColumnEnds()
         api.renderOrMeasure(table.asTableEnd(api.getCustomAttributes()))
     }
 
-    private fun adjustTableLayoutProgress() {
-        val startFromColumnIndex = tableIterations.getStartColumnIndexOrZero()
-        val startFromRowIndex = tableIterations.getStartRowIndexOrZero()
-        api.currentLayoutScope()
-            .layout<TableLayout>()
-            .setOffsets(startFromRowIndex, startFromColumnIndex)
-    }
-
     fun renderTable() {
-        adjustTableLayoutProgress()
         createRowRenderer().let {
             beginTable()
             it.renderRows()

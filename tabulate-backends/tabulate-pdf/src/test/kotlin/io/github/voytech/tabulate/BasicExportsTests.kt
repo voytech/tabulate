@@ -231,7 +231,7 @@ class BasicExportsTests {
     fun `should correctly export two on same sheet, first above second`() {
         document {
             page {
-                align { center; fullWidth } table (tableHeaderStyle + typedTable<SampleProduct> {
+                align { center; fullWidth; top; } table (tableHeaderStyle + typedTable<SampleProduct> {
                     attributes {
                         margins {
                             top { 10.pt() }
@@ -272,10 +272,9 @@ class BasicExportsTests {
                 })
             }
             page {
-                align { center; fullWidth; } table (tableHeaderStyle + typedTable<SampleCustomer> {
+                align { center; fullWidth; middle } table (tableHeaderStyle + typedTable<SampleCustomer> {
                     attributes {
                         margins {
-                            top { 10.pt() }
                             left { 10.pt() }
                         }
                         borders {

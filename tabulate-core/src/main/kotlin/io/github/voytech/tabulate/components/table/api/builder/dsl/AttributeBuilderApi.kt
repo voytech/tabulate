@@ -34,6 +34,12 @@ fun <T: Any> TableLevelAttributesBuilderApi<T>.columnWidth(block: WidthAttribute
 fun <T: Any> TableLevelAttributesBuilderApi<T>.rowHeight(block: HeightAttribute.Builder.() -> Unit) =
     attribute(HeightAttribute.builder(RowRenderable::class.java).apply(block))
 
+fun <T: Any> TableLevelAttributesBuilderApi<T>.width(block: WidthAttribute.Builder.() -> Unit) =
+    attribute(WidthAttribute.builder(Table::class.java).apply(block))
+
+fun <T: Any> TableLevelAttributesBuilderApi<T>.height(block: HeightAttribute.Builder.() -> Unit) =
+    attribute(HeightAttribute.builder(Table::class.java).apply(block))
+
 //Attributes available on column level
 fun <T: Any> ColumnLevelAttributesBuilderApi<T>.text(block: TextStylesAttribute.Builder.() -> Unit) =
     attribute(TextStylesAttribute.builder<CellRenderable>().apply(block))
