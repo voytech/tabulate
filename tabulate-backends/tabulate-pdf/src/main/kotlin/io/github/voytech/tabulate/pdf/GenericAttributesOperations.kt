@@ -71,7 +71,7 @@ class TextStylesAttributeRenderOperation<CTX : AttributedContext> :
             beginText() //TODO bullshit. cannot be like that.
             context.textMeasures().let { fontAndSize ->
                 setFont(fontAndSize.font(), fontAndSize.fontSize().toFloat())
-                content.setNonStrokingColor(attribute.fontColor.awtColor())
+                content.setNonStrokingColor(attribute.fontColor.awtColorOrDefault())
             }
         }
     }
@@ -84,8 +84,10 @@ class BackgroundAttributeRenderOperation<CTX : AttributedContext> :
         context: CTX,
         attribute: BackgroundAttribute,
     ): Unit = with(renderingContext) {
-        val bbox = boxLayout(context, context.getModelAttribute<BordersAttribute>())
-        bbox.outer.drawRect(attribute.color)
+        renderClipped(context) {
+            val bbox = boxLayout(context, context.getModelAttribute<BordersAttribute>())
+            bbox.outer.drawRect(attribute.color)
+        }
     }
 }
 
@@ -149,7 +151,7 @@ class BordersAttributeRenderOperation<CTX : AttributedContext> :
         context: CTX,
         attribute: BordersAttribute,
     ): Unit = with(renderingContext) {
-        drawBorders(context, attribute)
+        renderClipped(context) { drawBorders(context, attribute) }
     }
 }
 
@@ -192,7 +194,7 @@ private fun PdfBoxRenderingContext.drawLine(
 private fun PdfBoxRenderingContext.setBorderStyle(style: BorderStyle?, color: Color?, width: Measure<*>) {
     with(getCurrentContentStream()) {
         saveGraphicsState()
-        setStrokingColor(color.awtColor())
+        setStrokingColor(color.awtColorOrDefault())
         style?.applyOn(this)
         setLineWidth(width.switchUnitOfMeasure(UnitsOfMeasure.PT).value)
     }

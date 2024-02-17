@@ -5,10 +5,7 @@ import io.github.voytech.tabulate.components.table.model.SourceRow
 import io.github.voytech.tabulate.components.table.model.resolveCellValue
 import io.github.voytech.tabulate.components.table.template.SyntheticRow
 import io.github.voytech.tabulate.core.RenderingContext
-import io.github.voytech.tabulate.core.layout.ApplyLayoutElement
-import io.github.voytech.tabulate.core.layout.LayoutElement
-import io.github.voytech.tabulate.core.layout.LayoutSpace
-import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
+import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.layout.impl.SizingOptions
 import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.Attributes
@@ -35,6 +32,8 @@ class CellRenderable(
     override fun getRow(): Int = rowIndex
 
     override fun getColumn(): Int = columnIndex
+
+    override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
     override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         elementBoundingBox(

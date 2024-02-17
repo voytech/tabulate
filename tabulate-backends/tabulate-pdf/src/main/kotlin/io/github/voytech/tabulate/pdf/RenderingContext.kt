@@ -1,13 +1,12 @@
 package io.github.voytech.tabulate.pdf
 
 import io.github.voytech.tabulate.ImageIndex
-import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
-import io.github.voytech.tabulate.core.model.border.Borders
-import io.github.voytech.tabulate.core.model.color.Color
 import io.github.voytech.tabulate.core.HavingViewportSize
 import io.github.voytech.tabulate.core.RenderingContext
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.model.*
+import io.github.voytech.tabulate.core.model.border.Borders
+import io.github.voytech.tabulate.core.model.color.Color
 import io.github.voytech.tabulate.core.operation.AttributedContext
 import io.github.voytech.tabulate.core.operation.Renderable
 import io.github.voytech.tabulate.core.operation.boundingBox
@@ -124,19 +123,37 @@ class PdfBoxRenderingContext(
             getCurrentContentStream().drawImage(this, x, y)
     }
 
-    fun <R> Renderable<*>.withinRect(type: BoxLayoutBboxType, action: (RenderableBoundingBox) -> R): R {
-        val bbox = boxLayout(this, getModelAttribute<BordersAttribute>())
-        return (bbox.inner.takeIf { type == BoxLayoutBboxType.INNER } ?: bbox.outer).let { rect ->
-            with(getCurrentContentStream()) {
-                action(rect)
+    fun renderClipped(bbox: RenderableBoundingBox, render: () -> Unit) = with(getCurrentContentStream()) {
+        if (bbox.isDefined()) {
+            val height = requireNotNull(bbox.height)
+            val width = requireNotNull(bbox.width)
+            val bottomY = bbox.absoluteY + height
+            val rightX = bbox.absoluteX + width
+            val maxRightBottom = bbox.maxRightBottom
+            if (bottomY > maxRightBottom.y || rightX > maxRightBottom.x) {
+                val yLimit = bottomY.value.coerceAtMost(maxRightBottom.y.value).intoPdfBoxOrigin()
+                val xLimit = rightX.value.coerceAtMost(maxRightBottom.x.value)
+                val y = bbox.absoluteY.value.intoPdfBoxOrigin()
+                saveGraphicsState()
+                getCurrentContentStream().addRect(
+                    bbox.absoluteX.value, y, xLimit - bbox.absoluteX.value, yLimit - y
+                )
+                getCurrentContentStream().clip()
+                render()
+                restoreGraphicsState()
+            } else {
+                render()
             }
         }
     }
 
+    fun <CTX: AttributedContext> renderClipped(context: CTX, render: () -> Unit) =
+        renderClipped((context as Renderable<*>).boundingBox,render)
+
     fun RenderableBoundingBox.drawRect(color: Color? = null) {
         with(getCurrentContentStream()) {
             saveGraphicsState()
-            setNonStrokingColor(color.awtColor())
+            setNonStrokingColor(color.awtColorOrDefault())
             addRect(absoluteX.value, absoluteY.value, width?.value ?: 0f, height?.value ?: 0f)
             fill()
             restoreGraphicsState()
@@ -146,7 +163,7 @@ class PdfBoxRenderingContext(
     fun drawRect(x: Float, y: Float, width: Float, height: Float, color: Color? = null) {
         with(getCurrentContentStream()) {
             saveGraphicsState()
-            setNonStrokingColor(color.awtColor())
+            setNonStrokingColor(color.awtColorOrDefault())
             addRect(x, y, width, height)
             fill()
             restoreGraphicsState()
@@ -166,7 +183,7 @@ class PdfBoxRenderingContext(
     ) {
         with(getCurrentContentStream()) {
             saveGraphicsState()
-            setNonStrokingColor(color.awtColor())
+            setNonStrokingColor(color.awtColorOrDefault())
             moveTo(x, y)
             lineTo(x2, y2)
             lineTo(x3, y3)
@@ -265,5 +282,5 @@ data class BoxLayout(
 @JvmInline
 value class TextPosition(val xPositionedText: Pair<Float, String>)
 
-fun Color?.awtColor(): AwtColor =
+fun Color?.awtColorOrDefault(): AwtColor =
     this?.let { AwtColor(it.r, it.g, it.b) } ?: AwtColor.BLACK

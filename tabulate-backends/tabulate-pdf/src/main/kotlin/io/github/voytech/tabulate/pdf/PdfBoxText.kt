@@ -102,6 +102,7 @@ internal class PdfBoxText(
     private var currentLineBreakOffset = -1
     private var widthTillBreakLine = 0F
     private val spaceCharTextUnitsWidth = with(measures) { font().getWidth(" ".codePointAt(0)) }
+    private val fontColor = textStyles?.fontColor.awtColorOrDefault()
 
     private fun resolveTextWrap(): TextWrap =
         textStyles?.textWrap ?: DefaultTextWrap.NO_WRAP
@@ -204,9 +205,13 @@ internal class PdfBoxText(
         if (measuringResult == null) {
             measuringResult = measure(renderer)
         }
-        renderer.beginText()
-        lines.forEach { it.render(renderer) }
-        renderer.endText()
+        renderer.renderClipped(boundingBox) {
+            renderer.beginText()
+            renderer.setFont(measures.font(), measures.fontSize().toFloat())
+            renderer.getCurrentContentStream().setNonStrokingColor(fontColor)
+            lines.forEach { it.render(renderer) }
+            renderer.endText()
+        }
         return requireNotNull(measuringResult)
     }
 }

@@ -263,14 +263,14 @@ class LayoutSpace(
     @JvmSynthetic
     internal var leftTop: Position,
     @JvmSynthetic
-    internal var maxRightBottom: Position?,
+    internal var maxRightBottom: Position?, // TODO make this not nullable. Layout always has boundary enforced by parent.
     // Inner corners are padding offsets. An area to be allocated by children component's layouts
     // In between outer and inner bounding boxes, layout owning component can only draw component aggregated drawables e.g: borders
     // By default - so without any padding applied from attributes - inner corners are set to values of outer corners.
     @JvmSynthetic
     internal var innerLeftTop: Position = leftTop,
     @JvmSynthetic
-    internal var innerMaxRightBottom: Position? = maxRightBottom,
+    internal var innerMaxRightBottom: Position? = maxRightBottom, // TODO make this not nullable. Layout always has boundary enforced by parent.
     @JvmSynthetic
     internal var currentPosition: Position = innerLeftTop,
     val id: String = UUID.randomUUID().toString()
@@ -366,6 +366,9 @@ data class RenderableBoundingBox(
     var maxHeight: Height? = null
 ) {
 
+    val maxRightBottom: Position
+        get() = Position(layoutPosition.x + maxWidth!!, layoutPosition.y + maxHeight!!)
+
     fun unitsOfMeasure(): UnitsOfMeasure = layoutPosition.x.unit
 
     fun isDefined(): Boolean = width != null && height != null
@@ -385,7 +388,6 @@ data class RenderableBoundingBox(
                 height = height?.switchUnitOfMeasure(space.uom, bbox?.getHeight())
             )
         }
-
 
 }
 

@@ -502,13 +502,13 @@ class CommonTests {
             }
             page {
                 horizontal {
-                    attributes { borders { all { red; dotted; 1.pt() } } }
+                    attributes { borders { all { red; solid; 3.pt() } } }
                     align { fullSize; center; middle } table(typedTable<SampleProduct> {
                         attributes {
                             width { 70.percents() }
                             height { 50.percents() }
                             tableBorders { all { lightGray; solid; 5.pt() } }
-                            borders { all { 5.pt()} }
+                            borders { all { 3.pt()} }
                         }
                         columns {
                             column(SampleProduct::code) {
