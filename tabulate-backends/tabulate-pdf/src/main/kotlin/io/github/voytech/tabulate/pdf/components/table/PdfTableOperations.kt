@@ -21,9 +21,8 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
     override fun provideAttributeOperations(): BuildAttributeOperations<PdfBoxRenderingContext> = {
         operation(BackgroundAttributeRenderOperation<CellRenderable>(), -3)
         operation(BordersAttributeRenderOperation<CellRenderable>(), -2)
-        operation(BordersAttributeRenderOperation<RowEndRenderable<Table<*>>>(), -2)
-        //operation(TextStylesAttributeRenderOperation<CellRenderable>(), -1) //TODO drop this attribute, cannot be handled by separate render.
-        operation(BordersAttributeRenderOperation<TableStartRenderable>())
+        operation(BordersAttributeRenderOperation<RowEndRenderable<Table<*>>>(), -1)
+        operation(BordersAttributeRenderOperation<TableStartRenderable>(),1)
     }
 
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {

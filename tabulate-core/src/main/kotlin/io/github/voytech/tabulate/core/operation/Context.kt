@@ -82,8 +82,6 @@ abstract class AttributedContext(@JvmSynthetic override val attributes: Attribut
 abstract class Renderable<EL : Layout>(@JvmSynthetic override val attributes: Attributes? = null) :
     AttributedContext(), LayoutElement<EL> {
 
-    override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
-
     lateinit var boundingBox: RenderableBoundingBox
         internal set
 

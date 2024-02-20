@@ -89,18 +89,17 @@ interface Layout {
         y: Y,
         width: Width? = null,
         height: Height? = null,
-        type: LayoutBoundaryType? = LayoutBoundaryType.INNER
+        type: LayoutBoundaryType
     ): RenderableBoundingBox {
-        val boundingRectangle = getBoundingRectangle(type)
-        val uom = getActiveRectangle().leftTop.x.unit
+        val boundingRectangle = getBoundingRectangle(type)!!
         return RenderableBoundingBox(
-            layoutPosition = getActiveRectangle().leftTop,
+            layoutPosition = boundingRectangle.leftTop,
             absoluteX = x.switchUnitOfMeasure(uom),
             absoluteY = y.switchUnitOfMeasure(uom),
             width = width?.switchUnitOfMeasure(uom),
             height = height?.switchUnitOfMeasure(uom),
-            maxWidth = boundingRectangle?.getWidth(),
-            maxHeight = boundingRectangle?.getHeight()
+            maxWidth = boundingRectangle.getWidth(),
+            maxHeight = boundingRectangle.getHeight()
         )
     }
 
@@ -280,8 +279,6 @@ class LayoutSpace(
         maxRightBottom?.let { outer -> (outer - inner).asSize() } ?: Size.zero(uom)
     } ?: Size.zero(uom)
 
-    private val leftTopPadding: Size = (innerLeftTop - leftTop).asSize()
-
     val activeRectangle: BoundingRectangle
         get() = BoundingRectangle(innerLeftTop, currentPosition)
 
@@ -352,6 +349,7 @@ fun interface ApplyLayoutElement<L : Layout> {
     fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, layout: L)
 }
 
+// TODO layoutPosition -> minLeftTop ; maxWidth+maxHeight -> maxRightBottom  (absolute boundaries of this renderable bounding box enforced by a layout in which context a renderable is being rendered.)
 data class RenderableBoundingBox(
     val layoutPosition: Position,
     val absoluteX: X,
@@ -381,11 +379,11 @@ data class RenderableBoundingBox(
     fun normalize(space: LayoutSpace, type: LayoutBoundaryType): RenderableBoundingBox =
         (if (type == LayoutBoundaryType.OUTER) space.maxBoundingRectangle else space.innerBoundingRectangle).let { bbox ->
             copy(
-                layoutPosition = space.leftTop,
-                absoluteX = absoluteX.switchUnitOfMeasure(space.uom, bbox?.getWidth()),
-                absoluteY = absoluteY.switchUnitOfMeasure(space.uom, bbox?.getHeight()),
-                width = width?.switchUnitOfMeasure(space.uom, bbox?.getWidth()),
-                height = height?.switchUnitOfMeasure(space.uom, bbox?.getHeight())
+                layoutPosition = bbox!!.leftTop,
+                absoluteX = absoluteX.switchUnitOfMeasure(space.uom, bbox.getWidth()),
+                absoluteY = absoluteY.switchUnitOfMeasure(space.uom, bbox.getHeight()),
+                width = width?.switchUnitOfMeasure(space.uom, bbox.getWidth()),
+                height = height?.switchUnitOfMeasure(space.uom, bbox.getHeight())
             )
         }
 

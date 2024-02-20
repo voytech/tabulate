@@ -2,10 +2,7 @@ package io.github.voytech.tabulate.components.table.rendering
 
 import io.github.voytech.tabulate.components.table.template.SyntheticRow
 import io.github.voytech.tabulate.core.RenderingContext
-import io.github.voytech.tabulate.core.layout.ApplyLayoutElement
-import io.github.voytech.tabulate.core.layout.LayoutElement
-import io.github.voytech.tabulate.core.layout.LayoutSpace
-import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
+import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.layout.impl.SizingOptions
 import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.Attributes
@@ -20,7 +17,9 @@ interface RowLayoutElement : RowCoordinate, LayoutElement<TableLayout>, ApplyLay
         elementBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
-            width = getMeasuredContentSize()?.width
+            width = getMeasuredContentSize()?.width,
+            height = null,
+            boundaryToFit
         )
     }
 
@@ -46,12 +45,15 @@ class RowStartRenderable(
     val rowIndex: Int,
 ) : RowRenderable(attributes), RowLayoutElement {
     override fun getRow(): Int = rowIndex
+    override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
     override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         elementBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
             height = getModelAttribute<HeightAttribute>()?.value,
+            width = null,
+            type = boundaryToFit
         )
     }
 

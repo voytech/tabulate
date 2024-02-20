@@ -26,7 +26,8 @@ class ContainerRenderable internal constructor(
             x = leftTop.x,
             y = leftTop.y,
             width = getMeasuredSize()?.width,
-            height = getMeasuredSize()?.height
+            height = getMeasuredSize()?.height,
+            boundaryToFit
         )
     }
 

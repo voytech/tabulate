@@ -502,12 +502,12 @@ class CommonTests {
             }
             page {
                 horizontal {
-                    attributes { borders { all { red; solid; 3.pt() } } }
-                    align { fullSize; center; middle } table(typedTable<SampleProduct> {
+                    attributes { borders { all { green; solid; 3.pt() } } }
+                    /*align { fullSize; center; middle }*/ table(typedTable<SampleProduct> {
                         attributes {
                             width { 70.percents() }
-                            height { 50.percents() }
-                            tableBorders { all { lightGray; solid; 5.pt() } }
+                            height { 60.percents() }
+                            tableBorders { all { lightGray; solid; 3.pt() } }
                             borders { all { 3.pt()} }
                         }
                         columns {
@@ -519,11 +519,11 @@ class CommonTests {
                             }
                             column(SampleProduct::name) {
                                 attributes {
-                                    alignment { center }
+                                    alignment { center;middle }
                                 }
                             }
-                            column(SampleProduct::description)
-                            column(SampleProduct::price) {}
+                            column(SampleProduct::description) { attributes { alignment { middle } }}
+                            column(SampleProduct::price) { attributes { alignment { middle } }}
                         }
                         rows {
                             header("Id", "Name", "Description", "Price")

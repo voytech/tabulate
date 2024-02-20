@@ -5,14 +5,17 @@ import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
+import io.github.voytech.tabulate.core.model.attributes.color
 import io.github.voytech.tabulate.core.model.border.BorderStyle
 import io.github.voytech.tabulate.core.model.border.Borders
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.color.Color
+import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.color.darken
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.core.operation.AttributeOperation
 import io.github.voytech.tabulate.core.operation.AttributedContext
+import io.github.voytech.tabulate.core.operation.boundingBox
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType1Font
@@ -86,7 +89,7 @@ class BackgroundAttributeRenderOperation<CTX : AttributedContext> :
     ): Unit = with(renderingContext) {
         renderClipped(context) {
             val bbox = boxLayout(context, context.getModelAttribute<BordersAttribute>())
-            bbox.outer.drawRect(attribute.color)
+            bbox.outer.fillRect(attribute.color)
         }
     }
 }
@@ -151,7 +154,9 @@ class BordersAttributeRenderOperation<CTX : AttributedContext> :
         context: CTX,
         attribute: BordersAttribute,
     ): Unit = with(renderingContext) {
-        renderClipped(context) { drawBorders(context, attribute) }
+        renderClipped(context) {
+            drawBorders(context, attribute)
+        }
     }
 }
 

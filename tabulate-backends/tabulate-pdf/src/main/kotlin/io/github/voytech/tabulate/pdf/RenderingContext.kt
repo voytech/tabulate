@@ -131,12 +131,14 @@ class PdfBoxRenderingContext(
             val rightX = bbox.absoluteX + width
             val maxRightBottom = bbox.maxRightBottom
             if (bottomY > maxRightBottom.y || rightX > maxRightBottom.x) {
-                val yLimit = bottomY.value.coerceAtMost(maxRightBottom.y.value).intoPdfBoxOrigin()
+                val yLimit = bottomY.value.coerceAtMost(maxRightBottom.y.value)
+                val effectiveHeight = yLimit - bbox.absoluteY.value
                 val xLimit = rightX.value.coerceAtMost(maxRightBottom.x.value)
+                val effectiveWidth = xLimit - bbox.absoluteX.value
                 val y = bbox.absoluteY.value.intoPdfBoxOrigin()
                 saveGraphicsState()
                 getCurrentContentStream().addRect(
-                    bbox.absoluteX.value, y, xLimit - bbox.absoluteX.value, yLimit - y
+                    bbox.absoluteX.value, y-effectiveHeight, effectiveWidth, effectiveHeight
                 )
                 getCurrentContentStream().clip()
                 render()
@@ -150,7 +152,7 @@ class PdfBoxRenderingContext(
     fun <CTX: AttributedContext> renderClipped(context: CTX, render: () -> Unit) =
         renderClipped((context as Renderable<*>).boundingBox,render)
 
-    fun RenderableBoundingBox.drawRect(color: Color? = null) {
+    fun RenderableBoundingBox.fillRect(color: Color? = null) {
         with(getCurrentContentStream()) {
             saveGraphicsState()
             setNonStrokingColor(color.awtColorOrDefault())
@@ -160,7 +162,21 @@ class PdfBoxRenderingContext(
         }
     }
 
-    fun drawRect(x: Float, y: Float, width: Float, height: Float, color: Color? = null) {
+    fun RenderableBoundingBox.drawRect(color: Color? = null) {
+        drawRect(absoluteX.value, absoluteY.value, width?.value ?: 0f, height?.value ?: 0f,color)
+    }
+
+    fun drawRect(x: Float, y: Float, width: Float, height: Float,color: Color? = null) {
+        with(getCurrentContentStream()) {
+            saveGraphicsState()
+            setStrokingColor(color.awtColorOrDefault())
+            addRect(x, y, width, height)
+            stroke()
+            restoreGraphicsState()
+        }
+    }
+
+    fun fillRect(x: Float, y: Float, width: Float, height: Float, color: Color? = null) {
         with(getCurrentContentStream()) {
             saveGraphicsState()
             setNonStrokingColor(color.awtColorOrDefault())

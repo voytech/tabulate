@@ -3,10 +3,7 @@ package io.github.voytech.tabulate.components.table.rendering
 import io.github.voytech.tabulate.components.table.model.ColumnDef
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.core.RenderingContext
-import io.github.voytech.tabulate.core.layout.ApplyLayoutElement
-import io.github.voytech.tabulate.core.layout.LayoutElement
-import io.github.voytech.tabulate.core.layout.LayoutSpace
-import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
+import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.layout.impl.SizingOptions
 import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.Attributes
@@ -21,12 +18,16 @@ class ColumnEndRenderable(
     val columnIndex: Int,
 ) :  ColumnRenderable(attributes), LayoutElement<TableLayout>, ApplyLayoutElement<TableLayout>, ColumnCoordinate {
     override fun getColumn(): Int = columnIndex
+
+    override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
+
     override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         elementBoundingBox(
             x = getAbsoluteColumnPosition(getColumn()),
             y = getAbsoluteRowPosition(0),
             width = getMeasuredColumnWidth(getColumn(),1),
-            height = getCurrentContentSize().height
+            height = getCurrentContentSize().height,
+            boundaryToFit
         )
     }
 
