@@ -61,7 +61,7 @@ interface Layout {
      * Extend layout rendered space by specific [Width].
      */
 
-    fun LayoutSpace.reserveSpace(position: Position) = reserve(position)
+    fun LayoutSpace.reserveSpace(position: Position) = allocate(position)
 
     fun LayoutSpace.isCrossingBounds(
         bbox: RenderableBoundingBox, type: LayoutBoundaryType = LayoutBoundaryType.INNER
@@ -176,7 +176,7 @@ abstract class AbstractLayout(override val properties: LayoutProperties) : Layou
 
     final override fun LayoutSpace.setMeasured() {
         whileMeasuring {
-            getCurrentContentSize()?.let { reserveSpace(innerLeftTop + it) }
+            //getCurrentContentSize()?.let { reserveSpace(innerLeftTop + it) }
             isSpaceMeasured = true
             var widthAligned = false
             var heightAligned = false
@@ -289,7 +289,7 @@ class LayoutSpace(
         get() = innerMaxRightBottom?.let { BoundingRectangle(innerLeftTop, it) }
 
     @JvmSynthetic
-    internal fun reserve(position: Position) {
+    internal fun allocate(position: Position) {
         currentPosition = orMax(currentPosition, position).let { reservedRightBottom ->
             innerMaxRightBottom?.let { orMin(reservedRightBottom, it) } ?: reservedRightBottom
         }

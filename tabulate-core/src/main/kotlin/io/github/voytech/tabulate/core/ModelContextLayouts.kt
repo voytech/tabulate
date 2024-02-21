@@ -53,7 +53,7 @@ class NavigableLayout(
 
     override fun LayoutSpace.setMeasured() = with(delegate) {
         setMeasured()
-        reserveSpaceOnParent(currentPosition)
+        reserveSpaceOnParent(maxRightBottom!!)
     }
 
     internal fun LayoutSpace.finish() = onParentScope {

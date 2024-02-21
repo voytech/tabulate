@@ -502,8 +502,11 @@ class CommonTests {
             }
             page {
                 horizontal {
-                    attributes { borders { all { green; solid; 3.pt() } } }
-                    /*align { fullSize; center; middle }*/ table(typedTable<SampleProduct> {
+                    attributes {
+                        borders { all { green; solid; 3.pt() } }
+                        //width { 500.pt() }
+                    }
+                    align { fullSize; center; middle } table(typedTable<SampleProduct> {
                         attributes {
                             width { 70.percents() }
                             height { 60.percents() }
