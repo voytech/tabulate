@@ -5,10 +5,6 @@ import io.github.voytech.tabulate.core.model.*
 
 class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), AutonomousLayout {
 
-    private data class Slot(var position: Position, var width: Width? = null, var height: Height? = null)
-
-    private val slots: MutableList<Slot> = mutableListOf()
-
     private lateinit var localCursor: Position
 
     private lateinit var absoluteCursor: Position
@@ -18,7 +14,6 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
     private lateinit var uom: UnitsOfMeasure
 
     override var isSpaceMeasured: Boolean = false
-
 
     override fun LayoutSpace.reset() {
         whileMeasuring { this@FlowLayout.uom = this@reset.uom }.also {
@@ -30,11 +25,11 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
         }
     }
 
-    private fun LayoutSpace.currentPosition(): Position = (if (::absoluteCursor.isInitialized) absoluteCursor else currentPosition)
+    private fun LayoutSpace.currentPosition(): Position =
+        (if (::absoluteCursor.isInitialized) absoluteCursor else currentPosition)
 
     private fun LayoutSpace.moveLocalCursor(pos: Position): Position {
         localCursor = pos
-        slots += Slot(pos)
         currentIndex++
         return innerLeftTop + pos
     }
@@ -45,13 +40,13 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
             if (hasXSpaceLeft()) {
                 moveLocalCursor(Position(computedLocCursor.x + EPSILON, localCursor.y))
             } else if (hasYSpaceLeft()) {
-                moveLocalCursor(Position(X.zero(uom),computedLocCursor.y + EPSILON))
+                moveLocalCursor(Position(X.zero(uom), computedLocCursor.y + EPSILON))
             } else null
         } else {
             if (hasYSpaceLeft()) {
                 moveLocalCursor(Position(localCursor.x, computedLocCursor.y + EPSILON))
             } else if (hasXSpaceLeft()) {
-                moveLocalCursor(Position(computedLocCursor.x + EPSILON,Y.zero(uom)))
+                moveLocalCursor(Position(computedLocCursor.x + EPSILON, Y.zero(uom)))
             } else null
         }
     }
@@ -66,15 +61,9 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
         }
     }
 
-    private fun LayoutSpace.hasXSpaceLeft(): Boolean =
-        innerMaxRightBottom?.let { definedMaxRightBottom ->
-            currentPosition().x < definedMaxRightBottom.x
-        } ?: true
+    private fun LayoutSpace.hasXSpaceLeft(): Boolean = currentPosition().x < innerMaxRightBottom.x
 
-    private fun LayoutSpace.hasYSpaceLeft(): Boolean =
-        innerMaxRightBottom?.let { definedMaxRightBottom ->
-            currentPosition().y < definedMaxRightBottom.y
-        } ?: true
+    private fun LayoutSpace.hasYSpaceLeft(): Boolean = currentPosition().y < innerMaxRightBottom.y
 
     override fun LayoutSpace.hasSpaceLeft(): Boolean = hasXSpaceLeft() || hasYSpaceLeft()
 

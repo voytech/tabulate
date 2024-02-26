@@ -34,7 +34,7 @@ class Page internal constructor(
     private fun ExportApi.renderNewPage() =
         getCustomAttributes().run {
             val execution = ensureExecutionContext { PageExecutionContext() }
-            render(newPage(++execution.pageNumber, execution.currentPageTitleWithNumber(),this))
+            render(newPage(++execution.pageNumber, execution.currentPageTitleWithNumber(), this))
         }
 
     private fun ExportApi.stickyHeaderAndFooterWith(renderContents: (LayoutSpace, Position?) -> Unit) {
@@ -58,12 +58,11 @@ class Page internal constructor(
     private fun ExportApi.measureFooterSize() =
         footer?.measure(null, true)?.let { Size(it.width, it.height) }
 
-    private fun LayoutSpace.findFooterLeftTop(size: Size?): Position? = maxRightBottom?.let { maxRightBottom ->
+    private fun LayoutSpace.findFooterLeftTop(size: Size?): Position? =
         size?.let { Position(leftTop.x, maxRightBottom.y - it.height) }
-    }
 
     private fun Position?.asConstraints(layoutSpace: LayoutSpace): SpaceConstraints =
-        SpaceConstraints(maxRightBottom = this?.let { Position(layoutSpace.maxRightBottom!!.x, it.y) })
+        SpaceConstraints(maxRightBottom = this?.let { Position(layoutSpace.maxRightBottom.x, it.y) })
 
     private operator fun Position?.plus(size: Size?): SpaceConstraints =
         SpaceConstraints(leftTop = this, maxRightBottom = size?.let { this?.plus(size) })

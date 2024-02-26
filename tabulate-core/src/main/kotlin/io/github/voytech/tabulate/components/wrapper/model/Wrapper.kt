@@ -18,13 +18,13 @@ class Wrapper(
         attributes?.get<AlignmentAttribute>()
     }
     override val needsMeasureBeforeExport: Boolean
-        get() = false//alignments?.let { it.horizontal != null || it.vertical != null } ?: false
+        get() = alignments?.let { it.horizontal != null || it.vertical != null } ?: false
 
     override fun doExport(api: ExportApi) = api {
         withinCurrentLayout {
             alignments?.let { alignment ->
                 child.currentSizeOrMeasure()?.let { childSize ->
-                    it.maxBoundingRectangle?.size()?.let { size ->
+                    it.maxBoundingRectangle.size().let { size ->
                         val withMarginOrNot = getMarginSize(child)?.let { childSize + it } ?: childSize
                         child.export(SpaceConstraints(leftTop = it.leftTop.align(alignment, size, withMarginOrNot)))
                     }
@@ -40,7 +40,6 @@ class Wrapper(
     override fun takeMeasures(api: ExportApi) = api {
         withinCurrentLayout {
             child.measure() // pre-measure all children if this method was invoked eagerly before rendering.
-            it.maxRightBottom?.let { maxRightBottom -> it.reserveSpace(maxRightBottom) }
         }
     }
 

@@ -248,13 +248,6 @@ class ModelExportContext(
         phase = ExportPhase.MEASURING
     }
 
-    @JvmSynthetic
-    internal fun <R> whenMeasuring(block: (ModelExportContext) -> R) {
-        if (phase == ExportPhase.MEASURING) {
-            block(this)
-        }
-    }
-
 }
 
 class RenderIterationsApi internal constructor(private val context: ModelExportContext) {
@@ -357,9 +350,7 @@ class ExportApi private constructor(private val context: ModelExportContext) {
     }
 
     private fun getSizeIfMeasured(targetContext: ModelExportContext): Size? {
-        val phase = targetContext.phase
-        targetContext.phase = ExportPhase.MEASURING
-        return targetContext.layouts.getMaxSize().also { targetContext.phase = phase }
+        return targetContext.layouts.getMaxSize()
     }
 
     private fun ModelExportContext.isRunningOrRestarted(restart: Boolean = false): Boolean {

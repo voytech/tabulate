@@ -9,6 +9,7 @@ import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.text.api.builder.dsl.*
 import io.github.voytech.tabulate.components.wrapper.api.builder.dsl.align
+import io.github.voytech.tabulate.components.wrapper.api.builder.dsl.height
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.test.sampledata.SampleCustomer
@@ -91,16 +92,16 @@ class ContainerTests {
             page {
                 align { middle;center;fullSize } vertical {
                     attributes { borders { all { 1.pt(); dotted } } }
-                    align { left;fullWidth } text {
+                    align { left;top; fullWidth; } text {
                         value = "First table"
                         attributes {
                             alignment { center; top }
                             background { black }
                             text { white }
-                            borders { all { 1.pt(); solid } }
+                            borders { all { 3.pt(); solid } }
                         }
                     }
-                    align { left;fullWidth } table (defaultTable(SampleCustomer.create(5)) + {
+                    align { left; top;fullWidth } table (defaultTable(SampleCustomer.create(5)) + {
                         attributes {
                             margins { top { 5.pt() } }
                             tableBorders { all { 10.pt(); solid } }

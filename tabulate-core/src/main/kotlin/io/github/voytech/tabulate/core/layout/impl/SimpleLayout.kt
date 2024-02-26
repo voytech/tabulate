@@ -21,12 +21,10 @@ class SimpleLayout(properties: LayoutProperties) : AbstractLayout(properties), A
     }
 
     override fun LayoutSpace.hasSpaceLeft(): Boolean =
-        innerMaxRightBottom?.let { definedMaxRightBottom ->
-            if (properties.orientation == Orientation.HORIZONTAL) {
-                currentPosition.x < definedMaxRightBottom.x
-            } else {
-                currentPosition.y < definedMaxRightBottom.y
-            }
-        } ?: true
+        if (properties.orientation == Orientation.HORIZONTAL) {
+            currentPosition.x < innerMaxRightBottom.x
+        } else {
+            currentPosition.y < innerMaxRightBottom.y
+        }
 
 }

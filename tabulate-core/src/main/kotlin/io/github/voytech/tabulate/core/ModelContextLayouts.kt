@@ -37,23 +37,23 @@ class NavigableLayout(
     private fun reserveSpaceOnParent(position: Position) { // TODO think if we need to expand parent after each renderable ? for some cases like table layouts with column/row auto-sizing this does not allow to reliably compute size of render space (it must be recomputed after full measuring). For now eager layout expanding on each renderable seems to be redundant step.
         onParentScope { parent ->
             with(parent.layout) {
-                parent.space.reserveSpace(position)
+                parent.space.allocateSpace(position)
             }
         }
     }
 
-    override fun LayoutSpace.reserveSpace(position: Position) {
+    override fun LayoutSpace.allocateSpace(position: Position) {
         reserveSpaceOnParent(position)
-        with(delegate) { reserveSpace(position) }
+        with(delegate) { allocateSpace(position) }
     }
 
     override fun LayoutSpace.reserveByRectangle(bbox: RenderableBoundingBox) = with(bbox) {
-        reserveSpace(Position(absoluteX + width.orZero(), absoluteY + height.orZero()))
+        allocateSpace(Position(absoluteX + width.orZero(), absoluteY + height.orZero()))
     }
 
     override fun LayoutSpace.setMeasured() = with(delegate) {
         setMeasured()
-        reserveSpaceOnParent(maxRightBottom!!)
+        reserveSpaceOnParent(maxRightBottom)
     }
 
     internal fun LayoutSpace.finish() = onParentScope {
@@ -103,10 +103,8 @@ class ModelContextLayouts(
         lookupAncestors { it.layouts.last() != null }?.layouts
     }
 
-    fun getMaxSize(): Size? = currentOrNull()?.space?.let { space ->
-        space.maxRightBottom?.let { maxRightBottom ->
-            (maxRightBottom - space.leftTop).asSize()
-        }
+    fun getMaxSize(): Size? = currentOrNull()?.space?.let {
+        (it.maxRightBottom - it.leftTop).asSize()
     }
 
     private fun nextNodePosition(): Position? = currentOrNull()?.let {
