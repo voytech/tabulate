@@ -86,13 +86,13 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
     private fun Renderable<*>.getAbsoluteRightBottomColumn(): Int = boundingBox.let {
         it.absoluteX.let<X, Int> { x ->
             val end = x + (it.width?.value ?: 0F)
-            val maxEnd = it.maxWidth?.let { maxWidth -> x + maxWidth }
+            val maxEnd = x + it.maxWidth
             val mode = NonUniformCartesianGrid.IndexRoundMode.FLOOR.takeIf { wasWidthDeclared() }
                 ?: NonUniformCartesianGrid.IndexRoundMode.CEILING
             val index = grid.getColumnIndexAtPosition(end, mode)
             if (mode == NonUniformCartesianGrid.IndexRoundMode.CEILING) {
                 val pos = grid.getColumnPositionAtIndex(index)
-                if (maxEnd?.let { m -> pos > m } == true) {
+                if (pos > maxEnd) {
                     return index - 1
                 }
             }
@@ -103,13 +103,13 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
     private fun Renderable<*>.getAbsoluteRightBottomRow(): Int = boundingBox.let {
         it.absoluteY.let<Y, Int> { y ->
             val end = y + (it.height?.value ?: 0F)
-            val maxEnd = it.maxHeight?.let { maxHeight -> y + maxHeight }
+            val maxEnd = y + it.maxHeight
             val mode = NonUniformCartesianGrid.IndexRoundMode.FLOOR.takeIf { wasHeightDeclared() }
                 ?: NonUniformCartesianGrid.IndexRoundMode.CEILING
             val index = grid.getRowIndexAtPosition(end, mode)
             if (mode == NonUniformCartesianGrid.IndexRoundMode.CEILING) {
                 val pos = grid.getRowPositionAtIndex(index)
-                if (maxEnd?.let { m -> pos > m } == true) {
+                if (pos > maxEnd) {
                     return index - 1
                 }
             }

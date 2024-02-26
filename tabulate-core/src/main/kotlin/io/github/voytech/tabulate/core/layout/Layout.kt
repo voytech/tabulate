@@ -126,13 +126,12 @@ interface Layout {
     ): RenderableBoundingBox {
         val boundingRectangle = getBoundingRectangle(type)
         return RenderableBoundingBox(
-            layoutPosition = boundingRectangle.leftTop,
+            cropBoxLeftTop = boundingRectangle.leftTop,
+            cropBoxRightBottom = boundingRectangle.leftTop + boundingRectangle.size(),
             absoluteX = x.switchUnitOfMeasure(uom),
             absoluteY = y.switchUnitOfMeasure(uom),
             width = width?.switchUnitOfMeasure(uom),
-            height = height?.switchUnitOfMeasure(uom),
-            maxWidth = boundingRectangle.getWidth(),
-            maxHeight = boundingRectangle.getHeight()
+            height = height?.switchUnitOfMeasure(uom)
         )
     }
 
@@ -380,23 +379,25 @@ fun interface ApplyLayoutElement<L : Layout> {
 
 // TODO layoutPosition -> minLeftTop ; maxWidth+maxHeight -> maxRightBottom  (absolute boundaries of this renderable bounding box enforced by a layout in which context a renderable is being rendered.)
 data class RenderableBoundingBox(
-    val layoutPosition: Position,
+    val cropBoxLeftTop: Position,
+    val cropBoxRightBottom: Position,
     val absoluteX: X,
     val absoluteY: Y,
     // width - comes from model properties. (Set via model builder API)
     var width: Width? = null,
     // height - comes from model properties. (Set via model builder API)
-    var height: Height? = null,
-    // maxWidth - maximal allowed width, as constrained by enclosing model in model hierarchy
-    var maxWidth: Width? = null,
-    // maxHeight - maximal allowed height, as constrained by enclosing model in model hierarchy
-    var maxHeight: Height? = null
+    var height: Height? = null
 ) {
 
-    val maxRightBottom: Position
-        get() = Position(layoutPosition.x + maxWidth!!, layoutPosition.y + maxHeight!!)
+    val maxRightBottom: Position = cropBoxRightBottom
 
-    fun unitsOfMeasure(): UnitsOfMeasure = layoutPosition.x.unit
+    val maxWidth: Width
+        get() = (cropBoxRightBottom.x - cropBoxLeftTop.x).asWidth()
+
+    val maxHeight: Height
+        get() = (cropBoxRightBottom.y - cropBoxLeftTop.y).asHeight()
+
+    fun unitsOfMeasure(): UnitsOfMeasure = cropBoxLeftTop.x.unit
 
     fun isDefined(): Boolean = width != null && height != null
 
@@ -408,7 +409,7 @@ data class RenderableBoundingBox(
     fun normalize(space: LayoutSpace, type: LayoutBoundaryType): RenderableBoundingBox =
         (if (type == LayoutBoundaryType.OUTER) space.maxBoundingRectangle else space.innerBoundingRectangle).let { bbox ->
             copy(
-                layoutPosition = bbox!!.leftTop,
+                cropBoxLeftTop = bbox!!.leftTop,
                 absoluteX = absoluteX.switchUnitOfMeasure(space.uom, bbox.getWidth()),
                 absoluteY = absoluteY.switchUnitOfMeasure(space.uom, bbox.getHeight()),
                 width = width?.switchUnitOfMeasure(space.uom, bbox.getWidth()),
