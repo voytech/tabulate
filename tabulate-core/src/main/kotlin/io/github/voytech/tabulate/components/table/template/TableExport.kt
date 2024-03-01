@@ -101,7 +101,7 @@ internal class TableExport<T : Any>(
         resolveActiveColumns().let { iterator ->
             while (iterator.hasNext()) {
                 val def = iterator.next()
-                val renderable = def.asColumnStart(table, columnAttributes.forEnd(def), api.getCustomAttributes())
+                val renderable = def.asColumnEnd(table, columnAttributes.forEnd(def), api.getCustomAttributes())
                 status = api.renderOrMeasure(renderable).status
                 when {
                     status.isSkipped(CrossedAxis.X) -> {
