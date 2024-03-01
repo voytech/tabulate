@@ -14,7 +14,7 @@ fun interface StartRowOperation<CTX : RenderingContext> : VoidOperation<CTX, Row
 
 interface RowLayoutElement : RowCoordinate, LayoutElement<TableLayout>, ApplyLayoutElement<TableLayout> {
     override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
-        elementBoundingBox(
+        getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
             width = getMeasuredContentSize()?.width,
@@ -48,7 +48,7 @@ class RowStartRenderable(
     override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
     override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
-        elementBoundingBox(
+        getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
             height = getModelAttribute<HeightAttribute>()?.value,

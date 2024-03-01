@@ -36,7 +36,7 @@ class CellRenderable(
     override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
     override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
-        elementBoundingBox(
+        getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(getColumn()),
             y = getAbsoluteRowPosition(getRow()),
             width = getMeasuredColumnWidth(getColumn(), cellValue.colSpan, uom),

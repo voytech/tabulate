@@ -25,7 +25,7 @@ sealed class TableContext(
     override val boundaryToFit = LayoutBoundaryType.OUTER
 
     override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
-        elementBoundingBox(
+        getRenderableBoundingBox(
             x = leftTop.x,
             y = leftTop.y,
             width = getMeasuredSize()?.width,

@@ -47,7 +47,7 @@ class ExportInstance(
                 Y(renderingContext.getHeight().orMax(uom).value, uom)
             )
         } else {
-            Position(X.max(uom), Y.max(uom)) //TODO instead make it nullable - when null - renderer does not clip
+            Position(X.max(uom), Y.max(uom))
         }
 
     @JvmSynthetic
@@ -85,7 +85,7 @@ class StandaloneExportTemplate(private val format: DocumentFormat) {
     }
 
     fun <O : Any> export(model: AbstractModel, output: O,params: Map<String,Any> = emptyMap()) = with(ExportInstance(format)) {
-        model.createStandaloneExportContext(StateAttributes(params.toMutableMap())).scope {
+        model.createStandaloneExportContext(StateAttributes(params.toMutableMap())).api {
             resolveOutputBinding(output).run {
                 setOutput(renderingContext, output)
                 model.export()
@@ -96,7 +96,7 @@ class StandaloneExportTemplate(private val format: DocumentFormat) {
 
     fun <O : Any, T : Any> export(model: AbstractModel, output: O, dataSource: Iterable<T> = emptyList(), params: Map<String,Any> = emptyMap()) =
         with(ExportInstance(format)) {
-            model.createStandaloneExportContext(dataSource.asStateAttributes() + params).scope {
+            model.createStandaloneExportContext(dataSource.asStateAttributes() + params).api {
                 resolveOutputBinding(output).run {
                     setOutput(renderingContext, output)
                     model.export()

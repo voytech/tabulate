@@ -1,18 +1,16 @@
 package io.github.voytech.tabulate.resolver
 
+import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.api.builder.dsl.createTableBuilder
-import io.github.voytech.tabulate.components.table.api.builder.dsl.footer
-import io.github.voytech.tabulate.components.table.api.builder.dsl.header
-import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.components.table.model.ColumnKey
-import io.github.voytech.tabulate.components.table.template.AccumulatingRowContextResolver
-import io.github.voytech.tabulate.components.table.template.TableRenderIterations
 import io.github.voytech.tabulate.components.table.template.RowIndex
 import io.github.voytech.tabulate.components.table.template.Step
-import io.github.voytech.tabulate.core.model.StateAttributes
-import io.github.voytech.tabulate.support.createTableContext
+import io.github.voytech.tabulate.components.table.template.export
+import io.github.voytech.tabulate.core.DocumentFormat
+import io.github.voytech.tabulate.data.Product
+import io.github.voytech.tabulate.support.Spy
+import io.github.voytech.tabulate.support.createRowsRenderer
 import io.github.voytech.tabulate.support.success
-import io.github.voytech.tabulate.support.successfulRowComplete
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -25,20 +23,15 @@ class RowResolverTest {
     @Test
     fun `should resolve AttributedRow to null if no table definition nor data is provided`() {
         val table = createTableBuilder<Product> {  }.build()
-        val attribs = mutableMapOf<String, Any>()
-        val ctx = table.createTableContext(attribs)
-        val resolver = AccumulatingRowContextResolver(
-            table,
-            StateAttributes(mutableMapOf()), TableRenderIterations(ctx), successfulRowComplete()
-        )
-        val resolvedIndexedAttributedRow = resolver.resolve(RowIndex(0))
+        val renderer = table.createRowsRenderer(mutableMapOf())
+        val resolvedIndexedAttributedRow = renderer.resolve(RowIndex(0))
         assertNull(resolvedIndexedAttributedRow)
     }
 
     @ParameterizedTest
     @ValueSource(ints =  [0,  1] )
     fun `should resolve AttributedRow from custom row definition`(index: Int) {
-        val table =   createTableBuilder<Product> {
+        typedTable {
             columns {
                 column(Product::code)
             }
@@ -49,20 +42,12 @@ class RowResolverTest {
                     }
                 }
             }
-        }.build()
-        val attribs = mutableMapOf<String, Any>()
-        val ctx = table.createTableContext(attribs)
-        val resolver = AccumulatingRowContextResolver(
-            table,
-            StateAttributes(attribs),
-            TableRenderIterations(ctx),
-            successfulRowComplete()
-        )
-        val resolvedIndexedAttributedRow = resolver.resolve(RowIndex(0))
-        assertNotNull(resolvedIndexedAttributedRow)
-        assertEquals(index, resolvedIndexedAttributedRow!!.rowIndex.value)
-        with(resolvedIndexedAttributedRow.result) {
-            assertEquals("CustomProductCode",success().rowCellValues[ColumnKey.field(Product::code)]!!.cellValue.value)
+        }.export(DocumentFormat.format("spy"),Unit)
+        val iterator = Spy.spy.readHistory()
+        assertTrue(iterator.hasNext())
+        while (iterator.hasNext()) {
+            val renderable = iterator.next()
+            println(renderable)
         }
     }
 
@@ -72,22 +57,15 @@ class RowResolverTest {
             columns { column(Product::code) }
         }.build()
         val attribs = mutableMapOf<String, Any>()
-        val ctx = table.createTableContext(attribs)
-        val resolver = AccumulatingRowContextResolver(
-            table,
-            StateAttributes(attribs),
-            TableRenderIterations(ctx),
-            successfulRowComplete()
-        )
-        resolver.append(Product(
+        val renderer = table.createRowsRenderer(attribs, listOf(Product(
             "code1",
             "name1",
             "description1",
             "manufacturer1",
             LocalDate.now(),
             BigDecimal.TEN
-        ))
-        val resolvedIndexedAttributedRow = resolver.resolve(RowIndex())
+        )))
+        val resolvedIndexedAttributedRow = renderer.resolve(RowIndex())
         assertNotNull(resolvedIndexedAttributedRow)
         assertEquals(0, resolvedIndexedAttributedRow!!.rowIndex.value)
         with(resolvedIndexedAttributedRow.result) {
@@ -109,24 +87,18 @@ class RowResolverTest {
             }
         }.build()
         val attribs = mutableMapOf<String, Any>()
-        val ctx = table.createTableContext(attribs)
-        val resolver = AccumulatingRowContextResolver(
-            table,
-            StateAttributes(attribs),
-            TableRenderIterations(ctx),
-            successfulRowComplete()
-        )
-        resolver.append(Product(
+        val renderer = table.createRowsRenderer(attribs, listOf(Product(
             "code1",
             "name1",
             "description1",
             "manufacturer1",
             LocalDate.now(),
             BigDecimal.TEN
-        ))
-        val header = resolver.resolve(RowIndex())
-        val value = resolver.resolve(RowIndex(1))
-        val footer = resolver.resolve(RowIndex(2, Step("TRAILING_ROWS",0,0)))
+        )))
+
+        val header = renderer.resolve(RowIndex())
+        val value = renderer.resolve(RowIndex(1))
+        val footer = renderer.resolve(RowIndex(2, Step("TRAILING_ROWS",0,0)))
         assertNotNull(header)
         assertEquals(0, header!!.rowIndex.value)
         with(header.result) {

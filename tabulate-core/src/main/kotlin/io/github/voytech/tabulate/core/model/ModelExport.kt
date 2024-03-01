@@ -9,7 +9,6 @@ import io.github.voytech.tabulate.core.layout.LayoutSpace
 import io.github.voytech.tabulate.core.layout.SpaceConstraints
 import io.github.voytech.tabulate.core.operation.*
 import io.github.voytech.tabulate.plusAssign
-import java.util.logging.Logger
 
 
 @JvmInline
@@ -191,7 +190,7 @@ class ModelExportContext(
 
     internal var hasOverflows: Boolean = false
 
-    fun scope(block: ExportApi.(ModelExportContext) -> Unit) {
+    fun api(block: ExportApi.(ModelExportContext) -> Unit) {
         block(ExportApi(this), this)
     }
 

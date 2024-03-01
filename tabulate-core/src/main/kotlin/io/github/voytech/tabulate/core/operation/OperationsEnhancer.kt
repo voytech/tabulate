@@ -102,7 +102,7 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
     protected fun LayoutApi.tryApplyResults(context: E) = with(layout) {
         val boundaries = context.boundingBox()
         if (boundaries != null) {
-            space.reserveByRectangle(boundaries)
+            space.allocateRectangle(boundaries)
             @Suppress("UNCHECKED_CAST")
             if (context is ApplyLayoutElement<*>) {
                 with(context as ApplyLayoutElement<Layout>) {

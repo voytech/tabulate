@@ -38,7 +38,7 @@ class ColumnStartRenderable(
     override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
     override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
-        elementBoundingBox(
+        getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(getColumn()),
             y = getAbsoluteRowPosition(0),
             width = getModelAttribute<WidthAttribute>()?.value,

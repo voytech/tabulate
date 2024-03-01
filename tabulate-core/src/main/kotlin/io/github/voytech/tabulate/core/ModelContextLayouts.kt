@@ -47,7 +47,7 @@ class NavigableLayout(
         with(delegate) { allocateSpace(position) }
     }
 
-    override fun LayoutSpace.reserveByRectangle(bbox: RenderableBoundingBox) = with(bbox) {
+    override fun LayoutSpace.allocateRectangle(bbox: RenderableBoundingBox) = with(bbox) {
         allocateSpace(Position(absoluteX + width.orZero(), absoluteY + height.orZero()))
     }
 

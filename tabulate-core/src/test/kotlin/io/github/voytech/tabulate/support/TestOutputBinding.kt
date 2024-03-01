@@ -21,19 +21,3 @@ class TestOutputBinding: OutputBinding<TestRenderingContext, Unit> {
     }
 }
 
-class AlternativeTestOutputBinding: OutputBinding<AlternativeTestRenderingContext, Unit> {
-
-    override fun outputClass(): Class<Unit> = reify()
-
-    override fun flush() {
-        logger.info("This is fake implementation of ResultProvider flushing results into ether")
-    }
-
-    override fun setOutput(renderingContext: AlternativeTestRenderingContext, output: Unit) {
-        logger.info("This is fake implementation of ResultProvider flushing results into ether")
-    }
-
-    companion object {
-        val logger: Logger = Logger.getLogger(TestOutputBinding::class.java.name)
-    }
-}

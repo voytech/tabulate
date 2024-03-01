@@ -24,7 +24,7 @@ class TextRenderable internal constructor(
     override val boundaryToFit = LayoutBoundaryType.OUTER
 
     override fun LayoutSpace.defineBoundingBox(layout: SimpleLayout): RenderableBoundingBox = with(layout) {
-        elementBoundingBox(
+        getRenderableBoundingBox(
             x = leftTop.x,
             y = leftTop.y,
             width = getExplicitWidth(),

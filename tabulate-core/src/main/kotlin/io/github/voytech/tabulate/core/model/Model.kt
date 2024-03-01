@@ -47,7 +47,7 @@ abstract class AbstractModel(
     open val needsMeasureBeforeExport: Boolean = false
 
     @JvmSynthetic
-    internal operator fun invoke(method: Method, exportContext: ModelExportContext) = exportContext.scope {
+    internal operator fun invoke(method: Method, exportContext: ModelExportContext) = exportContext.api {
         when (method) {
             Method.INITIALIZE -> exportContextCreated(this)
             Method.MEASURE -> takeMeasures(this)

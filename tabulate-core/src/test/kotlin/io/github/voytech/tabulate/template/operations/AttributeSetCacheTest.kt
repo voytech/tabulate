@@ -2,16 +2,17 @@ package io.github.voytech.tabulate.template.operations
 
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.core.model.color.Colors
-import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.components.table.model.attributes.table.template
+import io.github.voytech.tabulate.components.table.rendering.RowEndRenderable
 import io.github.voytech.tabulate.components.table.rendering.TableStartRenderable
 import io.github.voytech.tabulate.components.table.rendering.asTableStart
-import io.github.voytech.tabulate.components.table.template.*
+import io.github.voytech.tabulate.components.table.template.RowIndex
+import io.github.voytech.tabulate.components.table.template.TableRowsRenderer
 import io.github.voytech.tabulate.core.model.StateAttributes
+import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
+import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.operation.*
-import io.github.voytech.tabulate.core.operation.withAttributeSetBasedCache
-import io.github.voytech.tabulate.support.createTableContext
+import io.github.voytech.tabulate.support.createRowsRenderer
 import io.github.voytech.tabulate.support.success
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -81,26 +82,18 @@ class AttributeSetCacheTest {
             background { color = Colors.WHITE }
             borders { leftBorderStyle = DefaultBorderStyle.SOLID }
         }
-        val firstTableContext = firstTable.createTableContext(customAttributes)
-        val iterator = RowContextIterator(
-            AccumulatingRowContextResolver(
-                firstTable, StateAttributes(customAttributes), TableRenderIterations(firstTableContext), successfulRowComplete()
-            ), TableRenderIterations(firstTableContext)
-        )
-        val attributedCell = iterator.next().success().rowCellValues.firstNotNullOf { it.value }
+        val firstTableRenderer = firstTable.createRowsRenderer(customAttributes)
+        val attributedCell =
+            firstTableRenderer.successfullFirstRow().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
             attributedCell.cacheOnAttributeSet("key") { "value" }
         }
         attributedCell.withAttributeSetBasedCache {
             assertEquals("value", attributedCell.getCachedOnAttributeSet("key"))
         }
-        val secondTableContext = secondTable.createTableContext(customAttributes)
-        val secondIterator = RowContextIterator(
-            AccumulatingRowContextResolver(
-                secondTable, StateAttributes(customAttributes), TableRenderIterations(secondTableContext), successfulRowComplete()
-            ), TableRenderIterations(secondTableContext)
-        )
-        val secondAttributedCell = secondIterator.next().success().rowCellValues.firstNotNullOf { it.value }
+        val secondTableRenderer = secondTable.createRowsRenderer(customAttributes)
+        val secondAttributedCell =
+            secondTableRenderer.successfullFirstRow().rowCellValues.firstNotNullOf { it.value }
         secondAttributedCell.withAttributeSetBasedCache {
             assertEquals("value", secondAttributedCell.getCachedOnAttributeSet("key"))
         }
@@ -111,10 +104,10 @@ class AttributeSetCacheTest {
         val customAttributes = mutableMapOf<String, Any>()
 
         val firstTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val firstTableContext: TableStartRenderable = firstTable.asTableStart(customAttributes)
+        val firstTableContext: TableStartRenderable = firstTable.asTableStart(StateAttributes(customAttributes))
 
         val secondTable = createTableModel { attributes { template { fileName = "second_filename" } } }
-        val secondTableContext: TableStartRenderable = secondTable.asTableStart(customAttributes)
+        val secondTableContext: TableStartRenderable = secondTable.asTableStart(StateAttributes(customAttributes))
 
         val cache = firstTableContext.setupCacheAndGet().also { it!!["someKey"] = "someValue" }
         val secondCache = secondTableContext.setupCacheAndGet()
@@ -132,14 +125,9 @@ class AttributeSetCacheTest {
             background { color = Colors.WHITE }
             borders { leftBorderStyle = DefaultBorderStyle.SOLID }
         }
-        val firstTableContext = firstTable.createTableContext(customAttributes)
-        val iterator = RowContextIterator(
-            AccumulatingRowContextResolver(
-                firstTable, StateAttributes(customAttributes),TableRenderIterations(firstTableContext),
-                successfulRowComplete()
-            ), TableRenderIterations(firstTableContext)
-        )
-        val attributedCell = iterator.next().success().rowCellValues.firstNotNullOf { it.value }
+        val firstTableRenderer = firstTable.createRowsRenderer(customAttributes)
+        val attributedCell =
+            firstTableRenderer.successfullFirstRow().rowCellValues.firstNotNullOf { it.value }
         attributedCell.withAttributeSetBasedCache {
             attributedCell.cacheOnAttributeSet("key") { "value" }
         }
@@ -152,17 +140,17 @@ class AttributeSetCacheTest {
             background { color = Colors.WHITE }
             borders { leftBorderStyle = DefaultBorderStyle.DOTTED }
         }
-        val secondTableContext = secondTable.createTableContext(customAttributes)
-        val secondIterator = RowContextIterator(
-            AccumulatingRowContextResolver(
-                secondTable, StateAttributes(customAttributes), TableRenderIterations(secondTableContext), successfulRowComplete()
-            ), TableRenderIterations(secondTableContext)
-        )
-        val secondAttributedCell = secondIterator.next().success().rowCellValues.firstNotNullOf { it.value }
+        val secondTableRenderer = secondTable.createRowsRenderer(customAttributes)
+
+        val secondAttributedCell =
+            secondTableRenderer.successfullFirstRow().rowCellValues.firstNotNullOf { it.value }
         secondAttributedCell.withAttributeSetBasedCache {
             assertThrows<IllegalStateException> { secondAttributedCell.getCachedOnAttributeSet("key") }
         }
     }
+
+    private fun <T : Any> TableRowsRenderer<T>.successfullFirstRow(): RowEndRenderable<T> =
+        resolve(RowIndex(0))!!.result.success()
 
 
 }

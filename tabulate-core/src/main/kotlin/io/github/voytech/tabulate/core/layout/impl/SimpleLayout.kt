@@ -1,9 +1,6 @@
 package io.github.voytech.tabulate.core.layout.impl
 
-import io.github.voytech.tabulate.core.layout.AbstractLayout
-import io.github.voytech.tabulate.core.layout.AutonomousLayout
-import io.github.voytech.tabulate.core.layout.LayoutProperties
-import io.github.voytech.tabulate.core.layout.LayoutSpace
+import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.EPSILON
 

@@ -511,7 +511,7 @@ class CommonTests {
                             width { 70.percents() }
                             height { 60.percents() }
                             tableBorders { all { lightGray; solid; 3.pt() } }
-                            borders { all { 3.pt()} }
+                            borders { all { 10.pt()} }
                         }
                         columns {
                             column(SampleProduct::code) {

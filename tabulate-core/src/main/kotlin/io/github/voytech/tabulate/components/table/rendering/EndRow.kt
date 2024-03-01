@@ -33,7 +33,7 @@ class RowEndRenderable<T>(
     fun getCells(): Map<ColumnKey<T>, CellRenderable> = rowCellValues
 
     override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
-        elementBoundingBox(
+        getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
             width = getMeasuredContentSize()?.width,
