@@ -33,7 +33,7 @@ data class TextStylesAttribute(
         var italic: Boolean? by observable(false)
         var strikeout: Boolean? by observable(false)
         var underline: Boolean? by observable(false)
-        override var color: Color? by observable(null)
+        override var color: Color? by observable(null, "color" to "fontColor")
         var ident: Short by observable(0)
 
         @Deprecated("Currently for backward compatibility", replaceWith = ReplaceWith("textWrap"))
@@ -57,8 +57,6 @@ data class TextStylesAttribute(
                 lineSpacing,
                 rotation
             )
-
-
     }
 
     override fun overrideWith(other: TextStylesAttribute): TextStylesAttribute = TextStylesAttribute(

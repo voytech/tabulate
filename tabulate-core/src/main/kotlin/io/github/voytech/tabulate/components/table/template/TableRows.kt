@@ -84,17 +84,17 @@ internal class SyntheticRow<T : Any>(
     internal val cellContextAttributes: MutableMap<ColumnDef<T>, Attributes> = mutableMapOf(),
 ) {
 
-    @Suppress("NOTHING_TO_INLINE")
-    internal inline fun mergeCellAttributes(column: ColumnDef<T>): Attributes =
-        tableAttributesForContext.get<CellRenderable>().orEmpty() +
+    internal fun mergeCellAttributes(column: ColumnDef<T>): Attributes {
+        return tableAttributesForContext.get<CellRenderable>().orEmpty() +
                 column.attributes.orEmpty().forContext<CellRenderable>() +
                 rowCellAttributes +
                 cellDefinitions[column.id]?.attributes.orEmpty().forContext<CellRenderable>()
+    }
 
 }
 
 internal class QualifiedRows<T : Any>(private val indexedTableRows: IndexedTableRows<T>) {
-    private var qualifiedRowsIndex: MutableMap<Set<RowDef<T>>, SyntheticRow<T>> = mutableMapOf()
+    private val qualifiedRowsIndex: MutableMap<Set<RowDef<T>>, SyntheticRow<T>> = mutableMapOf()
 
     internal fun findQualifying(sourceRow: SourceRow<T>): SyntheticRow<T> =
         indexedTableRows.getRows(sourceRow).let { matchedRowDefs ->

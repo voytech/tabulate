@@ -211,28 +211,28 @@ class TableExportTest {
         table {
             name = "Products table"
             attributes {
-                text { color = Colors.BLACK }
-                background { color = Colors.WHITE }
+                text { black }
+                background { white }
             }
             columns {
                 column(0) {
                     attributes {
-                        text { color = Colors.RED }
+                        text { red }
                     }
                 }
                 column(1) {}
             }
             rows {
                 newRow {
-                    attributes { text { color = Colors.WHITE } }
+                    attributes { text { white } }
                     cell {
-                        attributes { text { color = Colors.GREEN } }
+                        attributes { text { green } }
                         value = "Green cell"
                     }
                     cell { value = "White cell" }
                 }
                 newRow {
-                    attributes { text { color = Colors.WHITE } }
+                    attributes { text { white } }
                     cell {
                         value = "White cell"
                     }

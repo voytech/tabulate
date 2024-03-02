@@ -3,15 +3,19 @@ package io.github.voytech.tabulate.template.operations
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.model.attributes.table.template
+import io.github.voytech.tabulate.components.table.rendering.CellRenderable
 import io.github.voytech.tabulate.components.table.rendering.RowEndRenderable
 import io.github.voytech.tabulate.components.table.rendering.TableStartRenderable
 import io.github.voytech.tabulate.components.table.rendering.asTableStart
 import io.github.voytech.tabulate.components.table.template.RowIndex
 import io.github.voytech.tabulate.components.table.template.TableRowsRenderer
+import io.github.voytech.tabulate.core.DocumentFormat
+import io.github.voytech.tabulate.core.StandaloneExportTemplate
 import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.operation.*
+import io.github.voytech.tabulate.support.Spy
 import io.github.voytech.tabulate.support.createRowsRenderer
 import io.github.voytech.tabulate.support.success
 import org.junit.jupiter.api.Test
@@ -69,8 +73,6 @@ class AttributeSetCacheTest {
 
     @Test
     fun `should setup and lookup internal caches when cell attribute sets are equal`() {
-        val customAttributes = mutableMapOf<String, Any>()
-
         val firstTable = createTableModelWithCellAttributes {
             text { color = Colors.BLACK }
             background { color = Colors.WHITE }
@@ -82,20 +84,18 @@ class AttributeSetCacheTest {
             background { color = Colors.WHITE }
             borders { leftBorderStyle = DefaultBorderStyle.SOLID }
         }
-        val firstTableRenderer = firstTable.createRowsRenderer(customAttributes)
-        val attributedCell =
-            firstTableRenderer.successfullFirstRow().rowCellValues.firstNotNullOf { it.value }
-        attributedCell.withAttributeSetBasedCache {
-            attributedCell.cacheOnAttributeSet("key") { "value" }
+        val cellRenderable = firstTable.getFirstRenderableCellInExport(mutableMapOf())
+        val customAttributesWithCache = cellRenderable.additionalAttributes
+        cellRenderable.withAttributeSetBasedCache {
+            cellRenderable.cacheOnAttributeSet("key") { "value" }
         }
-        attributedCell.withAttributeSetBasedCache {
-            assertEquals("value", attributedCell.getCachedOnAttributeSet("key"))
+        cellRenderable.withAttributeSetBasedCache {
+            assertEquals("value", cellRenderable.getCachedOnAttributeSet("key"))
         }
-        val secondTableRenderer = secondTable.createRowsRenderer(customAttributes)
-        val secondAttributedCell =
-            secondTableRenderer.successfullFirstRow().rowCellValues.firstNotNullOf { it.value }
-        secondAttributedCell.withAttributeSetBasedCache {
-            assertEquals("value", secondAttributedCell.getCachedOnAttributeSet("key"))
+        
+        val secondExportCellRenderable = secondTable.getFirstRenderableCellInExport(customAttributesWithCache)
+        secondExportCellRenderable.withAttributeSetBasedCache {
+            assertEquals("value", secondExportCellRenderable.getCachedOnAttributeSet("key"))
         }
     }
 
@@ -119,20 +119,19 @@ class AttributeSetCacheTest {
 
     @Test
     fun `should setup internal caches and fail to lookup value in second cache for different cell attribute sets`() {
-        val customAttributes = mutableMapOf<String, Any>()
         val firstTable = createTableModelWithCellAttributes {
             text { color = Colors.BLACK }
             background { color = Colors.WHITE }
             borders { leftBorderStyle = DefaultBorderStyle.SOLID }
         }
-        val firstTableRenderer = firstTable.createRowsRenderer(customAttributes)
-        val attributedCell =
-            firstTableRenderer.successfullFirstRow().rowCellValues.firstNotNullOf { it.value }
-        attributedCell.withAttributeSetBasedCache {
-            attributedCell.cacheOnAttributeSet("key") { "value" }
+
+        val cellRenderable = firstTable.getFirstRenderableCellInExport(mutableMapOf())
+        val customAttributesWithCache = cellRenderable.additionalAttributes
+        cellRenderable.withAttributeSetBasedCache {
+            cellRenderable.cacheOnAttributeSet("key") { "value" }
         }
-        attributedCell.withAttributeSetBasedCache {
-            assertEquals("value", attributedCell.getCachedOnAttributeSet("key"))
+        cellRenderable.withAttributeSetBasedCache {
+            assertEquals("value", cellRenderable.getCachedOnAttributeSet("key"))
         }
 
         val secondTable = createTableModelWithCellAttributes {
@@ -140,17 +139,19 @@ class AttributeSetCacheTest {
             background { color = Colors.WHITE }
             borders { leftBorderStyle = DefaultBorderStyle.DOTTED }
         }
-        val secondTableRenderer = secondTable.createRowsRenderer(customAttributes)
-
-        val secondAttributedCell =
-            secondTableRenderer.successfullFirstRow().rowCellValues.firstNotNullOf { it.value }
-        secondAttributedCell.withAttributeSetBasedCache {
-            assertThrows<IllegalStateException> { secondAttributedCell.getCachedOnAttributeSet("key") }
+        val secondExportCellRenderable = secondTable.getFirstRenderableCellInExport(customAttributesWithCache)
+        secondExportCellRenderable.withAttributeSetBasedCache {
+            assertThrows<IllegalStateException> { secondExportCellRenderable.getCachedOnAttributeSet("key") }
         }
     }
 
-    private fun <T : Any> TableRowsRenderer<T>.successfullFirstRow(): RowEndRenderable<T> =
-        resolve(RowIndex(0))!!.result.success()
+    private fun Table<*>.getFirstRenderableCellInExport(attributes: MutableMap<String,Any>): CellRenderable {
+        val spyFormat = DocumentFormat.format("spy")
+        StandaloneExportTemplate(spyFormat).export(this, Unit, attributes)
+        val secondExportRowRenderable = Spy.spy.readHistory().asSequence()
+            .first { it.context is RowEndRenderable<*> }.context as RowEndRenderable<*>
+        return secondExportRowRenderable.rowCellValues.firstNotNullOf { it.value }
+    }
 
 
 }
