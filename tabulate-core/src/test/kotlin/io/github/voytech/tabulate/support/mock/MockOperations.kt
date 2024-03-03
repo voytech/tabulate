@@ -2,7 +2,9 @@ package io.github.voytech.tabulate.support.mock
 
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.model.Attribute
+import io.github.voytech.tabulate.core.model.Height
 import io.github.voytech.tabulate.core.model.Size
+import io.github.voytech.tabulate.core.model.Width
 import io.github.voytech.tabulate.core.operation.*
 import io.github.voytech.tabulate.support.TestRenderingContext
 import java.util.*
@@ -48,6 +50,8 @@ class MockMeasures {
 class Spy private constructor() {
     private val visitedOperations: LinkedList<InterceptedContext> = LinkedList()
     internal val measures = MockMeasures()
+    var documentWidth: Width? = null
+    var documentHeight: Height? = null
 
     internal fun track(
         interceptedOperation: MockOperation,
@@ -60,6 +64,8 @@ class Spy private constructor() {
             visitedOperations.clear()
             operationPriorities.clear()
             measures.clear()
+            documentHeight = null
+            documentWidth = null
         }
 
     companion object {
