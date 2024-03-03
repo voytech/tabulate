@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.template.layouts
+package io.github.voytech.tabulate.exports.layouts
 
 import org.junit.jupiter.api.Test
 

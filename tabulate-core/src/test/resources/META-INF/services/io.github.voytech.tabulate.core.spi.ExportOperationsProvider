@@ -1,2 +1,6 @@
 io.github.voytech.tabulate.support.AnotherTestExportOperationsFactory
-io.github.voytech.tabulate.support.TestExportOperationsFactory
+io.github.voytech.tabulate.support.mock.components.TestTableExportOperationsFactory
+io.github.voytech.tabulate.support.mock.components.TestContainerExportOperationsFactory
+io.github.voytech.tabulate.support.mock.components.TestPageExportOperationsFactory
+io.github.voytech.tabulate.support.mock.components.TestTextExportOperationsFactory
+io.github.voytech.tabulate.support.mock.components.TestImageExportOperationsFactory

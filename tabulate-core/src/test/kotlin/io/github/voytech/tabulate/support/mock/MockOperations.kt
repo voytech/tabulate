@@ -39,6 +39,10 @@ class MockMeasures {
             }?.measure?.let { it(renderable.boundingBox) }
         }
     }
+
+    fun clear() {
+        measures.clear()
+    }
 }
 
 class Spy private constructor() {
@@ -55,6 +59,7 @@ class Spy private constructor() {
         LinkedList(visitedOperations).iterator().also {
             visitedOperations.clear()
             operationPriorities.clear()
+            measures.clear()
         }
 
     companion object {
@@ -68,6 +73,7 @@ interface MockOperation
 abstract class MockMeasureProvider<E : AttributedContext>(private val spy: Spy = Spy.spy): MockOperation {
     fun tryProvideMeasures(context: E) {
         if (context is Renderable<*>) {
+            if (context.boundingBox.isDefined()) return
             val maybeSize = spy.measures.run { provideMeasures(context) }
             maybeSize?.let {
                 context.boundingBox.width = it.width
@@ -78,32 +84,37 @@ abstract class MockMeasureProvider<E : AttributedContext>(private val spy: Spy =
 }
 
 abstract class MockRenderResultOperation<E : AttributedContext>(
-    private val contextClass: Class<E>, private val spy: Spy = Spy.spy
+    private val contextClass: Class<E>, private val measure: Boolean = true, private val spy: Spy = Spy.spy
 ) : MockMeasureProvider<E>(), Operation<TestRenderingContext, E> {
 
     override operator fun invoke(renderingContext: TestRenderingContext, context: E): RenderingResult {
-        tryProvideMeasures(context)
+        if (measure) tryProvideMeasures(context)
         spy.track(this, context)
         return Ok.asResult()
     }
 }
 
 abstract class MockRenderOperation<E : AttributedContext>(
-    private val contextClass: Class<E>, private var spy: Spy = Spy.spy
+    private val contextClass: Class<E>, private val measure: Boolean = true,private val spy: Spy = Spy.spy
 ) : MockMeasureProvider<E>(), VoidOperation<TestRenderingContext, E> {
 
     override operator fun invoke(renderingContext: TestRenderingContext, context: E) {
-        tryProvideMeasures(context)
+        if (measure) tryProvideMeasures(context)
         spy.track(this, context)
     }
 }
 
-abstract class MockAttributeRenderOperation<T : Attribute<T>, E : AttributedContext>(
+open class MockAttributeRenderOperation<T : Attribute<T>, E : AttributedContext>(
     private val clazz: Class<T>, private val contextClass: Class<E>, private var spy: Spy = Spy.spy
 ) : AttributeOperation<TestRenderingContext, T, E>, MockOperation {
 
     override operator fun invoke(renderingContext: TestRenderingContext, context: E, attribute: T) {
         spy.track(this, context, attribute)
+    }
+
+    companion object {
+        inline operator fun <reified E: AttributedContext,reified T: Attribute<T>> invoke() =
+            MockAttributeRenderOperation(T::class.java,E::class.java)
     }
 }
 

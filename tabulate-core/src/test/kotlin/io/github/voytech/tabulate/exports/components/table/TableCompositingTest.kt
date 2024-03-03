@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.template
+package io.github.voytech.tabulate.exports.components.table
 
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.core.DocumentFormat

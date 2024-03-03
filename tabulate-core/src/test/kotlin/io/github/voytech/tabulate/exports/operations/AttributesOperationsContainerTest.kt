@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.template.operations
+package io.github.voytech.tabulate.exports.operations
 
 class AttributesOperationsContainerTest {
 /*

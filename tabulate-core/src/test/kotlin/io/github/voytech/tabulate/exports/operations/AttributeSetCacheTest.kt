@@ -1,4 +1,4 @@
-package io.github.voytech.tabulate.template.operations
+package io.github.voytech.tabulate.exports.operations
 
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.Table
