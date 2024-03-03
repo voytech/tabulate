@@ -10,7 +10,8 @@ import io.github.voytech.tabulate.core.operation.OperationsBuilder
 import io.github.voytech.tabulate.core.result.OutputBinding
 import io.github.voytech.tabulate.core.spi.*
 import io.github.voytech.tabulate.core.spi.DocumentFormat.Companion.format
-import io.github.voytech.tabulate.support.Spy.Companion.operationPriorities
+import io.github.voytech.tabulate.support.mock.Spy.Companion.operationPriorities
+import io.github.voytech.tabulate.support.mock.components.*
 
 
 class TestOutputBindingProvider: OutputBindingsProvider<TestRenderingContext> {
@@ -25,23 +26,23 @@ class TestOutputBindingProvider: OutputBindingsProvider<TestRenderingContext> {
 class TestExportOperationsFactory : OperationsBundleProvider<TestRenderingContext, Table<Any>> {
 
     override fun provideExportOperations(): BuildOperations<TestRenderingContext> = {
-        operation(StartTableTestOperation(Spy.spy))
-        operation(StartColumnTestOperation(Spy.spy))
-        operation(StartRowTestOperation(Spy.spy))
-        operation(RenderRowCellTestOperation(Spy.spy))
-        operation(EndRowTestOperation<Table<Any>>(Spy.spy))
-        operation(EndColumnTestOperation(Spy.spy))
-        operation(EndTableTestOperation(Spy.spy))
+        operation(StartTableTestOperation())
+        operation(StartColumnTestOperation())
+        operation(StartRowTestOperation())
+        operation(RenderRowCellTestOperation())
+        operation(EndRowTestOperation())
+        operation(EndColumnTestOperation())
+        operation(EndTableTestOperation())
     }
 
     override fun provideAttributeOperations(): BuildAttributeOperations<TestRenderingContext> = {
-        operation(CellTextStylesAttributeTestRenderOperation(Spy.spy),operationPriorities[TextStylesAttribute::class.java] ?: 1)
-        operation(CellBordersAttributeTestRenderOperation(Spy.spy),operationPriorities[BordersAttribute::class.java] ?: 1)
-        operation(CellBackgroundAttributeTestRenderOperation(Spy.spy),operationPriorities[BackgroundAttribute::class.java] ?: 1)
-        operation(CellAlignmentAttributeTestRenderOperation(Spy.spy),operationPriorities[AlignmentAttribute::class.java] ?: 1)
-        operation(ColumnWidthAttributeTestRenderOperation(Spy.spy),operationPriorities[WidthAttribute::class.java] ?: 1)
-        operation(RowHeightAttributeTestRenderOperation(Spy.spy),operationPriorities[HeightAttribute::class.java] ?: 1)
-        operation(TemplateFileAttributeTestRenderOperation(Spy.spy),operationPriorities[TemplateFileAttribute::class.java] ?: 1)
+        operation(CellTextStylesAttributeTestRenderOperation(),operationPriorities[TextStylesAttribute::class.java] ?: 1)
+        operation(CellBordersAttributeTestRenderOperation(),operationPriorities[BordersAttribute::class.java] ?: 1)
+        operation(CellBackgroundAttributeTestRenderOperation(),operationPriorities[BackgroundAttribute::class.java] ?: 1)
+        operation(CellAlignmentAttributeTestRenderOperation(),operationPriorities[AlignmentAttribute::class.java] ?: 1)
+        operation(ColumnWidthAttributeTestRenderOperation(),operationPriorities[WidthAttribute::class.java] ?: 1)
+        operation(RowHeightAttributeTestRenderOperation(),operationPriorities[HeightAttribute::class.java] ?: 1)
+        operation(TemplateFileAttributeTestRenderOperation(),operationPriorities[TemplateFileAttribute::class.java] ?: 1)
     }
 
     override fun getRenderingContextClass(): Class<TestRenderingContext> = reify()

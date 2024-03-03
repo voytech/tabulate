@@ -84,7 +84,7 @@ fun interface VoidOperation<CTX : RenderingContext, E : AttributedContext> {
     operator fun invoke(renderingContext: CTX, context: E)
 }
 
-class VoidOperationWrapper<CTX : RenderingContext, E : AttributedContext>(val voidOperation: VoidOperation<CTX, E>) :
+class VoidOperationAdapter<CTX : RenderingContext, E : AttributedContext>(val voidOperation: VoidOperation<CTX, E>) :
     Operation<CTX, E> {
     override fun invoke(renderingContext: CTX, context: E): RenderingResult {
         voidOperation(renderingContext, context)
@@ -105,7 +105,7 @@ class OperationsBuilder<CTX : RenderingContext>(val renderingContext: Class<CTX>
     inline fun <reified E : AttributedContext> operation(op: Operation<CTX, E>) = addOperation(E::class.java, op)
 
     inline fun <reified E : AttributedContext> operation(op: VoidOperation<CTX, E>) =
-        addOperation(E::class.java, VoidOperationWrapper(op))
+        addOperation(E::class.java, VoidOperationAdapter(op))
 
     @Suppress("UNCHECKED_CAST")
     private fun List<Enhance<CTX>>.applyEnhancers(delegate: ReifiedInvocation<*, *>) =

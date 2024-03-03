@@ -13,7 +13,7 @@ import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
 import io.github.voytech.tabulate.core.DocumentFormat
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
-import io.github.voytech.tabulate.support.Spy
+import io.github.voytech.tabulate.support.mock.Spy
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse

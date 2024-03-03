@@ -10,9 +10,7 @@ import io.github.voytech.tabulate.core.model.UnitsOfMeasure;
 import io.github.voytech.tabulate.core.model.Width;
 import io.github.voytech.tabulate.core.model.color.Colors;
 import io.github.voytech.tabulate.core.model.text.DefaultFonts;
-import io.github.voytech.tabulate.core.StandaloneExportTemplate;
-import io.github.voytech.tabulate.support.Spy;
-import kotlin.Unit;
+import io.github.voytech.tabulate.support.mock.Spy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static io.github.voytech.tabulate.components.table.api.builder.RowPredicates.all;
-import static io.github.voytech.tabulate.core.DocumentFormat.format;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 

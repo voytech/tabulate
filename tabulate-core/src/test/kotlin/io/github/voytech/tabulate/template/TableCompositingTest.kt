@@ -10,7 +10,7 @@ import io.github.voytech.tabulate.components.table.template.export
 import io.github.voytech.tabulate.components.table.template.tabulate
 import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
 import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
-import io.github.voytech.tabulate.support.Spy
+import io.github.voytech.tabulate.support.mock.Spy
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse

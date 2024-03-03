@@ -11,8 +11,8 @@ import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
 import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
 import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.DocumentFormat.Companion.format
-import io.github.voytech.tabulate.support.Spy
-import io.github.voytech.tabulate.support.Spy.Companion.operationPriorities
+import io.github.voytech.tabulate.support.mock.Spy
+import io.github.voytech.tabulate.support.mock.Spy.Companion.operationPriorities
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
