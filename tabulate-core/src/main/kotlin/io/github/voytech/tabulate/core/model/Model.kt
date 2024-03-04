@@ -87,6 +87,18 @@ abstract class AbstractModel(
 abstract class ModelWithAttributes :
     AttributedModelOrPart, AbstractModel()
 
+enum class DescendantsIterationsKind {
+    IMMEDIATE,
+    POSTPONED,
+    CUSTOM
+}
+abstract class AbstractContainerModel: AbstractModel() {
+    protected abstract val models: List<AbstractModel>
+    protected open val descendantsIterationsKind: DescendantsIterationsKind = DescendantsIterationsKind.POSTPONED
+}
+
+abstract class AbstractContainerModelWithAttributes: AbstractContainerModel(), AttributedModelOrPart
+
 interface ExecutionContext
 
 fun interface ValueSupplier<C : ExecutionContext, V : Any> : (C) -> V

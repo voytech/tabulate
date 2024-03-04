@@ -197,8 +197,12 @@ class ModelContextLayouts(
         return SpaceAndLayoutProperties(
             space = constraints.copy(
                 maxRightBottom = Position(
-                    x = explicitWidth?.let { constraints.leftTop.x + it } ?: implicitMaxRightBottom.x,
-                    y = explicitHeight?.let { constraints.leftTop.y + it } ?: implicitMaxRightBottom.y
+                    x = explicitWidth?.let {
+                        (constraints.leftTop.x + it).coerceAtMost(implicitMaxRightBottom.x)
+                    } ?: implicitMaxRightBottom.x,
+                    y = explicitHeight?.let {
+                        (constraints.leftTop.y + it).coerceAtMost(implicitMaxRightBottom.y)
+                    } ?: implicitMaxRightBottom.y
                 )
             ).withInnerMaxRightBottom(),
             layout = LayoutProperties(

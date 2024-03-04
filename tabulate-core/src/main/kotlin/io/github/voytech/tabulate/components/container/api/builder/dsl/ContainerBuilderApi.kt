@@ -6,8 +6,11 @@ import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
 import io.github.voytech.tabulate.components.wrapper.api.builder.dsl.WrapperBuilderApi
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.CompositeModelBuilderApi
+import io.github.voytech.tabulate.core.api.builder.dsl.DSLCommand
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
+import io.github.voytech.tabulate.core.model.DescendantsIterationsKind
 import io.github.voytech.tabulate.core.model.Orientation
+import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 
 
 /**
@@ -22,6 +25,16 @@ class ContainerBuilderApi internal constructor() :
     @set:JvmSynthetic
     @get:JvmSynthetic
     var orientation: Orientation by this.builder::orientation
+
+    val descendantsImmediateIterations: DSLCommand
+        get() {
+            this.builder.descendantsIterationsKind = DescendantsIterationsKind.IMMEDIATE; return DSLCommand
+        }
+
+    val descendantsPostponedIterations: DSLCommand
+        get() {
+            this.builder.descendantsIterationsKind = DescendantsIterationsKind.POSTPONED; return DSLCommand
+        }
 
     @JvmSynthetic
     fun attributes(block: ContainerAttributesBuilderApi.() -> Unit) {

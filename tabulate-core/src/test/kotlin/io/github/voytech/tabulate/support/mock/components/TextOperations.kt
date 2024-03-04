@@ -21,11 +21,11 @@ class TestTextExportOperationsFactory : OperationsBundleProvider<TestRenderingCo
     }
 
     override fun provideExportOperations(): BuildOperations<TestRenderingContext> = {
-        operation(TextOperation())
+        operation(TextOperation(false))
     }
 
     override fun provideMeasureOperations(): BuildOperations<TestRenderingContext> = {
-        operation(TextOperation())
+        operation(TextOperation(true))
     }
 
     override fun getModelClass(): Class<Text> = reify()
@@ -36,4 +36,4 @@ class TestTextExportOperationsFactory : OperationsBundleProvider<TestRenderingCo
 
 }
 
-class TextOperation: MockRenderOperation<TextRenderable>(TextRenderable::class.java)
+class TextOperation(isMeasuring: Boolean): MockRenderOperation<TextRenderable>(TextRenderable::class.java,isMeasuring)

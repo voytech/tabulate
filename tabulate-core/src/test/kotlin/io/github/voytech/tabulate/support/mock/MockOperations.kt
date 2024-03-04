@@ -19,7 +19,6 @@ data class MockMeasure<R : Renderable<*>>(val predicate: (R) -> Boolean, val mea
 
 class MockMeasures {
     private val measures: MutableMap<Class<out Renderable<*>>, MutableList<MockMeasure<*>>> = mutableMapOf()
-
     inline fun <reified R : Renderable<*>> register(
         noinline predicate: (R) -> Boolean, noinline measure: (RenderableBoundingBox) -> Size
     ) {
@@ -29,7 +28,7 @@ class MockMeasures {
     fun <R : Renderable<*>> registerTyped(
         clazz: Class<out R>, predicate: (R) -> Boolean, measure: (RenderableBoundingBox) -> Size
     ) {
-        measures.computeIfAbsent(clazz) { mutableListOf() } += MockMeasure(predicate,measure)
+        measures.computeIfAbsent(clazz) { mutableListOf() } += MockMeasure(predicate, measure)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -50,6 +49,9 @@ class MockMeasures {
 class Spy private constructor() {
     private val visitedOperations: LinkedList<InterceptedContext> = LinkedList()
     internal val measures = MockMeasures()
+
+    internal var trackRendering = true
+    internal var trackMeasuring = true
     var documentWidth: Width? = null
     var documentHeight: Height? = null
 
@@ -76,7 +78,7 @@ class Spy private constructor() {
 
 interface MockOperation
 
-abstract class MockMeasureProvider<E : AttributedContext>(private val spy: Spy = Spy.spy): MockOperation {
+abstract class MockMeasureProvider<E : AttributedContext>(private val spy: Spy = Spy.spy) : MockOperation {
     fun tryProvideMeasures(context: E) {
         if (context is Renderable<*>) {
             if (context.boundingBox.isDefined()) return
@@ -90,28 +92,41 @@ abstract class MockMeasureProvider<E : AttributedContext>(private val spy: Spy =
 }
 
 abstract class MockRenderResultOperation<E : AttributedContext>(
-    private val contextClass: Class<E>, private val measure: Boolean = true, private val spy: Spy = Spy.spy
+    private val contextClass: Class<E>, private val isMeasuringOp: Boolean = false,
+    private val measure: Boolean = true, private val spy: Spy = Spy.spy
 ) : MockMeasureProvider<E>(), Operation<TestRenderingContext, E> {
 
     override operator fun invoke(renderingContext: TestRenderingContext, context: E): RenderingResult {
         if (measure) tryProvideMeasures(context)
-        spy.track(this, context)
+        if (isMeasuringOp && spy.trackMeasuring ||
+            !isMeasuringOp && spy.trackRendering) {
+            spy.track(this, context)
+        }
         return Ok.asResult()
     }
 }
 
 abstract class MockRenderOperation<E : AttributedContext>(
-    private val contextClass: Class<E>, private val measure: Boolean = true,private val spy: Spy = Spy.spy
+    private val contextClass: Class<E>,
+    private val isMeasuringOp: Boolean = false,
+    private val measure: Boolean = true,
+    private val spy: Spy = Spy.spy
 ) : MockMeasureProvider<E>(), VoidOperation<TestRenderingContext, E> {
 
     override operator fun invoke(renderingContext: TestRenderingContext, context: E) {
         if (measure) tryProvideMeasures(context)
-        spy.track(this, context)
+        if (isMeasuringOp && spy.trackMeasuring ||
+            !isMeasuringOp && spy.trackRendering) {
+            spy.track(this, context)
+        }
     }
 }
 
 open class MockAttributeRenderOperation<T : Attribute<T>, E : AttributedContext>(
-    private val clazz: Class<T>, private val contextClass: Class<E>, private var spy: Spy = Spy.spy
+    private val clazz: Class<T>,
+    private val contextClass: Class<E>,
+    private val isMeasuringOpr: Boolean = false,
+    private val spy: Spy = Spy.spy
 ) : AttributeOperation<TestRenderingContext, T, E>, MockOperation {
 
     override operator fun invoke(renderingContext: TestRenderingContext, context: E, attribute: T) {
@@ -119,8 +134,8 @@ open class MockAttributeRenderOperation<T : Attribute<T>, E : AttributedContext>
     }
 
     companion object {
-        inline operator fun <reified E: AttributedContext,reified T: Attribute<T>> invoke() =
-            MockAttributeRenderOperation(T::class.java,E::class.java)
+        inline operator fun <reified E : AttributedContext, reified T : Attribute<T>> invoke() =
+            MockAttributeRenderOperation(T::class.java, E::class.java)
     }
 }
 

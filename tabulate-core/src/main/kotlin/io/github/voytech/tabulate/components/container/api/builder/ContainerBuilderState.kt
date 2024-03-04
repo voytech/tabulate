@@ -5,6 +5,7 @@ import io.github.voytech.tabulate.core.api.builder.AttributesAwareBuilder
 import io.github.voytech.tabulate.core.api.builder.CompositeModelBuilderState
 import io.github.voytech.tabulate.core.api.builder.ModelBuilderState
 import io.github.voytech.tabulate.core.model.AbstractModel
+import io.github.voytech.tabulate.core.model.DescendantsIterationsKind
 import io.github.voytech.tabulate.core.model.Orientation
 import io.github.voytech.tabulate.core.reify
 
@@ -17,6 +18,10 @@ class ContainerBuilderState : CompositeModelBuilderState<Container>, AttributesA
     @set:JvmSynthetic
     internal var orientation: Orientation = Orientation.HORIZONTAL
 
+    @get:JvmSynthetic
+    @set:JvmSynthetic
+    internal var descendantsIterationsKind: DescendantsIterationsKind = DescendantsIterationsKind.POSTPONED
+
     @JvmSynthetic
     override fun <E : AbstractModel> bind(node: ModelBuilderState<E>) {
         nodes.add(node)
@@ -26,6 +31,7 @@ class ContainerBuilderState : CompositeModelBuilderState<Container>, AttributesA
     override fun build(): Container = Container(
         attributes = attributes(),
         orientation = orientation,
+        descendantsIterationsKind = descendantsIterationsKind,
         models = nodes.map { it.build() }
     )
 

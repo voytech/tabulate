@@ -21,7 +21,7 @@ class TestContainerExportOperationsFactory : OperationsBundleProvider<TestRender
     }
 
     override fun provideExportOperations(): BuildOperations<TestRenderingContext> = {
-        operation(ContainerOperation())
+        operation(ContainerOperation(false))
     }
 
     override fun getRenderingContextClass(): Class<TestRenderingContext> = reify()
@@ -32,4 +32,4 @@ class TestContainerExportOperationsFactory : OperationsBundleProvider<TestRender
 
 }
 
-class ContainerOperation : MockRenderOperation<ContainerRenderable>(ContainerRenderable::class.java)
+class ContainerOperation(isMeasuring: Boolean) : MockRenderOperation<ContainerRenderable>(ContainerRenderable::class.java,isMeasuring)

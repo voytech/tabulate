@@ -37,7 +37,7 @@ class PageBuilderState : CompositeModelBuilderState<Page> {
     @JvmSynthetic
     override fun build(): Page = Page(
         name = name,
-        nodes = nodes.map { it.build() },
+        models = nodes.map { it.build() },
         header = header?.build(),
         footer = footer?.build()
     )

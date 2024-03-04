@@ -21,11 +21,11 @@ class TestImageExportOperationsFactory : OperationsBundleProvider<TestRenderingC
     }
 
     override fun provideExportOperations(): BuildOperations<TestRenderingContext> = {
-        operation(ImageOperation())
+        operation(ImageOperation(false))
     }
 
     override fun provideMeasureOperations(): BuildOperations<TestRenderingContext> = {
-        operation(ImageOperation())
+        operation(ImageOperation(true))
     }
 
     override fun getModelClass(): Class<Image> = reify()
@@ -36,4 +36,4 @@ class TestImageExportOperationsFactory : OperationsBundleProvider<TestRenderingC
 
 }
 
-class ImageOperation: MockRenderOperation<ImageRenderable>(ImageRenderable::class.java)
+class ImageOperation(isMeasuring: Boolean): MockRenderOperation<ImageRenderable>(ImageRenderable::class.java,isMeasuring)

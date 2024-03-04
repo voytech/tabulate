@@ -8,11 +8,10 @@ import io.github.voytech.tabulate.core.layout.SpaceConstraints
 class Page internal constructor(
     @get:JvmSynthetic
     internal val name: String = "untitled",
-    @get:JvmSynthetic
-    internal val nodes: List<AbstractModel>? = null,
     internal val header: AbstractModel? = null,
     internal val footer: AbstractModel? = null,
-) : AbstractModel() {
+    override val models: List<AbstractModel>,
+) : AbstractContainerModel() {
 
     override fun exportContextCreated(api: ExportApi) = api {
         getCustomAttributes()["_pageName"] = name
@@ -50,7 +49,7 @@ class Page internal constructor(
     }
 
     private fun ExportApi.exportContent(spaceConstraints: SpaceConstraints) {
-        nodes?.forEach {
+        models?.forEach {
             it.export(spaceConstraints)
         }
     }

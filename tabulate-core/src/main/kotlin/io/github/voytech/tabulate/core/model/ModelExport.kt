@@ -408,6 +408,20 @@ class ExportApi private constructor(private val context: ModelExportContext) {
     }
 }
 
+fun <L : Layout> ExportApi.exportWithContinuations(models: List<AbstractModel>, mode: DescendantsIterationsKind) =
+    when(mode) {
+        DescendantsIterationsKind.POSTPONED -> exportWithPostponedContinuations<L>(models)
+        DescendantsIterationsKind.IMMEDIATE -> exportWithImmediateContinuations<L>(models)
+        else -> error("Currently only POSTPONED and IMMEDIATE iterations kind are implemented")
+    }
+
+fun <L : Layout> ExportApi.measureWithContinuations(models: List<AbstractModel>, mode: DescendantsIterationsKind) =
+    when(mode) {
+        DescendantsIterationsKind.POSTPONED -> measureWithPostponedContinuations<L>(models)
+        DescendantsIterationsKind.IMMEDIATE -> measureWithImmediateContinuations<L>(models)
+        else -> error("Currently only POSTPONED and IMMEDIATE iterations kind are implemented")
+    }
+
 fun <L : Layout> ExportApi.exportWithPostponedContinuations(models: List<AbstractModel>) =
     traverseAllThenContinue<L>(models) { export() }
 
@@ -433,7 +447,7 @@ fun <L : Layout> ExportApi.exportWithImmediateContinuations(models: List<Abstrac
     traverseWithContinuations<L>(models) { export() }
 
 
-fun <L : Layout> ExportApi.measureWithImmediateContinuation(models: List<AbstractModel>) =
+fun <L : Layout> ExportApi.measureWithImmediateContinuations(models: List<AbstractModel>) =
     traverseWithContinuations<L>(models) { measure() }
 
 private fun <L : Layout> ExportApi.traverseWithContinuations(models: List<AbstractModel>,  action: AbstractModel.() -> Unit) =

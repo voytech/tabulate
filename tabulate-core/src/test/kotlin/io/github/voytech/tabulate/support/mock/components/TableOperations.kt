@@ -18,36 +18,45 @@ import io.github.voytech.tabulate.support.mock.Spy
 class TestTableExportOperationsFactory : OperationsBundleProvider<TestRenderingContext, Table<Any>> {
 
     override fun provideAttributeOperations(): BuildAttributeOperations<TestRenderingContext> = {
-        operation(CellTextStylesAttributeTestRenderOperation(), Spy.operationPriorities[TextStylesAttribute::class.java] ?: 1)
+        operation(
+            CellTextStylesAttributeTestRenderOperation(),
+            Spy.operationPriorities[TextStylesAttribute::class.java] ?: 1
+        )
         operation(CellBordersAttributeTestRenderOperation(), Spy.operationPriorities[BordersAttribute::class.java] ?: 1)
-        operation(CellBackgroundAttributeTestRenderOperation(),
-            Spy.operationPriorities[BackgroundAttribute::class.java] ?: 1)
-        operation(CellAlignmentAttributeTestRenderOperation(),
-            Spy.operationPriorities[AlignmentAttribute::class.java] ?: 1)
+        operation(
+            CellBackgroundAttributeTestRenderOperation(),
+            Spy.operationPriorities[BackgroundAttribute::class.java] ?: 1
+        )
+        operation(
+            CellAlignmentAttributeTestRenderOperation(),
+            Spy.operationPriorities[AlignmentAttribute::class.java] ?: 1
+        )
         operation(ColumnWidthAttributeTestRenderOperation(), Spy.operationPriorities[WidthAttribute::class.java] ?: 1)
         operation(RowHeightAttributeTestRenderOperation(), Spy.operationPriorities[HeightAttribute::class.java] ?: 1)
-        operation(TemplateFileAttributeTestRenderOperation(),
-            Spy.operationPriorities[TemplateFileAttribute::class.java] ?: 1)
+        operation(
+            TemplateFileAttributeTestRenderOperation(),
+            Spy.operationPriorities[TemplateFileAttribute::class.java] ?: 1
+        )
     }
 
     override fun provideExportOperations(): BuildOperations<TestRenderingContext> = {
-        operation(StartTableTestOperation())
-        operation(StartColumnTestOperation())
-        operation(StartRowTestOperation())
-        operation(RenderRowCellTestOperation())
-        operation(EndRowTestOperation())
-        operation(EndColumnTestOperation())
-        operation(EndTableTestOperation())
+        operation(StartTableTestOperation(false))
+        operation(StartColumnTestOperation(false))
+        operation(StartRowTestOperation(false))
+        operation(RenderRowCellTestOperation(false))
+        operation(EndRowTestOperation(false))
+        operation(EndColumnTestOperation(false))
+        operation(EndTableTestOperation(false))
     }
 
     override fun provideMeasureOperations(): BuildOperations<TestRenderingContext> = {
-        operation(StartTableTestOperation())
-        operation(StartColumnTestOperation())
-        operation(StartRowTestOperation())
-        operation(RenderRowCellTestOperation())
-        operation(EndRowTestOperation())
-        operation(EndColumnTestOperation())
-        operation(EndTableTestOperation())
+        operation(StartTableOperation { _, _ -> })
+        operation(StartColumnOperation { _, _ -> })
+        operation(StartRowOperation { _, _ -> })
+        operation(RenderRowCellTestOperation(true))
+        operation(EndRowOperation<TestRenderingContext, Table<Any>> { _, _ -> })
+        operation(EndColumnOperation { _, _ -> })
+        operation(EndTableOperation { _, _ -> })
     }
 
     override fun getRenderingContextClass(): Class<TestRenderingContext> = reify()
@@ -58,19 +67,26 @@ class TestTableExportOperationsFactory : OperationsBundleProvider<TestRenderingC
 
 }
 
-class StartTableTestOperation : MockRenderOperation<TableStartRenderable>(TableStartRenderable::class.java)
+class StartTableTestOperation(isMeasuring: Boolean) :
+    MockRenderOperation<TableStartRenderable>(TableStartRenderable::class.java, isMeasuring)
 
-class StartColumnTestOperation : MockRenderOperation<ColumnStartRenderable>(ColumnStartRenderable::class.java)
+class StartColumnTestOperation(isMeasuring: Boolean) :
+    MockRenderOperation<ColumnStartRenderable>(ColumnStartRenderable::class.java, isMeasuring)
 
-class StartRowTestOperation : MockRenderOperation<RowStartRenderable>(RowStartRenderable::class.java)
+class StartRowTestOperation(isMeasuring: Boolean) :
+    MockRenderOperation<RowStartRenderable>(RowStartRenderable::class.java, isMeasuring)
 
-class RenderRowCellTestOperation : MockRenderOperation<CellRenderable>(CellRenderable::class.java)
+class RenderRowCellTestOperation(isMeasuring: Boolean) :
+    MockRenderOperation<CellRenderable>(CellRenderable::class.java, isMeasuring)
 
-class EndRowTestOperation : MockRenderOperation<RowEndRenderable<*>>(RowEndRenderable::class.java)
+class EndRowTestOperation(isMeasuring: Boolean) :
+    MockRenderOperation<RowEndRenderable<*>>(RowEndRenderable::class.java, isMeasuring)
 
-class EndColumnTestOperation : MockRenderOperation<ColumnEndRenderable>(ColumnEndRenderable::class.java)
+class EndColumnTestOperation(isMeasuring: Boolean) :
+    MockRenderOperation<ColumnEndRenderable>(ColumnEndRenderable::class.java, isMeasuring)
 
-class EndTableTestOperation : MockRenderOperation<TableEndRenderable>(TableEndRenderable::class.java)
+class EndTableTestOperation(isMeasuring: Boolean) :
+    MockRenderOperation<TableEndRenderable>(TableEndRenderable::class.java, isMeasuring)
 
 
 abstract class InterceptedCellAttributeRenderOperation<T : Attribute<T>>(clazz: Class<T>) :

@@ -6,14 +6,14 @@ import io.github.voytech.tabulate.core.model.*
 
 class Document internal constructor(
     @get:JvmSynthetic
-    internal val nodes: List<AbstractModel>,
+    override val models: List<AbstractModel>,
     @get:JvmSynthetic override val attributes: Attributes?,
     override val id: String,
-) : ModelWithAttributes() {
+) : AbstractContainerModelWithAttributes() {
 
     override fun doExport(api: ExportApi) = api {
         render(DocumentStart(api))
-        nodes.forEach { child ->
+        models.forEach { child ->
             do {
                 child.export()
             } while (api.iterations().haveChildrenPendingIterations())
