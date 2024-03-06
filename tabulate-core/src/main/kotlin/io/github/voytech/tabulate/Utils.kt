@@ -5,6 +5,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.net.URL
 import javax.imageio.ImageIO
+import kotlin.math.pow
 import kotlin.math.round
 
 fun String.isValidUrl(): Boolean =
@@ -150,3 +151,5 @@ sealed class Either<A, B> {
 }
 
 fun Float.round3(): Float = (round(this * 1000)) / 1000
+
+fun Float.round(precision: Int): Float = 10F.pow(precision).let { (round(this * it)) / it }

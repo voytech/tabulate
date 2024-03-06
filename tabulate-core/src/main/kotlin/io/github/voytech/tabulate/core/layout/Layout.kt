@@ -307,6 +307,12 @@ abstract class AbstractLayout(override val properties: LayoutProperties) : Layou
         )
     }
 
+    fun LayoutSpace.getHorizontalSpacing(): Float =
+        if (innerLeftTop.x == currentPosition.x) 0F else properties.horizontalSpacing
+
+    fun LayoutSpace.getVerticalSpacing(): Float =
+        if (innerLeftTop.y == currentPosition.y) 0F else properties.verticalSpacing
+
 }
 
 class LayoutSpace(
@@ -462,5 +468,8 @@ data class LayoutProperties(
      * This means that the height of the component is effectively final when passed through this [SpaceConstraints] object at layout space creation.
      */
     val declaredHeight: Boolean = false,
+
+    val horizontalSpacing: Float = 0.1F,
+    val verticalSpacing: Float = 0.1F
 )
 

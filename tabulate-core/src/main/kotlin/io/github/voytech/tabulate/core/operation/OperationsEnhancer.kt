@@ -4,6 +4,7 @@ import io.github.voytech.tabulate.core.LayoutApi
 import io.github.voytech.tabulate.core.RenderingContext
 import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.model.Attribute
+import io.github.voytech.tabulate.core.model.Measure
 import io.github.voytech.tabulate.core.model.Orientation
 import io.github.voytech.tabulate.core.model.attributes.ClipAttribute
 import io.github.voytech.tabulate.core.model.clip.DefaultClippingMode
@@ -99,6 +100,20 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
             context.initBoundingBox(this)
         } else null
 
+    private fun LayoutApi.cropRenderableBoundingBoxIfRequired(
+        boundingBox: RenderableBoundingBox, type: LayoutBoundaryType
+    ) = with(layout) {
+        val rect = space.getBoundingRectangle(type)
+        boundingBox.height?.let {
+            val h = (rect.rightBottom.y - boundingBox.absoluteY).asHeight()
+            if (h < it) boundingBox.height = h
+        }
+        boundingBox.width?.let {
+            val w = (rect.rightBottom.x - boundingBox.absoluteX).asWidth()
+            if (w < it) boundingBox.width = w
+        }
+    }
+
     protected fun LayoutApi.tryApplyResults(context: E) = with(layout) {
         val boundaries = context.boundingBox()
         if (boundaries != null) {
@@ -109,6 +124,7 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
                     space.applyBoundingBox(boundaries, layout.delegate)
                 }
             }
+            //cropRenderableBoundingBoxIfRequired(boundaries, context.layoutBoundaryToFit())
         }
     }
 
@@ -195,6 +211,7 @@ class LayoutAwareMeasureOperation<CTX : RenderingContext, E : AttributedContext>
                 is RenderingClipped,
                 is RenderingSkipped,
                 is Ok -> status
+
                 else -> error("This OperationResult: $status is not supported on guarded measuring.")
             }.merge(measuringResult).also { tryApplyResults(context) }
         }

@@ -38,15 +38,15 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
         val computedLocCursor = currentPosition() - innerLeftTop
         return if (properties.orientation == Orientation.HORIZONTAL) {
             if (hasXSpaceLeft()) {
-                moveLocalCursor(Position(computedLocCursor.x + EPSILON, localCursor.y))
+                moveLocalCursor(Position(computedLocCursor.x + getHorizontalSpacing(), localCursor.y))
             } else if (hasYSpaceLeft()) {
-                moveLocalCursor(Position(X.zero(uom), computedLocCursor.y + EPSILON))
+                moveLocalCursor(Position(X.zero(uom), computedLocCursor.y + getVerticalSpacing()))
             } else null
         } else {
             if (hasYSpaceLeft()) {
-                moveLocalCursor(Position(localCursor.x, computedLocCursor.y + EPSILON))
+                moveLocalCursor(Position(localCursor.x, computedLocCursor.y + getVerticalSpacing()))
             } else if (hasXSpaceLeft()) {
-                moveLocalCursor(Position(computedLocCursor.x + EPSILON, Y.zero(uom)))
+                moveLocalCursor(Position(computedLocCursor.x + getHorizontalSpacing(), Y.zero(uom)))
             } else null
         }
     }

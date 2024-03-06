@@ -90,7 +90,7 @@ class NonUniformCartesianGrid(
         var entry: PositionAndLength? = null
         for (index in 0..Int.MAX_VALUE) {
             val resolved = this[index] ?: run {
-                val pos = entry?.let { it.position + it.length + EPSILON } ?: 0.0f
+                val pos = entry?.let { it.position + it.length + DEFAULT_GAP } ?: 0.0f
                 PositionAndLength(pos.round3(), defMeasure.round3())
             }
             entry = resolved
@@ -108,7 +108,7 @@ class NonUniformCartesianGrid(
             return this[effectiveIndex] ?: run {
                 val first = this[0] ?: PositionAndLength(0.000f, defMeasure3)
                 return (1..effectiveIndex).fold(first) { agg, idx ->
-                    this[idx] ?: PositionAndLength((agg.position + agg.length + EPSILON).round3(), defMeasure3)
+                    this[idx] ?: PositionAndLength((agg.position + agg.length + DEFAULT_GAP).round3(), defMeasure3)
                 }.also { this[effectiveIndex] = it }
             }
         }
@@ -315,10 +315,10 @@ class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties
     override fun getCurrentContentSize(): Size = delegate.getSize()
 
     fun LayoutSpace.getAbsoluteColumnPosition(columnIndex: Int): X =
-        getX(columnIndex.asXPosition(), uom)
+        getX(columnIndex.asX(), uom)
 
     fun LayoutSpace.getAbsoluteRowPosition(rowIndex: Int): Y =
-        getY(rowIndex.asYPosition(), uom)
+        getY(rowIndex.asY(), uom)
 
     override fun setColumnWidth(column: Int, width: Width, options: SizingOptions) {
         whileMeasuring {

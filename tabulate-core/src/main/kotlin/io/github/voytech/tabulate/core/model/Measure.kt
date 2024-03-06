@@ -10,7 +10,8 @@ import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
-internal const val EPSILON = 0.001F
+@JvmSynthetic
+internal const val DEFAULT_GAP = 0.001F
 
 fun Float.tbd(): BigDecimal = toBigDecimal().setScale(3, RoundingMode.HALF_UP)
 fun Float.tbdc(): BigDecimal = toBigDecimal().setScale(1, RoundingMode.FLOOR)
@@ -50,7 +51,7 @@ sealed class Measure<T : Measure<T>>(
         if (asUnitsOfMeasure != unit && unit in UnitsOfMeasure.convertibleUnits) {
             clazz.new(value.switchUnitOfMeasure(unit, asUnitsOfMeasure), asUnitsOfMeasure)
         } else if (asUnitsOfMeasure != unit && unit == UnitsOfMeasure.PC && referenceMeasure != null) {
-            val absoluteVal = value.tbd().divide(BigDecimal.valueOf(100),3,RoundingMode.HALF_UP)
+            val absoluteVal = value.tbd().divide(BigDecimal.valueOf(100), 3, RoundingMode.HALF_UP)
                 .multiply(referenceMeasure.value.tbd()).toFloat()
             clazz.new(absoluteVal, referenceMeasure.unit).switchUnitOfMeasure(asUnitsOfMeasure)
         } else {
@@ -108,6 +109,7 @@ data class Height(override val value: Float, override val unit: UnitsOfMeasure) 
     operator fun plus(other: Float): Height = copy(
         value = other + value
     )
+
     operator fun minus(other: Height): Height = copy(
         value = value - other.switchUnitOfMeasure(unit).value
     )
@@ -131,7 +133,7 @@ data class Size(val width: Width, val height: Height) {
     fun nonZero(): Boolean = width.value > 0 || height.value > 0
 
     companion object {
-        fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT): Size = Size(Width.zero(uom),Height.zero(uom))
+        fun zero(uom: UnitsOfMeasure = UnitsOfMeasure.PT): Size = Size(Width.zero(uom), Height.zero(uom))
     }
 }
 
@@ -160,7 +162,7 @@ data class X(override val value: Float, override val unit: UnitsOfMeasure) : Mea
     )
 
     operator fun plus(other: Float): X = copy(
-        value =value + other,
+        value = value + other,
         unit = unit
     )
 
@@ -176,19 +178,23 @@ data class X(override val value: Float, override val unit: UnitsOfMeasure) : Mea
 
 }
 
-fun X.align(alignment: HorizontalAlignment, outer: Width, inner: Width): X  =
+fun X.align(alignment: HorizontalAlignment, outer: Width, inner: Width): X =
     if (outer > inner) {
-        when(alignment) {
-            DefaultHorizontalAlignment.CENTER -> this + ((outer - inner).value.tbd().divide(2F.tbd(),3,RoundingMode.HALF_UP)).toFloat()
+        when (alignment) {
+            DefaultHorizontalAlignment.CENTER -> this + ((outer - inner).value.tbd()
+                .divide(2F.tbd(), 3, RoundingMode.HALF_UP)).toFloat()
+
             DefaultHorizontalAlignment.RIGHT -> this + (outer - inner)
             else -> this
         }
     } else this
 
-fun Y.align(alignment: VerticalAlignment, outer: Height, inner: Height): Y  =
+fun Y.align(alignment: VerticalAlignment, outer: Height, inner: Height): Y =
     if (outer > inner) {
-        when(alignment) {
-            DefaultVerticalAlignment.MIDDLE -> this + ((outer - inner).value.tbd().divide(2F.tbd(),3, RoundingMode.HALF_UP)).toFloat()
+        when (alignment) {
+            DefaultVerticalAlignment.MIDDLE -> this + ((outer - inner).value.tbd()
+                .divide(2F.tbd(), 3, RoundingMode.HALF_UP)).toFloat()
+
             DefaultVerticalAlignment.BOTTOM -> this + (outer - inner)
             else -> this
         }
@@ -257,11 +263,14 @@ data class Position(val x: X, val y: Y) {
     )
 
 
-    fun asSize(): Size = Size(Width(x.value,x.unit),Height(y.value,y.unit))
+    fun asSize(): Size = Size(Width(x.value, x.unit), Height(y.value, y.unit))
 
     companion object {
         fun start(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Position(X.zero(uom), Y.zero(uom))
         fun max(uom: UnitsOfMeasure = UnitsOfMeasure.PT) = Position(X.max(uom), Y.max(uom))
+
+        operator fun invoke(x: Float, y: Float, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Position =
+            Position(X(x, uom), Y(y, uom))
     }
 }
 
@@ -277,10 +286,10 @@ fun orMin(left: Position, right: Position) = Position(
     Y(min(left.y.value, right.y.switchUnitOfMeasure(left.y.unit).value), left.y.unit)
 )
 
-inline fun <reified T: Measure<T>> orMin(left: T, right: T) =
+inline fun <reified T : Measure<T>> orMin(left: T, right: T) =
     T::class.java.new(min(left.value, right.switchUnitOfMeasure(left.unit).value), left.unit)
 
-inline fun <reified T: Measure<T>> orMax(left: T, right: T) =
+inline fun <reified T : Measure<T>> orMax(left: T, right: T) =
     T::class.java.new(max(left.value, right.switchUnitOfMeasure(left.unit).value), left.unit)
 
 data class BoundingRectangle(
@@ -319,10 +328,10 @@ fun X.asColumn() = value.toInt()
 
 fun Y.asRow() = value.toInt()
 
-fun Int.asXPosition() = X(toFloat(), UnitsOfMeasure.NU)
+fun Int.asX() = X(toFloat(), UnitsOfMeasure.NU)
 
-fun Int.asYPosition() = Y(toFloat(), UnitsOfMeasure.NU)
+fun Int.asY() = Y(toFloat(), UnitsOfMeasure.NU)
 
-fun Float.asWidth(uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width = Width(this,uom)
+fun Float.asWidth(uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width = Width(this, uom)
 
-fun Float.asHeight(uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height = Height(this,uom)
+fun Float.asHeight(uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height = Height(this, uom)
