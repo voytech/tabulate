@@ -17,7 +17,7 @@ class PdfTextOperations : OperationsBundleProvider<PdfBoxRenderingContext, Text>
 
     override fun provideAttributeOperations(): BuildAttributeOperations<PdfBoxRenderingContext> = {
         operation(BackgroundAttributeRenderOperation<TextRenderable>(), -3)
-        operation(BordersAttributeRenderOperation<TextRenderable>(), -2)
+        operation(BordersAttributeRenderOperation<TextRenderable>(), 1)
     }
 
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {

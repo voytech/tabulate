@@ -87,17 +87,17 @@ class ApachePoiTextBox(
 
     private fun resolveMaxWidth(): Int = ((boundingBox.let {
         if (it.width != null) {
-            min(it.maxWidth?.value ?: 0F, it.width?.value ?: 0F)
+            min(it.maxWidth.value ?: 0F, it.width?.value ?: 0F)
         } else {
-            it.maxWidth?.value
+            it.maxWidth.value
         }
     } ?: 0f)).roundToInt()
 
     private fun resolveMaxHeight(): Int = ((boundingBox.let {
         if (it.height != null) {
-            min(it.maxHeight?.value ?: 0F, it.height?.value ?: 0F)
+            min(it.maxHeight.value ?: 0F, it.height?.value ?: 0F)
         } else {
-            it.maxHeight?.value
+            it.maxHeight.value
         }
     } ?: 0f)).roundToInt()
 

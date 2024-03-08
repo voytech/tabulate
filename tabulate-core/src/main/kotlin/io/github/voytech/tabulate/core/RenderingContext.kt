@@ -86,7 +86,7 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
     private fun Renderable<*>.getAbsoluteRightBottomColumn(): Int = boundingBox.let {
         it.absoluteX.let<X, Int> { x ->
             val end = x + (it.width?.value ?: 0F)
-            val maxEnd = x + it.maxWidth
+            val maxEnd = it.cropBoxRightBottom.x
             val mode = NonUniformCartesianGrid.IndexRoundMode.FLOOR.takeIf { wasWidthDeclared() }
                 ?: NonUniformCartesianGrid.IndexRoundMode.CEILING
             val index = grid.getColumnIndexAtPosition(end, mode)
@@ -103,7 +103,7 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
     private fun Renderable<*>.getAbsoluteRightBottomRow(): Int = boundingBox.let {
         it.absoluteY.let<Y, Int> { y ->
             val end = y + (it.height?.value ?: 0F)
-            val maxEnd = y + it.maxHeight
+            val maxEnd = it.cropBoxRightBottom.y
             val mode = NonUniformCartesianGrid.IndexRoundMode.FLOOR.takeIf { wasHeightDeclared() }
                 ?: NonUniformCartesianGrid.IndexRoundMode.CEILING
             val index = grid.getRowIndexAtPosition(end, mode)

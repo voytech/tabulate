@@ -20,9 +20,9 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
 
     override fun provideAttributeOperations(): BuildAttributeOperations<PdfBoxRenderingContext> = {
         operation(BackgroundAttributeRenderOperation<CellRenderable>(), -3)
-        operation(BordersAttributeRenderOperation<CellRenderable>(), -2)
+        operation(BordersAttributeRenderOperation<CellRenderable>(), 1)
         operation(BordersAttributeRenderOperation<RowEndRenderable<Table<*>>>(), -1)
-        operation(BordersAttributeRenderOperation<TableStartRenderable>(),1)
+        operation(BordersAttributeRenderOperation<TableStartRenderable>(),-1)
     }
 
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {

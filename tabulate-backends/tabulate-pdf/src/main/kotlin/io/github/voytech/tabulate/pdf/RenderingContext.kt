@@ -130,7 +130,7 @@ class PdfBoxRenderingContext(
             val bottomY = bbox.absoluteY + height
             val rightX = bbox.absoluteX + width
             val maxRightBottom = bbox.maxRightBottom
-            if (bottomY > maxRightBottom.y || rightX > maxRightBottom.x) {
+            if (bottomY >= maxRightBottom.y || rightX >= maxRightBottom.x) {
                 val yLimit = bottomY.value.coerceAtMost(maxRightBottom.y.value)
                 val effectiveHeight = yLimit - bbox.absoluteY.value
                 val xLimit = rightX.value.coerceAtMost(maxRightBottom.x.value)

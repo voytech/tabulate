@@ -23,18 +23,15 @@ data class RenderingResult(
 
     fun okOrError(): RenderingStatus = Ok.takeIf { !status.isError() } ?: status
 
+    fun set(status: RenderingStatus): RenderingResult = copy(
+        attributes = attributes + ("originalStatus" to this.status),
+        status = status,
+    )
 }
 
 sealed interface RenderingStatus
 
 fun RenderingStatus.asResult(): RenderingResult = RenderingResult(status = this)
-
-fun RenderingStatus.merge(original: RenderingResult): RenderingResult = original.copy(status = this)
-
-fun RenderingResult.merge(original: RenderingResult): RenderingResult = original.copy(
-    attributes = attributes + original.attributes,
-    status = status
-)
 
 open class InterruptionOnAxis(val crossedAxis: CrossedAxis) : RenderingStatus
 
@@ -53,6 +50,8 @@ object Error : RenderingStatus
 fun RenderingStatus?.isSkipped(axis: CrossedAxis): Boolean = this is RenderingSkipped && crossedAxis == axis
 
 fun RenderingStatus?.isClipped(axis: CrossedAxis): Boolean = this is RenderingClipped && crossedAxis == axis
+
+fun RenderingStatus?.hasOverflown(axis: CrossedAxis): Boolean = isSkipped(axis) || isClipped(axis)
 
 fun RenderingStatus?.isError(): Boolean = this is Error
 

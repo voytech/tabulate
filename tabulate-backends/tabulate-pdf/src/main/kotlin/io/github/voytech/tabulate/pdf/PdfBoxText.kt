@@ -56,16 +56,16 @@ internal class PdfBoxText(
 
         private fun getHorizontalAlignmentPadding(lineWidth: Float): Float = alignment?.horizontal?.let {
             when (it) {
-                DefaultHorizontalAlignment.RIGHT -> requiredBboxWidth - lineWidth
-                DefaultHorizontalAlignment.CENTER -> requiredBboxWidth / 2 - lineWidth / 2
+                DefaultHorizontalAlignment.RIGHT -> (requiredBboxWidth - lineWidth).coerceAtLeast(0F)
+                DefaultHorizontalAlignment.CENTER -> (requiredBboxWidth / 2 - lineWidth / 2).coerceAtLeast(0F)
                 else -> 0F
             }
         } ?: 0F
 
         private fun getVerticalAlignmentPadding(): Float = alignment?.vertical?.let {
             when (it) {
-                DefaultVerticalAlignment.BOTTOM -> (requiredBboxHeight - contentHeight)
-                DefaultVerticalAlignment.MIDDLE -> (requiredBboxHeight / 2 - contentHeight / 2)
+                DefaultVerticalAlignment.TOP -> (requiredBboxHeight - lineHeight).coerceAtLeast(0F)
+                DefaultVerticalAlignment.MIDDLE -> (requiredBboxHeight / 2 - lineHeight / 2).coerceAtLeast(0F)
                 else -> 0F
             }
         } ?: 0F
@@ -152,8 +152,8 @@ internal class PdfBoxText(
         return measuringResult ?: run<RenderingResult> {
             with(measures) {
                 while (offset < text.length) {
-                    if ((currentY + lineHeight).roundToInt() > maxHeight) {
-                        adjustRenderableBoundingBox(measuredWidth, currentY)
+                    if (currentY > 0F && (currentY + lineHeight).roundToInt() > maxHeight) {
+                        adjustRenderableBoundingBox(measuredWidth, currentY + lineHeight)
                         return RenderedPartly.asResult()
                     }
                     val codePoint: Int = text.codePointAt(offset)

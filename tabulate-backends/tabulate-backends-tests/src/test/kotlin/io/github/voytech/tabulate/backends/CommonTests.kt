@@ -437,27 +437,27 @@ class CommonTests {
         val doc = document {
             attributes {
                 width { 612.pt() }
-                height { 300.pt() }
+                height { 260.pt() }
             }
             page {
-                header {
-                    text {
-                        value = "Some heading."
-                        attributes {
-                            width { 100.percents() }
-                            height { 20.pt() }
-                        }
-                    }
-                }
-                footer {
-                    text {
-                        value<PageExecutionContext> { ctx -> "Page number: ${ctx.pageNumber}" }
-                        attributes {
-                            height { 30.pt() }
-                            width { 100.percents() }
-                        }
-                    }
-                }
+//                header {
+//                    text {
+//                        value = "Some heading."
+//                        attributes {
+//                            width { 100.percents() }
+//                            height { 20.pt() }
+//                        }
+//                    }
+//                }
+//                footer {
+//                    text {
+//                        value<PageExecutionContext> { ctx -> "Page number: ${ctx.pageNumber}" }
+//                        attributes {
+//                            height { 30.pt() }
+//                            width { 100.percents() }
+//                        }
+//                    }
+//                }
                 horizontal {
                     attributes { borders { all { lightGray; solid; 3.pt() } } }
                     table(typedTable<SampleProduct> {
@@ -466,19 +466,20 @@ class CommonTests {
                             column(SampleProduct::code) {
                                 attributes {
                                     text { red; bold; courierNew }
-                                    alignment { left; middle }
+                                    alignment { left; top }
                                 }
                             }
                             column(SampleProduct::name) {
                                 attributes {
                                     //width { 100.pt() }
-                                    alignment { center }
+                                    alignment { center; middle }
                                 }
                             }
                             column(SampleProduct::description)
                             column(SampleProduct::price) {}
                         }
                         rows {
+                            //matching { all() } assign { attributes { height { 40.pt() } }}
                             header("Id", "Name", "Description", "Price")
                             matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
                             matching { odd() } assign { attributes { background { yellow } } }
@@ -511,7 +512,7 @@ class CommonTests {
                             width { 70.percents() }
                             height { 60.percents() }
                             tableBorders { all { lightGray; solid; 3.pt() } }
-                            borders { all { 10.pt()} }
+                            borders { all { 7.pt()} }
                         }
                         columns {
                             column(SampleProduct::code) {

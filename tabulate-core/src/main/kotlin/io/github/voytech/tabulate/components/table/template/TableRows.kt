@@ -7,7 +7,6 @@ import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.operation.*
 import io.github.voytech.tabulate.core.operation.Nothing
 import io.github.voytech.tabulate.core.operation.RenderingSkipped
-import io.github.voytech.tabulate.core.operation.RenderingSkipped as OpOverflowResult
 
 internal fun <T : AttributedModelOrPart> T.attributesForAllContexts(): AttributesByContexts<T> =
     distributeAttributesForContexts(
@@ -131,11 +130,11 @@ internal class TableRowsRenderer<T : Any>(
     private val indexedTableRows: IndexedTableRows<T> = tableModel.indexRows()
     private val rows = QualifiedRows(indexedTableRows)
 
-    private fun RenderingResult.isYOverflown(): Boolean = status is OpOverflowResult && status.isSkipped(CrossedAxis.Y)
+    private fun RenderingResult.hasOverflown(): Boolean = status.hasOverflown(CrossedAxis.Y)
 
-    data class CellRenderingResult<T>(val isSkipped: Boolean, val key: ColumnKey<T>, val cell: CellRenderable)
+    data class CellRenderingResult<T>(val overflown: Boolean, val key: ColumnKey<T>, val cell: CellRenderable)
 
-    private fun List<CellRenderingResult<T>>.hasYAxisCrossingCells() = firstOrNull { it.isSkipped } != null
+    private fun List<CellRenderingResult<T>>.hasAnyCellOverflown() = firstOrNull { it.overflown } != null
 
     private fun List<CellRenderingResult<T>>.asMap(): Map<ColumnKey<T>, CellRenderable> =
         associate { it.key to it.cell }
@@ -145,7 +144,7 @@ internal class TableRowsRenderer<T : Any>(
     ): CellRenderingResult<T>? =
         if (renderIterations.inRenderWindow(column.index)) {
             createCellContext(sourceRow, column, state.data)?.let {
-                CellRenderingResult(api.renderOrMeasure(it).isYOverflown(), column.id, it)
+                CellRenderingResult(api.renderOrMeasure(it).hasOverflown(), column.id, it)
             }
         } else null
 
@@ -182,13 +181,14 @@ internal class TableRowsRenderer<T : Any>(
                 createRowStart(rowIndex = rowIndex.value, customAttributes = state.data).let { rowStart ->
                     when (val status = api.renderOrMeasure(rowStart).status) {
                         Ok, Nothing -> resolveAndRenderCells(sourceRow).let {
-                            if (it.hasYAxisCrossingCells()) {
-                                OverflowResult(OpOverflowResult(CrossedAxis.Y))
+                            if (it.hasAnyCellOverflown()) {
+                                //api.renderOrMeasure(createRowEnd(rowStart,it.asMap()))
+                                //resolveAndRenderRowEnd(rowStart, it.asMap())
+                                OverflowResult(RenderingClipped(CrossedAxis.Y)) //TODO decide overflow type (skip/clip)
                             } else {
                                 resolveAndRenderRowEnd(rowStart, it.asMap())
                             }
                         }
-
                         else -> OverflowResult(status as InterruptionOnAxis)
                     }
                 }

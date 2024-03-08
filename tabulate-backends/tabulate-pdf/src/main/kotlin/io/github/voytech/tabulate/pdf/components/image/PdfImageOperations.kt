@@ -18,7 +18,7 @@ class PdfImageOperations : OperationsBundleProvider<PdfBoxRenderingContext, Imag
 
     override fun provideAttributeOperations(): BuildAttributeOperations<PdfBoxRenderingContext> = {
         operation(BackgroundAttributeRenderOperation<ImageRenderable>(), -2)
-        operation(BordersAttributeRenderOperation<ImageRenderable>(), -1)
+        operation(BordersAttributeRenderOperation<ImageRenderable>(), 1)
     }
 
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {

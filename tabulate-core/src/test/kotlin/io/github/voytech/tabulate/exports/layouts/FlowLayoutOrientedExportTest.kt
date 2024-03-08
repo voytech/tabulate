@@ -234,6 +234,8 @@ class FlowLayoutOrientedExportTest {
 
     @Test
     fun `should render components using FlowLayout on multiple pages (Container component)`() {
+        Spy.spy.documentHeight = 400F.asHeight()
+        Spy.spy.documentWidth = 400F.asWidth()
         // Every text is measured to be of size 200,50
         Spy.spy.measures.register<TextRenderable>({ _ -> true }) {
             Size(220F.asWidth(), 50F.asHeight())

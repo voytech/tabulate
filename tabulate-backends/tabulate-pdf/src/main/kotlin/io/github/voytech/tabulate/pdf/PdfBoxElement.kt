@@ -42,16 +42,18 @@ abstract class PdfBoxElement(
     protected fun x(): Float = topLeftX
     protected fun PdfBoxRenderingContext.y(): Float = (topLeftY + maxHeight).intoPdfBoxOrigin()
     protected fun resolveMaxWidth(): Int = (boundingBox.let {
-        if (it.width != null) {
-            min(it.maxWidth.value, it.width?.value ?: 0F)
+        val v = it.width
+        if (v != null) {
+            min(it.maxWidth.value, v.value)
         } else {
             it.maxWidth.value
         }
     } - paddings.width).roundToInt()
 
     protected fun resolveMaxHeight(): Int = (boundingBox.let {
-        if (it.height != null) {
-            min(it.maxHeight.value, it.height?.value ?: 0F)
+        val h = it.height
+        if (h != null) {
+            min(it.maxHeight.value, h.value)
         } else {
             it.maxHeight.value
         }

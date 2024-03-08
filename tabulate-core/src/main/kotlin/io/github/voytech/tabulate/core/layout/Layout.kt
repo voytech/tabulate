@@ -414,10 +414,10 @@ data class RenderableBoundingBox(
     val maxRightBottom: Position = cropBoxRightBottom
 
     val maxWidth: Width
-        get() = (cropBoxRightBottom.x - cropBoxLeftTop.x).asWidth()
+        get() = (cropBoxRightBottom.x - absoluteX).asWidth()
 
     val maxHeight: Height
-        get() = (cropBoxRightBottom.y - cropBoxLeftTop.y).asHeight()
+        get() = (cropBoxRightBottom.y - absoluteY).asHeight()
 
     fun unitsOfMeasure(): UnitsOfMeasure = cropBoxLeftTop.x.unit
 

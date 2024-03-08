@@ -7,6 +7,7 @@ import io.github.voytech.tabulate.core.operation.RenderingResult
 import io.github.voytech.tabulate.core.operation.asResult
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 
+//TODO add support for attributes.
 class PdfBoxImage(
     private val image: PDImageXObject,
     boundingBox: RenderableBoundingBox,

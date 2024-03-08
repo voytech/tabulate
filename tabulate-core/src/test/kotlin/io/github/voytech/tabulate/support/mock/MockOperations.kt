@@ -8,6 +8,7 @@ import io.github.voytech.tabulate.support.TestRenderingContext
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -173,4 +174,5 @@ fun Iterator<InterceptedContext>.assertRenderableBoundingBoxesInOrder(fractionPr
             (renderableBoundingBox.absoluteY + (renderableBoundingBox.height ?: 0f.asHeight())).value.round(fractionPrecision)
         )
     }
+    assertFalse { hasNext() }
 }

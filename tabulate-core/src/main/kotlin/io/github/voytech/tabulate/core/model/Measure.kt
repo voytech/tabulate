@@ -16,6 +16,24 @@ internal const val DEFAULT_GAP = 0.001F
 fun Float.tbd(): BigDecimal = toBigDecimal().setScale(3, RoundingMode.HALF_UP)
 fun Float.tbdc(): BigDecimal = toBigDecimal().setScale(1, RoundingMode.FLOOR)
 
+//TODO make Width, Height X, Y inline extending Measure interface like that:
+/*
+interface Measure : Comparable<Float>{
+    val value: Float
+    override fun compareTo(other: Float): Int {
+        return value.round(1).compareTo(other.round(1))
+    }
+
+   fun switchUnitOfMeasure(fromUnits: UnitsOfMeasure, referenceMeasure: Measure? = null, referenceUnits: UnitsOfMeasure? = null): Float
+}
+
+@JvmInline
+value class Width(override val value: Float): Measure
+value class Height(override val value: Float): Measure
+value class X(override val value: Float): Measure
+value class Y(override val value: Float): Measure
+*/
+
 enum class StandardUnits {
     PX,
     PT;
@@ -25,10 +43,10 @@ enum class StandardUnits {
 }
 
 enum class UnitsOfMeasure {
-    PX,
-    PT,
-    PC,
-    NU;
+    PX, //Pixels,
+    PT, //Points,
+    PC, //Percentage relative units,
+    NU; //Nominal units (sequence of integers) e.g: row index in the table.
 
     companion object {
         fun default(): UnitsOfMeasure = PT
@@ -72,6 +90,7 @@ fun Float.switchUnitOfMeasure(sourceUnit: UnitsOfMeasure, targetUnit: UnitsOfMea
             else -> tbd().toFloat()
         }
     } else tbd().toFloat()
+
 
 data class Width(override val value: Float, override val unit: UnitsOfMeasure) :
     Measure<Width>(value, unit, Width::class.java) {

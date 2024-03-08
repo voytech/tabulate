@@ -25,6 +25,11 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
         }
     }
 
+    /**
+     * We for multi row flow layout we need separate position [absoluteCursor] for tracking next layout element.
+     * [currentPosition] from Layout tracks globally allocated area in the layout and can only grow along both axis.
+     * When moving to next row we need to reset one of the axis again which.
+     */
     private fun LayoutSpace.currentPosition(): Position =
         (if (::absoluteCursor.isInitialized) absoluteCursor else currentPosition)
 
