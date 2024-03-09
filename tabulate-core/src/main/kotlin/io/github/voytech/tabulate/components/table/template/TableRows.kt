@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.components.table.template
 
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.rendering.*
-import io.github.voytech.tabulate.core.layout.CrossedAxis
+import io.github.voytech.tabulate.core.layout.Axis
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.operation.*
 import io.github.voytech.tabulate.core.operation.Nothing
@@ -130,7 +130,7 @@ internal class TableRowsRenderer<T : Any>(
     private val indexedTableRows: IndexedTableRows<T> = tableModel.indexRows()
     private val rows = QualifiedRows(indexedTableRows)
 
-    private fun RenderingResult.hasOverflown(): Boolean = status.hasOverflown(CrossedAxis.Y)
+    private fun RenderingResult.hasOverflown(): Boolean = status.hasOverflown(Axis.Y)
 
     data class CellRenderingResult<T>(val overflown: Boolean, val key: ColumnKey<T>, val cell: CellRenderable)
 
@@ -168,7 +168,7 @@ internal class TableRowsRenderer<T : Any>(
             api.renderOrMeasure(rowEnd).let { result ->
                 when (result.status) {
                     Ok, Nothing -> SuccessResult(rowEnd)
-                    else -> OverflowResult(result.status as InterruptionOnAxis)
+                    else -> OverflowResult(result.status as AxisBoundStatus)
                 }
             }
         }
@@ -184,12 +184,12 @@ internal class TableRowsRenderer<T : Any>(
                             if (it.hasAnyCellOverflown()) {
                                 //api.renderOrMeasure(createRowEnd(rowStart,it.asMap()))
                                 //resolveAndRenderRowEnd(rowStart, it.asMap())
-                                OverflowResult(RenderingClipped(CrossedAxis.Y)) //TODO decide overflow type (skip/clip)
+                                OverflowResult(RenderingClipped(Axis.Y)) //TODO decide overflow type (skip/clip)
                             } else {
                                 resolveAndRenderRowEnd(rowStart, it.asMap())
                             }
                         }
-                        else -> OverflowResult(status as InterruptionOnAxis)
+                        else -> OverflowResult(status as AxisBoundStatus)
                     }
                 }
             }

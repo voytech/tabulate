@@ -6,20 +6,20 @@ import io.github.voytech.tabulate.core.TwoParamsBasedDispatch
 import io.github.voytech.tabulate.core.TwoParamsTypeInfo
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.RenderingContext
-import io.github.voytech.tabulate.core.layout.CrossedAxis
+import io.github.voytech.tabulate.core.layout.Axis
 
 @Suppress("MemberVisibilityCanBePrivate")
 data class RenderingResult(
     val attributes: Map<String, Any> = emptyMap(),
     val status: RenderingStatus
 ) {
-    fun isSkipped(axis: CrossedAxis): Boolean = status.isSkipped(axis)
+    fun isSkipped(axis: Axis): Boolean = status.isSkipped(axis)
 
-    fun isClipped(axis: CrossedAxis): Boolean = status.isClipped(axis)
+    fun isClipped(axis: Axis): Boolean = status.isClipped(axis)
+
+    fun isPartlyRendered(axis: Axis): Boolean = !isOk() && (status !is Error)
 
     fun isOk(): Boolean = status is Ok || status is Nothing
-
-    fun isPartlyRendered(): Boolean = !isOk() && (status !is Error)
 
     fun okOrError(): RenderingStatus = Ok.takeIf { !status.isError() } ?: status
 
@@ -33,13 +33,13 @@ sealed interface RenderingStatus
 
 fun RenderingStatus.asResult(): RenderingResult = RenderingResult(status = this)
 
-open class InterruptionOnAxis(val crossedAxis: CrossedAxis) : RenderingStatus
+open class AxisBoundStatus(val activeAxis: Axis) : RenderingStatus
 
-class RenderingSkipped(crossedAxis: CrossedAxis) : InterruptionOnAxis(crossedAxis)
+class RenderingSkipped(activeAxis: Axis) : AxisBoundStatus(activeAxis)
 
-class RenderingClipped(crossedAxis: CrossedAxis) : InterruptionOnAxis(crossedAxis)
+class RenderingClipped(activeAxis: Axis) : AxisBoundStatus(activeAxis)
 
-object RenderedPartly : RenderingStatus
+class RenderedPartly(activeAxis: Axis) : AxisBoundStatus(activeAxis)
 
 object Ok : RenderingStatus
 
@@ -47,11 +47,11 @@ object Nothing : RenderingStatus
 
 object Error : RenderingStatus
 
-fun RenderingStatus?.isSkipped(axis: CrossedAxis): Boolean = this is RenderingSkipped && crossedAxis == axis
+fun RenderingStatus?.isSkipped(axis: Axis): Boolean = this is RenderingSkipped && activeAxis == axis
 
-fun RenderingStatus?.isClipped(axis: CrossedAxis): Boolean = this is RenderingClipped && crossedAxis == axis
+fun RenderingStatus?.isClipped(axis: Axis): Boolean = this is RenderingClipped && activeAxis == axis
 
-fun RenderingStatus?.hasOverflown(axis: CrossedAxis): Boolean = isSkipped(axis) || isClipped(axis)
+fun RenderingStatus?.hasOverflown(axis: Axis): Boolean = isSkipped(axis) || isClipped(axis)
 
 fun RenderingStatus?.isError(): Boolean = this is Error
 

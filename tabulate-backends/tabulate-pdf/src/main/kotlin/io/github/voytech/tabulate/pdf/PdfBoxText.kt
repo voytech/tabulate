@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.pdf
 
+import io.github.voytech.tabulate.core.layout.Axis
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
@@ -154,7 +155,7 @@ internal class PdfBoxText(
                 while (offset < text.length) {
                     if (currentY > 0F && (currentY + lineHeight).roundToInt() > maxHeight) {
                         adjustRenderableBoundingBox(measuredWidth, currentY + lineHeight)
-                        return RenderedPartly.asResult()
+                        return RenderedPartly(Axis.Y).asResult()
                     }
                     val codePoint: Int = text.codePointAt(offset)
                     val char = text[offset]
@@ -186,8 +187,9 @@ internal class PdfBoxText(
                             moveToNextLine()
                         } else {
                             renderer.handleAndClearCurrentLine(currentX)
-                            adjustRenderableBoundingBox(measuredWidth, currentY + lineHeight)
-                            return RenderedPartly.asResult()
+                            val effectiveMeasuredWidth = if (measuredWidth==0F) charWidth else measuredWidth
+                            adjustRenderableBoundingBox(effectiveMeasuredWidth, currentY + lineHeight)
+                            return RenderedPartly(Axis.X).asResult()
                         }
                     }
                 }

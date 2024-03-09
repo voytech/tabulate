@@ -122,7 +122,9 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
             fitBoundingBoxIntoLayoutBounds(boundaries)
             space.allocateRectangle(boundaries)
             @Suppress("UNCHECKED_CAST")
-            if (context is ApplyLayoutElement<*> && status !is RenderingSkipped && status !is Error) {
+            if (context is ApplyLayoutElement<*> &&
+                status !is RenderingSkipped &&
+                status !is Error) {
                 with(context as ApplyLayoutElement<Layout>) {
                     space.applyBoundingBox(boundaries, layout.delegate)
                 }
@@ -149,8 +151,8 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
     private fun E.isClippingEnabled(): Boolean =
         getModelAttribute<ClipAttribute>()?.let { clip -> clip.mode == DefaultClippingMode.EDGE } ?: true
 
-    private fun LayoutApi.defaultCrossedAxis(): CrossedAxis =
-        CrossedAxis.X.takeIf { layout.properties.orientation == Orientation.HORIZONTAL } ?: CrossedAxis.Y
+    private fun LayoutApi.defaultCrossedAxis(): Axis =
+        Axis.X.takeIf { layout.properties.orientation == Orientation.HORIZONTAL } ?: Axis.Y
 
     protected fun LayoutApi.checkOverflowStatus(context: E): RenderingStatus =
         with<Layout, RenderingStatus>(layout) {
@@ -205,15 +207,14 @@ class LayoutAwareMeasureOperation<CTX : RenderingContext, E : AttributedContext>
 
     override operator fun invoke(renderingContext: CTX, context: E): RenderingResult = with(layoutApi()) {
         ensureRenderableBoundingBox(context).let {
-            val measuringResult = delegate.measureRenderableWhenMissingBounds(renderingContext, context)
+            val result = delegate.measureRenderableWhenMissingBounds(renderingContext, context)
             val status = checkOverflowStatus(context)
             when (status) {
                 is RenderingClipped,
-                is RenderingSkipped,
-                is Ok -> status
-
+                is RenderingSkipped -> status
+                is Ok -> result.status
                 else -> error("This OperationResult: $status is not supported on guarded measuring.")
-            }.let { newStatus -> measuringResult.set(newStatus) }.also { tryApplyResults(context, status) }
+            }.let { newStatus -> result.set(newStatus) }.also { tryApplyResults(context, it.status) }
         }
     }
 }

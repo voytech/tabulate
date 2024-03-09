@@ -10,9 +10,8 @@ import io.github.voytech.tabulate.core.InputParams.Companion.allowMeasureBeforeR
 import io.github.voytech.tabulate.core.InputParams.Companion.params
 import io.github.voytech.tabulate.core.StandaloneExportTemplate
 import io.github.voytech.tabulate.core.documentFormat
-import io.github.voytech.tabulate.core.layout.CrossedAxis
+import io.github.voytech.tabulate.core.layout.Axis
 import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.DataSourceBinding
 import io.github.voytech.tabulate.core.model.ExportApi
 import io.github.voytech.tabulate.core.operation.*
@@ -104,12 +103,12 @@ internal class TableExport<T : Any>(
                 val renderable = def.asColumnEnd(table, columnAttributes.forEnd(def), api.getCustomAttributes())
                 status = api.renderOrMeasure(renderable).status
                 when {
-                    status.isSkipped(CrossedAxis.X) -> {
+                    status.isSkipped(Axis.X) -> {
                         //tableIterations.pushNewIteration(def)
                         //tableIterations.pushNewIteration(def)
                         break
                     }
-                    status.isClipped(CrossedAxis.X) -> {
+                    status.isClipped(Axis.X) -> {
                         //tableIterations.limitWithEndColumn(def)
                         //if (iterator.hasNext()) {
                         //    tableIterations.insertAsNextIteration(iterator.next())

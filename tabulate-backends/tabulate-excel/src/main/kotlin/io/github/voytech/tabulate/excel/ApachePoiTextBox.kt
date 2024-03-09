@@ -1,5 +1,6 @@
 package io.github.voytech.tabulate.excel
 
+import io.github.voytech.tabulate.core.layout.Axis
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.asHeight
@@ -184,7 +185,7 @@ class ApachePoiTextBox(
         while (offset < text.length) {
             if ((currentY + lineHeight).roundToInt() > maxHeight) {
                 applySize(measuredWidth, currentY)
-                return RenderedPartly.asResult()
+                return RenderedPartly(Axis.Y).asResult()
             }
             val codePoint: Int = text.codePointAt(offset)
             val char = text[offset]
@@ -217,7 +218,7 @@ class ApachePoiTextBox(
                 } else {
                     handleAndClearCurrentLine(currentX)
                     applySize(measuredWidth, currentY + lineHeight)
-                    return RenderedPartly.asResult()
+                    return RenderedPartly(Axis.X).asResult()
                 }
             }
         }

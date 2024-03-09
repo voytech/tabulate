@@ -100,7 +100,7 @@ interface Layout {
 
     fun LayoutSpace.isCrossingBounds(
         bbox: RenderableBoundingBox, type: LayoutBoundaryType = LayoutBoundaryType.INNER
-    ): CrossedAxis?
+    ): Axis?
 
     fun applyChildRectangle(box: BoundingRectangle) {}
 
@@ -274,11 +274,11 @@ abstract class AbstractLayout(override val properties: LayoutProperties) : Layou
     final override fun LayoutSpace.isCrossingBounds(
         bbox: RenderableBoundingBox,
         type: LayoutBoundaryType
-    ): CrossedAxis? =
+    ): Axis? =
         if (isXCrossed(bbox, type)) {
-            CrossedAxis.X
+            Axis.X
         } else if (isYCrossed(bbox, type)) {
-            CrossedAxis.Y
+            Axis.Y
         } else null
 
     final override fun LayoutSpace.allocateSpace(position: Position) {
@@ -444,7 +444,7 @@ data class RenderableBoundingBox(
 
 fun RenderableBoundingBox?.isDefined() = this?.isDefined() ?: false
 
-enum class CrossedAxis {
+enum class Axis {
     X,
     Y
 }
