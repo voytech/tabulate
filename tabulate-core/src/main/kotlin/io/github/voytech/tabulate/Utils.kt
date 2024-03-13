@@ -86,6 +86,10 @@ class MultiIterationSet<T, E> : CompositeIterator<T, E> where E : Enum<E>, T : A
 
     private val iterations: MutableMap<E, AdjustingIterator<T>> = mutableMapOf()
 
+    private var newItemsAllowed = true
+
+    private fun <R> appendAllowed(block: () -> R): R? = if (newItemsAllowed) block() else null
+
     private fun <R> usingCategory(enum: E, block: AdjustingIterator<T>.() -> R?): R? {
         iterations.computeIfAbsent(enum) { AdjustingIterator(collection) }
         return iterations[enum]?.run(block)
@@ -93,7 +97,7 @@ class MultiIterationSet<T, E> : CompositeIterator<T, E> where E : Enum<E>, T : A
 
     fun find(pred: (T) -> Boolean): T? = collection.find(pred)
 
-    fun insert(enum: E, elem: T) {
+    fun insert(enum: E, elem: T) = appendAllowed {
         usingCategory(enum) {
             val index = currentIndex()
             val list = collection.toMutableList().also { it.add(index + 1, elem) }
@@ -103,7 +107,16 @@ class MultiIterationSet<T, E> : CompositeIterator<T, E> where E : Enum<E>, T : A
         }
     }
 
-    fun add(elem: T) {
+    private fun maxTouchedIndex(): Int = iterations.keys.maxOfOrNull { currentIndex(it) } ?: 0
+
+    fun deleteUntouched() {
+        val temp = collection.take(maxTouchedIndex() + 1)
+        collection.clear()
+        collection.addAll(temp)
+        iterations.values.forEach { it.rebuild() }
+    }
+
+    fun add(elem: T) = appendAllowed {
         collection.add(elem)
         iterations.values.forEach { it.rebuild() }
     }
@@ -138,6 +151,9 @@ class MultiIterationSet<T, E> : CompositeIterator<T, E> where E : Enum<E>, T : A
     }
 
     fun lastOrNull(): T? = collection.lastOrNull()
+    fun preventNewItems(prevent: Boolean = true) {
+        newItemsAllowed = !prevent
+    }
 
 }
 

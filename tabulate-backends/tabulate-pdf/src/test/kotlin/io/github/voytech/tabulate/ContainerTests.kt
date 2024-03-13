@@ -152,6 +152,7 @@ class ContainerTests {
             page {
                 vertical {
                     section {
+                        descendantsImmediateIterations
                         (0..40).forEach { index ->
                             text {
                                 value<PageExecutionContext> { "This is ($index) text on page (${it.pageNumber})" }
@@ -159,7 +160,9 @@ class ContainerTests {
                                     borders { all { solid } }
                                     margins { left { 1.pt() }; top { 1.pt() } }
                                     alignment { center; middle }
-                                    width { 33f.percents() }
+                                    width { 15.percents() }
+                                    clip { disabled }
+                                    overflow { retry }
                                 }
                             }
                         }

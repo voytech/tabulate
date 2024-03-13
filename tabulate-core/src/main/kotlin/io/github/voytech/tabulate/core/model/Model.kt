@@ -5,6 +5,7 @@ import io.github.voytech.tabulate.core.layout.LayoutProperties
 import io.github.voytech.tabulate.core.layout.SpaceConstraints
 import io.github.voytech.tabulate.core.layout.LayoutSpace
 import io.github.voytech.tabulate.core.layout.impl.SimpleLayout
+import io.github.voytech.tabulate.core.operation.Renderable
 import mu.KLogging
 import java.util.*
 
@@ -81,6 +82,13 @@ abstract class AbstractModel(
     internal fun resolveLayout(properties: LayoutProperties): Layout =
         if (this is LayoutStrategy<*>) createLayout(properties) else SimpleLayout(properties)
 
+
+    fun <A : Attribute<A>> getAttribute(attribute: Class<A>): A? =
+        (this as? AttributeAware)?.attributes?.get(attribute)
+
+    inline fun <reified A : Attribute<A>> getAttribute(): A? =
+        (this as? AttributeAware)?.attributes?.get(A::class.java)
+
     companion object : KLogging()
 }
 
@@ -90,7 +98,6 @@ abstract class ModelWithAttributes :
 enum class DescendantsIterationsKind {
     IMMEDIATE,
     POSTPONED,
-    CUSTOM
 }
 abstract class AbstractContainerModel: AbstractModel() {
     protected abstract val models: List<AbstractModel>

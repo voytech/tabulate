@@ -40,6 +40,12 @@ fun <T: Any> TableLevelAttributesBuilderApi<T>.width(block: WidthAttribute.Build
 fun <T: Any> TableLevelAttributesBuilderApi<T>.height(block: HeightAttribute.Builder.() -> Unit) =
     attribute(HeightAttribute.builder(Table::class.java).apply(block))
 
+fun <T: Any> TableLevelAttributesBuilderApi<T>.onVerticalOverflow(block: VerticalOverflowAttribute.Builder.() -> Unit) =
+    attribute(VerticalOverflowAttribute.builder(Table::class.java).apply(block))
+
+fun <T: Any> TableLevelAttributesBuilderApi<T>.onHorizontalOverflow(block: HorizontalOverflowAttribute.Builder.() -> Unit) =
+    attribute(HorizontalOverflowAttribute.builder(Table::class.java).apply(block))
+
 //Attributes available on column level
 fun <T: Any> ColumnLevelAttributesBuilderApi<T>.text(block: TextStylesAttribute.Builder.() -> Unit) =
     attribute(TextStylesAttribute.builder<CellRenderable>().apply(block))

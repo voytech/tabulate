@@ -3,6 +3,7 @@ package io.github.voytech.tabulate.components.text.api.builder.dsl
 import io.github.voytech.tabulate.components.text.model.Text
 import io.github.voytech.tabulate.components.text.operation.TextRenderable
 import io.github.voytech.tabulate.core.model.attributes.*
+import io.github.voytech.tabulate.core.model.overflow.OverflowWords
 
 // Attributes available on text level
 
@@ -30,4 +31,15 @@ fun TextAttributesBuilderApi.height(block: HeightAttribute.Builder.() -> Unit) {
 
 fun TextAttributesBuilderApi.width(block: WidthAttribute.Builder.() -> Unit) {
     attribute(WidthAttribute.Builder(Text::class.java).apply(block))
+}
+
+fun TextAttributesBuilderApi.verticalOverflow(block: VerticalOverflowAttribute.Builder.() -> Unit) =
+    attribute(VerticalOverflowAttribute.builder(Text::class.java).apply(block))
+
+fun TextAttributesBuilderApi.horizontalOverflow(block: HorizontalOverflowAttribute.Builder.() -> Unit) =
+    attribute(HorizontalOverflowAttribute.builder(Text::class.java).apply(block))
+
+fun TextAttributesBuilderApi.overflow(block: OverflowWords.() -> Unit) {
+    verticalOverflow(block)
+    horizontalOverflow(block)
 }

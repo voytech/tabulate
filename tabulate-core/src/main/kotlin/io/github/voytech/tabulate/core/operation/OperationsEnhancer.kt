@@ -6,7 +6,7 @@ import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.Orientation
 import io.github.voytech.tabulate.core.model.attributes.ClipAttribute
-import io.github.voytech.tabulate.core.model.clip.DefaultClippingMode
+import io.github.voytech.tabulate.core.model.clip.ClippingMode
 import io.github.voytech.tabulate.core.model.isNullOrEmpty
 
 /**
@@ -149,7 +149,7 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
         } else Nothing.asResult()
 
     private fun E.isClippingEnabled(): Boolean =
-        getModelAttribute<ClipAttribute>()?.let { clip -> clip.mode == DefaultClippingMode.EDGE } ?: true
+        getModelAttribute<ClipAttribute>()?.let { clip -> clip.mode == ClippingMode.CLIP } ?: true
 
     private fun LayoutApi.defaultCrossedAxis(): Axis =
         Axis.X.takeIf { layout.properties.orientation == Orientation.HORIZONTAL } ?: Axis.Y

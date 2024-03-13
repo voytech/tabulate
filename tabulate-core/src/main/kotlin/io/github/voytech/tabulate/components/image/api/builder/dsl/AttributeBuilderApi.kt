@@ -2,6 +2,7 @@ package io.github.voytech.tabulate.components.image.api.builder.dsl
 
 import io.github.voytech.tabulate.components.image.model.Image
 import io.github.voytech.tabulate.components.image.operation.ImageRenderable
+import io.github.voytech.tabulate.components.table.api.builder.dsl.TableLevelAttributesBuilderApi
 import io.github.voytech.tabulate.core.model.attributes.*
 
 // Attributes available on image level
@@ -25,3 +26,9 @@ fun ImageAttributesBuilderApi.height(block: HeightAttribute.Builder.() -> Unit) 
 fun ImageAttributesBuilderApi.width(block: WidthAttribute.Builder.() -> Unit) {
     attribute(WidthAttribute.builder<Image>().apply(block))
 }
+
+fun ImageAttributesBuilderApi.onVerticalOverflow(block: VerticalOverflowAttribute.Builder.() -> Unit) =
+    attribute(VerticalOverflowAttribute.builder(Image::class.java).apply(block))
+
+fun ImageAttributesBuilderApi.onHorizontalOverflow(block: HorizontalOverflowAttribute.Builder.() -> Unit) =
+    attribute(HorizontalOverflowAttribute.builder(Image::class.java).apply(block))

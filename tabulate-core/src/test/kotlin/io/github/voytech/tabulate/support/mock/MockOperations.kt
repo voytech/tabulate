@@ -9,7 +9,6 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 data class InterceptedContext(
@@ -53,7 +52,10 @@ class Spy private constructor() {
     private val visitedOperations: LinkedList<InterceptedContext> = LinkedList()
     internal val measures = MockMeasures()
 
+    // When set to true operations that have effect in actual rendering renderable object in viewport will be tracked.
     internal var trackRendering = true
+
+    // When set to false operations that are used to measure renderable (when no size provided) will be skipped.
     internal var trackMeasuring = true
     var documentWidth: Width? = null
     var documentHeight: Height? = null
@@ -112,15 +114,15 @@ abstract class MockRenderResultOperation<E : AttributedContext>(
 
 abstract class MockRenderOperation<E : AttributedContext>(
     private val contextClass: Class<E>,
-    private val isMeasuringOp: Boolean = false,
+    val isMeasuringOperation: Boolean = false,
     private val measure: Boolean = true,
     private val spy: Spy = Spy.spy
 ) : MockMeasureProvider<E>(), VoidOperation<TestRenderingContext, E> {
 
     override operator fun invoke(renderingContext: TestRenderingContext, context: E) {
         if (measure) tryProvideMeasures(context)
-        if (isMeasuringOp && spy.trackMeasuring ||
-            !isMeasuringOp && spy.trackRendering
+        if (isMeasuringOperation && spy.trackMeasuring ||
+            !isMeasuringOperation && spy.trackRendering
         ) {
             spy.track(this, context)
         }
@@ -144,6 +146,58 @@ open class MockAttributeRenderOperation<T : Attribute<T>, E : AttributedContext>
     }
 }
 
+fun InterceptedContext.assertIsMeasuringOperation(): Boolean =
+    (operation as? MockRenderOperation<*>)?.isMeasuringOperation ?: false
+
+fun InterceptedContext.assertIsRenderingOperation(): Boolean =
+    (operation as? MockRenderOperation<*>)?.isMeasuringOperation?.not() ?: true
+
+inline fun <reified R: AttributedContext> InterceptedContext.assertContextClass() =
+    context::class.java == R::class.java
+
+fun InterceptedContext.assertIsRenderable() {
+    assertTrue { context is Renderable<*> }
+}
+
+fun InterceptedContext.assertBoundingBox(fractionPrecision: Int, boundingBox: BoundingRectangle) {
+    assertIsRenderable()
+    val renderable = context as Renderable<*>
+    val renderableBoundingBox = renderable.boundingBox
+    assertEquals(
+        boundingBox.leftTop.x.value.round(fractionPrecision),
+        renderableBoundingBox.absoluteX.value.round(fractionPrecision)
+    )
+    assertEquals(
+        boundingBox.leftTop.y.value.round(fractionPrecision),
+        renderableBoundingBox.absoluteY.value.round(fractionPrecision)
+    )
+    assertEquals(
+        boundingBox.rightBottom.x.value.round(fractionPrecision),
+        (renderableBoundingBox.absoluteX + (renderableBoundingBox.width ?: 0f.asWidth())).value.round(
+            fractionPrecision
+        )
+    )
+    assertEquals(
+        boundingBox.rightBottom.y.value.round(fractionPrecision),
+        (renderableBoundingBox.absoluteY + (renderableBoundingBox.height ?: 0f.asHeight())).value.round(
+            fractionPrecision
+        )
+    )
+}
+
+inline fun <reified C: AttributedContext> InterceptedContext.assertPredicate(predicate: (C) -> Boolean): Boolean {
+    assertContextClass<C>()
+    return predicate(context as C).also { assertTrue { it } }
+}
+
+fun Iterator<InterceptedContext>.assertOperationAssertionsInOrder(vararg predicates: (InterceptedContext) -> Boolean) {
+    for (predicate in predicates) {
+        assertTrue { hasNext() }
+        val current = next()
+        assertTrue { predicate(current) }
+    }
+    assertFalse { hasNext() }
+}
 
 fun Iterator<InterceptedContext>.assertAttributedContextsAppearanceInOrder(vararg classes: KClass<out AttributedContext>) {
     for (contextClass in classes) {
@@ -154,25 +208,14 @@ fun Iterator<InterceptedContext>.assertAttributedContextsAppearanceInOrder(varar
     }
 }
 
-fun Iterator<InterceptedContext>.assertRenderableBoundingBoxesInOrder(fractionPrecision: Int,vararg boundingBoxes: BoundingRectangle) {
+fun Iterator<InterceptedContext>.assertRenderableBoundingBoxesInOrder(
+    fractionPrecision: Int,
+    vararg boundingBoxes: BoundingRectangle
+) {
     boundingBoxes.forEach { boundingBox ->
         assertTrue { hasNext() }
-
         val current = next()
-        val renderableBoundingBox = (current.context as? Renderable<*>)?.boundingBox
-
-        assertNotNull(renderableBoundingBox)
-
-        assertEquals(boundingBox.leftTop.x.value.round(fractionPrecision), renderableBoundingBox.absoluteX.value.round(fractionPrecision))
-        assertEquals(boundingBox.leftTop.y.value.round(fractionPrecision), renderableBoundingBox.absoluteY.value.round(fractionPrecision))
-        assertEquals(
-            boundingBox.rightBottom.x.value.round(fractionPrecision),
-            (renderableBoundingBox.absoluteX + (renderableBoundingBox.width ?: 0f.asWidth())).value.round(fractionPrecision)
-        )
-        assertEquals(
-            boundingBox.rightBottom.y.value.round(fractionPrecision),
-            (renderableBoundingBox.absoluteY + (renderableBoundingBox.height ?: 0f.asHeight())).value.round(fractionPrecision)
-        )
+        current.assertBoundingBox(fractionPrecision, boundingBox)
     }
     assertFalse { hasNext() }
 }

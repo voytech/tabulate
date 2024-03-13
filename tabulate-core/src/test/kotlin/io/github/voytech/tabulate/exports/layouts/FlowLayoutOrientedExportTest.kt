@@ -5,32 +5,21 @@ import io.github.voytech.tabulate.components.container.api.builder.dsl.horizonta
 import io.github.voytech.tabulate.components.container.api.builder.dsl.vertical
 import io.github.voytech.tabulate.components.document.api.builder.dsl.createDocument
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
-import io.github.voytech.tabulate.components.image.api.builder.dsl.image
 import io.github.voytech.tabulate.components.image.operation.ImageRenderable
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
 import io.github.voytech.tabulate.components.table.api.builder.dsl.height
 import io.github.voytech.tabulate.components.table.api.builder.dsl.table
 import io.github.voytech.tabulate.components.table.rendering.CellRenderable
 import io.github.voytech.tabulate.components.table.rendering.TableStartRenderable
-import io.github.voytech.tabulate.components.text.api.builder.dsl.height
-import io.github.voytech.tabulate.components.text.api.builder.dsl.text
-import io.github.voytech.tabulate.components.text.api.builder.dsl.width
+import io.github.voytech.tabulate.components.text.api.builder.dsl.*
 import io.github.voytech.tabulate.components.text.operation.TextRenderable
 import io.github.voytech.tabulate.core.DocumentFormat
 import io.github.voytech.tabulate.core.StandaloneExportTemplate
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.operation.boundingBox
 import io.github.voytech.tabulate.data.Product
 import io.github.voytech.tabulate.data.Products
-import io.github.voytech.tabulate.support.mock.InterceptedContext
-import io.github.voytech.tabulate.support.mock.Spy
-import io.github.voytech.tabulate.support.mock.assertAttributedContextsAppearanceInOrder
-import io.github.voytech.tabulate.support.mock.assertRenderableBoundingBoxesInOrder
-import io.github.voytech.tabulate.support.mock.components.NewPageOperation
+import io.github.voytech.tabulate.support.mock.*
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class FlowLayoutOrientedExportTest {
 
@@ -244,48 +233,94 @@ class FlowLayoutOrientedExportTest {
         Spy.spy.measures.register<ImageRenderable>({ _ -> true }) {
             Size(400F.asWidth(), 400F.asHeight())
         }
-        // TODO below flow layout does not work with multi paging because Document re-attempts child exports only when there are pending continuations (should also re-attempt when there models that are not started for exporting. But in order to determine that - considered model should create continuation for such child models)
-        // TODO FlowLayout could have method for passing measured size of a next component which position is to be resolved (passing of model size should be before mdl.export call) - this prevent rendering of elements which are about to be clipped.
-        // TODO add component bag "render iteration modes" - childrenIterations { immediate; postponed } immediate or postponed
         val doc = document {
             page {
+                // This particular rendering will not request measuring of horizontal container children because
+                // 'horizontal' does not contain borders and backgrounds so does not require to know its size a priori.
                 horizontal {
-                    text { value = "txt1." }
-                    text { value = "txt2." }
-                    text { value = "txt3." }
-                    text { value = "txt4." }
-                    image { filePath = "image1.png" }
-                    image { filePath = "image2.png" }
-                    image { filePath = "image3.png" }
-                    image { filePath = "image4.png" }
-                    image { filePath = "image5.png" }
-                    image { filePath = "image6.png" }
+                    descendantsImmediateIterations
+                    // `overflow { retry }` means that at model component level, when rendering of renderable is skipped due to free-space exhaustion
+                    // - entire model render iteration will be retried after allocating whole layout space on iteration that caused an overflow event.
+
+                    // `clip { disabled }` - turns on skipping of renderable.
+                    // This only makes sense to use both overflow=retry clip=disabled.
+                    // If clip=enabled, then retrying would cause partial repetition of content
+                    text { value = "txt1" ; attributes { overflow { retry }; clip { disabled } }}
+                    text { value = "txt2" ; attributes { overflow { retry }; clip { disabled } }}
+                    text { value = "txt3" ; attributes { overflow { retry }; clip { disabled } }}
+                    text { value = "txt4" ; attributes { overflow { retry }; clip { disabled } }}
+                    text { value = "txt5" ; attributes { overflow { retry }; clip { disabled } }}
+                    text { value = "txt6" ; attributes { overflow { retry }; clip { disabled } }}
+                    text { value = "txt7" ; attributes { overflow { retry }; clip { disabled } }}
+                    text { value = "txt8" ; attributes { overflow { retry }; clip { disabled } }}
+                    text { value = "txt9" ; attributes { overflow { retry }; clip { disabled } }}
+                    text { value = "txt10" ; attributes { overflow { retry }; clip { disabled } }}
+                    text { value = "txt11" ; attributes { overflow { retry }; clip { disabled } }}
+                    text { value = "txt12" ; attributes { overflow { retry }; clip { disabled } }}
                 }
             }
         }
         StandaloneExportTemplate(DocumentFormat.format("spy")).export(createDocument(doc), Unit)
         val history = Spy.spy.readHistory()
+        history.assertOperationAssertionsInOrder(
+            { op -> op.assertContextClass<NewPage>() },
+            // Measure
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt1" } },
+            // Render
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt1" } },
 
-        assertTrue { history.hasNext() }
-        var current = history.next()
-        assertTrue { current.operation is NewPageOperation }
-        assertEquals(1, (current.context as NewPage).pageNumber)
+            // Measure, but overflow is detected on X axis.
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt2" } },
+            // Measure in new iteration
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt2" } },
+            // Render in that iteration
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt2" } },
 
-        assertTrue { history.hasNext() }
-        current = history.next()
-        assertNotNull(current.context.boundingBox())
-        assertEquals("txt1.", (current.context as TextRenderable).text)
-        var currentBbox = requireNotNull(current.context.boundingBox())
-        assertTrue(currentBbox.isDefined())
-        assertEquals(0.0F, currentBbox.absoluteX.value)
-        assertEquals(0.0F, currentBbox.absoluteY.value)
-        assertEquals(220.0F, requireNotNull(currentBbox.width).value)
-        assertEquals(50.0F, requireNotNull(currentBbox.height).value)
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt3" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt3" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt3" } },
 
-        assertTrue { history.hasNext() }
-        current = history.next()
-        currentBbox = requireNotNull(current.context.boundingBox())
-        assertTrue(currentBbox.isDefined())
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt4" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt4" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt4" } },
+
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt5" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt5" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt5" } },
+
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt6" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt6" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt6" } },
+
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt7" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt7" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt7" } },
+
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt8" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt8" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt8" } },
+
+            { op -> op.assertContextClass<NewPage>() },
+
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt8" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt8" } },
+
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt9" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt9" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt9" } },
+
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt10" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt10" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt10" } },
+
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt11" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt11" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt11" } },
+
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt12" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt12" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt12" } },
+        )
     }
 
     @Test

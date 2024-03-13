@@ -6,13 +6,13 @@ import io.github.voytech.tabulate.core.model.RenderIterationsApi
 data class TableRenderIterations(val iterations: RenderIterationsApi) {
 
     internal fun <T> pushNewIteration(def: ColumnDef<T>) {
-        iterations.newRenderIteration(START_COLUMN to def.index)
+        iterations.appendPending(START_COLUMN to def.index)
     }
 
     internal fun <T> insertAsNextIteration(def: ColumnDef<T>) {
         iterations.getCurrentIterationAttributesOrNull().let { map ->
             val filtered = map.filter { it.key != END_COLUMN }
-            iterations.insertAsNextRenderIteration(filtered + (START_COLUMN to def.index))
+            iterations.prependPending(filtered + (START_COLUMN to def.index))
         }
     }
 
@@ -22,7 +22,7 @@ data class TableRenderIterations(val iterations: RenderIterationsApi) {
 
     internal fun pushNewIteration(rowIndex: RowIndex, recordIndex: Int) {
         iterations.appendAttributes(END_ROW to rowIndex - 1, END_RECORD to recordIndex - 1)
-        iterations.newRenderIteration(START_ROW to rowIndex, START_RECORD to recordIndex)
+        iterations.appendPending(START_ROW to rowIndex, START_RECORD to recordIndex)
     }
 
     private fun getStartColumnIndex(): Int? = iterations.getCurrentIterationAttributeOrNull(START_COLUMN)
