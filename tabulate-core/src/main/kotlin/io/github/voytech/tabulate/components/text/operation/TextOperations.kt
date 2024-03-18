@@ -7,6 +7,8 @@ import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.layout.impl.SimpleLayout
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.StateAttributes
+import io.github.voytech.tabulate.core.model.attributes.HeightAttribute
+import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
 import io.github.voytech.tabulate.core.operation.HasText
 import io.github.voytech.tabulate.core.operation.Operation
 import io.github.voytech.tabulate.core.operation.Renderable
@@ -27,8 +29,8 @@ class TextRenderable internal constructor(
         getRenderableBoundingBox(
             x = leftTop.x,
             y = leftTop.y,
-            width = getExplicitWidth(),
-            height = getExplicitHeight(),
+            width = getModelAttribute<WidthAttribute>()?.value,
+            height = getModelAttribute<HeightAttribute>()?.value,
             type = boundaryToFit
         )
     }

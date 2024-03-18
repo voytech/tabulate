@@ -57,9 +57,9 @@ class RowStartRenderable(
         )
     }
 
-    override fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, layout: TableLayout): Unit =
+    override fun LayoutSpace.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout): Unit =
         with(layout) {
-            context.height?.let {
+            bbox.height?.let {
                 val ops = SizingOptions.SET_LOCKED.takeIf { hasModelAttribute<HeightAttribute>() } ?: SizingOptions.SET
                 setRowHeight(getRow(), it, ops)
             }

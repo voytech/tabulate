@@ -47,9 +47,9 @@ class ColumnStartRenderable(
         )
     }
 
-    override fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, layout: TableLayout): Unit =
+    override fun LayoutSpace.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout): Unit =
         with(layout) {
-            context.width?.let {
+            bbox.width?.let {
                 val ops = SizingOptions.SET_LOCKED.takeIf { hasModelAttribute<WidthAttribute>() } ?: SizingOptions.SET
                 setColumnWidth(getColumn(), it, ops)
             }

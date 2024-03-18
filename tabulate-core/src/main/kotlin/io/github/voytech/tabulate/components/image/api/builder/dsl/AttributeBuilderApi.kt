@@ -20,15 +20,15 @@ fun ImageAttributesBuilderApi.background(block: BackgroundAttribute.Builder.() -
     attribute(BackgroundAttribute.builder<ImageRenderable>().apply(block))
 
 fun ImageAttributesBuilderApi.height(block: HeightAttribute.Builder.() -> Unit) {
-    attribute(HeightAttribute.builder<Image>().apply(block))
+    attribute(HeightAttribute.builder<ImageRenderable>().apply(block))
 }
 
 fun ImageAttributesBuilderApi.width(block: WidthAttribute.Builder.() -> Unit) {
-    attribute(WidthAttribute.builder<Image>().apply(block))
+    attribute(WidthAttribute.builder<ImageRenderable>().apply(block))
 }
 
-fun ImageAttributesBuilderApi.onVerticalOverflow(block: VerticalOverflowAttribute.Builder.() -> Unit) =
+fun ImageAttributesBuilderApi.verticalOverflow(block: VerticalOverflowAttribute.Builder.() -> Unit) =
     attribute(VerticalOverflowAttribute.builder(Image::class.java).apply(block))
 
-fun ImageAttributesBuilderApi.onHorizontalOverflow(block: HorizontalOverflowAttribute.Builder.() -> Unit) =
+fun ImageAttributesBuilderApi.horizontalOverflow(block: HorizontalOverflowAttribute.Builder.() -> Unit) =
     attribute(HorizontalOverflowAttribute.builder(Image::class.java).apply(block))

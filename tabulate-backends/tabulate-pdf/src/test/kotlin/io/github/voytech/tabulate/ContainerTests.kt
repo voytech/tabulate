@@ -147,7 +147,7 @@ class ContainerTests {
     }
 
     @Test
-    fun `should export document with 'text' with multiple sizes`() {
+    fun `test multiple 'text' components, width set, overflow retry, clip disabled`() {
         document {
             page {
                 vertical {
@@ -160,15 +160,13 @@ class ContainerTests {
                                     borders { all { solid } }
                                     margins { left { 1.pt() }; top { 1.pt() } }
                                     alignment { center; middle }
-                                    width { 15.percents() }
+                                    width { 10.percents() }
                                     clip { disabled }
                                     overflow { retry }
+                                    text { breakWords } // TODO breakLines causes strange gap!!!!
                                 }
                             }
                         }
-                    }
-                    section {
-                        attributes { margins { top { 10.pt() } } }
                     }
                 }
                 footer {

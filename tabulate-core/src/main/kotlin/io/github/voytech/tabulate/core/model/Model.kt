@@ -5,7 +5,6 @@ import io.github.voytech.tabulate.core.layout.LayoutProperties
 import io.github.voytech.tabulate.core.layout.SpaceConstraints
 import io.github.voytech.tabulate.core.layout.LayoutSpace
 import io.github.voytech.tabulate.core.layout.impl.SimpleLayout
-import io.github.voytech.tabulate.core.operation.Renderable
 import mu.KLogging
 import java.util.*
 
@@ -25,7 +24,7 @@ interface AttributedModelOrPart : AttributeAware, ModelPart
 fun <C : ExecutionContext, R : Any> ExportApi.value(supplier: ReifiedValueSupplier<C, R>): R? =
     with(getCustomAttributes()) { supplier.value() }
 
-interface LayoutStrategy<LP : Layout> {
+interface HavingLayout<LP : Layout> {
     fun createLayout(properties: LayoutProperties): LP
 
     fun <R> ExportApi.withinCurrentLayout(block: (LP.(LayoutSpace) -> R)): R =
@@ -34,10 +33,10 @@ interface LayoutStrategy<LP : Layout> {
 }
 
 internal enum class Method {
-    PREPARE,
+    BEFORE_LAYOUT,
     EXPORT,
     FINISH,
-    INITIALIZE,
+    EXPORT_CONTEXT_CREATED,
     MEASURE;
 }
 
@@ -50,9 +49,9 @@ abstract class AbstractModel(
     @JvmSynthetic
     internal operator fun invoke(method: Method, exportContext: ModelExportContext) = exportContext.api {
         when (method) {
-            Method.INITIALIZE -> exportContextCreated(this)
+            Method.EXPORT_CONTEXT_CREATED -> exportContextCreated(this)
             Method.MEASURE -> takeMeasures(this)
-            Method.PREPARE -> beforeLayoutCreated(this)
+            Method.BEFORE_LAYOUT -> beforeLayoutCreated(this)
             Method.EXPORT -> doExport(this)
             Method.FINISH -> finishExport(this)
         }
@@ -80,7 +79,7 @@ abstract class AbstractModel(
     protected open fun getLayoutConstraints(): SpaceConstraints? = null
 
     internal fun resolveLayout(properties: LayoutProperties): Layout =
-        if (this is LayoutStrategy<*>) createLayout(properties) else SimpleLayout(properties)
+        if (this is HavingLayout<*>) createLayout(properties) else SimpleLayout(properties)
 
 
     fun <A : Attribute<A>> getAttribute(attribute: Class<A>): A? =

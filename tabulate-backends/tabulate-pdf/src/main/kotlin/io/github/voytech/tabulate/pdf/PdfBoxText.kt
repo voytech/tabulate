@@ -65,8 +65,8 @@ internal class PdfBoxText(
 
         private fun getVerticalAlignmentPadding(): Float = alignment?.vertical?.let {
             when (it) {
-                DefaultVerticalAlignment.TOP -> (requiredBboxHeight - lineHeight).coerceAtLeast(0F)
-                DefaultVerticalAlignment.MIDDLE -> (requiredBboxHeight / 2 - lineHeight / 2).coerceAtLeast(0F)
+                DefaultVerticalAlignment.BOTTOM -> (requiredBboxHeight - (lineHeight*lines.size)).coerceAtLeast(0F)
+                DefaultVerticalAlignment.MIDDLE -> ((requiredBboxHeight/2 - (lineHeight*lines.size)/2)).coerceAtLeast(0F)
                 else -> 0F
             }
         } ?: 0F

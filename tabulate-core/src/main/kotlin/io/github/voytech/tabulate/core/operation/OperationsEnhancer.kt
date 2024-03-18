@@ -116,15 +116,12 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
         boundingBox.width?.let { boundingBox.width = minOf(it, boundingBox.maxWidth) }
     }
 
-    protected fun LayoutApi.tryApplyResults(context: E, status: RenderingStatus) = with(layout) {
+    protected fun LayoutApi.tryApplyResults(context: E) = with(layout) {
         context.boundingBox()?.let { boundaries ->
-            // TODO consider this shall we crop computed bounding box
             fitBoundingBoxIntoLayoutBounds(boundaries)
             space.allocateRectangle(boundaries)
             @Suppress("UNCHECKED_CAST")
-            if (context is ApplyLayoutElement<*> &&
-                status !is RenderingSkipped &&
-                status !is Error) {
+            if (context is ApplyLayoutElement<*>) {
                 with(context as ApplyLayoutElement<Layout>) {
                     space.applyBoundingBox(boundaries, layout.delegate)
                 }
@@ -189,7 +186,7 @@ class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedContext>(
                 is RenderingClipped -> renderClippingOrFully(intermediateResult)
                 is RenderingSkipped -> intermediateResult
                 else -> error("This OperationResult: ${intermediateResult.status} is not supported on guarded rendering.")
-            }.also { tryApplyResults(context, intermediateResult.status) }
+            }.also { tryApplyResults(context) }
         }
     }
 }
@@ -214,7 +211,7 @@ class LayoutAwareMeasureOperation<CTX : RenderingContext, E : AttributedContext>
                 is RenderingSkipped -> status
                 is Ok -> result.status
                 else -> error("This OperationResult: $status is not supported on guarded measuring.")
-            }.let { newStatus -> result.set(newStatus) }.also { tryApplyResults(context, it.status) }
+            }.let { newStatus -> result.set(newStatus) }.also { tryApplyResults(context) }
         }
     }
 }

@@ -49,7 +49,7 @@ class Table<T : Any> internal constructor(
 
     override val attributes: Attributes?,
 
-    ) : ModelWithAttributes(), LayoutStrategy<TableLayout> {
+    ) : ModelWithAttributes(), HavingLayout<TableLayout> {
 
     companion object {
         @JvmStatic

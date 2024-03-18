@@ -87,13 +87,9 @@ abstract class Renderable<EL : Layout>(@JvmSynthetic override val attributes: At
 
     fun hasBoundingBox() = this::boundingBox.isInitialized
 
-    fun initBoundingBox(
-        scope: LayoutApi, initializer: ((RenderableBoundingBox) -> RenderableBoundingBox)? = null
-    ): RenderableBoundingBox = with(scope.space) {
+    fun initBoundingBox(scope: LayoutApi): RenderableBoundingBox = with(scope.space) {
         if (this@Renderable::boundingBox.isInitialized) return boundingBox
-        boundingBox = defineBoundingBox(scope.layout())
-        initializer?.let { boundingBox += it(boundingBox) }
-        boundingBox = boundingBox.setLayoutSpaceUnits(scope.space, boundaryToFit)
+        boundingBox = defineBoundingBox(scope.layout()).convertUnits(scope.space, boundaryToFit, scope.parentSpace())
         return boundingBox
     }
 

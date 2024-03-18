@@ -14,7 +14,7 @@ class Container(
     @get:JvmSynthetic
     override val models: List<AbstractModel> = emptyList(),
     override val descendantsIterationsKind: DescendantsIterationsKind = DescendantsIterationsKind.POSTPONED,
-) : AbstractContainerModelWithAttributes(), LayoutStrategy<FlowLayout> {
+) : AbstractContainerModelWithAttributes(), HavingLayout<FlowLayout> {
 
     override val needsMeasureBeforeExport = hasRenderableAttributes()
 

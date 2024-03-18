@@ -26,11 +26,11 @@ fun TextAttributesBuilderApi.clip(block: ClipAttribute.Builder.() -> Unit) =
     attribute(ClipAttribute.builder<TextRenderable>().apply(block))
 
 fun TextAttributesBuilderApi.height(block: HeightAttribute.Builder.() -> Unit) {
-    attribute(HeightAttribute.Builder(Text::class.java).apply(block))
+    attribute(HeightAttribute.Builder(TextRenderable::class.java).apply(block))
 }
 
 fun TextAttributesBuilderApi.width(block: WidthAttribute.Builder.() -> Unit) {
-    attribute(WidthAttribute.Builder(Text::class.java).apply(block))
+    attribute(WidthAttribute.Builder(TextRenderable::class.java).apply(block))
 }
 
 fun TextAttributesBuilderApi.verticalOverflow(block: VerticalOverflowAttribute.Builder.() -> Unit) =

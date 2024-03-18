@@ -49,7 +49,7 @@ class Page internal constructor(
     }
 
     private fun ExportApi.exportContent(spaceConstraints: SpaceConstraints) {
-        models?.forEach {
+        models.forEach {
             it.export(spaceConstraints)
         }
     }

@@ -15,7 +15,7 @@ data class LayoutApi(val space: LayoutSpace, val layout: NavigableLayout) {
     fun <P : Layout, R> layout(block: P.(LayoutSpace) -> R) =
         block(layout(), space)
 
-    fun parentLayoutSpace(): LayoutSpace? = layout.getParentScope()?.space
+    fun parentSpace(): LayoutSpace? = layout.getParentScope()?.space
 
     fun close() = with(layout) {
         space.setMeasured()
@@ -133,7 +133,7 @@ class ModelContextLayouts(
     }
 
     @JvmSynthetic
-    internal fun <R> ensuringNextLayout(constraints: SpaceConstraints, block: LayoutApi.() -> R): R =
+    internal fun <R> ensuringLayout(constraints: SpaceConstraints, block: LayoutApi.() -> R): R =
         if (shouldCreateLayout()) {
             createLayout(constraints).run {
                 block(this).also { close() }

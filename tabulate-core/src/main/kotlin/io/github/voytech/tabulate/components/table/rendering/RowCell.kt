@@ -45,12 +45,12 @@ class CellRenderable(
         )
     }
 
-    override fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, layout: TableLayout): Unit =
+    override fun LayoutSpace.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout): Unit =
         with(layout) {
-            context.width?.let {
+            bbox.width?.let {
                 setColumnWidth(getColumn(), it, SizingOptions.SET_IF_GREATER)
             }
-            context.height?.let {
+            bbox.height?.let {
                 setRowHeight(getRow(), it, SizingOptions.SET_IF_GREATER)
             }
         }

@@ -12,7 +12,7 @@ class Wrapper(
     override val attributes: Attributes?,
     @get:JvmSynthetic
     internal val child: AbstractModel,
-) : ModelWithAttributes(), LayoutStrategy<SimpleLayout> {
+) : ModelWithAttributes(), HavingLayout<SimpleLayout> {
 
     private val alignments by lazy {
         attributes?.get<AlignmentAttribute>()

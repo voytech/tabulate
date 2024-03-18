@@ -396,7 +396,7 @@ fun interface MeasureLayoutElement<L : Layout> {
 }
 
 fun interface ApplyLayoutElement<L : Layout> {
-    fun LayoutSpace.applyBoundingBox(context: RenderableBoundingBox, layout: L)
+    fun LayoutSpace.applyBoundingBox(bbox: RenderableBoundingBox, layout: L)
 }
 
 // TODO layoutPosition -> minLeftTop ; maxWidth+maxHeight -> maxRightBottom  (absolute boundaries of this renderable bounding box enforced by a layout in which context a renderable is being rendered.)
@@ -428,15 +428,16 @@ data class RenderableBoundingBox(
         height = other.height?.switchUnitOfMeasure(unitsOfMeasure()) ?: height
     )
 
-    fun setLayoutSpaceUnits(space: LayoutSpace, type: LayoutBoundaryType): RenderableBoundingBox =
-        (if (type == LayoutBoundaryType.OUTER) space.maxBoundingRectangle else space.innerBoundingRectangle).let { bbox ->
+    fun convertUnits(child: LayoutSpace, type: LayoutBoundaryType, parent: LayoutSpace?): RenderableBoundingBox =
+        (if (type == LayoutBoundaryType.OUTER) child.maxBoundingRectangle else child.innerBoundingRectangle).let { bbox ->
+            val parentRect = parent?.innerBoundingRectangle ?: bbox
             copy(
                 cropBoxLeftTop = bbox.leftTop,
                 cropBoxRightBottom = bbox.leftTop + bbox.size(),
-                absoluteX = absoluteX.switchUnitOfMeasure(space.uom, bbox.getWidth()),
-                absoluteY = absoluteY.switchUnitOfMeasure(space.uom, bbox.getHeight()),
-                width = width?.switchUnitOfMeasure(space.uom, bbox.getWidth()),
-                height = height?.switchUnitOfMeasure(space.uom, bbox.getHeight())
+                absoluteX = absoluteX.switchUnitOfMeasure(child.uom, parentRect.getWidth()),
+                absoluteY = absoluteY.switchUnitOfMeasure(child.uom, parentRect.getHeight()),
+                width = width?.switchUnitOfMeasure(child.uom, parentRect.getWidth()),
+                height = height?.switchUnitOfMeasure(child.uom, parentRect.getHeight())
             )
         }
 

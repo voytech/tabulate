@@ -10,7 +10,6 @@ import io.github.voytech.tabulate.core.model.overflow.Overflow
 import io.github.voytech.tabulate.core.operation.*
 import io.github.voytech.tabulate.plusAssign
 
-
 @JvmInline
 value class StateAttributes(val data: MutableMap<String, Any> = mutableMapOf()) {
 
@@ -170,21 +169,12 @@ class OperationsInContext(private val ctx: ModelExportContext) {
     val render: Operations<RenderingContext> by lazy { with(ctx.instance) { ctx.getExportOperations() } }
     val measure: Operations<RenderingContext> by lazy { with(ctx.instance) { ctx.getMeasuringOperations() } }
 
-    fun render(context: AttributedContext): RenderingResult =
-        render(ctx.instance.renderingContext, context).trySetOverflowsFlag()
+    fun render(context: AttributedContext): RenderingResult = render(ctx.instance.renderingContext, context)
 
-    fun measure(context: AttributedContext): RenderingResult =
-        measure(ctx.instance.renderingContext, context).trySetOverflowsFlag()
+    fun measure(context: AttributedContext): RenderingResult = measure(ctx.instance.renderingContext, context)
 
     fun renderOrMeasure(context: AttributedContext): RenderingResult =
         if (ctx.phase == ExportPhase.MEASURING) measure(context) else render(context)
-
-    private fun RenderingResult.trySetOverflowsFlag(): RenderingResult = this.also {
-        when (it.status) {
-            is RenderingSkipped -> ctx.hasOverflows = true
-            else -> {}
-        }
-    }
 
     fun hasMeasuringOperations(): Boolean = measure.isEmpty().not()
 }
@@ -402,8 +392,8 @@ class ExportApi private constructor(private val context: ModelExportContext) {
                 }
             }
             resumeRenderIteration()
-            targetContext.model(Method.PREPARE, targetContext)
-            inNextLayoutScope(constraints) { targetContext.model(Method.EXPORT, targetContext) }
+            targetContext.model(Method.BEFORE_LAYOUT, targetContext)
+            inLayoutScope(constraints) { targetContext.model(Method.EXPORT, targetContext) }
             targetContext.model(Method.FINISH, targetContext)
             setNextState()
         }
@@ -413,7 +403,7 @@ class ExportApi private constructor(private val context: ModelExportContext) {
         targetContext: ModelExportContext, constraints: SpaceConstraints? = null, force: Boolean = false
     ): Size? = targetContext.setMeasuring().run {
         if (isRunningOrRestarted(force)) {
-            inNextLayoutScope(constraints) {
+            inLayoutScope(constraints) {
                 resumeRenderIteration()
                 targetContext.model(Method.MEASURE, targetContext)
                 setNextState()
@@ -428,23 +418,17 @@ class ExportApi private constructor(private val context: ModelExportContext) {
 
     private fun ModelExportContext.isRunningOrRestarted(restart: Boolean = false): Boolean {
         if (restart) state(phase, ExportState.STARTED)
-        // A model is still exporting/rendering when `hasOverflows` flag is set,
         // it is just STARTED or any continuation are registered on the tree down from here.
-        if (!isRunning()) return false
-        // Reset overflows flag. As long as overflows flag was previously set due to incomplete content render,
-        // we may resume continuation or restart rendering once again,
-        // but overflow flag should be examined once again during process.
-        hasOverflows = false
-        return true
+        return isRunning()
     }
 
     private fun ModelExportContext.shouldMeasure(): Boolean {
         return model.needsMeasureBeforeExport && layouts.needsMeasuring() && customStateAttributes.allowMeasureBeforeRender()
     }
 
-    private fun <R> ModelExportContext.inNextLayoutScope(
+    private fun <R> ModelExportContext.inLayoutScope(
         constraints: SpaceConstraints?, block: LayoutApi.() -> R
-    ): R = layouts.ensuringNextLayout(
+    ): R = layouts.ensuringLayout(
         SpaceConstraints(
             leftTop = constraints?.leftTop,
             maxRightBottom = constraints?.maxRightBottom,
@@ -462,14 +446,14 @@ class ExportApi private constructor(private val context: ModelExportContext) {
 
     private fun AbstractModel.useParentIfApplicable(): ModelExportContext? = let { model ->
         context.takeIf { context.model === model }?.also {
-            model(Method.INITIALIZE, it)
+            model(Method.EXPORT_CONTEXT_CREATED, it)
         }
     }
 
     private fun AbstractModel.createExportContext(): ModelExportContext = let { model ->
         context.navigate {
             createChildContext(model).context.also {
-                model(Method.INITIALIZE, it)
+                model(Method.EXPORT_CONTEXT_CREATED, it)
             }
         }
     }
