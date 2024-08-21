@@ -7,8 +7,10 @@ import io.github.voytech.tabulate.core.layout.impl.SimpleLayout
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
 import io.github.voytech.tabulate.core.model.attributes.MarginsAttribute
+import java.util.*
 
 class Wrapper(
+    override val id: String = UUID.randomUUID().toString(),
     override val attributes: Attributes?,
     @get:JvmSynthetic
     internal val child: AbstractModel,
@@ -23,7 +25,7 @@ class Wrapper(
     override fun doExport(api: ExportApi) = api {
         withinCurrentLayout {
             alignments?.let { alignment ->
-                child.currentSizeOrMeasure()?.let { childSize ->
+                child.measure().let { childSize ->
                     it.maxBoundingRectangle.size().let { size ->
                         val withMarginOrNot = getMarginSize(child)?.let { childSize + it } ?: childSize
                         child.export(SpaceConstraints(leftTop = it.leftTop.align(alignment, size, withMarginOrNot)))
@@ -33,14 +35,12 @@ class Wrapper(
         }
     }
 
-    private fun ExportApi.getMarginSize(model: AbstractModel): Size? = model.getAttribute<MarginsAttribute>()?.let {
+    private fun getMarginSize(model: AbstractModel): Size? = model.getAttribute<MarginsAttribute>()?.let {
         Size(it.left.asWidth(), it.top.asHeight())
     }
 
     override fun takeMeasures(api: ExportApi) = api {
-        withinCurrentLayout {
-            child.measure() // pre-measure all children if this method was invoked eagerly before rendering.
-        }
+        child.measure() // pre-measure all children if this method was invoked eagerly before rendering.
     }
 
     override fun createLayout(properties: LayoutProperties): SimpleLayout = SimpleLayout(properties)

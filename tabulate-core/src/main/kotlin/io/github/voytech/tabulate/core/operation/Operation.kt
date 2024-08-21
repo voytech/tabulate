@@ -13,16 +13,6 @@ data class RenderingResult(
     val attributes: Map<String, Any> = emptyMap(),
     val status: RenderingStatus
 ) {
-    fun isSkipped(axis: Axis): Boolean = status.isSkipped(axis)
-
-    fun isClipped(axis: Axis): Boolean = status.isClipped(axis)
-
-    fun isPartlyRendered(axis: Axis): Boolean = !isOk() && (status !is Error)
-
-    fun isOk(): Boolean = status is Ok || status is Nothing
-
-    fun okOrError(): RenderingStatus = Ok.takeIf { !status.isError() } ?: status
-
     fun set(status: RenderingStatus): RenderingResult = copy(
         attributes = attributes + ("originalStatus" to this.status),
         status = status,
@@ -33,7 +23,9 @@ sealed interface RenderingStatus
 
 fun RenderingStatus.asResult(): RenderingResult = RenderingResult(status = this)
 
-open class AxisBoundStatus(val activeAxis: Axis) : RenderingStatus
+open class AxisBoundStatus(val activeAxis: Axis) : RenderingStatus {
+    override fun toString(): String = javaClass.simpleName
+}
 
 class RenderingSkipped(activeAxis: Axis) : AxisBoundStatus(activeAxis)
 
@@ -41,11 +33,18 @@ class RenderingClipped(activeAxis: Axis) : AxisBoundStatus(activeAxis)
 
 class RenderedPartly(activeAxis: Axis) : AxisBoundStatus(activeAxis)
 
-object Ok : RenderingStatus
+object Ok : RenderingStatus {
+    override fun toString(): String = javaClass.simpleName
+}
 
-object Nothing : RenderingStatus
+object Nothing : RenderingStatus {
+    override fun toString(): String = javaClass.simpleName
 
-object Error : RenderingStatus
+}
+
+object Error : RenderingStatus {
+    override fun toString(): String = javaClass.simpleName
+}
 
 fun RenderingStatus?.isSkipped(axis: Axis): Boolean = this is RenderingSkipped && activeAxis == axis
 
@@ -55,6 +54,9 @@ fun RenderingStatus?.hasOverflown(axis: Axis): Boolean = isSkipped(axis) || isCl
 
 fun RenderingStatus?.isError(): Boolean = this is Error
 
+fun RenderingStatus?.hasLayoutEffect(): Boolean = !isError() && (this !is RenderingSkipped)
+
+fun RenderingStatus?.getAxis(): Axis? = (this as? AxisBoundStatus)?.activeAxis
 
 fun interface Operation<CTX : RenderingContext, E : AttributedContext> : InvokeWithTwoParams<CTX, E, RenderingResult> {
 

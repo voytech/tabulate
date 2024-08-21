@@ -1,14 +1,11 @@
 package io.github.voytech.tabulate.core.operation
 
-import io.github.voytech.tabulate.core.LayoutApi
-import io.github.voytech.tabulate.core.layout.LayoutBoundaryType
+import io.github.voytech.tabulate.core.LayoutData
+import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.AttributeAware
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.layout.LayoutElement
-import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
-import io.github.voytech.tabulate.core.layout.Layout
 
 
 /**
@@ -87,17 +84,23 @@ abstract class Renderable<EL : Layout>(@JvmSynthetic override val attributes: At
 
     fun hasBoundingBox() = this::boundingBox.isInitialized
 
-    fun initBoundingBox(scope: LayoutApi): RenderableBoundingBox = with(scope.space) {
+    internal fun initBoundingBox(scope: LayoutData): RenderableBoundingBox = with(scope.region) {
         if (this@Renderable::boundingBox.isInitialized) return boundingBox
-        boundingBox = defineBoundingBox(scope.layout()).convertUnits(scope.space, boundaryToFit, scope.parentSpace())
+        @Suppress("UNCHECKED_CAST")
+        boundingBox = defineBoundingBox(scope.layout as EL).convertUnits(scope.region, boundaryToFit, scope.parent)
         return boundingBox
     }
-
 }
 
 fun AttributedContext.boundingBox(): RenderableBoundingBox? =
     if (this is Renderable<*> && hasBoundingBox()) {
         this.boundingBox
+    } else null
+
+fun <L : Layout> AttributedContext.asLayoutElement(): ApplyLayoutElement<L>? =
+    if (this is ApplyLayoutElement<*>) {
+        @Suppress("UNCHECKED_CAST")
+        this as ApplyLayoutElement<L>
     } else null
 
 fun AttributedContext.layoutBoundaryToFit(): LayoutBoundaryType =

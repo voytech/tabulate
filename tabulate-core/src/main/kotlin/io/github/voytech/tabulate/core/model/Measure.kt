@@ -331,6 +331,7 @@ data class BoundingRectangle(
     fun getHeight(): Height = Height(rightBottom.y.value - leftTop.y.value, leftTop.y.unit)
 
     fun size(): Size = Size(getWidth(), getHeight())
+    override fun toString(): String = "LT=(${leftTop.x.value},${leftTop.y.value}),RB=(${rightBottom.x.value},${rightBottom.y.value})"
 }
 
 enum class Orientation {

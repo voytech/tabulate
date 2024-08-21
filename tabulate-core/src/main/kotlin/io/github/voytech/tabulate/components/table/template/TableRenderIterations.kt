@@ -1,24 +1,9 @@
 package io.github.voytech.tabulate.components.table.template
 
 import io.github.voytech.tabulate.components.table.model.ColumnDef
-import io.github.voytech.tabulate.core.model.RenderIterationsApi
+import io.github.voytech.tabulate.core.model.ExportIterationsApi
 
-data class TableRenderIterations(val iterations: RenderIterationsApi) {
-
-    internal fun <T> pushNewIteration(def: ColumnDef<T>) {
-        iterations.appendPending(START_COLUMN to def.index)
-    }
-
-    internal fun <T> insertAsNextIteration(def: ColumnDef<T>) {
-        iterations.getCurrentIterationAttributesOrNull().let { map ->
-            val filtered = map.filter { it.key != END_COLUMN }
-            iterations.prependPending(filtered + (START_COLUMN to def.index))
-        }
-    }
-
-    internal fun <T> limitWithEndColumn(def: ColumnDef<T>) {
-        iterations.appendAttributes(END_COLUMN to def.index - 1)
-    }
+data class TableRenderIterations(val iterations: ExportIterationsApi) {
 
     internal fun pushNewIteration(rowIndex: RowIndex, recordIndex: Int) {
         iterations.appendAttributes(END_ROW to rowIndex - 1, END_RECORD to recordIndex - 1)

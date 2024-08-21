@@ -5,6 +5,7 @@ import io.github.voytech.tabulate.core.api.builder.*
 import io.github.voytech.tabulate.core.model.ReifiedValueSupplier
 import io.github.voytech.tabulate.core.model.ValueSupplier
 import io.github.voytech.tabulate.core.reify
+import java.util.*
 
 
 /**
@@ -17,6 +18,10 @@ class TextBuilderState : ModelBuilderState<Text>, AttributesAwareBuilder<Text>()
 
     @get:JvmSynthetic
     @set:JvmSynthetic
+    internal var id: String = UUID.randomUUID().toString()
+
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     internal var value: String = "?"
 
     @get:JvmSynthetic
@@ -24,7 +29,7 @@ class TextBuilderState : ModelBuilderState<Text>, AttributesAwareBuilder<Text>()
     internal var valueSupplier: ReifiedValueSupplier<*,String>? = null
 
     @JvmSynthetic
-    override fun build(): Text = Text(value, valueSupplier, attributes())
+    override fun build(): Text = Text(id = id, value= value, valueSupplier = valueSupplier, attributes = attributes())
 
     override fun modelClass(): Class<Text> = reify()
 

@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.core.model
 import io.github.voytech.tabulate.core.layout.Layout
 import io.github.voytech.tabulate.core.layout.LayoutProperties
 import io.github.voytech.tabulate.core.layout.SpaceConstraints
-import io.github.voytech.tabulate.core.layout.LayoutSpace
+import io.github.voytech.tabulate.core.layout.Region
 import io.github.voytech.tabulate.core.layout.impl.SimpleLayout
 import mu.KLogging
 import java.util.*
@@ -27,16 +27,15 @@ fun <C : ExecutionContext, R : Any> ExportApi.value(supplier: ReifiedValueSuppli
 interface HavingLayout<LP : Layout> {
     fun createLayout(properties: LayoutProperties): LP
 
-    fun <R> ExportApi.withinCurrentLayout(block: (LP.(LayoutSpace) -> R)): R =
-        currentLayoutScope().layout(block)
+    fun  ExportApi.withinCurrentLayout(block: (LP.(Region) -> Unit)) {
+        layout(block)
+    }
 
 }
 
 internal enum class Method {
-    BEFORE_LAYOUT,
     EXPORT,
-    FINISH,
-    EXPORT_CONTEXT_CREATED,
+    CONTEXT_CREATED,
     MEASURE;
 }
 
@@ -49,32 +48,21 @@ abstract class AbstractModel(
     @JvmSynthetic
     internal operator fun invoke(method: Method, exportContext: ModelExportContext) = exportContext.api {
         when (method) {
-            Method.EXPORT_CONTEXT_CREATED -> exportContextCreated(this)
+            Method.CONTEXT_CREATED -> exportContextCreated(this)
             Method.MEASURE -> takeMeasures(this)
-            Method.BEFORE_LAYOUT -> beforeLayoutCreated(this)
             Method.EXPORT -> doExport(this)
-            Method.FINISH -> finishExport(this)
         }
-    }
-
-
-    protected open fun beforeLayoutCreated(api: ExportApi) {
-        logger.warn { "Model.beforeLayoutCreated hook not implemented" }
     }
 
     protected abstract fun doExport(api: ExportApi)
 
-    protected open fun finishExport(api: ExportApi) {
-        logger.warn { "Model.finishExport hook not implemented" }
-    }
+    protected open fun finishExport(api: ExportApi) {}
 
-    protected open fun exportContextCreated(api: ExportApi) {
-        logger.warn { "Model.exportContextCreated not implemented" }
-    }
+    protected open fun exportContextCreated(api: ExportApi) {}
 
-    protected open fun takeMeasures(api: ExportApi) {
-        logger.warn { "Model.takeMeasures not implemented" }
-    }
+
+    //@TODO this should not be optional.
+    protected open fun takeMeasures(api: ExportApi) {}
 
     protected open fun getLayoutConstraints(): SpaceConstraints? = null
 
@@ -87,6 +75,8 @@ abstract class AbstractModel(
 
     inline fun <reified A : Attribute<A>> getAttribute(): A? =
         (this as? AttributeAware)?.attributes?.get(A::class.java)
+
+    override fun toString(): String = "${javaClass.simpleName}[$id]"
 
     companion object : KLogging()
 }

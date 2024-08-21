@@ -1,6 +1,5 @@
 package io.github.voytech.tabulate.core.model
 
-import io.github.voytech.tabulate.MultiIterationSet
 import io.github.voytech.tabulate.core.*
 import io.github.voytech.tabulate.core.InputParams.Companion.allowMeasureBeforeRender
 import io.github.voytech.tabulate.core.layout.*
@@ -8,7 +7,6 @@ import io.github.voytech.tabulate.core.model.attributes.HorizontalOverflowAttrib
 import io.github.voytech.tabulate.core.model.attributes.VerticalOverflowAttribute
 import io.github.voytech.tabulate.core.model.overflow.Overflow
 import io.github.voytech.tabulate.core.operation.*
-import io.github.voytech.tabulate.plusAssign
 
 @JvmInline
 value class StateAttributes(val data: MutableMap<String, Any> = mutableMapOf()) {
@@ -60,9 +58,9 @@ value class StateAttributes(val data: MutableMap<String, Any> = mutableMapOf()) 
 
 fun MutableMap<String, Any>.stateAttributes(): StateAttributes = StateAttributes(this)
 
-fun StateAttributes?.orEmpty() = this ?: StateAttributes(mutableMapOf())
+fun StateAttributes?.ensure() = this ?: StateAttributes(mutableMapOf())
 
-enum class ExportPhase {
+enum class Phase {
     MEASURING,
     RENDERING
 }
@@ -74,93 +72,11 @@ enum class ExportState {
 }
 
 @JvmInline
-value class StateMap(private val map: MutableMap<ExportPhase, ExportState> = mutableMapOf()) {
-    operator fun invoke(phase: ExportPhase): ExportState = map[phase] ?: ExportState.STARTED
+value class StateMap(private val map: MutableMap<Phase, ExportState> = mutableMapOf()) {
+    operator fun invoke(phase: Phase): ExportState = map[phase] ?: ExportState.STARTED
 
-    operator fun invoke(phase: ExportPhase, state: ExportState) {
+    operator fun invoke(phase: Phase, state: ExportState) {
         map[phase] = state
-    }
-
-}
-
-data class RenderIteration(
-    internal val pushOnIteration: Int = 0,
-    internal val attributes: MutableMap<String, Any>
-) {
-    @Suppress("UNCHECKED_CAST")
-    operator fun <T : Any> get(key: String): T? = attributes[key] as T?
-
-    internal fun merge(other: Map<String, Any>) {
-        attributes += other
-    }
-
-}
-
-class RenderIterations(
-    private val iterations: MultiIterationSet<RenderIteration, ExportPhase> = MultiIterationSet(),
-) {
-    val size: Int
-        get() = iterations.size()
-
-    private fun findCollision(step: Int, attributes: Map<String, Any>): RenderIteration? = with(iterations) {
-        find { iteration ->
-            iteration.pushOnIteration == step && attributes.any { iteration.attributes.containsKey(it.key) }
-        }
-    }
-
-    fun appendPending(phase: ExportPhase, vararg attributes: Pair<String, Any>) {
-        appendPending(phase, attributes.toMap())
-    }
-
-    fun appendPending(phase: ExportPhase, attributes: Map<String, Any>) = with(iterations) {
-        val step = currentIndex(phase) + 1
-        val attribs = attributes.toMutableMap()
-        if (findCollision(step, attribs) == null) {
-            iterations += RenderIteration(step, attribs)
-        }
-    }
-
-    fun prependPending(phase: ExportPhase, attributes: Map<String, Any>) = with(iterations) {
-        val step = currentIndex(phase) + 1
-        if (findCollision(step, attributes) == null) {
-            iterations.insert(phase, RenderIteration(step, attributes.toMutableMap()))
-        }
-    }
-
-    fun appendAttributes(phase: ExportPhase, vararg attributes: Pair<String, Any>) {
-        iterations.currentOrNull(phase)?.merge(attributes.toMap())
-    }
-
-    fun clearAttributes(phase: ExportPhase): Map<String, Any> =
-        iterations.currentOrNull(phase)?.run {
-            attributes.toMap().also { attributes.clear() }
-        } ?: emptyMap()
-
-    fun discardPending() {
-        iterations.deleteUntouched()
-    }
-
-    fun resume(phase: ExportPhase) {
-        preventNewItems(false)
-        if (size == 0) appendPending(phase)
-        iterations.nextOrNull(phase)
-    }
-
-    fun <E : Any> getCurrentIterationAttributeOrNull(phase: ExportPhase, key: String): E? =
-        iterations.currentOrNull(phase)?.get(key)
-
-    fun getCurrentIterationAttributesOrNull(phase: ExportPhase): Map<String, Any> =
-        iterations.currentOrNull(phase)?.attributes ?: emptyMap()
-
-    private operator fun plusAssign(element: RenderIteration) {
-        iterations += element
-    }
-
-    operator fun invoke(): MultiIterationSet<RenderIteration, ExportPhase> = iterations
-
-    operator fun get(phase: ExportPhase): RenderIteration? = iterations.nextOrNull(phase)
-    fun preventNewItems(prevent: Boolean = true) {
-        iterations.preventNewItems(prevent)
     }
 
 }
@@ -174,7 +90,7 @@ class OperationsInContext(private val ctx: ModelExportContext) {
     fun measure(context: AttributedContext): RenderingResult = measure(ctx.instance.renderingContext, context)
 
     fun renderOrMeasure(context: AttributedContext): RenderingResult =
-        if (ctx.phase == ExportPhase.MEASURING) measure(context) else render(context)
+        if (ctx.phase == Phase.MEASURING) measure(context) else render(context)
 
     fun hasMeasuringOperations(): Boolean = measure.isEmpty().not()
 }
@@ -185,128 +101,122 @@ class ModelExportContext(
     val model: AbstractModel,
     val customStateAttributes: StateAttributes,
     val parentAttributes: Attributes? = null,
-    var phase: ExportPhase = ExportPhase.RENDERING,
+    var phase: Phase = Phase.RENDERING,
     val state: StateMap = StateMap()
 ) {
 
-    val layouts: ModelContextLayouts = ModelContextLayouts(this)
+    val depth: Int by lazy { parents().size }
 
     val operations: OperationsInContext by lazy { OperationsInContext(this) }
 
     @JvmSynthetic
-    internal val renderIterations: RenderIterations = RenderIterations()
+    internal val exportIterations: ExportIterations = ExportIterations(this)
 
-    internal var hasOverflows: Boolean = false
+    @get:JvmSynthetic
+    internal val activeIteration: ExportIteration
+        get() = exportIterations.current
+
+    @get:JvmSynthetic
+    internal val activeLayoutContext: ModelContextLayout
+        get() = activeIteration.layoutContext
+
+    @get:JvmSynthetic
+    internal val activeLayout: LayoutData
+        get() = activeLayoutContext.layout
 
     fun api(block: ExportApi.(ModelExportContext) -> Unit) {
         block(ExportApi(this), this)
     }
 
-    @JvmSynthetic
-    internal fun resumeRenderIteration() {
-        renderIterations.resume(phase)
-    }
-
     fun <E : Any> getCurrentIterationAttributeOrNull(key: String): E? =
-        renderIterations.getCurrentIterationAttributeOrNull(phase, key)
+        exportIterations.getCurrentIterationAttributeOrNull(key)
 
     fun getCurrentIterationAttributesOrNull(): Map<String, Any> =
-        renderIterations.getCurrentIterationAttributesOrNull(phase)
+        exportIterations.getCurrentIterationAttributesOrNull()
 
-    fun hasPendingIterations(): Boolean = renderIterations().currentIndex(phase) < renderIterations.size - 1
-
-    fun haveChildrenPendingIterations(): Boolean = navigate {
-        checkAnyChildren { it.hasPendingIterations() }
-    }
 
     fun getCustomAttributes(): StateAttributes = customStateAttributes
 
     @JvmSynthetic
     internal fun setNextState() {
         if (state(phase) == ExportState.STARTED) state(phase, ExportState.ACTIVE)
-        if (!isRunning()) {
+        if (!hasAnyIteration()) {
             state(phase, ExportState.FINISHED)
         }
     }
 
-    private fun needsToBeContinued(): Boolean = hasPendingIterations() || haveChildrenPendingIterations()
+    @JvmSynthetic
+    internal fun hasAnyIteration(): Boolean =
+        exportIterations.hasAnyIteration() || exportIterations.haveAnyChildAnyIteration()
 
-    fun isRunning(): Boolean = (state(phase) == ExportState.STARTED) || hasOverflows || needsToBeContinued()
+    fun isRunning(): Boolean = state(phase) != ExportState.FINISHED
 
     @JvmSynthetic
     internal fun setExporting() = apply {
-        phase = ExportPhase.RENDERING
+        phase = Phase.RENDERING
     }
 
     @JvmSynthetic
     internal fun setMeasuring() = apply {
-        phase = ExportPhase.MEASURING
+        phase = Phase.MEASURING
     }
 
 }
 
 @Suppress("MemberVisibilityCanBePrivate")
-class RenderIterationsApi internal constructor(private val context: ModelExportContext) {
+class ExportIterationsApi internal constructor(private val context: ModelExportContext) {
 
     fun appendPending(vararg attributes: Pair<String, Any>) {
-        context.renderIterations.appendPending(context.phase, *attributes)
+        context.exportIterations.appendIteration(attributes.toMap())
     }
 
     fun appendPending(attributes: Map<String, Any>) {
-        context.renderIterations.appendPending(context.phase, attributes)
+        context.exportIterations.appendIteration(attributes)
     }
 
     fun prependPending(attributes: Map<String, Any>) {
-        context.renderIterations.prependPending(context.phase, attributes)
+        context.exportIterations.prependIteration(attributes)
     }
 
     fun appendAttributes(vararg attributes: Pair<String, Any>) {
-        context.renderIterations.appendAttributes(context.phase, *attributes)
+        context.exportIterations.appendAttributes(*attributes)
     }
 
     private fun clearAttributes(): Map<String, Any> =
-        context.renderIterations.clearAttributes(context.phase)
+        context.exportIterations.clearAttributes()
 
-    private fun moveToPending() {
-        prependPending(clearAttributes())
+    private fun discardScheduled() {
+        context.exportIterations.discardScheduled()
     }
 
-    private fun discardPending() {
-        context.renderIterations.discardPending()
-    }
-
-    private fun preventNewItems() {
-        context.renderIterations.preventNewItems()
+    private fun suspendAttributes() {
+        context.exportIterations.suspendAttributes()
     }
 
     fun stop() {
-        discardPending()
+        discardScheduled()
         clearAttributes()
-        preventNewItems()
         appendAttributes("_stop" to true)
+        suspendAttributes()
     }
 
     fun retry() {
-        discardPending()
-        moveToPending()
-        preventNewItems()
+        discardScheduled()
+        prependPending(clearAttributes())
         appendAttributes("_retry" to true)
+        suspendAttributes()
     }
 
     fun finish() {
-        discardPending()
-        preventNewItems()
+        discardScheduled()
         appendAttributes("_stop" to true)
+        suspendAttributes()
     }
 
     fun <E : Any> getCurrentIterationAttributeOrNull(key: String): E? =
         context.getCurrentIterationAttributeOrNull(key)
 
-    fun getCurrentIterationAttributesOrNull(): Map<String, Any> = context.getCurrentIterationAttributesOrNull()
-
-    fun hasPendingIterations(): Boolean = context.hasPendingIterations()
-
-    fun haveChildrenPendingIterations(): Boolean = context.haveChildrenPendingIterations()
+    fun haveAnyChildAnyScheduledIteration(): Boolean = context.exportIterations.haveAnyChildAnyIteration()
 
     private fun AbstractModel.getOverflowHandlingStrategy(result: RenderingResult): Overflow? =
         (result.status as? AxisBoundStatus)?.let {
@@ -348,13 +258,8 @@ class ExportApi private constructor(private val context: ModelExportContext) {
         withinInitializedContext { exportInContext(it, constraints, force) }
     }
 
-    fun AbstractModel.measure(constraints: SpaceConstraints? = null, force: Boolean = false): Size? =
+    fun AbstractModel.measure(constraints: SpaceConstraints? = null, force: Boolean = false): Size =
         withinInitializedContext { measureInContext(it, constraints, force) }
-
-    fun AbstractModel.currentSizeOrMeasure(constraints: SpaceConstraints? = null, force: Boolean = false): Size? =
-        withinInitializedContext { getSizeIfMeasured(it) ?: measureInContext(it, constraints, force) }
-
-    fun AbstractModel.getSize(): Size? = withinInitializedContext { getSizeIfMeasured(it) }
 
     fun AbstractModel.isRunning(): Boolean = withinInitializedContext { it.isRunning() }
 
@@ -370,90 +275,95 @@ class ExportApi private constructor(private val context: ModelExportContext) {
         operations.renderOrMeasure(renderable)
     }
 
-    fun currentLayoutScope(): LayoutApi = context.layouts.current()
+    fun currentLayout(): LayoutData = context.exportIterations.getCurrentLayout()
 
-    fun currentLayoutSpace(): LayoutSpace = currentLayoutScope().space
+    fun currentLayoutSpace(): Region = currentLayout().region
 
-    fun clearAllLayouts() = with(context.instance) { clearAllLayouts() }
+    fun iterations(): ExportIterationsApi = ExportIterationsApi(context)
 
-    fun iterations(): RenderIterationsApi = RenderIterationsApi(context)
+    fun iterations(block: ExportIterationsApi.() -> Unit) = iterations().apply(block)
 
-    fun iterations(block: RenderIterationsApi.() -> Unit) = iterations().apply(block)
+    fun <LP : Layout> layout(block: LP.(Region) -> Unit) {
+        context.exportIterations.current.layout().apply {
+            (layout as LP).apply { block(region) }
+        }
+    }
 
     fun getCustomAttributes(): StateAttributes = context.getCustomAttributes()
 
     private fun exportInContext(
-        targetContext: ModelExportContext, constraints: SpaceConstraints? = null, force: Boolean = false
-    ) = targetContext.setExporting().run {
-        if (isRunningOrRestarted(force)) {
-            if (targetContext.shouldMeasure()) {
-                measureInContext(targetContext, constraints).also {
-                    targetContext.setExporting()
+        target: ModelExportContext, constraints: SpaceConstraints? = null, force: Boolean = false
+    ) = target.setExporting().run {
+        if (target.isRunningOrRestarted(force)) {
+            var measuringLeftTop: Position? = null
+            if (target.shouldMeasure()) {
+                measureInContext(target, constraints).also {
+                    measuringLeftTop = target.activeLayout.region.leftTop
+                    target.setExporting()
                 }
             }
-            resumeRenderIteration()
-            targetContext.model(Method.BEFORE_LAYOUT, targetContext)
-            inLayoutScope(constraints) { targetContext.model(Method.EXPORT, targetContext) }
-            targetContext.model(Method.FINISH, targetContext)
-            setNextState()
+            target.exportIterations.executeIteration(constraints.ensure(measuringLeftTop)) {
+                target.model(Method.EXPORT, target)
+            }
+            target.setNextState()
         }
     }
 
-    private fun measureInContext(
-        targetContext: ModelExportContext, constraints: SpaceConstraints? = null, force: Boolean = false
-    ): Size? = targetContext.setMeasuring().run {
-        if (isRunningOrRestarted(force)) {
-            inLayoutScope(constraints) {
-                resumeRenderIteration()
-                targetContext.model(Method.MEASURE, targetContext)
-                setNextState()
-            }
-            targetContext.layouts.getMaxSize()
-        } else targetContext.layouts.getMaxSize()
-    }
+    private fun SpaceConstraints?.ensure(
+        leftTop: Position? = null,
+        maxRightBottom: Position? = null
+    ): SpaceConstraints = SpaceConstraints(
+        leftTop = this?.leftTop ?: leftTop,
+        maxRightBottom = this?.maxRightBottom ?: maxRightBottom,
+    )
 
-    private fun getSizeIfMeasured(targetContext: ModelExportContext): Size? {
-        return targetContext.layouts.getMaxSize()
+    private fun measureInContext(
+        target: ModelExportContext, constraints: SpaceConstraints? = null, force: Boolean = false
+    ): Size = target.setMeasuring().run {
+        if (isRunningOrRestarted(force)) {
+            target.exportIterations.executeIteration(constraints.ensure()) {
+                target.model(Method.MEASURE, target)
+            }
+            target.setNextState()
+            target.activeLayoutContext.getMaxSize()
+        } else target.activeLayoutContext.getMaxSize()
     }
 
     private fun ModelExportContext.isRunningOrRestarted(restart: Boolean = false): Boolean {
         if (restart) state(phase, ExportState.STARTED)
         // it is just STARTED or any continuation are registered on the tree down from here.
-        return isRunning()
+        return isRunning() || hasAnyIteration()
     }
 
     private fun ModelExportContext.shouldMeasure(): Boolean {
-        return model.needsMeasureBeforeExport && layouts.needsMeasuring() && customStateAttributes.allowMeasureBeforeRender()
+        return model.needsMeasureBeforeExport &&
+                !exportIterations.hasAnyMeasuredIteration() &&
+                customStateAttributes.allowMeasureBeforeRender()
     }
 
-    private fun <R> ModelExportContext.inLayoutScope(
-        constraints: SpaceConstraints?, block: LayoutApi.() -> R
-    ): R = layouts.ensuringLayout(
-        SpaceConstraints(
-            leftTop = constraints?.leftTop,
-            maxRightBottom = constraints?.maxRightBottom,
-        ), block
-    )
-
     private fun <R> AbstractModel.withinInitializedContext(block: (ModelExportContext) -> R): R =
-        block(ensuringExportContext().also { it.phase = context.phase })
+        ensuringExportContext().let { targetContext ->
+            targetContext.phase = context.phase
+            targetContext.markDepth()
+            block(targetContext).also { unsetDepth() }
+        }
 
     private fun AbstractModel.ensuringExportContext(): ModelExportContext = let { model ->
-        context.navigate {
+        context.treeNode {
             useParentIfApplicable() ?: getChildContext(model) ?: createExportContext()
         }
     }
 
     private fun AbstractModel.useParentIfApplicable(): ModelExportContext? = let { model ->
         context.takeIf { context.model === model }?.also {
-            model(Method.EXPORT_CONTEXT_CREATED, it)
+            model(Method.CONTEXT_CREATED, it)
         }
     }
 
     private fun AbstractModel.createExportContext(): ModelExportContext = let { model ->
-        context.navigate {
+        context.treeNode {
             createChildContext(model).context.also {
-                model(Method.EXPORT_CONTEXT_CREATED, it)
+                model(Method.CONTEXT_CREATED, it)
             }
         }
     }
@@ -490,20 +400,19 @@ fun <L : Layout> ExportApi.measureWithPostponedContinuations(models: List<Abstra
 private fun <L : Layout> ExportApi.traverseAllThenContinue(
     models: List<AbstractModel>,
     action: AbstractModel.() -> Unit
-) =
-    currentLayoutScope().layout<L, Unit> { space ->
-        if (this is AutonomousLayout) {
-            var runnables = models
-            while (runnables.isNotEmpty() && space.hasSpaceLeft()) {
-                runnables.forEach {
-                    if (space.hasSpaceLeft()) {
-                        it.action()
-                    }
+) = layout<L> { space ->
+    if (this is AutonomousLayout) {
+        var runnables = models
+        while (runnables.isNotEmpty() && space.hasSpaceLeft()) {
+            runnables.forEach {
+                if (space.hasSpaceLeft()) {
+                    it.action()
                 }
-                runnables = runnables.filter { it.isRunning() }
             }
+            runnables = runnables.filter { it.isRunning() }
         }
     }
+}
 
 fun <L : Layout> ExportApi.exportWithImmediateContinuations(models: List<AbstractModel>) =
     traverseWithContinuations<L>(models) { export() }
@@ -515,13 +424,12 @@ fun <L : Layout> ExportApi.measureWithImmediateContinuations(models: List<Abstra
 private fun <L : Layout> ExportApi.traverseWithContinuations(
     models: List<AbstractModel>,
     action: AbstractModel.() -> Unit
-) =
-    currentLayoutScope().layout<L, Unit> { space ->
-        if (this is AutonomousLayout) {
-            models.forEach {
-                while (it.isRunning() && space.hasSpaceLeft()) {
-                    it.action()
-                }
+) = layout<L> { space ->
+    if (this is AutonomousLayout) {
+        models.forEach {
+            while (it.isRunning() && space.hasSpaceLeft()) {
+                it.action()
             }
         }
     }
+}

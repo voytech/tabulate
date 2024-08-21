@@ -4,13 +4,15 @@ import io.github.voytech.tabulate.components.table.model.ColumnKey
 import io.github.voytech.tabulate.components.table.template.SyntheticRow
 import io.github.voytech.tabulate.core.RenderingContext
 import io.github.voytech.tabulate.core.layout.LayoutBoundaryType
-import io.github.voytech.tabulate.core.layout.LayoutSpace
+import io.github.voytech.tabulate.core.layout.Region
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.layout.impl.SizingOptions
 import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.attributes.HeightAttribute
+import io.github.voytech.tabulate.core.operation.RenderingStatus
 import io.github.voytech.tabulate.core.operation.VoidOperation
+import io.github.voytech.tabulate.core.operation.hasLayoutEffect
 
 fun interface EndRowOperation<CTX : RenderingContext, T: Any>: VoidOperation<CTX, RowEndRenderable<T>>
 
@@ -32,7 +34,7 @@ class RowEndRenderable<T>(
 
     fun getCells(): Map<ColumnKey<T>, CellRenderable> = rowCellValues
 
-    override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun Region.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
@@ -42,8 +44,9 @@ class RowEndRenderable<T>(
         )
     }
 
-    override fun LayoutSpace.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout): Unit =
+    override fun Region.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus): Unit =
         with(layout) {
+            if (!status.hasLayoutEffect()) return
             bbox.height?.let {
                 val ops = SizingOptions.SET_LOCKED.takeIf { hasModelAttribute<HeightAttribute>() } ?: SizingOptions.SET
                 setRowHeight(getRow(), it, ops)

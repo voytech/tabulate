@@ -22,6 +22,9 @@ object Colors {
     val LIGHT_GRAY = Color(r = 211, g = 211, b = 211)
 
     @JvmField
+    val LIGHTER_GRAY = Color(r = 231, g = 231, b = 231)
+
+    @JvmField
     val WHITE = Color(r = 255, g = 255, b = 255)
 
     @JvmField
@@ -74,6 +77,11 @@ interface DefaultColorWords {
     val lightGray : DSLCommand
         get() {
             color = Colors.LIGHT_GRAY; return DSLCommand
+        }
+
+    val lighterGray : DSLCommand
+        get() {
+            color = Colors.LIGHTER_GRAY; return DSLCommand
         }
 
     val white : DSLCommand

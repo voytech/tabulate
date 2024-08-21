@@ -9,9 +9,7 @@ import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.layout.impl.SizingOptions
 import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.operation.HasValue
-import io.github.voytech.tabulate.core.operation.Operation
-import io.github.voytech.tabulate.core.operation.Renderable
+import io.github.voytech.tabulate.core.operation.*
 
 fun interface RenderRowCellOperation<CTX : RenderingContext> : Operation<CTX, CellRenderable>
 
@@ -35,7 +33,7 @@ class CellRenderable(
 
     override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
-    override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun Region.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(getColumn()),
             y = getAbsoluteRowPosition(getRow()),
@@ -45,8 +43,9 @@ class CellRenderable(
         )
     }
 
-    override fun LayoutSpace.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout): Unit =
+    override fun Region.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus): Unit =
         with(layout) {
+            if (!status.hasLayoutEffect()) return
             bbox.width?.let {
                 setColumnWidth(getColumn(), it, SizingOptions.SET_IF_GREATER)
             }

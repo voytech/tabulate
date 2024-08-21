@@ -4,180 +4,260 @@ import io.github.voytech.tabulate.components.container.api.builder.dsl.*
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.image.api.builder.dsl.*
+import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
-import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.text.api.builder.dsl.*
 import io.github.voytech.tabulate.components.wrapper.api.builder.dsl.align
-import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
-import io.github.voytech.tabulate.core.model.color.Colors
-import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
-import io.github.voytech.tabulate.test.sampledata.SampleCustomer
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import java.awt.Color
 import java.io.File
 import java.time.LocalDate
+import kotlin.math.abs
 
 @DisplayName("CV Generator test.")
 class CVExample {
 
-    private fun ContainerBuilderApi.textList(type: String, vararg skills: String) {
-        vertical {
-            attributes { margins { top { 20.pt() } } }
-            text {
-                value = type
-                attributes {
-                    margins { left { 5.pt() }; top { 5.pt() } }
-                    text { courier; black; bold; fontSize = 14; breakLines }
-                }
-            }
+    class AvatarBuilder {
+        lateinit var imagePath: String
+        lateinit var email: String
+        lateinit var phoneNumber: String
+        lateinit var postalCode: String
+        lateinit var city: String
+        lateinit var street: String
+        lateinit var country: String
+    }
+
+    private fun ContainerBuilderApi.avatar(builder: AvatarBuilder.() -> Unit) {
+        AvatarBuilder().apply { builder() }.let {
             vertical {
-                attributes {
-                    margins { left { 5.pt() }; top { 5.pt() } }
+                attributes { margins { left { 5.pt() }; top { 5.pt() } } }
+                image {
+                    filePath = it.imagePath
+                    attributes {
+                        width { 125.pt() }; height { 150.pt() }
+                        borders { all { solid; 1.pt(); lightGray } }
+                    }
                 }
-                skills.forEach {
-                    text {
-                        attributes { text { courier; black }; margins { top { 5.pt() } } }
-                        value = it
+                textValue { "E-mail: ${it.email}" }
+                textValue { "Phone: ${it.phoneNumber}" }
+                textValue { "Country: ${it.country}" }
+                textValue { "City: ${it.city}" }
+                textValue { "Street: ${it.street}" }
+                textValue { "Postal code: ${it.postalCode}" }
+            }
+        }
+    }
+
+    class ProfileBuilder {
+        lateinit var firstName: String
+        lateinit var lastName: String
+        lateinit var description: String
+    }
+
+    private fun ContainerBuilderApi.profile(builder: ProfileBuilder.() -> Unit) {
+        ProfileBuilder().apply { builder() }.let {
+            vertical {
+                attributes { margins { left { 5.pt() }; top { 5.pt() } } }
+                textValue {
+                    attributes {
+                        text { fontSize = 38; bold }
+                        margins { top { 5.pt() } }
+                    }
+                    it.firstName
+                }
+                textValue {
+                    attributes {
+                        text { fontSize = 38; bold }
+                        margins { top { 5.pt() } }
+                    }
+                    it.lastName
+                }
+                vertical {
+                    attributes { background { lightGray } }
+                    textValue { attributes { text { bold; fontSize = 16 } }; "Profile" }
+                    textValue {
+                        attributes {
+                            width { 95.percents() }
+                            margins { top { 5.pt() }; left { 5.pt() } }
+                            text { breakLines }
+                            alignment { justify; top }
+                        }
+                        it.description
                     }
                 }
             }
         }
     }
 
-    private fun ContainerBuilderApi.contact(firstName: String, lastName: String, email: String, phone: String) {
-        vertical {
-            text {
-                attributes { text { arialBlack; fontSize = 24; breakWords } }
-                value = "$firstName $lastName"
-            }
-            text {
-                attributes {
-                    text { fontSize = 12; arialBlack; lightGray; breakWords }
+    class EmploymentEntryBuilder {
+        lateinit var client: String
+        lateinit var role: String
+        lateinit var title: String
+        lateinit var from: LocalDate
+        lateinit var to: LocalDate
+        lateinit var description: String
+    }
+
+    private fun ContainerBuilderApi.employmentEntry(builder: EmploymentEntryBuilder.() -> Unit) {
+        EmploymentEntryBuilder().apply { builder() }.let {
+            vertical {
+                attributes { background { lighterGray } }
+                attributes { margins { left { 5.pt() }; top { 5.pt() } } }
+                textValue { attributes { text { bold; fontSize = 12; white };background { black } }; it.client }
+                textValue { attributes { text { bold; fontSize = 10 } }; "${it.from} - ${it.to}" }
+                textValue {
+                    attributes {
+                        width { 95.percents() }
+                        margins { top { 5.pt() }; left { 5.pt() } }
+                        text { breakLines }
+                        alignment { justify; top }
+                        clip { disabled }
+                        overflow { retry }
+                    }
+                    it.description
                 }
-                value = "email: $email"
-            }
-            text {
-                attributes {
-                    text { fontSize = 12; arialBlack; lightGray; breakWords }
-                }
-                value = "tel: $phone"
             }
         }
     }
 
-    private fun ContainerBuilderApi.job(from: LocalDate, to: LocalDate, role: String, customer: String) {
-        vertical {
+    private fun PageBuilderApi.divider() =
+        content {
             attributes {
-                margins { top { 10.pt() }; left { 10.pt()} }
+                margins { top { 2.pt() } }
                 width { 100.percents() }
-                borders {
-                    left { solid; lightGray; 4.pt() }
-                }
-            }
-            vertical {
-                attributes { margins { left { 10.pt() } } }
-                text {
-                    attributes {
-                        text { arialBlack; white; bold; fontSize = 18; }
-                        borders { all { 2.pt(); black } }
-                        background { black }
-                    }
-                    value = customer
-                }
-                text {
-                    attributes {
-                        margins { top { 5.pt() } }
-                        borders { all { 2.pt(); lightGray } }
-                        text { arialBlack; lightGray; bold; fontSize = 16 }
-                    }
-                    value = "$from - $to"
-                }
-                text {
-                    attributes {
-                        margins { top { 5.pt() } }
-                        borders { all { 2.pt(); lightGray } }
-                        text { arialBlack; black; bold; fontSize = 14; underline }
-                    }
-                    value = role
-                }
+                borders { bottom { 1.pt(); solid; lightGray } }
             }
         }
-    }
-
 
     @Test
-    fun `should export simple CV pdf`() {
+    fun `should export CV template pdf`() {
         document {
             page {
-                align { center; fullWidth; top } horizontal {
-                    align { left; width25 } vertical {
-                        attributes {
-                            width { 100.percents() }
-                            height { 100.percents() }
-                            background { lightGray }
-                            borders { all { red; 20.pt(); solid } }
-                        }
-                        vertical {
-                            textList("Programming Languages:", "Java", "Kotlin", "Typescript", "Python", "JavaScript")
-                            textList("Frameworks:", "Spring Boot", "Spring", "Angular", "React", "Backbone.js")
-                        }
+                align { left; top; fullWidth; } horizontal {
+                    avatar {
+                        imagePath = "src/test/resources/kotlin.jpeg"
+                        email = "email@email.com"
+                        phoneNumber = "600-600-600"
+                        city = "City"
+                        country = "Country"
+                        street = "Street "
+                        postalCode = "00-000"
                     }
-                    align { right; width75 } vertical {
-                        attributes {
-                            alignment { center; top }
-                            background { white }
-                            width { 100.percents() }
-                            height { 100.percents() }
-                            borders { all { green; 20.pt(); solid } }
-                        }
-                        horizontal {
-                            attributes {
-                                width { 100.percents() }
-                                height { 150.pt() }
-                                borders { all { blue; 15.pt(); solid } }
-                            }
-                            align { left; middle; halfWidth; fullHeight } vertical {
-                                attributes { borders { all { lightGray; 10.pt(); solid } } }
-                                contact("Firstname", "Lastname", "firstname.lastname@gmail.com", "600 600 600")
-                            }
-                            align { right; halfWidth } vertical {
-                                attributes {
-                                    width { 150.pt() }
-                                    height { 150.pt() }
-                                    borders { all { red; 10.pt(); solid } }
-                                }
-                               /* image {
-                                    filePath = "src/test/resources/kotlin.jpeg"
-                                    attributes {
-                                        width { 150.pt() }
-                                        height { 150.pt() }
-                                        borders { all { 3.pt(); double; lightGray } }
-                                    }
-                                }*/
-                            }
-                        }
-                        job(LocalDate.of(2016,10,1),LocalDate.of(2017,10,1),"Senior Java Developer", "A SuperHero Company.")
-                        job(LocalDate.of(2015,10,1),LocalDate.of(2016,10,1),"Senior Java Developer", "Briefings and lore")
-                        job(LocalDate.of(2014,10,1),LocalDate.of(2015,10,1),"Java Developer", "STEM group")
-                        job(LocalDate.of(2013,10,1),LocalDate.of(2014,10,1),"Java Developer", "Constant Creation Curations")
-                        job(LocalDate.of(2012,10,1),LocalDate.of(2013,10,1),"Java Developer", "Client Of Youth Margins.")
+                    profile {
+                        firstName = "First name"
+                        lastName = "Last name"
+                        description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                "Donec molestie blandit pretium. Fusce tincidunt urna vel dignissim gravida. " +
+                                "Nunc sit amet lacinia sem, non lobortis sapien. " +
+                                "Proin suscipit, odio quis aliquam facilisis, ex augue eleifend leo, in tristique libero nisl in tortor. " +
+                                "Donec vel sollicitudin massa, quis malesuada justo. " +
+                                "In non leo scelerisque justo feugiat sagittis at tristique quam. Duis ornare sed leo in dignissim. " +
+                                "Aenean eget sodales magna, eleifend aliquet purus.\n" +
+                                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                "Donec molestie blandit pretium. Fusce tincidunt urna vel dignissim gravida. " +
+                                "Nunc sit amet lacinia sem, non lobortis sapien. " +
+                                "Proin suscipit, odio quis aliquam facilisis, ex augue eleifend leo, in tristique libero nisl in tortor. " +
+                                "Donec vel sollicitudin massa, quis malesuada justo. " +
+                                "In non leo scelerisque justo feugiat sagittis at tristique quam. Duis ornare sed leo in dignissim. " +
+                                "Aenean eget sodales magna, eleifend aliquet purus.\n"
                     }
                 }
-                /*footer {
-                    text {
+                divider()
+                horizontal {
+                    attributes { height { 100.percents() } }
+                    align { left; top; width75; } vertical {
                         attributes {
-                            text { black }
+                            borders { right { lightGray; 1.pt(); solid } }
                             width { 100.percents() }
-                            alignment { center }
-                            borders { all { lightGray; dotted; 1.pt() } }
+                            height { 100.percents() }
+
                         }
-                        value<PageExecutionContext> { "Page : ${it.pageNumber}" }
+                        textValue { attributes { text { bold; fontSize = 16 } };"Employment History" }
+                        employmentEntry {
+                            client = "Client 1"
+                            from = LocalDate.now()
+                            to = LocalDate.now()
+                            role = "Fullstack development"
+                            title = "Senior Java Programmer"
+                            description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                    "Donec molestie blandit pretium. Fusce tincidunt urna vel dignissim gravida. " +
+                                    "Nunc sit amet lacinia sem, non lobortis sapien. " +
+                                    "Proin suscipit, odio quis aliquam facilisis, ex augue eleifend leo, in tristique libero nisl in tortor. " +
+                                    "Donec vel sollicitudin massa, quis malesuada justo. " +
+                                    "In non leo scelerisque justo feugiat sagittis at tristique quam. Duis ornare sed leo in dignissim. " +
+                                    "Aenean eget sodales magna, eleifend aliquet purus.\n"
+                        }
+                        employmentEntry {
+                            client = "Client 2. Let make this client name a bit longer"
+                            from = LocalDate.now()
+                            to = LocalDate.now()
+                            role = "Fullstack development"
+                            title = "Senior Java Programmer"
+                            description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                    "Donec molestie blandit pretium. Fusce tincidunt urna vel dignissim gravida. " +
+                                    "Nunc sit amet lacinia sem, non lobortis sapien. " +
+                                    "Proin suscipit, odio quis aliquam facilisis, ex augue eleifend leo, in tristique libero nisl in tortor. " +
+                                    "Donec vel sollicitudin massa, quis malesuada justo. " +
+                                    "In non leo scelerisque justo feugiat sagittis at tristique quam. Duis ornare sed leo in dignissim. " +
+                                    "Aenean eget sodales magna, eleifend aliquet purus.\n"
+                        }
+                        employmentEntry {
+                            client = "Client 3. Lesser description"
+                            from = LocalDate.now()
+                            to = LocalDate.now()
+                            role = "Fullstack development"
+                            title = "Senior Java Programmer"
+                            description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                    "Donec molestie blandit pretium. Fusce tincidunt urna vel dignissim gravida. " +
+                                    "Nunc sit amet lacinia sem, non lobortis sapien. "
+                        }
+                        employmentEntry {
+                            client = "Client 3. very long description"
+                            from = LocalDate.now()
+                            to = LocalDate.now()
+                            role = "Fullstack development"
+                            title = "Senior Java Programmer"
+                            description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                    "Donec molestie blandit pretium. Fusce tincidunt urna vel dignissim gravida. " +
+                                    "Nunc sit amet lacinia sem, non lobortis sapien. " +
+                                    "Proin suscipit, odio quis aliquam facilisis, ex augue eleifend leo, in tristique libero nisl in tortor. " +
+                                    "Donec vel sollicitudin massa, quis malesuada justo. " +
+                                    "In non leo scelerisque justo feugiat sagittis at tristique quam. Duis ornare sed leo in dignissim. " +
+                                    "Aenean eget sodales magna, eleifend aliquet purus.\n" +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                            /*              "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit."*/
+
+                        }
                     }
-                }*/
+                    align { right; top; width25 } vertical {
+                        attributes {
+                            width { 100.percents() }
+                        }
+                        textValue { attributes { text { bold; fontSize = 16 } };"Skills" }
+                    }
+                }
+                divider()
             }
-        }.export(File("cv.pdf"))
+        }.export(File("cv_template.pdf"))
     }
 
 

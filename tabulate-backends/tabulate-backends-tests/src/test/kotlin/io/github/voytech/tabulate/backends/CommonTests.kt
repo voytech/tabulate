@@ -11,15 +11,11 @@ import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.RowCellExpression
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
-import io.github.voytech.tabulate.components.table.template.AdditionalSteps
 import io.github.voytech.tabulate.components.text.api.builder.dsl.*
 import io.github.voytech.tabulate.components.wrapper.api.builder.dsl.align
-import io.github.voytech.tabulate.core.InputParams
-import io.github.voytech.tabulate.core.model.alignment.DefaultHorizontalAlignment
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
-import io.github.voytech.tabulate.excel.setXlsxRowsCountInWindow
 import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -50,7 +46,7 @@ class CommonTests {
                         }
                         rows {
                             header {
-                                columnTitles("code","name")
+                                columnTitles("code", "name")
                                 attributes {
                                     text {
                                         fontSize = 21
@@ -232,25 +228,21 @@ class CommonTests {
             vertical {
                 text {
                     attributes {
-                        text { arialBlack; white; bold; fontSize = 18; }
-                        borders { all { 2.pt(); black } }
-                        background { black }
+                        text {  lightGray; bold; fontSize = 16; }
                     }
                     value = company
                 }
                 text {
                     attributes {
                         margins { top { 5.pt() } }
-                        borders { all { 2.pt(); lightGray } }
-                        text { arialBlack; lightGray; bold; fontSize = 16 }
+                        text { arialBlack; lightGray; fontSize = 14 }
                     }
                     value = "$from - $to"
                 }
                 text {
                     attributes {
                         margins { top { 5.pt() } }
-                        borders { all { 2.pt(); lightGray } }
-                        text { arialBlack; black; bold; fontSize = 14; underline }
+                        text { arialBlack; black; fontSize = 12; underline }
                     }
                     value = role
                 }
@@ -264,33 +256,29 @@ class CommonTests {
             page {
                 horizontal {
                     attributes {
-                        width { 900.pt() }
+                        margins { left { 5.pt() }; top { 5.pt() } }
+                        width { 100.percents() }
+                        height { 150.pt() }
                     }
-                    vertical {
-                        textList("Programming Languages:", "Java", "Kotlin", "Typescript", "Python", "JavaScript")
-                        textList("Frameworks:", "Spring Boot", "Spring", "Angular", "React", "Backbone.js")
-                    }
-                    vertical {
-                        attributes { alignment { center; top } }
-                        horizontal {
+                    align { left;top;width25 } vertical {
+                        attributes { width { 150.pt() } }
+                        image {
+                            filePath = "src/test/resources/kotlin.jpeg"
                             attributes {
-                                width { 50.percents() }
+                                width { 150.pt() }
                                 height { 150.pt() }
-                            }
-                            vertical {
-                                attributes { borders { all { lightGray; 1.pt(); solid } } }
-                                contact("Firstname", "Lastname", "firstname.lastname@gmail.com", "600 600 600")
-                            }
-                            image {
-                                filePath = "src/test/resources/kotlin.jpeg"
-                                attributes {
-                                    width { 150.pt() }
-                                    height { 150.pt() }
-                                    background { white }
-                                    borders { all { lightGray; 1.pt(); solid } }
-                                }
+                                background { white }
+                                borders { all { lightGray; 1.pt(); solid } }
                             }
                         }
+                    }
+                    align { left; top; width75 } vertical {
+                        contact("Firstname", "Lastname", "firstname.lastname@gmail.com", "600 600 600")
+                    }
+                }
+                horizontal {
+                    vertical {
+                        attributes { margins { left { 10.pt() } } }
                         job(
                             LocalDate.of(2016, 10, 1),
                             LocalDate.of(2017, 10, 1),
@@ -325,8 +313,7 @@ class CommonTests {
                 }
             }
         }
-        //doc.export(File("cv.pdf"))
-        doc.export(File("cv.xlsx"))
+        doc.export(File("cv.pdf"))
     }
 
     @Test
@@ -479,10 +466,9 @@ class CommonTests {
                             column(SampleProduct::price) {}
                         }
                         rows {
-                            //matching { all() } assign { attributes { height { 40.pt() } }}
+                            matching { all() } assign { attributes { height { 40.pt() } } }
                             header("Id", "Name", "Description", "Price")
                             matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
-                            matching { odd() } assign { attributes { background { yellow } } }
                         }
                         dataSource(SampleProduct.create(152))
                     })
@@ -498,8 +484,8 @@ class CommonTests {
     fun exportTableWithDeclaredSize() {
         val doc = document {
             attributes {
-               // width { 612.pt() }
-               // height { 300.pt() }
+                // width { 612.pt() }
+                // height { 300.pt() }
             }
             page {
                 horizontal {
@@ -507,12 +493,12 @@ class CommonTests {
                         borders { all { green; solid; 3.pt() } }
                         //width { 500.pt() }
                     }
-                    align { fullSize; center; middle } table(typedTable<SampleProduct> {
+                    align { fullSize; center; middle } table (typedTable<SampleProduct> {
                         attributes {
                             width { 70.percents() }
                             height { 60.percents() }
-                            tableBorders { all { lightGray; solid; 3.pt() } }
-                            borders { all { 7.pt()} }
+                            tableBorders { all { lightGray; solid; 1.pt() } }
+                            borders { all { 1.pt() } }
                         }
                         columns {
                             column(SampleProduct::code) {
@@ -526,15 +512,14 @@ class CommonTests {
                                     alignment { center;middle }
                                 }
                             }
-                            column(SampleProduct::description) { attributes { alignment { middle } }}
-                            column(SampleProduct::price) { attributes { alignment { middle } }}
+                            column(SampleProduct::description) { attributes { alignment { middle } } }
+                            column(SampleProduct::price) { attributes { alignment { middle } } }
                         }
                         rows {
                             header("Id", "Name", "Description", "Price")
                             matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
-                            matching { odd() } assign { attributes { background { yellow } } }
                         }
-                        dataSource(SampleProduct.create(20))
+                        dataSource(SampleProduct.create(120))
                     })
                 }
             }

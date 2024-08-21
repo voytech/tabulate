@@ -50,6 +50,7 @@ configure(
     dependencies {
         implementation(kotlin("stdlib", kotlinVersion))
         implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
+        implementation("ch.qos.logback:logback-classic:1.2.6")
         testImplementation("org.jetbrains.kotlin","kotlin-test", kotlinVersion)
         testImplementation(platform("org.junit:junit-bom:$junitVersion"))
         testImplementation("org.junit.jupiter","junit-jupiter")

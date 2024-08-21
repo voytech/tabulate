@@ -9,7 +9,9 @@ import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
+import io.github.voytech.tabulate.core.operation.RenderingStatus
 import io.github.voytech.tabulate.core.operation.VoidOperation
+import io.github.voytech.tabulate.core.operation.hasLayoutEffect
 
 fun interface EndColumnOperation<CTX : RenderingContext>: VoidOperation<CTX, ColumnEndRenderable>
 
@@ -21,7 +23,7 @@ class ColumnEndRenderable(
 
     override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
-    override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun Region.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(getColumn()),
             y = getAbsoluteRowPosition(0),
@@ -31,7 +33,8 @@ class ColumnEndRenderable(
         )
     }
 
-    override fun LayoutSpace.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout) {
+    override fun Region.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus) {
+        if (!status.hasLayoutEffect()) return
         with(layout) {
             bbox.width?.let {
                 val ops = SizingOptions.SET_LOCKED.takeIf { hasModelAttribute<WidthAttribute>() } ?: SizingOptions.SET

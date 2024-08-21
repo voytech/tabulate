@@ -1,0 +1,12 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger level="trace" name="io.github.voytech.tabulate.core.model.ContextDebug">
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+</configuration>

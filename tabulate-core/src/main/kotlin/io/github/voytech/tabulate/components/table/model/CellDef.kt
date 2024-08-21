@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.components.table.model
 import io.github.voytech.tabulate.components.table.rendering.CellValue
 import io.github.voytech.tabulate.core.model.AttributedModelOrPart
 import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.model.orEmpty
+import io.github.voytech.tabulate.core.model.ensure
 
 /**
  * Defines behaviours for situation when row-span causes row to collide with downstream rows at runtime.
@@ -110,7 +110,7 @@ internal operator fun <T> CellDef<T>?.plus(other: CellDef<T>): CellDef<T> {
             colSpan = other.colSpan,
             rowSpan = other.rowSpan,
             rowSpanMode = other.rowSpanMode,
-            attributes = attributes.orEmpty() + other.attributes.orEmpty()
+            attributes = attributes.ensure() + other.attributes.ensure()
         )
     } else other
 }

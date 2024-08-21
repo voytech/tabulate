@@ -8,6 +8,9 @@ import javax.imageio.ImageIO
 import kotlin.math.pow
 import kotlin.math.round
 
+fun String.ellipsis(maxLen: Int = 20): String =
+    if (length > maxLen) "${substring(0,maxLen)}..." else this
+
 fun String.isValidUrl(): Boolean =
     try {
         URL(this).toURI()

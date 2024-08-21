@@ -11,6 +11,7 @@ import io.github.voytech.tabulate.components.wrapper.api.builder.dsl.WrapperBuil
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.ModelBuilderApi
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
+import java.util.*
 
 
 /**
@@ -20,6 +21,10 @@ import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
  */
 @TabulateMarker
 class ImageBuilderApi internal constructor() : ModelBuilderApi<Image, ImageBuilderState>(ImageBuilderState()) {
+
+    @set:JvmSynthetic
+    @get:JvmSynthetic
+    var id: String by this.builder::id
 
     @set:JvmSynthetic
     @get:JvmSynthetic

@@ -84,10 +84,10 @@ internal class SyntheticRow<T : Any>(
 ) {
 
     internal fun mergeCellAttributes(column: ColumnDef<T>): Attributes {
-        return tableAttributesForContext.get<CellRenderable>().orEmpty() +
-                column.attributes.orEmpty().forContext<CellRenderable>() +
+        return tableAttributesForContext.get<CellRenderable>().ensure() +
+                column.attributes.ensure().forContext<CellRenderable>() +
                 rowCellAttributes +
-                cellDefinitions[column.id]?.attributes.orEmpty().forContext<CellRenderable>()
+                cellDefinitions[column.id]?.attributes.ensure().forContext<CellRenderable>()
     }
 
 }

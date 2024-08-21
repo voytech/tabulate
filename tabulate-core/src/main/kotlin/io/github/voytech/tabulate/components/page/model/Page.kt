@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.components.page.model
 
 import io.github.voytech.tabulate.components.commons.operation.newPage
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.layout.LayoutSpace
+import io.github.voytech.tabulate.core.layout.Region
 import io.github.voytech.tabulate.core.layout.SpaceConstraints
 
 class Page internal constructor(
@@ -19,14 +19,10 @@ class Page internal constructor(
         getCustomAttributes().ensureExecutionContext { PageExecutionContext() }.pageTitle = name
     }
 
-    override fun beforeLayoutCreated(api: ExportApi): Unit = api {
-        clearAllLayouts()
-    }
-
     override fun doExport(api: ExportApi) = api {
         renderNewPage()
-        stickyHeaderAndFooterWith { layout, footerLeftTop ->
-            exportContent(footerLeftTop.asConstraints(layout))
+        stickyHeaderAndFooterWith { region, footerLeftTop ->
+            exportContent(resolveContentMaxRightBottom(footerLeftTop, region))
         }
     }
 
@@ -36,7 +32,7 @@ class Page internal constructor(
             render(newPage(++execution.pageNumber, execution.currentPageTitleWithNumber(), this))
         }
 
-    private fun ExportApi.stickyHeaderAndFooterWith(renderContents: (LayoutSpace, Position?) -> Unit) {
+    private fun ExportApi.stickyHeaderAndFooterWith(renderContents: (Region, Position?) -> Unit) {
         exportHeader()
         val footerSize = measureFooterSize()
         val footerLeftTop = currentLayoutSpace().findFooterLeftTop(footerSize)
@@ -57,11 +53,11 @@ class Page internal constructor(
     private fun ExportApi.measureFooterSize() =
         footer?.measure(null, true)?.let { Size(it.width, it.height) }
 
-    private fun LayoutSpace.findFooterLeftTop(size: Size?): Position? =
+    private fun Region.findFooterLeftTop(size: Size?): Position? =
         size?.let { Position(leftTop.x, maxRightBottom.y - it.height) }
 
-    private fun Position?.asConstraints(layoutSpace: LayoutSpace): SpaceConstraints =
-        SpaceConstraints(maxRightBottom = this?.let { Position(layoutSpace.maxRightBottom.x, it.y) })
+    private fun resolveContentMaxRightBottom(footerLeftTop: Position?, region: Region): SpaceConstraints =
+        SpaceConstraints(maxRightBottom = footerLeftTop?.let { Position(region.maxRightBottom.x, it.y) })
 
     private operator fun Position?.plus(size: Size?): SpaceConstraints =
         SpaceConstraints(leftTop = this, maxRightBottom = size?.let { this?.plus(size) })

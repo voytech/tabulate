@@ -13,9 +13,9 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
 
     private lateinit var uom: UnitsOfMeasure
 
-    override var isSpaceMeasured: Boolean = false
+    override var isMeasured: Boolean = false
 
-    override fun LayoutSpace.reset() {
+    override fun Region.reset() {
         whileMeasuring { this@FlowLayout.uom = this@reset.uom }.also {
             localCursor = Position.start(uom)
             if (::absoluteCursor.isInitialized) {
@@ -30,16 +30,16 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
      * [currentPosition] from Layout tracks globally allocated area in the layout and can only grow along both axis.
      * When moving to next row we need to reset one of the axis again which.
      */
-    private fun LayoutSpace.currentPosition(): Position =
+    private fun Region.currentPosition(): Position =
         (if (::absoluteCursor.isInitialized) absoluteCursor else currentPosition)
 
-    private fun LayoutSpace.moveLocalCursor(pos: Position): Position {
+    private fun Region.moveLocalCursor(pos: Position): Position {
         localCursor = pos
         currentIndex++
         return innerLeftTop + pos
     }
 
-    override fun LayoutSpace.resolveNextPosition(): Position? {
+    override fun Region.resolveNextPosition(): Position? {
         val computedLocCursor = currentPosition() - innerLeftTop
         return if (properties.orientation == Orientation.HORIZONTAL) {
             if (hasXSpaceLeft()) {
@@ -56,7 +56,7 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
         }
     }
 
-    override fun applyChildRectangle(box: BoundingRectangle) {
+    override fun applyAllocatedRectangle(box: BoundingRectangle) {
         absoluteCursor = if (properties.orientation == Orientation.HORIZONTAL) {
             val ac = if (::absoluteCursor.isInitialized) absoluteCursor.y else Y.zero(uom)
             Position(box.rightBottom.x, box.rightBottom.y.coerceAtLeast(ac))
@@ -66,10 +66,10 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
         }
     }
 
-    private fun LayoutSpace.hasXSpaceLeft(): Boolean = currentPosition().x < innerMaxRightBottom.x
+    private fun Region.hasXSpaceLeft(): Boolean = currentPosition().x < innerMaxRightBottom.x
 
-    private fun LayoutSpace.hasYSpaceLeft(): Boolean = currentPosition().y < innerMaxRightBottom.y
+    private fun Region.hasYSpaceLeft(): Boolean = currentPosition().y < innerMaxRightBottom.y
 
-    override fun LayoutSpace.hasSpaceLeft(): Boolean = hasXSpaceLeft() || hasYSpaceLeft()
+    override fun Region.hasSpaceLeft(): Boolean = hasXSpaceLeft() || hasYSpaceLeft()
 
 }

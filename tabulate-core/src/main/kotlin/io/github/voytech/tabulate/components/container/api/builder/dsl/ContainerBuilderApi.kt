@@ -10,7 +10,6 @@ import io.github.voytech.tabulate.core.api.builder.dsl.DSLCommand
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.model.DescendantsIterationsKind
 import io.github.voytech.tabulate.core.model.Orientation
-import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 
 
 /**
@@ -22,16 +21,26 @@ import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 @TabulateMarker
 class ContainerBuilderApi internal constructor() :
     CompositeModelBuilderApi<Container, ContainerBuilderState>(ContainerBuilderState()) {
+
+    @set:JvmSynthetic
+    @get:JvmSynthetic
+    var id: String by this.builder::id
+
     @set:JvmSynthetic
     @get:JvmSynthetic
     var orientation: Orientation by this.builder::orientation
 
-    val descendantsImmediateIterations: DSLCommand
+    val forcePreMeasure: DSLCommand
+        get() {
+            this.builder.forcePreMeasure = true; return DSLCommand
+        }
+
+    val immediateIterations: DSLCommand
         get() {
             this.builder.descendantsIterationsKind = DescendantsIterationsKind.IMMEDIATE; return DSLCommand
         }
 
-    val descendantsPostponedIterations: DSLCommand
+    val postponedIterations: DSLCommand
         get() {
             this.builder.descendantsIterationsKind = DescendantsIterationsKind.POSTPONED; return DSLCommand
         }
@@ -52,7 +61,7 @@ class ContainerAttributesBuilderApi internal constructor(private val builderStat
 
 //TODO introduce api marker on which API builders below can be installed in one shot
 
-fun PageBuilderApi.section(block: ContainerBuilderApi.() -> Unit) = bind(ContainerBuilderApi().apply(block))
+fun PageBuilderApi.content(block: ContainerBuilderApi.() -> Unit) = bind(ContainerBuilderApi().apply(block))
 
 fun PageBuilderApi.vertical(block: ContainerBuilderApi.() -> Unit) = bind(ContainerBuilderApi().apply {
     block()
@@ -74,7 +83,9 @@ fun PageBuilderApi.horizontal(block: ContainerBuilderApi.() -> Unit) = bind(Cont
     orientation = Orientation.HORIZONTAL
 })
 
-fun ContainerBuilderApi.section(block: ContainerBuilderApi.() -> Unit) = bind(ContainerBuilderApi().apply(block))
+fun ContainerBuilderApi.content(block: ContainerBuilderApi.() -> Unit) = bind(ContainerBuilderApi().apply(block))
+
+infix fun WrapperBuilderApi.content(block: ContainerBuilderApi.() -> Unit) = bind(ContainerBuilderApi().apply(block))
 
 fun ContainerBuilderApi.vertical(block: ContainerBuilderApi.() -> Unit) = bind(ContainerBuilderApi().apply {
     block()

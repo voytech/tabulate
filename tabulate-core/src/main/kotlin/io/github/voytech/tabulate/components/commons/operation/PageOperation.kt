@@ -9,4 +9,5 @@ class NewPage(val pageNumber: Int, val pageName: String, val customAttributes: S
 
 fun interface PageOperation<CTX : RenderingContext> : VoidOperation<CTX, NewPage>
 
-fun newPage(pageNumber: Int,pageName: String, customAttributes: StateAttributes): NewPage = NewPage(pageNumber, pageName, customAttributes)
+fun newPage(pageNumber: Int, pageName: String, customAttributes: StateAttributes): NewPage =
+    NewPage(pageNumber, pageName, customAttributes)

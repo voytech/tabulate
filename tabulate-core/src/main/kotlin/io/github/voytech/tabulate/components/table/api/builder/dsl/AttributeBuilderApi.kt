@@ -6,7 +6,10 @@ import io.github.voytech.tabulate.components.table.rendering.CellRenderable
 import io.github.voytech.tabulate.components.table.rendering.ColumnRenderable
 import io.github.voytech.tabulate.components.table.rendering.RowRenderable
 import io.github.voytech.tabulate.components.table.rendering.TableStartRenderable
+import io.github.voytech.tabulate.components.text.api.builder.dsl.horizontalOverflow
+import io.github.voytech.tabulate.components.text.api.builder.dsl.verticalOverflow
 import io.github.voytech.tabulate.core.model.attributes.*
+import io.github.voytech.tabulate.core.model.overflow.OverflowWords
 
 
 // Attributes available on table level
@@ -45,6 +48,11 @@ fun <T: Any> TableLevelAttributesBuilderApi<T>.onVerticalOverflow(block: Vertica
 
 fun <T: Any> TableLevelAttributesBuilderApi<T>.onHorizontalOverflow(block: HorizontalOverflowAttribute.Builder.() -> Unit) =
     attribute(HorizontalOverflowAttribute.builder(Table::class.java).apply(block))
+
+fun <T: Any> TableLevelAttributesBuilderApi<T>.overflow(block: OverflowWords.() -> Unit) {
+    onHorizontalOverflow(block)
+    onVerticalOverflow(block)
+}
 
 //Attributes available on column level
 fun <T: Any> ColumnLevelAttributesBuilderApi<T>.text(block: TextStylesAttribute.Builder.() -> Unit) =

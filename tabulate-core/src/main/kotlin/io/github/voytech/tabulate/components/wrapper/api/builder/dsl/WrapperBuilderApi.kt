@@ -9,6 +9,7 @@ import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
 import io.github.voytech.tabulate.core.model.attributes.HeightAttribute
 import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
+import java.util.*
 
 
 /**
@@ -20,6 +21,10 @@ import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
 @TabulateMarker
 class WrapperBuilderApi internal constructor() :
     CompositeModelBuilderApi<Wrapper, WrapperBuilderState>(WrapperBuilderState()) {
+
+    @get:JvmSynthetic
+    @set:JvmSynthetic
+    var id: String by this.builder::id
 
     @JvmSynthetic
     fun attributes(block: WrapperAttributesBuilderApi.() -> Unit) {
@@ -75,9 +80,13 @@ class WrapperAttributesBuilderApi internal constructor(private val builderState:
         builderState.attribute(WidthAttribute.builder(Wrapper::class.java).apply {  50.percents() })
         return DSLCommand
     }
-
     val width25: DSLCommand get() {
         builderState.attribute(WidthAttribute.builder(Wrapper::class.java).apply {  25.percents() })
+        return DSLCommand
+    }
+
+    val width50: DSLCommand get() {
+        builderState.attribute(WidthAttribute.builder(Wrapper::class.java).apply {  50.percents() })
         return DSLCommand
     }
 
@@ -85,7 +94,6 @@ class WrapperAttributesBuilderApi internal constructor(private val builderState:
         builderState.attribute(WidthAttribute.builder(Wrapper::class.java).apply {  75.percents() })
         return DSLCommand
     }
-
 
     val fullHeight: DSLCommand get() {
         builderState.attribute(HeightAttribute.builder(Wrapper::class.java).apply { 100.percents() })
@@ -99,6 +107,11 @@ class WrapperAttributesBuilderApi internal constructor(private val builderState:
 
     val height25: DSLCommand get() {
         builderState.attribute(HeightAttribute.builder(Wrapper::class.java).apply {  25.percents() })
+        return DSLCommand
+    }
+
+    val height50: DSLCommand get() {
+        builderState.attribute(HeightAttribute.builder(Wrapper::class.java).apply {  50.percents() })
         return DSLCommand
     }
 }

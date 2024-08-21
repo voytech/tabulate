@@ -8,12 +8,14 @@ import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.attributes.HeightAttribute
 import io.github.voytech.tabulate.core.operation.Renderable
+import io.github.voytech.tabulate.core.operation.RenderingStatus
 import io.github.voytech.tabulate.core.operation.VoidOperation
+import io.github.voytech.tabulate.core.operation.hasLayoutEffect
 
 fun interface StartRowOperation<CTX : RenderingContext> : VoidOperation<CTX, RowStartRenderable>
 
 interface RowLayoutElement : RowCoordinate, LayoutElement<TableLayout>, ApplyLayoutElement<TableLayout> {
-    override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun Region.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
@@ -47,7 +49,7 @@ class RowStartRenderable(
     override fun getRow(): Int = rowIndex
     override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
-    override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun Region.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
@@ -57,8 +59,9 @@ class RowStartRenderable(
         )
     }
 
-    override fun LayoutSpace.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout): Unit =
+    override fun Region.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus): Unit =
         with(layout) {
+            if (!status.hasLayoutEffect()) return
             bbox.height?.let {
                 val ops = SizingOptions.SET_LOCKED.takeIf { hasModelAttribute<HeightAttribute>() } ?: SizingOptions.SET
                 setRowHeight(getRow(), it, ops)

@@ -106,7 +106,7 @@ class BasicExportsTests {
                             cell { value = 34.toUShort() }
                             cell { value = (-34).toShort() }
                             cell {
-                                value = "https://cdn.pixabay.com/photo/2013/07/12/14/07/basketball-147794_960_720.png"
+                                value = "src/test/resources/kotlin.jpeg"
                                 typeHint { DefaultTypeHints.IMAGE_URI }
                             }
                         }
@@ -480,8 +480,7 @@ class BasicExportsTests {
                                 "laborum.\n"
                 }
                 image {
-                    filePath =
-                        "https://as1.ftcdn.net/v2/jpg/06/03/14/68/1000_F_603146889_Hja6dZyh2DGHT7wZp3tKxZZnoI2bR7iQ.jpg"
+                    filePath = "src/test/resources/kotlin.jpeg"
                     attributes {
                         uniformSize()
                         defaultMargins()
@@ -489,8 +488,7 @@ class BasicExportsTests {
                     }
                 }
                 image {
-                    filePath =
-                        "https://as1.ftcdn.net/v2/jpg/06/03/14/68/1000_F_603146889_Hja6dZyh2DGHT7wZp3tKxZZnoI2bR7iQ.jpg"
+                    filePath = "src/test/resources/kotlin.jpeg"
                     attributes {
                         uniformSize()
                         defaultMargins()
@@ -550,7 +548,7 @@ class BasicExportsTests {
                         width { 600.pt() }
                         background { color = Colors.LIGHT_GRAY }
                         text {
-                            courierNew; red; fontSize = 10; italic = true; underline = true; bold; wrapText = true
+                            red; fontSize = 10;
                         }
                         alignment { middle }
                         borders {
@@ -568,11 +566,14 @@ class BasicExportsTests {
                     }
                 }
                 table {
-                    dataSource(SampleProduct.create(100))
-                    attributes { borders { all { color = Colors.LIGHT_GRAY; 0.5F.pt() } } }
+                    dataSource(SampleProduct.create(40))
+                    attributes {
+                        borders { all { lightGray; 0.5F.pt() } }
+                        overflow { retry }
+                    }
                     columns {
                         column(SampleProduct::code) {
-                            attributes { text { weight = DefaultWeightStyle.BOLD } }
+                            attributes { text { bold } }
                         }
                         column(SampleProduct::name)
                         column("img") { attributes { width { 30.pt() } } }
@@ -595,7 +596,9 @@ class BasicExportsTests {
                         width { 200.pt() }
                         alignment { middle }
                         background { black }
-                        text { white; fontSize = 10; bold }
+                        clip { disabled }
+                        overflow { retry }
+                        text { white; bold }
                     }
                 }
             }

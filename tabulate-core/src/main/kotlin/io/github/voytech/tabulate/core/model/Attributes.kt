@@ -147,7 +147,7 @@ class Attributes(
 }
 
 
-fun Attributes?.orEmpty() = this ?: Attributes(emptySet())
+fun Attributes?.ensure() = this ?: Attributes(emptySet())
 
 fun Attributes?.isNullOrEmpty(): Boolean = this?.size == 0
 

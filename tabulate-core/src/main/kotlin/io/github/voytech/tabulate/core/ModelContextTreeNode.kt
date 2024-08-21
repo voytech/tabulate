@@ -29,15 +29,6 @@ internal class ModelContextTreeNode(
     }
 
     @JvmSynthetic
-    internal fun lookupAncestors(predicate: (ModelExportContext) -> Boolean): ModelExportContext? {
-        var tmp = parent
-        while (tmp != null && !predicate(tmp.context)) {
-            tmp = tmp.parent
-        }
-        return tmp?.context
-    }
-
-    @JvmSynthetic
     internal fun checkAnyChildren(block: (ModelExportContext) -> Boolean): Boolean = children.any {
         it.value.let { node -> block(node.context) || node.checkAnyChildren(block) }
     }
@@ -65,7 +56,26 @@ internal class ModelContextTreeNode(
 }
 
 @JvmSynthetic
-internal fun <R> ModelExportContext.navigate(block: ModelContextTreeNode.() -> R): R = instance[model].let { treeNode ->
+internal fun <R> ModelExportContext.treeNode(block: ModelContextTreeNode.() -> R): R = instance[model].let { treeNode ->
     requireNotNull(treeNode)
     treeNode.run(block)
+}
+
+@JvmSynthetic
+internal fun ModelExportContext.treeNode(): ModelContextTreeNode =
+    instance[model] ?: error("ModelExportContext not managed in tree.")
+
+@JvmSynthetic
+internal fun ModelExportContext.parent(): ModelExportContext? =
+    treeNode().let { treeNode -> treeNode.parent?.context }
+
+@JvmSynthetic
+internal fun ModelExportContext.parents(): List<ModelExportContext> {
+    var current = this.parent()
+    val parents = mutableListOf<ModelExportContext>()
+    while (current!=null) {
+        parents+=current
+        current = current.parent()
+    }
+    return parents
 }

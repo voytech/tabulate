@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate
 
 import io.github.voytech.tabulate.components.container.api.builder.dsl.margins
-import io.github.voytech.tabulate.components.container.api.builder.dsl.section
+import io.github.voytech.tabulate.components.container.api.builder.dsl.content
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.image.api.builder.dsl.*
@@ -807,9 +807,9 @@ class ApachePoiTabulateTests {
     fun `should export document with correctly handled table X`() {
         document {
             page {
-                section {
+                content {
                     orientation = Orientation.VERTICAL
-                    section {
+                    content {
                         orientation = Orientation.HORIZONTAL
                         (0..10).forEach { index ->
                             text {
@@ -821,7 +821,7 @@ class ApachePoiTabulateTests {
                             }
                         }
                     }
-                    section {
+                    content {
                         attributes {
                             margins {
                                 left { 25.pt() }
@@ -837,7 +837,7 @@ class ApachePoiTabulateTests {
                         table(defaultTable(SampleCustomer.create(5)))
                         table(defaultTable(SampleCustomer.create(5)))
                     }
-                    section {
+                    content {
                         attributes { margins { top { 10.pt() } } }
                         text { value<PageExecutionContext> { "This is page ${it.pageNumber}" } }
                     }

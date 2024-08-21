@@ -1,13 +1,12 @@
 package io.github.voytech.tabulate.core.operation
 
-import io.github.voytech.tabulate.core.LayoutApi
+import io.github.voytech.tabulate.core.LayoutData
 import io.github.voytech.tabulate.core.RenderingContext
 import io.github.voytech.tabulate.core.layout.*
-import io.github.voytech.tabulate.core.model.Attribute
-import io.github.voytech.tabulate.core.model.Orientation
+import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.attributes.ClipAttribute
 import io.github.voytech.tabulate.core.model.clip.ClippingMode
-import io.github.voytech.tabulate.core.model.isNullOrEmpty
+import io.github.voytech.tabulate.core.model.trace
 
 /**
  * Operations enhancer bringing attribute-level operations into context of an operation. This allows to delegate each attribute
@@ -91,50 +90,42 @@ class EnableAttributeOperationAwareness<CTX : RenderingContext>(private val attr
 
 sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
     protected val delegate: Operation<CTX, E>,
-    protected val layoutApi: () -> LayoutApi,
+    protected val layoutApi: () -> LayoutData,
 ) : Operation<CTX, E> {
 
-    protected fun LayoutApi.ensureRenderableBoundingBox(context: E): RenderableBoundingBox? =
+    protected fun LayoutData.ensureRenderableBoundingBox(context: E): RenderableBoundingBox? =
         if (context is Renderable<*>) {
             context.initBoundingBox(this)
         } else null
 
-    /**
-     * Adjusts the dimensions of a {@link RenderableBoundingBox} to fit within the layout bounds
-     * defined by the associated {@link LayoutApi}.
-     *
-     * This function updates the height and width of the given bounding box based on the maximum
-     * height and width specified by the layout. If the height or width of the bounding box exceeds
-     * the corresponding maximum value, it is set to the maximum allowed value.
-     *
-     * @param boundingBox The {@link RenderableBoundingBox} to be fitted into the layout bounds.
-     * @author Wojciech Mąka
-     * @since 0.2.0
-     */
-    private fun LayoutApi.fitBoundingBoxIntoLayoutBounds(boundingBox: RenderableBoundingBox) = with(layout) {
-        boundingBox.height?.let { boundingBox.height = minOf(it, boundingBox.maxHeight) }
-        boundingBox.width?.let { boundingBox.width = minOf(it, boundingBox.maxWidth) }
-    }
 
-    protected fun LayoutApi.tryApplyResults(context: E) = with(layout) {
+    protected fun LayoutData.tryApplyResults(context: E, status: RenderingStatus) {
         context.boundingBox()?.let { boundaries ->
-            fitBoundingBoxIntoLayoutBounds(boundaries)
-            space.allocateRectangle(boundaries)
-            @Suppress("UNCHECKED_CAST")
-            if (context is ApplyLayoutElement<*>) {
-                with(context as ApplyLayoutElement<Layout>) {
-                    space.applyBoundingBox(boundaries, layout.delegate)
-                }
+            // before applying potentially recalculated bbox onto region, first ensure it does not exceed outer layout bounds.
+            boundaries.revalidateSize()
+            context.asLayoutElement<Layout>()?.let {
+                with(it) { region.applyBoundingBox(boundaries, layout, status) }
             }
         }
     }
+
+    private fun E.checkIfSkippedOrClipped(directResult: RenderingResult): RenderingResult =
+        when (directResult.status) {
+            is RenderedPartly -> {
+                val axis = directResult.status.activeAxis
+                if (isClippingEnabled()) {
+                    directResult.set(RenderingClipped(axis))
+                } else directResult.set(RenderingSkipped(axis))
+            }
+            else -> directResult
+        }
 
     protected fun Operation<CTX, E>.measureRenderableWhenMissingBounds(
         renderingContext: CTX,
         context: E
     ): RenderingResult =
         if (!context.boundingBox().isDefined()) {
-            this(renderingContext, context)
+            context.checkIfSkippedOrClipped(invoke(renderingContext, context))
         } else Nothing.asResult()
 
     protected fun Operations<CTX>.measureRenderableWhenMissingBounds(
@@ -142,18 +133,18 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
         context: E
     ): RenderingResult =
         if (!context.boundingBox().isDefined()) {
-            this(renderingContext, context)
+            context.checkIfSkippedOrClipped(invoke(renderingContext, context))
         } else Nothing.asResult()
 
     private fun E.isClippingEnabled(): Boolean =
         getModelAttribute<ClipAttribute>()?.let { clip -> clip.mode == ClippingMode.CLIP } ?: true
 
-    private fun LayoutApi.defaultCrossedAxis(): Axis =
+    private fun LayoutData.defaultCrossedAxis(): Axis =
         Axis.X.takeIf { layout.properties.orientation == Orientation.HORIZONTAL } ?: Axis.Y
 
-    protected fun LayoutApi.checkOverflowStatus(context: E): RenderingStatus =
+    protected fun LayoutData.checkOverflowStatus(context: E): RenderingStatus =
         with<Layout, RenderingStatus>(layout) {
-            with(space) {
+            with(region) {
                 val maybeCrossedBounds = context.boundingBox()?.let { bbox ->
                     isCrossingBounds(bbox, context.layoutBoundaryToFit())
                 }
@@ -171,13 +162,15 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
 
 class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedContext>(
     delegate: Operation<CTX, E>,
-    layoutApi: () -> LayoutApi, private val measuringOperations: Operations<CTX>,
+    layoutApi: () -> LayoutData, private val measuringOperations: Operations<CTX>,
 ) : LayoutAwareOperation<CTX, E>(delegate, layoutApi) {
 
     override operator fun invoke(renderingContext: CTX, context: E): RenderingResult = with(layoutApi()) {
         ensureRenderableBoundingBox(context).let {
-            val measuringResult = measuringOperations.measureRenderableWhenMissingBounds(renderingContext, context)
-            val intermediateResult = measuringResult.set(checkOverflowStatus(context))
+            val result = measuringOperations.measureRenderableWhenMissingBounds(renderingContext, context)
+            val status = checkOverflowStatus(context)
+            traceSection("$context", "Overflow status: [${status}] ", "Measure result: [${result.status}]")
+            val intermediateResult = result.set(status)
             val renderClippingOrFully: (RenderingResult) -> RenderingResult = { intermediate ->
                 delegate(renderingContext, context).set(intermediate.status)
             }
@@ -186,7 +179,7 @@ class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedContext>(
                 is RenderingClipped -> renderClippingOrFully(intermediateResult)
                 is RenderingSkipped -> intermediateResult
                 else -> error("This OperationResult: ${intermediateResult.status} is not supported on guarded rendering.")
-            }.also { tryApplyResults(context) }
+            }.also { tryApplyResults(context, it.status) }
         }
     }
 }
@@ -199,33 +192,34 @@ class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedContext>(
  */
 class LayoutAwareMeasureOperation<CTX : RenderingContext, E : AttributedContext>(
     delegate: Operation<CTX, E>,
-    layoutApi: () -> LayoutApi,
+    layoutApi: () -> LayoutData,
 ) : LayoutAwareOperation<CTX, E>(delegate, layoutApi) {
 
     override operator fun invoke(renderingContext: CTX, context: E): RenderingResult = with(layoutApi()) {
         ensureRenderableBoundingBox(context).let {
             val result = delegate.measureRenderableWhenMissingBounds(renderingContext, context)
             val status = checkOverflowStatus(context)
+            traceSection("$context", "Overflow status: [${status}] ", "Measure result: [${result.status}]")
             when (status) {
                 is RenderingClipped,
                 is RenderingSkipped -> status
                 is Ok -> result.status
                 else -> error("This OperationResult: $status is not supported on guarded measuring.")
-            }.let { newStatus -> result.set(newStatus) }.also { tryApplyResults(context) }
+            }.let { newStatus -> result.set(newStatus) }.also { tryApplyResults(context, it.status) }
         }
     }
 }
 
 class EnableRenderingUsingLayouts<CTX : RenderingContext>(
     private val measuringOperations: Operations<CTX>,
-    private val layout: () -> LayoutApi,
+    private val layout: () -> LayoutData,
 ) : Enhance<CTX> {
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
         LayoutAwareRenderOperation(op.delegate, layout, measuringOperations)
 }
 
 class EnableMeasuringForLayouts<CTX : RenderingContext>(
-    private val layout: () -> LayoutApi,
+    private val layout: () -> LayoutData,
 ) : Enhance<CTX> {
     override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
         LayoutAwareMeasureOperation(op.delegate, layout)

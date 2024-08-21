@@ -8,18 +8,23 @@ import io.github.voytech.tabulate.core.model.AbstractModel
 import io.github.voytech.tabulate.core.model.DescendantsIterationsKind
 import io.github.voytech.tabulate.core.model.Orientation
 import io.github.voytech.tabulate.core.reify
+import java.util.*
 
 class ContainerBuilderState : CompositeModelBuilderState<Container>, AttributesAwareBuilder<Container>() {
 
-    @get:JvmSynthetic
+    @JvmSynthetic
+    internal var forcePreMeasure: Boolean = false
+
+    @JvmSynthetic
+    internal var id: String = UUID.randomUUID().toString()
+
+    @JvmSynthetic
     internal var nodes: MutableList<ModelBuilderState<*>> = mutableListOf()
 
-    @get:JvmSynthetic
-    @set:JvmSynthetic
+    @JvmSynthetic
     internal var orientation: Orientation = Orientation.HORIZONTAL
 
-    @get:JvmSynthetic
-    @set:JvmSynthetic
+    @JvmSynthetic
     internal var descendantsIterationsKind: DescendantsIterationsKind = DescendantsIterationsKind.POSTPONED
 
     @JvmSynthetic
@@ -29,6 +34,8 @@ class ContainerBuilderState : CompositeModelBuilderState<Container>, AttributesA
 
     @JvmSynthetic
     override fun build(): Container = Container(
+        id = id,
+        forcePreMeasure = forcePreMeasure,
         attributes = attributes(),
         orientation = orientation,
         descendantsIterationsKind = descendantsIterationsKind,

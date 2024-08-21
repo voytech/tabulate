@@ -6,9 +6,13 @@ import io.github.voytech.tabulate.core.layout.impl.FlowLayout
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
+import java.util.*
 
 class Container(
+    override val id: String = UUID.randomUUID().toString(),
     override val attributes: Attributes?,
+    @get:JvmSynthetic
+    internal val forcePreMeasure: Boolean,
     @get:JvmSynthetic
     internal val orientation: Orientation = Orientation.HORIZONTAL,
     @get:JvmSynthetic
@@ -16,7 +20,7 @@ class Container(
     override val descendantsIterationsKind: DescendantsIterationsKind = DescendantsIterationsKind.POSTPONED,
 ) : AbstractContainerModelWithAttributes(), HavingLayout<FlowLayout> {
 
-    override val needsMeasureBeforeExport = hasRenderableAttributes()
+    override val needsMeasureBeforeExport = forcePreMeasure || hasRenderableAttributes()
 
     override fun doExport(api: ExportApi): Unit = api {
         if (hasRenderableAttributes()) {

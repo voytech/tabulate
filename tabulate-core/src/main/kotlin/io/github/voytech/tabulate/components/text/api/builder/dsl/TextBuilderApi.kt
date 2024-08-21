@@ -26,6 +26,10 @@ class TextBuilderApi internal constructor() : ModelBuilderApi<Text, TextBuilderS
     @get:JvmSynthetic
     var value: String by this.builder::value
 
+    @set:JvmSynthetic
+    @get:JvmSynthetic
+    var id: String by this.builder::id
+
     @JvmSynthetic
     inline fun <reified C : ExecutionContext> value(noinline supplier: (C) -> String) {
         value(C::class.java, supplier)
@@ -59,10 +63,20 @@ class TextAttributesBuilderApi internal constructor(private val builderState: Te
 //TODO introduce api marker on which API builders below can be installed in one shot
 fun HeaderBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
 
+fun HeaderBuilderApi.textValue(block: TextBuilderApi.() -> String) = bind(TextBuilderApi().apply { value = block() })
+
 fun FooterBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
+
+fun FooterBuilderApi.textValue(block: TextBuilderApi.() -> String) = bind(TextBuilderApi().apply { value = block() })
 
 fun PageBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
 
+fun PageBuilderApi.textValue(block: TextBuilderApi.() -> String) = bind(TextBuilderApi().apply { value = block() })
+
 fun ContainerBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
 
+fun ContainerBuilderApi.textValue(block: TextBuilderApi.() -> String) = bind(TextBuilderApi().apply { value = block() })
+
 infix fun WrapperBuilderApi.text(block: TextBuilderApi.() -> Unit) = bind(TextBuilderApi().apply(block))
+
+infix fun WrapperBuilderApi.textValue(block: TextBuilderApi.() -> String) = bind(TextBuilderApi().apply { value = block() })

@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.components.table.rendering
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.core.RenderingContext
 import io.github.voytech.tabulate.core.layout.LayoutBoundaryType
-import io.github.voytech.tabulate.core.layout.LayoutSpace
+import io.github.voytech.tabulate.core.layout.Region
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.Attributes
@@ -24,7 +24,7 @@ sealed class TableContext(
 
     override val boundaryToFit = LayoutBoundaryType.OUTER
 
-    override fun LayoutSpace.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun Region.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
             x = leftTop.x,
             y = leftTop.y,

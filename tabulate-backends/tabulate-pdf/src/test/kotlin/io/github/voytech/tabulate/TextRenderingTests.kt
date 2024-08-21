@@ -16,7 +16,7 @@ class TextRenderingTests {
         document {
             page {
                 horizontal {
-                    section {
+                    content {
                         attributes {
                             width { 50.percents() }
                             //height { 20.percents() }
@@ -59,7 +59,7 @@ class TextRenderingTests {
                             attributes { clip { enabled }; text { noWrap } }
                         }
                     }
-                    section {
+                    content {
                         attributes {
                             width { 50.percents() }
                             borders { all { dotted; black } }

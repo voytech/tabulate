@@ -238,7 +238,7 @@ class FlowLayoutOrientedExportTest {
                 // This particular rendering will not request measuring of horizontal container children because
                 // 'horizontal' does not contain borders and backgrounds so does not require to know its size a priori.
                 horizontal {
-                    descendantsImmediateIterations
+                    immediateIterations
                     // `overflow { retry }` means that at model component level, when rendering of renderable is skipped due to free-space exhaustion
                     // - entire model render iteration will be retried after allocating whole layout space on iteration that caused an overflow event.
 
@@ -343,7 +343,7 @@ class FlowLayoutOrientedExportTest {
                     // multiple descendants and some of them requires continuation due to lack of space,
                     // firstly all component's first iterations will be rendered, and then theirs continuations in the
                     // order matching their initial appearance order.
-                    descendantsPostponedIterations
+                    postponedIterations
                     table {
                         attributes { height { 500.pt() } } // Table will be truncated and continuation will be requested.
                         columns(Product::code, Product::name, Product::price)
@@ -389,7 +389,7 @@ class FlowLayoutOrientedExportTest {
                     // descendant's immediate iterations means that when there are
                     // multiple descendants and some of them requires continuation due to lack of space,
                     // firstly all its iterations are to be rendered, and then other models (and their iterations).
-                    descendantsImmediateIterations
+                    immediateIterations
                     table {
                         attributes { height { 500.pt() } } // Table will be truncated and continuation will be requested.
                         columns(Product::code, Product::name, Product::price)

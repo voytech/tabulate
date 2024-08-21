@@ -4,6 +4,7 @@ import io.github.voytech.tabulate.components.image.model.Image
 import io.github.voytech.tabulate.core.api.builder.AttributesAwareBuilder
 import io.github.voytech.tabulate.core.api.builder.ModelBuilderState
 import io.github.voytech.tabulate.core.reify
+import java.util.*
 
 
 /**
@@ -14,12 +15,14 @@ import io.github.voytech.tabulate.core.reify
  */
 class ImageBuilderState : ModelBuilderState<Image>, AttributesAwareBuilder<Image>() {
 
-    @get:JvmSynthetic
-    @set:JvmSynthetic
+    @JvmSynthetic
+    internal var id: String = UUID.randomUUID().toString()
+
+    @JvmSynthetic
     internal var filePath: String = "?"
 
     @JvmSynthetic
-    override fun build(): Image = Image(filePath, attributes())
+    override fun build(): Image = Image(id,filePath, attributes())
 
     override fun modelClass(): Class<Image> = reify()
 

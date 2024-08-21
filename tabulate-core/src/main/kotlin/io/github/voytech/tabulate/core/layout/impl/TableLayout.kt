@@ -290,14 +290,14 @@ class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties
 
     private val delegate = NonUniformCartesianGrid()
 
-    override fun LayoutSpace.getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position {
+    override fun Region.getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position {
         return Position(
             getX(relativePosition.x, targetUnit),
             getY(relativePosition.y, targetUnit)
         )
     }
 
-    override fun LayoutSpace.getX(relativeX: X, targetUnit: UnitsOfMeasure): X {
+    override fun Region.getX(relativeX: X, targetUnit: UnitsOfMeasure): X {
         assert(relativeX.unit == UnitsOfMeasure.NU) { "input coordinate must be expressed in ordinal numeric units" }
         //TODO getX method should be allowed ONLY to return relative position. SUMMING with absolutePosition should be encapsulated in AbstractLayoutPolicy.
         val absoluteXPosition = getActiveRectangle().leftTop.x.switchUnitOfMeasure(targetUnit)
@@ -305,7 +305,7 @@ class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties
         return absoluteXPosition + currentLayoutRelativeX
     }
 
-    override fun LayoutSpace.getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y {
+    override fun Region.getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y {
         assert(relativeY.unit == UnitsOfMeasure.NU) { "input coordinate must be expressed in ordinal numeric units" }
         val absoluteYPosition = getActiveRectangle().leftTop.y.switchUnitOfMeasure(targetUnit)
         val currentLayoutRelativeY = delegate.getY(relativeY, targetUnit)
@@ -314,10 +314,10 @@ class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties
 
     override fun getCurrentContentSize(): Size = delegate.getSize()
 
-    fun LayoutSpace.getAbsoluteColumnPosition(columnIndex: Int): X =
+    fun Region.getAbsoluteColumnPosition(columnIndex: Int): X =
         getX(columnIndex.asX(), uom)
 
-    fun LayoutSpace.getAbsoluteRowPosition(rowIndex: Int): Y =
+    fun Region.getAbsoluteRowPosition(rowIndex: Int): Y =
         getY(rowIndex.asY(), uom)
 
     override fun setColumnWidth(column: Int, width: Width, options: SizingOptions) {
@@ -345,12 +345,12 @@ class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties
     }
 
     override fun getMeasuredColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width? =
-        if (isSpaceMeasured || delegate.isColumnLocked(column)) {
+        if (isMeasured || delegate.isColumnLocked(column)) {
             delegate.getMeasuredColumnWidth(column, colSpan, uom)
         } else null
 
     override fun getMeasuredRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height? =
-        if (isSpaceMeasured || delegate.isRowLocked(row)) {
+        if (isMeasured || delegate.isRowLocked(row)) {
             delegate.getMeasuredRowHeight(row, rowSpan, uom)
         } else null
 

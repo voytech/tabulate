@@ -2,7 +2,6 @@ package io.github.voytech.tabulate.core
 
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.exception.OutputBindingResolvingException
-import io.github.voytech.tabulate.core.layout.SpaceConstraints
 import io.github.voytech.tabulate.core.operation.factories.OperationsFactory
 import io.github.voytech.tabulate.core.operation.*
 import io.github.voytech.tabulate.core.result.OutputBinding
@@ -21,24 +20,23 @@ class ExportInstance(
 ) {
     internal val uom: UnitsOfMeasure = UnitsOfMeasure.PT
 
-    internal lateinit var root: ModelContextTreeNode
+    private lateinit var root: ModelContextTreeNode
 
     private val nodeMap: MutableMap<AbstractModel, ModelContextTreeNode> = mutableMapOf()
 
-    fun ModelExportContext.getExportOperations(): Operations<RenderingContext> =
-        operationsFactory.createMeasureOperations(model).let { measuringOperations ->
-            operationsFactory.createExportOperations(model,
-                EnableRenderingUsingLayouts(measuringOperations) {
-                    layouts.current(ExportPhase.RENDERING)
-                },
+    fun ModelExportContext.getExportOperations(): Operations<RenderingContext> {
+        return operationsFactory.createMeasureOperations(model).let { measuringOperations ->
+            operationsFactory.createExportOperations(
+                model, EnableRenderingUsingLayouts(measuringOperations) { activeLayout },
             )
         }
+    }
 
-    fun ModelExportContext.getMeasuringOperations(): Operations<RenderingContext> =
-        operationsFactory.createMeasureOperations(model,
-            EnableMeasuringForLayouts { layouts.current(ExportPhase.MEASURING) },
+    fun ModelExportContext.getMeasuringOperations(): Operations<RenderingContext> {
+        return operationsFactory.createMeasureOperations(
+            model, EnableMeasuringForLayouts { activeLayout },
         )
-
+    }
 
     internal fun getDocumentMaxRightBottom(): Position =
         if (renderingContext is HavingViewportSize) {
@@ -58,15 +56,9 @@ class ExportInstance(
         nodeMap[model] = value
     }
 
-    fun clearAllLayouts() = with(root) {
-        traverse { it.layouts.clear() }
-        context.layouts.createLayout(SpaceConstraints(maxRightBottom = getDocumentMaxRightBottom()))
-    }
-
-
     @JvmSynthetic
     internal fun AbstractModel.createStandaloneExportContext(attributes: StateAttributes? = null): ModelExportContext =
-        ModelExportContext(this@ExportInstance, this, attributes.orEmpty()).also {
+        ModelExportContext(this@ExportInstance, this, attributes.ensure()).also {
             root = ModelContextTreeNode(it, null)
             nodeMap[this] = root
         }
@@ -84,17 +76,23 @@ class StandaloneExportTemplate(private val format: DocumentFormat) {
         loadFirstByDocumentFormat<OutputBindingsProvider<RenderingContext>, RenderingContext>(format)!!
     }
 
-    fun <O : Any> export(model: AbstractModel, output: O,params: Map<String,Any> = emptyMap()) = with(ExportInstance(format)) {
-        model.createStandaloneExportContext(StateAttributes(params.toMutableMap())).api {
-            resolveOutputBinding(output).run {
-                setOutput(renderingContext, output)
-                model.export()
-                flush()
+    fun <O : Any> export(model: AbstractModel, output: O, params: Map<String, Any> = emptyMap()) =
+        with(ExportInstance(format)) {
+            model.createStandaloneExportContext(StateAttributes(params.toMutableMap())).api {
+                resolveOutputBinding(output).run {
+                    setOutput(renderingContext, output)
+                    model.export()
+                    flush()
+                }
             }
         }
-    }
 
-    fun <O : Any, T : Any> export(model: AbstractModel, output: O, dataSource: Iterable<T> = emptyList(), params: Map<String,Any> = emptyMap()) =
+    fun <O : Any, T : Any> export(
+        model: AbstractModel,
+        output: O,
+        dataSource: Iterable<T> = emptyList(),
+        params: Map<String, Any> = emptyMap()
+    ) =
         with(ExportInstance(format)) {
             model.createStandaloneExportContext(dataSource.asStateAttributes() + params).api {
                 resolveOutputBinding(output).run {
