@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.components.document.model
 import io.github.voytech.tabulate.components.document.operation.DocumentEnd
 import io.github.voytech.tabulate.components.document.operation.DocumentStart
 import io.github.voytech.tabulate.components.page.model.Page
-import io.github.voytech.tabulate.core.layout.SpaceConstraints.Companion.atLeftTop
+import io.github.voytech.tabulate.core.layout.RegionConstraints.Companion.atLeftTop
 import io.github.voytech.tabulate.core.model.*
 
 class Document internal constructor(

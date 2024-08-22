@@ -148,7 +148,7 @@ class ContainerTests {
                 horizontal {
                     forcePreMeasure
                     immediateIterations
-                    (0..20).forEach { index ->
+                    (0..5000).forEach { index ->
                         text {
                             id = "$index"
                             value<PageExecutionContext> { "This is ($index) text on page (${it.pageNumber})" }

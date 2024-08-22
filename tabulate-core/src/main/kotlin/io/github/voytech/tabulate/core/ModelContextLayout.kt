@@ -7,7 +7,6 @@ import io.github.voytech.tabulate.core.model.attributes.*
 
 
 data class LayoutData(val region: Region, val parent: Region?, val layout: Layout) {
-    fun getMaxSize() = region.maxBoundingRectangle.size()
 
     fun endLayout() = with(layout) {
         region.setMeasured()
@@ -43,7 +42,7 @@ class ModelContextLayout(private val context: ModelExportContext) {
         (it.maxRightBottom - it.leftTop).asSize()
     }
 
-    private fun createLayout(box: SpaceConstraints) {
+    private fun createLayout(box: RegionConstraints) {
         val (spaceConstraints, layoutProperties) = newLayoutConstraints(box)
         requireNotNull(spaceConstraints.leftTop)
         layout = LayoutData(
@@ -53,7 +52,7 @@ class ModelContextLayout(private val context: ModelExportContext) {
         )
     }
 
-    fun beginLayout(constraints: SpaceConstraints) {
+    fun beginLayout(constraints: RegionConstraints) {
         if (!this::layout.isInitialized) {
             createLayout(constraints)
         } else if (layout.layout.isMeasured) {
@@ -81,14 +80,14 @@ class ModelContextLayout(private val context: ModelExportContext) {
         }
     }
 
-    private fun SpaceConstraints.resolveEffectiveLeftTop(parent: ModelContextLayout?): SpaceConstraints {
+    private fun RegionConstraints.resolveEffectiveLeftTop(parent: ModelContextLayout?): RegionConstraints {
         val parentSpace = parent?.getCurrentLayoutSpace()
         return copy(
             leftTop = leftTop ?: parent?.nextNodePosition() ?: parentSpace?.innerLeftTop ?: Position.start(uom())
         ).withMargins()
     }
 
-    private fun newLayoutConstraints(box: SpaceConstraints): SpaceAndLayoutProperties =
+    private fun newLayoutConstraints(box: RegionConstraints): SpaceAndLayoutProperties =
         getParentLayout().let {
             withMaxRightBottomResolved(
                 it?.getCurrentLayoutSpace(),
@@ -96,7 +95,7 @@ class ModelContextLayout(private val context: ModelExportContext) {
             )
         }
 
-    private fun SpaceConstraints.withInnerLeftTop(): SpaceConstraints =
+    private fun RegionConstraints.withInnerLeftTop(): RegionConstraints =
         context.padding()?.let {
             requireNotNull(leftTop)
             if (innerLeftTop == null) {
@@ -104,7 +103,7 @@ class ModelContextLayout(private val context: ModelExportContext) {
             } else this
         } ?: copy(innerLeftTop = leftTop)
 
-    private fun SpaceConstraints.withInnerMaxRightBottom(): SpaceConstraints =
+    private fun RegionConstraints.withInnerMaxRightBottom(): RegionConstraints =
         context.padding()?.let {
             requireNotNull(maxRightBottom)
             if (innerMaxRightBottom == null) {
@@ -112,18 +111,19 @@ class ModelContextLayout(private val context: ModelExportContext) {
             } else this
         } ?: copy(innerMaxRightBottom = maxRightBottom)
 
-    private fun SpaceConstraints.withMargins(): SpaceConstraints = lookupAttribute(MarginsAttribute::class.java)?.let {
-        requireNotNull(leftTop)
-        copy(leftTop = Position(it.left + leftTop.x, it.top + leftTop.y))
-    } ?: this
+    private fun RegionConstraints.withMargins(): RegionConstraints =
+        lookupAttribute(MarginsAttribute::class.java)?.let {
+            requireNotNull(leftTop)
+            copy(leftTop = Position(it.left + leftTop.x, it.top + leftTop.y))
+        } ?: this
 
     private data class SpaceAndLayoutProperties(
-        val space: SpaceConstraints,
+        val space: RegionConstraints,
         val layout: LayoutProperties = LayoutProperties()
     )
 
     private fun withMaxRightBottomResolved(
-        parent: Region?, constraints: SpaceConstraints
+        parent: Region?, constraints: RegionConstraints
     ): SpaceAndLayoutProperties {
         requireNotNull(constraints.leftTop)
         val implicitMaxRightBottom =
@@ -164,7 +164,7 @@ class ModelContextLayout(private val context: ModelExportContext) {
         (context.model as? AttributedModelOrPart)?.attributes?.forContext(context.model.javaClass)?.get(attribute)
 
     internal fun debugInfo(): String = if (this::layout.isInitialized) {
-        layout.region.toString()
+        "${layout.region}"
     } else {
         "?"
     }

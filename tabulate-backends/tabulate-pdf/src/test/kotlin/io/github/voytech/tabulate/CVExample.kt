@@ -228,8 +228,8 @@ class CVExample {
                                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
                                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
                                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-                            /*              "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
                                           "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
                                           "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
                                           "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
@@ -244,7 +244,7 @@ class CVExample {
                                           "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
                                           "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
                                           "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit."*/
+                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
 
                         }
                     }

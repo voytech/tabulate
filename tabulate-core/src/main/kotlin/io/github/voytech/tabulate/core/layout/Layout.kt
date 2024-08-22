@@ -357,8 +357,8 @@ class Region(
             maxRightBottom = position
             innerMaxRightBottom = position - rightBottomPadding
         } else {
-            innerMaxRightBottom = position
             maxRightBottom = position + rightBottomPadding
+            innerMaxRightBottom = position
         }
         currentPosition = innerMaxRightBottom
     }
@@ -366,11 +366,13 @@ class Region(
     @JvmSynthetic
     internal fun restart(position: Position?) {
         position?.let {
-            maxRightBottom = it + maxBoundingRectangle.size()
+            val maxBoundingRectangleSize = maxBoundingRectangle.size()
+            val innerBoundingRectangleSize = innerBoundingRectangle.size()
             val padding = (innerLeftTop - leftTop).asSize()
-            innerMaxRightBottom = it + padding + innerBoundingRectangle.size()
             leftTop = it
             innerLeftTop = it + padding
+            maxRightBottom = leftTop + maxBoundingRectangleSize
+            innerMaxRightBottom = innerLeftTop + innerBoundingRectangleSize
         }.also { currentPosition = innerLeftTop }
     }
 
@@ -379,7 +381,7 @@ class Region(
     }
 
     companion object {
-        operator fun invoke(uom: UnitsOfMeasure, constraints: SpaceConstraints): Region {
+        operator fun invoke(uom: UnitsOfMeasure, constraints: RegionConstraints): Region {
             requireNotNull(constraints.leftTop)
             requireNotNull(constraints.maxRightBottom)
             val innerLeftTop = constraints.innerLeftTop ?: constraints.leftTop
@@ -475,14 +477,14 @@ enum class Axis {
     Y
 }
 
-data class SpaceConstraints(
+data class RegionConstraints(
     val leftTop: Position? = null,
     val maxRightBottom: Position? = null,
     val innerLeftTop: Position? = null,
     val innerMaxRightBottom: Position? = null
 ) {
     companion object {
-        fun atLeftTop(): SpaceConstraints = SpaceConstraints(leftTop = Position.start())
+        fun atLeftTop(): RegionConstraints = RegionConstraints(leftTop = Position.start())
     }
 }
 
@@ -490,12 +492,12 @@ data class LayoutProperties(
     val orientation: Orientation = Orientation.VERTICAL,
     /**
      * when declaredWidth = true, maxRightBottom cannot align to measured content managed by that layout.
-     * This means that the width of the component is effectively final when passed through this [SpaceConstraints] object at layout space creation.
+     * This means that the width of the component is effectively final when passed through this [RegionConstraints] object at layout space creation.
      */
     val declaredWidth: Boolean = false,
     /**
      * when declaredHeight = true, maxRightBottom cannot align to measured content managed by that layout.
-     * This means that the height of the component is effectively final when passed through this [SpaceConstraints] object at layout space creation.
+     * This means that the height of the component is effectively final when passed through this [RegionConstraints] object at layout space creation.
      */
     val declaredHeight: Boolean = false,
 

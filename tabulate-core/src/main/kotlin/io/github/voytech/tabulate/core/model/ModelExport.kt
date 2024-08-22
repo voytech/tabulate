@@ -182,41 +182,25 @@ class ExportIterationsApi internal constructor(private val context: ModelExportC
         context.exportIterations.appendAttributes(*attributes)
     }
 
-    private fun clearAttributes(): Map<String, Any> =
-        context.exportIterations.clearAttributes()
-
-    private fun discardScheduled() {
-        context.exportIterations.discardScheduled()
-    }
-
-    private fun suspendAttributes() {
-        context.exportIterations.suspendAttributes()
-    }
-
-    fun stop() {
+    fun stop() = with(context.exportIterations) {
         discardScheduled()
         clearAttributes()
-        appendAttributes("_stop" to true)
-        suspendAttributes()
+        setDryRunForActive()
     }
 
-    fun retry() {
+    fun retry()= with(context.exportIterations) {
         discardScheduled()
         prependPending(clearAttributes())
-        appendAttributes("_retry" to true)
-        suspendAttributes()
+        setDryRunForActive()
     }
 
-    fun finish() {
+    fun finish() = with(context.exportIterations) {
         discardScheduled()
-        appendAttributes("_stop" to true)
-        suspendAttributes()
+        setDryRunForActive()
     }
 
     fun <E : Any> getCurrentIterationAttributeOrNull(key: String): E? =
         context.getCurrentIterationAttributeOrNull(key)
-
-    fun haveAnyChildAnyScheduledIteration(): Boolean = context.exportIterations.haveAnyChildAnyIteration()
 
     private fun AbstractModel.getOverflowHandlingStrategy(result: RenderingResult): Overflow? =
         (result.status as? AxisBoundStatus)?.let {
@@ -245,7 +229,6 @@ class ExportIterationsApi internal constructor(private val context: ModelExportC
                     else -> {}
                 }
             }
-
             else -> {}
         }
     }
@@ -254,11 +237,11 @@ class ExportIterationsApi internal constructor(private val context: ModelExportC
 
 class ExportApi private constructor(private val context: ModelExportContext) {
 
-    fun AbstractModel.export(constraints: SpaceConstraints? = null, force: Boolean = false) {
+    fun AbstractModel.export(constraints: RegionConstraints? = null, force: Boolean = false) {
         withinInitializedContext { exportInContext(it, constraints, force) }
     }
 
-    fun AbstractModel.measure(constraints: SpaceConstraints? = null, force: Boolean = false): Size =
+    fun AbstractModel.measure(constraints: RegionConstraints? = null, force: Boolean = false): Size =
         withinInitializedContext { measureInContext(it, constraints, force) }
 
     fun AbstractModel.isRunning(): Boolean = withinInitializedContext { it.isRunning() }
@@ -292,7 +275,7 @@ class ExportApi private constructor(private val context: ModelExportContext) {
     fun getCustomAttributes(): StateAttributes = context.getCustomAttributes()
 
     private fun exportInContext(
-        target: ModelExportContext, constraints: SpaceConstraints? = null, force: Boolean = false
+        target: ModelExportContext, constraints: RegionConstraints? = null, force: Boolean = false
     ) = target.setExporting().run {
         if (target.isRunningOrRestarted(force)) {
             var measuringLeftTop: Position? = null
@@ -303,28 +286,32 @@ class ExportApi private constructor(private val context: ModelExportContext) {
                 }
             }
             target.exportIterations.executeIteration(constraints.ensure(measuringLeftTop)) {
+                target.traceIteration("[ITERATION START]")
                 target.model(Method.EXPORT, target)
             }
             target.setNextState()
+            target.traceIteration("[ITERATION END]")
         }
     }
 
-    private fun SpaceConstraints?.ensure(
+    private fun RegionConstraints?.ensure(
         leftTop: Position? = null,
         maxRightBottom: Position? = null
-    ): SpaceConstraints = SpaceConstraints(
+    ): RegionConstraints = RegionConstraints(
         leftTop = this?.leftTop ?: leftTop,
         maxRightBottom = this?.maxRightBottom ?: maxRightBottom,
     )
 
     private fun measureInContext(
-        target: ModelExportContext, constraints: SpaceConstraints? = null, force: Boolean = false
+        target: ModelExportContext, constraints: RegionConstraints? = null, force: Boolean = false
     ): Size = target.setMeasuring().run {
-        if (isRunningOrRestarted(force)) {
+        if (target.isRunningOrRestarted(force)) {
             target.exportIterations.executeIteration(constraints.ensure()) {
+                target.traceIteration("[ITERATION START]")
                 target.model(Method.MEASURE, target)
             }
             target.setNextState()
+            target.traceIteration("[ITERATION END]")
             target.activeLayoutContext.getMaxSize()
         } else target.activeLayoutContext.getMaxSize()
     }
@@ -332,7 +319,8 @@ class ExportApi private constructor(private val context: ModelExportContext) {
     private fun ModelExportContext.isRunningOrRestarted(restart: Boolean = false): Boolean {
         if (restart) state(phase, ExportState.STARTED)
         // it is just STARTED or any continuation are registered on the tree down from here.
-        return isRunning() || hasAnyIteration()
+        return (isRunning() || hasAnyIteration())
+            .also { traceSection("${this@isRunningOrRestarted.model}, isRunningOrRestarted: $it") }
     }
 
     private fun ModelExportContext.shouldMeasure(): Boolean {

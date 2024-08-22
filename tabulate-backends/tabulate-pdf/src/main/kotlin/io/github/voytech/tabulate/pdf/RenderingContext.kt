@@ -55,11 +55,17 @@ class PdfBoxRenderingContext(
     private var fontSet: Boolean = false
     private var textPositionSet: Boolean = false
 
-    fun addPage() = PDPage().apply {
+    fun createNextPage() = PDPage().apply {
         if (this@PdfBoxRenderingContext::pageContentStream.isInitialized) pageContentStream.close()
         document.addPage(this)
         pageContentStream = createContent()
         currentPage = this
+    }
+
+    fun createPageIfMissing() {
+        if (!this::currentPage.isInitialized) {
+            createNextPage()
+        }
     }
 
     fun beginText() {
@@ -237,11 +243,6 @@ class PdfBoxRenderingContext(
         Height(currentPage.mediaBox.height, UnitsOfMeasure.PT)
     } else Height(PDRectangle.LETTER.height, UnitsOfMeasure.PT)
 
-}
-
-enum class BoxLayoutBboxType {
-    INNER,
-    OUTER;
 }
 
 /**

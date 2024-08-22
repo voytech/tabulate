@@ -1,9 +1,9 @@
 package io.github.voytech.tabulate.core
 
-import io.github.voytech.tabulate.core.layout.SpaceConstraints
-import io.github.voytech.tabulate.core.model.ModelExportContext
-import io.github.voytech.tabulate.core.model.Phase
+import io.github.voytech.tabulate.core.layout.RegionConstraints
+import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.debug
+import io.github.voytech.tabulate.core.model.trace
 import io.github.voytech.tabulate.core.model.traceIteration
 import mu.KLogging
 
@@ -70,43 +70,40 @@ class ExportIterations(val context: ModelExportContext) {
     private fun moveForRender(): ExportIteration =
         runningIterations.removeFirstOrNull() ?: scheduledIterations.removeFirst()
 
-    private fun startIteration(constraints: SpaceConstraints): Boolean {
-        if (!hasAnyIteration() && haveAnyChildAnyIteration()) appendIteration()
+    private fun ensureIteration() {
+        if (!hasAnyIteration() && (haveAnyChildAnyIteration() || context.isRunning())) appendIteration()
+    }
+
+    private fun setIteration(): ExportIteration {
+        ensureIteration()
         if (hasAnyIteration()) {
-            when (context.phase) {
+            return when (context.phase) {
                 Phase.MEASURING -> moveForMeasure().use()
                 Phase.RENDERING -> moveForRender().use()
-            }.also { context.traceIteration("[ITERATION START]") }
-                .begin(constraints)
-            return true
+            }
         } else {
             logger.error { "Could not start iteration. No scheduled nor running iterations present!" }
             error("Could not start iteration. No scheduled nor running iterations present!")
         }
     }
 
-    private fun endIteration() {
-        current.end()
-        context.traceIteration("[ITERATION END]")
+    @JvmSynthetic
+    internal fun <R> executeIteration(constraint: RegionConstraints, block: () -> R): R? {
+        val iteration = setIteration()
+        withinIteration = true
+        return iteration.execute(constraint, block).also {
+            withinIteration = false
+        }
     }
 
-    fun <R> executeIteration(constraint: SpaceConstraints, block: () -> R): R? {
-        val started = startIteration(constraint)
-        return if (started) {
-            withinIteration = true
-            block().also {
-                withinIteration = false
-                endIteration()
-            }
-        } else null
-    }
-
-    fun hasAnyMeasuredIteration(): Boolean {
+    @JvmSynthetic
+    internal fun hasAnyMeasuredIteration(): Boolean {
         require(!withinIteration) { "hasAnyMeasuredIteration can be invoked only outside of iteration scope" }
         return runningIterations.isNotEmpty()
     }
 
-    fun hasAnyScheduledIteration(): Boolean {
+    @JvmSynthetic
+    internal fun hasAnyScheduledIteration(): Boolean {
         require(!withinIteration) { "hasAnyScheduledIteration can be invoked only outside of iteration scope" }
         return scheduledIterations.isNotEmpty()
     }
@@ -115,7 +112,8 @@ class ExportIterations(val context: ModelExportContext) {
      * This method is not allowed to be invoked within iteration block.
      * It can be only called before or after rendering/measuring iteration block
      */
-    fun hasAnyIteration(): Boolean {
+    @JvmSynthetic
+    internal fun hasAnyIteration(): Boolean {
         require(!withinIteration) { "hasAnyIteration can be invoked only outside of iteration scope" }
         return when (context.phase) {
             Phase.MEASURING -> hasAnyScheduledIteration()
@@ -123,9 +121,15 @@ class ExportIterations(val context: ModelExportContext) {
         }
     }
 
-    fun haveAnyChildAnyIteration(): Boolean = context.treeNode {
+    @JvmSynthetic
+    internal fun haveAnyChildAnyIteration(): Boolean = context.treeNode {
         require(!withinIteration) { "haveAnyChildAnyIteration can be invoked only outside of iteration scope" }
         checkAnyChildren { it.exportIterations.hasAnyIteration() }
+    }
+
+    @JvmSynthetic
+    internal fun setDryRunForActive() {
+        current.setDryRun()
     }
 
     fun getCurrentIterationAttributesOrNull(): Map<String, Any> = current.attributes.toMap()
@@ -145,19 +149,24 @@ class ExportIteration(val context: ModelExportContext) {
     infix fun conflicts(other: ExportIteration): Boolean =
         attributes.any { it.value == other.attributes[it.key] }
 
-    fun begin(space: SpaceConstraints) {
-        layoutContext.beginLayout(space)
+    @JvmSynthetic
+    internal fun <R> execute(constraint: RegionConstraints, block: () -> R): R? {
+        layoutContext.beginLayout(constraint)
+        return (if (isDryRenderRun()) {
+            layoutContext.endLayout()
+            null.also { trace("Dry render run detected!") }
+        } else {
+            block().also { layoutContext.endLayout() }
+        })
     }
 
-    fun end() {
-        layoutContext.endLayout()
+    private fun isDryRenderRun(): Boolean = attributes["_dryRun"] as? Boolean ?: false
+
+    fun setDryRun() {
+        attributes["_dryRun"] = true
+        suspendAttributes = true
     }
 
     fun layout(): LayoutData = layoutContext.layout
-
-    fun isRetried(): Boolean = attributes["_retry"] as? Boolean ?: false
-
-    fun isStopped(): Boolean = attributes["_stop"] as? Boolean ?: false
-
 
 }

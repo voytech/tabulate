@@ -5,7 +5,9 @@ import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.operation.AttributedContext
 import io.github.voytech.tabulate.core.operation.VoidOperation
 
-class NewPage(val pageNumber: Int, val pageName: String, val customAttributes: StateAttributes) : AttributedContext()
+class NewPage(val pageNumber: Int, val pageName: String, val customAttributes: StateAttributes) : AttributedContext() {
+    override fun toString(): String = "NewPage[$pageNumber]"
+}
 
 fun interface PageOperation<CTX : RenderingContext> : VoidOperation<CTX, NewPage>
 

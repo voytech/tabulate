@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.components.page.model
 import io.github.voytech.tabulate.components.commons.operation.newPage
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.layout.Region
-import io.github.voytech.tabulate.core.layout.SpaceConstraints
+import io.github.voytech.tabulate.core.layout.RegionConstraints
 
 class Page internal constructor(
     @get:JvmSynthetic
@@ -41,29 +41,29 @@ class Page internal constructor(
     }
 
     private fun ExportApi.exportHeader() {
-        header?.export(null, true)
+        header?.export(force = true)
     }
 
-    private fun ExportApi.exportContent(spaceConstraints: SpaceConstraints) {
+    private fun ExportApi.exportContent(regionConstraints: RegionConstraints) {
         models.forEach {
-            it.export(spaceConstraints)
+            it.export(regionConstraints)
         }
     }
 
     private fun ExportApi.measureFooterSize() =
-        footer?.measure(null, true)?.let { Size(it.width, it.height) }
+        footer?.measure(force = true)?.let { Size(it.width, it.height) }
 
     private fun Region.findFooterLeftTop(size: Size?): Position? =
         size?.let { Position(leftTop.x, maxRightBottom.y - it.height) }
 
-    private fun resolveContentMaxRightBottom(footerLeftTop: Position?, region: Region): SpaceConstraints =
-        SpaceConstraints(maxRightBottom = footerLeftTop?.let { Position(region.maxRightBottom.x, it.y) })
+    private fun resolveContentMaxRightBottom(footerLeftTop: Position?, region: Region): RegionConstraints =
+        RegionConstraints(maxRightBottom = footerLeftTop?.let { Position(region.maxRightBottom.x, it.y) })
 
-    private operator fun Position?.plus(size: Size?): SpaceConstraints =
-        SpaceConstraints(leftTop = this, maxRightBottom = size?.let { this?.plus(size) })
+    private operator fun Position?.plus(size: Size?): RegionConstraints =
+        RegionConstraints(leftTop = this, maxRightBottom = size?.let { this?.plus(size) })
 
-    private fun ExportApi.exportFooter(spaceConstraints: SpaceConstraints?) {
-        footer?.export(spaceConstraints, true)
+    private fun ExportApi.exportFooter(regionConstraints: RegionConstraints?) {
+        footer?.export(regionConstraints, true)
     }
 
 }

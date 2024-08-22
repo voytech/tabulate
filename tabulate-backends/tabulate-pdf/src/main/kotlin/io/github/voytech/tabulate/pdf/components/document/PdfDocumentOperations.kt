@@ -14,7 +14,7 @@ class PdfDocumentOperations : OperationsBundleProvider<PdfBoxRenderingContext, D
     override fun provideAttributeOperations(): BuildAttributeOperations<PdfBoxRenderingContext> = {}
 
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {
-        operation(PageOperation { renderingContext, _ -> renderingContext.addPage() })
+        operation(PageOperation { renderingContext, _ -> renderingContext.createNextPage() })
     }
 
     override fun getDocumentFormat(): DocumentFormat<PdfBoxRenderingContext> = DocumentFormat.format("pdf", "pdfbox")

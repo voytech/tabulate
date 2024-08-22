@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.components.wrapper.model
 
 import io.github.voytech.tabulate.core.align
 import io.github.voytech.tabulate.core.layout.LayoutProperties
-import io.github.voytech.tabulate.core.layout.SpaceConstraints
+import io.github.voytech.tabulate.core.layout.RegionConstraints
 import io.github.voytech.tabulate.core.layout.impl.SimpleLayout
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
@@ -28,7 +28,7 @@ class Wrapper(
                 child.measure().let { childSize ->
                     it.maxBoundingRectangle.size().let { size ->
                         val withMarginOrNot = getMarginSize(child)?.let { childSize + it } ?: childSize
-                        child.export(SpaceConstraints(leftTop = it.leftTop.align(alignment, size, withMarginOrNot)))
+                        child.export(RegionConstraints(leftTop = it.leftTop.align(alignment, size, withMarginOrNot)))
                     }
                 }
             } ?: child.export()

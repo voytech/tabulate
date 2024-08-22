@@ -1,7 +1,15 @@
 package io.github.voytech.tabulate
 
+import io.github.voytech.tabulate.components.image.api.builder.dsl.ImageAttributesBuilderApi
+import io.github.voytech.tabulate.components.image.api.builder.dsl.background
+import io.github.voytech.tabulate.components.image.api.builder.dsl.borders
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
+import io.github.voytech.tabulate.components.table.model.RowCellExpression
+import io.github.voytech.tabulate.components.text.api.builder.dsl.*
 import io.github.voytech.tabulate.test.sampledata.SampleCustomer
+import java.math.BigDecimal
+import java.math.RoundingMode
+import kotlin.reflect.KProperty1
 
 object Utils {
     fun sampleCustomersTable(data: List<SampleCustomer>): (TableBuilderApi<SampleCustomer>.() -> Unit) = typedTable {
@@ -25,5 +33,48 @@ object Utils {
             }
         }
         dataSource(data)
+    }
+
+
+    fun <T : Any> RowBuilderApi<T>.dollarColumn(prop: KProperty1<T, Any?>) =
+        cell(prop) {
+            expression = RowCellExpression {
+                "${(it.record?.let { obj -> (prop.get(obj) as BigDecimal).setScale(2, RoundingMode.HALF_UP) } ?: 0)} $"
+            }
+        }
+
+    val tableHeaderStyle = table {
+        rows {
+            header {
+                attributes {
+                    text { white; italic = true; bold }
+                    background { black }
+                    rowBorders {// TODO - simplify border API. Add builder methods like 'horizontalBorders', 'verticalBorders', 'allBorders'
+                        left { red; solid; 1f.pt() }
+                        top { red; solid; 1f.pt() }
+                        right { red; solid; 1f.pt() }
+                        bottom { red; solid; 1f.pt() }
+                    }
+                }
+            }
+        }
+    }
+
+
+    val textBoxStyle: TextAttributesBuilderApi.() -> Unit = {
+        height { 20.pt() }
+        text { courierNew }
+        alignment { center; middle }
+        background { lightGray; solid }
+        borders {
+            all { double; 3.pt(); black }
+        }
+    }
+
+    val imageStyles: ImageAttributesBuilderApi.() -> Unit = {
+        background { lightGray; solid }
+        borders {
+            all { solid; 2.pt(); lightGray }
+        }
     }
 }
