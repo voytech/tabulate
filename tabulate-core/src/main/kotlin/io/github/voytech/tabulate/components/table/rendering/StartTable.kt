@@ -24,10 +24,10 @@ sealed class TableContext(
 
     override val boundaryToFit = LayoutBoundaryType.OUTER
 
-    override fun Region.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
-            x = leftTop.x,
-            y = leftTop.y,
+            x = getMaxBoundingRectangle().leftTop.x,
+            y = getMaxBoundingRectangle().leftTop.y,
             width = getMeasuredSize()?.width,
             height = getMeasuredSize()?.height,
             boundaryToFit
@@ -42,7 +42,11 @@ sealed class TableContext(
  */
 class TableStartRenderable(
     attributes: Attributes?,
-) : TableContext(attributes)
+) : TableContext(attributes) {
+    override fun toString(): String {
+        return "TableStartRenderable(attributes=$attributes)"
+    }
+}
 
 internal fun <T : Any> Table<T>.asTableStart(customAttributes: StateAttributes): TableStartRenderable =
     TableStartRenderable(attributes?.forContext<TableStartRenderable>()).apply { additionalAttributes = customAttributes.data }

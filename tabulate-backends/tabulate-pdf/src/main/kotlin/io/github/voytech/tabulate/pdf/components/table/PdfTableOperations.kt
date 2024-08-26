@@ -46,8 +46,8 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
     }
 
     override fun provideMeasureOperations(): BuildOperations<PdfBoxRenderingContext> = {
-        operation(StartTableOperation { renderingContext, _ -> renderingContext.createPageIfMissing()}) // TODO fix table template to make it not requiring empty operations.
-        operation(StartColumnOperation { _, _ -> })
+        operation(StartTableOperation { renderingContext, _ -> renderingContext.createPageIfMissing()}) // TODO for standalone rendering !!!
+        operation(StartColumnOperation { _, _ -> }) // TODO fix table template to make it not requiring empty operations.
         operation(StartRowOperation { _, _ -> })
         operation(RenderRowCellOperation { renderingContext, context ->
             context.getTypeHint().let {

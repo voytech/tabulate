@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.core.operation
 
-import io.github.voytech.tabulate.core.LayoutData
+import io.github.voytech.tabulate.core.ConnectedLayouts
 import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.AttributeAware
@@ -80,14 +80,14 @@ abstract class Renderable<EL : Layout>(@JvmSynthetic override val attributes: At
     AttributedContext(), LayoutElement<EL> {
 
     lateinit var boundingBox: RenderableBoundingBox
-        internal set
+        private set
 
     fun hasBoundingBox() = this::boundingBox.isInitialized
 
-    internal fun initBoundingBox(scope: LayoutData): RenderableBoundingBox = with(scope.region) {
-        if (this@Renderable::boundingBox.isInitialized) return boundingBox
+    internal fun initBoundingBox(layouts: ConnectedLayouts): RenderableBoundingBox = with(layouts.layout) {
+        if (hasBoundingBox()) return boundingBox
         @Suppress("UNCHECKED_CAST")
-        boundingBox = defineBoundingBox(scope.layout as EL).convertUnits(scope.region, boundaryToFit, scope.parent)
+        boundingBox = defineBoundingBox(layouts.layout as EL).convertUnits(layouts.layout, boundaryToFit, layouts.parent)
         return boundingBox
     }
 }

@@ -3,6 +3,7 @@ package io.github.voytech.tabulate.core.layout
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.operation.Ok
 import io.github.voytech.tabulate.core.operation.RenderingStatus
+import io.github.voytech.tabulate.round
 import java.util.UUID
 
 /**
@@ -25,7 +26,8 @@ import java.util.UUID
  */
 enum class LayoutBoundaryType {
     INNER,
-    OUTER
+    OUTER,
+    CONTENT,
 }
 
 interface AbsolutePositionMethods {
@@ -62,11 +64,10 @@ interface AbsolutePositionMethods {
  * @since 0.2.0
  */
 interface AutonomousLayout {
-    fun Region.reset()
 
-    fun Region.resolveNextPosition(): Position?
+    fun resolveNextPosition(): Position?
 
-    fun Region.hasSpaceLeft(): Boolean
+    fun hasSpaceLeft(): Boolean
 }
 
 data class MeasurementResults(val widthAligned: Boolean = false, val heightAligned: Boolean)
@@ -77,46 +78,56 @@ interface Layout {
 
     val properties: LayoutProperties
 
+    val uom: UnitsOfMeasure
+
+    fun initialize(constraints: RegionConstraints)
+
+    fun reset(position: Position? = null)
     /**
      * Query for absolute position expressed in [targetUnit] by using current layout relative position.
      */
-    fun Region.getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position
+    fun getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position
 
     /**
      * Query for absolute X axis position expressed in [targetUnit] by using current layout relative X position.
      */
-    fun Region.getX(relativeX: X, targetUnit: UnitsOfMeasure): X
+    fun getX(relativeX: X, targetUnit: UnitsOfMeasure): X
 
     /**
      * Query for absolute Y axis position expressed in [targetUnit] by using current layout relative Y position.
      */
-    fun Region.getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y
+    fun getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y
 
     /**
      * Extend layout rendered space by specific [Width].
      */
 
-    fun Region.allocateSpace(position: Position)
+    fun allocateSpace(position: Position)
 
-    fun Region.allocateRectangle(bbox: RenderableBoundingBox)
+    fun allocateRectangle(bbox: RenderableBoundingBox)
 
-    fun Region.isCrossingBounds(
+    fun absorb(layout: Layout)
+
+    fun isCrossingBounds(
         bbox: RenderableBoundingBox, type: LayoutBoundaryType = LayoutBoundaryType.INNER
     ): Axis?
 
-    fun applyAllocatedRectangle(box: BoundingRectangle) {}
 
     /**
      * Extend layout rendered space by specific [Height].
      */
 
-    fun Region.getActiveRectangle(): BoundingRectangle
+    fun getActiveRectangle(): BoundingRectangle
 
-    fun Region.getMaxBoundingRectangle(): BoundingRectangle
+    fun getMaxBoundingRectangle(): BoundingRectangle = getBoundingRectangle(LayoutBoundaryType.OUTER)
 
-    fun Region.getBoundingRectangle(type: LayoutBoundaryType? = LayoutBoundaryType.INNER): BoundingRectangle
+    fun getInnerBoundingRectangle(): BoundingRectangle = getBoundingRectangle(LayoutBoundaryType.INNER)
 
-    fun Region.getRenderableBoundingBox(
+    fun getContentBoundingRectangle(): BoundingRectangle = getBoundingRectangle(LayoutBoundaryType.INNER)
+
+    fun getBoundingRectangle(type: LayoutBoundaryType? = LayoutBoundaryType.INNER): BoundingRectangle
+
+    fun getRenderableBoundingBox(
         x: X, y: Y, width: Width? = null, height: Height? = null, type: LayoutBoundaryType
     ): RenderableBoundingBox
 
@@ -133,42 +144,60 @@ interface Layout {
     /**
      * Gets the size measured by the layout (content) + size of paddings = [Region] size)
      */
-    fun Region.getMeasuredSize(): Size?
+    fun getMeasuredSize(): Size?
 
     /**
      * Gets the size measured by the layout (content) + size of paddings = [Region] size)
      */
-    fun Region.getCurrentSize(): Size?
+    fun getCurrentSize(): Size?
 
     /**
      * Gets the width declared by API (by WidthAttribute and HeightAttribute)
      */
-    fun Region.getExplicitWidth(mode: LayoutBoundaryType = LayoutBoundaryType.OUTER): Width?
+    fun getExplicitWidth(mode: LayoutBoundaryType = LayoutBoundaryType.OUTER): Width?
 
     /**
      * Gets the height declared by API (by WidthAttribute and HeightAttribute)
      */
-    fun Region.getExplicitHeight(mode: LayoutBoundaryType = LayoutBoundaryType.OUTER): Height?
+    fun getExplicitHeight(mode: LayoutBoundaryType = LayoutBoundaryType.OUTER): Height?
 
     fun getMeasurementResults(): MeasurementResults? = null
 
-    fun Region.setMeasured() {
+    fun setMeasured() {
         isMeasured = true
     }
 
 }
 
-abstract class AbstractLayout(override val properties: LayoutProperties) : Layout {
+abstract class AbstractLayout(
+    override val properties: LayoutProperties
+) : Layout {
+    internal lateinit var region: Region
+        private set
     override var isMeasured: Boolean = false
     private var contentSize: Size? = null
     private var measurementResults: MeasurementResults? = null
+    override val uom: UnitsOfMeasure = UnitsOfMeasure.PT
+
+    override fun initialize(constraints: RegionConstraints) {
+        if (this::region.isInitialized) return
+        region = Region(uom, constraints)
+        started()
+    }
+
+    final override fun reset(position: Position?) {
+        region.reset(position)
+        started()
+    }
+
+    protected open fun started() {}
 
     /**
      * Given layout policy in scope, returns absolute x,y position of relative position.
      * @author Wojciech Maka
      * @since 0.2.0
      */
-    override fun Region.getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position = Position(
+    override fun getPosition(relativePosition: Position, targetUnit: UnitsOfMeasure): Position = Position(
         getX(relativePosition.x, targetUnit), getY(relativePosition.y, targetUnit)
     )
 
@@ -177,7 +206,7 @@ abstract class AbstractLayout(override val properties: LayoutProperties) : Layou
      * @author Wojciech Maka
      * @since 0.2.0
      */
-    override fun Region.getX(relativeX: X, targetUnit: UnitsOfMeasure): X {
+    override fun getX(relativeX: X, targetUnit: UnitsOfMeasure): X {
         val absoluteX = getActiveRectangle().leftTop.x.switchUnitOfMeasure(targetUnit)
         return X((absoluteX + relativeX).value, targetUnit)
     }
@@ -187,12 +216,12 @@ abstract class AbstractLayout(override val properties: LayoutProperties) : Layou
      * @author Wojciech Maka
      * @since 0.2.0
      */
-    override fun Region.getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y {
+    override fun getY(relativeY: Y, targetUnit: UnitsOfMeasure): Y {
         val absoluteY = getActiveRectangle().leftTop.y.switchUnitOfMeasure(targetUnit)
         return Y((absoluteY + relativeY).value, targetUnit)
     }
 
-    final override fun Region.setMeasured() {
+    final override fun setMeasured() {
         whileMeasuring {
             getCurrentContentSize()?.let { allocateSpace(innerLeftTop + it) }
             isMeasured = true
@@ -215,31 +244,31 @@ abstract class AbstractLayout(override val properties: LayoutProperties) : Layou
 
     override fun getMeasuredContentSize(): Size? = whenMeasured { contentSize }
 
-    override fun Region.getMeasuredSize(): Size? = whenMeasured { maxBoundingRectangle.size() }
+    override fun getMeasuredSize(): Size? = whenMeasured { maxBoundingRectangle.size() }
 
-    override fun Region.getCurrentSize(): Size? = maxBoundingRectangle.size()
+    override fun getCurrentSize(): Size? = region.maxBoundingRectangle.size()
 
-    final override fun Region.getActiveRectangle(): BoundingRectangle = activeRectangle
+    final override fun getActiveRectangle(): BoundingRectangle = region.activeRectangle
 
-    final override fun Region.getMaxBoundingRectangle(): BoundingRectangle = maxBoundingRectangle
+    final override fun getMaxBoundingRectangle(): BoundingRectangle = region.maxBoundingRectangle
 
-    final override fun Region.getBoundingRectangle(type: LayoutBoundaryType?): BoundingRectangle =
-        if (type == LayoutBoundaryType.INNER) innerBoundingRectangle else maxBoundingRectangle
+    final override fun getBoundingRectangle(type: LayoutBoundaryType?): BoundingRectangle =
+        if (type == LayoutBoundaryType.INNER) region.innerBoundingRectangle else region.maxBoundingRectangle
 
-    final override fun Region.getExplicitWidth(mode: LayoutBoundaryType): Width? = if (properties.declaredWidth) {
+    final override fun getExplicitWidth(mode: LayoutBoundaryType): Width? = if (properties.declaredWidth) {
         if (mode == LayoutBoundaryType.OUTER) {
-            maxBoundingRectangle.size().width
+            region.maxBoundingRectangle.size().width
         } else {
-            innerBoundingRectangle.size().width
+            region.innerBoundingRectangle.size().width
         }
     } else null
 
-    final override fun Region.getExplicitHeight(mode: LayoutBoundaryType): Height? =
+    final override fun getExplicitHeight(mode: LayoutBoundaryType): Height? =
         if (properties.declaredHeight) {
             if (mode == LayoutBoundaryType.OUTER) {
-                maxBoundingRectangle.size().height
+                region.maxBoundingRectangle.size().height
             } else {
-                innerBoundingRectangle.size().height
+                region.innerBoundingRectangle.size().height
             }
         } else null
 
@@ -249,7 +278,7 @@ abstract class AbstractLayout(override val properties: LayoutProperties) : Layou
      * @author Wojciech Maka
      * @since 0.2.0
      */
-    protected fun <R> whileMeasuring(block: () -> R): R? = if (!isMeasured) block() else null
+    protected fun <R> whileMeasuring(block: Region.() -> R): R? = if (!isMeasured) block(region) else null
 
 
     /**
@@ -258,22 +287,33 @@ abstract class AbstractLayout(override val properties: LayoutProperties) : Layou
      * @author Wojciech Maka
      * @since 0.2.0
      */
-    protected fun <R> whenMeasured(block: () -> R): R? = if (isMeasured) block() else null
+    protected fun <R> whenMeasured(block: Region.() -> R): R? = if (isMeasured) block(region) else null
 
-    private fun Region.rightBottomByType(type: LayoutBoundaryType): Position =
-        if (type == LayoutBoundaryType.INNER) innerMaxRightBottom else maxRightBottom
+    private fun rightBottomByType(type: LayoutBoundaryType): Position =
+        if (type == LayoutBoundaryType.INNER) region.innerMaxRightBottom else region.maxRightBottom
 
-    open fun Region.isXCrossed(bbox: RenderableBoundingBox, type: LayoutBoundaryType): Boolean =
+    open fun isXCrossed(bbox: RenderableBoundingBox, type: LayoutBoundaryType): Boolean =
         rightBottomByType(type).let { pos ->
-            (bbox.absoluteX + bbox.width.orZero()) > pos.x
+            val bboxRight = bbox.absoluteX + bbox.width.orZero()
+            return (bboxRight > pos.x).also { if (it) trace("X Overflow: bboxRightX: $bboxRight, pos.x: ${pos.x}") }
         }
 
-    open fun Region.isYCrossed(bbox: RenderableBoundingBox, type: LayoutBoundaryType): Boolean =
+    open fun isYCrossed(bbox: RenderableBoundingBox, type: LayoutBoundaryType): Boolean =
         rightBottomByType(type).let { pos ->
-            (bbox.absoluteY + bbox.height.orZero()) > pos.y
+            val bboxBottom = bbox.absoluteY + bbox.height.orZero()
+            return (bboxBottom > pos.y)
+                .also {
+                    if (it) trace(
+                        "Y Overflow: bboxBottomY: ${bboxBottom.value.round(1)}, pos.y: ${
+                            pos.y.value.round(
+                                1
+                            )
+                        }"
+                    )
+                }
         }
 
-    final override fun Region.isCrossingBounds(
+    final override fun isCrossingBounds(
         bbox: RenderableBoundingBox,
         type: LayoutBoundaryType
     ): Axis? =
@@ -283,21 +323,30 @@ abstract class AbstractLayout(override val properties: LayoutProperties) : Layou
             Axis.Y
         } else null
 
-    final override fun Region.allocateSpace(position: Position) {
-        allocate(position)
+    final override fun allocateSpace(position: Position) {
+        region.allocate(position)
     }
 
-    final override fun Region.allocateRectangle(bbox: RenderableBoundingBox) = with(bbox) {
+    final override fun allocateRectangle(bbox: RenderableBoundingBox) = with(bbox) {
         allocateSpace(Position(absoluteX + width.orZero(), absoluteY + height.orZero()))
     }
 
-    final override fun Region.getRenderableBoundingBox(
+    final override fun absorb(layout: Layout) {
+        val boundingRectangle = layout.getMaxBoundingRectangle()
+        allocateSpace(boundingRectangle.rightBottom)
+        onChildLayoutAbsorbed(boundingRectangle)
+    }
+
+    open fun onChildLayoutAbsorbed(boundingRectangle: BoundingRectangle) { }
+
+    final override fun getRenderableBoundingBox(
         x: X,
         y: Y,
         width: Width?,
         height: Height?,
         type: LayoutBoundaryType
     ): RenderableBoundingBox {
+        val uom = region.uom
         val boundingRectangle = getBoundingRectangle(type)
         return RenderableBoundingBox(
             cropBoxLeftTop = boundingRectangle.leftTop,
@@ -309,11 +358,11 @@ abstract class AbstractLayout(override val properties: LayoutProperties) : Layou
         )
     }
 
-    fun Region.getHorizontalSpacing(): Float =
-        if (innerLeftTop.x == currentPosition.x) 0F else properties.horizontalSpacing
+    fun getHorizontalSpacing(): Float =
+        if (region.innerLeftTop.x == region.currentPosition.x) 0F else properties.horizontalSpacing
 
-    fun Region.getVerticalSpacing(): Float =
-        if (innerLeftTop.y == currentPosition.y) 0F else properties.verticalSpacing
+    fun getVerticalSpacing(): Float =
+        if (region.innerLeftTop.y == region.currentPosition.y) 0F else properties.verticalSpacing
 
 }
 
@@ -364,7 +413,7 @@ class Region(
     }
 
     @JvmSynthetic
-    internal fun restart(position: Position?) {
+    internal fun reset(position: Position? = null) {
         position?.let {
             val maxBoundingRectangleSize = maxBoundingRectangle.size()
             val innerBoundingRectangleSize = innerBoundingRectangle.size()
@@ -395,18 +444,16 @@ interface LayoutElement<L : Layout> {
 
     val boundaryToFit: LayoutBoundaryType
 
-    fun Region.defineBoundingBox(layout: L): RenderableBoundingBox
+    fun defineBoundingBox(layout: L): RenderableBoundingBox
 
 }
 
 fun interface MeasureLayoutElement<L : Layout> {
-    fun Region.measureAt(policy: L): Position
+    fun measureAt(layout: L): Position
 }
 
 interface ApplyLayoutElement<L : Layout> {
-    fun Region.applyBoundingBox(bbox: RenderableBoundingBox, layout: L, status: RenderingStatus = Ok) = with(layout) {
-        allocateRectangle(bbox)
-    }
+    fun applyBoundingBox(bbox: RenderableBoundingBox, layout: L, status: RenderingStatus = Ok)
 }
 
 // TODO layoutPosition -> minLeftTop ; maxWidth+maxHeight -> maxRightBottom  (absolute boundaries of this renderable bounding box enforced by a layout in which context a renderable is being rendered.)
@@ -438,9 +485,9 @@ data class RenderableBoundingBox(
         height = other.height?.switchUnitOfMeasure(unitsOfMeasure()) ?: height
     )
 
-    fun convertUnits(child: Region, type: LayoutBoundaryType, parent: Region?): RenderableBoundingBox =
-        (if (type == LayoutBoundaryType.OUTER) child.maxBoundingRectangle else child.innerBoundingRectangle).let { bbox ->
-            val parentRect = parent?.innerBoundingRectangle ?: bbox
+    fun convertUnits(child: Layout, type: LayoutBoundaryType, parent: Layout?): RenderableBoundingBox =
+        (if (type == LayoutBoundaryType.OUTER) child.getMaxBoundingRectangle() else child.getInnerBoundingRectangle()).let { bbox ->
+            val parentRect = parent?.getInnerBoundingRectangle() ?: bbox
             copy(
                 cropBoxLeftTop = bbox.leftTop,
                 cropBoxRightBottom = bbox.leftTop + bbox.size(),

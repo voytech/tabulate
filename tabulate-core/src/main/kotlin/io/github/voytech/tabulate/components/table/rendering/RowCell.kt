@@ -33,7 +33,7 @@ class CellRenderable(
 
     override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
-    override fun Region.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(getColumn()),
             y = getAbsoluteRowPosition(getRow()),
@@ -43,7 +43,7 @@ class CellRenderable(
         )
     }
 
-    override fun Region.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus): Unit =
+    override fun applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus): Unit =
         with(layout) {
             if (!status.hasLayoutEffect()) return
             bbox.width?.let {
@@ -53,6 +53,10 @@ class CellRenderable(
                 setRowHeight(getRow(), it, SizingOptions.SET_IF_GREATER)
             }
         }
+
+    override fun toString(): String {
+        return "RowCellRenderable(rowIndex=$rowIndex, columnIndex=$columnIndex, cellValue=$cellValue)"
+    }
 }
 
 internal fun <T : Any> SyntheticRow<T>.createCellContext(

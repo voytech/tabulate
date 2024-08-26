@@ -130,11 +130,10 @@ internal class TableRowsRenderer<T : Any>(
     private val indexedTableRows: IndexedTableRows<T> = tableModel.indexRows()
     private val rows = QualifiedRows(indexedTableRows)
 
-    private fun RenderingResult.hasOverflown(): Boolean = status.hasOverflown(Axis.Y)
+    data class CellRenderingResult<T>(val result: RenderingResult, val key: ColumnKey<T>, val cell: CellRenderable)
 
-    data class CellRenderingResult<T>(val overflown: Boolean, val key: ColumnKey<T>, val cell: CellRenderable)
+    private fun List<CellRenderingResult<T>>.firstNokResultOrNull() = firstOrNull { it.result.hasOverflown() }
 
-    private fun List<CellRenderingResult<T>>.hasAnyCellOverflown() = firstOrNull { it.overflown } != null
 
     private fun List<CellRenderingResult<T>>.asMap(): Map<ColumnKey<T>, CellRenderable> =
         associate { it.key to it.cell }
@@ -144,7 +143,7 @@ internal class TableRowsRenderer<T : Any>(
     ): CellRenderingResult<T>? =
         if (renderIterations.inRenderWindow(column.index)) {
             createCellContext(sourceRow, column, state.data)?.let {
-                CellRenderingResult(api.renderOrMeasure(it).hasOverflown(), column.id, it)
+                CellRenderingResult(api.renderOrMeasure(it), column.id, it)
             }
         } else null
 
@@ -181,11 +180,10 @@ internal class TableRowsRenderer<T : Any>(
                 createRowStart(rowIndex = rowIndex.value, customAttributes = state.data).let { rowStart ->
                     when (val status = api.renderOrMeasure(rowStart).status) {
                         Ok, Nothing -> resolveAndRenderCells(sourceRow).let {
-                            if (it.hasAnyCellOverflown()) {
-                                //api.renderOrMeasure(createRowEnd(rowStart,it.asMap()))
-                                //resolveAndRenderRowEnd(rowStart, it.asMap())
-                                OverflowResult(RenderingClipped(Axis.Y)) //TODO decide overflow type (skip/clip)
-                            } else {
+                            it.firstNokResultOrNull()?.let { nok ->
+                                OverflowResult(nok.result.status  as AxisBoundStatus)
+                                //@TODO I think when clipped then we should continue with resolveAndRenderRowEnd
+                            } ?: run {
                                 resolveAndRenderRowEnd(rowStart, it.asMap())
                             }
                         }

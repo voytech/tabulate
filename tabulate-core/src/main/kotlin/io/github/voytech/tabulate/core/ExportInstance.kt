@@ -27,14 +27,14 @@ class ExportInstance(
     fun ModelExportContext.getExportOperations(): Operations<RenderingContext> {
         return operationsFactory.createMeasureOperations(model).let { measuringOperations ->
             operationsFactory.createExportOperations(
-                model, EnableRenderingUsingLayouts(measuringOperations) { activeLayout },
+                model, EnableRenderingUsingLayouts(measuringOperations) { activeLayoutContext.pairWithParent() },
             )
         }
     }
 
     fun ModelExportContext.getMeasuringOperations(): Operations<RenderingContext> {
         return operationsFactory.createMeasureOperations(
-            model, EnableMeasuringForLayouts { activeLayout },
+            model, EnableMeasuringForLayouts { activeLayoutContext.pairWithParent() },
         )
     }
 

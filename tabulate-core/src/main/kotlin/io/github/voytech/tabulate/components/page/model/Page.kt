@@ -1,6 +1,7 @@
 package io.github.voytech.tabulate.components.page.model
 
 import io.github.voytech.tabulate.components.commons.operation.newPage
+import io.github.voytech.tabulate.core.layout.Layout
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.layout.Region
 import io.github.voytech.tabulate.core.layout.RegionConstraints
@@ -21,8 +22,8 @@ class Page internal constructor(
 
     override fun doExport(api: ExportApi) = api {
         renderNewPage()
-        stickyHeaderAndFooterWith { region, footerLeftTop ->
-            exportContent(resolveContentMaxRightBottom(footerLeftTop, region))
+        stickyHeaderAndFooterWith { layout, footerLeftTop ->
+            exportContent(resolveContentMaxRightBottom(footerLeftTop, layout))
         }
     }
 
@@ -32,11 +33,12 @@ class Page internal constructor(
             render(newPage(++execution.pageNumber, execution.currentPageTitleWithNumber(), this))
         }
 
-    private fun ExportApi.stickyHeaderAndFooterWith(renderContents: (Region, Position?) -> Unit) {
+    private fun ExportApi.stickyHeaderAndFooterWith(renderContents: (Layout, Position?) -> Unit) {
         exportHeader()
         val footerSize = measureFooterSize()
-        val footerLeftTop = currentLayoutSpace().findFooterLeftTop(footerSize)
-        renderContents(currentLayoutSpace(), footerLeftTop)
+        val currentLayout = currentLayout()
+        val footerLeftTop = currentLayout.findFooterLeftTop(footerSize)
+        renderContents(currentLayout, footerLeftTop)
         exportFooter(footerLeftTop + footerSize)
     }
 
@@ -53,11 +55,17 @@ class Page internal constructor(
     private fun ExportApi.measureFooterSize() =
         footer?.measure(force = true)?.let { Size(it.width, it.height) }
 
-    private fun Region.findFooterLeftTop(size: Size?): Position? =
-        size?.let { Position(leftTop.x, maxRightBottom.y - it.height) }
+    private fun Layout.findFooterLeftTop(size: Size?): Position? = size?.let {
+        getMaxBoundingRectangle().let { (leftTop, maxRightBottom) ->
+            Position(leftTop.x, maxRightBottom.y - it.height)
+        }
+    }
 
-    private fun resolveContentMaxRightBottom(footerLeftTop: Position?, region: Region): RegionConstraints =
-        RegionConstraints(maxRightBottom = footerLeftTop?.let { Position(region.maxRightBottom.x, it.y) })
+
+    private fun resolveContentMaxRightBottom(footerLeftTop: Position?, layout: Layout): RegionConstraints {
+        val maxRightBottom = layout.getMaxBoundingRectangle().rightBottom
+        return RegionConstraints(maxRightBottom = footerLeftTop?.let { Position(maxRightBottom.x, it.y) })
+    }
 
     private operator fun Position?.plus(size: Size?): RegionConstraints =
         RegionConstraints(leftTop = this, maxRightBottom = size?.let { this?.plus(size) })

@@ -39,7 +39,7 @@ class ColumnStartRenderable(
 
     override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
-    override fun Region.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(getColumn()),
             y = getAbsoluteRowPosition(0),
@@ -49,7 +49,7 @@ class ColumnStartRenderable(
         )
     }
 
-    override fun Region.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus): Unit =
+    override fun applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus): Unit =
         with(layout) {
             if (!status.hasLayoutEffect()) return
             bbox.width?.let {
@@ -59,6 +59,10 @@ class ColumnStartRenderable(
         }
 
     override fun getColumn(): Int = columnIndex
+
+    override fun toString(): String {
+        return "ColumnStartRenderable(columnIndex=$columnIndex)"
+    }
 }
 
 internal fun <T : Any> ColumnDef<T>.asColumnStart(

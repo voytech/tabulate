@@ -1,9 +1,12 @@
 package io.github.voytech.tabulate.test.sampledata
 
-import java.math.BigDecimal
-import java.time.LocalDate
-import kotlin.random.Random
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json.Default.decodeFromString
+import java.io.File
 
+
+@Serializable
 data class SampleCustomer(
     val firstName: String,
     val lastName: String,
@@ -15,18 +18,14 @@ data class SampleCustomer(
 ) {
 
     companion object {
+
+        private val data: List<SampleCustomer> by lazy {
+            val jsonString = this::class.java.getResource("/sample_customers.json")!!.readText()
+            decodeFromString(ListSerializer(serializer()), jsonString)
+        }
+
         fun create(count: Int = 1): List<SampleCustomer> {
-            Random(count)
-            return (0 .. count).map {
-                SampleCustomer(
-                    firstNameDictionary.shuffled().first(),
-                    lastNameDictionary.shuffled().first(),
-                    countryDictionary.shuffled().first(),
-                    "City",
-                    streetDictionary.shuffled().first(),
-                    "10","1"
-                )
-            }
+            return data.take(count)
         }
     }
 }

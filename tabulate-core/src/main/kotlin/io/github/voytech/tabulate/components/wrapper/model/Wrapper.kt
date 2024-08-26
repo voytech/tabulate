@@ -26,9 +26,10 @@ class Wrapper(
         withinCurrentLayout {
             alignments?.let { alignment ->
                 child.measure().let { childSize ->
-                    it.maxBoundingRectangle.size().let { size ->
+                    val outerRect = getMaxBoundingRectangle()
+                    outerRect.size().let { size ->
                         val withMarginOrNot = getMarginSize(child)?.let { childSize + it } ?: childSize
-                        child.export(RegionConstraints(leftTop = it.leftTop.align(alignment, size, withMarginOrNot)))
+                        child.export(RegionConstraints(leftTop = outerRect.leftTop.align(alignment, size, withMarginOrNot)))
                     }
                 }
             } ?: child.export()

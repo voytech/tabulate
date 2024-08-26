@@ -6,6 +6,8 @@ val kotlinLoggingVersion: String by project
 plugins {
     java
     kotlin("jvm")
+    kotlin("plugin.serialization") version "1.7.0" apply false
+
     id("java-library")
     id("org.jetbrains.dokka") version "1.4.32"
     id("pl.allegro.tech.build.axion-release")

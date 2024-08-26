@@ -15,7 +15,7 @@ import io.github.voytech.tabulate.core.operation.hasLayoutEffect
 fun interface StartRowOperation<CTX : RenderingContext> : VoidOperation<CTX, RowStartRenderable>
 
 interface RowLayoutElement : RowCoordinate, LayoutElement<TableLayout>, ApplyLayoutElement<TableLayout> {
-    override fun Region.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
@@ -49,7 +49,7 @@ class RowStartRenderable(
     override fun getRow(): Int = rowIndex
     override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
-    override fun Region.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
@@ -59,7 +59,7 @@ class RowStartRenderable(
         )
     }
 
-    override fun Region.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus): Unit =
+    override fun applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus): Unit =
         with(layout) {
             if (!status.hasLayoutEffect()) return
             bbox.height?.let {
@@ -67,6 +67,10 @@ class RowStartRenderable(
                 setRowHeight(getRow(), it, ops)
             }
         }
+
+    override fun toString(): String {
+        return "RowStartRenderable(rowIndex=$rowIndex)"
+    }
 
 }
 

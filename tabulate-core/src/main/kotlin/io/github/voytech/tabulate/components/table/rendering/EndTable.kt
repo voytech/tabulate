@@ -15,7 +15,11 @@ fun interface EndTableOperation<CTX : RenderingContext>: VoidOperation<CTX, Tabl
  */
 class TableEndRenderable(
     attributes: Attributes?,
-) : TableContext(attributes)
+) : TableContext(attributes) {
+    override fun toString(): String {
+        return "TableEndRenderable(attributes=$attributes)"
+    }
+}
 
 internal fun <T : Any> Table<T>.asTableEnd(customAttributes: StateAttributes): TableEndRenderable =
     TableEndRenderable(attributes?.forContext<TableEndRenderable>()).apply { additionalAttributes = customAttributes.data }

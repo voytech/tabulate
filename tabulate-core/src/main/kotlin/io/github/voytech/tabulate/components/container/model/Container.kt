@@ -26,17 +26,11 @@ class Container(
         if (hasRenderableAttributes()) {
             render(ContainerRenderable(attributes?.forContext<ContainerRenderable>(), api.getCustomAttributes()))
         }
-        withinCurrentLayout { space ->
-            space.reset()
-            exportWithContinuations<FlowLayout>(models, descendantsIterationsKind)
-        }
+        exportWithContinuations<FlowLayout>(models, descendantsIterationsKind)
     }
 
     override fun takeMeasures(api: ExportApi) = api {
-        withinCurrentLayout { space ->
-            space.reset()
-            measureWithContinuations<FlowLayout>(models, descendantsIterationsKind)
-        }
+        measureWithContinuations<FlowLayout>(models, descendantsIterationsKind)
     }
 
     private fun hasRenderableAttributes(): Boolean =

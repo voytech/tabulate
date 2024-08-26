@@ -6,8 +6,6 @@ import io.github.voytech.tabulate.components.table.rendering.CellRenderable
 import io.github.voytech.tabulate.components.table.rendering.ColumnRenderable
 import io.github.voytech.tabulate.components.table.rendering.RowRenderable
 import io.github.voytech.tabulate.components.table.rendering.TableStartRenderable
-import io.github.voytech.tabulate.components.text.api.builder.dsl.horizontalOverflow
-import io.github.voytech.tabulate.components.text.api.builder.dsl.verticalOverflow
 import io.github.voytech.tabulate.core.model.attributes.*
 import io.github.voytech.tabulate.core.model.overflow.OverflowWords
 
@@ -43,16 +41,19 @@ fun <T: Any> TableLevelAttributesBuilderApi<T>.width(block: WidthAttribute.Build
 fun <T: Any> TableLevelAttributesBuilderApi<T>.height(block: HeightAttribute.Builder.() -> Unit) =
     attribute(HeightAttribute.builder(Table::class.java).apply(block))
 
-fun <T: Any> TableLevelAttributesBuilderApi<T>.onVerticalOverflow(block: VerticalOverflowAttribute.Builder.() -> Unit) =
+fun <T: Any> TableLevelAttributesBuilderApi<T>.verticalOverflow(block: VerticalOverflowAttribute.Builder.() -> Unit) =
     attribute(VerticalOverflowAttribute.builder(Table::class.java).apply(block))
 
-fun <T: Any> TableLevelAttributesBuilderApi<T>.onHorizontalOverflow(block: HorizontalOverflowAttribute.Builder.() -> Unit) =
+fun <T: Any> TableLevelAttributesBuilderApi<T>.horizontalOverflow(block: HorizontalOverflowAttribute.Builder.() -> Unit) =
     attribute(HorizontalOverflowAttribute.builder(Table::class.java).apply(block))
 
 fun <T: Any> TableLevelAttributesBuilderApi<T>.overflow(block: OverflowWords.() -> Unit) {
-    onHorizontalOverflow(block)
-    onVerticalOverflow(block)
+    horizontalOverflow(block)
+    verticalOverflow(block)
 }
+
+fun <T: Any> TableLevelAttributesBuilderApi<T>.clip(block: ClipAttribute.Builder.() -> Unit) =
+    attribute(ClipAttribute.builder(CellRenderable::class.java).apply(block))
 
 //Attributes available on column level
 fun <T: Any> ColumnLevelAttributesBuilderApi<T>.text(block: TextStylesAttribute.Builder.() -> Unit) =

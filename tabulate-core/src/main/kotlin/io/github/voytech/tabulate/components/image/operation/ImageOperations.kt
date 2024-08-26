@@ -19,7 +19,7 @@ class ImageRenderable internal constructor(
     val filePath: String,
     override val attributes: Attributes?,
     stateAttributes: StateAttributes,
-) : Renderable<SimpleLayout>(), HasImage, ApplyLayoutElement<SimpleLayout> {
+) : Renderable<SimpleLayout>(), HasImage{
 
     init {
         additionalAttributes = stateAttributes.data
@@ -27,22 +27,14 @@ class ImageRenderable internal constructor(
 
     override val boundaryToFit = LayoutBoundaryType.OUTER
 
-    override fun Region.defineBoundingBox(layout: SimpleLayout): RenderableBoundingBox = with(layout) {
+    override fun defineBoundingBox(layout: SimpleLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
-            x = leftTop.x,
-            y = leftTop.y,
+            x = getMaxBoundingRectangle().leftTop.x,
+            y = getMaxBoundingRectangle().leftTop.y,
             width = getModelAttribute<WidthAttribute>()?.value,
             height = getModelAttribute<HeightAttribute>()?.value,
             boundaryToFit
         )
-    }
-
-    override fun Region.applyBoundingBox(
-        bbox: RenderableBoundingBox,
-        layout: SimpleLayout,
-        status: RenderingStatus
-    ) = with(layout) {
-        allocateRectangle(bbox)
     }
 
     override val imageUri: String

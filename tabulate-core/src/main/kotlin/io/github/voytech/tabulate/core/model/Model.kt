@@ -27,7 +27,7 @@ fun <C : ExecutionContext, R : Any> ExportApi.value(supplier: ReifiedValueSuppli
 interface HavingLayout<LP : Layout> {
     fun createLayout(properties: LayoutProperties): LP
 
-    fun  ExportApi.withinCurrentLayout(block: (LP.(Region) -> Unit)) {
+    fun  ExportApi.withinCurrentLayout(block: (LP.() -> Unit)) {
         layout(block)
     }
 

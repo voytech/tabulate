@@ -12,24 +12,35 @@ import java.math.RoundingMode
 import kotlin.reflect.KProperty1
 
 object Utils {
-    fun sampleCustomersTable(data: List<SampleCustomer>): (TableBuilderApi<SampleCustomer>.() -> Unit) = typedTable {
+    fun sampleCustomersTable(
+        data: List<SampleCustomer>,
+        vararg props: KProperty1<SampleCustomer, *>
+    ): (TableBuilderApi<SampleCustomer>.() -> Unit) = typedTable {
         attributes {
-            borders { bottom { 0.2.pt(); solid } }
+            margins { left { 1.pt()}; top {1.pt()} }
+            borders { bottom { 0.5.pt(); solid } }
+            tableBorders { all { 0.5.pt();solid; black } }
             text { breakWords; black }
         }
-        columns {
-            column(SampleCustomer::firstName)
-            column(SampleCustomer::lastName)
-            column(SampleCustomer::country)
-            column(SampleCustomer::city)
-            column(SampleCustomer::street)
-            column(SampleCustomer::houseNumber)
-            column(SampleCustomer::flat)
+        if (props.isNotEmpty()) {
+            columns { props.forEach { column(it) } }
+        } else {
+            columns {
+                column(SampleCustomer::firstName)
+                column(SampleCustomer::lastName)
+                column(SampleCustomer::country)
+                column(SampleCustomer::city)
+                column(SampleCustomer::street)
+                column(SampleCustomer::houseNumber)
+                column(SampleCustomer::flat)
+            }
         }
-        rows {
-            header {
-                columnTitles("First Name", "Last Name", "Country", "City", "Street", "House Nr", "Flat Nr")
-                attributes { text { bold; black; fontSize = 12 } }
+        if (props.isEmpty()) {
+            rows {
+                header {
+                    columnTitles("First Name", "Last Name", "Country", "City", "Street", "House Nr", "Flat Nr")
+                    attributes { text { bold; black; fontSize = 12 } }
+                }
             }
         }
         dataSource(data)

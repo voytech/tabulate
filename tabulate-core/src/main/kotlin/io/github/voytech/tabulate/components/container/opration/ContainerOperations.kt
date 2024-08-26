@@ -21,10 +21,10 @@ class ContainerRenderable internal constructor(
 
     override val boundaryToFit = LayoutBoundaryType.OUTER
 
-    override fun Region.defineBoundingBox(layout: FlowLayout): RenderableBoundingBox = with(layout) {
+    override fun defineBoundingBox(layout: FlowLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
-            x = leftTop.x,
-            y = leftTop.y,
+            x = getMaxBoundingRectangle().leftTop.x,
+            y = getMaxBoundingRectangle().leftTop.y,
             width = getMeasuredSize()?.width,
             height = getMeasuredSize()?.height,
             boundaryToFit

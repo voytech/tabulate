@@ -1,6 +1,10 @@
 package io.github.voytech.tabulate
 
 import io.github.voytech.tabulate.Utils.dollarColumn
+import io.github.voytech.tabulate.components.container.api.builder.dsl.borders
+import io.github.voytech.tabulate.components.container.api.builder.dsl.height
+import io.github.voytech.tabulate.components.container.api.builder.dsl.margins
+import io.github.voytech.tabulate.components.container.api.builder.dsl.vertical
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
@@ -11,6 +15,7 @@ import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.D
 import io.github.voytech.tabulate.components.table.template.AdditionalSteps
 import io.github.voytech.tabulate.components.table.template.tabulate
 import io.github.voytech.tabulate.components.text.api.builder.dsl.*
+import io.github.voytech.tabulate.test.sampledata.SampleCustomer
 import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -204,12 +209,42 @@ class TableTests {
     @Test
     fun `should tabulate collection into pdf`() {
         SampleProduct.create(14).tabulate("table_4.pdf") {
+            attributes {
+                borders { all { 0.5.pt();solid;lightGray } }
+                tableBorders { all { 1.pt();solid;red } }
+            }
             columns {
-                column(SampleProduct::code)
-                column(SampleProduct::name)
-                column(SampleProduct::description)
-                column(SampleProduct::price)
+                column(SampleProduct::code) { attributes { width { 100.pt() } }}
+                column(SampleProduct::name) { attributes { width { 100.pt() } }}
+                column(SampleProduct::description) { attributes { width { 100.pt() } }}
+                column(SampleProduct::price) { attributes { width { 100.pt() } }}
+            }
+            rows {
+                matching { gt(0) } assign { dollarColumn(SampleProduct::price)}
             }
         }
+    }
+
+    @Test
+    fun `should export multiple tables vertically with overflow handling`() {
+        document {
+            page {
+                vertical {
+                    immediateIterations
+                    forcePreMeasure
+                    attributes {
+                        height { 36.percents() }
+                        borders { all { solid; green; 2.pt() } }
+                    }
+                    repeat((1 .. 20).count()) {
+                        table(typedTable<SampleCustomer> { name="$it";attributes { clip { disabled } } } +
+                            Utils.sampleCustomersTable(
+                                SampleCustomer.create(5), SampleCustomer::firstName, SampleCustomer::lastName
+                            )
+                        )
+                    }
+                }
+            }
+        }.export(File("table_5.pdf"))
     }
 }

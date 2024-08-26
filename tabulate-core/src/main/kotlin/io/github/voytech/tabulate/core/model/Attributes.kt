@@ -144,6 +144,9 @@ class Attributes(
     companion object {
         operator fun invoke() = Attributes()
     }
+
+    override fun toString(): String = "$attributeSet"
+
 }
 
 

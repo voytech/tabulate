@@ -80,11 +80,13 @@ class Table<T : Any> internal constructor(
             startAt(iteration.getStartRowIndexOrZero(), iteration.getStartColumnIndexOrZero())
             TableExport(this@Table, this@api, iteration, data()).renderTable()
             //After measuring layout try resize columns to fit explicitly set width
-            it.getExplicitWidth(LayoutBoundaryType.INNER)?.let { explicitWidth -> resizeColumnsToFit(explicitWidth) }
-            it.getExplicitHeight(LayoutBoundaryType.INNER)?.let { explicitHeight -> resizeRowsToFit(explicitHeight) }
+            getExplicitWidth(LayoutBoundaryType.INNER)?.let { explicitWidth -> resizeColumnsToFit(explicitWidth) }
+            getExplicitHeight(LayoutBoundaryType.INNER)?.let { explicitHeight -> resizeRowsToFit(explicitHeight) }
         }
     }
 
     override fun createLayout(properties: LayoutProperties): TableLayout = TableLayout(properties)
+
+    override fun toString(): String = "Table[$name]"
 
 }

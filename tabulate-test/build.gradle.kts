@@ -3,6 +3,7 @@ val junitVersion: String by project
 
 plugins {
     kotlin("jvm")
+    kotlin("plugin.serialization")
     id("pl.allegro.tech.build.axion-release")
 }
 
@@ -13,5 +14,6 @@ scmVersion {
 
 dependencies {
     implementation("org.jetbrains.kotlin","kotlin-test", kotlinVersion)
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
     implementation(project(":tabulate-core"))
 }

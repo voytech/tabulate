@@ -6,97 +6,86 @@ import io.github.voytech.tabulate.core.model.alignment.orDefault
 import io.github.voytech.tabulate.core.model.attributes.*
 
 
-data class LayoutData(val region: Region, val parent: Region?, val layout: Layout) {
+data class ConnectedLayouts(val layout: Layout, val parent: Layout?) {
 
-    fun endLayout() = with(layout) {
-        region.setMeasured()
+    fun endLayout() {
+        layout.setMeasured()
     }
 
-    fun getMaxBoundingRectangle(): BoundingRectangle = with(layout) {
-        region.getMaxBoundingRectangle()
-    }
+    fun getMaxBoundingRectangle(): BoundingRectangle = layout.getMaxBoundingRectangle()
 
-    fun applyChildRectangle(maxBoundingRectangle: BoundingRectangle) {
-        layout.applyAllocatedRectangle(maxBoundingRectangle)
-    }
 
-    fun allocateSpace(position: Position) = with(layout) {
-        region.allocateSpace(position)
+    fun allocateSpace(position: Position) {
+        layout.allocateSpace(position)
     }
 
     fun isMeasured() = layout.isMeasured
 
 }
 
-class ModelContextLayout(private val context: ModelExportContext) {
-    lateinit var layout: LayoutData
+/**
+ * Wrapper for layout context, which is responsible for managing layout data and calculations that are associated with
+ * particular model export context. It creates scope for external rendering operations to be executed in.
+ * It is ModelExportContext extension by composition thus can navigate through the model tree and access parent context
+ * in order to resolve layout constraints for new or restarted layouts.
+ * LayoutData is created usually during measuring phase. Layout can be also restarted at different position on rendering phase
+ * e.g. when enclosing parent layout was previously repositioned.
+ */
+class ModelContextLayout(private val context: ModelExportContext) { // TODO make this class extending interface ContextScope
+    lateinit var layout: Layout
         private set
 
     private fun uom(): UnitsOfMeasure = context.instance.uom
 
-    private fun getCurrentLayoutSpace(): Region = layout.region
+    private fun getParent(): ModelContextLayout? = context.parent()?.activeLayoutContext
 
-    private fun getParentLayout(): ModelContextLayout? = context.parent()?.activeLayoutContext
+    private fun getParentLayout(): Layout? = getParent()?.layout
 
-    fun getMaxSize(): Size = getCurrentLayoutSpace().let {
-        (it.maxRightBottom - it.leftTop).asSize()
-    }
+    fun pairWithParent(): ConnectedLayouts = ConnectedLayouts(layout, getParentLayout())
+
+    fun getMaxSize(): Size = layout.getMaxBoundingRectangle().size()
 
     private fun createLayout(box: RegionConstraints) {
         val (spaceConstraints, layoutProperties) = newLayoutConstraints(box)
         requireNotNull(spaceConstraints.leftTop)
-        layout = LayoutData(
-            Region(uom(), spaceConstraints),
-            getParentLayout()?.layout?.region,
-            context.model.resolveLayout(layoutProperties)
-        )
+        layout = context.model.resolveLayout(layoutProperties)
+        layout.initialize(spaceConstraints)
     }
 
     fun beginLayout(constraints: RegionConstraints) {
         if (!this::layout.isInitialized) {
             createLayout(constraints)
-        } else if (layout.layout.isMeasured) {
-            layout.region.restart(constraints.resolveEffectiveLeftTop(getParentLayout()).leftTop)
+        } else if (layout.isMeasured) {
+            layout.reset(constraints.resolveEffectiveLeftTop(getParent()).leftTop)
         }
     }
 
     fun endLayout() {
-        layout.endLayout()
-        updateUpstream()
-    }
-
-    private fun updateUpstream() {
-        val current = layout
-        val upstream = getParentLayout()?.layout
-        if (upstream != null) {
-            upstream.allocateSpace(current.region.maxRightBottom)
-            upstream.applyChildRectangle(current.getMaxBoundingRectangle())
-        }
+        layout.setMeasured()
+        getParentLayout()?.absorb(layout)
     }
 
     private fun nextNodePosition(): Position? = layout.let {
-        (it.layout as? AutonomousLayout)?.run {
-            it.region.resolveNextPosition()
-        }
+        (it as? AutonomousLayout)?.run { resolveNextPosition() }
     }
 
     private fun RegionConstraints.resolveEffectiveLeftTop(parent: ModelContextLayout?): RegionConstraints {
-        val parentSpace = parent?.getCurrentLayoutSpace()
+        val parentContentLeftTop = parent?.layout?.getContentBoundingRectangle()?.leftTop
         return copy(
-            leftTop = leftTop ?: parent?.nextNodePosition() ?: parentSpace?.innerLeftTop ?: Position.start(uom())
+            leftTop = leftTop ?: parent?.nextNodePosition() ?: parentContentLeftTop ?: Position.start(uom())
         ).withMargins()
     }
 
     private fun newLayoutConstraints(box: RegionConstraints): SpaceAndLayoutProperties =
-        getParentLayout().let {
+        getParent().let {
             withMaxRightBottomResolved(
-                it?.getCurrentLayoutSpace(),
+                it?.layout,
                 box.resolveEffectiveLeftTop(it).withInnerLeftTop()
             )
         }
 
     private fun RegionConstraints.withInnerLeftTop(): RegionConstraints =
-        context.padding()?.let {
+        context.getBorderOffsets()?.let {
             requireNotNull(leftTop)
             if (innerLeftTop == null) {
                 copy(innerLeftTop = leftTop + Size(it.left, it.top))
@@ -104,7 +93,7 @@ class ModelContextLayout(private val context: ModelExportContext) {
         } ?: copy(innerLeftTop = leftTop)
 
     private fun RegionConstraints.withInnerMaxRightBottom(): RegionConstraints =
-        context.padding()?.let {
+        context.getBorderOffsets()?.let {
             requireNotNull(maxRightBottom)
             if (innerMaxRightBottom == null) {
                 copy(innerMaxRightBottom = maxRightBottom - Size(it.right, it.bottom))
@@ -123,11 +112,12 @@ class ModelContextLayout(private val context: ModelExportContext) {
     )
 
     private fun withMaxRightBottomResolved(
-        parent: Region?, constraints: RegionConstraints
+        parent: Layout?, constraints: RegionConstraints
     ): SpaceAndLayoutProperties {
         requireNotNull(constraints.leftTop)
         val implicitMaxRightBottom =
-            constraints.maxRightBottom ?: parent?.innerMaxRightBottom ?: context.instance.getDocumentMaxRightBottom()
+            constraints.maxRightBottom ?: parent?.getContentBoundingRectangle()?.rightBottom
+            ?: context.instance.getDocumentMaxRightBottom()
         val explicitWidth = getExplicitWidth(parent)
         val explicitHeight = getExplicitHeight(parent)
         return SpaceAndLayoutProperties(
@@ -148,23 +138,23 @@ class ModelContextLayout(private val context: ModelExportContext) {
         )
     }
 
-    private fun getExplicitHeight(layout: Region?): Height? =
+    private fun getExplicitHeight(layout: Layout?): Height? =
         lookupAttribute(HeightAttribute::class.java)?.switchUnitOfMeasure(uom(), layout)
 
-    private fun getExplicitWidth(layout: Region?): Width? =
+    private fun getExplicitWidth(layout: Layout?): Width? =
         lookupAttribute(WidthAttribute::class.java)?.switchUnitOfMeasure(uom(), layout)
 
-    private fun HeightAttribute.switchUnitOfMeasure(uom: UnitsOfMeasure, layout: Region?): Height =
-        value.switchUnitOfMeasure(uom, layout?.innerBoundingRectangle?.getHeight())
+    private fun HeightAttribute.switchUnitOfMeasure(uom: UnitsOfMeasure, parent: Layout?): Height =
+        value.switchUnitOfMeasure(uom, parent?.getContentBoundingRectangle()?.getHeight())
 
-    private fun WidthAttribute.switchUnitOfMeasure(uom: UnitsOfMeasure, layout: Region?): Width =
-        value.switchUnitOfMeasure(uom, layout?.innerBoundingRectangle?.getWidth())
+    private fun WidthAttribute.switchUnitOfMeasure(uom: UnitsOfMeasure, parent: Layout?): Width =
+        value.switchUnitOfMeasure(uom, parent?.getContentBoundingRectangle()?.getWidth())
 
     private fun <A : Attribute<A>> lookupAttribute(attribute: Class<A>): A? =
         (context.model as? AttributedModelOrPart)?.attributes?.forContext(context.model.javaClass)?.get(attribute)
 
     internal fun debugInfo(): String = if (this::layout.isInitialized) {
-        "${layout.region}"
+        "${layout}"
     } else {
         "?"
     }
@@ -190,15 +180,20 @@ data class Padding(
     )
 }
 
-fun ModelExportContext.padding(): Padding? =
-    (model as? AttributedModelOrPart)
-        ?.attributes
-        ?.forContext(model.javaClass)
-        ?.get<BordersAttribute>()?.let {
-            Padding(
-                left = it.leftBorderWidth,
-                right = it.rightBorderWidth,
-                bottom = it.bottomBorderHeight,
-                top = it.topBorderHeight
-            )
-        }
+inline fun <reified A : Attribute<A>> Model.getAttribute(): A? =
+    (this as? AttributedModelOrPart)?.attributes?.forContext(javaClass)?.get(A::class.java)
+
+fun ModelExportContext.getBorderOffsets(): Padding? =
+    model.getAttribute<BordersAttribute>()?.let {
+        Padding(
+            left = it.leftBorderWidth,
+            right = it.rightBorderWidth,
+            bottom = it.bottomBorderHeight,
+            top = it.topBorderHeight
+        )
+    }
+
+fun ModelExportContext.getPaddingOffsets(): Padding =
+    Padding(Width.zero(), Height.zero(), Width.zero(), Height.zero())
+
+// TODO add getPaddingOffsets() when PaddingAttribute implemented.

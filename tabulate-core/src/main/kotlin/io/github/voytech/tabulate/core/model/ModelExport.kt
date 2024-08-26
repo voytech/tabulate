@@ -121,7 +121,7 @@ class ModelExportContext(
         get() = activeIteration.layoutContext
 
     @get:JvmSynthetic
-    internal val activeLayout: LayoutData
+    internal val activeLayout: Layout
         get() = activeLayoutContext.layout
 
     fun api(block: ExportApi.(ModelExportContext) -> Unit) {
@@ -188,7 +188,7 @@ class ExportIterationsApi internal constructor(private val context: ModelExportC
         setDryRunForActive()
     }
 
-    fun retry()= with(context.exportIterations) {
+    fun retry() = with(context.exportIterations) {
         discardScheduled()
         prependPending(clearAttributes())
         setDryRunForActive()
@@ -202,7 +202,7 @@ class ExportIterationsApi internal constructor(private val context: ModelExportC
     fun <E : Any> getCurrentIterationAttributeOrNull(key: String): E? =
         context.getCurrentIterationAttributeOrNull(key)
 
-    private fun AbstractModel.getOverflowHandlingStrategy(result: RenderingResult): Overflow? =
+    fun AbstractModel.getOverflowHandlingStrategy(result: RenderingResult): Overflow? =
         (result.status as? AxisBoundStatus)?.let {
             if (it.activeAxis == Axis.X) {
                 getAttribute<HorizontalOverflowAttribute>()?.overflow
@@ -229,6 +229,7 @@ class ExportIterationsApi internal constructor(private val context: ModelExportC
                     else -> {}
                 }
             }
+
             else -> {}
         }
     }
@@ -258,17 +259,16 @@ class ExportApi private constructor(private val context: ModelExportContext) {
         operations.renderOrMeasure(renderable)
     }
 
-    fun currentLayout(): LayoutData = context.exportIterations.getCurrentLayout()
-
-    fun currentLayoutSpace(): Region = currentLayout().region
+    fun currentLayout(): Layout = context.exportIterations.getCurrentLayout()
 
     fun iterations(): ExportIterationsApi = ExportIterationsApi(context)
 
     fun iterations(block: ExportIterationsApi.() -> Unit) = iterations().apply(block)
 
-    fun <LP : Layout> layout(block: LP.(Region) -> Unit) {
+    fun <LP : Layout> layout(block: LP.() -> Unit) {
         context.exportIterations.current.layout().apply {
-            (layout as LP).apply { block(region) }
+            @Suppress("UNCHECKED_CAST")
+            block(this as LP)
         }
     }
 
@@ -281,7 +281,7 @@ class ExportApi private constructor(private val context: ModelExportContext) {
             var measuringLeftTop: Position? = null
             if (target.shouldMeasure()) {
                 measureInContext(target, constraints).also {
-                    measuringLeftTop = target.activeLayout.region.leftTop
+                    measuringLeftTop = target.activeLayout.getMaxBoundingRectangle().leftTop
                     target.setExporting()
                 }
             }
@@ -388,12 +388,12 @@ fun <L : Layout> ExportApi.measureWithPostponedContinuations(models: List<Abstra
 private fun <L : Layout> ExportApi.traverseAllThenContinue(
     models: List<AbstractModel>,
     action: AbstractModel.() -> Unit
-) = layout<L> { space ->
+) = layout<L> {
     if (this is AutonomousLayout) {
         var runnables = models
-        while (runnables.isNotEmpty() && space.hasSpaceLeft()) {
+        while (runnables.isNotEmpty() && hasSpaceLeft()) {
             runnables.forEach {
-                if (space.hasSpaceLeft()) {
+                if (hasSpaceLeft()) {
                     it.action()
                 }
             }
@@ -412,10 +412,10 @@ fun <L : Layout> ExportApi.measureWithImmediateContinuations(models: List<Abstra
 private fun <L : Layout> ExportApi.traverseWithContinuations(
     models: List<AbstractModel>,
     action: AbstractModel.() -> Unit
-) = layout<L> { space ->
+) = layout<L> {
     if (this is AutonomousLayout) {
         models.forEach {
-            while (it.isRunning() && space.hasSpaceLeft()) {
+            while (it.isRunning() && hasSpaceLeft()) {
                 it.action()
             }
         }

@@ -4,7 +4,6 @@ import io.github.voytech.tabulate.components.table.model.ColumnKey
 import io.github.voytech.tabulate.components.table.template.SyntheticRow
 import io.github.voytech.tabulate.core.RenderingContext
 import io.github.voytech.tabulate.core.layout.LayoutBoundaryType
-import io.github.voytech.tabulate.core.layout.Region
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.layout.impl.SizingOptions
 import io.github.voytech.tabulate.core.layout.impl.TableLayout
@@ -34,7 +33,7 @@ class RowEndRenderable<T>(
 
     fun getCells(): Map<ColumnKey<T>, CellRenderable> = rowCellValues
 
-    override fun Region.defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
@@ -44,7 +43,7 @@ class RowEndRenderable<T>(
         )
     }
 
-    override fun Region.applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus): Unit =
+    override fun applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus): Unit =
         with(layout) {
             if (!status.hasLayoutEffect()) return
             bbox.height?.let {
@@ -52,6 +51,10 @@ class RowEndRenderable<T>(
                 setRowHeight(getRow(), it, ops)
             }
         }
+
+    override fun toString(): String {
+        return "RowEndRenderable(rowIndex=$rowIndex)"
+    }
 }
 
 internal fun <T : Any> SyntheticRow<T>.createRowEnd(
