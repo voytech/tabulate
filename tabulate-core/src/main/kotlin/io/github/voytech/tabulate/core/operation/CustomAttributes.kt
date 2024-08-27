@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.core.operation
 
-import io.github.voytech.tabulate.core.ConnectedLayouts
+import io.github.voytech.tabulate.core.RelatedLayouts
 import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.AttributeAware
@@ -13,17 +13,17 @@ import io.github.voytech.tabulate.core.model.Attributes
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-sealed interface Context {
+sealed interface CustomAttributes {
     fun getCustomAttributes(): MutableMap<String, Any>
 }
 
 /**
- * Basic implementation of [Context] interface
- * @see Context
+ * Basic implementation of [CustomAttributes] interface
+ * @see CustomAttributes
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-sealed class ContextData : Context {
+sealed class CustomAttributesData : CustomAttributes {
 
     var additionalAttributes: MutableMap<String, Any> = mutableMapOf()
 
@@ -45,8 +45,8 @@ sealed class ContextData : Context {
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class AttributedContext(@JvmSynthetic override val attributes: Attributes? = null) :
-    ContextData(),
+abstract class AttributedEntity(@JvmSynthetic override val attributes: Attributes? = null) :
+    CustomAttributesData(),
     AttributeAware {
 
     val id: String by lazy { "_${javaClass}-${hashCode()}" }
@@ -76,48 +76,49 @@ abstract class AttributedContext(@JvmSynthetic override val attributes: Attribut
 
 }
 
-abstract class Renderable<EL : Layout>(@JvmSynthetic override val attributes: Attributes? = null) :
-    AttributedContext(), LayoutElement<EL> {
+abstract class RenderableEntity<EL : Layout>(@JvmSynthetic override val attributes: Attributes? = null) :
+    AttributedEntity(), LayoutElement<EL> {
 
     lateinit var boundingBox: RenderableBoundingBox
         private set
 
     fun hasBoundingBox() = this::boundingBox.isInitialized
 
-    internal fun initBoundingBox(layouts: ConnectedLayouts): RenderableBoundingBox = with(layouts.layout) {
+    internal fun initBoundingBox(layouts: RelatedLayouts): RenderableBoundingBox = with(layouts.layout) {
         if (hasBoundingBox()) return boundingBox
         @Suppress("UNCHECKED_CAST")
-        boundingBox = defineBoundingBox(layouts.layout as EL).convertUnits(layouts.layout, boundaryToFit, layouts.parent)
+        boundingBox = (layouts.layout as EL).defineBoundingBox()
+            .convertUnits(layouts.layout, boundaryToFit, layouts.parent)
         return boundingBox
     }
 }
 
-fun AttributedContext.boundingBox(): RenderableBoundingBox? =
-    if (this is Renderable<*> && hasBoundingBox()) {
+fun AttributedEntity.boundingBox(): RenderableBoundingBox? =
+    if (this is RenderableEntity<*> && hasBoundingBox()) {
         this.boundingBox
     } else null
 
-fun <L : Layout> AttributedContext.asLayoutElement(): ApplyLayoutElement<L>? =
+fun <L : Layout> AttributedEntity.asLayoutElement(): ApplyLayoutElement<L>? =
     if (this is ApplyLayoutElement<*>) {
         @Suppress("UNCHECKED_CAST")
         this as ApplyLayoutElement<L>
     } else null
 
-fun AttributedContext.layoutBoundaryToFit(): LayoutBoundaryType =
-    if (this is Renderable<*>) {
+fun AttributedEntity.layoutBoundaryToFit(): LayoutBoundaryType =
+    if (this is RenderableEntity<*>) {
         boundaryToFit
     } else LayoutBoundaryType.INNER
 
 class AttributesByContexts<T : AttributedModelOrPart>(
-    from: T, to: List<Class<out AttributedContext>>,
-    val attributes: Map<Class<out AttributedContext>, Attributes> =
+    from: T, to: List<Class<out AttributedEntity>>,
+    val attributes: Map<Class<out AttributedEntity>, Attributes> =
         to.associate { (it to (from.attributes?.forContext(it) ?: Attributes())) },
 ) {
-    internal inline fun <reified E : AttributedContext> get(): Attributes = attributes[E::class.java] ?: Attributes()
+    internal inline fun <reified E : AttributedEntity> get(): Attributes = attributes[E::class.java] ?: Attributes()
 }
 
 fun <T : AttributedModelOrPart> T.distributeAttributesForContexts(
-    vararg clazz: Class<out AttributedContext>,
+    vararg clazz: Class<out AttributedEntity>,
 ): AttributesByContexts<T> = AttributesByContexts(this, listOf(*clazz))
 
 

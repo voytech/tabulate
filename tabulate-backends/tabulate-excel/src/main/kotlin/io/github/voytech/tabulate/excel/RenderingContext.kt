@@ -6,8 +6,8 @@ import io.github.voytech.tabulate.core.model.color.Color
 import io.github.voytech.tabulate.components.table.rendering.CellValue
 import io.github.voytech.tabulate.components.table.rendering.Coordinates
 import io.github.voytech.tabulate.core.RenderingContextForSpreadsheet
-import io.github.voytech.tabulate.core.operation.AttributedContext
-import io.github.voytech.tabulate.core.operation.Renderable
+import io.github.voytech.tabulate.core.operation.AttributedEntity
+import io.github.voytech.tabulate.core.operation.RenderableEntity
 import io.github.voytech.tabulate.core.result.OutputBinding
 import io.github.voytech.tabulate.core.result.OutputStreamOutputBinding
 import io.github.voytech.tabulate.core.spi.DocumentFormat
@@ -54,7 +54,7 @@ class ApachePoiRenderingContext(private val images: ImageIndex = ImageIndex()) :
 
     private var workbook: SXSSFWorkbook? = null
 
-    private val shapesRegistry: MutableMap<AttributedContext, XSSFShape> = mutableMapOf()
+    private val shapesRegistry: MutableMap<AttributedEntity, XSSFShape> = mutableMapOf()
 
     fun provideWorkbook(templateFile: InputStream? = null, forceRecreate: Boolean = false): SXSSFWorkbook {
         if (workbook == null || forceRecreate) {
@@ -186,14 +186,14 @@ class ApachePoiRenderingContext(private val images: ImageIndex = ImageIndex()) :
 
     fun createClientAnchor(): ClientAnchor = getCreationHelper().createClientAnchor()
 
-    fun <S : XSSFShape, C : AttributedContext> S.bind(context: C): S = apply { shapesRegistry[context] = this }
+    fun <S : XSSFShape, C : AttributedEntity> S.bind(context: C): S = apply { shapesRegistry[context] = this }
 
-    fun <S : XSSFShape> AttributedContext.shape(clazz: Class<S>): S = shapesRegistry[this] as S
+    fun <S : XSSFShape> AttributedEntity.shape(clazz: Class<S>): S = shapesRegistry[this] as S
 
-    inline fun <reified S : XSSFShape> AttributedContext.shape(): S = shape(S::class.java)
+    inline fun <reified S : XSSFShape> AttributedEntity.shape(): S = shape(S::class.java)
 
     // TODO focus now on getting client anchors right. They need to correctly convert from point/inch/pixels to nominals.
-    fun Renderable<*>.createApachePoiSpreadsheetAnchor(): XSSFClientAnchor =
+    fun RenderableEntity<*>.createApachePoiSpreadsheetAnchor(): XSSFClientAnchor =
         createSpreadsheetAnchor().let { anchor ->
             (createClientAnchor() as XSSFClientAnchor).apply {
                 setCol1(anchor.leftTopColumn)

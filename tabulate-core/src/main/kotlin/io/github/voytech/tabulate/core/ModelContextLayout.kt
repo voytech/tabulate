@@ -6,7 +6,7 @@ import io.github.voytech.tabulate.core.model.alignment.orDefault
 import io.github.voytech.tabulate.core.model.attributes.*
 
 
-data class ConnectedLayouts(val layout: Layout, val parent: Layout?) {
+data class RelatedLayouts(val layout: Layout, val parent: Layout?) {
 
     fun endLayout() {
         layout.setMeasured()
@@ -41,7 +41,7 @@ class ModelContextLayout(private val context: ModelExportContext) { // TODO make
 
     private fun getParentLayout(): Layout? = getParent()?.layout
 
-    fun pairWithParent(): ConnectedLayouts = ConnectedLayouts(layout, getParentLayout())
+    fun pairWithParent(): RelatedLayouts = RelatedLayouts(layout, getParentLayout())
 
     fun getMaxSize(): Size = layout.getMaxBoundingRectangle().size()
 

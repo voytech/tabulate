@@ -3,9 +3,9 @@ package io.github.voytech.tabulate.exports.operations
 import io.github.voytech.tabulate.components.table.api.builder.dsl.*
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.model.attributes.table.template
-import io.github.voytech.tabulate.components.table.rendering.CellRenderable
-import io.github.voytech.tabulate.components.table.rendering.RowEndRenderable
-import io.github.voytech.tabulate.components.table.rendering.TableStartRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderableEntity
+import io.github.voytech.tabulate.components.table.rendering.RowEndRenderableEntity
+import io.github.voytech.tabulate.components.table.rendering.TableStartRenderableEntity
 import io.github.voytech.tabulate.components.table.rendering.asTableStart
 import io.github.voytech.tabulate.core.DocumentFormat
 import io.github.voytech.tabulate.core.StandaloneExportTemplate
@@ -52,10 +52,10 @@ class AttributeSetCacheTest {
         val customAttributes = mutableMapOf<String, Any>()
 
         val firstTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val firstTableContext: TableStartRenderable = firstTable.asTableStart(StateAttributes(customAttributes))
+        val firstTableContext: TableStartRenderableEntity = firstTable.asTableStart(StateAttributes(customAttributes))
 
         val secondTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val secondTableContext: TableStartRenderable = secondTable.asTableStart(StateAttributes(customAttributes))
+        val secondTableContext: TableStartRenderableEntity = secondTable.asTableStart(StateAttributes(customAttributes))
 
         val cache = firstTableContext.setupCacheAndGet().also { it!!["someKey"] = "someValue" }
         val secondCache = secondTableContext.setupCacheAndGet()
@@ -100,10 +100,10 @@ class AttributeSetCacheTest {
         val customAttributes = mutableMapOf<String, Any>()
 
         val firstTable = createTableModel { attributes { template { fileName = "filename" } } }
-        val firstTableContext: TableStartRenderable = firstTable.asTableStart(StateAttributes(customAttributes))
+        val firstTableContext: TableStartRenderableEntity = firstTable.asTableStart(StateAttributes(customAttributes))
 
         val secondTable = createTableModel { attributes { template { fileName = "second_filename" } } }
-        val secondTableContext: TableStartRenderable = secondTable.asTableStart(StateAttributes(customAttributes))
+        val secondTableContext: TableStartRenderableEntity = secondTable.asTableStart(StateAttributes(customAttributes))
 
         val cache = firstTableContext.setupCacheAndGet().also { it!!["someKey"] = "someValue" }
         val secondCache = secondTableContext.setupCacheAndGet()
@@ -141,11 +141,11 @@ class AttributeSetCacheTest {
         }
     }
 
-    private fun Table<*>.getFirstRenderableCellInExport(attributes: MutableMap<String,Any>): CellRenderable {
+    private fun Table<*>.getFirstRenderableCellInExport(attributes: MutableMap<String,Any>): CellRenderableEntity {
         val spyFormat = DocumentFormat.format("spy")
         StandaloneExportTemplate(spyFormat).export(this, Unit, attributes)
         val secondExportRowRenderable = Spy.spy.readHistory().asSequence()
-            .first { it.context is RowEndRenderable<*> }.context as RowEndRenderable<*>
+            .first { it.context is RowEndRenderableEntity<*> }.context as RowEndRenderableEntity<*>
         return secondExportRowRenderable.rowCellValues.firstNotNullOf { it.value }
     }
 

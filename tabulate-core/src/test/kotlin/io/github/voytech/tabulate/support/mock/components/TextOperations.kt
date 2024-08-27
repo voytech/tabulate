@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.support.mock.components
 
 import io.github.voytech.tabulate.components.text.model.Text
-import io.github.voytech.tabulate.components.text.operation.TextRenderable
+import io.github.voytech.tabulate.components.text.operation.TextRenderableEntity
 import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.reify
@@ -16,8 +16,8 @@ import io.github.voytech.tabulate.support.mock.MockRenderOperation
 class TestTextExportOperationsFactory : OperationsBundleProvider<TestRenderingContext, Text> {
 
     override fun provideAttributeOperations(): BuildAttributeOperations<TestRenderingContext> = {
-        operation(MockAttributeRenderOperation<TextRenderable, BackgroundAttribute>(), -3)
-        operation(MockAttributeRenderOperation<TextRenderable, BordersAttribute>(), -2)
+        operation(MockAttributeRenderOperation<TextRenderableEntity, BackgroundAttribute>(), -3)
+        operation(MockAttributeRenderOperation<TextRenderableEntity, BordersAttribute>(), -2)
     }
 
     override fun provideExportOperations(): BuildOperations<TestRenderingContext> = {
@@ -36,4 +36,4 @@ class TestTextExportOperationsFactory : OperationsBundleProvider<TestRenderingCo
 
 }
 
-class TextOperation(isMeasuring: Boolean): MockRenderOperation<TextRenderable>(TextRenderable::class.java,isMeasuring)
+class TextOperation(isMeasuring: Boolean): MockRenderOperation<TextRenderableEntity>(TextRenderableEntity::class.java,isMeasuring)

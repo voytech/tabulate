@@ -6,14 +6,14 @@ import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.AttributeAware
 import io.github.voytech.tabulate.core.model.clip.ClippingMode
 import io.github.voytech.tabulate.core.model.clip.TextClippingModeWords
-import io.github.voytech.tabulate.core.operation.Renderable
+import io.github.voytech.tabulate.core.operation.RenderableEntity
 
 /**
- * Represents a clipping attribute that defines the clipping mode for rendering components [Renderable].
- * The clipping mode determines how a [Renderable] should be rendered.
+ * Represents a clipping attribute that defines the clipping mode for rendering components [RenderableEntity].
+ * The clipping mode determines how a [RenderableEntity] should be rendered.
  * It can be CLIPPED when rendered to match [RenderableBoundingBox] constraints, or it can be SKIPPED meaning no rendering
  * will be performed. After rendering, rendering operation must return [RenderingResult] containing information if
- * [Renderable] was successfully rendered, clipped or skipped.
+ * [RenderableEntity] was successfully rendered, clipped or skipped.
  *
  * By default, this setting is set to {@link ClippingMode#SKIP}.
  *
@@ -43,11 +43,11 @@ data class ClipAttribute(
 
     companion object {
         @JvmStatic
-        fun  builder(target: Class<out Renderable<*>>) : Builder =
+        fun  builder(target: Class<out RenderableEntity<*>>) : Builder =
             Builder(target)
 
         @JvmStatic
-        inline fun <reified AC: Renderable<*>> builder() : Builder =
+        inline fun <reified AC: RenderableEntity<*>> builder() : Builder =
             Builder(AC::class.java)
     }
 }

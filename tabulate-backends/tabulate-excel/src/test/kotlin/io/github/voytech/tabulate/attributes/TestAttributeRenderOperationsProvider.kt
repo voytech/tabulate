@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.attributes
 import io.github.voytech.tabulate.components.table.api.builder.dsl.CellLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.components.table.rendering.CellAttributeRenderOperation
-import io.github.voytech.tabulate.components.table.rendering.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderableEntity
 import io.github.voytech.tabulate.components.table.rendering.getSheetName
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.model.Attribute
@@ -38,7 +38,7 @@ class TestAttributeRenderOperationsProvider : AttributeOperationsProvider<Apache
 
 data class SimpleTestCellAttribute(val valueSuffix: String) : Attribute<SimpleTestCellAttribute>() {
 
-    class Builder(var valueSuffix: String = "") : AttributeBuilder<SimpleTestCellAttribute>(CellRenderable::class.java) {
+    class Builder(var valueSuffix: String = "") : AttributeBuilder<SimpleTestCellAttribute>(CellRenderableEntity::class.java) {
         override fun provide(): SimpleTestCellAttribute = SimpleTestCellAttribute(valueSuffix)
     }
 }
@@ -46,7 +46,7 @@ data class SimpleTestCellAttribute(val valueSuffix: String) : Attribute<SimpleTe
 class SimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<ApachePoiRenderingContext, SimpleTestCellAttribute>() {
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
-        context: CellRenderable,
+        context: CellRenderableEntity,
         attribute: SimpleTestCellAttribute
     ) {
         with(renderingContext.provideCell(context.getSheetName(), context.getRow(), context.getColumn())) {
@@ -59,7 +59,7 @@ class NoopSimpleTestCellAttributeRenderOperation : CellAttributeRenderOperation<
 
     override operator fun invoke(
         renderingContext: TestRenderingContext,
-        context: CellRenderable,
+        context: CellRenderableEntity,
         attribute: SimpleTestCellAttribute
     ) {}
 }

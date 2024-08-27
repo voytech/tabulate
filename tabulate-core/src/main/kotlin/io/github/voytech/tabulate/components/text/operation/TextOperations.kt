@@ -10,14 +10,14 @@ import io.github.voytech.tabulate.core.model.attributes.HeightAttribute
 import io.github.voytech.tabulate.core.model.attributes.WidthAttribute
 import io.github.voytech.tabulate.core.operation.HasText
 import io.github.voytech.tabulate.core.operation.Operation
-import io.github.voytech.tabulate.core.operation.Renderable
+import io.github.voytech.tabulate.core.operation.RenderableEntity
 import io.github.voytech.tabulate.ellipsis
 
-class TextRenderable internal constructor(
+class TextRenderableEntity internal constructor(
     val text: String,
     override val attributes: Attributes?,
     stateAttributes: StateAttributes,
-) : Renderable<SimpleLayout>(), HasText {
+) : RenderableEntity<SimpleLayout>(), HasText {
 
     init {
         additionalAttributes = stateAttributes.data
@@ -25,17 +25,16 @@ class TextRenderable internal constructor(
 
     override val boundaryToFit = LayoutBoundaryType.OUTER
 
-    override fun defineBoundingBox(layout: SimpleLayout): RenderableBoundingBox = with(layout) {
+    override fun SimpleLayout.defineBoundingBox(): RenderableBoundingBox =
         getRenderableBoundingBox(
             x = getMaxBoundingRectangle().leftTop.x,
             y = getMaxBoundingRectangle().leftTop.y,
             // In case of when measure was called prior to render
             // we can take measured size of layout which was used for measuring.
-            width = getMeasuredSize()?.width ?:  getModelAttribute<WidthAttribute>()?.value,
+            width = getMeasuredSize()?.width ?: getModelAttribute<WidthAttribute>()?.value,
             height = getMeasuredSize()?.height ?: getModelAttribute<HeightAttribute>()?.value,
             type = boundaryToFit
         )
-    }
 
 
     override val value: String
@@ -46,4 +45,4 @@ class TextRenderable internal constructor(
     }
 }
 
-fun interface TextOperation<CTX : RenderingContext> : Operation<CTX, TextRenderable>
+fun interface TextOperation<CTX : RenderingContext> : Operation<CTX, TextRenderableEntity>

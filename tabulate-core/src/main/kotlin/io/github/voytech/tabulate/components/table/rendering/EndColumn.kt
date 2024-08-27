@@ -13,33 +13,31 @@ import io.github.voytech.tabulate.core.operation.RenderingStatus
 import io.github.voytech.tabulate.core.operation.VoidOperation
 import io.github.voytech.tabulate.core.operation.hasLayoutEffect
 
-fun interface EndColumnOperation<CTX : RenderingContext>: VoidOperation<CTX, ColumnEndRenderable>
+fun interface EndColumnOperation<CTX : RenderingContext> : VoidOperation<CTX, ColumnEndRenderableEntity>
 
-class ColumnEndRenderable(
+class ColumnEndRenderableEntity(
     attributes: Attributes? = null,
     val columnIndex: Int,
-) :  ColumnRenderable(attributes), LayoutElement<TableLayout>, ApplyLayoutElement<TableLayout>, ColumnCoordinate {
+) : ColumnRenderableEntity(attributes), LayoutElement<TableLayout>, ApplyLayoutElement<TableLayout>, ColumnCoordinate {
     override fun getColumn(): Int = columnIndex
 
     override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
-    override fun defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun TableLayout.defineBoundingBox(): RenderableBoundingBox =
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(getColumn()),
             y = getAbsoluteRowPosition(0),
-            width = getMeasuredColumnWidth(getColumn(),1),
+            width = getMeasuredColumnWidth(getColumn(), 1),
             height = getCurrentContentSize().height,
             boundaryToFit
         )
-    }
 
-    override fun applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus) {
+
+    override fun TableLayout.absorbRenderableBoundingBox(bbox: RenderableBoundingBox, status: RenderingStatus) {
         if (!status.hasLayoutEffect()) return
-        with(layout) {
-            bbox.width?.let {
-                val ops = SizingOptions.SET_LOCKED.takeIf { hasModelAttribute<WidthAttribute>() } ?: SizingOptions.SET
-                setColumnWidth(getColumn(), it, ops)
-            }
+        bbox.width?.let {
+            val ops = SizingOptions.SET_LOCKED.takeIf { hasModelAttribute<WidthAttribute>() } ?: SizingOptions.SET
+            setColumnWidth(getColumn(), it, ops)
         }
     }
 
@@ -53,7 +51,7 @@ internal fun <T : Any> ColumnDef<T>.asColumnEnd(
     table: Table<T>,
     attributes: Attributes,
     customAttributes: StateAttributes,
-) = ColumnEndRenderable(
+) = ColumnEndRenderableEntity(
     columnIndex = table.getColumnIndex(index),
     attributes = attributes
 ).apply { additionalAttributes = customAttributes.data }

@@ -182,15 +182,15 @@ abstract class AbstractLayout(
     override fun initialize(constraints: RegionConstraints) {
         if (this::region.isInitialized) return
         region = Region(uom, constraints)
-        started()
+        onBeginLayout()
     }
 
     final override fun reset(position: Position?) {
         region.reset(position)
-        started()
+        onBeginLayout()
     }
 
-    protected open fun started() {}
+    protected open fun onBeginLayout() {}
 
     /**
      * Given layout policy in scope, returns absolute x,y position of relative position.
@@ -372,13 +372,14 @@ class Region(
     internal var leftTop: Position,
     @JvmSynthetic
     internal var maxRightBottom: Position,
-    // Inner corners are padding offsets. An area to be allocated by children component's layouts
-    // In between outer and inner bounding boxes, layout owning component can only draw component aggregated drawables e.g: borders
-    // By default - so without any padding applied from attributes - inner corners are set to values of outer corners.
     @JvmSynthetic
     internal var innerLeftTop: Position = leftTop,
     @JvmSynthetic
     internal var innerMaxRightBottom: Position = maxRightBottom,
+    @JvmSynthetic
+    internal var contentLeftTop: Position = innerLeftTop,
+    @JvmSynthetic
+    internal var contentMaxRightBottom: Position = innerMaxRightBottom,
     @JvmSynthetic
     internal var currentPosition: Position = innerLeftTop,
     val id: String = UUID.randomUUID().toString()
@@ -444,7 +445,7 @@ interface LayoutElement<L : Layout> {
 
     val boundaryToFit: LayoutBoundaryType
 
-    fun defineBoundingBox(layout: L): RenderableBoundingBox
+    fun L.defineBoundingBox(): RenderableBoundingBox
 
 }
 
@@ -453,7 +454,7 @@ fun interface MeasureLayoutElement<L : Layout> {
 }
 
 interface ApplyLayoutElement<L : Layout> {
-    fun applyBoundingBox(bbox: RenderableBoundingBox, layout: L, status: RenderingStatus = Ok)
+    fun L.absorbRenderableBoundingBox(bbox: RenderableBoundingBox, status: RenderingStatus = Ok)
 }
 
 // TODO layoutPosition -> minLeftTop ; maxWidth+maxHeight -> maxRightBottom  (absolute boundaries of this renderable bounding box enforced by a layout in which context a renderable is being rendered.)

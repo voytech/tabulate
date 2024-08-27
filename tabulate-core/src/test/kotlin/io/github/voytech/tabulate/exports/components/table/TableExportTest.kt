@@ -37,37 +37,37 @@ class TableExportTest {
 
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableStartRenderable).getSheetName()) }
+        history.next().run { assertEquals("Products table", (context as TableStartRenderableEntity).getSheetName()) }
         // Columns
-        history.next().run { assertEquals(0, (context as ColumnStartRenderable).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnStartRenderable).columnIndex) }
-        history.next().run { assertEquals(2, (context as ColumnStartRenderable).columnIndex) }
-        history.next().run { assertEquals(3, (context as ColumnStartRenderable).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStartRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStartRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(2, (context as ColumnStartRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(3, (context as ColumnStartRenderableEntity).columnIndex) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowStartRenderable).getRow()) }
-        history.next().run { assertEquals("code1", (context as CellRenderable).value) }
-        history.next().run { assertEquals("name1", (context as CellRenderable).value) }
-        history.next().run { assertEquals("description1", (context as CellRenderable).value) }
-        history.next().run { assertEquals("manufacturer1", (context as CellRenderable).value) }
+        history.next().run { assertEquals(0, (context as RowStartRenderableEntity).getRow()) }
+        history.next().run { assertEquals("code1", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("name1", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("description1", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("manufacturer1", (context as CellRenderableEntity).value) }
         history.next().run {
-            assertEquals(0, (context as RowEndRenderable<*>).getRow())
+            assertEquals(0, (context as RowEndRenderableEntity<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Row 1
-        history.next().run { assertEquals(1, (context as RowStartRenderable).getRow()) }
-        history.next().run { assertEquals("code2", (context as CellRenderable).value) }
-        history.next().run { assertEquals("name2", (context as CellRenderable).value) }
-        history.next().run { assertEquals("description2", (context as CellRenderable).value) }
-        history.next().run { assertEquals("manufacturer2", (context as CellRenderable).value) }
+        history.next().run { assertEquals(1, (context as RowStartRenderableEntity).getRow()) }
+        history.next().run { assertEquals("code2", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("name2", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("description2", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("manufacturer2", (context as CellRenderableEntity).value) }
         history.next().run {
-            assertEquals(1, (context as RowEndRenderable<*>).getRow())
+            assertEquals(1, (context as RowEndRenderableEntity<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
-        history.next().run { assertEquals(0, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertEquals(2, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertEquals(3, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertIs<TableEndRenderable>(context) }
+        history.next().run { assertEquals(0, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(2, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(3, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertIs<TableEndRenderableEntity>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -91,55 +91,55 @@ class TableExportTest {
 
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableStartRenderable).getSheetName()) }
+        history.next().run { assertEquals("Products table", (context as TableStartRenderableEntity).getSheetName()) }
         // Columns - Opening
-        history.next().run { assertEquals(0, (context as ColumnStartRenderable).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnStartRenderable).columnIndex) }
-        history.next().run { assertEquals(2, (context as ColumnStartRenderable).columnIndex) }
-        history.next().run { assertEquals(3, (context as ColumnStartRenderable).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStartRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStartRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(2, (context as ColumnStartRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(3, (context as ColumnStartRenderableEntity).columnIndex) }
 
         // Header
-        history.next().run { assertEquals(0, (context as RowStartRenderable).getRow()) }
-        history.next().run { assertEquals("Code", (context as CellRenderable).value) }
-        history.next().run { assertEquals("Name", (context as CellRenderable).value) }
-        history.next().run { assertEquals("Description", (context as CellRenderable).value) }
-        history.next().run { assertEquals("Manufacturer", (context as CellRenderable).value) }
+        history.next().run { assertEquals(0, (context as RowStartRenderableEntity).getRow()) }
+        history.next().run { assertEquals("Code", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("Name", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("Description", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("Manufacturer", (context as CellRenderableEntity).value) }
         history.next().run {
-            assertEquals(0, (context as RowEndRenderable<*>).getRow())
+            assertEquals(0, (context as RowEndRenderableEntity<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Row 0
-        history.next().run { assertEquals(1, (context as RowStartRenderable).getRow()) }
-        history.next().run { assertEquals("code1", (context as CellRenderable).value) }
-        history.next().run { assertEquals("name1", (context as CellRenderable).value) }
-        history.next().run { assertEquals("description1", (context as CellRenderable).value) }
-        history.next().run { assertEquals("manufacturer1", (context as CellRenderable).value) }
+        history.next().run { assertEquals(1, (context as RowStartRenderableEntity).getRow()) }
+        history.next().run { assertEquals("code1", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("name1", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("description1", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("manufacturer1", (context as CellRenderableEntity).value) }
         history.next().run {
-            assertEquals(1, (context as RowEndRenderable<*>).getRow())
+            assertEquals(1, (context as RowEndRenderableEntity<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Row 1
-        history.next().run { assertEquals(2, (context as RowStartRenderable).getRow()) }
-        history.next().run { assertEquals("code2", (context as CellRenderable).value) }
-        history.next().run { assertEquals("name2", (context as CellRenderable).value) }
-        history.next().run { assertEquals("description2", (context as CellRenderable).value) }
-        history.next().run { assertEquals("manufacturer2", (context as CellRenderable).value) }
+        history.next().run { assertEquals(2, (context as RowStartRenderableEntity).getRow()) }
+        history.next().run { assertEquals("code2", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("name2", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("description2", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("manufacturer2", (context as CellRenderableEntity).value) }
         history.next().run {
-            assertEquals(2, (context as RowEndRenderable<*>).getRow())
+            assertEquals(2, (context as RowEndRenderableEntity<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Footer row
-        history.next().run { assertEquals(3, (context as RowStartRenderable).getRow()) }
-        history.next().run { assertEquals("First footer cell.", (context as CellRenderable).value) }
+        history.next().run { assertEquals(3, (context as RowStartRenderableEntity).getRow()) }
+        history.next().run { assertEquals("First footer cell.", (context as CellRenderableEntity).value) }
         history.next().run {
-            assertEquals(3, (context as RowEndRenderable<*>).getRow())
+            assertEquals(3, (context as RowEndRenderableEntity<*>).getRow())
             assertEquals(1, context.getCells().keys.size)
         }
-        history.next().run { assertEquals(0, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertEquals(2, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertEquals(3, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertIs<TableEndRenderable>(context) }
+        history.next().run { assertEquals(0, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(2, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(3, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertIs<TableEndRenderableEntity>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -164,45 +164,45 @@ class TableExportTest {
 
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableStartRenderable).getSheetName()) }
+        history.next().run { assertEquals("Products table", (context as TableStartRenderableEntity).getSheetName()) }
         // Columns - Opening
-        history.next().run { assertEquals(0, (context as ColumnStartRenderable).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnStartRenderable).columnIndex) }
-        history.next().run { assertEquals(2, (context as ColumnStartRenderable).columnIndex) }
-        history.next().run { assertEquals(3, (context as ColumnStartRenderable).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStartRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStartRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(2, (context as ColumnStartRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(3, (context as ColumnStartRenderableEntity).columnIndex) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowStartRenderable).getRow()) }
-        history.next().run { assertEquals("code1", (context as CellRenderable).value) }
-        history.next().run { assertEquals("name1", (context as CellRenderable).value) }
-        history.next().run { assertEquals("description1", (context as CellRenderable).value) }
-        history.next().run { assertEquals("manufacturer1", (context as CellRenderable).value) }
+        history.next().run { assertEquals(0, (context as RowStartRenderableEntity).getRow()) }
+        history.next().run { assertEquals("code1", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("name1", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("description1", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("manufacturer1", (context as CellRenderableEntity).value) }
         history.next().run {
-            assertEquals(0, (context as RowEndRenderable<*>).getRow())
+            assertEquals(0, (context as RowEndRenderableEntity<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Row 1
-        history.next().run { assertEquals(1, (context as RowStartRenderable).getRow()) }
-        history.next().run { assertEquals("code2", (context as CellRenderable).value) }
-        history.next().run { assertEquals("name2", (context as CellRenderable).value) }
-        history.next().run { assertEquals("description2", (context as CellRenderable).value) }
-        history.next().run { assertEquals("manufacturer2", (context as CellRenderable).value) }
+        history.next().run { assertEquals(1, (context as RowStartRenderableEntity).getRow()) }
+        history.next().run { assertEquals("code2", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("name2", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("description2", (context as CellRenderableEntity).value) }
+        history.next().run { assertEquals("manufacturer2", (context as CellRenderableEntity).value) }
         history.next().run {
-            assertEquals(1, (context as RowEndRenderable<*>).getRow())
+            assertEquals(1, (context as RowEndRenderableEntity<*>).getRow())
             assertEquals(4, context.getCells().keys.size)
         }
         // Footer row
-        history.next().run { assertEquals(5, (context as RowStartRenderable).getRow()) }
-        history.next().run { assertEquals("Custom row cell", (context as CellRenderable).value) }
+        history.next().run { assertEquals(5, (context as RowStartRenderableEntity).getRow()) }
+        history.next().run { assertEquals("Custom row cell", (context as CellRenderableEntity).value) }
         history.next().run {
-            assertEquals(5, (context as RowEndRenderable<*>).getRow())
+            assertEquals(5, (context as RowEndRenderableEntity<*>).getRow())
             assertEquals(1, context.getCells().keys.size)
         }
         // Columns closing.
-        history.next().run { assertEquals(0, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertEquals(2, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertEquals(3, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertIs<TableEndRenderable>(context) }
+        history.next().run { assertEquals(0, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(2, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(3, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertIs<TableEndRenderableEntity>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -250,47 +250,47 @@ class TableExportTest {
 
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableStartRenderable).getSheetName()) }
+        history.next().run { assertEquals("Products table", (context as TableStartRenderableEntity).getSheetName()) }
         // Columns - Opening
-        history.next().run { assertEquals(0, (context as ColumnStartRenderable).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnStartRenderable).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStartRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStartRenderableEntity).columnIndex) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowStartRenderable).getRow()) }
-        history.next().run { assertEquals("Green cell", (context as CellRenderable).value) }
+        history.next().run { assertEquals(0, (context as RowStartRenderableEntity).getRow()) }
+        history.next().run { assertEquals("Green cell", (context as CellRenderableEntity).value) }
         history.next().run { assertEquals(Colors.GREEN, (attribute as TextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
-        history.next().run { assertEquals("White cell", (context as CellRenderable).value) }
+        history.next().run { assertEquals("White cell", (context as CellRenderableEntity).value) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as TextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
         history.next().run {
-            assertEquals(0, (context as RowEndRenderable<*>).getRow())
+            assertEquals(0, (context as RowEndRenderableEntity<*>).getRow())
             assertEquals(2, context.getCells().keys.size)
         }
         // Row 1
-        history.next().run { assertEquals(1, (context as RowStartRenderable).getRow()) }
-        history.next().run { assertEquals("White cell", (context as CellRenderable).value) }
+        history.next().run { assertEquals(1, (context as RowStartRenderableEntity).getRow()) }
+        history.next().run { assertEquals("White cell", (context as CellRenderableEntity).value) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as TextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
         history.next().run {
-            assertEquals(1, (context as RowEndRenderable<*>).getRow())
+            assertEquals(1, (context as RowEndRenderableEntity<*>).getRow())
             assertEquals(1, context.getCells().keys.size)
         }
         // Row 1
-        history.next().run { assertEquals(2, (context as RowStartRenderable).getRow()) }
-        history.next().run { assertEquals("Red cell", (context as CellRenderable).value) }
+        history.next().run { assertEquals(2, (context as RowStartRenderableEntity).getRow()) }
+        history.next().run { assertEquals("Red cell", (context as CellRenderableEntity).value) }
         history.next().run { assertEquals(Colors.RED, (attribute as TextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
-        history.next().run { assertEquals("Black cell", (context as CellRenderable).value) }
+        history.next().run { assertEquals("Black cell", (context as CellRenderableEntity).value) }
         history.next().run { assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor) }
         history.next().run { assertEquals(Colors.WHITE, (attribute as BackgroundAttribute).color) }
         history.next().run {
-            assertEquals(2, (context as RowEndRenderable<*>).getRow())
+            assertEquals(2, (context as RowEndRenderableEntity<*>).getRow())
             assertEquals(2, context.getCells().keys.size)
         }
         // Columns closing.
-        history.next().run { assertEquals(0, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertEquals(1, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertIs<TableEndRenderable>(context) }
+        history.next().run { assertEquals(0, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertIs<TableEndRenderableEntity>(context) }
         assertFalse(history.hasNext())
 
     }
@@ -342,61 +342,61 @@ class TableExportTest {
         }.export(DocumentFormat("spy"), Unit)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Products table", (context as TableStartRenderable).getSheetName()) }
+        history.next().run { assertEquals("Products table", (context as TableStartRenderableEntity).getSheetName()) }
         // Columns - Opening 0
-        history.next().run { assertEquals(0, (context as ColumnStartRenderable).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStartRenderableEntity).columnIndex) }
         // Column 0 attribute
         history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Columns - Opening 1
-        history.next().run { assertEquals(1, (context as ColumnStartRenderable).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStartRenderableEntity).columnIndex) }
         // Column 1 attribute
         history.next().run { assertEquals(100, (attribute as WidthAttribute).value.value.toInt()) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowStartRenderable).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStartRenderableEntity).getRow()) }
         history.next().run { assertEquals(50, (attribute as HeightAttribute).value.value.toInt()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("Black, strikeout, bold, italic cell", (context as CellRenderable).value) }
+        history.next().run { assertEquals("Black, strikeout, bold, italic cell", (context as CellRenderableEntity).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
             assertEquals(true, attribute.strikeout)
             assertEquals(DefaultWeightStyle.BOLD, attribute.weight)
             assertEquals(true, attribute.italic)
         }
-        history.next().run { assertTrue(context is RowEndRenderable<*>) }
+        history.next().run { assertTrue(context is RowEndRenderableEntity<*>) }
         // Row 1, cell 0
-        history.next().run { assertEquals(1, (context as RowStartRenderable).getRow()) }
+        history.next().run { assertEquals(1, (context as RowStartRenderableEntity).getRow()) }
         history.next().run { assertEquals(20, (attribute as HeightAttribute).value.value.toInt()) }
-        history.next().run { assertEquals("Black, strikeout, bold cell", (context as CellRenderable).value) }
+        history.next().run { assertEquals("Black, strikeout, bold cell", (context as CellRenderableEntity).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
             assertEquals(true, attribute.strikeout)
             assertEquals(DefaultWeightStyle.BOLD, attribute.weight)
             assertEquals(false, attribute.italic)
         }
-        history.next().run { assertTrue(context is RowEndRenderable<*>) }
+        history.next().run { assertTrue(context is RowEndRenderableEntity<*>) }
         // Row 2, cell 0
-        history.next().run { assertEquals(2, (context as RowStartRenderable).getRow()) }
+        history.next().run { assertEquals(2, (context as RowStartRenderableEntity).getRow()) }
         history.next().run { assertEquals(20, (attribute as HeightAttribute).value.value.toInt()) }
-        history.next().run { assertEquals("Black, strikeout cell", (context as CellRenderable).value) }
+        history.next().run { assertEquals("Black, strikeout cell", (context as CellRenderableEntity).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
             assertEquals(true, attribute.strikeout)
             assertEquals(DefaultWeightStyle.NORMAL, attribute.weight)
             assertEquals(false, attribute.italic)
         }
-        history.next().run { assertEquals("Black cell", (context as CellRenderable).value) }
+        history.next().run { assertEquals("Black cell", (context as CellRenderableEntity).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
             assertEquals(false, attribute.strikeout)
             assertEquals(DefaultWeightStyle.NORMAL, attribute.weight)
             assertEquals(false, attribute.italic)
         }
-        history.next().run { assertIs<RowEndRenderable<*>>(context) }
+        history.next().run { assertIs<RowEndRenderableEntity<*>>(context) }
         // Columns - Closing 0
-        history.next().run { assertEquals(0, (context as ColumnEndRenderable).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnEndRenderableEntity).columnIndex) }
         // Columns - Closing 1
-        history.next().run { assertEquals(1, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertIs<TableEndRenderable>(context) }
+        history.next().run { assertEquals(1, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertIs<TableEndRenderableEntity>(context) }
         assertFalse(history.hasNext())
     }
 

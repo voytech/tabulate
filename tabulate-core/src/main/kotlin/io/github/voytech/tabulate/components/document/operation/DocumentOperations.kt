@@ -1,14 +1,14 @@
 package io.github.voytech.tabulate.components.document.operation
 
 import io.github.voytech.tabulate.core.model.ExportApi
-import io.github.voytech.tabulate.core.operation.AttributedContext
+import io.github.voytech.tabulate.core.operation.AttributedEntity
 
-sealed class DocumentContext(scope: ExportApi) : AttributedContext() {
+sealed class DocumentEntity(scope: ExportApi) : AttributedEntity() {
     init {
         additionalAttributes = scope.getCustomAttributes().data
     }
 }
 
-class DocumentStart(scope: ExportApi) : DocumentContext(scope)
+class DocumentStart(scope: ExportApi) : DocumentEntity(scope)
 
-class DocumentEnd(scope: ExportApi) : DocumentContext(scope)
+class DocumentEnd(scope: ExportApi) : DocumentEntity(scope)

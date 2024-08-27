@@ -3,9 +3,9 @@ package io.github.voytech.tabulate.components.table.api.builder.fluent
 import io.github.voytech.tabulate.components.table.api.builder.*
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHintAttribute
-import io.github.voytech.tabulate.components.table.rendering.CellRenderable
-import io.github.voytech.tabulate.components.table.rendering.ColumnRenderable
-import io.github.voytech.tabulate.components.table.rendering.RowRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderableEntity
+import io.github.voytech.tabulate.components.table.rendering.ColumnRenderableEntity
+import io.github.voytech.tabulate.components.table.rendering.RowRenderableEntity
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.model.Attribute
 import io.github.voytech.tabulate.core.model.attributes.*
@@ -292,17 +292,17 @@ class CellBuilder<T: Any> internal constructor(
 
 object TableAttributes {
     @JvmStatic
-    fun heightAttribute(): HeightAttribute.Builder= HeightAttribute.builder(RowRenderable::class.java)
+    fun heightAttribute(): HeightAttribute.Builder= HeightAttribute.builder(RowRenderableEntity::class.java)
     @JvmStatic
-    fun widthAttribute(): WidthAttribute.Builder= WidthAttribute.builder(ColumnRenderable::class.java)
+    fun widthAttribute(): WidthAttribute.Builder= WidthAttribute.builder(ColumnRenderableEntity::class.java)
     @JvmStatic
-    fun textAttribute(): TextStylesAttribute.Builder= TextStylesAttribute.builder(CellRenderable::class.java)
+    fun textAttribute(): TextStylesAttribute.Builder= TextStylesAttribute.builder(CellRenderableEntity::class.java)
     @JvmStatic
-    fun cellBorderAttribute(): BordersAttribute.Builder= BordersAttribute.builder(CellRenderable::class.java)
+    fun cellBorderAttribute(): BordersAttribute.Builder= BordersAttribute.builder(CellRenderableEntity::class.java)
     @JvmStatic
-    fun rowBorderAttribute(): BordersAttribute.Builder= BordersAttribute.builder(RowRenderable::class.java)
+    fun rowBorderAttribute(): BordersAttribute.Builder= BordersAttribute.builder(RowRenderableEntity::class.java)
     @JvmStatic
-    fun backgroundAttribute(): BackgroundAttribute.Builder= BackgroundAttribute.builder(CellRenderable::class.java)
+    fun backgroundAttribute(): BackgroundAttribute.Builder= BackgroundAttribute.builder(CellRenderableEntity::class.java)
     @JvmStatic
-    fun alignmentAttribute(): AlignmentAttribute.Builder= AlignmentAttribute.builder(CellRenderable::class.java)
+    fun alignmentAttribute(): AlignmentAttribute.Builder= AlignmentAttribute.builder(CellRenderableEntity::class.java)
 }

@@ -4,9 +4,9 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.CellLevelAttr
 import io.github.voytech.tabulate.components.table.api.builder.dsl.ColumnLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.dsl.RowLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.api.builder.dsl.TableLevelAttributesBuilderApi
-import io.github.voytech.tabulate.components.table.rendering.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderableEntity
 import io.github.voytech.tabulate.components.table.rendering.TableContext
-import io.github.voytech.tabulate.components.table.rendering.TableStartRenderable
+import io.github.voytech.tabulate.components.table.rendering.TableStartRenderableEntity
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.model.Attribute
@@ -21,7 +21,7 @@ data class CellExcelDataFormatAttribute(
 ) : Attribute<CellExcelDataFormatAttribute>() {
 
     @TabulateMarker
-    class Builder : AttributeBuilder<CellExcelDataFormatAttribute>(CellRenderable::class.java) {
+    class Builder : AttributeBuilder<CellExcelDataFormatAttribute>(CellRenderableEntity::class.java) {
         var value: String by observable("General", "value" to "dataFormat")
         override fun provide(): CellExcelDataFormatAttribute = CellExcelDataFormatAttribute(value)
     }
@@ -91,7 +91,7 @@ data class CellCommentAttribute(
 ) : Attribute<CellCommentAttribute>() {
 
     @TabulateMarker
-    class Builder() : AttributeBuilder<CellCommentAttribute>(CellRenderable::class.java) {
+    class Builder() : AttributeBuilder<CellCommentAttribute>(CellRenderableEntity::class.java) {
         var author: String by observable("anonymous")
         var comment: String by observable("Please provide a commentary!")
         override fun provide(): CellCommentAttribute = CellCommentAttribute(author, comment)
@@ -140,7 +140,7 @@ data class PrintingAttribute(
 ) : Attribute<PrintingAttribute>() {
 
     @TabulateMarker
-    class Builder : AttributeBuilder<PrintingAttribute>(TableStartRenderable::class.java) {
+    class Builder : AttributeBuilder<PrintingAttribute>(TableStartRenderableEntity::class.java) {
         var numberOfCopies: Short by observable(1)
         var isDraft: Boolean by observable(false)
         var blackAndWhite: Boolean by observable(false)

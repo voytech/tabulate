@@ -61,7 +61,7 @@ fun RenderingStatus?.hasLayoutEffect(): Boolean = !isError() && (this !is Render
 
 fun RenderingStatus?.getAxis(): Axis? = (this as? AxisBoundStatus)?.activeAxis
 
-fun interface Operation<CTX : RenderingContext, E : AttributedContext> : InvokeWithTwoParams<CTX, E, RenderingResult> {
+fun interface Operation<CTX : RenderingContext, E : AttributedEntity> : InvokeWithTwoParams<CTX, E, RenderingResult> {
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     override operator fun invoke(renderingContext: CTX, context: E): RenderingResult
@@ -72,7 +72,7 @@ typealias ReifiedOperation<CTX, E> = ReifiedInvocation<Operation<CTX, E>, TwoPar
 
 class Operations<CTX : RenderingContext>(private val dispatch: TwoParamsBasedDispatch) {
 
-    operator fun <A : Attribute<*>, E : AttributedContext> invoke(renderingContext: CTX, context: E): RenderingResult =
+    operator fun <A : Attribute<*>, E : AttributedEntity> invoke(renderingContext: CTX, context: E): RenderingResult =
         (dispatch[renderingContext, context] as? Operation<CTX, E>)?.invoke(renderingContext, context)
             ?: Nothing.asResult()
 
@@ -81,14 +81,14 @@ class Operations<CTX : RenderingContext>(private val dispatch: TwoParamsBasedDis
 }
 
 interface Enhance<CTX : RenderingContext> {
-    operator fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E>
+    operator fun <E : AttributedEntity> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E>
 }
 
-fun interface VoidOperation<CTX : RenderingContext, E : AttributedContext> {
+fun interface VoidOperation<CTX : RenderingContext, E : AttributedEntity> {
     operator fun invoke(renderingContext: CTX, context: E)
 }
 
-class VoidOperationAdapter<CTX : RenderingContext, E : AttributedContext>(val voidOperation: VoidOperation<CTX, E>) :
+class VoidOperationAdapter<CTX : RenderingContext, E : AttributedEntity>(val voidOperation: VoidOperation<CTX, E>) :
     Operation<CTX, E> {
     override fun invoke(renderingContext: CTX, context: E): RenderingResult {
         voidOperation(renderingContext, context)
@@ -100,20 +100,20 @@ class OperationsBuilder<CTX : RenderingContext>(val renderingContext: Class<CTX>
 
     private val dispatch: TwoParamsBasedDispatch = TwoParamsBasedDispatch()
 
-    fun <E : AttributedContext> addOperation(clazz: Class<E>, op: Operation<CTX, E>) {
+    fun <E : AttributedEntity> addOperation(clazz: Class<E>, op: Operation<CTX, E>) {
         with(dispatch) {
             op.bind(renderingContext, clazz)
         }
     }
 
-    inline fun <reified E : AttributedContext> operation(op: Operation<CTX, E>) = addOperation(E::class.java, op)
+    inline fun <reified E : AttributedEntity> operation(op: Operation<CTX, E>) = addOperation(E::class.java, op)
 
-    inline fun <reified E : AttributedContext> operation(op: VoidOperation<CTX, E>) =
+    inline fun <reified E : AttributedEntity> operation(op: VoidOperation<CTX, E>) =
         addOperation(E::class.java, VoidOperationAdapter(op))
 
     @Suppress("UNCHECKED_CAST")
     private fun List<Enhance<CTX>>.applyEnhancers(delegate: ReifiedInvocation<*, *>) =
-        fold(delegate as ReifiedOperation<CTX, AttributedContext>) { op, transformer ->
+        fold(delegate as ReifiedOperation<CTX, AttributedEntity>) { op, transformer ->
             ReifiedOperation(op.meta, transformer(op))
         }.delegate
 

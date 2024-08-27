@@ -17,7 +17,7 @@ abstract class TableAttributeRenderOperation<CTX : RenderingContext, A : Attribu
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class RowAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>, AC : RowRenderable> :
+abstract class RowAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>, AC : RowRenderableEntity> :
     AttributeOperation<CTX, A, AC>
 
 
@@ -27,13 +27,13 @@ abstract class RowAttributeRenderOperation<CTX : RenderingContext, A : Attribute
  * @since 0.1.0
  */
 abstract class CellAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>> :
-    AttributeOperation<CTX, A, CellRenderable>
+    AttributeOperation<CTX, A, CellRenderableEntity>
 
 /**
  * Column attribute operation associated with column rendering context
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-abstract class ColumnAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>, AC : ColumnRenderable> :
+abstract class ColumnAttributeRenderOperation<CTX : RenderingContext, A : Attribute<A>, AC : ColumnRenderableEntity> :
     AttributeOperation<CTX, A, AC>
 

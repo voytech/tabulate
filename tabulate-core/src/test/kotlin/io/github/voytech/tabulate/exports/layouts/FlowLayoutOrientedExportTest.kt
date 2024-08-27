@@ -5,14 +5,14 @@ import io.github.voytech.tabulate.components.container.api.builder.dsl.horizonta
 import io.github.voytech.tabulate.components.container.api.builder.dsl.vertical
 import io.github.voytech.tabulate.components.document.api.builder.dsl.createDocument
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
-import io.github.voytech.tabulate.components.image.operation.ImageRenderable
+import io.github.voytech.tabulate.components.image.operation.ImageRenderableEntity
 import io.github.voytech.tabulate.components.page.api.builder.dsl.page
 import io.github.voytech.tabulate.components.table.api.builder.dsl.height
 import io.github.voytech.tabulate.components.table.api.builder.dsl.table
-import io.github.voytech.tabulate.components.table.rendering.CellRenderable
-import io.github.voytech.tabulate.components.table.rendering.TableStartRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderableEntity
+import io.github.voytech.tabulate.components.table.rendering.TableStartRenderableEntity
 import io.github.voytech.tabulate.components.text.api.builder.dsl.*
-import io.github.voytech.tabulate.components.text.operation.TextRenderable
+import io.github.voytech.tabulate.components.text.operation.TextRenderableEntity
 import io.github.voytech.tabulate.core.DocumentFormat
 import io.github.voytech.tabulate.core.StandaloneExportTemplate
 import io.github.voytech.tabulate.core.model.*
@@ -80,7 +80,7 @@ class FlowLayoutOrientedExportTest {
             }
         }
         StandaloneExportTemplate(DocumentFormat.format("spy")).export(createDocument(doc), Unit)
-        val history = Spy.spy.readHistory().asSequence().filter { it.context is TextRenderable }.iterator()
+        val history = Spy.spy.readHistory().asSequence().filter { it.context is TextRenderableEntity }.iterator()
         horizontalLayoutAssertions(history)
     }
 
@@ -89,7 +89,7 @@ class FlowLayoutOrientedExportTest {
         Spy.spy.documentHeight = 400F.asHeight()
         Spy.spy.documentWidth = 400F.asWidth()
         Spy.spy.trackMeasuring = false
-        Spy.spy.measures.register<TextRenderable>({ _ -> true }) {
+        Spy.spy.measures.register<TextRenderableEntity>({ _ -> true }) {
             Size(100F.asWidth(), 100F.asHeight())
         }
         val doc2 = document {
@@ -118,7 +118,7 @@ class FlowLayoutOrientedExportTest {
             }
         }
         StandaloneExportTemplate(DocumentFormat.format("spy")).export(createDocument(doc2), Unit)
-        val history2 = Spy.spy.readHistory().asSequence().filter { it.context is TextRenderable }.iterator()
+        val history2 = Spy.spy.readHistory().asSequence().filter { it.context is TextRenderableEntity }.iterator()
         horizontalLayoutAssertions(history2)
     }
 
@@ -179,7 +179,7 @@ class FlowLayoutOrientedExportTest {
             }
         }
         StandaloneExportTemplate(DocumentFormat.format("spy")).export(createDocument(doc), Unit)
-        val history = Spy.spy.readHistory().asSequence().filter { it.context is TextRenderable }.iterator()
+        val history = Spy.spy.readHistory().asSequence().filter { it.context is TextRenderableEntity }.iterator()
         verticalLayoutAssertions(history)
     }
 
@@ -188,7 +188,7 @@ class FlowLayoutOrientedExportTest {
         Spy.spy.documentHeight = 400F.asHeight()
         Spy.spy.documentWidth = 400F.asWidth()
         Spy.spy.trackMeasuring = false
-        Spy.spy.measures.register<TextRenderable>({ _ -> true }) {
+        Spy.spy.measures.register<TextRenderableEntity>({ _ -> true }) {
             Size(100F.asWidth(), 100F.asHeight())
         }
         val doc2 = document {
@@ -217,7 +217,7 @@ class FlowLayoutOrientedExportTest {
             }
         }
         StandaloneExportTemplate(DocumentFormat.format("spy")).export(createDocument(doc2), Unit)
-        val history2 = Spy.spy.readHistory().asSequence().filter { it.context is TextRenderable }.iterator()
+        val history2 = Spy.spy.readHistory().asSequence().filter { it.context is TextRenderableEntity }.iterator()
         verticalLayoutAssertions(history2)
     }
 
@@ -226,11 +226,11 @@ class FlowLayoutOrientedExportTest {
         Spy.spy.documentHeight = 400F.asHeight()
         Spy.spy.documentWidth = 400F.asWidth()
         // Every text is measured to be of size 200,50
-        Spy.spy.measures.register<TextRenderable>({ _ -> true }) {
+        Spy.spy.measures.register<TextRenderableEntity>({ _ -> true }) {
             Size(220F.asWidth(), 50F.asHeight())
         }
         // Every image is measured to be of size 200,200
-        Spy.spy.measures.register<ImageRenderable>({ _ -> true }) {
+        Spy.spy.measures.register<ImageRenderableEntity>({ _ -> true }) {
             Size(400F.asWidth(), 400F.asHeight())
         }
         val doc = document {
@@ -265,61 +265,61 @@ class FlowLayoutOrientedExportTest {
         history.assertOperationAssertionsInOrder(
             { op -> op.assertContextClass<NewPage>() },
             // Measure
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt1" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt1" } },
             // Render
-            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt1" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt1" } },
 
             // Measure, but overflow is detected on X axis.
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt2" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt2" } },
             // Measure in new iteration
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt2" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt2" } },
             // Render in that iteration
-            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt2" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt2" } },
 
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt3" } },
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt3" } },
-            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt3" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt3" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt3" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt3" } },
 
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt4" } },
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt4" } },
-            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt4" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt4" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt4" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt4" } },
 
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt5" } },
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt5" } },
-            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt5" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt5" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt5" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt5" } },
 
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt6" } },
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt6" } },
-            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt6" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt6" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt6" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt6" } },
 
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt7" } },
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt7" } },
-            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt7" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt7" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt7" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt7" } },
 
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt8" } },
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt8" } },
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt8" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt8" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt8" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt8" } },
 
             { op -> op.assertContextClass<NewPage>() },
 
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt8" } },
-            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt8" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt8" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt8" } },
 
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt9" } },
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt9" } },
-            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt9" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt9" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt9" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt9" } },
 
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt10" } },
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt10" } },
-            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt10" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt10" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt10" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt10" } },
 
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt11" } },
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt11" } },
-            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt11" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt11" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt11" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt11" } },
 
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt12" } },
-            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderable> { it.text == "txt12" } },
-            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderable> { it.text == "txt12" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt12" } },
+            { op -> op.assertIsMeasuringOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt12" } },
+            { op -> op.assertIsRenderingOperation() && op.assertPredicate<TextRenderableEntity> { it.text == "txt12" } },
         )
     }
 
@@ -330,10 +330,10 @@ class FlowLayoutOrientedExportTest {
         Spy.spy.documentWidth = 600F.asWidth()
         Spy.spy.trackMeasuring = false
         // Make each table cell of size: 200x100 (Thus entire width will be occupied as page width = 600x800 by default)
-        Spy.spy.measures.register<CellRenderable>({ _ -> true }) {
+        Spy.spy.measures.register<CellRenderableEntity>({ _ -> true }) {
             Size(200F.asWidth(), 100F.asHeight())
         }
-        Spy.spy.measures.register<TextRenderable>({ _ -> true }) {
+        Spy.spy.measures.register<TextRenderableEntity>({ _ -> true }) {
             Size(200F.asWidth(), 100F.asHeight())
         }
         val doc = document {
@@ -355,18 +355,18 @@ class FlowLayoutOrientedExportTest {
         }
         StandaloneExportTemplate(DocumentFormat.format("spy")).export(createDocument(doc), Unit)
         val history = Spy.spy.readHistory().asSequence().filter {
-            it.context is TableStartRenderable ||
-                    it.context is TextRenderable ||
+            it.context is TableStartRenderableEntity ||
+                    it.context is TextRenderableEntity ||
                     it.context is NewPage
         }.iterator()
 
         history.assertAttributedContextsAppearanceInOrder(
             NewPage::class,
-            TableStartRenderable::class,
-            TextRenderable::class,
-            TableStartRenderable::class,
+            TableStartRenderableEntity::class,
+            TextRenderableEntity::class,
+            TableStartRenderableEntity::class,
             NewPage::class,
-            TableStartRenderable::class
+            TableStartRenderableEntity::class
         )
     }
 
@@ -377,10 +377,10 @@ class FlowLayoutOrientedExportTest {
         Spy.spy.documentWidth = 600F.asWidth()
         Spy.spy.trackMeasuring = false
         // Make each table cell of size: 200x100 (Thus entire width will be occupied as page width = 600x800 by default)
-        Spy.spy.measures.register<CellRenderable>({ _ -> true }) {
+        Spy.spy.measures.register<CellRenderableEntity>({ _ -> true }) {
             Size(200F.asWidth(), 100F.asHeight())
         }
-        Spy.spy.measures.register<TextRenderable>({ _ -> true }) {
+        Spy.spy.measures.register<TextRenderableEntity>({ _ -> true }) {
             Size(200F.asWidth(), 100F.asHeight())
         }
         val doc = document {
@@ -401,18 +401,18 @@ class FlowLayoutOrientedExportTest {
         }
         StandaloneExportTemplate(DocumentFormat.format("spy")).export(createDocument(doc), Unit)
         val history = Spy.spy.readHistory().asSequence().filter {
-            it.context is TableStartRenderable ||
-                    it.context is TextRenderable ||
+            it.context is TableStartRenderableEntity ||
+                    it.context is TextRenderableEntity ||
                     it.context is NewPage
         }.iterator()
 
         history.assertAttributedContextsAppearanceInOrder(
             NewPage::class,
-            TableStartRenderable::class,
-            TableStartRenderable::class,
+            TableStartRenderableEntity::class,
+            TableStartRenderableEntity::class,
             NewPage::class,
-            TableStartRenderable::class,
-            TextRenderable::class,
+            TableStartRenderableEntity::class,
+            TextRenderableEntity::class,
         )
 
     }

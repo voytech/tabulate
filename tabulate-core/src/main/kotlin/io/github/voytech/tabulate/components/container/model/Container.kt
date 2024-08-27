@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.components.container.model
 
-import io.github.voytech.tabulate.components.container.opration.ContainerRenderable
+import io.github.voytech.tabulate.components.container.operation.ContainerRenderableEntity
 import io.github.voytech.tabulate.core.layout.LayoutProperties
 import io.github.voytech.tabulate.core.layout.impl.FlowLayout
 import io.github.voytech.tabulate.core.model.*
@@ -24,7 +24,7 @@ class Container(
 
     override fun doExport(api: ExportApi): Unit = api {
         if (hasRenderableAttributes()) {
-            render(ContainerRenderable(attributes?.forContext<ContainerRenderable>(), api.getCustomAttributes()))
+            render(ContainerRenderableEntity(attributes?.forContext<ContainerRenderableEntity>(), api.getCustomAttributes()))
         }
         exportWithContinuations<FlowLayout>(models, descendantsIterationsKind)
     }
@@ -34,7 +34,7 @@ class Container(
     }
 
     private fun hasRenderableAttributes(): Boolean =
-        attributes?.forContext<ContainerRenderable>()
+        attributes?.forContext<ContainerRenderableEntity>()
             ?.let { it.has<BackgroundAttribute>() || it.has<BordersAttribute>() } ?: false
 
     override fun createLayout(properties: LayoutProperties): FlowLayout =

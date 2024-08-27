@@ -51,16 +51,16 @@ internal class TableExport<T : Any>(
     data class ColumnContextAttributes(val start: Attributes, val end: Attributes)
 
     private val columnContextAttributes = table.distributeAttributesForContexts(
-        ColumnStartRenderable::class.java, ColumnEndRenderable::class.java
+        ColumnStartRenderableEntity::class.java, ColumnEndRenderableEntity::class.java
     )
 
     private val columnAttributes: Map<ColumnDef<T>, ColumnContextAttributes> =
         table.columns.associateWith { column ->
-            column.distributeAttributesForContexts(ColumnStartRenderable::class.java, ColumnEndRenderable::class.java)
+            column.distributeAttributesForContexts(ColumnStartRenderableEntity::class.java, ColumnEndRenderableEntity::class.java)
                 .let {
                     ColumnContextAttributes(
-                        columnContextAttributes.get<ColumnStartRenderable>() + it.get<ColumnStartRenderable>(),
-                        columnContextAttributes.get<ColumnEndRenderable>() + it.get<ColumnEndRenderable>()
+                        columnContextAttributes.get<ColumnStartRenderableEntity>() + it.get<ColumnStartRenderableEntity>(),
+                        columnContextAttributes.get<ColumnEndRenderableEntity>() + it.get<ColumnEndRenderableEntity>()
                     )
                 }
         }

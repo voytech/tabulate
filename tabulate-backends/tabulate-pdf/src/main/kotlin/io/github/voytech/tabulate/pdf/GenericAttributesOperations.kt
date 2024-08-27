@@ -5,17 +5,14 @@ import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
-import io.github.voytech.tabulate.core.model.attributes.color
 import io.github.voytech.tabulate.core.model.border.BorderStyle
 import io.github.voytech.tabulate.core.model.border.Borders
 import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.color.Color
-import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.color.darken
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.core.operation.AttributeOperation
-import io.github.voytech.tabulate.core.operation.AttributedContext
-import io.github.voytech.tabulate.core.operation.boundingBox
+import io.github.voytech.tabulate.core.operation.AttributedEntity
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.font.PDType1Font
@@ -62,7 +59,7 @@ fun TextStylesAttribute.pdFont(): PDFont =
         }
     } else default()
 
-class TextStylesAttributeRenderOperation<CTX : AttributedContext> :
+class TextStylesAttributeRenderOperation<CTX : AttributedEntity> :
     AttributeOperation<PdfBoxRenderingContext, TextStylesAttribute, CTX> {
 
     override operator fun invoke(
@@ -80,7 +77,7 @@ class TextStylesAttributeRenderOperation<CTX : AttributedContext> :
     }
 }
 
-class BackgroundAttributeRenderOperation<CTX : AttributedContext> :
+class BackgroundAttributeRenderOperation<CTX : AttributedEntity> :
     AttributeOperation<PdfBoxRenderingContext, BackgroundAttribute, CTX> {
     override fun invoke(
         renderingContext: PdfBoxRenderingContext,
@@ -124,7 +121,7 @@ fun BorderStyle?.rightBottomSecondaryColor(original: Color?): Color? =
         else -> original
     }
 
-fun <A : AttributedContext> PdfBoxRenderingContext.drawBorders(context: A, borders: Borders) {
+fun <A : AttributedEntity> PdfBoxRenderingContext.drawBorders(context: A, borders: Borders) {
     topBorder(
         context, borders,
         borders.topBorderStyle?.leftTopPrimaryColor(borders.topBorderColor),
@@ -147,7 +144,7 @@ fun <A : AttributedContext> PdfBoxRenderingContext.drawBorders(context: A, borde
     )
 }
 
-class BordersAttributeRenderOperation<CTX : AttributedContext> :
+class BordersAttributeRenderOperation<CTX : AttributedEntity> :
     AttributeOperation<PdfBoxRenderingContext, BordersAttribute, CTX> {
     override fun invoke(
         renderingContext: PdfBoxRenderingContext,
@@ -233,7 +230,7 @@ private fun BorderStyle?.subLine(width: Measure<*>): SubLineWidthAndOffset =
         }
     } else 0F to 0F
 
-private fun <A : AttributedContext> PdfBoxRenderingContext.topCompositeBorder(
+private fun <A : AttributedEntity> PdfBoxRenderingContext.topCompositeBorder(
     boxLayout: BoxLayout,
     context: A,
     borders: Borders,
@@ -268,7 +265,7 @@ private fun <A : AttributedContext> PdfBoxRenderingContext.topCompositeBorder(
     )
 }
 
-private fun <A : AttributedContext> PdfBoxRenderingContext.topBorder(
+private fun <A : AttributedEntity> PdfBoxRenderingContext.topBorder(
     context: A,
     borders: Borders,
     primaryColor: Color? = null,
@@ -289,7 +286,7 @@ private fun <A : AttributedContext> PdfBoxRenderingContext.topBorder(
     }
 }
 
-private fun <A : AttributedContext> PdfBoxRenderingContext.bottomCompositeBorder(
+private fun <A : AttributedEntity> PdfBoxRenderingContext.bottomCompositeBorder(
     boxLayout: BoxLayout,
     context: A,
     borders: Borders,
@@ -323,7 +320,7 @@ private fun <A : AttributedContext> PdfBoxRenderingContext.bottomCompositeBorder
     )
 }
 
-private fun <A : AttributedContext> PdfBoxRenderingContext.bottomBorder(
+private fun <A : AttributedEntity> PdfBoxRenderingContext.bottomBorder(
     context: A,
     borders: Borders,
     primaryColor: Color? = null,
@@ -378,7 +375,7 @@ private fun PdfBoxRenderingContext.leftCompositeBorder(
     )
 }
 
-private fun <A : AttributedContext> PdfBoxRenderingContext.leftBorder(
+private fun <A : AttributedEntity> PdfBoxRenderingContext.leftBorder(
     context: A,
     borders: Borders,
     primaryColor: Color? = null,
@@ -432,7 +429,7 @@ private fun PdfBoxRenderingContext.rightCompositeBorder(
     )
 }
 
-private fun <A : AttributedContext> PdfBoxRenderingContext.rightBorder(
+private fun <A : AttributedEntity> PdfBoxRenderingContext.rightBorder(
     context: A,
     borders: Borders,
     primaryColor: Color? = null,

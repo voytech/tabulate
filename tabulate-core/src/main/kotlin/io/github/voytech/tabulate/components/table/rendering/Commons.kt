@@ -4,14 +4,14 @@ import io.github.voytech.tabulate.components.page.model.PageExecutionContext
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.model.attributes.cell.TypeHintAttribute
 import io.github.voytech.tabulate.core.model.stateAttributes
-import io.github.voytech.tabulate.core.operation.Context
+import io.github.voytech.tabulate.core.operation.CustomAttributes
 
 /**
  * Basic interface providing custom attributes that are shared throughout entire exporting process.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-fun Context.getSheetName(): String =
+fun CustomAttributes.getSheetName(): String =
     getCustomAttributes().stateAttributes().let { attributes ->
         attributes.getExecutionContext<PageExecutionContext>()
             ?.currentPageTitleWithNumber()
@@ -76,4 +76,4 @@ internal fun <T : Any> Table<T>.getRowIndex(rowIndex: Int) = (firstRow ?: 0) + r
 
 internal fun <T : Any> Table<T>.getColumnIndex(columnIndex: Int) = (firstColumn ?: 0) + columnIndex
 
-fun CellRenderable.getTypeHint(): TypeHintAttribute? = getModelAttribute<TypeHintAttribute>()
+fun CellRenderableEntity.getTypeHint(): TypeHintAttribute? = getModelAttribute<TypeHintAttribute>()

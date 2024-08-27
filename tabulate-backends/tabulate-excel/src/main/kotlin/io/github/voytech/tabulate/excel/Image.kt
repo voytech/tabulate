@@ -12,7 +12,7 @@ import javax.imageio.ImageIO
 
 class Image(private val imageData: BufferedImage, private val boundingBox: RenderableBoundingBox) {
 
-    constructor(renderable: Renderable<*>) : this(renderable.image(), renderable.boundingBox)
+    constructor(renderable: RenderableEntity<*>) : this(renderable.image(), renderable.boundingBox)
 
     constructor(uri: String, bbox: RenderableBoundingBox) : this(uri.loadBufferedImage(), bbox)
 
@@ -25,12 +25,12 @@ class Image(private val imageData: BufferedImage, private val boundingBox: Rende
     }
 }
 
-fun Renderable<*>.image(): BufferedImage {
+fun RenderableEntity<*>.image(): BufferedImage {
     require(this is HasImage)
     return imageUri.loadBufferedImage()
 }
 
-fun <R> R.measureImage(): RenderingResult where R : Renderable<*>, R : HasImage = Image(this).measure()
+fun <R> R.measureImage(): RenderingResult where R : RenderableEntity<*>, R : HasImage = Image(this).measure()
 
 fun ByteArray.measureImage(boundingBox: RenderableBoundingBox) =
     Image(ImageIO.read(ByteArrayInputStream(this)), boundingBox).measure()

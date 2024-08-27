@@ -6,14 +6,14 @@ import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.StateAttributes
 import io.github.voytech.tabulate.core.operation.VoidOperation
 
-fun interface EndTableOperation<CTX : RenderingContext>: VoidOperation<CTX, TableEndRenderable>
+fun interface EndTableOperation<CTX : RenderingContext>: VoidOperation<CTX, TableEndRenderableEntity>
 
 /**
  * Table operation context with additional model attributes applicable on table level.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class TableEndRenderable(
+class TableEndRenderableEntity(
     attributes: Attributes?,
 ) : TableContext(attributes) {
     override fun toString(): String {
@@ -21,5 +21,5 @@ class TableEndRenderable(
     }
 }
 
-internal fun <T : Any> Table<T>.asTableEnd(customAttributes: StateAttributes): TableEndRenderable =
-    TableEndRenderable(attributes?.forContext<TableEndRenderable>()).apply { additionalAttributes = customAttributes.data }
+internal fun <T : Any> Table<T>.asTableEnd(customAttributes: StateAttributes): TableEndRenderableEntity =
+    TableEndRenderableEntity(attributes?.forContext<TableEndRenderableEntity>()).apply { additionalAttributes = customAttributes.data }

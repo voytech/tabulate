@@ -7,8 +7,8 @@ import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.border.Borders
 import io.github.voytech.tabulate.core.model.color.Color
-import io.github.voytech.tabulate.core.operation.AttributedContext
-import io.github.voytech.tabulate.core.operation.Renderable
+import io.github.voytech.tabulate.core.operation.AttributedEntity
+import io.github.voytech.tabulate.core.operation.RenderableEntity
 import io.github.voytech.tabulate.core.operation.boundingBox
 import io.github.voytech.tabulate.core.result.OutputBinding
 import io.github.voytech.tabulate.core.result.OutputStreamOutputBinding
@@ -155,8 +155,8 @@ class PdfBoxRenderingContext(
         }
     }
 
-    fun <CTX: AttributedContext> renderClipped(context: CTX, render: () -> Unit) =
-        renderClipped((context as Renderable<*>).boundingBox,render)
+    fun <CTX: AttributedEntity> renderClipped(context: CTX, render: () -> Unit) =
+        renderClipped((context as RenderableEntity<*>).boundingBox,render)
 
     fun RenderableBoundingBox.fillRect(color: Color? = null) {
         with(getCurrentContentStream()) {
@@ -217,7 +217,7 @@ class PdfBoxRenderingContext(
     }
 
     //TODO put it into shared attribute map for caching at first boxLayout access.
-    fun <A : AttributedContext> boxLayout(context: A, borders: Borders?): BoxLayout =
+    fun <A : AttributedEntity> boxLayout(context: A, borders: Borders?): BoxLayout =
         context.boundingBox()?.let { bbox ->
             BoxLayout(this, bbox, borders)
         } ?: error("Engine must provide bbox")

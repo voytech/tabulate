@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.excel
 
-import io.github.voytech.tabulate.components.table.rendering.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderableEntity
 import io.github.voytech.tabulate.components.table.rendering.getSheetName
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
@@ -9,7 +9,7 @@ import io.github.voytech.tabulate.core.model.border.DefaultBorderStyle
 import io.github.voytech.tabulate.core.model.text.DefaultTextWrap
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
 import io.github.voytech.tabulate.core.operation.AttributeOperation
-import io.github.voytech.tabulate.core.operation.AttributedContext
+import io.github.voytech.tabulate.core.operation.AttributedEntity
 import io.github.voytech.tabulate.core.operation.cacheOnAttributeSet
 import org.apache.poi.hssf.usermodel.HSSFTextbox
 import org.apache.poi.ss.usermodel.CellStyle
@@ -19,7 +19,7 @@ import org.apache.poi.xssf.usermodel.TextDirection
 import org.apache.poi.xssf.usermodel.XSSFFont
 
 class XSSFShapeAlignmentAttributeRenderOperation<CTX> :
-    AttributeOperation<ApachePoiRenderingContext, AlignmentAttribute, CTX> where CTX : AttributedContext {
+    AttributeOperation<ApachePoiRenderingContext, AlignmentAttribute, CTX> where CTX : AttributedEntity {
 
     override fun invoke(
         renderingContext: ApachePoiRenderingContext,
@@ -38,7 +38,7 @@ class XSSFShapeAlignmentAttributeRenderOperation<CTX> :
     }
 }
 
-class XSSFShapeTextStylesAttributeRenderOperation<CTX : AttributedContext> :
+class XSSFShapeTextStylesAttributeRenderOperation<CTX : AttributedEntity> :
     AttributeOperation<ApachePoiRenderingContext, TextStylesAttribute, CTX> {
 
     override operator fun invoke(
@@ -70,7 +70,7 @@ class XSSFShapeTextStylesAttributeRenderOperation<CTX : AttributedContext> :
     }
 }
 
-class XSSFShapeBackgroundAttributeRenderOperation<CTX : AttributedContext> :
+class XSSFShapeBackgroundAttributeRenderOperation<CTX : AttributedEntity> :
     AttributeOperation<ApachePoiRenderingContext, BackgroundAttribute, CTX> {
     override fun invoke(
         renderingContext: ApachePoiRenderingContext,
@@ -87,7 +87,7 @@ class XSSFShapeBackgroundAttributeRenderOperation<CTX : AttributedContext> :
     }
 }
 
-class XSSFBorderAttributeRenderOperation<CTX : AttributedContext> :
+class XSSFBorderAttributeRenderOperation<CTX : AttributedEntity> :
     AttributeOperation<ApachePoiRenderingContext, BordersAttribute, CTX> {
     override fun invoke(
         renderingContext: ApachePoiRenderingContext,
@@ -123,16 +123,16 @@ private const val CELL_STYLE_CACHE_KEY: String = "cellStyle"
 
 private const val CELL_FONT_CACHE_KEY: String = "font"
 
-fun ApachePoiRenderingContext.getCachedStyle(context: CellRenderable): CellStyle {
+fun ApachePoiRenderingContext.getCachedStyle(context: CellRenderableEntity): CellStyle {
     return context.cacheOnAttributeSet(CELL_STYLE_CACHE_KEY, this::createCellStyle)  as CellStyle
 }
 
-fun ApachePoiRenderingContext.getCachedFont(context: AttributedContext): XSSFFont {
+fun ApachePoiRenderingContext.getCachedFont(context: AttributedEntity): XSSFFont {
     return context.cacheOnAttributeSet(CELL_FONT_CACHE_KEY, this::createFont) as XSSFFont
 }
 
-fun ApachePoiRenderingContext.createFontFrom(attributedContext: AttributedContext, attribute: TextStylesAttribute): XSSFFont =
-    getCachedFont(attributedContext).configureWith(attribute)
+fun ApachePoiRenderingContext.createFontFrom(attributedEntity: AttributedEntity, attribute: TextStylesAttribute): XSSFFont =
+    getCachedFont(attributedEntity).configureWith(attribute)
 
 fun XSSFFont.configureWith(attribute: TextStylesAttribute): XSSFFont = apply {
     attribute.fontFamily?.run { this@apply.fontName = this.fontName }

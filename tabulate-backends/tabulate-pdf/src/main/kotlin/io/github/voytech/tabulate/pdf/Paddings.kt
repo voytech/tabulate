@@ -2,9 +2,9 @@ package io.github.voytech.tabulate.pdf
 
 import io.github.voytech.tabulate.core.model.UnitsOfMeasure
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
-import io.github.voytech.tabulate.core.operation.AttributedContext
+import io.github.voytech.tabulate.core.operation.AttributedEntity
 
-data class Paddings(private val context: AttributedContext) {
+data class Paddings(private val context: AttributedEntity) {
     private val bordersAttribute: BordersAttribute? by lazy { context.getModelAttribute<BordersAttribute>() }
     val left: Float by lazy { bordersAttribute?.leftBorderWidth?.switchUnitOfMeasure(UnitsOfMeasure.PT)?.value ?: 0F }
     val top: Float by lazy { bordersAttribute?.topBorderHeight?.switchUnitOfMeasure(UnitsOfMeasure.PT)?.value ?: 0F }
@@ -14,4 +14,4 @@ data class Paddings(private val context: AttributedContext) {
     val height: Float = top + bottom
 }
 
-fun AttributedContext.paddings(): Paddings = Paddings(this)
+fun AttributedEntity.paddings(): Paddings = Paddings(this)

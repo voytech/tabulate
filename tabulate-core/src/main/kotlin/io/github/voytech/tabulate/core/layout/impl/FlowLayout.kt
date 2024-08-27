@@ -14,7 +14,7 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
 
     override var isMeasured: Boolean = false
 
-    override fun started() = with(region) {
+    override fun onBeginLayout() = with(region) {
         localCursor = Position.start(uom)
         if (::absoluteCursor.isInitialized) {
             absoluteCursor = innerLeftTop

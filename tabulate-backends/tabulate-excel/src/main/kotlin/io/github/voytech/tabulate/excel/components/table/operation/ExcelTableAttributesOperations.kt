@@ -34,7 +34,7 @@ class CellTextStylesAttributeRenderOperation :
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
-        context: CellRenderable,
+        context: CellRenderableEntity,
         attribute: TextStylesAttribute,
     ) = with(renderingContext) {
         provideCellStyle(
@@ -61,7 +61,7 @@ class CellBackgroundAttributeRenderOperation :
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
-        context: CellRenderable,
+        context: CellRenderableEntity,
         attribute: BackgroundAttribute,
     ) = with(renderingContext) {
         provideCellStyle(
@@ -105,7 +105,7 @@ class CellBordersAttributeRenderOperation :
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
-        context: CellRenderable,
+        context: CellRenderableEntity,
         attribute: BordersAttribute,
     ): Unit = with(renderingContext) {
         renderingContext.provideCellStyle(
@@ -140,11 +140,11 @@ class CellBordersAttributeRenderOperation :
  * @since 0.2.0
  */
 class RowBordersAttributeRenderOperation<T: Any> :
-    RowAttributeRenderOperation<ApachePoiRenderingContext, BordersAttribute, RowEndRenderable<T>>() {
+    RowAttributeRenderOperation<ApachePoiRenderingContext, BordersAttribute, RowEndRenderableEntity<T>>() {
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
-        context: RowEndRenderable<T>,
+        context: RowEndRenderableEntity<T>,
         attribute: BordersAttribute,
     ): Unit = with(renderingContext) {
         provideSheet(context.getSheetName()).let { sheet ->
@@ -189,7 +189,7 @@ class CellAlignmentAttributeRenderOperation :
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
-        context: CellRenderable,
+        context: CellRenderableEntity,
         attribute: AlignmentAttribute,
     ) = with(renderingContext) {
         provideCellStyle(
@@ -232,7 +232,7 @@ class CellDataFormatAttributeRenderOperation :
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
-        context: CellRenderable,
+        context: CellRenderableEntity,
         attribute: CellExcelDataFormatAttribute,
     ) = with(renderingContext) {
         provideCellStyle(
@@ -252,11 +252,11 @@ class CellDataFormatAttributeRenderOperation :
  * @since 0.1.0
  */
 class FilterAndSortTableAttributeRenderOperation :
-    TableAttributeRenderOperation<ApachePoiRenderingContext, FilterAndSortTableAttribute, TableStartRenderable>() {
+    TableAttributeRenderOperation<ApachePoiRenderingContext, FilterAndSortTableAttribute, TableStartRenderableEntity>() {
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
-        context: TableStartRenderable,
+        context: TableStartRenderableEntity,
         attribute: FilterAndSortTableAttribute,
     ) {
         renderingContext.workbook().creationHelper.createAreaReference(
@@ -280,10 +280,10 @@ class FilterAndSortTableAttributeRenderOperation :
  * @since 0.1.0
  */
 class TemplateFileAttributeRenderOperation :
-    TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute, TableStartRenderable>() {
+    TableAttributeRenderOperation<ApachePoiRenderingContext, TemplateFileAttribute, TableStartRenderableEntity>() {
     override fun invoke(
         renderingContext: ApachePoiRenderingContext,
-        context: TableStartRenderable,
+        context: TableStartRenderableEntity,
         attribute: TemplateFileAttribute,
     ) {
         renderingContext.provideWorkbook(FileInputStream(attribute.fileName), true).let {
@@ -301,7 +301,7 @@ class CellCommentAttributeRenderOperation :
     CellAttributeRenderOperation<ApachePoiRenderingContext, CellCommentAttribute>() {
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
-        context: CellRenderable,
+        context: CellRenderableEntity,
         attribute: CellCommentAttribute,
     ) = with(renderingContext) {
         provideCell(
@@ -325,11 +325,11 @@ class CellCommentAttributeRenderOperation :
  * @since 0.2.0
  */
 class PrintingAttributeRenderOperation :
-    TableAttributeRenderOperation<ApachePoiRenderingContext, PrintingAttribute, TableStartRenderable>() {
+    TableAttributeRenderOperation<ApachePoiRenderingContext, PrintingAttribute, TableStartRenderableEntity>() {
 
     override operator fun invoke(
         renderingContext: ApachePoiRenderingContext,
-        context: TableStartRenderable,
+        context: TableStartRenderableEntity,
         attribute: PrintingAttribute,
     ) {
         renderingContext.workbook().let {

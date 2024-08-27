@@ -3,8 +3,8 @@ package io.github.voytech.tabulate.core
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.layout.impl.NonUniformCartesianGrid
 import io.github.voytech.tabulate.core.layout.impl.SizingOptions
-import io.github.voytech.tabulate.core.operation.AttributedContext
-import io.github.voytech.tabulate.core.operation.Renderable
+import io.github.voytech.tabulate.core.operation.AttributedEntity
+import io.github.voytech.tabulate.core.operation.RenderableEntity
 import io.github.voytech.tabulate.core.operation.boundingBox
 
 /**
@@ -37,20 +37,20 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
         grid = NonUniformCartesianGrid(defaultColumnWidth, defaultRowHeight)
     }
 
-    fun AttributedContext.getAbsoluteColumn(): Int = boundingBox()?.let {
+    fun AttributedEntity.getAbsoluteColumn(): Int = boundingBox()?.let {
         grid.getColumnIndexAtPosition(it.absoluteX, NonUniformCartesianGrid.IndexRoundMode.HALF_UP)
     } ?: 0
 
-    fun AttributedContext.getAbsoluteRow(): Int = boundingBox()?.let {
+    fun AttributedEntity.getAbsoluteRow(): Int = boundingBox()?.let {
         grid.getRowIndexAtPosition(it.absoluteY, NonUniformCartesianGrid.IndexRoundMode.HALF_UP)
     } ?: 0
 
-    fun AttributedContext.trySetAndSyncAbsoluteColumnWidth(column: Int, width: Width, colSpan: Int = 1): Width? = boundingBox()?.let {
+    fun AttributedEntity.trySetAndSyncAbsoluteColumnWidth(column: Int, width: Width, colSpan: Int = 1): Width? = boundingBox()?.let {
         it.width = this@RenderingContextForSpreadsheet.trySetAbsoluteColumnWidth(column, width, colSpan).switchUnitOfMeasure(it.unitsOfMeasure())
         it.width
     }
 
-    fun AttributedContext.syncAbsoluteColumnWidth(column: Int) = boundingBox()?.let {
+    fun AttributedEntity.syncAbsoluteColumnWidth(column: Int) = boundingBox()?.let {
         it.width = grid.getMeasuredColumnWidth(column)
     }
 
@@ -60,12 +60,12 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
         return grid.getMeasuredColumnWidth(column)
     }
 
-    fun AttributedContext.trySetAndSyncAbsoluteRowHeight(row: Int, height: Height, rowSpan: Int = 1): Height? = boundingBox()?.let {
+    fun AttributedEntity.trySetAndSyncAbsoluteRowHeight(row: Int, height: Height, rowSpan: Int = 1): Height? = boundingBox()?.let {
         it.height = trySetAbsoluteRowHeight(row, height, rowSpan).switchUnitOfMeasure(it.unitsOfMeasure())
         it.height
     }
 
-    fun AttributedContext.syncAbsoluteRowHeight(row: Int) = boundingBox()?.let {
+    fun AttributedEntity.syncAbsoluteRowHeight(row: Int) = boundingBox()?.let {
         it.height = grid.getMeasuredRowHeight(row)
     }
 
@@ -75,15 +75,15 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
         return grid.getMeasuredRowHeight(row)
     }
 
-    private fun Renderable<*>.getAbsoluteLeftTopColumn(): Int = boundingBox.absoluteX.let {
+    private fun RenderableEntity<*>.getAbsoluteLeftTopColumn(): Int = boundingBox.absoluteX.let {
         grid.getColumnIndexAtPosition(it, NonUniformCartesianGrid.IndexRoundMode.FLOOR)
     }
 
-    private fun Renderable<*>.getAbsoluteLeftTopRow(): Int = boundingBox.absoluteY.let {
+    private fun RenderableEntity<*>.getAbsoluteLeftTopRow(): Int = boundingBox.absoluteY.let {
         grid.getRowIndexAtPosition(it, NonUniformCartesianGrid.IndexRoundMode.FLOOR)
     }
 
-    private fun Renderable<*>.getAbsoluteRightBottomColumn(): Int = boundingBox.let {
+    private fun RenderableEntity<*>.getAbsoluteRightBottomColumn(): Int = boundingBox.let {
         it.absoluteX.let<X, Int> { x ->
             val end = x + (it.width?.value ?: 0F)
             val maxEnd = it.cropBoxRightBottom.x
@@ -100,7 +100,7 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
         }
     }
 
-    private fun Renderable<*>.getAbsoluteRightBottomRow(): Int = boundingBox.let {
+    private fun RenderableEntity<*>.getAbsoluteRightBottomRow(): Int = boundingBox.let {
         it.absoluteY.let<Y, Int> { y ->
             val end = y + (it.height?.value ?: 0F)
             val maxEnd = it.cropBoxRightBottom.y
@@ -117,20 +117,20 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
         }
     }
 
-    fun Renderable<*>.checkSizeDeclarations() {
+    fun RenderableEntity<*>.checkSizeDeclarations() {
         setContextAttribute(WIDTH_DECLARED, boundingBox.width != null)
         setContextAttribute(HEIGHT_DECLARED, boundingBox.height != null)
     }
 
-    private fun Renderable<*>.wasHeightDeclared(remove: Boolean = false): Boolean =
+    private fun RenderableEntity<*>.wasHeightDeclared(remove: Boolean = false): Boolean =
         (if (remove) removeContextAttribute<Boolean>(HEIGHT_DECLARED)
         else getContextAttribute(HEIGHT_DECLARED)) ?: false
 
-    private fun Renderable<*>.wasWidthDeclared(remove: Boolean = false): Boolean =
+    private fun RenderableEntity<*>.wasWidthDeclared(remove: Boolean = false): Boolean =
         (if (remove) removeContextAttribute<Boolean>(WIDTH_DECLARED)
         else getContextAttribute(WIDTH_DECLARED)) ?: false
 
-    fun Renderable<*>.applySpreadsheetAnchor() = apply {
+    fun RenderableEntity<*>.applySpreadsheetAnchor() = apply {
         removeContextAttribute<SpreadSheetAnchor>(ANCHOR)?.let { anchor ->
             if (!wasWidthDeclared(true)) {
                 var width = 0F
@@ -149,7 +149,7 @@ abstract class RenderingContextForSpreadsheet : RenderingContext {
         }
     }
 
-    fun Renderable<*>.createSpreadsheetAnchor(): SpreadSheetAnchor = SpreadSheetAnchor(
+    fun RenderableEntity<*>.createSpreadsheetAnchor(): SpreadSheetAnchor = SpreadSheetAnchor(
         leftTopColumn = getAbsoluteLeftTopColumn(),
         leftTopRow = getAbsoluteLeftTopRow(),
         rightBottomColumn = getAbsoluteRightBottomColumn(),

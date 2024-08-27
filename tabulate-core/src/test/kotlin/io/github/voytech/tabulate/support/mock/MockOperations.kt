@@ -13,31 +13,31 @@ import kotlin.test.assertTrue
 
 data class InterceptedContext(
     val operation: MockOperation,
-    val context: AttributedContext,
+    val context: AttributedEntity,
     val attribute: Attribute<*>? = null
 )
 
-data class MockMeasure<R : Renderable<*>>(val predicate: (R) -> Boolean, val measure: (RenderableBoundingBox) -> Size)
+data class MockMeasure<R : RenderableEntity<*>>(val predicate: (R) -> Boolean, val measure: (RenderableBoundingBox) -> Size)
 
 class MockMeasures {
-    private val measures: MutableMap<Class<out Renderable<*>>, MutableList<MockMeasure<*>>> = mutableMapOf()
-    inline fun <reified R : Renderable<*>> register(
+    private val measures: MutableMap<Class<out RenderableEntity<*>>, MutableList<MockMeasure<*>>> = mutableMapOf()
+    inline fun <reified R : RenderableEntity<*>> register(
         noinline predicate: (R) -> Boolean, noinline measure: (RenderableBoundingBox) -> Size
     ) {
         registerTyped(R::class.java, predicate, measure)
     }
 
-    fun <R : Renderable<*>> registerTyped(
+    fun <R : RenderableEntity<*>> registerTyped(
         clazz: Class<out R>, predicate: (R) -> Boolean, measure: (RenderableBoundingBox) -> Size
     ) {
         measures.computeIfAbsent(clazz) { mutableListOf() } += MockMeasure(predicate, measure)
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun MockOperation.provideMeasures(renderable: Renderable<*>): Size? {
+    fun MockOperation.provideMeasures(renderable: RenderableEntity<*>): Size? {
         return measures[renderable::class.java]?.let { all ->
             all.find {
-                it as MockMeasure<Renderable<*>>
+                it as MockMeasure<RenderableEntity<*>>
                 it.predicate(renderable)
             }?.measure?.let { it(renderable.boundingBox) }
         }
@@ -62,7 +62,7 @@ class Spy private constructor() {
 
     internal fun track(
         interceptedOperation: MockOperation,
-        context: AttributedContext,
+        context: AttributedEntity,
         attribute: Attribute<*>? = null
     ) = visitedOperations.add(InterceptedContext(interceptedOperation, context, attribute))
 
@@ -83,9 +83,9 @@ class Spy private constructor() {
 
 interface MockOperation
 
-abstract class MockMeasureProvider<E : AttributedContext>(private val spy: Spy = Spy.spy) : MockOperation {
+abstract class MockMeasureProvider<E : AttributedEntity>(private val spy: Spy = Spy.spy) : MockOperation {
     fun tryProvideMeasures(context: E) {
-        if (context is Renderable<*>) {
+        if (context is RenderableEntity<*>) {
             if (context.boundingBox.isDefined()) return
             val maybeSize = spy.measures.run { provideMeasures(context) }
             maybeSize?.let {
@@ -96,7 +96,7 @@ abstract class MockMeasureProvider<E : AttributedContext>(private val spy: Spy =
     }
 }
 
-abstract class MockRenderResultOperation<E : AttributedContext>(
+abstract class MockRenderResultOperation<E : AttributedEntity>(
     private val contextClass: Class<E>, private val isMeasuringOp: Boolean = false,
     private val measure: Boolean = true, private val spy: Spy = Spy.spy
 ) : MockMeasureProvider<E>(), Operation<TestRenderingContext, E> {
@@ -112,7 +112,7 @@ abstract class MockRenderResultOperation<E : AttributedContext>(
     }
 }
 
-abstract class MockRenderOperation<E : AttributedContext>(
+abstract class MockRenderOperation<E : AttributedEntity>(
     private val contextClass: Class<E>,
     val isMeasuringOperation: Boolean = false,
     private val measure: Boolean = true,
@@ -129,7 +129,7 @@ abstract class MockRenderOperation<E : AttributedContext>(
     }
 }
 
-open class MockAttributeRenderOperation<T : Attribute<T>, E : AttributedContext>(
+open class MockAttributeRenderOperation<T : Attribute<T>, E : AttributedEntity>(
     private val clazz: Class<T>,
     private val contextClass: Class<E>,
     private val isMeasuringOpr: Boolean = false,
@@ -141,7 +141,7 @@ open class MockAttributeRenderOperation<T : Attribute<T>, E : AttributedContext>
     }
 
     companion object {
-        inline operator fun <reified E : AttributedContext, reified T : Attribute<T>> invoke() =
+        inline operator fun <reified E : AttributedEntity, reified T : Attribute<T>> invoke() =
             MockAttributeRenderOperation(T::class.java, E::class.java)
     }
 }
@@ -152,16 +152,16 @@ fun InterceptedContext.assertIsMeasuringOperation(): Boolean =
 fun InterceptedContext.assertIsRenderingOperation(): Boolean =
     (operation as? MockRenderOperation<*>)?.isMeasuringOperation?.not() ?: true
 
-inline fun <reified R: AttributedContext> InterceptedContext.assertContextClass() =
+inline fun <reified R: AttributedEntity> InterceptedContext.assertContextClass() =
     context::class.java == R::class.java
 
 fun InterceptedContext.assertIsRenderable() {
-    assertTrue { context is Renderable<*> }
+    assertTrue { context is RenderableEntity<*> }
 }
 
 fun InterceptedContext.assertBoundingBox(fractionPrecision: Int, boundingBox: BoundingRectangle) {
     assertIsRenderable()
-    val renderable = context as Renderable<*>
+    val renderable = context as RenderableEntity<*>
     val renderableBoundingBox = renderable.boundingBox
     assertEquals(
         boundingBox.leftTop.x.value.round(fractionPrecision),
@@ -185,7 +185,7 @@ fun InterceptedContext.assertBoundingBox(fractionPrecision: Int, boundingBox: Bo
     )
 }
 
-inline fun <reified C: AttributedContext> InterceptedContext.assertPredicate(predicate: (C) -> Boolean): Boolean {
+inline fun <reified C: AttributedEntity> InterceptedContext.assertPredicate(predicate: (C) -> Boolean): Boolean {
     assertContextClass<C>()
     return predicate(context as C).also { assertTrue { it } }
 }
@@ -199,7 +199,7 @@ fun Iterator<InterceptedContext>.assertOperationAssertionsInOrder(vararg predica
     assertFalse { hasNext() }
 }
 
-fun Iterator<InterceptedContext>.assertAttributedContextsAppearanceInOrder(vararg classes: KClass<out AttributedContext>) {
+fun Iterator<InterceptedContext>.assertAttributedContextsAppearanceInOrder(vararg classes: KClass<out AttributedEntity>) {
     for (contextClass in classes) {
         println(contextClass)
         assertTrue { hasNext() }

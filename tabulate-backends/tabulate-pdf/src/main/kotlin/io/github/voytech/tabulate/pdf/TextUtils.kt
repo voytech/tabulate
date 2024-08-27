@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.pdf
 
 import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
-import io.github.voytech.tabulate.core.operation.AttributedContext
+import io.github.voytech.tabulate.core.operation.AttributedEntity
 import org.apache.pdfbox.pdmodel.font.PDFont
 
 
@@ -26,7 +26,7 @@ class FontMeasurements(private val inner: Pair<PDFont, Int>) {
 
 }
 
-fun <A : AttributedContext> A.textMeasures(): FontMeasurements =
+fun <A : AttributedEntity> A.textMeasures(): FontMeasurements =
     getModelAttribute<TextStylesAttribute>().let {
         FontMeasurements((it?.pdFont() ?: defaultFont) to (it?.fontSize ?: defaultFontSize))
     }

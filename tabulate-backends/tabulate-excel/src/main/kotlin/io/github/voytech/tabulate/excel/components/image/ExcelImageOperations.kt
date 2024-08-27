@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.excel.components.image
 
 import io.github.voytech.tabulate.components.image.model.Image
-import io.github.voytech.tabulate.components.image.operation.ImageRenderable
+import io.github.voytech.tabulate.components.image.operation.ImageRenderableEntity
 import io.github.voytech.tabulate.components.table.rendering.getSheetName
 import io.github.voytech.tabulate.core.operation.VoidOperation
 import io.github.voytech.tabulate.core.reify
@@ -17,7 +17,7 @@ import org.apache.poi.ss.usermodel.Workbook
 class ExcelImageOperations : OperationsBundleProvider<ApachePoiRenderingContext, Image> {
 
     override fun provideExportOperations(): BuildOperations<ApachePoiRenderingContext> = {
-        operation(VoidOperation<ApachePoiRenderingContext,ImageRenderable> { renderingContext, context ->
+        operation(VoidOperation<ApachePoiRenderingContext,ImageRenderableEntity> { renderingContext, context ->
             with(renderingContext) {
                 renderingContext.provideSheet(context.getSheetName()).let {
                     val picIndex = workbook().addPicture(context.filePath.loadImageAsByteArray(), Workbook.PICTURE_TYPE_PNG)
@@ -30,7 +30,7 @@ class ExcelImageOperations : OperationsBundleProvider<ApachePoiRenderingContext,
     }
 
     override fun provideMeasureOperations(): BuildOperations<ApachePoiRenderingContext> = {
-        operation(VoidOperation<ApachePoiRenderingContext,ImageRenderable> { renderingContext, context ->
+        operation(VoidOperation<ApachePoiRenderingContext,ImageRenderableEntity> { renderingContext, context ->
             with(renderingContext) {
                 context.checkSizeDeclarations()
                 context.measureImage()

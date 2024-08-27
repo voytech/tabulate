@@ -1,8 +1,8 @@
 package io.github.voytech.tabulate.pdf.components.container
 
 import io.github.voytech.tabulate.components.container.model.Container
-import io.github.voytech.tabulate.components.container.opration.ContainerOperation
-import io.github.voytech.tabulate.components.container.opration.ContainerRenderable
+import io.github.voytech.tabulate.components.container.operation.ContainerOperation
+import io.github.voytech.tabulate.components.container.operation.ContainerRenderableEntity
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.spi.BuildAttributeOperations
 import io.github.voytech.tabulate.core.spi.BuildOperations
@@ -16,8 +16,8 @@ import io.github.voytech.tabulate.pdf.PdfBoxRenderingContext
 class PdfContainerOperations : OperationsBundleProvider<PdfBoxRenderingContext, Container> {
 
     override fun provideAttributeOperations(): BuildAttributeOperations<PdfBoxRenderingContext> = {
-        operation(BackgroundAttributeRenderOperation<ContainerRenderable>(), -2)
-        operation(BordersAttributeRenderOperation<ContainerRenderable>(), -1)
+        operation(BackgroundAttributeRenderOperation<ContainerRenderableEntity>(), -2)
+        operation(BordersAttributeRenderOperation<ContainerRenderableEntity>(), -1)
     }
 
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {

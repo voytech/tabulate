@@ -1,9 +1,9 @@
 package io.github.voytech.tabulate.core.model
 
 import io.github.voytech.tabulate.core.layout.impl.SimpleLayout
-import io.github.voytech.tabulate.core.operation.Renderable
+import io.github.voytech.tabulate.core.operation.RenderableEntity
 
-abstract class DirectlyRenderableModel<R : Renderable<SimpleLayout>> : ModelWithAttributes() {
+abstract class DirectlyRenderableModel<R : RenderableEntity<SimpleLayout>> : ModelWithAttributes() {
 
     override fun doExport(api: ExportApi) = api {
         val renderable = asRenderable()

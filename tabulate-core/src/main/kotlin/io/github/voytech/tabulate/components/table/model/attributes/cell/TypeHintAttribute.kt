@@ -4,7 +4,7 @@ import io.github.voytech.tabulate.components.table.api.builder.dsl.CellLevelAttr
 import io.github.voytech.tabulate.components.table.api.builder.dsl.ColumnLevelAttributesBuilderApi
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.DefaultTypeHints
 import io.github.voytech.tabulate.components.table.model.attributes.cell.enums.contract.CellType
-import io.github.voytech.tabulate.components.table.rendering.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderableEntity
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.model.Attribute
@@ -13,7 +13,7 @@ data class TypeHintAttribute(
     val type: CellType,
 ) : Attribute<TypeHintAttribute>() {
     @TabulateMarker
-    class Builder : AttributeBuilder<TypeHintAttribute>(CellRenderable::class.java) {
+    class Builder : AttributeBuilder<TypeHintAttribute>(CellRenderableEntity::class.java) {
         var type: CellType by observable(DefaultTypeHints.STRING)
         override fun provide(): TypeHintAttribute = TypeHintAttribute(type)
     }

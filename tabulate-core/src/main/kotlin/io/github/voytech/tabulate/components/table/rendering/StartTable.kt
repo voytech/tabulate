@@ -3,15 +3,14 @@ package io.github.voytech.tabulate.components.table.rendering
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.core.RenderingContext
 import io.github.voytech.tabulate.core.layout.LayoutBoundaryType
-import io.github.voytech.tabulate.core.layout.Region
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.model.StateAttributes
-import io.github.voytech.tabulate.core.operation.Renderable
+import io.github.voytech.tabulate.core.operation.RenderableEntity
 import io.github.voytech.tabulate.core.operation.VoidOperation
 
-fun interface StartTableOperation<CTX : RenderingContext>: VoidOperation<CTX, TableStartRenderable>
+fun interface StartTableOperation<CTX : RenderingContext> : VoidOperation<CTX, TableStartRenderableEntity>
 
 /**
  * Table operation context with additional model attributes applicable on table level.
@@ -20,11 +19,11 @@ fun interface StartTableOperation<CTX : RenderingContext>: VoidOperation<CTX, Ta
  */
 sealed class TableContext(
     attributes: Attributes?,
-) : Renderable<TableLayout>(attributes) {
+) : RenderableEntity<TableLayout>(attributes) {
 
     override val boundaryToFit = LayoutBoundaryType.OUTER
 
-    override fun defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun TableLayout.defineBoundingBox(): RenderableBoundingBox =
         getRenderableBoundingBox(
             x = getMaxBoundingRectangle().leftTop.x,
             y = getMaxBoundingRectangle().leftTop.y,
@@ -32,7 +31,6 @@ sealed class TableContext(
             height = getMeasuredSize()?.height,
             boundaryToFit
         )
-    }
 }
 
 /**
@@ -40,7 +38,7 @@ sealed class TableContext(
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class TableStartRenderable(
+class TableStartRenderableEntity(
     attributes: Attributes?,
 ) : TableContext(attributes) {
     override fun toString(): String {
@@ -48,5 +46,7 @@ class TableStartRenderable(
     }
 }
 
-internal fun <T : Any> Table<T>.asTableStart(customAttributes: StateAttributes): TableStartRenderable =
-    TableStartRenderable(attributes?.forContext<TableStartRenderable>()).apply { additionalAttributes = customAttributes.data }
+internal fun <T : Any> Table<T>.asTableStart(customAttributes: StateAttributes): TableStartRenderableEntity =
+    TableStartRenderableEntity(attributes?.forContext<TableStartRenderableEntity>()).apply {
+        additionalAttributes = customAttributes.data
+    }

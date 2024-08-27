@@ -19,10 +19,10 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Table<Any>> {
 
     override fun provideAttributeOperations(): BuildAttributeOperations<PdfBoxRenderingContext> = {
-        operation(BackgroundAttributeRenderOperation<CellRenderable>(), -3)
-        operation(BordersAttributeRenderOperation<CellRenderable>(), 1)
-        operation(BordersAttributeRenderOperation<RowEndRenderable<Table<*>>>(), -1)
-        operation(BordersAttributeRenderOperation<TableStartRenderable>(),-1)
+        operation(BackgroundAttributeRenderOperation<CellRenderableEntity>(), -3)
+        operation(BordersAttributeRenderOperation<CellRenderableEntity>(), 1)
+        operation(BordersAttributeRenderOperation<RowEndRenderableEntity<Table<*>>>(), -1)
+        operation(BordersAttributeRenderOperation<TableStartRenderableEntity>(),-1)
     }
 
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {
@@ -72,12 +72,12 @@ class PdfTableOperations : OperationsBundleProvider<PdfBoxRenderingContext, Tabl
 
 }
 
-private fun CellRenderable.asPdfBoxTextElement(): PdfBoxText = PdfBoxText(
+private fun CellRenderableEntity.asPdfBoxTextElement(): PdfBoxText = PdfBoxText(
     value.toString(), requireNotNull(boundingBox()), textMeasures(), paddings(),
     getModelAttribute<TextStylesAttribute>(), getModelAttribute<AlignmentAttribute>()
 )
 
-private fun CellRenderable.asPdfBoxImageElement(image: PDImageXObject): PdfBoxImage = PdfBoxImage(
+private fun CellRenderableEntity.asPdfBoxImageElement(image: PDImageXObject): PdfBoxImage = PdfBoxImage(
     image, requireNotNull(boundingBox()), paddings(),
     getModelAttribute<AlignmentAttribute>()
 )

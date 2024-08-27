@@ -15,15 +15,15 @@ import java.util.logging.Logger
 class TestRenderingContext: RenderingContext
 
 fun interface RowCellTest {
-    fun test(context: CellRenderable)
+    fun test(context: CellRenderableEntity)
 }
 
 interface CloseRowTest {
-    fun <T> test(context: RowEndRenderable<T>) { }
+    fun <T> test(context: RowEndRenderableEntity<T>) { }
 }
 
 fun interface OpenRowTest {
-    fun test(context: ColumnStartRenderable)
+    fun test(context: ColumnStartRenderableEntity)
 }
 
 class TestOutputBinding: OutputBinding<TestRenderingContext, Unit> {
@@ -65,7 +65,7 @@ class TestExportOperationsFactory: ExportOperationsProvider<TestRenderingContext
     override fun provideExportOperations(): BuildOperations<TestRenderingContext> = {
         operation(StartColumnOperation { _, context ->  columnTest?.test(context) })
         operation(EndRowOperation<TestRenderingContext,Table<Any>> { _, context ->  rowTest?.test(context) })
-        operation(VoidOperation<TestRenderingContext,CellRenderable> { _, context ->  cellTest?.test(context) })
+        operation(VoidOperation<TestRenderingContext,CellRenderableEntity> { _, context ->  cellTest?.test(context) })
     }
 
     override fun getModelClass(): Class<Table<Any>> = reify()

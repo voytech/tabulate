@@ -237,7 +237,7 @@ class ApachePoiTextBox(
 
 }
 
-fun <E> E.measureText(): RenderingResult where E : HasValue<*>, E : Renderable<*> =
+fun <E> E.measureText(): RenderingResult where E : HasValue<*>, E : RenderableEntity<*> =
     if (!boundingBox.isDefined()) {
         ApachePoiTextBox(
             value.toString(),

@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.csv.components.table.model.attributes
 
 import io.github.voytech.tabulate.components.table.api.builder.dsl.TableLevelAttributesBuilderApi
-import io.github.voytech.tabulate.components.table.rendering.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderableEntity
 import io.github.voytech.tabulate.core.api.builder.AttributeBuilder
 import io.github.voytech.tabulate.core.api.builder.dsl.TabulateMarker
 import io.github.voytech.tabulate.core.model.Attribute
@@ -14,7 +14,7 @@ import io.github.voytech.tabulate.core.model.Attribute
 data class CellSeparatorCharacterAttribute(val separator: String = ","):
     Attribute<CellSeparatorCharacterAttribute>() {
     @TabulateMarker
-    class Builder : AttributeBuilder<CellSeparatorCharacterAttribute>(CellRenderable::class.java) {
+    class Builder : AttributeBuilder<CellSeparatorCharacterAttribute>(CellRenderableEntity::class.java) {
         var value: String by observable(",")
         override fun provide(): CellSeparatorCharacterAttribute = CellSeparatorCharacterAttribute(value)
     }

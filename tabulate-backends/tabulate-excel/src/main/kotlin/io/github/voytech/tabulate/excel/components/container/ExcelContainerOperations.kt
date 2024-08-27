@@ -1,8 +1,8 @@
 package io.github.voytech.tabulate.excel.components.container
 
 import io.github.voytech.tabulate.components.container.model.Container
-import io.github.voytech.tabulate.components.container.opration.ContainerOperation
-import io.github.voytech.tabulate.components.container.opration.ContainerRenderable
+import io.github.voytech.tabulate.components.container.operation.ContainerOperation
+import io.github.voytech.tabulate.components.container.operation.ContainerRenderableEntity
 import io.github.voytech.tabulate.components.table.rendering.getSheetName
 import io.github.voytech.tabulate.core.reify
 import io.github.voytech.tabulate.core.spi.BuildAttributeOperations
@@ -18,8 +18,8 @@ import org.apache.poi.xssf.usermodel.XSSFSimpleShape
 class ExcelContainerOperations : OperationsBundleProvider<ApachePoiRenderingContext, Container> {
 
     override fun provideAttributeOperations(): BuildAttributeOperations<ApachePoiRenderingContext> = {
-        operation(XSSFShapeBackgroundAttributeRenderOperation<ContainerRenderable>())
-        operation(XSSFBorderAttributeRenderOperation<ContainerRenderable>())
+        operation(XSSFShapeBackgroundAttributeRenderOperation<ContainerRenderableEntity>())
+        operation(XSSFBorderAttributeRenderOperation<ContainerRenderableEntity>())
     }
 
     override fun provideExportOperations(): BuildOperations<ApachePoiRenderingContext> = {

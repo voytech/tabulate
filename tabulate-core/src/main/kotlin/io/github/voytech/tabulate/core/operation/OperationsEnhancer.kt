@@ -1,6 +1,6 @@
 package io.github.voytech.tabulate.core.operation
 
-import io.github.voytech.tabulate.core.ConnectedLayouts
+import io.github.voytech.tabulate.core.RelatedLayouts
 import io.github.voytech.tabulate.core.RenderingContext
 import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.model.*
@@ -13,7 +13,7 @@ import io.github.voytech.tabulate.core.model.clip.ClippingMode
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-internal class AttributesAwareExportOperation<CTX : RenderingContext, E : AttributedContext>(
+internal class AttributesAwareExportOperation<CTX : RenderingContext, E : AttributedEntity>(
     private val reifiedOperation: ReifiedOperation<CTX, E>,
     attributesOperations: AttributesOperations<CTX>,
 ) : Operation<CTX, E> {
@@ -75,7 +75,7 @@ internal class AttributesAwareExportOperation<CTX : RenderingContext, E : Attrib
 
 class EnableAttributeOperationAwareness<CTX : RenderingContext>(private val attributesOperations: AttributesOperations<CTX>) :
     Enhance<CTX> {
-    override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> {
+    override fun <E : AttributedEntity> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> {
         return AttributesAwareExportOperation(op, attributesOperations)
     }
 }
@@ -87,23 +87,23 @@ class EnableAttributeOperationAwareness<CTX : RenderingContext>(private val attr
  * @since 0.2.0
  */
 
-sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>(
+sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedEntity>(
     protected val delegate: Operation<CTX, E>,
-    protected val layoutApi: () -> ConnectedLayouts,
+    protected val layoutProvider: () -> RelatedLayouts,
 ) : Operation<CTX, E> {
 
-    protected fun ConnectedLayouts.ensureRenderableBoundingBox(context: E): RenderableBoundingBox? =
-        if (context is Renderable<*>) {
+    protected fun RelatedLayouts.ensureRenderableBoundingBox(context: E): RenderableBoundingBox? =
+        if (context is RenderableEntity<*>) {
             context.initBoundingBox(this)
         } else null
 
 
-    protected fun ConnectedLayouts.tryApplyResults(context: E, status: RenderingStatus) {
+    protected fun RelatedLayouts.tryApplyResults(context: E, status: RenderingStatus) {
         context.boundingBox()?.let { boundaries ->
             // before applying potentially recalculated bbox onto region, first ensure it does not exceed outer layout bounds.
             layout.allocateRectangle(boundaries.revalidateSize())
-            context.asLayoutElement<Layout>()?.let {
-                it.applyBoundingBox(boundaries, layout, status)
+            context.asLayoutElement<Layout>()?.run {
+                layout.absorbRenderableBoundingBox(boundaries, status)
             }
         }
     }
@@ -140,11 +140,11 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
         getModelAttribute<ClipAttribute>()?.let { clip -> clip.mode == ClippingMode.CLIP }
             ?: true //TODO get default value from global export configurations.
 
-    private fun ConnectedLayouts.defaultCrossedAxis(): Axis =
+    private fun RelatedLayouts.defaultCrossedAxis(): Axis =
         Axis.X.takeIf { layout.properties.orientation == Orientation.HORIZONTAL }
             ?: Axis.Y //TODO get default value from global export configurations.
 
-    protected fun ConnectedLayouts.checkOverflowStatus(context: E): RenderingStatus {
+    protected fun RelatedLayouts.checkOverflowStatus(context: E): RenderingStatus {
         val maybeCrossedBounds = context.boundingBox()?.let { bbox ->
             layout.isCrossingBounds(bbox, context.layoutBoundaryToFit())
         }
@@ -159,12 +159,12 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedContext>
 
 }
 
-class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedContext>(
+class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedEntity>(
     delegate: Operation<CTX, E>,
-    layoutApi: () -> ConnectedLayouts, private val measuringOperations: Operations<CTX>,
-) : LayoutAwareOperation<CTX, E>(delegate, layoutApi) {
+    layoutProvider: () -> RelatedLayouts, private val measuringOperations: Operations<CTX>,
+) : LayoutAwareOperation<CTX, E>(delegate, layoutProvider) {
 
-    override operator fun invoke(renderingContext: CTX, context: E): RenderingResult = with(layoutApi()) {
+    override operator fun invoke(renderingContext: CTX, context: E): RenderingResult = with(layoutProvider()) {
         ensureRenderableBoundingBox(context).let {
             val result = measuringOperations.measureRenderableWhenMissingBounds(renderingContext, context)
             val status = checkOverflowStatus(context)
@@ -189,12 +189,12 @@ class LayoutAwareRenderOperation<CTX : RenderingContext, E : AttributedContext>(
  * @author Wojciech Mąka
  * @since 0.2.0
  */
-class LayoutAwareMeasureOperation<CTX : RenderingContext, E : AttributedContext>(
+class LayoutAwareMeasureOperation<CTX : RenderingContext, E : AttributedEntity>(
     delegate: Operation<CTX, E>,
-    layoutApi: () -> ConnectedLayouts,
-) : LayoutAwareOperation<CTX, E>(delegate, layoutApi) {
+    layoutProvider: () -> RelatedLayouts,
+) : LayoutAwareOperation<CTX, E>(delegate, layoutProvider) {
 
-    override operator fun invoke(renderingContext: CTX, context: E): RenderingResult = with(layoutApi()) {
+    override operator fun invoke(renderingContext: CTX, context: E): RenderingResult = with(layoutProvider()) {
         ensureRenderableBoundingBox(context).let {
             val result = delegate.measureRenderableWhenMissingBounds(renderingContext, context)
             val status = checkOverflowStatus(context)
@@ -212,16 +212,16 @@ class LayoutAwareMeasureOperation<CTX : RenderingContext, E : AttributedContext>
 
 class EnableRenderingUsingLayouts<CTX : RenderingContext>(
     private val measuringOperations: Operations<CTX>,
-    private val layout: () -> ConnectedLayouts,
+    private val layoutProvider: () -> RelatedLayouts,
 ) : Enhance<CTX> {
-    override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
-        LayoutAwareRenderOperation(op.delegate, layout, measuringOperations)
+    override fun <E : AttributedEntity> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
+        LayoutAwareRenderOperation(op.delegate, layoutProvider, measuringOperations)
 }
 
 class EnableMeasuringForLayouts<CTX : RenderingContext>(
-    private val layout: () -> ConnectedLayouts,
+    private val layoutProvider: () -> RelatedLayouts,
 ) : Enhance<CTX> {
-    override fun <E : AttributedContext> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
-        LayoutAwareMeasureOperation(op.delegate, layout)
+    override fun <E : AttributedEntity> invoke(op: ReifiedOperation<CTX, E>): Operation<CTX, E> =
+        LayoutAwareMeasureOperation(op.delegate, layoutProvider)
 }
 

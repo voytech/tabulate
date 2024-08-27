@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.pdf.components.text
 
 import io.github.voytech.tabulate.components.text.model.Text
 import io.github.voytech.tabulate.components.text.operation.TextOperation
-import io.github.voytech.tabulate.components.text.operation.TextRenderable
+import io.github.voytech.tabulate.components.text.operation.TextRenderableEntity
 import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
 import io.github.voytech.tabulate.core.model.attributes.TextStylesAttribute
 import io.github.voytech.tabulate.core.operation.boundingBox
@@ -16,8 +16,8 @@ import io.github.voytech.tabulate.pdf.*
 class PdfTextOperations : OperationsBundleProvider<PdfBoxRenderingContext, Text> {
 
     override fun provideAttributeOperations(): BuildAttributeOperations<PdfBoxRenderingContext> = {
-        operation(BackgroundAttributeRenderOperation<TextRenderable>(), -3)
-        operation(BordersAttributeRenderOperation<TextRenderable>(), 1)
+        operation(BackgroundAttributeRenderOperation<TextRenderableEntity>(), -3)
+        operation(BordersAttributeRenderOperation<TextRenderableEntity>(), 1)
     }
 
     override fun provideExportOperations(): BuildOperations<PdfBoxRenderingContext> = {
@@ -40,7 +40,7 @@ class PdfTextOperations : OperationsBundleProvider<PdfBoxRenderingContext, Text>
 
 }
 
-private fun TextRenderable.asPdfBoxElement(): PdfBoxText {
+private fun TextRenderableEntity.asPdfBoxElement(): PdfBoxText {
     return PdfBoxText(
         text, requireNotNull(boundingBox()), textMeasures(), paddings(),
         getModelAttribute<TextStylesAttribute>(),

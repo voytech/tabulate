@@ -27,14 +27,14 @@ import java.util.*
 
 
 private object ApachePoiStartTableOperation : StartTableOperation<ApachePoiRenderingContext> {
-    override fun invoke(renderingContext: ApachePoiRenderingContext, context: TableStartRenderable) {
+    override fun invoke(renderingContext: ApachePoiRenderingContext, context: TableStartRenderableEntity) {
         renderingContext.provideWorkbook()
         renderingContext.provideSheet(context.getSheetName())
     }
 }
 
 private object ApachePoiStartColumnOperation : StartColumnOperation<ApachePoiRenderingContext> {
-    override fun invoke(renderingContext: ApachePoiRenderingContext, context: ColumnStartRenderable) {
+    override fun invoke(renderingContext: ApachePoiRenderingContext, context: ColumnStartRenderableEntity) {
         with(renderingContext) {
             if (!context.hasWidthDefined()) {
                 val absoluteColumn = context.getAbsoluteColumn()
@@ -43,12 +43,12 @@ private object ApachePoiStartColumnOperation : StartColumnOperation<ApachePoiRen
         }
     }
 
-    private fun ColumnStartRenderable.hasWidthDefined(): Boolean =
+    private fun ColumnStartRenderableEntity.hasWidthDefined(): Boolean =
         boundingBox.width != null || getModelAttribute<WidthAttribute>() != null
 }
 
 private object ApachePoiStartRowOperation : StartRowOperation<ApachePoiRenderingContext> {
-    override fun invoke(renderingContext: ApachePoiRenderingContext, context: RowStartRenderable) {
+    override fun invoke(renderingContext: ApachePoiRenderingContext, context: RowStartRenderableEntity) {
         with(renderingContext) {
             provideSheet(context.getSheetName())
             provideRow(context.getSheetName(), context.getAbsoluteRow())
@@ -57,7 +57,7 @@ private object ApachePoiStartRowOperation : StartRowOperation<ApachePoiRendering
 }
 
 private object ApachePoiMeasureRowCellOperation : RenderRowCellOperation<ApachePoiRenderingContext> {
-    override fun invoke(renderingContext: ApachePoiRenderingContext, context: CellRenderable): RenderingResult =
+    override fun invoke(renderingContext: ApachePoiRenderingContext, context: CellRenderableEntity): RenderingResult =
         with(renderingContext) {
             context.getTypeHint()?.let {
                 when (it.type.getCellTypeId()) {
@@ -72,7 +72,7 @@ private object ApachePoiMeasureRowCellOperation : RenderRowCellOperation<ApacheP
 
     // After measuring cell bounding box - try to adjust global row/column measures,
     // if resolved column/row values are globally largest so far
-    private fun CellRenderable.synchronizeMeasuredBoundingBox(renderingContext: ApachePoiRenderingContext): Unit =
+    private fun CellRenderableEntity.synchronizeMeasuredBoundingBox(renderingContext: ApachePoiRenderingContext): Unit =
         with(renderingContext){
         boundingBox.height?.let { computedHeight ->
             trySetAndSyncAbsoluteRowHeight(getAbsoluteRow(), computedHeight, cellValue.rowSpan)
@@ -84,7 +84,7 @@ private object ApachePoiMeasureRowCellOperation : RenderRowCellOperation<ApacheP
 }
 
 private object ApachePoiRenderRowCellOperation : RenderRowCellOperation<ApachePoiRenderingContext> {
-    override fun invoke(renderingContext: ApachePoiRenderingContext, context: CellRenderable): RenderingResult {
+    override fun invoke(renderingContext: ApachePoiRenderingContext, context: CellRenderableEntity): RenderingResult {
         with(renderingContext) {
             context.getTypeHint()?.let {
                 when (it.type.getCellTypeId()) {
@@ -113,7 +113,7 @@ private object ApachePoiRenderRowCellOperation : RenderRowCellOperation<ApachePo
 }
 
 private object ApachePoiEndRowOperation : EndRowOperation<ApachePoiRenderingContext, Any> {
-    override fun invoke(renderingContext: ApachePoiRenderingContext, context: RowEndRenderable<Any>) {
+    override fun invoke(renderingContext: ApachePoiRenderingContext, context: RowEndRenderableEntity<Any>) {
         with(renderingContext) {
             provideSheet(context.getSheetName()).let {
                 val absoluteRowIndex = context.getAbsoluteRow()
@@ -130,7 +130,7 @@ private object ApachePoiEndRowOperation : EndRowOperation<ApachePoiRenderingCont
 }
 
 private object ApachePoiEndColumnOperation : EndColumnOperation<ApachePoiRenderingContext> {
-    override fun invoke(renderingContext: ApachePoiRenderingContext, context: ColumnEndRenderable) {
+    override fun invoke(renderingContext: ApachePoiRenderingContext, context: ColumnEndRenderableEntity) {
         with(renderingContext) {
             provideSheet(context.getSheetName()).let { sheet ->
                 val absoluteColumnIndex = context.getAbsoluteColumn()
@@ -152,13 +152,13 @@ private object ApachePoiEndColumnOperation : EndColumnOperation<ApachePoiRenderi
         }
     }
 
-    private fun ColumnEndRenderable.hasWidthDefined(): Boolean =
+    private fun ColumnEndRenderableEntity.hasWidthDefined(): Boolean =
         boundingBox.width != null || getModelAttribute<WidthAttribute>() != null
 
 }
 
 private object ApachePoiEndRowMeasureOperation : EndRowOperation<ApachePoiRenderingContext, Any> {
-    override fun invoke(renderingContext: ApachePoiRenderingContext, context: RowEndRenderable<Any>) {
+    override fun invoke(renderingContext: ApachePoiRenderingContext, context: RowEndRenderableEntity<Any>) {
         with(renderingContext) {
             provideSheet(context.getSheetName()).let {
                 val absoluteRowIndex = context.getAbsoluteRow()
@@ -170,7 +170,7 @@ private object ApachePoiEndRowMeasureOperation : EndRowOperation<ApachePoiRender
 }
 
 private object ApachePoiEndColumnMeasureOperation : EndColumnOperation<ApachePoiRenderingContext> {
-    override fun invoke(renderingContext: ApachePoiRenderingContext, context: ColumnEndRenderable) {
+    override fun invoke(renderingContext: ApachePoiRenderingContext, context: ColumnEndRenderableEntity) {
         with(renderingContext) {
             provideSheet(context.getSheetName()).let {
                 val absoluteColumnIndex = context.getAbsoluteColumn()
@@ -181,7 +181,7 @@ private object ApachePoiEndColumnMeasureOperation : EndColumnOperation<ApachePoi
 
 }
 
-private fun ApachePoiRenderingContext.provideCell(context: CellRenderable, block: (SXSSFCell.() -> Unit)) {
+private fun ApachePoiRenderingContext.provideCell(context: CellRenderableEntity, block: (SXSSFCell.() -> Unit)) {
     provideCell(
         context.getSheetName(),
         context.getAbsoluteRow(),
@@ -189,7 +189,7 @@ private fun ApachePoiRenderingContext.provideCell(context: CellRenderable, block
     ) { it.apply(block) }
 }
 
-private fun ApachePoiRenderingContext.renderImageDataCell(context: CellRenderable) {
+private fun ApachePoiRenderingContext.renderImageDataCell(context: CellRenderableEntity) {
     createImageCell(
         context.getSheetName(),
         context.getAbsoluteRow(),
@@ -200,7 +200,7 @@ private fun ApachePoiRenderingContext.renderImageDataCell(context: CellRenderabl
     )
 }
 
-private fun ApachePoiRenderingContext.renderImageUrlCell(context: CellRenderable) {
+private fun ApachePoiRenderingContext.renderImageUrlCell(context: CellRenderableEntity) {
     createImageCell(
         context.getSheetName(),
         context.getAbsoluteRow(),
@@ -211,31 +211,31 @@ private fun ApachePoiRenderingContext.renderImageUrlCell(context: CellRenderable
     )
 }
 
-private fun ApachePoiRenderingContext.renderFormulaCell(context: CellRenderable) = provideCell(context) {
+private fun ApachePoiRenderingContext.renderFormulaCell(context: CellRenderableEntity) = provideCell(context) {
     cellFormula = context.value as? String
 }
 
-private fun ApachePoiRenderingContext.renderErrorCell(context: CellRenderable) = provideCell(context) {
+private fun ApachePoiRenderingContext.renderErrorCell(context: CellRenderableEntity) = provideCell(context) {
     setCellErrorValue(context.value as Byte)
 }
 
-private fun ApachePoiRenderingContext.renderStringCellValue(context: CellRenderable) = provideCell(context) {
+private fun ApachePoiRenderingContext.renderStringCellValue(context: CellRenderableEntity) = provideCell(context) {
     setCellValue(context.value.toString())
 }
 
-private fun ApachePoiRenderingContext.renderNumericCellValue(context: CellRenderable) = provideCell(context) {
+private fun ApachePoiRenderingContext.renderNumericCellValue(context: CellRenderableEntity) = provideCell(context) {
     setCellValue((context.value as Number).toDouble())
 }
 
-private fun ApachePoiRenderingContext.renderBooleanCellValue(context: CellRenderable) = provideCell(context) {
+private fun ApachePoiRenderingContext.renderBooleanCellValue(context: CellRenderableEntity) = provideCell(context) {
     setCellValue(context.value as Boolean)
 }
 
-private fun ApachePoiRenderingContext.renderDateCellValue(context: CellRenderable) = provideCell(context) {
+private fun ApachePoiRenderingContext.renderDateCellValue(context: CellRenderableEntity) = provideCell(context) {
     setCellValue(toDate(context.value))
 }
 
-private fun ApachePoiRenderingContext.castAndRenderCellValue(context: CellRenderable) =
+private fun ApachePoiRenderingContext.castAndRenderCellValue(context: CellRenderableEntity) =
     when (context.value) {
         is String -> renderStringCellValue(context)
         is Boolean -> renderBooleanCellValue(context)
@@ -248,7 +248,7 @@ private fun ApachePoiRenderingContext.castAndRenderCellValue(context: CellRender
         else -> renderStringCellValue(context)
     }
 
-private fun CellRenderable.hasSpans(): Boolean = cellValue.colSpan > 1 || cellValue.rowSpan > 1
+private fun CellRenderableEntity.hasSpans(): Boolean = cellValue.colSpan > 1 || cellValue.rowSpan > 1
 
 
 /**

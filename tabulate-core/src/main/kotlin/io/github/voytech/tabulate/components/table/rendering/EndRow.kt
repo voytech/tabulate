@@ -13,7 +13,7 @@ import io.github.voytech.tabulate.core.operation.RenderingStatus
 import io.github.voytech.tabulate.core.operation.VoidOperation
 import io.github.voytech.tabulate.core.operation.hasLayoutEffect
 
-fun interface EndRowOperation<CTX : RenderingContext, T: Any>: VoidOperation<CTX, RowEndRenderable<T>>
+fun interface EndRowOperation<CTX : RenderingContext, T : Any> : VoidOperation<CTX, RowEndRenderableEntity<T>>
 
 /**
  * Row operation context with additional model attributes applicable on row level.
@@ -21,36 +21,34 @@ fun interface EndRowOperation<CTX : RenderingContext, T: Any>: VoidOperation<CTX
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class RowEndRenderable<T>(
+class RowEndRenderableEntity<T>(
     attributes: Attributes?,
-    val rowCellValues: Map<ColumnKey<T>, CellRenderable>,
+    val rowCellValues: Map<ColumnKey<T>, CellRenderableEntity>,
     val rowIndex: Int,
-) : RowRenderable(attributes), RowLayoutElement {
+) : RowRenderableEntity(attributes), RowLayoutElement {
 
     override fun getRow(): Int = rowIndex
-    
+
     override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
-    fun getCells(): Map<ColumnKey<T>, CellRenderable> = rowCellValues
+    fun getCells(): Map<ColumnKey<T>, CellRenderableEntity> = rowCellValues
 
-    override fun defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun TableLayout.defineBoundingBox(): RenderableBoundingBox =
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
             width = getMeasuredContentSize()?.width,
-            height = getCurrentRowHeight(getRow(),1, uom),
+            height = getCurrentRowHeight(getRow(), 1, uom),
             boundaryToFit
         )
-    }
 
-    override fun applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus): Unit =
-        with(layout) {
-            if (!status.hasLayoutEffect()) return
-            bbox.height?.let {
-                val ops = SizingOptions.SET_LOCKED.takeIf { hasModelAttribute<HeightAttribute>() } ?: SizingOptions.SET
-                setRowHeight(getRow(), it, ops)
-            }
+    override fun TableLayout.absorbRenderableBoundingBox(bbox: RenderableBoundingBox, status: RenderingStatus) {
+        if (!status.hasLayoutEffect()) return
+        bbox.height?.let {
+            val ops = SizingOptions.SET_LOCKED.takeIf { hasModelAttribute<HeightAttribute>() } ?: SizingOptions.SET
+            setRowHeight(getRow(), it, ops)
         }
+    }
 
     override fun toString(): String {
         return "RowEndRenderable(rowIndex=$rowIndex)"
@@ -58,10 +56,10 @@ class RowEndRenderable<T>(
 }
 
 internal fun <T : Any> SyntheticRow<T>.createRowEnd(
-    rowStart: RowStartRenderable,
-    rowCellValues: Map<ColumnKey<T>, CellRenderable>,
-): RowEndRenderable<T> =
-    RowEndRenderable(
+    rowStart: RowStartRenderableEntity,
+    rowCellValues: Map<ColumnKey<T>, CellRenderableEntity>,
+): RowEndRenderableEntity<T> =
+    RowEndRenderableEntity(
         rowIndex = rowStart.rowIndex,
         attributes = rowEndAttributes,
         rowCellValues = rowCellValues

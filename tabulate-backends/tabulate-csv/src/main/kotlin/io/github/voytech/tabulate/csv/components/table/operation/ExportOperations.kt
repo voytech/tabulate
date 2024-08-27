@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.csv.components.table.operation
 
 
 import io.github.voytech.tabulate.components.table.model.Table
-import io.github.voytech.tabulate.components.table.rendering.CellRenderable
+import io.github.voytech.tabulate.components.table.rendering.CellRenderableEntity
 import io.github.voytech.tabulate.components.table.rendering.EndRowOperation
 import io.github.voytech.tabulate.components.table.rendering.StartRowOperation
 import io.github.voytech.tabulate.core.reify
@@ -43,7 +43,7 @@ class CsvExportOperationsFactory : ExportOperationsProvider<CsvRenderingContext,
 
     override fun getModelClass(): Class<Table<Any>> = reify()
 
-    private fun CellRenderable.getSeparatorCharacter(): String =
+    private fun CellRenderableEntity.getSeparatorCharacter(): String =
         getModelAttribute(CellSeparatorCharacterAttribute::class.java)?.separator ?: ","
 
 }

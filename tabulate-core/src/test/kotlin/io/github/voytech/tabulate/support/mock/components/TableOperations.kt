@@ -68,40 +68,40 @@ class TestTableExportOperationsFactory : OperationsBundleProvider<TestRenderingC
 }
 
 class StartTableTestOperation(isMeasuring: Boolean) :
-    MockRenderOperation<TableStartRenderable>(TableStartRenderable::class.java, isMeasuring)
+    MockRenderOperation<TableStartRenderableEntity>(TableStartRenderableEntity::class.java, isMeasuring)
 
 class StartColumnTestOperation(isMeasuring: Boolean) :
-    MockRenderOperation<ColumnStartRenderable>(ColumnStartRenderable::class.java, isMeasuring)
+    MockRenderOperation<ColumnStartRenderableEntity>(ColumnStartRenderableEntity::class.java, isMeasuring)
 
 class StartRowTestOperation(isMeasuring: Boolean) :
-    MockRenderOperation<RowStartRenderable>(RowStartRenderable::class.java, isMeasuring)
+    MockRenderOperation<RowStartRenderableEntity>(RowStartRenderableEntity::class.java, isMeasuring)
 
 class RenderRowCellTestOperation(isMeasuring: Boolean) :
-    MockRenderOperation<CellRenderable>(CellRenderable::class.java, isMeasuring)
+    MockRenderOperation<CellRenderableEntity>(CellRenderableEntity::class.java, isMeasuring)
 
 class EndRowTestOperation(isMeasuring: Boolean) :
-    MockRenderOperation<RowEndRenderable<*>>(RowEndRenderable::class.java, isMeasuring)
+    MockRenderOperation<RowEndRenderableEntity<*>>(RowEndRenderableEntity::class.java, isMeasuring)
 
 class EndColumnTestOperation(isMeasuring: Boolean) :
-    MockRenderOperation<ColumnEndRenderable>(ColumnEndRenderable::class.java, isMeasuring)
+    MockRenderOperation<ColumnEndRenderableEntity>(ColumnEndRenderableEntity::class.java, isMeasuring)
 
 class EndTableTestOperation(isMeasuring: Boolean) :
-    MockRenderOperation<TableEndRenderable>(TableEndRenderable::class.java, isMeasuring)
+    MockRenderOperation<TableEndRenderableEntity>(TableEndRenderableEntity::class.java, isMeasuring)
 
 
 abstract class InterceptedCellAttributeRenderOperation<T : Attribute<T>>(clazz: Class<T>) :
-    MockAttributeRenderOperation<T, CellRenderable>(clazz, CellRenderable::class.java)
+    MockAttributeRenderOperation<T, CellRenderableEntity>(clazz, CellRenderableEntity::class.java)
 
 
 abstract class InterceptedRowAttributeRenderOperation<T : Attribute<T>>(clazz: Class<T>) :
-    MockAttributeRenderOperation<T, RowStartRenderable>(clazz, RowStartRenderable::class.java)
+    MockAttributeRenderOperation<T, RowStartRenderableEntity>(clazz, RowStartRenderableEntity::class.java)
 
 abstract class InterceptedColumnAttributeRenderOperation<T : Attribute<T>>(clazz: Class<T>) :
-    MockAttributeRenderOperation<T, ColumnStartRenderable>(clazz, ColumnStartRenderable::class.java)
+    MockAttributeRenderOperation<T, ColumnStartRenderableEntity>(clazz, ColumnStartRenderableEntity::class.java)
 
 abstract class InterceptedTableAttributeRenderOperation<T : Attribute<T>>(
     clazz: Class<T>
-) : MockAttributeRenderOperation<T, TableStartRenderable>(clazz, TableStartRenderable::class.java)
+) : MockAttributeRenderOperation<T, TableStartRenderableEntity>(clazz, TableStartRenderableEntity::class.java)
 
 class CellTextStylesAttributeTestRenderOperation :
     InterceptedCellAttributeRenderOperation<TextStylesAttribute>(TextStylesAttribute::class.java)

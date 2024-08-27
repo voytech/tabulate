@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.support.mock.components
 
 import io.github.voytech.tabulate.components.container.model.Container
-import io.github.voytech.tabulate.components.container.opration.ContainerRenderable
+import io.github.voytech.tabulate.components.container.operation.ContainerRenderableEntity
 import io.github.voytech.tabulate.core.model.attributes.BackgroundAttribute
 import io.github.voytech.tabulate.core.model.attributes.BordersAttribute
 import io.github.voytech.tabulate.core.reify
@@ -16,8 +16,8 @@ import io.github.voytech.tabulate.support.mock.MockRenderOperation
 class TestContainerExportOperationsFactory : OperationsBundleProvider<TestRenderingContext, Container> {
 
     override fun provideAttributeOperations(): BuildAttributeOperations<TestRenderingContext> = {
-        operation(MockAttributeRenderOperation<ContainerRenderable,BackgroundAttribute>(), -2)
-        operation(MockAttributeRenderOperation<ContainerRenderable,BordersAttribute>(), -1)
+        operation(MockAttributeRenderOperation<ContainerRenderableEntity,BackgroundAttribute>(), -2)
+        operation(MockAttributeRenderOperation<ContainerRenderableEntity,BordersAttribute>(), -1)
     }
 
     override fun provideExportOperations(): BuildOperations<TestRenderingContext> = {
@@ -32,4 +32,4 @@ class TestContainerExportOperationsFactory : OperationsBundleProvider<TestRender
 
 }
 
-class ContainerOperation(isMeasuring: Boolean) : MockRenderOperation<ContainerRenderable>(ContainerRenderable::class.java,isMeasuring)
+class ContainerOperation(isMeasuring: Boolean) : MockRenderOperation<ContainerRenderableEntity>(ContainerRenderableEntity::class.java,isMeasuring)

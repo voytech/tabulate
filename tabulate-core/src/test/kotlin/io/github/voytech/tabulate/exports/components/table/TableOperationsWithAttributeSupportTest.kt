@@ -45,37 +45,37 @@ class TableOperationsWithAttributeSupportTest {
 
         val history = Spy.spy.readHistory()
         history.next().run {
-            assertTrue { TableStartRenderable::class.java == context.javaClass }
+            assertTrue { TableStartRenderableEntity::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { ColumnStartRenderable::class.java == context.javaClass }
+            assertTrue { ColumnStartRenderableEntity::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { ColumnStartRenderable::class.java == context.javaClass }
+            assertTrue { ColumnStartRenderableEntity::class.java == context.javaClass }
             assertTrue { attribute is WidthAttribute }
         }
         history.next().run {
-            assertTrue { RowStartRenderable::class.java == context.javaClass }
+            assertTrue { RowStartRenderableEntity::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { CellRenderable::class.java == context.javaClass }
+            assertTrue { CellRenderableEntity::class.java == context.javaClass }
             assertTrue { attribute is BordersAttribute }
         }
         history.next().run {
-            assertTrue { CellRenderable::class.java == context.javaClass }
+            assertTrue { CellRenderableEntity::class.java == context.javaClass }
             assertNull(attribute)
         }
         history.next().run {
-            assertTrue { CellRenderable::class.java == context.javaClass }
+            assertTrue { CellRenderableEntity::class.java == context.javaClass }
             assertTrue { attribute is TextStylesAttribute }
         }
         history.next().run {
-            assertTrue { RowEndRenderable::class.java == context.javaClass }
+            assertTrue { RowEndRenderableEntity::class.java == context.javaClass }
         }
         history.next().run {
-            assertTrue { ColumnEndRenderable::class.java == context.javaClass }
+            assertTrue { ColumnEndRenderableEntity::class.java == context.javaClass }
         }
-        history.next().run { assertIs<TableEndRenderable>(context) }
+        history.next().run { assertIs<TableEndRenderableEntity>(context) }
         assertFalse(history.hasNext())
     }
 

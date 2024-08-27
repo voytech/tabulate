@@ -85,11 +85,11 @@ class OperationsInContext(private val ctx: ModelExportContext) {
     val render: Operations<RenderingContext> by lazy { with(ctx.instance) { ctx.getExportOperations() } }
     val measure: Operations<RenderingContext> by lazy { with(ctx.instance) { ctx.getMeasuringOperations() } }
 
-    fun render(context: AttributedContext): RenderingResult = render(ctx.instance.renderingContext, context)
+    fun render(context: AttributedEntity): RenderingResult = render(ctx.instance.renderingContext, context)
 
-    fun measure(context: AttributedContext): RenderingResult = measure(ctx.instance.renderingContext, context)
+    fun measure(context: AttributedEntity): RenderingResult = measure(ctx.instance.renderingContext, context)
 
-    fun renderOrMeasure(context: AttributedContext): RenderingResult =
+    fun renderOrMeasure(context: AttributedEntity): RenderingResult =
         if (ctx.phase == Phase.MEASURING) measure(context) else render(context)
 
     fun hasMeasuringOperations(): Boolean = measure.isEmpty().not()
@@ -247,15 +247,15 @@ class ExportApi private constructor(private val context: ModelExportContext) {
 
     fun AbstractModel.isRunning(): Boolean = withinInitializedContext { it.isRunning() }
 
-    fun render(renderable: AttributedContext): RenderingResult = with(context) {
+    fun render(renderable: AttributedEntity): RenderingResult = with(context) {
         operations.render(renderable)
     }
 
-    fun measure(renderable: AttributedContext): RenderingResult = with(context) {
+    fun measure(renderable: AttributedEntity): RenderingResult = with(context) {
         operations.measure(renderable)
     }
 
-    fun renderOrMeasure(renderable: AttributedContext): RenderingResult = with(context) {
+    fun renderOrMeasure(renderable: AttributedEntity): RenderingResult = with(context) {
         operations.renderOrMeasure(renderable)
     }
 

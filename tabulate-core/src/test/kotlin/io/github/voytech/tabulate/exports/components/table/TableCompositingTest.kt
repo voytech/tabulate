@@ -47,22 +47,22 @@ class TableCompositingTest {
         (customTable + overrideTable).export(DocumentFormat("spy"), Unit)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableStartRenderable).getSheetName()) }
+        history.next().run { assertEquals("Name override", (context as TableStartRenderableEntity).getSheetName()) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnStartRenderable).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStartRenderableEntity).columnIndex) }
         // Column 0 attribute
         history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowStartRenderable).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStartRenderableEntity).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("I gave a value.", (context as CellRenderable).value) }
+        history.next().run { assertEquals("I gave a value.", (context as CellRenderableEntity).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
-        history.next().run { assertTrue(context is RowEndRenderable<*>) }
+        history.next().run { assertTrue(context is RowEndRenderableEntity<*>) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertIs<TableEndRenderable>(context) }
+        history.next().run { assertEquals(0, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertIs<TableEndRenderableEntity>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -90,26 +90,26 @@ class TableCompositingTest {
         Products.items(1).tabulate(DocumentFormat("spy"), Unit,customTable + overrideTable)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableStartRenderable).getSheetName()) }
+        history.next().run { assertEquals("Name override", (context as TableStartRenderableEntity).getSheetName()) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnStartRenderable).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStartRenderableEntity).columnIndex) }
         // Column 0 attribute
         history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Column 1
-        history.next().run { assertEquals(1, (context as ColumnStartRenderable).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStartRenderableEntity).columnIndex) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowStartRenderable).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStartRenderableEntity).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("code1", (context as CellRenderable).value) }
+        history.next().run { assertEquals("code1", (context as CellRenderableEntity).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
-        history.next().run { assertTrue(context is RowEndRenderable<*>) }
+        history.next().run { assertTrue(context is RowEndRenderableEntity<*>) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnEndRenderable).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnEndRenderableEntity).columnIndex) }
         // Column 1
-        history.next().run { assertEquals(1, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertIs<TableEndRenderable>(context) }
+        history.next().run { assertEquals(1, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertIs<TableEndRenderableEntity>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -137,31 +137,31 @@ class TableCompositingTest {
         Products.items(1).tabulate(DocumentFormat("spy"), Unit,baseTable + overrideTable)
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableStartRenderable).getSheetName()) }
+        history.next().run { assertEquals("Name override", (context as TableStartRenderableEntity).getSheetName()) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnStartRenderable).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStartRenderableEntity).columnIndex) }
         // Column 0 attribute
         history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Column 1
-        history.next().run { assertEquals(1, (context as ColumnStartRenderable).columnIndex) }
+        history.next().run { assertEquals(1, (context as ColumnStartRenderableEntity).columnIndex) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowStartRenderable).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStartRenderableEntity).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("code1", (context as CellRenderable).value) }
+        history.next().run { assertEquals("code1", (context as CellRenderableEntity).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
         // Row 0, cell 1
-        history.next().run { assertEquals("name1", (context as CellRenderable).value) }
+        history.next().run { assertEquals("name1", (context as CellRenderableEntity).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
-        history.next().run { assertTrue(context is RowEndRenderable<*>) }
+        history.next().run { assertTrue(context is RowEndRenderableEntity<*>) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnEndRenderable).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnEndRenderableEntity).columnIndex) }
         // Column 1
-        history.next().run { assertEquals(1, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertIs<TableEndRenderable>(context) }
+        history.next().run { assertEquals(1, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertIs<TableEndRenderableEntity>(context) }
         assertFalse(history.hasNext())
     }
 
@@ -183,22 +183,22 @@ class TableCompositingTest {
         Products.items(1).tabulate(DocumentFormat("spy"), Unit,baseTable + typedTable { name = "Name override" })
         val history = Spy.spy.readHistory()
         // Table
-        history.next().run { assertEquals("Name override", (context as TableStartRenderable).getSheetName()) }
+        history.next().run { assertEquals("Name override", (context as TableStartRenderableEntity).getSheetName()) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnStartRenderable).columnIndex) }
+        history.next().run { assertEquals(0, (context as ColumnStartRenderableEntity).columnIndex) }
         // Column 0 attribute
         history.next().run { assertEquals(45, (attribute as WidthAttribute).value.value.toInt()) }
         // Row 0
-        history.next().run { assertEquals(0, (context as RowStartRenderable).getRow()) }
+        history.next().run { assertEquals(0, (context as RowStartRenderableEntity).getRow()) }
         // Row 0, cell 0
-        history.next().run { assertEquals("code1", (context as CellRenderable).value) }
+        history.next().run { assertEquals("code1", (context as CellRenderableEntity).value) }
         history.next().run {
             assertEquals(Colors.BLACK, (attribute as TextStylesAttribute).fontColor)
         }
-        history.next().run { assertTrue(context is RowEndRenderable<*>) }
+        history.next().run { assertTrue(context is RowEndRenderableEntity<*>) }
         // Column 0
-        history.next().run { assertEquals(0, (context as ColumnEndRenderable).columnIndex) }
-        history.next().run { assertIs<TableEndRenderable>(context) }
+        history.next().run { assertEquals(0, (context as ColumnEndRenderableEntity).columnIndex) }
+        history.next().run { assertIs<TableEndRenderableEntity>(context) }
         assertFalse(history.hasNext())
     }
 

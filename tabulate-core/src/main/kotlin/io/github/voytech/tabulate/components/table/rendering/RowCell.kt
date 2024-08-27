@@ -11,20 +11,20 @@ import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.Attributes
 import io.github.voytech.tabulate.core.operation.*
 
-fun interface RenderRowCellOperation<CTX : RenderingContext> : Operation<CTX, CellRenderable>
+fun interface RenderRowCellOperation<CTX : RenderingContext> : Operation<CTX, CellRenderableEntity>
 
 /**
  * Cell operation context with additional model attributes applicable on cell level.
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-class CellRenderable(
+class CellRenderableEntity(
     val cellValue: CellValue,
     attributes: Attributes?,
     val rowIndex: Int,
     val columnIndex: Int,
     override val value: Any = cellValue.value,
-) : Renderable<TableLayout>(attributes), LayoutElement<TableLayout>, ApplyLayoutElement<TableLayout>, RowCellCoordinate,
+) : RenderableEntity<TableLayout>(attributes), LayoutElement<TableLayout>, ApplyLayoutElement<TableLayout>, RowCellCoordinate,
     HasValue<Any> {
 
     override fun getRow(): Int = rowIndex
@@ -33,7 +33,7 @@ class CellRenderable(
 
     override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
 
-    override fun defineBoundingBox(layout: TableLayout): RenderableBoundingBox = with(layout) {
+    override fun TableLayout.defineBoundingBox(): RenderableBoundingBox =
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(getColumn()),
             y = getAbsoluteRowPosition(getRow()),
@@ -41,18 +41,16 @@ class CellRenderable(
             height = getMeasuredRowHeight(getRow(), cellValue.rowSpan, uom),
             boundaryToFit
         )
-    }
 
-    override fun applyBoundingBox(bbox: RenderableBoundingBox, layout: TableLayout, status: RenderingStatus): Unit =
-        with(layout) {
-            if (!status.hasLayoutEffect()) return
-            bbox.width?.let {
-                setColumnWidth(getColumn(), it, SizingOptions.SET_IF_GREATER)
-            }
-            bbox.height?.let {
-                setRowHeight(getRow(), it, SizingOptions.SET_IF_GREATER)
-            }
+    override fun TableLayout.absorbRenderableBoundingBox(bbox: RenderableBoundingBox, status: RenderingStatus) {
+        if (!status.hasLayoutEffect()) return
+        bbox.width?.let {
+            setColumnWidth(getColumn(), it, SizingOptions.SET_IF_GREATER)
         }
+        bbox.height?.let {
+            setRowHeight(getRow(), it, SizingOptions.SET_IF_GREATER)
+        }
+    }
 
     override fun toString(): String {
         return "RowCellRenderable(rowIndex=$rowIndex, columnIndex=$columnIndex, cellValue=$cellValue)"
@@ -61,9 +59,9 @@ class CellRenderable(
 
 internal fun <T : Any> SyntheticRow<T>.createCellContext(
     row: SourceRow<T>, column: ColumnDef<T>, customAttributes: MutableMap<String, Any>,
-): CellRenderable? =
+): CellRenderableEntity? =
     cellDefinitions.resolveCellValue(column, row)?.let { value ->
-        CellRenderable(
+        CellRenderableEntity(
             cellValue = value,
             attributes = cellContextAttributes[column],
             rowIndex = table.getRowIndex(row.rowIndexValue()),

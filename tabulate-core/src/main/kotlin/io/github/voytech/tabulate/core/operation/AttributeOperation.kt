@@ -9,7 +9,7 @@ import io.github.voytech.tabulate.core.RenderingContext
  * @author Wojciech Mąka
  * @since 0.1.0
  */
-fun interface AttributeOperation<CTX : RenderingContext, A : Attribute<A>, E : AttributedContext> :
+fun interface AttributeOperation<CTX : RenderingContext, A : Attribute<A>, E : AttributedEntity> :
     InvokeWithThreeParams<CTX, E, A> {
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
@@ -17,7 +17,7 @@ fun interface AttributeOperation<CTX : RenderingContext, A : Attribute<A>, E : A
 
 }
 
-internal class PrioritizedAttributeOperation<CTX : RenderingContext, A : Attribute<A>, E : AttributedContext>(
+internal class PrioritizedAttributeOperation<CTX : RenderingContext, A : Attribute<A>, E : AttributedEntity>(
     internal val priority: Int = DEFAULT,
     internal val operation: AttributeOperation<CTX, A, E>
 ) : AttributeOperation<CTX, A, E> {
@@ -43,7 +43,7 @@ typealias ReifiedAttributeOperation<CTX, A, E> = ReifiedInvocation<AttributeOper
 value class AttributesOperations<CTX : RenderingContext>(private val dispatch: ThreeParamsBasedDispatch) {
 
     @Suppress("UNCHECKED_CAST")
-    internal fun <E : AttributedContext> getOperationsBy(info: TwoParamsTypeInfo<CTX, E>): List<ReifiedAttributeOperation<CTX, *, E>> {
+    internal fun <E : AttributedEntity> getOperationsBy(info: TwoParamsTypeInfo<CTX, E>): List<ReifiedAttributeOperation<CTX, *, E>> {
         return dispatch.find { it.firstTwoParamTypes() == info }.map { it as ReifiedAttributeOperation<CTX, *, E> }
             .sortedBy { (it.delegate as PrioritizedAttributeOperation<CTX, *, E>).priority }
     }
@@ -52,12 +52,12 @@ value class AttributesOperations<CTX : RenderingContext>(private val dispatch: T
 class AttributeOperationsBuilder<CTX : RenderingContext>(val renderingContext: Class<CTX>) {
     val dispatch: ThreeParamsBasedDispatch = ThreeParamsBasedDispatch()
 
-    fun <A : Attribute<A>, E : AttributedContext> AttributeOperation<CTX, A, E>.prioritized(
+    fun <A : Attribute<A>, E : AttributedEntity> AttributeOperation<CTX, A, E>.prioritized(
         priority: Int
     ): AttributeOperation<CTX, A, E> = PrioritizedAttributeOperation(priority, this)
 
 
-    inline fun <reified A : Attribute<A>, reified E : AttributedContext> operation(
+    inline fun <reified A : Attribute<A>, reified E : AttributedEntity> operation(
         op: AttributeOperation<CTX, A, E>, priority: Int = 1
     ) {
         with(dispatch) {
