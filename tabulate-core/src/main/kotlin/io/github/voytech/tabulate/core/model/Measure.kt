@@ -315,6 +315,12 @@ data class BoundingRectangle(
     fun getHeight(): Height = Height(rightBottom.y.value - leftTop.y.value, leftTop.y.unit)
 
     fun size(): Size = Size(getWidth(), getHeight())
+
+    fun moveAt(position: Position): BoundingRectangle {
+        val vector = position - leftTop
+        return BoundingRectangle(leftTop + vector, rightBottom + vector)
+    }
+
     override fun toString(): String = "LT=(${leftTop.x.value},${leftTop.y.value}),RB=(${rightBottom.x.value},${rightBottom.y.value})"
 }
 

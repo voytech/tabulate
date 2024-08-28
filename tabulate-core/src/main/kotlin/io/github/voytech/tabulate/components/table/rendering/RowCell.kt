@@ -31,7 +31,7 @@ class CellRenderableEntity(
 
     override fun getColumn(): Int = columnIndex
 
-    override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
+    override val boundaryToFit: BoundaryType = BoundaryType.CONTENT
 
     override fun TableLayout.defineBoundingBox(): RenderableBoundingBox =
         getRenderableBoundingBox(

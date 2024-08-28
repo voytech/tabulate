@@ -65,58 +65,27 @@ class ModelContextLayout(private val context: ModelExportContext) { // TODO make
         getParentLayout()?.absorb(layout)
     }
 
-    private fun nextNodePosition(): Position? = layout.let {
-        (it as? AutonomousLayout)?.run { resolveNextPosition() }
-    }
-
-    private fun RegionConstraints.resolveEffectiveLeftTop(parent: ModelContextLayout?): RegionConstraints {
-        val parentContentLeftTop = parent?.layout?.getContentBoundingRectangle()?.leftTop
-        return copy(
-            leftTop = leftTop ?: parent?.nextNodePosition() ?: parentContentLeftTop ?: Position.start(uom())
-        ).withMargins()
-    }
+    private fun nextItemPosition(): Position? = (layout as? SequentialLayout)?.run { resolveNextPosition() }
 
     private fun newLayoutConstraints(box: RegionConstraints): SpaceAndLayoutProperties =
         getParent().let {
             withMaxRightBottomResolved(
                 it?.layout,
-                box.resolveEffectiveLeftTop(it).withInnerLeftTop()
+                box.resolveEffectiveLeftTop(it).applyLeftTopBoxModel()
             )
         }
 
-    private fun RegionConstraints.withInnerLeftTop(): RegionConstraints =
-        context.getBorderOffsets()?.let {
-            requireNotNull(leftTop)
-            if (innerLeftTop == null) {
-                copy(innerLeftTop = leftTop + Size(it.left, it.top))
-            } else this
-        } ?: copy(innerLeftTop = leftTop)
-
-    private fun RegionConstraints.withInnerMaxRightBottom(): RegionConstraints =
-        context.getBorderOffsets()?.let {
-            requireNotNull(maxRightBottom)
-            if (innerMaxRightBottom == null) {
-                copy(innerMaxRightBottom = maxRightBottom - Size(it.right, it.bottom))
-            } else this
-        } ?: copy(innerMaxRightBottom = maxRightBottom)
-
-    private fun RegionConstraints.withMargins(): RegionConstraints =
-        lookupAttribute(MarginsAttribute::class.java)?.let {
-            requireNotNull(leftTop)
-            copy(leftTop = Position(it.left + leftTop.x, it.top + leftTop.y))
-        } ?: this
-
-    private data class SpaceAndLayoutProperties(
-        val space: RegionConstraints,
-        val layout: LayoutProperties = LayoutProperties()
-    )
+    private fun RegionConstraints.resolveEffectiveLeftTop(parent: ModelContextLayout?): RegionConstraints {
+        val parentContentLeftTop = parent?.layout?.getContentRectangle()?.leftTop
+        return copy(leftTop = leftTop ?: parent?.nextItemPosition() ?: parentContentLeftTop ?: Position.start(uom()))
+    }
 
     private fun withMaxRightBottomResolved(
         parent: Layout?, constraints: RegionConstraints
     ): SpaceAndLayoutProperties {
         requireNotNull(constraints.leftTop)
         val implicitMaxRightBottom =
-            constraints.maxRightBottom ?: parent?.getContentBoundingRectangle()?.rightBottom
+            constraints.maxRightBottom ?: parent?.getContentRectangle()?.rightBottom
             ?: context.instance.getDocumentMaxRightBottom()
         val explicitWidth = getExplicitWidth(parent)
         val explicitHeight = getExplicitHeight(parent)
@@ -130,13 +99,76 @@ class ModelContextLayout(private val context: ModelExportContext) { // TODO make
                         (constraints.leftTop.y + it).coerceAtMost(implicitMaxRightBottom.y)
                     } ?: implicitMaxRightBottom.y
                 )
-            ).withInnerMaxRightBottom(),
+            ).applyRightBottomBoxModel(),
             layout = LayoutProperties(
                 declaredWidth = explicitWidth != null,
                 declaredHeight = explicitHeight != null,
             )
         )
     }
+
+    private fun RegionConstraints.applyLeftTopBoxModel(): RegionConstraints =
+        applyLeftTopMarginOffsets()
+            .applyLeftTopBorderOffsets()
+            .applyLeftTopPaddingOffsets()
+
+    private fun RegionConstraints.applyRightBottomBoxModel(): RegionConstraints =
+        applyRightBottomMarginOffsets()
+            .applyRightBottomBorderOffsets()
+            .applyRightBottomPaddingOffsets()
+
+    private fun RegionConstraints.applyLeftTopMarginOffsets(): RegionConstraints =
+        context.getMarginOffsets().let {
+            requireNotNull(leftTop)
+            if (borderLeftTop == null) {
+                copy(borderLeftTop = leftTop + Size(it.left, it.top))
+            } else this
+        }
+
+    private fun RegionConstraints.applyRightBottomMarginOffsets(): RegionConstraints =
+        context.getMarginOffsets().let {
+            requireNotNull(maxRightBottom)
+            if (borderRightBottom == null) {
+                copy(borderRightBottom = maxRightBottom - Size(it.right, it.bottom))
+            } else this
+        }
+
+    private fun RegionConstraints.applyLeftTopBorderOffsets(): RegionConstraints =
+        context.getBorderOffsets().let {
+            requireNotNull(borderLeftTop)
+            if (paddingLeftTop == null) {
+                copy(paddingLeftTop = borderLeftTop + Size(it.left, it.top))
+            } else this
+        }
+
+    private fun RegionConstraints.applyRightBottomBorderOffsets(): RegionConstraints =
+        context.getBorderOffsets().let {
+            requireNotNull(borderRightBottom)
+            if (paddingRightBottom == null) {
+                copy(paddingRightBottom = borderRightBottom - Size(it.right, it.bottom))
+            } else this
+        }
+
+    private fun RegionConstraints.applyLeftTopPaddingOffsets(): RegionConstraints =
+        context.getPaddingOffsets().let {
+            requireNotNull(paddingLeftTop)
+            if (contentLeftTop == null) {
+                copy(contentLeftTop = paddingLeftTop + Size(it.left, it.top))
+            } else this
+        }
+
+    private fun RegionConstraints.applyRightBottomPaddingOffsets(): RegionConstraints =
+        context.getPaddingOffsets().let {
+            requireNotNull(paddingRightBottom)
+            if (contentRightBottom == null) {
+                copy(contentRightBottom = paddingRightBottom - Size(it.right, it.bottom))
+            } else this
+        }
+
+    private data class SpaceAndLayoutProperties(
+        val space: RegionConstraints,
+        val layout: LayoutProperties = LayoutProperties()
+    )
 
     private fun getExplicitHeight(layout: Layout?): Height? =
         lookupAttribute(HeightAttribute::class.java)?.switchUnitOfMeasure(uom(), layout)
@@ -145,16 +177,16 @@ class ModelContextLayout(private val context: ModelExportContext) { // TODO make
         lookupAttribute(WidthAttribute::class.java)?.switchUnitOfMeasure(uom(), layout)
 
     private fun HeightAttribute.switchUnitOfMeasure(uom: UnitsOfMeasure, parent: Layout?): Height =
-        value.switchUnitOfMeasure(uom, parent?.getContentBoundingRectangle()?.getHeight())
+        value.switchUnitOfMeasure(uom, parent?.getContentRectangle()?.getHeight())
 
     private fun WidthAttribute.switchUnitOfMeasure(uom: UnitsOfMeasure, parent: Layout?): Width =
-        value.switchUnitOfMeasure(uom, parent?.getContentBoundingRectangle()?.getWidth())
+        value.switchUnitOfMeasure(uom, parent?.getContentRectangle()?.getWidth())
 
     private fun <A : Attribute<A>> lookupAttribute(attribute: Class<A>): A? =
         (context.model as? AttributedModelOrPart)?.attributes?.forContext(context.model.javaClass)?.get(attribute)
 
     internal fun debugInfo(): String = if (this::layout.isInitialized) {
-        "${layout}"
+        "$layout"
     } else {
         "?"
     }
@@ -183,17 +215,33 @@ data class Padding(
 inline fun <reified A : Attribute<A>> Model.getAttribute(): A? =
     (this as? AttributedModelOrPart)?.attributes?.forContext(javaClass)?.get(A::class.java)
 
-fun ModelExportContext.getBorderOffsets(): Padding? =
-    model.getAttribute<BordersAttribute>()?.let {
-        Padding(
-            left = it.leftBorderWidth,
-            right = it.rightBorderWidth,
-            bottom = it.bottomBorderHeight,
-            top = it.topBorderHeight
-        )
-    }
+
+fun ModelExportContext.getMarginOffsets(): Padding {
+    val margins = model.getAttribute<MarginsAttribute>()
+    return Padding(
+        left = margins?.left?.asWidth().orZero(),
+        right = Width.zero(),
+        top = margins?.top?.asHeight().orZero(),
+        bottom = Height.zero(),
+    )
+}
+
+fun ModelExportContext.getBorderOffsets(): Padding {
+    val borders = model.getAttribute<BordersAttribute>()
+    return Padding(
+        left = borders?.leftBorderWidth.orZero(),
+        right = borders?.rightBorderWidth.orZero(),
+        top = borders?.topBorderHeight.orZero(),
+        bottom = borders?.bottomBorderHeight.orZero(),
+    )
+}
 
 fun ModelExportContext.getPaddingOffsets(): Padding =
-    Padding(Width.zero(), Height.zero(), Width.zero(), Height.zero())
+    Padding(
+        left = Width.zero(),
+        top = Height.zero(),
+        right = Width.zero(),
+        bottom = Height.zero()
+    )
 
 // TODO add getPaddingOffsets() when PaddingAttribute implemented.

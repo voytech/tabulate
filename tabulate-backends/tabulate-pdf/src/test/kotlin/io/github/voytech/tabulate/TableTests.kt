@@ -214,13 +214,13 @@ class TableTests {
                 tableBorders { all { 1.pt();solid;red } }
             }
             columns {
-                column(SampleProduct::code) { attributes { width { 100.pt() } }}
-                column(SampleProduct::name) { attributes { width { 100.pt() } }}
-                column(SampleProduct::description) { attributes { width { 100.pt() } }}
-                column(SampleProduct::price) { attributes { width { 100.pt() } }}
+                column(SampleProduct::code) { attributes { width { 100.pt() } } }
+                column(SampleProduct::name) { attributes { width { 100.pt() } } }
+                column(SampleProduct::description) { attributes { width { 100.pt() } } }
+                column(SampleProduct::price) { attributes { width { 100.pt() } } }
             }
             rows {
-                matching { gt(0) } assign { dollarColumn(SampleProduct::price)}
+                matching { gt(0) } assign { dollarColumn(SampleProduct::price) }
             }
         }
     }
@@ -234,13 +234,14 @@ class TableTests {
                     forcePreMeasure
                     attributes {
                         height { 36.percents() }
-                        borders { all { solid; green; 2.pt() } }
+                        margins { left { 5.pt() }; top { 5.pt() } }
+                        borders { all { solid; green; 6.pt() } }
                     }
-                    repeat((1 .. 20).count()) {
-                        table(typedTable<SampleCustomer> { name="$it";attributes { clip { disabled } } } +
-                            Utils.sampleCustomersTable(
-                                SampleCustomer.create(5), SampleCustomer::firstName, SampleCustomer::lastName
-                            )
+                    repeat((1..20).count()) {
+                        table(typedTable<SampleCustomer> { name = "$it";attributes { clip { disabled } } } +
+                                Utils.sampleCustomersTable(
+                                    SampleCustomer.create(5), SampleCustomer::firstName, SampleCustomer::lastName
+                                )
                         )
                     }
                 }

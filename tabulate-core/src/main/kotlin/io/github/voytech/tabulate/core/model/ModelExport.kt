@@ -211,29 +211,6 @@ class ExportIterationsApi internal constructor(private val context: ModelExportC
             }
         }
 
-    fun AbstractModel.catchOverflow(result: RenderingResult) {
-        val overflow = getOverflowHandlingStrategy(result)
-        when (result.status) {
-            is RenderingClipped -> {
-                when (overflow) {
-                    Overflow.STOP -> stop()
-                    Overflow.FINISH -> finish()
-                    else -> {}
-                }
-            }
-
-            is RenderingSkipped -> {
-                when (overflow) {
-                    Overflow.RETRY, null -> retry()
-                    Overflow.STOP -> stop()
-                    else -> {}
-                }
-            }
-
-            else -> {}
-        }
-    }
-
 }
 
 class ExportApi private constructor(private val context: ModelExportContext) {
@@ -389,7 +366,7 @@ private fun <L : Layout> ExportApi.traverseAllThenContinue(
     models: List<AbstractModel>,
     action: AbstractModel.() -> Unit
 ) = layout<L> {
-    if (this is AutonomousLayout) {
+    if (this is SequentialLayout) {
         var runnables = models
         while (runnables.isNotEmpty() && hasSpaceLeft()) {
             runnables.forEach {
@@ -413,7 +390,7 @@ private fun <L : Layout> ExportApi.traverseWithContinuations(
     models: List<AbstractModel>,
     action: AbstractModel.() -> Unit
 ) = layout<L> {
-    if (this is AutonomousLayout) {
+    if (this is SequentialLayout) {
         models.forEach {
             while (it.isRunning() && hasSpaceLeft()) {
                 it.action()

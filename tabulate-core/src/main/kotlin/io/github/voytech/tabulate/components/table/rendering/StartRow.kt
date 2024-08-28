@@ -46,7 +46,7 @@ class RowStartRenderableEntity(
     val rowIndex: Int,
 ) : RowRenderableEntity(attributes), RowLayoutElement {
     override fun getRow(): Int = rowIndex
-    override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
+    override val boundaryToFit: BoundaryType = BoundaryType.CONTENT
 
     override fun TableLayout.defineBoundingBox(): RenderableBoundingBox =
         getRenderableBoundingBox(

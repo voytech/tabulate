@@ -37,7 +37,7 @@ class ColumnStartRenderableEntity(
     val columnIndex: Int,
 ) : ColumnRenderableEntity(attributes), LayoutElement<TableLayout>, ApplyLayoutElement<TableLayout>, ColumnCoordinate {
 
-    override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
+    override val boundaryToFit: BoundaryType = BoundaryType.CONTENT
 
     override fun TableLayout.defineBoundingBox(): RenderableBoundingBox =
         getRenderableBoundingBox(

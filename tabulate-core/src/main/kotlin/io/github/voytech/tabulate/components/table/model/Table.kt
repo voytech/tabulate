@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.components.table.model
 
 import io.github.voytech.tabulate.components.table.template.TableExport
 import io.github.voytech.tabulate.components.table.template.TableRenderIterations
-import io.github.voytech.tabulate.core.layout.LayoutBoundaryType
+import io.github.voytech.tabulate.core.layout.BoundaryType
 import io.github.voytech.tabulate.core.layout.LayoutProperties
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.reify
@@ -80,8 +80,8 @@ class Table<T : Any> internal constructor(
             startAt(iteration.getStartRowIndexOrZero(), iteration.getStartColumnIndexOrZero())
             TableExport(this@Table, this@api, iteration, data()).renderTable()
             //After measuring layout try resize columns to fit explicitly set width
-            getExplicitWidth(LayoutBoundaryType.INNER)?.let { explicitWidth -> resizeColumnsToFit(explicitWidth) }
-            getExplicitHeight(LayoutBoundaryType.INNER)?.let { explicitHeight -> resizeRowsToFit(explicitHeight) }
+            getExplicitWidth(BoundaryType.BORDER)?.let { explicitWidth -> resizeColumnsToFit(explicitWidth) }
+            getExplicitHeight(BoundaryType.BORDER)?.let { explicitHeight -> resizeRowsToFit(explicitHeight) }
         }
     }
 

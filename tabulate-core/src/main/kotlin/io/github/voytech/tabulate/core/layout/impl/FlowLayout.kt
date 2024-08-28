@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.core.layout.impl
 import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.model.*
 
-class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), AutonomousLayout {
+class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), SequentialLayout {
 
     private lateinit var localCursor: Position
 
@@ -11,13 +11,12 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
 
     private var currentIndex = 0
 
-
     override var isMeasured: Boolean = false
 
     override fun onBeginLayout() = with(region) {
         localCursor = Position.start(uom)
         if (::absoluteCursor.isInitialized) {
-            absoluteCursor = innerLeftTop
+            absoluteCursor = contentLeftTop
         }
         currentIndex = 0
     }
@@ -28,16 +27,16 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
      * When moving to next row we need to reset one of the axis again which.
      */
     private fun Region.currentPosition(): Position =
-        (if (::absoluteCursor.isInitialized) absoluteCursor else currentPosition)
+        (if (::absoluteCursor.isInitialized) absoluteCursor else contentCursorPosition)
 
     private fun Region.moveLocalCursor(pos: Position): Position {
         localCursor = pos
         currentIndex++
-        return innerLeftTop + pos
+        return contentLeftTop + pos
     }
 
     override fun resolveNextPosition(): Position? = with(region) {
-        val computedLocCursor = currentPosition() - innerLeftTop
+        val computedLocCursor = currentPosition() - contentLeftTop
         return if (properties.orientation == Orientation.HORIZONTAL) {
             if (hasXSpaceLeft()) {
                 moveLocalCursor(Position(computedLocCursor.x + getHorizontalSpacing(), localCursor.y))
@@ -63,9 +62,9 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Aut
         }
     }
 
-    private fun Region.hasXSpaceLeft(): Boolean = currentPosition().x < innerMaxRightBottom.x
+    private fun Region.hasXSpaceLeft(): Boolean = currentPosition().x < contentRightBottom.x
 
-    private fun Region.hasYSpaceLeft(): Boolean = currentPosition().y < innerMaxRightBottom.y
+    private fun Region.hasYSpaceLeft(): Boolean = currentPosition().y < contentRightBottom.y
 
     override fun hasSpaceLeft(): Boolean = with(region) { hasXSpaceLeft() || hasYSpaceLeft() }
 

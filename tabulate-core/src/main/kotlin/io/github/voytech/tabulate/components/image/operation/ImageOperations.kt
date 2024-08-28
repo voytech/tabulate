@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.components.image.operation
 
 import io.github.voytech.tabulate.core.RenderingContext
-import io.github.voytech.tabulate.core.layout.LayoutBoundaryType
+import io.github.voytech.tabulate.core.layout.BoundaryType
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.layout.impl.SimpleLayout
 import io.github.voytech.tabulate.core.model.Attributes
@@ -22,15 +22,17 @@ class ImageRenderableEntity internal constructor(
         additionalAttributes = stateAttributes.data
     }
 
-    override val boundaryToFit = LayoutBoundaryType.OUTER
+    override val boundaryToFit = BoundaryType.BORDER
 
     override fun SimpleLayout.defineBoundingBox(): RenderableBoundingBox =
         getRenderableBoundingBox(
-            x = getMaxBoundingRectangle().leftTop.x,
-            y = getMaxBoundingRectangle().leftTop.y,
-            width = getModelAttribute<WidthAttribute>()?.value,
-            height = getModelAttribute<HeightAttribute>()?.value,
-            boundaryToFit
+            x = getBorderRectangle().leftTop.x,
+            y = getBorderRectangle().leftTop.y,
+            // In case of when measure was called prior to render
+            // we can take measured size of layout which was used for measuring.
+            width = whenMeasured { getBorderRectangle().getWidth() } ?: getModelAttribute<WidthAttribute>()?.value,
+            height = whenMeasured { getBorderRectangle().getHeight() } ?: getModelAttribute<HeightAttribute>()?.value,
+            type = boundaryToFit
         )
 
 

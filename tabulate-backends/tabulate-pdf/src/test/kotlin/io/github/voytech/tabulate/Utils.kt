@@ -19,7 +19,7 @@ object Utils {
         attributes {
             margins { left { 1.pt()}; top {1.pt()} }
             borders { bottom { 0.5.pt(); solid } }
-            tableBorders { all { 0.5.pt();solid; black } }
+            tableBorders { all { 5.pt();solid; black } }
             text { breakWords; black }
         }
         if (props.isNotEmpty()) {

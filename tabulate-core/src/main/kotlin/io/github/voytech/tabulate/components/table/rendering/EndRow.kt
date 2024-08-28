@@ -3,7 +3,7 @@ package io.github.voytech.tabulate.components.table.rendering
 import io.github.voytech.tabulate.components.table.model.ColumnKey
 import io.github.voytech.tabulate.components.table.template.SyntheticRow
 import io.github.voytech.tabulate.core.RenderingContext
-import io.github.voytech.tabulate.core.layout.LayoutBoundaryType
+import io.github.voytech.tabulate.core.layout.BoundaryType
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.layout.impl.SizingOptions
 import io.github.voytech.tabulate.core.layout.impl.TableLayout
@@ -29,7 +29,7 @@ class RowEndRenderableEntity<T>(
 
     override fun getRow(): Int = rowIndex
 
-    override val boundaryToFit: LayoutBoundaryType = LayoutBoundaryType.INNER
+    override val boundaryToFit: BoundaryType = BoundaryType.CONTENT
 
     fun getCells(): Map<ColumnKey<T>, CellRenderableEntity> = rowCellValues
 

@@ -3,7 +3,6 @@ package io.github.voytech.tabulate.components.page.model
 import io.github.voytech.tabulate.components.commons.operation.newPage
 import io.github.voytech.tabulate.core.layout.Layout
 import io.github.voytech.tabulate.core.model.*
-import io.github.voytech.tabulate.core.layout.Region
 import io.github.voytech.tabulate.core.layout.RegionConstraints
 
 class Page internal constructor(
@@ -56,15 +55,15 @@ class Page internal constructor(
         footer?.measure(force = true)?.let { Size(it.width, it.height) }
 
     private fun Layout.findFooterLeftTop(size: Size?): Position? = size?.let {
-        getMaxBoundingRectangle().let { (leftTop, maxRightBottom) ->
-            Position(leftTop.x, maxRightBottom.y - it.height)
+        getContentRectangle().let { (leftTop, rightBottom) ->
+            Position(leftTop.x, rightBottom.y - it.height)
         }
     }
 
 
     private fun resolveContentMaxRightBottom(footerLeftTop: Position?, layout: Layout): RegionConstraints {
-        val maxRightBottom = layout.getMaxBoundingRectangle().rightBottom
-        return RegionConstraints(maxRightBottom = footerLeftTop?.let { Position(maxRightBottom.x, it.y) })
+        val rightBottom = layout.getContentRectangle().rightBottom
+        return RegionConstraints(maxRightBottom = footerLeftTop?.let { Position(rightBottom.x, it.y) })
     }
 
     private operator fun Position?.plus(size: Size?): RegionConstraints =
@@ -73,5 +72,7 @@ class Page internal constructor(
     private fun ExportApi.exportFooter(regionConstraints: RegionConstraints?) {
         footer?.export(regionConstraints, true)
     }
+
+    override fun toString(): String = "Page[$name]"
 
 }

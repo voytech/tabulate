@@ -7,6 +7,7 @@ import java.net.URL
 import javax.imageio.ImageIO
 import kotlin.math.pow
 import kotlin.math.round
+import kotlin.system.measureNanoTime
 
 fun String.ellipsis(maxLen: Int = 20): String =
     if (length > maxLen) "${substring(0,maxLen)}..." else this
@@ -158,6 +159,16 @@ class MultiIterationSet<T, E> : CompositeIterator<T, E> where E : Enum<E>, T : A
         newItemsAllowed = !prevent
     }
 
+}
+
+fun benchmarkFloatMultiplication(iterations: Int): Long {
+    val value = 123.456F
+    val factor = 100F
+    return measureNanoTime {
+        repeat(iterations) {
+            val result = value * factor
+        }
+    }
 }
 
 operator fun <T, E> MultiIterationSet<T, E>.plusAssign(element: T) where E : Enum<E>, T : Any {

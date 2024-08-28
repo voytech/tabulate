@@ -144,10 +144,8 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedEntity>(
         Axis.X.takeIf { layout.properties.orientation == Orientation.HORIZONTAL }
             ?: Axis.Y //TODO get default value from global export configurations.
 
-    protected fun RelatedLayouts.checkOverflowStatus(context: E): RenderingStatus {
-        val maybeCrossedBounds = context.boundingBox()?.let { bbox ->
-            layout.isCrossingBounds(bbox, context.layoutBoundaryToFit())
-        }
+    protected fun checkOverflowStatus(context: E): RenderingStatus {
+        val maybeCrossedBounds = context.boundingBox()?.isCrossingBounds()
         return if (maybeCrossedBounds != null) {
             if (context.isClippingEnabled()) {
                 RenderingClipped(maybeCrossedBounds)

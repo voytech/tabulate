@@ -104,10 +104,10 @@ fun <L : Layout> AttributedEntity.asLayoutElement(): ApplyLayoutElement<L>? =
         this as ApplyLayoutElement<L>
     } else null
 
-fun AttributedEntity.layoutBoundaryToFit(): LayoutBoundaryType =
+fun AttributedEntity.layoutBoundaryToFit(): BoundaryType =
     if (this is RenderableEntity<*>) {
         boundaryToFit
-    } else LayoutBoundaryType.INNER
+    } else BoundaryType.BORDER
 
 class AttributesByContexts<T : AttributedModelOrPart>(
     from: T, to: List<Class<out AttributedEntity>>,

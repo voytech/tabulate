@@ -20,10 +20,11 @@ class BorderConfigurationsTests {
                 table {
                     attributes {
                         margins {
-                            left { 5.pt() }
-                            top { 5.pt() }
+                            left { 2.pt() }
+                            top { 2.pt() }
                         }
                         columnWidth { 80.pt() }
+                        width { 99.percents() }
                         rowHeight { 20.pt() }
                     }
                     columns {

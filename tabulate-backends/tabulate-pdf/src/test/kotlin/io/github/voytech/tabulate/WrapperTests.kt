@@ -22,12 +22,14 @@ class WrapperTests {
         document {
             page {
                 horizontal {
-                    textValue { " TOP " }
-                    textValue { " TOP " }
-                    textValue { " TOP " }
+                    id="main"
+                    textValue { id="top[1]"; " TOP " }
+                    textValue { id="top[2]";" TOP " }
+                    textValue { id="top[3]";" TOP " }
                 }
                 align { center; top; fullWidth; fullHeight } horizontal {
-                    // left side panel
+                    id="aligned"
+                    attributes { borders { all { 2.pt(); solid; red } } }
                     align { middle; center; width25; fullHeight } content  {
                         textValue { " LEFT " }
                         textValue { " LEFT " }

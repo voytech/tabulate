@@ -2,7 +2,7 @@ package io.github.voytech.tabulate.components.table.rendering
 
 import io.github.voytech.tabulate.components.table.model.Table
 import io.github.voytech.tabulate.core.RenderingContext
-import io.github.voytech.tabulate.core.layout.LayoutBoundaryType
+import io.github.voytech.tabulate.core.layout.BoundaryType
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.Attributes
@@ -21,14 +21,17 @@ sealed class TableContext(
     attributes: Attributes?,
 ) : RenderableEntity<TableLayout>(attributes) {
 
-    override val boundaryToFit = LayoutBoundaryType.OUTER
+    override val boundaryToFit = BoundaryType.BORDER
 
     override fun TableLayout.defineBoundingBox(): RenderableBoundingBox =
         getRenderableBoundingBox(
-            x = getMaxBoundingRectangle().leftTop.x,
-            y = getMaxBoundingRectangle().leftTop.y,
-            width = getMeasuredSize()?.width,
-            height = getMeasuredSize()?.height,
+            x = getBorderRectangle().leftTop.x,
+            y = getBorderRectangle().leftTop.y,
+            // provide width+height only on RENDERING phase when everything is measured and calculated
+            // As long as defineBoundingBox is also called in MEASURING phase we cannot assume width+height are values to rely on.
+            // TODO - consider diverging defineBoundingBox into defineMeasuringBoundingBox and defineRenderingBoundingBox or something similar
+            width = whenMeasured { getBorderRectangle().getWidth() },
+            height = whenMeasured { getBorderRectangle().getHeight() },
             boundaryToFit
         )
 }

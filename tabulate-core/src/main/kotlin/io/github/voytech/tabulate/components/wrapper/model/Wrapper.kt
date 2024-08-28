@@ -26,18 +26,15 @@ class Wrapper(
         withinCurrentLayout {
             alignments?.let { alignment ->
                 child.measure().let { childSize ->
-                    val outerRect = getMaxBoundingRectangle()
-                    outerRect.size().let { size ->
-                        val withMarginOrNot = getMarginSize(child)?.let { childSize + it } ?: childSize
-                        child.export(RegionConstraints(leftTop = outerRect.leftTop.align(alignment, size, withMarginOrNot)))
-                    }
+                    val parentContent = getContentRectangle()
+                    child.export(
+                        RegionConstraints(
+                            leftTop = parentContent.leftTop.align(alignment, parentContent.size(), childSize)
+                        )
+                    )
                 }
             } ?: child.export()
         }
-    }
-
-    private fun getMarginSize(model: AbstractModel): Size? = model.getAttribute<MarginsAttribute>()?.let {
-        Size(it.left.asWidth(), it.top.asHeight())
     }
 
     override fun takeMeasures(api: ExportApi) = api {

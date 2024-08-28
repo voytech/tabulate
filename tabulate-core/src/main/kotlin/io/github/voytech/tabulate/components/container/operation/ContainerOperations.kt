@@ -1,7 +1,7 @@
 package io.github.voytech.tabulate.components.container.operation
 
 import io.github.voytech.tabulate.core.RenderingContext
-import io.github.voytech.tabulate.core.layout.LayoutBoundaryType
+import io.github.voytech.tabulate.core.layout.BoundaryType
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.layout.impl.FlowLayout
 import io.github.voytech.tabulate.core.model.Attributes
@@ -18,14 +18,16 @@ class ContainerRenderableEntity internal constructor(
         additionalAttributes = stateAttributes.data
     }
 
-    override val boundaryToFit = LayoutBoundaryType.OUTER
+    //This means we are going to fit the bounding box to the border of the container
+    //This renderable may be rendered within following area: border>padding>content
+    override val boundaryToFit = BoundaryType.BORDER
 
     override fun FlowLayout.defineBoundingBox(): RenderableBoundingBox =
         getRenderableBoundingBox(
-            x = getMaxBoundingRectangle().leftTop.x,
-            y = getMaxBoundingRectangle().leftTop.y,
-            width = getMeasuredSize()?.width,
-            height = getMeasuredSize()?.height,
+            x = getBorderRectangle().leftTop.x,
+            y = getBorderRectangle().leftTop.y,
+            width = whenMeasured { getBorderRectangle().getWidth() },
+            height = whenMeasured { getBorderRectangle().getHeight() },
             boundaryToFit
         )
 
