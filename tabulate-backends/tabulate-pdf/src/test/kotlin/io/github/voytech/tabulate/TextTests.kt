@@ -48,7 +48,8 @@ class TextTests {
                             }
                         }
                         text {
-                            value = "A very very very long text with width 3 and this text will be clipped as it cannot wrap and clip is enabled"
+                            value =
+                                "A very very very long text with width 3 and this text will be clipped as it cannot wrap and clip is enabled"
                             attributes { clip { enabled }; text { noWrap }; borders { all { 0.5.pt();solid } } }
                         }
                         text {
@@ -67,15 +68,16 @@ class TextTests {
                         }
                         text {
                             attributes {
-                                text { breakLines; timesNewRoman; fontSize = 12; bold;  italic=true }
+                                text { breakLines; timesNewRoman; fontSize = 12; bold; italic = true }
                                 alignment { justify }
-                                margins { left { 5.pt()}; top { 5.pt() } }
+                                margins { left { 5.pt() }; top { 5.pt() } }
                                 borders { all { lightGray; 3.pt() } }
                             }
-                            value = "This text will not cause words to break, instead text lines may break only when space or  sign is present so that words are kept intact. " +
-                                    "And how long this text will be... how long? Please tell me!!! Write this text so long that it will cross the horizontal boundaries. Let us see " +
-                                    "Still some text to write. A little longer words maybe ?. Almost done. I think now the text will finally stop rendering " +
-                                    "due to crossing parent layout bounding box boundaries!"
+                            value =
+                                "This text will not cause words to break, instead text lines may break only when space or  sign is present so that words are kept intact. " +
+                                        "And how long this text will be... how long? Please tell me!!! Write this text so long that it will cross the horizontal boundaries. Let us see " +
+                                        "Still some text to write. A little longer words maybe ?. Almost done. I think now the text will finally stop rendering " +
+                                        "due to crossing parent layout bounding box boundaries!"
                         }
                     }
                 }

@@ -13,7 +13,7 @@ class Document internal constructor(
     override val id: String,
 ) : AbstractContainerModelWithAttributes() {
 
-    override fun doExport(api: ExportApi) = api {
+    override fun doExport(api: ExportApi): Unit = api {
         render(DocumentStart(api))
         ifPaging { page ->
             do {

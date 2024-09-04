@@ -92,7 +92,6 @@ class OperationsInContext(private val ctx: ModelExportContext) {
     fun renderOrMeasure(context: AttributedEntity): RenderingResult =
         if (ctx.phase == Phase.MEASURING) measure(context) else render(context)
 
-    fun hasMeasuringOperations(): Boolean = measure.isEmpty().not()
 }
 
 class ModelExportContext(
@@ -188,7 +187,7 @@ class ExportIterationsApi internal constructor(private val context: ModelExportC
         setDryRunForActive()
     }
 
-    fun retry() = with(context.exportIterations) {
+    fun retryIteration() = with(context.exportIterations) {
         discardScheduled()
         prependPending(clearAttributes())
         setDryRunForActive()
@@ -226,6 +225,15 @@ class ExportApi private constructor(private val context: ModelExportContext) {
 
     fun render(renderable: AttributedEntity): RenderingResult = with(context) {
         operations.render(renderable)
+    }
+
+    fun RenderingResult.thenRetryOnOverflowOrElse(block: (() -> RenderingResult)? = null): RenderingResult  {
+        return if (hasOverflown()) {
+            iterations().retryIteration()
+            this
+        } else {
+            block?.let { it() } ?: this
+        }
     }
 
     fun measure(renderable: AttributedEntity): RenderingResult = with(context) {
@@ -333,7 +341,7 @@ class ExportApi private constructor(private val context: ModelExportContext) {
         }
     }
 
-    operator fun invoke(scope: ExportApi.() -> Unit) = scope(this)
+    operator fun <R> invoke(scope: ExportApi.() -> R) = scope(this)
 
     companion object {
         @JvmSynthetic
@@ -346,14 +354,12 @@ fun <L : Layout> ExportApi.exportWithContinuations(models: List<AbstractModel>, 
     when (mode) {
         DescendantsIterationsKind.POSTPONED -> exportWithPostponedContinuations<L>(models)
         DescendantsIterationsKind.IMMEDIATE -> exportWithImmediateContinuations<L>(models)
-        else -> error("Currently only POSTPONED and IMMEDIATE iterations kind are implemented")
     }
 
 fun <L : Layout> ExportApi.measureWithContinuations(models: List<AbstractModel>, mode: DescendantsIterationsKind) =
     when (mode) {
         DescendantsIterationsKind.POSTPONED -> measureWithPostponedContinuations<L>(models)
         DescendantsIterationsKind.IMMEDIATE -> measureWithImmediateContinuations<L>(models)
-        else -> error("Currently only POSTPONED and IMMEDIATE iterations kind are implemented")
     }
 
 fun <L : Layout> ExportApi.exportWithPostponedContinuations(models: List<AbstractModel>) =

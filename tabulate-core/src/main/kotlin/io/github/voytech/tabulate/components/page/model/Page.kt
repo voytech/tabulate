@@ -19,7 +19,7 @@ class Page internal constructor(
         getCustomAttributes().ensureExecutionContext { PageExecutionContext() }.pageTitle = name
     }
 
-    override fun doExport(api: ExportApi) = api {
+    override fun doExport(api: ExportApi): Unit = api {
         renderNewPage()
         stickyHeaderAndFooterWith { layout, footerLeftTop ->
             exportContent(resolveContentMaxRightBottom(footerLeftTop, layout))

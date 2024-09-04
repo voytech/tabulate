@@ -74,7 +74,7 @@ class CommonTests {
             }
         }
         doc.export(File("two_tables.pdf"))
-        //doc.export(File("two_tables.xlsx"))
+        doc.export(File("two_tables.xlsx"))
     }
 
     @Test
@@ -120,7 +120,7 @@ class CommonTests {
                         table {
                             dataSource(SampleProduct.create(15))
                             attributes {
-                                borders { all { lightGray; 0.5F.pt() } }
+                                borders { all { lightGray; 1F.pt() } }
                             }
                             columns {
                                 column(SampleProduct::code) {
@@ -171,32 +171,8 @@ class CommonTests {
                 }
             }
         }
-        //doc.export(File("test.xlsx"))
+        doc.export(File("test.xlsx"))
         doc.export(File("test.pdf"))
-    }
-
-    private fun ContainerBuilderApi.textList(type: String, vararg skills: String) {
-        vertical {
-            attributes { margins { top { 20.pt() } } }
-            text {
-                value = type
-                attributes {
-                    margins { left { 5.pt() }; top { 5.pt() } }
-                    text { courier; black; bold; fontSize = 14; breakLines }
-                }
-            }
-            vertical {
-                attributes {
-                    margins { left { 5.pt() }; top { 5.pt() } }
-                }
-                skills.forEach {
-                    text {
-                        attributes { text { courier; black }; margins { top { 5.pt() } } }
-                        value = it
-                    }
-                }
-            }
-        }
     }
 
     private fun ContainerBuilderApi.contact(firstName: String, lastName: String, email: String, phone: String) {

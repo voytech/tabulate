@@ -31,7 +31,7 @@ class CVExample {
     private fun ContainerBuilderApi.avatar(builder: AvatarBuilder.() -> Unit) {
         AvatarBuilder().apply { builder() }.let {
             vertical {
-                attributes { margins { left { 5.pt() }; top { 5.pt() } } }
+                attributes { margins { all { 5.pt() } } }
                 image {
                     filePath = it.imagePath
                     attributes {
@@ -58,18 +58,18 @@ class CVExample {
     private fun ContainerBuilderApi.profile(builder: ProfileBuilder.() -> Unit) {
         ProfileBuilder().apply { builder() }.let {
             vertical {
-                attributes { margins { left { 5.pt() }; top { 5.pt() } } }
+                attributes { margins { all { 5.pt() } } }
                 textValue {
                     attributes {
                         text { fontSize = 38; bold }
-                        margins { top { 5.pt() } }
+                        margins { all { 5.pt() } }
                     }
                     it.firstName
                 }
                 textValue {
                     attributes {
                         text { fontSize = 38; bold }
-                        margins { top { 5.pt() } }
+                        margins { all { 5.pt() } }
                     }
                     it.lastName
                 }
@@ -78,8 +78,8 @@ class CVExample {
                     textValue { attributes { text { bold; fontSize = 16 } }; "Profile" }
                     textValue {
                         attributes {
-                            width { 95.percents() }
-                            margins { top { 5.pt() }; left { 5.pt() } }
+                            width { 100.percents() }
+                            margins { all { 5.pt() } }
                             text { breakLines }
                             alignment { justify; top }
                         }
@@ -103,17 +103,29 @@ class CVExample {
         EmploymentEntryBuilder().apply { builder() }.let {
             vertical {
                 attributes { background { lighterGray } }
-                attributes { margins { left { 5.pt() }; top { 5.pt() } } }
-                textValue { attributes { text { bold; fontSize = 12; white };background { black } }; it.client }
-                textValue { attributes { text { bold; fontSize = 10 } }; "${it.from} - ${it.to}" }
+                attributes { margins { all { 5.pt() } } }
                 textValue {
                     attributes {
-                        width { 95.percents() }
-                        margins { top { 5.pt() }; left { 5.pt() } }
+                        text { bold; fontSize = 12; white };
+                        background { black }
+                        margins { all { 2.pt() } }
+                    }
+                    it.client
+                }
+                textValue {
+                    attributes {
+                        text { bold; fontSize = 10 }
+                        margins { all { 2.pt() } }
+                    };
+                    "${it.from} - ${it.to}"
+                }
+                textValue {
+                    attributes {
+                        margins { all { 5.pt() } }
                         text { breakLines }
                         alignment { justify; top }
-                        clip { disabled }
-                        overflow { retry }
+                        //clip { disabled }
+                        //overflow { retry }
                     }
                     it.description
                 }
@@ -229,22 +241,22 @@ class CVExample {
                                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
                                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
                                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
-                                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit." +
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
 
                         }
                     }

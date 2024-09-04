@@ -42,13 +42,15 @@ class CellRenderableEntity(
             boundaryToFit
         )
 
-    override fun TableLayout.absorbRenderableBoundingBox(bbox: RenderableBoundingBox, status: RenderingStatus) {
+    override fun TableLayout.applyMeasures(bbox: RenderableBoundingBox, status: RenderingStatus) {
         if (!status.hasLayoutEffect()) return
-        bbox.width?.let {
-            setColumnWidth(getColumn(), it, SizingOptions.SET_IF_GREATER)
-        }
-        bbox.height?.let {
-            setRowHeight(getRow(), it, SizingOptions.SET_IF_GREATER)
+        whileMeasuring {
+            bbox.width?.let {
+                setColumnWidth(getColumn(), it, SizingOptions.REVERSIBLE)
+            }
+            bbox.height?.let {
+                setRowHeight(getRow(), it, SizingOptions.REVERSIBLE)
+            }
         }
     }
 

@@ -32,7 +32,7 @@ class TextRenderableEntity internal constructor(
             // In case of when measure was called prior to render
             // we can take measured size of layout which was used for measuring.
             width = whenMeasured { getBorderRectangle().getWidth() } ?: getModelAttribute<WidthAttribute>()?.value,
-            height = whenMeasured { getBorderRectangle().getHeight() }?: getModelAttribute<HeightAttribute>()?.value,
+            height = whenMeasured { getBorderRectangle().getHeight() } ?: getModelAttribute<HeightAttribute>()?.value,
             type = boundaryToFit
         )
 

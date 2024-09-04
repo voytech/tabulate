@@ -1,10 +1,7 @@
 package io.github.voytech.tabulate
 
 import io.github.voytech.tabulate.Utils.dollarColumn
-import io.github.voytech.tabulate.components.container.api.builder.dsl.borders
-import io.github.voytech.tabulate.components.container.api.builder.dsl.height
-import io.github.voytech.tabulate.components.container.api.builder.dsl.margins
-import io.github.voytech.tabulate.components.container.api.builder.dsl.vertical
+import io.github.voytech.tabulate.components.container.api.builder.dsl.*
 import io.github.voytech.tabulate.components.document.api.builder.dsl.document
 import io.github.voytech.tabulate.components.document.template.export
 import io.github.voytech.tabulate.components.page.api.builder.dsl.PageBuilderApi
@@ -225,27 +222,140 @@ class TableTests {
         }
     }
 
+    private fun TableBuilderApi<*>.tableNumberHeaderRow(seq: Int) {
+        rows {
+            newRow {
+                cell(0) {
+                    value = "$seq"
+                    colSpan = 2
+                    attributes { alignment { center }; text { bold } }
+                }
+            }
+        }
+    }
+
+    private fun ContainerBuilderApi.containerAttributes() {
+        attributes {
+            height { 36.percents() }
+            margins { all { 5.pt() } }
+            borders { all { solid; green; 6.pt() } }
+        }
+    }
+
     @Test
     fun `should export multiple tables vertically with overflow handling`() {
         document {
             page {
                 vertical {
                     immediateIterations
-                    forcePreMeasure
-                    attributes {
-                        height { 36.percents() }
-                        margins { left { 5.pt() }; top { 5.pt() } }
-                        borders { all { solid; green; 6.pt() } }
-                    }
-                    repeat((1..20).count()) {
-                        table(typedTable<SampleCustomer> { name = "$it";attributes { clip { disabled } } } +
-                                Utils.sampleCustomersTable(
-                                    SampleCustomer.create(5), SampleCustomer::firstName, SampleCustomer::lastName
-                                )
+                    //forcePreMeasure
+                    containerAttributes()
+                    repeat((1..19).count()) {
+                        table(
+                            Utils.sampleCustomersTable(
+                                SampleCustomer.create(5),
+                                SampleCustomer::firstName,
+                                SampleCustomer::lastName
+                            ) + typedTable<SampleCustomer> {
+                                columns {
+                                    //column(SampleCustomer::firstName) { attributes { width { 50.pt() } }}
+                                    //column(SampleCustomer::lastName) { attributes { width { 50.pt() } }}
+                                }
+                                name = "$it";attributes { clip { disabled } }
+                                tableNumberHeaderRow(it)
+                            }
                         )
                     }
                 }
             }
         }.export(File("table_5.pdf"))
+    }
+
+    @Test
+    fun `should export tables with  column0 width=15,clip=disabled`() {
+        document {
+            page {
+                vertical {
+                    immediateIterations
+                    //forcePreMeasure
+                    containerAttributes()
+                    repeat((1..19).count()) {
+                        table(
+                            Utils.sampleCustomersTable(
+                                SampleCustomer.create(5),
+                                SampleCustomer::firstName,
+                                SampleCustomer::lastName
+                            ) + typedTable<SampleCustomer> {
+                                columns {
+                                    column(SampleCustomer::firstName) { attributes { width { 15.pt() } }}
+                                }
+                                name = "$it";attributes { clip { disabled } }
+                                tableNumberHeaderRow(it)
+                            }
+                        )
+                    }
+                }
+            }
+        }.export(File("table_6.pdf"))
+    }
+
+    @Test
+    fun `should export tables with  column0Width=50,column1Width=150,clip=disabled`() {
+        document {
+            page {
+                vertical {
+                    immediateIterations
+                    containerAttributes()
+                    repeat((1..19).count()) {
+                        table(
+                            Utils.sampleCustomersTable(
+                                SampleCustomer.create(5),
+                                SampleCustomer::firstName,
+                                SampleCustomer::lastName
+                            ) + typedTable<SampleCustomer> {
+                                columns {
+                                    column(SampleCustomer::firstName) { attributes { width { 50.pt() } }}
+                                    column(SampleCustomer::lastName) { attributes { width { 150.pt()  } }}
+                                }
+                                name = "$it";attributes { clip { disabled } }
+                                tableNumberHeaderRow(it)
+                            }
+                        )
+                    }
+                }
+            }
+        }.export(File("table_7.pdf"))
+    }
+
+    @Test
+    fun `should export tables with  row0Height=50,column1Width=150,clip=disabled`() {
+        document {
+            page {
+                vertical {
+                    immediateIterations
+                    containerAttributes()
+                    repeat((1..19).count()) {
+                        table(
+                            Utils.sampleCustomersTable(
+                                SampleCustomer.create(5),
+                                SampleCustomer::firstName,
+                                SampleCustomer::lastName
+                            ) + typedTable<SampleCustomer> {
+                                columns {
+                                    column(SampleCustomer::lastName) { attributes { width { 150.pt()  } }}
+                                }
+                                name = "$it";attributes { clip { disabled } }
+                                tableNumberHeaderRow(it)
+                                rows {
+                                    matching { eq(0) } assign {
+                                        attributes { height { 50.pt() }  }
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }.export(File("table_8.pdf"))
     }
 }

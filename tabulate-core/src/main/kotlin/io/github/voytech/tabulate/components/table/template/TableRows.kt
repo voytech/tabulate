@@ -2,6 +2,11 @@ package io.github.voytech.tabulate.components.table.template
 
 import io.github.voytech.tabulate.components.table.model.*
 import io.github.voytech.tabulate.components.table.rendering.*
+import io.github.voytech.tabulate.components.table.template.TableRenderIterations.Companion.END_RECORD
+import io.github.voytech.tabulate.components.table.template.TableRenderIterations.Companion.END_ROW
+import io.github.voytech.tabulate.components.table.template.TableRenderIterations.Companion.START_RECORD
+import io.github.voytech.tabulate.components.table.template.TableRenderIterations.Companion.START_ROW
+import io.github.voytech.tabulate.core.layout.Axis
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.operation.*
 import io.github.voytech.tabulate.core.operation.Nothing
@@ -78,7 +83,8 @@ internal class SyntheticRow<T : Any>(
     // attributes to be accessible on AttributedContext:
     internal val rowStartAttributes: Attributes = tableAttributesForContext.get<RowStartRenderableEntity>() + allRowAttributes.forContext<RowStartRenderableEntity>(),
     internal val rowEndAttributes: Attributes = tableAttributesForContext.get<RowEndRenderableEntity<T>>() + allRowAttributes.forContext<RowEndRenderableEntity<T>>(),
-    private val rowCellAttributes: Attributes = rowDefinitions.flattenCellAttributes().forContext<CellRenderableEntity>(),
+    private val rowCellAttributes: Attributes = rowDefinitions.flattenCellAttributes()
+        .forContext<CellRenderableEntity>(),
     internal val cellContextAttributes: MutableMap<ColumnDef<T>, Attributes> = mutableMapOf(),
 ) {
 
@@ -129,7 +135,11 @@ internal class TableRowsRenderer<T : Any>(
     private val indexedTableRows: IndexedTableRows<T> = tableModel.indexRows()
     private val rows = QualifiedRows(indexedTableRows)
 
-    data class CellRenderingResult<T>(val result: RenderingResult, val key: ColumnKey<T>, val cell: CellRenderableEntity)
+    data class CellRenderingResult<T>(
+        val result: RenderingResult,
+        val key: ColumnKey<T>,
+        val cell: CellRenderableEntity
+    )
 
     private fun List<CellRenderingResult<T>>.firstNokResultOrNull() = firstOrNull { it.result.hasOverflown() }
 
@@ -178,14 +188,15 @@ internal class TableRowsRenderer<T : Any>(
             with(rows.findQualifying(sourceRow)) {
                 createRowStart(rowIndex = rowIndex.value, customAttributes = state.data).let { rowStart ->
                     when (val status = api.renderOrMeasure(rowStart).status) {
-                        Ok, Nothing -> resolveAndRenderCells(sourceRow).let {
+                        Ok, Nothing, is RenderingClipped -> resolveAndRenderCells(sourceRow).let {
                             it.firstNokResultOrNull()?.let { nok ->
-                                OverflowResult(nok.result.status  as AxisBoundStatus)
+                                OverflowResult(nok.result.status as AxisBoundStatus)
                                 //@TODO I think when clipped then we should continue with resolveAndRenderRowEnd
                             } ?: run {
                                 resolveAndRenderRowEnd(rowStart, it.asMap())
                             }
                         }
+
                         else -> OverflowResult(status as AxisBoundStatus)
                     }
                 }
@@ -239,37 +250,49 @@ internal class TableRowsRenderer<T : Any>(
     /**
      * @author Wojciech Mąka
      */
-    private fun IndexedResult<RowEndRenderableEntity<T>>.startWithSkippedRowOnNextIteration() {
-        renderIterations.pushNewIteration(rowIndex, sourceRecordIndex ?: recordIndex)
+    private fun IndexedResult<RowEndRenderableEntity<T>>.startWithSkippedRowOnNextIteration(processedCnt: Int) {
+        if (processedCnt > 1) {
+            // This means whe have processed at least one row so there is something to render something on this iteration
+            val finalRecordIndex = sourceRecordIndex ?: recordIndex
+            api.iterations().appendAttributes(END_ROW to rowIndex - 1, END_RECORD to finalRecordIndex - 1)
+            api.iterations().appendPending(START_ROW to rowIndex, START_RECORD to finalRecordIndex)
+        } else {
+            // This mean there was nothing to render on this iteration, so we can retry to absorb new space.
+            api.iterations().retryIteration()
+        }
     }
 
     private fun IndexedResult<RowEndRenderableEntity<T>>.startWithNextExistingRowOnNextIteration() {
         val nextDefinedRowIndex = indexedTableRows.getNextCustomRowIndex(rowIndex)
         val nextRowIndex = rowIndex.inc()
         if (nextDefinedRowIndex != null || recordIndex <= lastRecordIndex) {
-            renderIterations.pushNewIteration(nextRowIndex, recordIndex)
+            api.iterations().appendAttributes(END_ROW to nextRowIndex - 1, END_RECORD to recordIndex - 1)
+            api.iterations().appendPending(START_ROW to nextRowIndex, START_RECORD to recordIndex)
         }
     }
 
     private fun RowIndex.inActiveWindow(): Boolean {
-        val maxIndex = renderIterations.getEndRowIndex()
-        val minIndex = renderIterations.getStartRowIndex()
+        val maxIndex = api.iterations().getCurrentIterationAttributeOrNull<RowIndex>(END_ROW)
+        val minIndex = api.iterations().getCurrentIterationAttributeOrNull<RowIndex>(START_ROW)
         return !(maxIndex != null && value > maxIndex.value || minIndex != null && value < minIndex.value)
     }
 
-    fun renderRows() {
+    fun renderRows(then: () -> RenderingResult): RenderingResult {
+        var processedCnt = 0
         while (indexIncrement.getRowIndex().inActiveWindow()) {
             val row = resolve(indexIncrement.getRowIndex())
             if (row != null) {
+                processedCnt++
                 when (row.result) {
                     is SuccessResult -> {
                         indexIncrement.set(row.rowIndex)
                         indexIncrement.inc()
                     }
+
                     is OverflowResult -> {
                         when (row.result.overflow) {
                             is RenderingSkipped -> {
-                                row.startWithSkippedRowOnNextIteration()
+                                row.startWithSkippedRowOnNextIteration(processedCnt)
                                 break
                             }
 
@@ -282,6 +305,8 @@ internal class TableRowsRenderer<T : Any>(
                 }
             } else break
         }
+        then()
+        return Ok.asResult()
     }
 
 }

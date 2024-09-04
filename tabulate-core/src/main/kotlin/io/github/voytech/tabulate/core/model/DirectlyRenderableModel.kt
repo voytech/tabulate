@@ -9,7 +9,7 @@ import io.github.voytech.tabulate.core.operation.RenderingSkipped
 
 abstract class DirectlyRenderableModel<R : RenderableEntity<SimpleLayout>> : ModelWithAttributes() {
 
-    override fun doExport(api: ExportApi) = api {
+    override fun doExport(api: ExportApi): Unit = api {
         val renderable = asRenderable()
         render(renderable).let { result ->
             traceSection("Rendered: $renderable, ${result.status}")
@@ -17,7 +17,7 @@ abstract class DirectlyRenderableModel<R : RenderableEntity<SimpleLayout>> : Mod
         }
     }
 
-    override fun takeMeasures(api: ExportApi) = api {
+    override fun takeMeasures(api: ExportApi): Unit = api {
         val renderable = asRenderable()
         measure(renderable).let { result ->
             traceSection("Measured: $renderable, ${result.status}")
@@ -38,7 +38,7 @@ abstract class DirectlyRenderableModel<R : RenderableEntity<SimpleLayout>> : Mod
 
             is RenderingSkipped -> {
                 when (overflow) {
-                    Overflow.RETRY, null -> retry()
+                    Overflow.RETRY, null -> retryIteration()
                     Overflow.STOP -> stop()
                     else -> {}
                 }

@@ -49,13 +49,12 @@ class ColumnStartRenderableEntity(
         )
 
 
-    override fun TableLayout.absorbRenderableBoundingBox(bbox: RenderableBoundingBox, status: RenderingStatus) {
+    override fun TableLayout.applyMeasures(bbox: RenderableBoundingBox, status: RenderingStatus) {
         if (!status.hasLayoutEffect()) return
         bbox.width?.let {
             val ops = SizingOptions.SET_LOCKED.takeIf { hasModelAttribute<WidthAttribute>() } ?: SizingOptions.SET
             setColumnWidth(getColumn(), it, ops)
         }
-
     }
 
     override fun getColumn(): Int = columnIndex

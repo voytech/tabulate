@@ -7,14 +7,15 @@ import io.github.voytech.tabulate.round3
 enum class SizingOptions {
     SET,
     SET_IF_GREATER,
-    SET_LOCKED
+    SET_LOCKED,
+    REVERSIBLE,
 }
 
 interface TableSizingMethods {
     fun setColumnWidth(column: Int, width: Width, options: SizingOptions = SizingOptions.SET)
     fun setRowHeight(row: Int, height: Height, options: SizingOptions = SizingOptions.SET)
-    fun resizeColumnsToFit(width: Width)
-    fun resizeRowsToFit(height: Height)
+    fun increaseColumnsWidthsToFill(width: Width)
+    fun increaseRowsHeightsToFill(height: Height)
     fun getMeasuredColumnWidth(column: Int, colSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Width?
     fun getMeasuredRowHeight(row: Int, rowSpan: Int = 1, uom: UnitsOfMeasure = UnitsOfMeasure.PT): Height?
     fun startAt(row: Int, column: Int)
@@ -33,14 +34,31 @@ class NonUniformCartesianGrid(
     val standardUnit: StandardUnits = StandardUnits.PT,
 ) : TableSizingMethods, AbsolutePositionMethods {
 
+    private inner class UnconfirmedMeasures(
+        val columnWidths: MutableMap<Int, PositionAndLength> = columns.toMutableMap(),
+        var rowIndex: Int? = null,
+        var rowHeight: Float? = null,
+    ) {
+        fun isRowHeightSet(): Boolean = rowIndex != null && rowHeight != null
+
+    }
+
+    private fun <T> UnconfirmedMeasures?.whenValidFor(row: Int, block: (measures: UnconfirmedMeasures) -> T): T? {
+        if (this == null) return null
+        val local = rows.asLocal(row)
+        val correct = rowIndex == local
+        return if (correct) block(this) else null
+    }
+
     private val defaultWidthInPt: Float = defaultUnscaledWidthInPt.round3()
     private val defaultHeightInPt: Float = defaultUnscaledHeightInPt.round3()
 
     private var rowOffsetIndex: Int = 0
     private var columnOffsetIndex: Int = 0
-
     private val rows: MutableMap<Int, PositionAndLength> = mutableMapOf()
     private val columns: MutableMap<Int, PositionAndLength> = mutableMapOf()
+    private var unconfirmedMeasures: UnconfirmedMeasures? = null
+
     private val lockedRows: MutableMap<Int, Boolean> = mutableMapOf()
     private val lockedColumns: MutableMap<Int, Boolean> = mutableMapOf()
 
@@ -81,7 +99,9 @@ class NonUniformCartesianGrid(
         columnOffsetIndex
     }
 
-    private fun MutableMap<Int, PositionAndLength>.ofLocal(index: Int): Int = index - offsetIndex()
+    private fun MutableMap<Int, PositionAndLength>.areRows(): Boolean = this === rows
+
+    private fun MutableMap<Int, PositionAndLength>.asLocal(index: Int): Int = index - offsetIndex()
 
     private fun MutableMap<Int, PositionAndLength>.findIndex(
         position: Float, defMeasure: Float, mode: IndexRoundMode = IndexRoundMode.FLOOR
@@ -103,7 +123,7 @@ class NonUniformCartesianGrid(
     }
 
     private fun MutableMap<Int, PositionAndLength>.findPosition(index: Int, defMeasure: Float): PositionAndLength =
-        ofLocal(index).let { effectiveIndex ->
+        asLocal(index).let { effectiveIndex ->
             val defMeasure3 = defMeasure.round3()
             return this[effectiveIndex] ?: run {
                 val first = this[0] ?: PositionAndLength(0.000f, defMeasure3)
@@ -171,11 +191,11 @@ class NonUniformCartesianGrid(
     private fun <T : Measure<T>> MutableMap<Int, PositionAndLength>.setLengthAtIndex(
         index: Int, length: T, defaultMeasure: Float, setOnlyGreater: Boolean = false
     ) {
+        val localIndex = asLocal(index)
         return findPosition(index, defaultMeasure).let { posLen ->
             length.switchUnitOfMeasure(standardUnit.asUnitsOfMeasure()).let { measure ->
                 val measure3 = measure.value.round3()
-                val localIndex = ofLocal(index)
-                val diff = measure3 - (this[localIndex]?.length ?: 0f)
+                val diff = measure3 - posLen.length
                 if (diff > 0 || !setOnlyGreater) {
                     this[localIndex] = PositionAndLength(posLen.position, measure3)
                     keys.forEach {
@@ -184,6 +204,30 @@ class NonUniformCartesianGrid(
                 }
             }
         }
+    }
+
+    private fun ensureUnconfirmedMeasures(): UnconfirmedMeasures = unconfirmedMeasures ?: run {
+        UnconfirmedMeasures(
+            mutableMapOf<Int, PositionAndLength>().apply { this += columns }
+        ).also { unconfirmedMeasures = it }
+    }
+
+    private fun <T : Measure<T>> proposeRowHeightAtIndex(index: Int, length: T, defaultMeasure: Float) {
+        ensureUnconfirmedMeasures().let {
+            val current = if (!it.isRowHeightSet()) {
+                it.rowIndex = rows.asLocal(index)
+                rows.findPosition(index, defaultMeasure).length
+            } else {
+                it.rowHeight!!
+            }
+            val newMeasure = length.value.round3()
+            val diff = newMeasure - current
+            it.rowHeight = if (diff > 0) newMeasure else current
+        }
+    }
+
+    private fun <T : Measure<T>> proposeColumnWidthAtIndex(index: Int, length: T, defaultMeasure: Float) {
+        ensureUnconfirmedMeasures().columnWidths.setLengthAtIndex(index, length, defaultMeasure, true)
     }
 
     private fun MutableMap<Int, Boolean>.lock(index: Int) {
@@ -207,6 +251,11 @@ class NonUniformCartesianGrid(
                 SizingOptions.SET_LOCKED -> {
                     measures.setLengthAtIndex(index, measure, defMeasure); locks.lock(index)
                 }
+
+                SizingOptions.REVERSIBLE -> {
+                    if (measures.areRows()) proposeRowHeightAtIndex(index, measure, defMeasure)
+                    else proposeColumnWidthAtIndex(index, measure, defMeasure)
+                }
             }
         }
     }
@@ -219,20 +268,62 @@ class NonUniformCartesianGrid(
         setLengthWithOptions(rows, lockedRows, row, height, defaultHeightInPt, options)
     }
 
-    override fun resizeColumnsToFit(width: Width) {
-        columns.resizeLengthsToFit(width, defaultWidthInPt, lockedColumns)
+    fun getProposedRowHeight(row: Int): Height? {
+        return unconfirmedMeasures.whenValidFor(row) { unconfirmed ->
+            unconfirmed.rowHeight?.let { height -> Height(height, standardUnit.asUnitsOfMeasure()) }
+        }
     }
 
-    override fun resizeRowsToFit(height: Height) {
-        rows.resizeLengthsToFit(height, defaultHeightInPt, lockedRows)
+    fun getProposedRowWidth(row: Int): Width? {
+        return unconfirmedMeasures.whenValidFor(row) { unconfirmed ->
+            Width(unconfirmed.columnWidths.getTotalLength(), standardUnit.asUnitsOfMeasure())
+        }
     }
 
-    private fun <T : Measure<T>> MutableMap<Int, PositionAndLength>.resizeLengthsToFit(
+    fun confirmProposedRowSize(row: Int) {
+        unconfirmedMeasures.whenValidFor(row) { unconfirmed ->
+            getProposedRowHeight(row)?.let { height ->
+                rows.setLengthAtIndex(row, height, defaultHeightInPt)
+            }
+            columns.clear()
+            columns.putAll(unconfirmed.columnWidths)
+        }
+        unconfirmedMeasures = null
+    }
+
+    fun rollbackProposedRowSize() {
+        unconfirmedMeasures = null
+    }
+
+    override fun increaseColumnsWidthsToFill(width: Width) {
+        columns.increaseSizeToFill(width, defaultWidthInPt, lockedColumns)
+    }
+
+    override fun increaseRowsHeightsToFill(height: Height) {
+        rows.increaseSizeToFill(height, defaultHeightInPt, lockedRows)
+    }
+
+    fun shrinkProposedRowToFit(row: Int, size: Size) {
+        unconfirmedMeasures.whenValidFor(row) {
+            if (it.columnWidths.isNotEmpty()) {
+                it.columnWidths.resizePositionsToFit(size.width, defaultWidthInPt, lockedColumns) { target, content ->
+                    target < content
+                }
+            }
+        }
+    }
+
+    private fun <T : Measure<T>> MutableMap<Int, PositionAndLength>.increaseSizeToFill(
         length: T, defaultLen: Float, locks: MutableMap<Int, Boolean>
+    ) = resizePositionsToFit(length, defaultLen, locks) { target, content -> target > content }
+
+
+    private fun <T : Measure<T>> MutableMap<Int, PositionAndLength>.resizePositionsToFit(
+        length: T, defaultLen: Float, locks: MutableMap<Int, Boolean>, comparator: (Float, Float) -> Boolean
     ) {
         val targetLength = length.switchUnitOfMeasure(standardUnit.asUnitsOfMeasure()).value
         val contentWidth = getTotalLength()
-        if (targetLength > contentWidth) {
+        if (comparator(targetLength, contentWidth)) {
             val diff = targetLength - contentWidth
             val notLockedMeasures = filterKeys { index -> !locks.containsKey(index) }
             if (notLockedMeasures.isNotEmpty()) {
@@ -253,7 +344,7 @@ class NonUniformCartesianGrid(
         defMeasure: Float
     ): T =
         clazz.new(
-            0.until(span).sumOf { (this[ofLocal(index + it)]?.length ?: defMeasure).toDouble() }.toFloat(),
+            0.until(span).sumOf { (this[asLocal(index + it)]?.length ?: defMeasure).toDouble() }.toFloat(),
             standardUnit.asUnitsOfMeasure()
         )
 
@@ -332,18 +423,6 @@ class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties
         }
     }
 
-    override fun resizeColumnsToFit(width: Width) {
-        whileMeasuring {
-            delegate.resizeColumnsToFit(width)
-        }
-    }
-
-    override fun resizeRowsToFit(height: Height) {
-        whileMeasuring {
-            delegate.resizeRowsToFit(height)
-        }
-    }
-
     override fun getMeasuredColumnWidth(column: Int, colSpan: Int, uom: UnitsOfMeasure): Width? =
         if (isMeasured || delegate.isColumnLocked(column)) {
             delegate.getMeasuredColumnWidth(column, colSpan, uom)
@@ -356,6 +435,40 @@ class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties
 
     fun getCurrentRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height =
         delegate.getMeasuredRowHeight(row, rowSpan, uom)
+
+    fun getProposedRowHeight(row: Int): Height? = delegate.getProposedRowHeight(row)
+
+    fun getProposedRowWidth(row: Int): Width? = delegate.getProposedRowWidth(row)
+
+    fun rollbackProposedRowSize(row: Int) {
+        whileMeasuring {
+            delegate.rollbackProposedRowSize()
+        }
+    }
+
+    fun confirmProposedRowSize(row: Int) {
+        whileMeasuring {
+            delegate.confirmProposedRowSize(row)
+        }
+    }
+
+    fun shrinkProposedRowToFit(row: Int, size: Size?) {
+        whileMeasuring {
+            if (size != null) delegate.shrinkProposedRowToFit(row, size)
+        }
+    }
+
+    override fun increaseColumnsWidthsToFill(width: Width) {
+        whileMeasuring {
+            delegate.increaseColumnsWidthsToFill(width)
+        }
+    }
+
+    override fun increaseRowsHeightsToFill(height: Height) {
+        whileMeasuring {
+            delegate.increaseRowsHeightsToFill(height)
+        }
+    }
 
     override fun startAt(row: Int, column: Int) {
         delegate.startAt(row, column)

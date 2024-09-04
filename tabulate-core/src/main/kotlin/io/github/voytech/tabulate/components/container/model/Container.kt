@@ -29,7 +29,7 @@ class Container(
         exportWithContinuations<FlowLayout>(models, descendantsIterationsKind)
     }
 
-    override fun takeMeasures(api: ExportApi) = api {
+    override fun takeMeasures(api: ExportApi): Unit = api {
         measureWithContinuations<FlowLayout>(models, descendantsIterationsKind)
     }
 

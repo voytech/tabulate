@@ -6,7 +6,6 @@ import io.github.voytech.tabulate.core.layout.RegionConstraints
 import io.github.voytech.tabulate.core.layout.impl.SimpleLayout
 import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.attributes.AlignmentAttribute
-import io.github.voytech.tabulate.core.model.attributes.MarginsAttribute
 import java.util.*
 
 class Wrapper(
@@ -22,7 +21,7 @@ class Wrapper(
     override val needsMeasureBeforeExport: Boolean
         get() = alignments?.let { it.horizontal != null || it.vertical != null } ?: false
 
-    override fun doExport(api: ExportApi) = api {
+    override fun doExport(api: ExportApi): Unit = api {
         withinCurrentLayout {
             alignments?.let { alignment ->
                 child.measure().let { childSize ->
@@ -37,7 +36,7 @@ class Wrapper(
         }
     }
 
-    override fun takeMeasures(api: ExportApi) = api {
+    override fun takeMeasures(api: ExportApi): Unit = api {
         child.measure() // pre-measure all children if this method was invoked eagerly before rendering.
     }
 

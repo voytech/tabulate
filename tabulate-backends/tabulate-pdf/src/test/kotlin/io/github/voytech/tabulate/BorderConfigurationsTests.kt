@@ -19,12 +19,9 @@ class BorderConfigurationsTests {
             page {
                 table {
                     attributes {
-                        margins {
-                            left { 2.pt() }
-                            top { 2.pt() }
-                        }
+                        margins { all { 5.pt() } }
                         columnWidth { 80.pt() }
-                        width { 99.percents() }
+                        width { 100.percents() }
                         rowHeight { 20.pt() }
                     }
                     columns {

@@ -66,7 +66,7 @@ class Table<T : Any> internal constructor(
 
     private fun data(): Iterable<T>? = dataSource?.dataSource
 
-    override fun doExport(api: ExportApi) = api {
+    override fun doExport(api: ExportApi): Unit = api {
         withinCurrentLayout {
             val iteration = currentIteration()
             startAt(iteration.getStartRowIndexOrZero(), iteration.getStartColumnIndexOrZero())
@@ -74,14 +74,14 @@ class Table<T : Any> internal constructor(
         }
     }
 
-    override fun takeMeasures(api: ExportApi) = api {
+    override fun takeMeasures(api: ExportApi): Unit = api {
         withinCurrentLayout {
             val iteration = currentIteration()
             startAt(iteration.getStartRowIndexOrZero(), iteration.getStartColumnIndexOrZero())
             TableExport(this@Table, this@api, iteration, data()).renderTable()
             //After measuring layout try resize columns to fit explicitly set width
-            getExplicitWidth(BoundaryType.BORDER)?.let { explicitWidth -> resizeColumnsToFit(explicitWidth) }
-            getExplicitHeight(BoundaryType.BORDER)?.let { explicitHeight -> resizeRowsToFit(explicitHeight) }
+            getExplicitWidth(BoundaryType.BORDER)?.let { explicitWidth -> increaseColumnsWidthsToFill(explicitWidth) }
+            getExplicitHeight(BoundaryType.BORDER)?.let { explicitHeight -> increaseRowsHeightsToFill(explicitHeight) }
         }
     }
 

@@ -2,8 +2,7 @@ package io.github.voytech.tabulate.core
 
 import io.github.voytech.tabulate.core.layout.Layout
 import io.github.voytech.tabulate.core.layout.RegionConstraints
-import io.github.voytech.tabulate.core.model.ModelExportContext
-import io.github.voytech.tabulate.core.model.Phase
+import io.github.voytech.tabulate.core.model.*
 import io.github.voytech.tabulate.core.model.debug
 import io.github.voytech.tabulate.core.model.trace
 import mu.KLogging
@@ -27,6 +26,10 @@ class ExportIterations(val context: ModelExportContext) {
         current = scheduledIterations[0]
     }
 
+    private fun reactivate() {
+        context.state(Phase.MEASURING,ExportState.ACTIVE)
+    }
+
     /**
      * Creates a new export iteration with optional attributes.
      *
@@ -44,11 +47,11 @@ class ExportIterations(val context: ModelExportContext) {
      */
     fun appendIteration(attributes: Map<String, Any>? = null) {
         val newOne = newIteration(attributes)
-        if (scheduledIterations.any { it conflicts newOne } ||
-            runningIterations.any { it conflicts newOne }) {
+        if (scheduledIterations.any { it conflicts newOne }) {
             debug("Iteration attributes conflict detected!")
         } else {
             scheduledIterations += newOne
+            reactivate()
         }
     }
 
@@ -59,6 +62,7 @@ class ExportIterations(val context: ModelExportContext) {
      */
     fun prependIteration(attributes: Map<String, Any>) {
         scheduledIterations.add(0, newIteration(attributes))
+        reactivate()
     }
 
     /**

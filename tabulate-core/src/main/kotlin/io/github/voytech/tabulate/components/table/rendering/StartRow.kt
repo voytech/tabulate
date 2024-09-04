@@ -58,7 +58,7 @@ class RowStartRenderableEntity(
         )
 
 
-    override fun TableLayout.absorbRenderableBoundingBox(bbox: RenderableBoundingBox, status: RenderingStatus) {
+    override fun TableLayout.applyMeasures(bbox: RenderableBoundingBox, status: RenderingStatus) {
         if (!status.hasLayoutEffect()) return
         bbox.height?.let {
             val ops = SizingOptions.SET_LOCKED.takeIf { hasModelAttribute<HeightAttribute>() } ?: SizingOptions.SET

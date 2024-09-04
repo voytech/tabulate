@@ -17,9 +17,9 @@ object Utils {
         vararg props: KProperty1<SampleCustomer, *>
     ): (TableBuilderApi<SampleCustomer>.() -> Unit) = typedTable {
         attributes {
-            margins { left { 1.pt()}; top {1.pt()} }
+            margins { all { 2.pt()} }
             borders { bottom { 0.5.pt(); solid } }
-            tableBorders { all { 5.pt();solid; black } }
+            tableBorders { all { 3.pt();solid; black } }
             text { breakWords; black }
         }
         if (props.isNotEmpty()) {

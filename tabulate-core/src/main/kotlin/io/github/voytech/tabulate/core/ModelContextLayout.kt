@@ -6,22 +6,7 @@ import io.github.voytech.tabulate.core.model.alignment.orDefault
 import io.github.voytech.tabulate.core.model.attributes.*
 
 
-data class RelatedLayouts(val layout: Layout, val parent: Layout?) {
-
-    fun endLayout() {
-        layout.setMeasured()
-    }
-
-    fun getMaxBoundingRectangle(): BoundingRectangle = layout.getMaxBoundingRectangle()
-
-
-    fun allocateSpace(position: Position) {
-        layout.allocateSpace(position)
-    }
-
-    fun isMeasured() = layout.isMeasured
-
-}
+data class RelatedLayouts(val layout: Layout, val parent: Layout?)
 
 /**
  * Wrapper for layout context, which is responsible for managing layout data and calculations that are associated with
@@ -32,14 +17,14 @@ data class RelatedLayouts(val layout: Layout, val parent: Layout?) {
  * e.g. when enclosing parent layout was previously repositioned.
  */
 class ModelContextLayout(private val context: ModelExportContext) { // TODO make this class extending interface ContextScope
-    lateinit var layout: Layout
+    lateinit var layout: AbstractLayout
         private set
 
     private fun uom(): UnitsOfMeasure = context.instance.uom
 
     private fun getParent(): ModelContextLayout? = context.parent()?.activeLayoutContext
 
-    private fun getParentLayout(): Layout? = getParent()?.layout
+    private fun getParentLayout(): AbstractLayout? = getParent()?.layout
 
     fun pairWithParent(): RelatedLayouts = RelatedLayouts(layout, getParentLayout())
 
@@ -71,7 +56,7 @@ class ModelContextLayout(private val context: ModelExportContext) { // TODO make
         getParent().let {
             withMaxRightBottomResolved(
                 it?.layout,
-                box.resolveEffectiveLeftTop(it).applyLeftTopBoxModel()
+                box.resolveEffectiveLeftTop(it)
             )
         }
 
@@ -79,6 +64,7 @@ class ModelContextLayout(private val context: ModelExportContext) { // TODO make
         val parentContentLeftTop = parent?.layout?.getContentRectangle()?.leftTop
         return copy(leftTop = leftTop ?: parent?.nextItemPosition() ?: parentContentLeftTop ?: Position.start(uom()))
     }
+
 
     private fun withMaxRightBottomResolved(
         parent: Layout?, constraints: RegionConstraints
@@ -99,7 +85,7 @@ class ModelContextLayout(private val context: ModelExportContext) { // TODO make
                         (constraints.leftTop.y + it).coerceAtMost(implicitMaxRightBottom.y)
                     } ?: implicitMaxRightBottom.y
                 )
-            ).applyRightBottomBoxModel(),
+            ).applyBoxModel(),
             layout = LayoutProperties(
                 declaredWidth = explicitWidth != null,
                 declaredHeight = explicitHeight != null,
@@ -107,61 +93,67 @@ class ModelContextLayout(private val context: ModelExportContext) { // TODO make
         )
     }
 
-    private fun RegionConstraints.applyLeftTopBoxModel(): RegionConstraints =
+    private fun RegionConstraints.applyBoxModel(): RegionConstraints =
         applyLeftTopMarginOffsets()
+            .applyRightBottomMarginOffsets()
             .applyLeftTopBorderOffsets()
-            .applyLeftTopPaddingOffsets()
-
-    private fun RegionConstraints.applyRightBottomBoxModel(): RegionConstraints =
-        applyRightBottomMarginOffsets()
             .applyRightBottomBorderOffsets()
+            .applyLeftTopPaddingOffsets()
             .applyRightBottomPaddingOffsets()
+
 
     private fun RegionConstraints.applyLeftTopMarginOffsets(): RegionConstraints =
         context.getMarginOffsets().let {
             requireNotNull(leftTop)
+            requireNotNull(maxRightBottom)
             if (borderLeftTop == null) {
-                copy(borderLeftTop = leftTop + Size(it.left, it.top))
+                copy(borderLeftTop = orMin(leftTop + Size(it.left, it.top), maxRightBottom))
             } else this
         }
 
     private fun RegionConstraints.applyRightBottomMarginOffsets(): RegionConstraints =
         context.getMarginOffsets().let {
+            requireNotNull(leftTop)
             requireNotNull(maxRightBottom)
+            requireNotNull(borderLeftTop)
             if (borderRightBottom == null) {
-                copy(borderRightBottom = maxRightBottom - Size(it.right, it.bottom))
+                copy(borderRightBottom = orMax(maxRightBottom - Size(it.right, it.bottom), borderLeftTop))
             } else this
         }
 
     private fun RegionConstraints.applyLeftTopBorderOffsets(): RegionConstraints =
         context.getBorderOffsets().let {
             requireNotNull(borderLeftTop)
+            requireNotNull(borderRightBottom)
             if (paddingLeftTop == null) {
-                copy(paddingLeftTop = borderLeftTop + Size(it.left, it.top))
+                copy(paddingLeftTop = orMin(borderLeftTop + Size(it.left, it.top), borderRightBottom))
             } else this
         }
 
     private fun RegionConstraints.applyRightBottomBorderOffsets(): RegionConstraints =
         context.getBorderOffsets().let {
+            requireNotNull(paddingLeftTop)
             requireNotNull(borderRightBottom)
             if (paddingRightBottom == null) {
-                copy(paddingRightBottom = borderRightBottom - Size(it.right, it.bottom))
+                copy(paddingRightBottom = orMax(borderRightBottom - Size(it.right, it.bottom), paddingLeftTop))
             } else this
         }
 
     private fun RegionConstraints.applyLeftTopPaddingOffsets(): RegionConstraints =
         context.getPaddingOffsets().let {
             requireNotNull(paddingLeftTop)
+            requireNotNull(paddingRightBottom)
             if (contentLeftTop == null) {
-                copy(contentLeftTop = paddingLeftTop + Size(it.left, it.top))
+                copy(contentLeftTop = orMin(paddingLeftTop + Size(it.left, it.top), paddingRightBottom))
             } else this
         }
 
     private fun RegionConstraints.applyRightBottomPaddingOffsets(): RegionConstraints =
         context.getPaddingOffsets().let {
+            requireNotNull(contentLeftTop)
             requireNotNull(paddingRightBottom)
             if (contentRightBottom == null) {
-                copy(contentRightBottom = paddingRightBottom - Size(it.right, it.bottom))
+                copy(contentRightBottom = orMax(paddingRightBottom - Size(it.right, it.bottom), contentLeftTop))
             } else this
         }
 
@@ -193,6 +185,7 @@ class ModelContextLayout(private val context: ModelExportContext) { // TODO make
 
 }
 
+
 fun Position.align(attribute: AlignmentAttribute, parentSize: Size, thisSize: Size): Position = Position(
     x = x.align(attribute.horizontal.orDefault(), parentSize.width, thisSize.width),
     y = y.align(attribute.vertical.orDefault(), parentSize.height, thisSize.height)
@@ -212,17 +205,13 @@ data class Padding(
     )
 }
 
-inline fun <reified A : Attribute<A>> Model.getAttribute(): A? =
-    (this as? AttributedModelOrPart)?.attributes?.forContext(javaClass)?.get(A::class.java)
-
-
 fun ModelExportContext.getMarginOffsets(): Padding {
     val margins = model.getAttribute<MarginsAttribute>()
     return Padding(
         left = margins?.left?.asWidth().orZero(),
-        right = Width.zero(),
+        right = margins?.right?.asWidth().orZero(),
         top = margins?.top?.asHeight().orZero(),
-        bottom = Height.zero(),
+        bottom = margins?.bottom?.asHeight().orZero()
     )
 }
 
@@ -243,5 +232,6 @@ fun ModelExportContext.getPaddingOffsets(): Padding =
         right = Width.zero(),
         bottom = Height.zero()
     )
+
 
 // TODO add getPaddingOffsets() when PaddingAttribute implemented.

@@ -31,7 +31,7 @@ data class ClipAttribute(
 ) : Attribute<ClipAttribute>() {
 
     @TabulateMarker
-    class Builder(target: Class<out AttributeAware>) : AttributeBuilder<ClipAttribute>(target),
+    class Builder(target: Set<Class<out AttributeAware>>) : AttributeBuilder<ClipAttribute>(target),
         TextClippingModeWords {
         override var mode: ClippingMode by observable(ClippingMode.SKIP)
         override fun provide(): ClipAttribute = ClipAttribute(mode)
@@ -43,11 +43,11 @@ data class ClipAttribute(
 
     companion object {
         @JvmStatic
-        fun  builder(target: Class<out RenderableEntity<*>>) : Builder =
-            Builder(target)
+        fun  builder(vararg target: Class<out RenderableEntity<*>>) : Builder =
+            Builder(setOf(*target))
 
         @JvmStatic
         inline fun <reified AC: RenderableEntity<*>> builder() : Builder =
-            Builder(AC::class.java)
+            Builder(setOf(AC::class.java))
     }
 }

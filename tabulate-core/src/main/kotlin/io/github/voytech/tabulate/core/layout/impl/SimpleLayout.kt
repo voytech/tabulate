@@ -10,17 +10,17 @@ class SimpleLayout(properties: LayoutProperties) : AbstractLayout(properties), S
 
     override fun resolveNextPosition(): Position = with(region) {
         return if (properties.orientation == Orientation.HORIZONTAL) {
-            Position(contentCursorPosition.x + getHorizontalSpacing(), contentLeftTop.y)
+            Position(renderingPosition.x + getHorizontalSpacing(), contentLeftTop.y)
         } else {
-            Position(contentLeftTop.x, contentCursorPosition.y + getVerticalSpacing())
+            Position(contentLeftTop.x, renderingPosition.y + getVerticalSpacing())
         }
     }
 
     override fun hasSpaceLeft(): Boolean = with(region) {
         if (properties.orientation == Orientation.HORIZONTAL) {
-            contentCursorPosition.x < contentRightBottom.x
+            renderingPosition.x < contentRightBottom.x
         } else {
-            contentCursorPosition.y < contentRightBottom.y
+            renderingPosition.y < contentRightBottom.y
         }
     }
 

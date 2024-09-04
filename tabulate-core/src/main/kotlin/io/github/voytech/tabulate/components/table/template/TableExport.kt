@@ -56,7 +56,10 @@ internal class TableExport<T : Any>(
 
     private val columnAttributes: Map<ColumnDef<T>, ColumnContextAttributes> =
         table.columns.associateWith { column ->
-            column.distributeAttributesForContexts(ColumnStartRenderableEntity::class.java, ColumnEndRenderableEntity::class.java)
+            column.distributeAttributesForContexts(
+                ColumnStartRenderableEntity::class.java,
+                ColumnEndRenderableEntity::class.java
+            )
                 .let {
                     ColumnContextAttributes(
                         columnContextAttributes.get<ColumnStartRenderableEntity>() + it.get<ColumnStartRenderableEntity>(),
@@ -68,9 +71,11 @@ internal class TableExport<T : Any>(
     private fun createRowRenderer() =
         TableRowsRenderer(table, dataSourceActiveWindow, api, lastDataSourceIndex, tableIterations)
 
-    private fun beginTable() {
-        api.renderOrMeasure(table.asTableStart(api.getCustomAttributes()))
-        renderColumnsStarts()
+    private fun beginTable(block: () -> RenderingResult): RenderingResult = api {
+        renderOrMeasure(table.asTableStart(api.getCustomAttributes()))
+            .thenRetryOnOverflowOrElse {
+                renderColumnsStarts().asResult().thenRetryOnOverflowOrElse(block)
+            }
     }
 
     private fun resolveActiveColumns(): Iterator<ColumnDef<T>> =
@@ -83,8 +88,8 @@ internal class TableExport<T : Any>(
         this[def]?.end ?: Attributes()
 
 
-    private fun renderColumnsStarts(): RenderingStatus? {
-        var status: RenderingStatus? = Ok
+    private fun renderColumnsStarts(): RenderingStatus {
+        var status: RenderingStatus = Ok
         resolveActiveColumns().let { iterator ->
             while (iterator.hasNext()) {
                 val def = iterator.next()
@@ -95,8 +100,8 @@ internal class TableExport<T : Any>(
         return status
     }
 
-    private fun renderColumnEnds(): RenderingStatus? {
-        var status: RenderingStatus? = Ok
+    private fun renderColumnEnds(): RenderingStatus {
+        var status: RenderingStatus = Ok
         resolveActiveColumns().let { iterator ->
             while (iterator.hasNext()) {
                 val def = iterator.next()
@@ -108,6 +113,7 @@ internal class TableExport<T : Any>(
                         //tableIterations.pushNewIteration(def)
                         break
                     }
+
                     status.isClipped(Axis.X) -> {
                         //tableIterations.limitWithEndColumn(def)
                         //if (iterator.hasNext()) {
@@ -121,16 +127,16 @@ internal class TableExport<T : Any>(
         return status
     }
 
-    private fun endTable() {
+    private fun endTable(): RenderingResult {
         renderColumnEnds()
-        api.renderOrMeasure(table.asTableEnd(api.getCustomAttributes()))
+        return api.renderOrMeasure(table.asTableEnd(api.getCustomAttributes()))
     }
 
-    fun renderTable() {
-        createRowRenderer().let {
-            beginTable()
-            it.renderRows()
-            endTable()
+    fun renderTable() = api {
+        beginTable {
+            createRowRenderer().renderRows {
+                endTable()
+            }
         }
     }
 

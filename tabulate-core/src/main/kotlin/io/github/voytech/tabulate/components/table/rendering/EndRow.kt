@@ -3,15 +3,12 @@ package io.github.voytech.tabulate.components.table.rendering
 import io.github.voytech.tabulate.components.table.model.ColumnKey
 import io.github.voytech.tabulate.components.table.template.SyntheticRow
 import io.github.voytech.tabulate.core.RenderingContext
+import io.github.voytech.tabulate.core.layout.Axis
 import io.github.voytech.tabulate.core.layout.BoundaryType
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
-import io.github.voytech.tabulate.core.layout.impl.SizingOptions
 import io.github.voytech.tabulate.core.layout.impl.TableLayout
 import io.github.voytech.tabulate.core.model.Attributes
-import io.github.voytech.tabulate.core.model.attributes.HeightAttribute
-import io.github.voytech.tabulate.core.operation.RenderingStatus
-import io.github.voytech.tabulate.core.operation.VoidOperation
-import io.github.voytech.tabulate.core.operation.hasLayoutEffect
+import io.github.voytech.tabulate.core.operation.*
 
 fun interface EndRowOperation<CTX : RenderingContext, T : Any> : VoidOperation<CTX, RowEndRenderableEntity<T>>
 
@@ -37,16 +34,21 @@ class RowEndRenderableEntity<T>(
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
-            width = getMeasuredContentSize()?.width,
-            height = getCurrentRowHeight(getRow(), 1, uom),
+            width = whileMeasuring { getProposedRowWidth(getRow()) } ?: getCurrentContentSize().width,
+            height = whileMeasuring { getProposedRowHeight(getRow()) } ?: getCurrentRowHeight(getRow(), 1, uom),
             boundaryToFit
         )
 
-    override fun TableLayout.absorbRenderableBoundingBox(bbox: RenderableBoundingBox, status: RenderingStatus) {
-        if (!status.hasLayoutEffect()) return
-        bbox.height?.let {
-            val ops = SizingOptions.SET_LOCKED.takeIf { hasModelAttribute<HeightAttribute>() } ?: SizingOptions.SET
-            setRowHeight(getRow(), it, ops)
+    override fun TableLayout.applyMeasures(bbox: RenderableBoundingBox, status: RenderingStatus) {
+        whileMeasuring {
+            if (status.hasLayoutEffect()) {
+                if (status.isClipped()) {
+                    shrinkProposedRowToFit(getRow(), bbox.size)
+                }
+                confirmProposedRowSize(getRow())
+            } else {
+                rollbackProposedRowSize(getRow())
+            }
         }
     }
 

@@ -50,6 +50,8 @@ fun RenderingStatus?.isSkipped(axis: Axis): Boolean = this is RenderingSkipped &
 
 fun RenderingStatus?.isClipped(axis: Axis): Boolean = this is RenderingClipped && activeAxis == axis
 
+fun RenderingStatus?.isClipped(): Boolean = this is RenderingClipped
+
 fun RenderingStatus?.hasOverflown(): Boolean = getAxis()?.let { isSkipped(it) || isClipped(it) } ?: false
 
 fun RenderingResult.hasOverflown(): Boolean = status.hasOverflown()

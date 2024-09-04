@@ -1,9 +1,6 @@
 package io.github.voytech.tabulate.core.model
 
-import io.github.voytech.tabulate.core.layout.Layout
-import io.github.voytech.tabulate.core.layout.LayoutProperties
-import io.github.voytech.tabulate.core.layout.RegionConstraints
-import io.github.voytech.tabulate.core.layout.Region
+import io.github.voytech.tabulate.core.layout.*
 import io.github.voytech.tabulate.core.layout.impl.SimpleLayout
 import mu.KLogging
 import java.util.*
@@ -24,7 +21,7 @@ interface AttributedModelOrPart : AttributeAware, ModelPart
 fun <C : ExecutionContext, R : Any> ExportApi.value(supplier: ReifiedValueSupplier<C, R>): R? =
     with(getCustomAttributes()) { supplier.value() }
 
-interface HavingLayout<LP : Layout> {
+interface HavingLayout<LP : AbstractLayout> {
     fun createLayout(properties: LayoutProperties): LP
 
     fun  ExportApi.withinCurrentLayout(block: (LP.() -> Unit)) {
@@ -66,7 +63,7 @@ abstract class AbstractModel(
 
     protected open fun getLayoutConstraints(): RegionConstraints? = null
 
-    internal fun resolveLayout(properties: LayoutProperties): Layout =
+    internal fun resolveLayout(properties: LayoutProperties): AbstractLayout =
         if (this is HavingLayout<*>) createLayout(properties) else SimpleLayout(properties)
 
 

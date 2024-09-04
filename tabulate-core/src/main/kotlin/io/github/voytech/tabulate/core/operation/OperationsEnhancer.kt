@@ -101,9 +101,9 @@ sealed class LayoutAwareOperation<CTX : RenderingContext, E : AttributedEntity>(
     protected fun RelatedLayouts.tryApplyResults(context: E, status: RenderingStatus) {
         context.boundingBox()?.let { boundaries ->
             // before applying potentially recalculated bbox onto region, first ensure it does not exceed outer layout bounds.
-            layout.allocateRectangle(boundaries.revalidateSize())
+            layout.allocateRectangle(boundaries.validateSize())
             context.asLayoutElement<Layout>()?.run {
-                layout.absorbRenderableBoundingBox(boundaries, status)
+                layout.applyMeasures(boundaries, status)
             }
         }
     }

@@ -27,7 +27,7 @@ class FlowLayout(properties: LayoutProperties) : AbstractLayout(properties), Seq
      * When moving to next row we need to reset one of the axis again which.
      */
     private fun Region.currentPosition(): Position =
-        (if (::absoluteCursor.isInitialized) absoluteCursor else contentCursorPosition)
+        (if (::absoluteCursor.isInitialized) absoluteCursor else renderingPosition)
 
     private fun Region.moveLocalCursor(pos: Position): Position {
         localCursor = pos
