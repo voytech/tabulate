@@ -403,28 +403,13 @@ class CommonTests {
                 height { 260.pt() }
             }
             page {
-//                header {
-//                    text {
-//                        value = "Some heading."
-//                        attributes {
-//                            width { 100.percents() }
-//                            height { 20.pt() }
-//                        }
-//                    }
-//                }
-//                footer {
-//                    text {
-//                        value<PageExecutionContext> { ctx -> "Page number: ${ctx.pageNumber}" }
-//                        attributes {
-//                            height { 30.pt() }
-//                            width { 100.percents() }
-//                        }
-//                    }
-//                }
                 horizontal {
                     attributes { borders { all { lightGray; solid; 3.pt() } } }
                     table(typedTable<SampleProduct> {
-                        //attributes { tableBorders { all { 2f.pt() } } }
+                        attributes {
+                            tableBorders { all { 2f.pt() } }
+                            borders { all { 1.pt() } }
+                        }
                         columns {
                             column(SampleProduct::code) {
                                 attributes {
@@ -451,7 +436,7 @@ class CommonTests {
                 }
             }
         }
-        //doc.export("multiple_pages_plus_header_and_footer.xlsx",InputParams.params().setXlsxRowsCountInWindow(300))
+       // doc.export("multiple_pages_plus_header_and_footer.xlsx", InputParams.params().setXlsxRowsCountInWindow(300))
         doc.export("multiple_pages_plus_header_and_footer.pdf")
     }
 

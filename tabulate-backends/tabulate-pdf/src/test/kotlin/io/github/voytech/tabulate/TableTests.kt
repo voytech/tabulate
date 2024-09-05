@@ -328,7 +328,7 @@ class TableTests {
     }
 
     @Test
-    fun `should export tables with  row0Height=50,column1Width=150,clip=disabled`() {
+    fun `should export tables with row0Height=50,column1Width=150,clip=disabled`() {
         document {
             page {
                 vertical {
@@ -357,5 +357,37 @@ class TableTests {
                 }
             }
         }.export(File("table_8.pdf"))
+    }
+
+    @Test
+    fun `should export tables with row0Height=50,column1Width=150,clip=enabled`() {
+        document {
+            page {
+                vertical {
+                    immediateIterations
+                    containerAttributes()
+                    repeat((1..19).count()) {
+                        table(
+                            Utils.sampleCustomersTable(
+                                SampleCustomer.create(5),
+                                SampleCustomer::firstName,
+                                SampleCustomer::lastName
+                            ) + typedTable<SampleCustomer> {
+                                columns {
+                                    column(SampleCustomer::lastName) { attributes { width { 150.pt()  } }}
+                                }
+                                name = "$it";attributes { clip { enabled } }
+                                tableNumberHeaderRow(it)
+                                rows {
+                                    matching { eq(0) } assign {
+                                        attributes { height { 50.pt() }  }
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }.export(File("table_9.pdf"))
     }
 }

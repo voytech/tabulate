@@ -3,7 +3,6 @@ package io.github.voytech.tabulate.components.table.rendering
 import io.github.voytech.tabulate.components.table.model.ColumnKey
 import io.github.voytech.tabulate.components.table.template.SyntheticRow
 import io.github.voytech.tabulate.core.RenderingContext
-import io.github.voytech.tabulate.core.layout.Axis
 import io.github.voytech.tabulate.core.layout.BoundaryType
 import io.github.voytech.tabulate.core.layout.RenderableBoundingBox
 import io.github.voytech.tabulate.core.layout.impl.TableLayout
@@ -34,8 +33,8 @@ class RowEndRenderableEntity<T>(
         getRenderableBoundingBox(
             x = getAbsoluteColumnPosition(0),
             y = getAbsoluteRowPosition(getRow()),
-            width = whileMeasuring { getProposedRowWidth(getRow()) } ?: getCurrentContentSize().width,
-            height = whileMeasuring { getProposedRowHeight(getRow()) } ?: getCurrentRowHeight(getRow(), 1, uom),
+            width = whileMeasuring { getUnconfirmedRowWidth(getRow()) } ?: getCurrentContentSize().width,
+            height = whileMeasuring { getUnconfirmedRowHeight(getRow()) } ?: getCurrentRowHeight(getRow(), 1, uom),
             boundaryToFit
         )
 

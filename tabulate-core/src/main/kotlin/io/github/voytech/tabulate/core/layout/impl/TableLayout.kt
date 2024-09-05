@@ -268,21 +268,25 @@ class NonUniformCartesianGrid(
         setLengthWithOptions(rows, lockedRows, row, height, defaultHeightInPt, options)
     }
 
-    fun getProposedRowHeight(row: Int): Height? {
+    fun getUnconfirmedRowHeight(row: Int): Height? {
         return unconfirmedMeasures.whenValidFor(row) { unconfirmed ->
             unconfirmed.rowHeight?.let { height -> Height(height, standardUnit.asUnitsOfMeasure()) }
         }
     }
 
-    fun getProposedRowWidth(row: Int): Width? {
+    fun getUnconfirmedRowWidth(row: Int): Width? {
         return unconfirmedMeasures.whenValidFor(row) { unconfirmed ->
             Width(unconfirmed.columnWidths.getTotalLength(), standardUnit.asUnitsOfMeasure())
         }
     }
 
+    fun startRowSizing(row: Int) {
+        ensureUnconfirmedMeasures().rowIndex = rows.asLocal(row)
+    }
+
     fun confirmProposedRowSize(row: Int) {
         unconfirmedMeasures.whenValidFor(row) { unconfirmed ->
-            getProposedRowHeight(row)?.let { height ->
+            getUnconfirmedRowHeight(row)?.let { height ->
                 rows.setLengthAtIndex(row, height, defaultHeightInPt)
             }
             columns.clear()
@@ -436,19 +440,23 @@ class TableLayout(properties: LayoutProperties) : AbstractTableLayout(properties
     fun getCurrentRowHeight(row: Int, rowSpan: Int, uom: UnitsOfMeasure): Height =
         delegate.getMeasuredRowHeight(row, rowSpan, uom)
 
-    fun getProposedRowHeight(row: Int): Height? = delegate.getProposedRowHeight(row)
+    fun getUnconfirmedRowHeight(row: Int): Height? = delegate.getUnconfirmedRowHeight(row)
 
-    fun getProposedRowWidth(row: Int): Width? = delegate.getProposedRowWidth(row)
+    fun getUnconfirmedRowWidth(row: Int): Width? = delegate.getUnconfirmedRowWidth(row)
 
-    fun rollbackProposedRowSize(row: Int) {
-        whileMeasuring {
-            delegate.rollbackProposedRowSize()
-        }
+    fun startRowSizing(row: Int) {
+        delegate.startRowSizing(row)
     }
 
     fun confirmProposedRowSize(row: Int) {
         whileMeasuring {
             delegate.confirmProposedRowSize(row)
+        }
+    }
+
+    fun rollbackProposedRowSize(row: Int) {
+        whileMeasuring {
+            delegate.rollbackProposedRowSize()
         }
     }
 

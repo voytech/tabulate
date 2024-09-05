@@ -59,24 +59,6 @@ fun TextStylesAttribute.pdFont(): PDFont =
         }
     } else default()
 
-class TextStylesAttributeRenderOperation<CTX : AttributedEntity> :
-    AttributeOperation<PdfBoxRenderingContext, TextStylesAttribute, CTX> {
-
-    override operator fun invoke(
-        renderingContext: PdfBoxRenderingContext,
-        context: CTX,
-        attribute: TextStylesAttribute,
-    ) = with(renderingContext) {
-        getCurrentContentStream().let { content ->
-            beginText() //TODO bullshit. cannot be like that.
-            context.textMeasures().let { fontAndSize ->
-                setFont(fontAndSize.font(), fontAndSize.fontSize().toFloat())
-                content.setNonStrokingColor(attribute.fontColor.awtColorOrDefault())
-            }
-        }
-    }
-}
-
 class BackgroundAttributeRenderOperation<CTX : AttributedEntity> :
     AttributeOperation<PdfBoxRenderingContext, BackgroundAttribute, CTX> {
     override fun invoke(

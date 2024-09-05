@@ -294,7 +294,9 @@ class BasicExportsTests {
                     dataSource(SampleProduct.create(40))
                     attributes {
                         borders { all { lightGray; 0.5F.pt() } }
-                        overflow { retry }
+                        clip { disabled }
+                        text { breakWords }
+
                     }
                     columns {
                         column(SampleProduct::code) {

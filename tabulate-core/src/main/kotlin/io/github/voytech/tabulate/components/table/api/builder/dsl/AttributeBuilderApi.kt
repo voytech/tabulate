@@ -51,7 +51,11 @@ fun <T : Any> TableLevelAttributesBuilderApi<T>.overflow(block: OverflowWords.()
 
 fun <T : Any> TableLevelAttributesBuilderApi<T>.clip(block: ClipAttribute.Builder.() -> Unit) =
     attribute(
-        ClipAttribute.builder(CellRenderableEntity::class.java, RowEndRenderableEntity::class.java).apply(block)
+        ClipAttribute.builder(
+            CellRenderableEntity::class.java,
+            RowEndRenderableEntity::class.java,
+            RowStartRenderableEntity::class.java
+        ).apply(block)
     )
 
 //Attributes available on column level

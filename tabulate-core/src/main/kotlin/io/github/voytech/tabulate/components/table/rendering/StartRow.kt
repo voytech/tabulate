@@ -60,6 +60,7 @@ class RowStartRenderableEntity(
 
     override fun TableLayout.applyMeasures(bbox: RenderableBoundingBox, status: RenderingStatus) {
         if (!status.hasLayoutEffect()) return
+        startRowSizing(getRow())
         bbox.height?.let {
             val ops = SizingOptions.SET_LOCKED.takeIf { hasModelAttribute<HeightAttribute>() } ?: SizingOptions.SET
             setRowHeight(getRow(), it, ops)

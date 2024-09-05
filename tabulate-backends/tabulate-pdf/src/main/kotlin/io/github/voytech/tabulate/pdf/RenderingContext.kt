@@ -20,8 +20,10 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
+import java.io.IOException
 import java.io.OutputStream
 import java.awt.Color as AwtColor
+
 
 class PdfBoxOutputBindingsFactory : OutputBindingsProvider<PdfBoxRenderingContext> {
 
@@ -164,6 +166,35 @@ class PdfBoxRenderingContext(
             setNonStrokingColor(color.awtColorOrDefault())
             addRect(absoluteX.value, absoluteY.value, width?.value ?: 0f, height?.value ?: 0f)
             fill()
+            restoreGraphicsState()
+        }
+    }
+
+    // TODO all closed shapes needs to be rendered as lines - convert from drawRect to drawLine invocations for drawing background and borders.
+    @Throws(IOException::class)
+    fun drawRoundedRectangle(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        radius: Float
+    ) {
+        with(getCurrentContentStream()) {
+            saveGraphicsState()
+            val b = y - height
+            val right = x + width
+            val top = y
+            moveTo(x + radius, y)
+            lineTo(right - radius, y)
+            curveTo(right, y, right, y, right, y - radius)
+            lineTo(right, b + radius)
+            curveTo(right, b, right, b, right - radius, b)
+            lineTo(x + radius, b)
+            curveTo(x, b, x, b, x, b + radius)
+            lineTo(x, y - radius)
+            curveTo(x, y, x, y, x + radius, y)
+            closePath()
+            stroke()
             restoreGraphicsState()
         }
     }
