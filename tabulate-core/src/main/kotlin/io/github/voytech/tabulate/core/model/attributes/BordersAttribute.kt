@@ -27,6 +27,10 @@ data class BordersAttribute(
     override val bottomBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
     override val bottomBorderColor: Color? = null,
     override val bottomBorderHeight: Height = Height(1F, UnitsOfMeasure.PT),
+    override val leftBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val rightBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val topBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val bottomBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
 ) : Attribute<BordersAttribute>(), Borders {
 
     @TabulateMarker
@@ -52,13 +56,17 @@ data class BordersAttribute(
         var leftBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
         var leftBorderColor: Color? by observable(null)
         var leftBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
+        var leftBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
         var rightBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
+        var rightBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
         var rightBorderColor: Color? by observable(null)
         var rightBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
         var topBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
         var topBorderColor: Color? by observable(null)
         var topBorderHeight: Height by observable(Height(1F, UnitsOfMeasure.PT))
+        var topBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
         var bottomBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
+        var bottomBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
         var bottomBorderColor: Color? by observable(null)
         var bottomBorderHeight: Height by observable(Height(1F, UnitsOfMeasure.PT))
 
@@ -106,9 +114,11 @@ data class BordersAttribute(
 
         override fun provide(): BordersAttribute = BordersAttribute(
             leftBorderStyle, leftBorderColor, leftBorderWidth,
-            rightBorderStyle, rightBorderColor, rightBorderWidth,
+            leftBorderRadius,
+            rightBorderStyle, rightBorderColor, rightBorderWidth, rightBorderRadius,
             topBorderStyle, topBorderColor, topBorderHeight,
-            bottomBorderStyle, bottomBorderColor, bottomBorderHeight
+            topBorderRadius,
+            bottomBorderStyle, bottomBorderColor, bottomBorderHeight, bottomBorderRadius
         )
     }
 
@@ -125,6 +135,10 @@ data class BordersAttribute(
         bottomBorderStyle = takeIfChanged(other, BordersAttribute::bottomBorderStyle),
         bottomBorderColor = takeIfChanged(other, BordersAttribute::bottomBorderColor),
         bottomBorderHeight = takeIfChanged(other, BordersAttribute::bottomBorderHeight),
+        leftBorderRadius = takeIfChanged(other, BordersAttribute::leftBorderRadius),
+        rightBorderRadius = takeIfChanged(other, BordersAttribute::rightBorderRadius),
+        topBorderRadius = takeIfChanged(other, BordersAttribute::topBorderRadius),
+        bottomBorderRadius = takeIfChanged(other, BordersAttribute::bottomBorderRadius),
     )
 
     companion object {
