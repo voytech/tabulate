@@ -16,17 +16,22 @@ data class BordersAttribute(
     override val leftBorderColor: Color? = null,
     override val leftBorderWidth: Width = Width(1F, UnitsOfMeasure.PT),
 
+    override val leftBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
+
     override val rightBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
     override val rightBorderColor: Color? = null,
     override val rightBorderWidth: Width = Width(1F, UnitsOfMeasure.PT),
+    override val rightBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
 
     override val topBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
     override val topBorderColor: Color? = null,
     override val topBorderHeight: Height = Height(1F, UnitsOfMeasure.PT),
+    override val topBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
 
     override val bottomBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
     override val bottomBorderColor: Color? = null,
     override val bottomBorderHeight: Height = Height(1F, UnitsOfMeasure.PT),
+    override val bottomBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
     override val leftBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
     override val rightBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
     override val topBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
