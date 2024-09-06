@@ -106,21 +106,25 @@ fun BorderStyle?.rightBottomSecondaryColor(original: Color?): Color? =
     }
 
 fun <A : AttributedEntity> PdfBoxRenderingContext.drawBorders(context: A, borders: Borders) {
+    leftTopRoundCorner(context, borders)
     topBorder(
         context, borders,
         borders.topBorderStyle?.leftTopPrimaryColor(borders.topBorderColor),
         borders.topBorderStyle?.leftTopSecondaryColor(borders.topBorderColor),
     )
+    rightTopRoundCorner(context, borders)
     leftBorder(
         context, borders,
         borders.leftBorderStyle?.leftTopPrimaryColor(borders.leftBorderColor),
         borders.leftBorderStyle?.leftTopSecondaryColor(borders.leftBorderColor),
     )
+    rightBottomRoundCorner(context, borders)
     rightBorder(
         context, borders,
         borders.rightBorderStyle?.rightBottomPrimaryColor(borders.rightBorderColor),
         borders.rightBorderStyle?.rightBottomSecondaryColor(borders.rightBorderColor),
     )
+    leftBottomRoundCorner(context, borders)
     bottomBorder(
         context, borders,
         borders.bottomBorderStyle?.rightBottomPrimaryColor(borders.bottomBorderColor),
