@@ -92,9 +92,6 @@ data class BordersAttribute(
                 leftBorderStyle = it.style
                 leftBorderWidth = Width(it.measure, it.uom)
                 leftBorderRadius = Width(it.radius, it.uom)
-                rightBorderRadius = Width(it.radius, it.uom)
-                topBorderRadius = Width(it.radius, it.uom)
-                bottomBorderRadius = Width(it.radius, it.uom)
             }
         }
 
@@ -103,6 +100,7 @@ data class BordersAttribute(
                 rightBorderColor = it.color
                 rightBorderStyle = it.style
                 rightBorderWidth = Width(it.measure, it.uom)
+                rightBorderRadius = Width(it.radius, it.uom)
             }
         }
 
@@ -111,6 +109,7 @@ data class BordersAttribute(
                 topBorderColor = it.color
                 topBorderStyle = it.style
                 topBorderHeight = Height(it.measure, it.uom)
+                topBorderRadius = Width(it.radius, it.uom)
             }
         }
 
@@ -119,6 +118,7 @@ data class BordersAttribute(
                 bottomBorderColor = it.color
                 bottomBorderStyle = it.style
                 bottomBorderHeight = Height(it.measure, it.uom)
+                bottomBorderRadius = Width(it.radius, it.uom)
             }
         }
 
