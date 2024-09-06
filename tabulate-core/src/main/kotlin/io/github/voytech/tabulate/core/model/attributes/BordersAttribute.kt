@@ -39,8 +39,7 @@ data class BordersAttribute(
         var measure: Float = 1F
         var uom: UnitsOfMeasure = UnitsOfMeasure.PT
         override var color: Color? = Colors.BLACK
-
-        var radiusMeasure: Float = 0F
+        var radius: Float = 0F
 
         fun Number.pt() {
             measure = toFloat()
@@ -52,14 +51,12 @@ data class BordersAttribute(
             uom = UnitsOfMeasure.PX
         }
 
-        var radius: Number = 0F
-
         fun Number.radiusPt() {
-            radiusMeasure = toFloat()
+            radius = toFloat()
         }
 
         fun Number.radiusPx() {
-            radiusMeasure = toFloat()
+            radius = toFloat()
         }
     }
 
