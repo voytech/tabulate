@@ -40,6 +40,9 @@ data class BordersAttribute(
         var uom: UnitsOfMeasure = UnitsOfMeasure.PT
         override var color: Color? = Colors.BLACK
 
+        var radiusMeasure: Float = 0F
+        var radiusUom: UnitsOfMeasure = UnitsOfMeasure.PT
+
         fun Number.pt() {
             measure = toFloat()
             uom = UnitsOfMeasure.PT
