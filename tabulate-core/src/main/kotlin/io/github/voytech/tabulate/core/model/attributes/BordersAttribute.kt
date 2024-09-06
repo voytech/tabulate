@@ -41,7 +41,6 @@ data class BordersAttribute(
         override var color: Color? = Colors.BLACK
 
         var radiusMeasure: Float = 0F
-        var radiusUom: UnitsOfMeasure = UnitsOfMeasure.PT
 
         fun Number.pt() {
             measure = toFloat()
@@ -57,17 +56,14 @@ data class BordersAttribute(
             get() = radiusMeasure
             set(value) {
                 radiusMeasure = value.toFloat()
-                radiusUom = uom // Use the same unit of measure as the main measure
             }
 
         fun Number.radiusPt() {
             radiusMeasure = toFloat()
-            radiusUom = UnitsOfMeasure.PT
         }
 
         fun Number.radiusPx() {
             radiusMeasure = toFloat()
-            radiusUom = UnitsOfMeasure.PX
         }
     }
 
