@@ -23,7 +23,8 @@ const val defaultFontSize: Int = 10
 
 fun TextStylesAttribute.default(): PDFont =
     (if (weight == DefaultWeightStyle.BOLD) {
-        Standard14Fonts.FontName.HELVETICA_BOLD_OBLIQUE.takeIf { italic == true } ?: Standard14Fonts.FontName.HELVETICA_BOLD
+        Standard14Fonts.FontName.HELVETICA_BOLD_OBLIQUE.takeIf { italic == true }
+            ?: Standard14Fonts.FontName.HELVETICA_BOLD
     } else if (italic == true) {
         Standard14Fonts.FontName.HELVETICA_OBLIQUE
     } else {
@@ -35,7 +36,8 @@ fun TextStylesAttribute.pdFont(): PDFont =
         when (fontFamily!!.getFontId()) {
             "TIMES_NEW_ROMAN", "TIMES_ROMAN" -> {
                 (if (weight == DefaultWeightStyle.BOLD) {
-                    Standard14Fonts.FontName.TIMES_BOLD_ITALIC.takeIf { italic == true } ?: Standard14Fonts.FontName.TIMES_BOLD
+                    Standard14Fonts.FontName.TIMES_BOLD_ITALIC.takeIf { italic == true }
+                        ?: Standard14Fonts.FontName.TIMES_BOLD
                 } else if (italic == true) {
                     Standard14Fonts.FontName.TIMES_ITALIC
                 } else {
@@ -124,6 +126,42 @@ fun <A : AttributedEntity> PdfBoxRenderingContext.drawBorders(context: A, border
         borders.bottomBorderStyle?.rightBottomPrimaryColor(borders.bottomBorderColor),
         borders.bottomBorderStyle?.rightBottomSecondaryColor(borders.bottomBorderColor),
     )
+}
+
+fun <A : AttributedEntity> leftTopRoundCorner(
+    context: A,
+    borders: Borders,
+    primaryColor: Color? = null,
+    secondaryColor: Color? = null,
+) {
+    TODO("Not yet implemented")
+}
+
+fun <A : AttributedEntity> rightTopRoundCorner(
+    context: A,
+    borders: Borders,
+    primaryColor: Color? = null,
+    secondaryColor: Color? = null,
+) {
+    TODO("Not yet implemented")
+}
+
+fun <A : AttributedEntity> rightBottomRoundCorner(
+    context: A,
+    borders: Borders,
+    primaryColor: Color? = null,
+    secondaryColor: Color? = null,
+) {
+    TODO("Not yet implemented")
+}
+
+fun <A : AttributedEntity> leftBottomRoundCorner(
+    context: A,
+    borders: Borders,
+    primaryColor: Color? = null,
+    secondaryColor: Color? = null,
+) {
+    TODO("Not yet implemented")
 }
 
 class BordersAttributeRenderOperation<CTX : AttributedEntity> :
