@@ -32,10 +32,6 @@ data class BordersAttribute(
     override val bottomBorderColor: Color? = null,
     override val bottomBorderHeight: Height = Height(1F, UnitsOfMeasure.PT),
     override val bottomBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
-    override val leftBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
-    override val rightBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
-    override val topBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
-    override val bottomBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
 ) : Attribute<BordersAttribute>(), Borders {
 
     @TabulateMarker
