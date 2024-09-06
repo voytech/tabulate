@@ -52,11 +52,7 @@ data class BordersAttribute(
             uom = UnitsOfMeasure.PX
         }
 
-        var radius: Number
-            get() = radiusMeasure
-            set(value) {
-                radiusMeasure = value.toFloat()
-            }
+        var radius: Number = 0F
 
         fun Number.radiusPt() {
             radiusMeasure = toFloat()
