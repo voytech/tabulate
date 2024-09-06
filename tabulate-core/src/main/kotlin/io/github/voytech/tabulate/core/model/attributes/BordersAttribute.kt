@@ -12,29 +12,66 @@ import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.color.DefaultColorWords
 
 data class BordersAttribute(
-    override val leftBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
+    override val leftBorderStyle: BorderStyle = DefaultBorderStyle.NONE,
     override val leftBorderColor: Color? = null,
     override val leftBorderWidth: Width = Width(1F, UnitsOfMeasure.PT),
-    override val leftTopBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
 
-    override val rightBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
+    override val rightBorderStyle: BorderStyle = DefaultBorderStyle.NONE,
     override val rightBorderColor: Color? = null,
     override val rightBorderWidth: Width = Width(1F, UnitsOfMeasure.PT),
-    override val rightTopBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
 
-    override val topBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
+    override val topBorderStyle: BorderStyle = DefaultBorderStyle.NONE,
     override val topBorderColor: Color? = null,
     override val topBorderHeight: Height = Height(1F, UnitsOfMeasure.PT),
-    override val rightBottomBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
 
-    override val bottomBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
+    override val bottomBorderStyle: BorderStyle = DefaultBorderStyle.NONE,
     override val bottomBorderColor: Color? = null,
     override val bottomBorderHeight: Height = Height(1F, UnitsOfMeasure.PT),
-    override val leftBottomBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
-) : Attribute<BordersAttribute>(), Borders {
+
+    override val leftTopBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val leftTopBorderCornerStyle: BorderStyle = DefaultBorderStyle.NONE,
+    override val leftTopBorderCornerColor: Color? = null,
+    override val leftTopBorderCornerWidth: Width = Width(0F, UnitsOfMeasure.PT),
+
+    override val rightTopBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val rightTopBorderCornerStyle: BorderStyle = DefaultBorderStyle.NONE,
+    override val rightTopBorderCornerColor: Color? = null,
+    override val rightTopBorderCornerWidth: Width = Width(0F, UnitsOfMeasure.PT),
+
+    override val leftBottomBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val leftBottomBorderCornerStyle: BorderStyle = DefaultBorderStyle.NONE,
+    override val leftBottomBorderCornerColor: Color? = null,
+    override val leftBottomBorderCornerWidth: Width = Width(0F, UnitsOfMeasure.PT),
+
+    override val rightBottomBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val rightBottomBorderCornerStyle: BorderStyle = DefaultBorderStyle.NONE,
+    override val rightBottomBorderCornerColor: Color? = null,
+    override val rightBottomBorderCornerWidth: Width = Width(0F, UnitsOfMeasure.PT),
+
+
+    ) : Attribute<BordersAttribute>(), Borders {
 
     @TabulateMarker
     class SingleBorderBuilder : DefaultBorderStyleWords, DefaultColorWords {
+        override var style: BorderStyle = DefaultBorderStyle.SOLID
+        var measure: Float = 1F
+        var uom: UnitsOfMeasure = UnitsOfMeasure.PT
+        override var color: Color? = Colors.BLACK
+
+        fun Number.pt() {
+            measure = toFloat()
+            uom = UnitsOfMeasure.PT
+        }
+
+        fun Number.px() {
+            measure = toFloat()
+            uom = UnitsOfMeasure.PX
+        }
+
+    }
+
+    @TabulateMarker
+    class CornerBorderBuilder : DefaultBorderStyleWords, DefaultColorWords {
         override var style: BorderStyle = DefaultBorderStyle.SOLID
         var measure: Float = 1F
         var uom: UnitsOfMeasure = UnitsOfMeasure.PT
@@ -60,25 +97,41 @@ data class BordersAttribute(
         }
     }
 
+
     @TabulateMarker
     class Builder(target: Set<Class<out AttributeAware>>) : AttributeBuilder<BordersAttribute>(target) {
-        var leftBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
+        var leftBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
         var leftBorderColor: Color? by observable(null)
         var leftBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
-        var leftTopBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
-        var rightTopBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
-        var rightBottomBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
-        var leftBottomBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var rightBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
         var rightBorderColor: Color? by observable(null)
         var rightBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
-        var topBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
+        var topBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
         var topBorderColor: Color? by observable(null)
         var topBorderHeight: Height by observable(Height(1F, UnitsOfMeasure.PT))
-        var rightBottomBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
-        var bottomBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
-        var leftBottomBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var bottomBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
         var bottomBorderColor: Color? by observable(null)
         var bottomBorderHeight: Height by observable(Height(1F, UnitsOfMeasure.PT))
+
+        var leftTopBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var leftTopBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
+        var leftTopBorderColor: Color? by observable(null)
+        var leftTopBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
+
+        var rightTopBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var rightTopBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
+        var rightTopBorderColor: Color? by observable(null)
+        var rightTopBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
+
+        var leftBottomBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var leftBottomBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
+        var leftBottomBorderColor: Color? by observable(null)
+        var leftBottomBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
+
+        var rightBottomBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var rightBottomBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
+        var rightBottomBorderColor: Color? by observable(null)
+        var rightBottomBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
 
         fun all(block: SingleBorderBuilder.() -> Unit) {
             top(block)
@@ -87,12 +140,36 @@ data class BordersAttribute(
             bottom(block)
         }
 
+        fun corners(block: CornerBorderBuilder.() -> Unit) {
+            leftTopCorner(block)
+            leftBottomCorner(block)
+            rightTopCorner(block)
+            rightBottomCorner(block)
+        }
+
+        fun leftTopCorner(block: CornerBorderBuilder.() -> Unit) {
+            CornerBorderBuilder().apply(block).let {
+                leftTopBorderRadius = Width(it.radius, it.uom)
+                leftTopBorderColor = it.color
+                leftTopBorderStyle = it.style
+                leftTopBorderWidth = Width(it.measure, it.uom)
+            }
+        }
+
         fun left(block: SingleBorderBuilder.() -> Unit) {
             SingleBorderBuilder().apply(block).let {
                 leftBorderColor = it.color
                 leftBorderStyle = it.style
                 leftBorderWidth = Width(it.measure, it.uom)
-                leftTopBorderRadius = Width(it.radius, it.uom)
+            }
+        }
+
+        fun rightTopCorner(block: CornerBorderBuilder.() -> Unit) {
+            CornerBorderBuilder().apply(block).let {
+                rightTopBorderRadius = Width(it.radius, it.uom)
+                rightTopBorderColor = it.color
+                rightTopBorderStyle = it.style
+                rightTopBorderWidth = Width(it.measure, it.uom)
             }
         }
 
@@ -101,7 +178,15 @@ data class BordersAttribute(
                 rightBorderColor = it.color
                 rightBorderStyle = it.style
                 rightBorderWidth = Width(it.measure, it.uom)
-                rightTopBorderRadius = Width(it.radius, it.uom)
+            }
+        }
+
+        fun rightBottomCorner(block: CornerBorderBuilder.() -> Unit) {
+            CornerBorderBuilder().apply(block).let {
+                rightBottomBorderRadius = Width(it.radius, it.uom)
+                rightBottomBorderColor = it.color
+                rightBottomBorderStyle = it.style
+                rightBottomBorderWidth = Width(it.measure, it.uom)
             }
         }
 
@@ -110,26 +195,36 @@ data class BordersAttribute(
                 topBorderColor = it.color
                 topBorderStyle = it.style
                 topBorderHeight = Height(it.measure, it.uom)
-                rightBottomBorderRadius = Width(it.radius, it.uom)
             }
         }
+
+        fun leftBottomCorner(block: CornerBorderBuilder.() -> Unit) {
+            CornerBorderBuilder().apply(block).let {
+                leftBottomBorderRadius = Width(it.radius, it.uom)
+                leftBottomBorderColor = it.color
+                leftBottomBorderStyle = it.style
+                leftBottomBorderWidth = Width(it.measure, it.uom)
+            }
+        }
+
 
         fun bottom(block: SingleBorderBuilder.() -> Unit) {
             SingleBorderBuilder().apply(block).let {
                 bottomBorderColor = it.color
                 bottomBorderStyle = it.style
                 bottomBorderHeight = Height(it.measure, it.uom)
-                leftBottomBorderRadius = Width(it.radius, it.uom)
             }
         }
 
         override fun provide(): BordersAttribute = BordersAttribute(
             leftBorderStyle, leftBorderColor, leftBorderWidth,
-            leftTopBorderRadius,
-            rightBorderStyle, rightBorderColor, rightBorderWidth, rightTopBorderRadius,
+            rightBorderStyle, rightBorderColor, rightBorderWidth,
             topBorderStyle, topBorderColor, topBorderHeight,
-            rightBottomBorderRadius,
-            bottomBorderStyle, bottomBorderColor, bottomBorderHeight, leftBottomBorderRadius
+            bottomBorderStyle, bottomBorderColor, bottomBorderHeight,
+            leftTopBorderRadius, leftTopBorderStyle, leftTopBorderColor, leftTopBorderWidth,
+            rightTopBorderRadius, rightTopBorderStyle, rightTopBorderColor, rightTopBorderWidth,
+            leftBottomBorderRadius, leftBottomBorderStyle, leftBottomBorderColor, leftBottomBorderWidth,
+            rightBottomBorderRadius, rightBottomBorderStyle, rightBottomBorderColor, rightBottomBorderWidth,
         )
     }
 
@@ -146,10 +241,22 @@ data class BordersAttribute(
         bottomBorderStyle = takeIfChanged(other, BordersAttribute::bottomBorderStyle),
         bottomBorderColor = takeIfChanged(other, BordersAttribute::bottomBorderColor),
         bottomBorderHeight = takeIfChanged(other, BordersAttribute::bottomBorderHeight),
-        leftTopBorderRadius = takeIfChanged(other, BordersAttribute::leftTopBorderRadius),
-        rightTopBorderRadius = takeIfChanged(other, BordersAttribute::rightTopBorderRadius),
-        rightBottomBorderRadius = takeIfChanged(other, BordersAttribute::rightBottomBorderRadius),
-        leftBottomBorderRadius = takeIfChanged(other, BordersAttribute::leftBottomBorderRadius),
+        leftTopBorderCornerRadius = takeIfChanged(other, BordersAttribute::leftTopBorderCornerRadius),
+        leftTopBorderCornerStyle = takeIfChanged(other, BordersAttribute::leftTopBorderCornerStyle),
+        leftTopBorderCornerColor = takeIfChanged(other, BordersAttribute::leftTopBorderCornerColor),
+        leftTopBorderCornerWidth = takeIfChanged(other, BordersAttribute::leftTopBorderCornerWidth),
+        rightTopBorderCornerRadius = takeIfChanged(other, BordersAttribute::rightTopBorderCornerRadius),
+        rightTopBorderCornerStyle = takeIfChanged(other, BordersAttribute::rightTopBorderCornerStyle),
+        rightTopBorderCornerColor = takeIfChanged(other, BordersAttribute::rightTopBorderCornerColor),
+        rightTopBorderCornerWidth = takeIfChanged(other, BordersAttribute::rightTopBorderCornerWidth),
+        rightBottomBorderCornerRadius = takeIfChanged(other, BordersAttribute::rightBottomBorderCornerRadius),
+        rightBottomBorderCornerStyle = takeIfChanged(other, BordersAttribute::rightBottomBorderCornerStyle),
+        rightBottomBorderCornerColor = takeIfChanged(other, BordersAttribute::rightBottomBorderCornerColor),
+        rightBottomBorderCornerWidth = takeIfChanged(other, BordersAttribute::rightBottomBorderCornerWidth),
+        leftBottomBorderCornerRadius = takeIfChanged(other, BordersAttribute::leftBottomBorderCornerRadius),
+        leftBottomBorderCornerStyle = takeIfChanged(other, BordersAttribute::leftBottomBorderCornerStyle),
+        leftBottomBorderCornerWidth = takeIfChanged(other, BordersAttribute::leftBottomBorderCornerWidth),
+        leftBottomBorderCornerColor = takeIfChanged(other, BordersAttribute::leftBottomBorderCornerColor),
     )
 
     companion object {
@@ -172,6 +279,21 @@ fun BordersAttribute.haveEqualWidths(): Boolean =
             (rightBorderWidth.value == topBorderHeight.value) &&
             (rightBorderWidth.unit == topBorderHeight.unit) &&
             (topBorderHeight == bottomBorderHeight)
+
+fun BorderStyle?.isSingleLine(): Boolean =
+    this == DefaultBorderStyle.SOLID || this == DefaultBorderStyle.DOTTED || this == DefaultBorderStyle.DASHED
+
+fun Borders.hasOnlySingleLineStyle(): Boolean =
+    leftBorderStyle.isSingleLine() &&
+    rightBorderStyle.isSingleLine() &&
+    topBorderStyle.isSingleLine() &&
+    bottomBorderStyle.isSingleLine() &&
+    rightBorderStyle.isSingleLine() &&
+    leftTopBorderCornerStyle.isSingleLine() &&
+    rightTopBorderCornerStyle.isSingleLine() &&
+    leftBottomBorderCornerStyle.isSingleLine() &&
+    rightBottomBorderCornerStyle.isSingleLine()
+
 
 fun BordersAttribute.areAllEqual(): Boolean = haveEqualStyles() && haveEqualColors() && haveEqualWidths()
 

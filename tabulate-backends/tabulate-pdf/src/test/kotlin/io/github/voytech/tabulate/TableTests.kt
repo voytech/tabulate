@@ -373,10 +373,14 @@ class TableTests {
                                 SampleCustomer::firstName,
                                 SampleCustomer::lastName
                             ) + typedTable<SampleCustomer> {
+                                name = "$it";
+                                attributes {
+                                    clip { enabled }
+                                    tableBorders { all { 1.pt();solid;black;  } }
+                                }
                                 columns {
                                     column(SampleCustomer::lastName) { attributes { width { 150.pt()  } }}
                                 }
-                                name = "$it";attributes { clip { enabled } }
                                 tableNumberHeaderRow(it)
                                 rows {
                                     matching { eq(0) } assign {

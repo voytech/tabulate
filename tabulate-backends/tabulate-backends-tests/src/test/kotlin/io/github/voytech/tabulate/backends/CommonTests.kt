@@ -16,6 +16,7 @@ import io.github.voytech.tabulate.components.wrapper.api.builder.dsl.align
 import io.github.voytech.tabulate.core.model.alignment.DefaultVerticalAlignment
 import io.github.voytech.tabulate.core.model.color.Colors
 import io.github.voytech.tabulate.core.model.text.DefaultWeightStyle
+import io.github.voytech.tabulate.test.sampledata.SampleCustomer
 import io.github.voytech.tabulate.test.sampledata.SampleProduct
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -486,5 +487,92 @@ class CommonTests {
             }
         }
         doc.export("table_of_declared_size.pdf")
+    }
+
+    private fun TableBuilderApi<*>.tableNumberHeaderRow(seq: Int) {
+        rows {
+            newRow {
+                cell(0) {
+                    value = "$seq"
+                    colSpan = 2
+                    attributes { alignment { center }; text { bold } }
+                }
+            }
+        }
+    }
+
+
+    private fun ContainerBuilderApi.containerAttributes() {
+        attributes {
+            height { 36.percents() }
+            margins { all { 5.pt() } }
+            borders { all { solid; green; 6.pt() } }
+        }
+    }
+
+    fun sampleCustomersTable(
+        data: List<SampleCustomer>,
+        vararg props: KProperty1<SampleCustomer, *>
+    ): (TableBuilderApi<SampleCustomer>.() -> Unit) = typedTable {
+        attributes {
+            margins { all { 2.pt()} }
+            borders { bottom { 0.5.pt(); solid } }
+            tableBorders { all { 3.pt();solid; black } }
+            text { breakWords; black }
+        }
+        if (props.isNotEmpty()) {
+            columns { props.forEach { column(it) } }
+        } else {
+            columns {
+                column(SampleCustomer::firstName)
+                column(SampleCustomer::lastName)
+                column(SampleCustomer::country)
+                column(SampleCustomer::city)
+                column(SampleCustomer::street)
+                column(SampleCustomer::houseNumber)
+                column(SampleCustomer::flat)
+            }
+        }
+        if (props.isEmpty()) {
+            rows {
+                header {
+                    columnTitles("First Name", "Last Name", "Country", "City", "Street", "House Nr", "Flat Nr")
+                    attributes { text { bold; black; fontSize = 12 } }
+                }
+            }
+        }
+        dataSource(data)
+    }
+
+    @Test
+    fun `should export tables with row0Height=50,column1Width=150,clip=disabled`() {
+        document {
+            page {
+                vertical {
+                    immediateIterations
+                    containerAttributes()
+                    repeat((1..19).count()) {
+                        table(
+                            sampleCustomersTable(
+                                SampleCustomer.create(15),
+                                SampleCustomer::firstName,
+                                SampleCustomer::lastName
+                            ) + typedTable<SampleCustomer> {
+                                columns {
+                                    column(SampleCustomer::lastName) { attributes { width { 150.pt()  } }}
+                                }
+                                name = "$it";attributes { clip { disabled } }
+                                tableNumberHeaderRow(it)
+                                rows {
+                                    matching { eq(0) } assign {
+                                        attributes { height { 50.pt() }  }
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }.export(File("table_8.xlsx"))
     }
 }

@@ -74,7 +74,10 @@ class CVExample {
                     it.lastName
                 }
                 vertical {
-                    attributes { background { lightGray } }
+                    attributes {
+                        background { lightGray }
+                        borders { leftTopCorner { 150.radiusPt(); } }
+                    }
                     textValue { attributes { text { bold; fontSize = 16 } }; "Profile" }
                     textValue {
                         attributes {

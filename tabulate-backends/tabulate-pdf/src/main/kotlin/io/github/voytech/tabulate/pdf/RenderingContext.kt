@@ -14,6 +14,7 @@ import io.github.voytech.tabulate.core.result.OutputBinding
 import io.github.voytech.tabulate.core.result.OutputStreamOutputBinding
 import io.github.voytech.tabulate.core.spi.DocumentFormat
 import io.github.voytech.tabulate.core.spi.OutputBindingsProvider
+import io.github.voytech.tabulate.round1
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -160,11 +161,20 @@ class PdfBoxRenderingContext(
     fun <CTX: AttributedEntity> renderClipped(context: CTX, render: () -> Unit) =
         renderClipped((context as RenderableEntity<*>).boundingBox,render)
 
-    fun RenderableBoundingBox.fillRect(color: Color? = null) {
+    fun BoxLayout.fillRect(color: Color? = null) {
         with(getCurrentContentStream()) {
             saveGraphicsState()
             setNonStrokingColor(color.awtColorOrDefault())
-            addRect(absoluteX.value, absoluteY.value, width?.value ?: 0f, height?.value ?: 0f)
+            moveTo(outerLeftTopX + leftTopCornerRadiusOrZero, outerLeftTopY)
+            lineTo(outerRightTopX - rightTopCornerRadiusOrZero, outerRightTopY)
+            curveTo(outerRightTopX, outerRightTopY, outerRightTopX, outerRightTopY, outerRightTopX, outerRightTopY - rightTopCornerRadiusOrZero)
+            lineTo(outerRightBottomX, outerRightBottomY + rightBottomCornerRadiusOrZero)
+            curveTo(outerRightBottomX, outerRightBottomY, outerRightTopX, outerRightBottomY, outerRightBottomX - rightBottomCornerRadiusOrZero, outerRightBottomY)
+            lineTo(outerLeftBottomX + leftBottomCornerRadiusOrZero, outerLeftBottomY)
+            curveTo(outerLeftBottomX, outerLeftBottomY, outerLeftBottomX, outerLeftBottomY, outerLeftBottomX, outerLeftBottomY + leftBottomCornerRadiusOrZero)
+            lineTo(outerLeftTopX, outerLeftTopY - leftTopCornerRadiusOrZero)
+            curveTo(outerLeftTopX, outerLeftTopY, outerLeftTopX, outerLeftTopY, outerLeftTopX + leftTopCornerRadiusOrZero, outerLeftTopY)
+            closePath()
             fill()
             restoreGraphicsState()
         }
@@ -209,16 +219,6 @@ class PdfBoxRenderingContext(
             setStrokingColor(color.awtColorOrDefault())
             addRect(x, y, width, height)
             stroke()
-            restoreGraphicsState()
-        }
-    }
-
-    fun fillRect(x: Float, y: Float, width: Float, height: Float, color: Color? = null) {
-        with(getCurrentContentStream()) {
-            saveGraphicsState()
-            setNonStrokingColor(color.awtColorOrDefault())
-            addRect(x, y, width, height)
-            fill()
             restoreGraphicsState()
         }
     }
@@ -286,7 +286,7 @@ class PdfBoxRenderingContext(
 data class BoxLayout(
     private val context: PdfBoxRenderingContext,
     val source: RenderableBoundingBox,
-    private val borders: Borders?,
+    val borders: Borders?,
 ) {
     private val pageHeight = Height(context.getCurrentPage().mediaBox.height, UnitsOfMeasure.PT)
     val outer: RenderableBoundingBox by lazy {
@@ -300,6 +300,34 @@ data class BoxLayout(
     val innerY: Float = inner.absoluteY.value
     val outerX: Float = outer.absoluteX.value
     val outerY: Float = outer.absoluteY.value
+
+    val leftBorderHalfWidth = borders?.let{ (it.leftBorderWidth.value / 2).round1()} ?: 0F
+    val topBorderHalfHeight = borders?.let{ (it.topBorderHeight.value / 2).round1()} ?: 0F
+    val rightBorderHalfWidth = borders?.let{ (it.rightBorderWidth.value / 2).round1()} ?: 0F
+    val bottomBorderHalfHeight = borders?.let{ (it.bottomBorderHeight.value / 2).round1()} ?: 0F
+
+    val leftTopCornerHalfWidth = borders?.let{ (it.leftTopBorderCornerWidth.value / 2).round1()} ?: 0F
+    val rightTopCornerHalfWidth = borders?.let{ (it.rightTopBorderCornerWidth.value / 2).round1()} ?: 0F
+    val rightBottomCornerHalfWidth = borders?.let{ (it.rightBottomBorderCornerWidth.value / 2).round1()} ?: 0F
+    val leftBottomCornerHalfWidth = borders?.let{ (it.leftBottomBorderCornerWidth.value / 2).round1()} ?: 0F
+
+    val leftTopCornerRadiusOrZero = borders?.let{ it.leftTopBorderCornerRadius.value } ?: 0F
+    val rightTopCornerRadiusOrZero = borders?.let{ it.rightTopBorderCornerRadius.value } ?: 0F
+    val rightBottomCornerRadiusOrZero = borders?.let{ it.rightBottomBorderCornerRadius.value } ?: 0F
+    val leftBottomCornerRadiusOrZero = borders?.let{ it.leftBottomBorderCornerRadius.value } ?: 0F
+
+    val outerLeftTopX: Float = outerX
+    val outerLeftTopY: Float = outerY + (outer.height?.value ?: 0F)
+
+    val outerRightTopX: Float = outerX + (outer.width?.value ?: 0F)
+    val outerRightTopY: Float = outerY + (outer.height?.value ?: 0F)
+
+    val outerLeftBottomX: Float = outerX
+    val outerLeftBottomY: Float = outerY
+
+    val outerRightBottomX: Float = outerX + (outer.width?.value ?: 0F)
+    val outerRightBottomY: Float = outerY
+
 
     private fun computeContentBoundingBox(): RenderableBoundingBox =
         if (borders != null) {

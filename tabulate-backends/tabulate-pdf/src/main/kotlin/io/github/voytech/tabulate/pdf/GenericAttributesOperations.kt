@@ -70,8 +70,50 @@ class BackgroundAttributeRenderOperation<CTX : AttributedEntity> :
     ): Unit = with(renderingContext) {
         renderClipped(context) {
             val bbox = boxLayout(context, context.getModelAttribute<BordersAttribute>())
-            bbox.outer.fillRect(attribute.color)
+            bbox.fillRect(attribute.color)
         }
+    }
+}
+
+class BordersAttributeRenderOperation<CTX : AttributedEntity> :
+    AttributeOperation<PdfBoxRenderingContext, BordersAttribute, CTX> {
+    override fun invoke(
+        renderingContext: PdfBoxRenderingContext,
+        context: CTX,
+        attribute: BordersAttribute,
+    ): Unit = with(renderingContext) {
+        renderClipped(context) {
+            drawBorders(context, attribute)
+        }
+    }
+}
+
+
+fun <A : AttributedEntity> PdfBoxRenderingContext.drawBorders(context: A, borders: Borders) {
+    boxLayout(context, borders).let { box ->
+        getCurrentContentStream().saveGraphicsState()
+        val leftPrimaryColor = borders.leftBorderStyle.leftTopPrimaryColor(borders.leftBorderColor)
+        val leftSecondaryColor = borders.leftBorderStyle.leftTopSecondaryColor(borders.leftBorderColor)
+        leftBorder(box, borders, leftPrimaryColor, leftSecondaryColor)
+
+        val topPrimaryColor = borders.topBorderStyle.leftTopPrimaryColor(borders.topBorderColor)
+        val topSecondaryColor = borders.topBorderStyle.leftTopSecondaryColor(borders.topBorderColor)
+        topBorder(box, borders, topPrimaryColor, topSecondaryColor)
+
+        val rightPrimaryColor = borders.rightBorderStyle.rightBottomPrimaryColor(borders.rightBorderColor)
+        val rightSecondaryColor = borders.rightBorderStyle.rightBottomSecondaryColor(borders.rightBorderColor)
+        rightBorder(box, borders, rightPrimaryColor, rightSecondaryColor)
+
+        val bottomPrimaryColor = borders.bottomBorderStyle.rightBottomPrimaryColor(borders.bottomBorderColor)
+        val bottomSecondaryColor = borders.bottomBorderStyle.rightBottomSecondaryColor(borders.bottomBorderColor)
+        bottomBorder(box, borders, bottomPrimaryColor, bottomSecondaryColor)
+
+        leftTopRoundCorner(box, borders, leftPrimaryColor, leftSecondaryColor)
+        rightTopRoundCorner(box, borders, topPrimaryColor, topSecondaryColor)
+        rightBottomRoundCorner(box, borders, rightPrimaryColor, rightSecondaryColor)
+        leftBottomRoundCorner(box, borders, bottomPrimaryColor, bottomSecondaryColor)
+
+        getCurrentContentStream().restoreGraphicsState()
     }
 }
 
@@ -105,73 +147,66 @@ fun BorderStyle?.rightBottomSecondaryColor(original: Color?): Color? =
         else -> original
     }
 
-fun <A : AttributedEntity> PdfBoxRenderingContext.drawBorders(context: A, borders: Borders) {
-    val leftPrimaryColor = borders.leftBorderStyle?.leftTopPrimaryColor(borders.leftBorderColor)
-    val leftSecondaryColor = borders.leftBorderStyle?.leftTopSecondaryColor(borders.leftBorderColor)
-    leftBorder(context, borders, leftPrimaryColor, leftSecondaryColor)
-    leftTopRoundCorner(context, borders, leftPrimaryColor, leftSecondaryColor)
-    val topPrimaryColor = borders.topBorderStyle?.leftTopPrimaryColor(borders.topBorderColor)
-    val topSecondaryColor = borders.topBorderStyle?.leftTopSecondaryColor(borders.topBorderColor)
-    topBorder(context, borders, topPrimaryColor, topSecondaryColor)
-    rightTopRoundCorner(context, borders, topPrimaryColor, topSecondaryColor)
-    val rightPrimaryColor = borders.rightBorderStyle?.rightBottomPrimaryColor(borders.rightBorderColor)
-    val rightSecondaryColor = borders.rightBorderStyle?.rightBottomSecondaryColor(borders.rightBorderColor)
-    rightBorder(context, borders, rightPrimaryColor, rightSecondaryColor)
-    rightBottomRoundCorner(context, borders, rightPrimaryColor, rightSecondaryColor)
-    val bottomPrimaryColor = borders.bottomBorderStyle?.rightBottomPrimaryColor(borders.bottomBorderColor)
-    val bottomSecondaryColor = borders.bottomBorderStyle?.rightBottomSecondaryColor(borders.bottomBorderColor)
-    bottomBorder(context, borders, bottomPrimaryColor, bottomSecondaryColor)
-    leftBottomRoundCorner(context, borders, bottomPrimaryColor, bottomSecondaryColor)
-}
-
-fun <A : AttributedEntity> leftTopRoundCorner(
-    context: A,
+fun PdfBoxRenderingContext.leftTopRoundCorner(
+    box: BoxLayout,
     borders: Borders,
     leftPrimaryColor: Color?,
     leftSecondaryColor: Color?,
 ) {
-    TODO("Not yet implemented")
+    val color = borders.leftTopBorderCornerColor
+    val style = borders.leftTopBorderCornerStyle
+    val width = borders.leftTopBorderCornerWidth
+    val radius = borders.leftTopBorderCornerRadius
+    setCornerStyle(style, color, width)
+    drawLeftTopCorner(
+        box.outerLeftTopX,
+        box.outerLeftTopY,
+        radius.value
+    )
 }
 
-fun <A : AttributedEntity> rightTopRoundCorner(
-    context: A,
+fun PdfBoxRenderingContext.rightTopRoundCorner(
+    box: BoxLayout,
     borders: Borders,
     rightPrimaryColor: Color?,
     rightSecondaryColor: Color?,
 ) {
-    TODO("Not yet implemented")
+    val color = borders.rightTopBorderCornerColor
+    val style = borders.rightTopBorderCornerStyle
+    val width = borders.rightTopBorderCornerWidth
+    val radius = borders.rightTopBorderCornerRadius
+    setCornerStyle(style, color, width)
+    drawRightTopCorner(box.outerRightTopX, box.outerRightTopY, radius.value)
 }
 
-fun <A : AttributedEntity> rightBottomRoundCorner(
-    context: A,
+fun PdfBoxRenderingContext.rightBottomRoundCorner(
+    box: BoxLayout,
     borders: Borders,
     bottomPrimaryColor: Color?,
     bottomSecondaryColor: Color?,
 ) {
-    TODO("Not yet implemented")
+    val color = borders.rightBottomBorderCornerColor
+    val style = borders.rightBottomBorderCornerStyle
+    val width = borders.rightBottomBorderCornerWidth
+    val radius = borders.rightBottomBorderCornerRadius
+    setCornerStyle(style, color, width)
+    drawRightBottomCorner(box.outerRightBottomX, box.outerRightBottomY, radius.value)
 }
 
-fun <A : AttributedEntity> leftBottomRoundCorner(
-    context: A,
+fun PdfBoxRenderingContext.leftBottomRoundCorner(
+    box: BoxLayout,
     borders: Borders,
     leftPrimaryColor: Color?,
     leftSecondaryColor: Color?,
 ) {
-    TODO("Not yet implemented")
+    val color = borders.leftBottomBorderCornerColor
+    val style = borders.leftBottomBorderCornerStyle
+    val width = borders.leftBottomBorderCornerWidth
+    val radius = borders.leftBottomBorderCornerRadius
+    setCornerStyle(style, color, width)
+    drawLeftBottomCorner(box.outerLeftBottomX, box.outerLeftBottomY, radius.value)
 }
 
-class BordersAttributeRenderOperation<CTX : AttributedEntity> :
-    AttributeOperation<PdfBoxRenderingContext, BordersAttribute, CTX> {
-    override fun invoke(
-        renderingContext: PdfBoxRenderingContext,
-        context: CTX,
-        attribute: BordersAttribute,
-    ): Unit = with(renderingContext) {
-        renderClipped(context) {
-            drawBorders(context, attribute)
-        }
-    }
-}
 
 typealias LineDashPattern = Pair<FloatArray, Float>
 
@@ -195,23 +230,56 @@ private fun BorderStyle.applyOn(contentStream: PDPageContentStream) {
     }
 }
 
-private fun PdfBoxRenderingContext.drawLine(
-    x1: Float,
-    y1: Float,
-    x2: Float,
-    y2: Float,
-) {
+private fun PdfBoxRenderingContext.drawLine(x1: Float, y1: Float, x2: Float, y2: Float) {
     with(getCurrentContentStream()) {
         moveTo(x1, y1)
         lineTo(x2, y2)
         stroke()
-        restoreGraphicsState()
+    }
+}
+
+private fun PdfBoxRenderingContext.drawRightBottomCorner(x: Float, y: Float, radius: Float) {
+    with(getCurrentContentStream()) {
+        moveTo(x - radius, y)
+        curveTo(x, y, x, y, x, y + radius)
+        stroke()
+    }
+}
+
+private fun PdfBoxRenderingContext.drawRightTopCorner(x: Float, y: Float, radius: Float) {
+    with(getCurrentContentStream()) {
+        moveTo(x - radius, y)
+        curveTo(x, y, x, y, x, y - radius)
+        stroke()
+    }
+}
+
+private fun PdfBoxRenderingContext.drawLeftTopCorner(x: Float, y: Float, radius: Float) {
+    with(getCurrentContentStream()) {
+        moveTo(x + radius, y)
+        curveTo(x, y, x, y, x, y - radius)
+        stroke()
+    }
+}
+
+private fun PdfBoxRenderingContext.drawLeftBottomCorner(x: Float, y: Float, radius: Float) {
+    with(getCurrentContentStream()) {
+        moveTo(x + radius, y)
+        curveTo(x, y, x, y, x, y + radius)
+        stroke()
+    }
+}
+
+private fun PdfBoxRenderingContext.setCornerStyle(style: BorderStyle?, color: Color?, width: Measure<*>) {
+    with(getCurrentContentStream()) {
+        setStrokingColor(color.awtColorOrDefault())
+        style?.applyOn(this)
+        setLineWidth(width.switchUnitOfMeasure(UnitsOfMeasure.PT).value)
     }
 }
 
 private fun PdfBoxRenderingContext.setBorderStyle(style: BorderStyle?, color: Color?, width: Measure<*>) {
     with(getCurrentContentStream()) {
-        saveGraphicsState()
         setStrokingColor(color.awtColorOrDefault())
         style?.applyOn(this)
         setLineWidth(width.switchUnitOfMeasure(UnitsOfMeasure.PT).value)
@@ -246,9 +314,8 @@ private fun BorderStyle?.subLine(width: Measure<*>): SubLineWidthAndOffset =
         }
     } else 0F to 0F
 
-private fun <A : AttributedEntity> PdfBoxRenderingContext.topCompositeBorder(
+private fun PdfBoxRenderingContext.topCompositeBorder(
     boxLayout: BoxLayout,
-    context: A,
     borders: Borders,
     primaryColor: Color? = null,
     secondaryColor: Color? = null,
@@ -281,30 +348,31 @@ private fun <A : AttributedEntity> PdfBoxRenderingContext.topCompositeBorder(
     )
 }
 
-private fun <A : AttributedEntity> PdfBoxRenderingContext.topBorder(
-    context: A,
+private fun PdfBoxRenderingContext.topBorder(
+    box: BoxLayout,
     borders: Borders,
     primaryColor: Color? = null,
     secondaryColor: Color? = null,
 ) {
     if (borders.topBorderStyle.hasBorder()) {
-        boxLayout(context, borders).let {
+        box.let {
             if (borders.topBorderStyle.hasComplexBorder()) {
-                topCompositeBorder(it, context, borders, primaryColor, secondaryColor)
+                topCompositeBorder(it, borders, primaryColor, secondaryColor)
             } else {
                 setBorderStyle(borders.topBorderStyle, borders.topBorderColor, borders.topBorderHeight)
-                val x1 = it.outerX
-                val y1 = it.outerY + (it.outer.height?.value ?: 0f) - borders.topBorderHeight.value / 2
-                val x2 = it.outerX + (it.outer.width?.value ?: 0f)
-                drawLine(x1, y1, x2, y1)
+                drawLine(
+                    box.outerLeftTopX + box.leftTopCornerRadiusOrZero,
+                    box.outerLeftTopY,
+                    box.outerRightTopX - box.rightTopCornerRadiusOrZero,
+                    box.outerRightTopY
+                )
             }
         }
     }
 }
 
-private fun <A : AttributedEntity> PdfBoxRenderingContext.bottomCompositeBorder(
+private fun PdfBoxRenderingContext.bottomCompositeBorder(
     boxLayout: BoxLayout,
-    context: A,
     borders: Borders,
     primaryColor: Color? = null,
     secondaryColor: Color? = null,
@@ -336,22 +404,24 @@ private fun <A : AttributedEntity> PdfBoxRenderingContext.bottomCompositeBorder(
     )
 }
 
-private fun <A : AttributedEntity> PdfBoxRenderingContext.bottomBorder(
-    context: A,
+private fun PdfBoxRenderingContext.bottomBorder(
+    box: BoxLayout,
     borders: Borders,
     primaryColor: Color? = null,
     secondaryColor: Color? = null,
 ) {
     if (borders.bottomBorderStyle.hasBorder()) {
-        boxLayout(context, borders).let {
+        box.let {
             if (borders.bottomBorderStyle.hasComplexBorder()) {
-                bottomCompositeBorder(it, context, borders, primaryColor, secondaryColor)
+                bottomCompositeBorder(it, borders, primaryColor, secondaryColor)
             } else {
                 setBorderStyle(borders.bottomBorderStyle, borders.bottomBorderColor, borders.bottomBorderHeight)
-                val x1 = it.outerX
-                val y1 = it.outerY + borders.bottomBorderHeight.value / 2
-                val x2 = x1 + (it.outer.width?.value ?: 0f)
-                drawLine(x1, y1, x2, y1)
+                drawLine(
+                    box.outerLeftBottomX + box.leftBottomCornerRadiusOrZero,
+                    box.outerLeftBottomY,
+                    box.outerRightBottomX - box.rightBottomCornerRadiusOrZero,
+                    box.outerRightBottomY
+                )
             }
         }
     }
@@ -391,22 +461,24 @@ private fun PdfBoxRenderingContext.leftCompositeBorder(
     )
 }
 
-private fun <A : AttributedEntity> PdfBoxRenderingContext.leftBorder(
-    context: A,
+private fun PdfBoxRenderingContext.leftBorder(
+    box: BoxLayout,
     borders: Borders,
     primaryColor: Color? = null,
     secondaryColor: Color? = null,
 ) {
     if (borders.leftBorderStyle.hasBorder()) {
-        boxLayout(context, borders).let {
+        box.let {
             if (borders.leftBorderStyle.hasComplexBorder()) {
                 leftCompositeBorder(it, borders, primaryColor, secondaryColor)
             } else {
                 setBorderStyle(borders.leftBorderStyle, borders.leftBorderColor, borders.leftBorderWidth)
-                val x1 = it.outerX + borders.leftBorderWidth.value / 2
-                val y1 = it.outerY
-                val y2 = y1 + (it.outer.height?.value ?: 0F)
-                drawLine(x1, y1, x1, y2)
+                drawLine(
+                    box.outerLeftTopX,
+                    box.outerLeftTopY - box.leftTopCornerRadiusOrZero,
+                    box.outerLeftBottomX,
+                    box.outerLeftBottomY + box.leftBottomCornerRadiusOrZero
+                )
             }
         }
     }
@@ -445,22 +517,24 @@ private fun PdfBoxRenderingContext.rightCompositeBorder(
     )
 }
 
-private fun <A : AttributedEntity> PdfBoxRenderingContext.rightBorder(
-    context: A,
+private fun PdfBoxRenderingContext.rightBorder(
+    box: BoxLayout,
     borders: Borders,
     primaryColor: Color? = null,
     secondaryColor: Color? = null,
 ) {
     if (borders.rightBorderStyle.hasBorder()) {
-        boxLayout(context, borders).let {
+        box.let {
             if (borders.rightBorderStyle.hasComplexBorder()) {
                 rightCompositeBorder(it, borders, primaryColor, secondaryColor)
             } else {
                 setBorderStyle(borders.rightBorderStyle, borders.rightBorderColor, borders.rightBorderWidth)
-                val x1 = it.outerX + (it.outer.width?.value ?: 0f) - borders.rightBorderWidth.value / 2
-                val y1 = it.outerY
-                val y2 = y1 + (it.outer.height?.value ?: 0F)
-                drawLine(x1, y1, x1, y2)
+                drawLine(
+                    box.outerRightTopX,
+                    (box.outerRightTopY - box.leftTopCornerRadiusOrZero),
+                    box.outerRightBottomX,
+                    (box.outerRightBottomY + box.leftBottomCornerRadiusOrZero)
+                )
             }
         }
     }

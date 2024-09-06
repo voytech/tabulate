@@ -39,4 +39,6 @@ sealed class Either<A, B> {
 
 fun Float.round3(): Float = (round(this * 1000)) / 1000
 
+fun Float.round1(): Float = (round(this * 10)) / 10
+
 fun Float.round(precision: Int): Float = 10F.pow(precision).let { (round(this * it)) / it }
