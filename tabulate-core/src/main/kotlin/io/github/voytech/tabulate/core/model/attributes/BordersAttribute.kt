@@ -49,6 +49,23 @@ data class BordersAttribute(
             measure = toFloat()
             uom = UnitsOfMeasure.PX
         }
+
+        var radius: Number
+            get() = radiusMeasure
+            set(value) {
+                radiusMeasure = value.toFloat()
+                radiusUom = uom // Use the same unit of measure as the main measure
+            }
+
+        fun Number.radiusPt() {
+            radiusMeasure = toFloat()
+            radiusUom = UnitsOfMeasure.PT
+        }
+
+        fun Number.radiusPx() {
+            radiusMeasure = toFloat()
+            radiusUom = UnitsOfMeasure.PX
+        }
     }
 
     @TabulateMarker
