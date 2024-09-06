@@ -106,24 +106,32 @@ fun BorderStyle?.rightBottomSecondaryColor(original: Color?): Color? =
     }
 
 fun <A : AttributedEntity> PdfBoxRenderingContext.drawBorders(context: A, borders: Borders) {
+    val leftPrimaryColor = borders.leftBorderStyle?.leftTopPrimaryColor(borders.leftBorderColor)
+    val leftSecondaryColor = borders.leftBorderStyle?.leftTopSecondaryColor(borders.leftBorderColor)
     leftBorder(
         context, borders,
         borders.leftBorderStyle?.leftTopPrimaryColor(borders.leftBorderColor),
         borders.leftBorderStyle?.leftTopSecondaryColor(borders.leftBorderColor),
     )
     leftTopRoundCorner(context, borders)
+    val topPrimaryColor = borders.topBorderStyle?.leftTopPrimaryColor(borders.topBorderColor)
+    val topSecondaryColor = borders.topBorderStyle?.leftTopSecondaryColor(borders.topBorderColor)
     topBorder(
         context, borders,
         borders.topBorderStyle?.leftTopPrimaryColor(borders.topBorderColor),
         borders.topBorderStyle?.leftTopSecondaryColor(borders.topBorderColor),
     )
     rightTopRoundCorner(context, borders)
+    val rightPrimaryColor = borders.rightBorderStyle?.rightBottomPrimaryColor(borders.rightBorderColor)
+    val rightSecondaryColor = borders.rightBorderStyle?.rightBottomSecondaryColor(borders.rightBorderColor)
     rightBorder(
         context, borders,
         borders.rightBorderStyle?.rightBottomPrimaryColor(borders.rightBorderColor),
         borders.rightBorderStyle?.rightBottomSecondaryColor(borders.rightBorderColor),
     )
     rightBottomRoundCorner(context, borders)
+    val bottomPrimaryColor = borders.bottomBorderStyle?.rightBottomPrimaryColor(borders.bottomBorderColor)
+    val bottomSecondaryColor = borders.bottomBorderStyle?.rightBottomSecondaryColor(borders.bottomBorderColor)
     bottomBorder(
         context, borders,
         borders.bottomBorderStyle?.rightBottomPrimaryColor(borders.bottomBorderColor),
