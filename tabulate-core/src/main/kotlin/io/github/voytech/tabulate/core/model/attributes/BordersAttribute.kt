@@ -15,7 +15,6 @@ data class BordersAttribute(
     override val leftBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
     override val leftBorderColor: Color? = null,
     override val leftBorderWidth: Width = Width(1F, UnitsOfMeasure.PT),
-
     override val leftBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
 
     override val rightBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
@@ -70,9 +69,6 @@ data class BordersAttribute(
         var bottomBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
         var bottomBorderColor: Color? by observable(null)
         var bottomBorderHeight: Height by observable(Height(1F, UnitsOfMeasure.PT))
-
-        //fun Number.pt(): Width = Width(toFloat(), UnitsOfMeasure.PT)
-        //fun Number.px(): Width = Width(toFloat(), UnitsOfMeasure.PX)
 
         fun all(block: SingleBorderBuilder.() -> Unit) {
             top(block)
