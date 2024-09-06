@@ -127,8 +127,8 @@ fun <A : AttributedEntity> PdfBoxRenderingContext.drawBorders(context: A, border
 fun <A : AttributedEntity> leftTopRoundCorner(
     context: A,
     borders: Borders,
-    primaryColor: Color? = null,
-    secondaryColor: Color? = null,
+    primaryColor: Color?,
+    secondaryColor: Color?,
 ) {
     TODO("Not yet implemented")
 }
@@ -136,8 +136,8 @@ fun <A : AttributedEntity> leftTopRoundCorner(
 fun <A : AttributedEntity> rightTopRoundCorner(
     context: A,
     borders: Borders,
-    primaryColor: Color? = null,
-    secondaryColor: Color? = null,
+    primaryColor: Color?,
+    secondaryColor: Color?,
 ) {
     TODO("Not yet implemented")
 }
@@ -145,8 +145,8 @@ fun <A : AttributedEntity> rightTopRoundCorner(
 fun <A : AttributedEntity> rightBottomRoundCorner(
     context: A,
     borders: Borders,
-    primaryColor: Color? = null,
-    secondaryColor: Color? = null,
+    primaryColor: Color?,
+    secondaryColor: Color?,
 ) {
     TODO("Not yet implemented")
 }
@@ -154,8 +154,8 @@ fun <A : AttributedEntity> rightBottomRoundCorner(
 fun <A : AttributedEntity> leftBottomRoundCorner(
     context: A,
     borders: Borders,
-    primaryColor: Color? = null,
-    secondaryColor: Color? = null,
+    primaryColor: Color?,
+    secondaryColor: Color?,
 ) {
     TODO("Not yet implemented")
 }
