@@ -15,22 +15,22 @@ data class BordersAttribute(
     override val leftBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
     override val leftBorderColor: Color? = null,
     override val leftBorderWidth: Width = Width(1F, UnitsOfMeasure.PT),
-    override val leftBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val leftTopBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
 
     override val rightBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
     override val rightBorderColor: Color? = null,
     override val rightBorderWidth: Width = Width(1F, UnitsOfMeasure.PT),
-    override val rightBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val rightTopBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
 
     override val topBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
     override val topBorderColor: Color? = null,
     override val topBorderHeight: Height = Height(1F, UnitsOfMeasure.PT),
-    override val topBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val rightBottomBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
 
     override val bottomBorderStyle: BorderStyle? = DefaultBorderStyle.NONE,
     override val bottomBorderColor: Color? = null,
     override val bottomBorderHeight: Height = Height(1F, UnitsOfMeasure.PT),
-    override val bottomBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val leftBottomBorderRadius: Width = Width(0F, UnitsOfMeasure.PT),
 ) : Attribute<BordersAttribute>(), Borders {
 
     @TabulateMarker
@@ -65,8 +65,8 @@ data class BordersAttribute(
         var leftBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
         var leftBorderColor: Color? by observable(null)
         var leftBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
-        var leftBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
-        var rightBorderStyle: BorderStyle? by observable(DefaultBorderStyle.NONE)
+        var leftTopBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var rightTopBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
         var rightBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
         var rightBorderColor: Color? by observable(null)
         var rightBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
@@ -124,11 +124,11 @@ data class BordersAttribute(
 
         override fun provide(): BordersAttribute = BordersAttribute(
             leftBorderStyle, leftBorderColor, leftBorderWidth,
-            leftBorderRadius,
-            rightBorderStyle, rightBorderColor, rightBorderWidth, rightBorderRadius,
+            leftTopBorderRadius,
+            rightBorderStyle, rightBorderColor, rightBorderWidth, rightTopBorderRadius,
             topBorderStyle, topBorderColor, topBorderHeight,
-            topBorderRadius,
-            bottomBorderStyle, bottomBorderColor, bottomBorderHeight, bottomBorderRadius
+            rightBottomBorderRadius,
+            bottomBorderStyle, bottomBorderColor, bottomBorderHeight, leftBottomBorderRadius
         )
     }
 
@@ -145,10 +145,10 @@ data class BordersAttribute(
         bottomBorderStyle = takeIfChanged(other, BordersAttribute::bottomBorderStyle),
         bottomBorderColor = takeIfChanged(other, BordersAttribute::bottomBorderColor),
         bottomBorderHeight = takeIfChanged(other, BordersAttribute::bottomBorderHeight),
-        leftBorderRadius = takeIfChanged(other, BordersAttribute::leftBorderRadius),
-        rightBorderRadius = takeIfChanged(other, BordersAttribute::rightBorderRadius),
-        topBorderRadius = takeIfChanged(other, BordersAttribute::topBorderRadius),
-        bottomBorderRadius = takeIfChanged(other, BordersAttribute::bottomBorderRadius),
+        leftTopBorderRadius = takeIfChanged(other, BordersAttribute::leftTopBorderRadius),
+        rightTopBorderRadius = takeIfChanged(other, BordersAttribute::rightTopBorderRadius),
+        rightBottomBorderRadius = takeIfChanged(other, BordersAttribute::rightBottomBorderRadius),
+        leftBottomBorderRadius = takeIfChanged(other, BordersAttribute::leftBottomBorderRadius),
     )
 
     companion object {
