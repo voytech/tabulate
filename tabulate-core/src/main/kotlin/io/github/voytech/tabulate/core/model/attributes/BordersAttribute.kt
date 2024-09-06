@@ -91,6 +91,10 @@ data class BordersAttribute(
                 leftBorderColor = it.color
                 leftBorderStyle = it.style
                 leftBorderWidth = Width(it.measure, it.uom)
+                leftBorderRadius = Width(it.radius, it.uom)
+                rightBorderRadius = Width(it.radius, it.uom)
+                topBorderRadius = Width(it.radius, it.uom)
+                bottomBorderRadius = Width(it.radius, it.uom)
             }
         }
 
