@@ -504,10 +504,14 @@ private fun PdfBoxRenderingContext.bottomBorder(
                 bottomCompositeBorder(it, borders, primaryColor, secondaryColor)
             } else {
                 setBorderStyle(borders.bottomBorderStyle, borders.bottomBorderColor, borders.bottomBorderHeight)
+                val leftX = (box.outerLeftBottomX + box.leftBottomCornerRadiusOrZero)
+                    .coerceAtMost(box.outerLeftBottomX + box.outerHalfWidth)
+                val rightX = (box.outerRightBottomX - box.rightBottomCornerRadiusOrZero)
+                    .coerceAtLeast(box.outerRightBottomX - box.outerHalfWidth)
                 drawLine(
-                    box.outerLeftBottomX + box.leftBottomCornerRadiusOrZero,
+                    leftX,
                     box.outerLeftBottomY + box.bottomBorderHalfThickness,
-                    box.outerRightBottomX - box.rightBottomCornerRadiusOrZero,
+                    rightX,
                     box.outerRightBottomY + box.bottomBorderHalfThickness
                 )
             }
