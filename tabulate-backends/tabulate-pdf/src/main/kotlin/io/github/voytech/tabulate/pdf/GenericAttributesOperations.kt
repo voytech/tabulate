@@ -75,6 +75,18 @@ class BackgroundAttributeRenderOperation<CTX : AttributedEntity> :
     }
 }
 
+private fun PdfBoxRenderingContext.bottomBorderClippingPath(box: BoxLayout, block: () -> Unit) {
+    val x1 = box.outerLeftBottomX
+    val y1 = box.outerLeftBottomY
+    val x2 = x1 + maxOf(box.borders!!.leftBorderWidth.value, box.leftBottomCornerRadiusOrZero)
+    val y2 = y1 + maxOf(box.borders.bottomBorderHeight.value, box.leftBottomCornerRadiusOrZero)
+    val x3 = box.outerRightBottomX - maxOf(box.borders.rightBorderWidth.value, box.rightBottomCornerRadiusOrZero)
+    val y3 = y2
+    val x4 = box.outerRightBottomX
+    val y4 = y1
+    pathClipped(x1, y1, x2, y2, x3, y3, x4, y4, x1, y1) { block() }
+}
+
 
 class BordersAttributeRenderOperation<CTX : AttributedEntity> :
     AttributeOperation<PdfBoxRenderingContext, BordersAttribute, CTX> {
