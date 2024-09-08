@@ -241,17 +241,25 @@ fun PdfBoxRenderingContext.leftBottomRoundCorner(
     val style = if (isLeftBorderStyle) borders.leftBorderStyle else borders.bottomBorderStyle
     val width = if (isLeftBorderStyle) borders.leftBorderWidth else borders.bottomBorderHeight
     val radius = borders.leftBottomBorderCornerRadius
-    val baseBottom = box.outerLeftBottomY - box.bottomBorderHalfThickness
-    val baseLeft = box.outerLeftBottomX - box.leftBorderHalfThickness
+    val color = if (isLeftBorderStyle) borders.leftBorderColor else borders.bottomBorderColor
+    val style = if (isLeftBorderStyle) borders.leftBorderStyle else borders.bottomBorderStyle
+    val width = if (isLeftBorderStyle) borders.leftBorderWidth else borders.bottomBorderHeight
+    val radius = borders.leftBottomBorderCornerRadius
+    val baseBottom = box.outerLeftBottomY + box.bottomBorderHalfThickness
+    val baseLeft = box.outerLeftBottomX + box.leftBorderHalfThickness
     pathClipped(
-        baseLeft, baseBottom,
-        baseLeft + box.outerHalfWidth, baseBottom,
-        baseLeft + box.outerHalfWidth, baseBottom + box.outerHalfHeight,
-        baseLeft, baseBottom + box.outerHalfHeight,
-        baseLeft, baseBottom,
+        box.outerLeftBottomX, box.outerLeftBottomY + box.outerHalfHeight,
+        box.outerLeftBottomX + box.outerHalfWidth, box.outerLeftBottomY + box.outerHalfHeight,
+        box.outerLeftBottomX + box.outerHalfWidth, box.outerLeftBottomY,
+        box.outerLeftBottomX, box.outerLeftBottomY,
+        box.outerLeftBottomX, box.outerLeftBottomY + box.outerHalfHeight,
     ) {
         setCornerStyle(style, color, width)
-        drawLeftBottomCorner(box.outerLeftBottomX, box.outerLeftBottomY, radius.value)
+        drawLeftBottomCorner(
+            baseLeft,
+            baseBottom,
+            radius.value
+        )
     }
 }
 
