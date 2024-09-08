@@ -28,22 +28,18 @@ data class BordersAttribute(
     override val bottomBorderColor: Color? = null,
     override val bottomBorderHeight: Height = Height(1F, UnitsOfMeasure.PT),
 
-    override val leftTopBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
     override val leftTopBorderCornerStyle: BorderStyle = DefaultBorderStyle.NONE,
     override val leftTopBorderCornerColor: Color? = null,
     override val leftTopBorderCornerWidth: Width = Width(0F, UnitsOfMeasure.PT),
 
-    override val rightTopBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
     override val rightTopBorderCornerStyle: BorderStyle = DefaultBorderStyle.NONE,
     override val rightTopBorderCornerColor: Color? = null,
     override val rightTopBorderCornerWidth: Width = Width(0F, UnitsOfMeasure.PT),
 
-    override val leftBottomBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
     override val leftBottomBorderCornerStyle: BorderStyle = DefaultBorderStyle.NONE,
     override val leftBottomBorderCornerColor: Color? = null,
     override val leftBottomBorderCornerWidth: Width = Width(0F, UnitsOfMeasure.PT),
 
-    override val rightBottomBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
     override val rightBottomBorderCornerStyle: BorderStyle = DefaultBorderStyle.NONE,
     override val rightBottomBorderCornerColor: Color? = null,
     override val rightBottomBorderCornerWidth: Width = Width(0F, UnitsOfMeasure.PT),
@@ -103,22 +99,18 @@ data class BordersAttribute(
         var bottomBorderColor: Color? by observable(null)
         var bottomBorderHeight: Height by observable(Height(1F, UnitsOfMeasure.PT))
 
-        var leftTopBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
         var leftTopBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
         var leftTopBorderColor: Color? by observable(null)
         var leftTopBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
 
-        var rightTopBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
         var rightTopBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
         var rightTopBorderColor: Color? by observable(null)
         var rightTopBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
 
-        var leftBottomBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
         var leftBottomBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
         var leftBottomBorderColor: Color? by observable(null)
         var leftBottomBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
 
-        var rightBottomBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
         var rightBottomBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
         var rightBottomBorderColor: Color? by observable(null)
         var rightBottomBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
@@ -139,7 +131,6 @@ data class BordersAttribute(
 
         fun leftTopCorner(block: CornerBorderBuilder.() -> Unit) {
             CornerBorderBuilder().apply(block).let {
-                leftTopBorderRadius = Width(it.radius, it.uom)
             }
         }
 
@@ -153,7 +144,6 @@ data class BordersAttribute(
 
         fun rightTopCorner(block: CornerBorderBuilder.() -> Unit) {
             CornerBorderBuilder().apply(block).let {
-                rightTopBorderRadius = Width(it.radius, it.uom)
             }
         }
 
@@ -167,7 +157,6 @@ data class BordersAttribute(
 
         fun rightBottomCorner(block: CornerBorderBuilder.() -> Unit) {
             CornerBorderBuilder().apply(block).let {
-                rightBottomBorderRadius = Width(it.radius, it.uom)
             }
         }
 
@@ -181,7 +170,6 @@ data class BordersAttribute(
 
         fun leftBottomCorner(block: CornerBorderBuilder.() -> Unit) {
             CornerBorderBuilder().apply(block).let {
-                leftBottomBorderRadius = Width(it.radius, it.uom)
             }
         }
 
