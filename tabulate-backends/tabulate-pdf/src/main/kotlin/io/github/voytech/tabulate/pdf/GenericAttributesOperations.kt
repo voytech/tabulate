@@ -214,10 +214,6 @@ fun PdfBoxRenderingContext.rightBottomRoundCorner(
     val style = if (isRightBorderStyle) borders.rightBorderStyle else borders.bottomBorderStyle
     val width = if (isRightBorderStyle) borders.rightBorderWidth else borders.bottomBorderHeight
     val radius = borders.rightBottomBorderCornerRadius
-    val color = if (isRightBorderStyle) borders.rightBorderColor else borders.bottomBorderColor
-    val style = if (isRightBorderStyle) borders.rightBorderStyle else borders.bottomBorderStyle
-    val width = if (isRightBorderStyle) borders.rightBorderWidth else borders.bottomBorderHeight
-    val radius = borders.rightBottomBorderCornerRadius
     val baseBottom = box.outerRightBottomY + box.bottomBorderHalfThickness
     val baseRight = box.outerRightBottomX - box.rightBorderHalfThickness
     pathClipped(
