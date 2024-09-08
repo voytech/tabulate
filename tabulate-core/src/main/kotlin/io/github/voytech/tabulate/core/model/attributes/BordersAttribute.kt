@@ -102,6 +102,11 @@ data class BordersAttribute(
         var rightBottomBorderColor: Color? by observable(null)
         var rightBottomBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
 
+        var leftTopBorderCornerRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var rightTopBorderCornerRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var leftBottomBorderCornerRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var rightBottomBorderCornerRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+
         fun all(block: SingleBorderBuilder.() -> Unit) {
             top(block)
             left(block)
@@ -118,6 +123,10 @@ data class BordersAttribute(
 
         fun leftTopCorner(block: CornerBorderBuilder.() -> Unit) {
             CornerBorderBuilder().apply(block).let {
+                leftTopBorderCornerRadius = Width(it.radius, it.uom)
+                rightTopBorderCornerRadius = Width(it.radius, it.uom)
+                rightBottomBorderCornerRadius = Width(it.radius, it.uom)
+                leftBottomBorderCornerRadius = Width(it.radius, it.uom)
             }
         }
 
@@ -174,10 +183,10 @@ data class BordersAttribute(
             rightBorderStyle, rightBorderColor, rightBorderWidth,
             topBorderStyle, topBorderColor, topBorderHeight,
             bottomBorderStyle, bottomBorderColor, bottomBorderHeight,
-            leftTopBorderRadius, leftTopBorderStyle, leftTopBorderColor, leftTopBorderWidth,
-            rightTopBorderRadius, rightTopBorderStyle, rightTopBorderColor, rightTopBorderWidth,
-            leftBottomBorderRadius, leftBottomBorderStyle, leftBottomBorderColor, leftBottomBorderWidth,
-            rightBottomBorderRadius, rightBottomBorderStyle, rightBottomBorderColor, rightBottomBorderWidth,
+            leftTopBorderCornerRadius, leftTopBorderStyle, leftTopBorderColor, leftTopBorderWidth,
+            rightTopBorderCornerRadius, rightTopBorderStyle, rightTopBorderColor, rightTopBorderWidth,
+            leftBottomBorderCornerRadius, leftBottomBorderStyle, leftBottomBorderColor, leftBottomBorderWidth,
+            rightBottomBorderCornerRadius, rightBottomBorderStyle, rightBottomBorderColor, rightBottomBorderWidth,
         )
     }
 
