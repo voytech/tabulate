@@ -106,7 +106,7 @@ fun <A : AttributedEntity> PdfBoxRenderingContext.drawBorders(context: A, border
 
         val rightPrimaryColor = borders.rightBorderStyle.rightBottomPrimaryColor(borders.rightBorderColor)
         val rightSecondaryColor = borders.rightBorderStyle.rightBottomSecondaryColor(borders.rightBorderColor)
-        // rightBorder(box, borders, rightPrimaryColor, rightSecondaryColor)
+        rightBorder(box, borders, rightPrimaryColor, rightSecondaryColor)
         rightTopRoundCorner(box, borders, true)
         rightBottomRoundCorner(box, borders, true)
 
@@ -160,19 +160,19 @@ fun PdfBoxRenderingContext.leftTopRoundCorner(
     val style = if (isLeftBorderStyle) borders.leftBorderStyle else borders.topBorderStyle
     val width = if (isLeftBorderStyle) borders.leftBorderWidth else borders.topBorderHeight
     val radius = borders.leftTopBorderCornerRadius
-    val baseTop = box.outerLeftTopY + box.topBorderHalfThickness
-    val baseLeft = box.outerLeftTopX - box.leftBorderHalfThickness
+    val baseTop = box.outerLeftTopY - box.topBorderHalfThickness
+    val baseLeft = box.outerLeftTopX + box.leftBorderHalfThickness
     pathClipped(
-        baseLeft, baseTop - box.outerHalfHeight,
-        baseLeft + box.outerHalfWidth, baseTop - box.outerHalfHeight,
-        baseLeft + box.outerHalfWidth, baseTop,
-        baseLeft, baseTop,
-        baseLeft, baseTop - box.outerHalfHeight,
+        box.outerLeftTopX, box.outerLeftTopY - box.outerHalfHeight,
+        box.outerLeftTopX + box.outerHalfWidth, box.outerLeftTopY - box.outerHalfHeight,
+        box.outerLeftTopX + box.outerHalfWidth, box.outerLeftTopY,
+        box.outerLeftTopX, box.outerLeftTopY,
+        box.outerLeftTopX, box.outerLeftTopY - box.outerHalfHeight,
     ) {
         setCornerStyle(style, color, width)
         drawLeftTopCorner(
-            box.outerLeftTopX,
-            box.outerLeftTopY,
+            baseLeft,
+            baseTop,
             radius.value
         )
     }
@@ -402,9 +402,9 @@ private fun PdfBoxRenderingContext.topBorder(
                 setBorderStyle(borders.topBorderStyle, borders.topBorderColor, borders.topBorderHeight)
                 drawLine(
                     box.outerLeftTopX + box.leftTopCornerRadiusOrZero,
-                    box.outerLeftTopY,
+                    box.outerLeftTopY - box.topBorderHalfThickness,
                     box.outerRightTopX - box.rightTopCornerRadiusOrZero,
-                    box.outerRightTopY
+                    box.outerRightTopY - box.topBorderHalfThickness
                 )
             }
         }
@@ -458,9 +458,9 @@ private fun PdfBoxRenderingContext.bottomBorder(
                 setBorderStyle(borders.bottomBorderStyle, borders.bottomBorderColor, borders.bottomBorderHeight)
                 drawLine(
                     box.outerLeftBottomX + box.leftBottomCornerRadiusOrZero,
-                    box.outerLeftBottomY,
+                    box.outerLeftBottomY + box.bottomBorderHalfThickness,
                     box.outerRightBottomX - box.rightBottomCornerRadiusOrZero,
-                    box.outerRightBottomY
+                    box.outerRightBottomY + box.bottomBorderHalfThickness
                 )
             }
         }
@@ -514,9 +514,9 @@ private fun PdfBoxRenderingContext.leftBorder(
             } else {
                 setBorderStyle(borders.leftBorderStyle, borders.leftBorderColor, borders.leftBorderWidth)
                 drawLine(
-                    box.outerLeftTopX,
+                    box.outerLeftTopX + box.leftBorderHalfThickness,
                     box.outerLeftTopY - box.leftTopCornerRadiusOrZero,
-                    box.outerLeftBottomX,
+                    box.outerLeftBottomX + box.leftBorderHalfThickness,
                     box.outerLeftBottomY + box.leftBottomCornerRadiusOrZero
                 )
             }
@@ -570,9 +570,9 @@ private fun PdfBoxRenderingContext.rightBorder(
             } else {
                 setBorderStyle(borders.rightBorderStyle, borders.rightBorderColor, borders.rightBorderWidth)
                 drawLine(
-                    box.outerRightTopX,
+                    box.outerRightTopX - box.rightBorderHalfThickness,
                     (box.outerRightTopY - box.leftTopCornerRadiusOrZero),
-                    box.outerRightBottomX,
+                    box.outerRightBottomX - box.rightBorderHalfThickness,
                     (box.outerRightBottomY + box.leftBottomCornerRadiusOrZero)
                 )
             }
