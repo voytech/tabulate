@@ -27,23 +27,10 @@ data class BordersAttribute(
     override val bottomBorderStyle: BorderStyle = DefaultBorderStyle.NONE,
     override val bottomBorderColor: Color? = null,
     override val bottomBorderHeight: Height = Height(1F, UnitsOfMeasure.PT),
-
-    override val leftTopBorderCornerStyle: BorderStyle = DefaultBorderStyle.NONE,
-    override val leftTopBorderCornerColor: Color? = null,
-    override val leftTopBorderCornerWidth: Width = Width(0F, UnitsOfMeasure.PT),
-
-    override val rightTopBorderCornerStyle: BorderStyle = DefaultBorderStyle.NONE,
-    override val rightTopBorderCornerColor: Color? = null,
-    override val rightTopBorderCornerWidth: Width = Width(0F, UnitsOfMeasure.PT),
-
-    override val leftBottomBorderCornerStyle: BorderStyle = DefaultBorderStyle.NONE,
-    override val leftBottomBorderCornerColor: Color? = null,
-    override val leftBottomBorderCornerWidth: Width = Width(0F, UnitsOfMeasure.PT),
-
-    override val rightBottomBorderCornerStyle: BorderStyle = DefaultBorderStyle.NONE,
-    override val rightBottomBorderCornerColor: Color? = null,
-    override val rightBottomBorderCornerWidth: Width = Width(0F, UnitsOfMeasure.PT),
-
+    override val leftTopBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val leftBottomBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val rightBottomBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val rightTopBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
 
     ) : Attribute<BordersAttribute>(), Borders {
 
@@ -68,8 +55,8 @@ data class BordersAttribute(
 
     @TabulateMarker
     class CornerBorderBuilder : DefaultBorderStyleWords, DefaultColorWords {
-        var uom: UnitsOfMeasure = UnitsOfMeasure.PT
-        var radius: Float = 0F
+        private var uom: UnitsOfMeasure = UnitsOfMeasure.PT
+        private var radius: Float = 0F
 
         fun Number.pt() {
             radius = toFloat()
