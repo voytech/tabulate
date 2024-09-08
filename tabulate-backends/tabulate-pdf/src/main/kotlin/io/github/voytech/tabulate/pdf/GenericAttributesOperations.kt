@@ -160,12 +160,22 @@ fun PdfBoxRenderingContext.leftTopRoundCorner(
     val style = if (isLeftBorderStyle) borders.leftBorderStyle else borders.topBorderStyle
     val width = if (isLeftBorderStyle) borders.leftBorderWidth else borders.topBorderHeight
     val radius = borders.leftTopBorderCornerRadius
-    setCornerStyle(style, color, width)
-    drawLeftTopCorner(
-        box.outerLeftTopX,
-        box.outerLeftTopY,
-        radius.value
-    )
+    val baseTop = box.outerLeftTopY + box.topBorderHalfThickness
+    val baseLeft = box.outerLeftTopX - box.leftBorderHalfThickness
+    pathClipped(
+        baseLeft, baseTop - box.outerHalfHeight,
+        baseLeft + box.outerHalfWidth, baseTop - box.outerHalfHeight,
+        baseLeft + box.outerHalfWidth, baseTop,
+        baseLeft, baseTop,
+        baseLeft, baseTop - box.outerHalfHeight,
+    ) {
+        setCornerStyle(style, color, width)
+        drawLeftTopCorner(
+            box.outerLeftTopX,
+            box.outerLeftTopY,
+            radius.value
+        )
+    }
 }
 
 fun PdfBoxRenderingContext.rightTopRoundCorner(
