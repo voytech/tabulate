@@ -72,29 +72,19 @@ data class BordersAttribute(
 
     @TabulateMarker
     class CornerBorderBuilder : DefaultBorderStyleWords, DefaultColorWords {
-        override var style: BorderStyle = DefaultBorderStyle.SOLID
-        var measure: Float = 1F
         var uom: UnitsOfMeasure = UnitsOfMeasure.PT
-        override var color: Color? = Colors.BLACK
         var radius: Float = 0F
 
         fun Number.pt() {
-            measure = toFloat()
+            radius = toFloat()
             uom = UnitsOfMeasure.PT
         }
 
         fun Number.px() {
-            measure = toFloat()
+            radius = toFloat()
             uom = UnitsOfMeasure.PX
         }
 
-        fun Number.radiusPt() {
-            radius = toFloat()
-        }
-
-        fun Number.radiusPx() {
-            radius = toFloat()
-        }
     }
 
 
@@ -150,9 +140,6 @@ data class BordersAttribute(
         fun leftTopCorner(block: CornerBorderBuilder.() -> Unit) {
             CornerBorderBuilder().apply(block).let {
                 leftTopBorderRadius = Width(it.radius, it.uom)
-                leftTopBorderColor = it.color
-                leftTopBorderStyle = it.style
-                leftTopBorderWidth = Width(it.measure, it.uom)
             }
         }
 
@@ -167,9 +154,6 @@ data class BordersAttribute(
         fun rightTopCorner(block: CornerBorderBuilder.() -> Unit) {
             CornerBorderBuilder().apply(block).let {
                 rightTopBorderRadius = Width(it.radius, it.uom)
-                rightTopBorderColor = it.color
-                rightTopBorderStyle = it.style
-                rightTopBorderWidth = Width(it.measure, it.uom)
             }
         }
 
@@ -184,9 +168,6 @@ data class BordersAttribute(
         fun rightBottomCorner(block: CornerBorderBuilder.() -> Unit) {
             CornerBorderBuilder().apply(block).let {
                 rightBottomBorderRadius = Width(it.radius, it.uom)
-                rightBottomBorderColor = it.color
-                rightBottomBorderStyle = it.style
-                rightBottomBorderWidth = Width(it.measure, it.uom)
             }
         }
 
@@ -201,9 +182,6 @@ data class BordersAttribute(
         fun leftBottomCorner(block: CornerBorderBuilder.() -> Unit) {
             CornerBorderBuilder().apply(block).let {
                 leftBottomBorderRadius = Width(it.radius, it.uom)
-                leftBottomBorderColor = it.color
-                leftBottomBorderStyle = it.style
-                leftBottomBorderWidth = Width(it.measure, it.uom)
             }
         }
 
