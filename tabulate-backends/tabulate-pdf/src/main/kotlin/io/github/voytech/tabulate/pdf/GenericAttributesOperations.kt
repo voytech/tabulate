@@ -570,15 +570,15 @@ private fun PdfBoxRenderingContext.rightCompositeBorder(
     )
 }
 
-private fun PdfBoxRenderingContext.rightBorderClippingPath(box: BoxLayout, block: () -> Unit) {
-    val x1 = box.outerRightTopX
-    val y1 = box.outerRightTopY
-    val x2 = x1 - maxOf(box.borders!!.rightBorderWidth.value, box.rightTopCornerRadiusOrZero)
-    val y2 = y1 - maxOf(box.borders.topBorderHeight.value, box.rightTopCornerRadiusOrZero)
+private fun PdfBoxRenderingContext.leftBorderClippingPath(box: BoxLayout, block: () -> Unit) {
+    val x1 = box.outerLeftTopX
+    val y1 = box.outerLeftTopY
+    val x2 = x1 + maxOf(box.borders!!.leftBorderWidth.value, box.leftTopCornerRadiusOrZero)
+    val y2 = y1 - maxOf(box.borders.topBorderHeight.value, box.leftTopCornerRadiusOrZero)
     val x3 = x2
-    val y3 = box.outerRightBottomY + maxOf(box.borders.bottomBorderHeight.value, box.rightBottomCornerRadiusOrZero)
-    val x4 = box.outerRightBottomX
-    val y4 = box.outerRightTopY
+    val y3 = box.outerLeftBottomY + maxOf(box.borders.bottomBorderHeight.value, box.leftBottomCornerRadiusOrZero)
+    val x4 = box.outerLeftBottomX
+    val y4 = box.outerLeftTopY
     pathClipped(x1, y1, x2, y2, x3, y3, x4, y4, x1, y1) { block() }
 }
 
