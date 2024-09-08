@@ -177,8 +177,18 @@ fun PdfBoxRenderingContext.rightTopRoundCorner(
     val style = if (isRightBorderStyle) borders.rightBorderStyle else borders.topBorderStyle
     val width = if (isRightBorderStyle) borders.rightBorderWidth else borders.topBorderHeight
     val radius = borders.rightTopBorderCornerRadius
-    setCornerStyle(style, color, width)
-    drawRightTopCorner(box.outerRightTopX, box.outerRightTopY, radius.value)
+    val baseTop = box.outerRightTopY + box.topBorderHalfThickness
+    val baseRight = box.outerRightTopX + box.rightBorderHalfThickness
+    pathClipped(
+        baseRight - box.outerHalfWidth, baseTop - box.outerHalfHeight,
+        baseRight, baseTop - box.outerHalfHeight,
+        baseRight, baseTop,
+        baseRight - box.outerHalfWidth, baseTop,
+        baseRight - box.outerHalfWidth, baseTop - box.outerHalfHeight,
+    ) {
+        setCornerStyle(style, color, width)
+        drawRightTopCorner(box.outerRightTopX, box.outerRightTopY, radius.value)
+    }
 }
 
 fun PdfBoxRenderingContext.rightBottomRoundCorner(
