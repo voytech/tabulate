@@ -106,11 +106,12 @@ fun <A : AttributedEntity> PdfBoxRenderingContext.drawBorders(context: A, border
 
         val rightPrimaryColor = borders.rightBorderStyle.rightBottomPrimaryColor(borders.rightBorderColor)
         val rightSecondaryColor = borders.rightBorderStyle.rightBottomSecondaryColor(borders.rightBorderColor)
-        rightBorder(box, borders, rightPrimaryColor, rightSecondaryColor)
-        rightTopRoundCorner(box, borders, true)
-        rightBottomRoundCorner(box, borders, true)
+        rightBorderClippingPath(box) {
+            rightBorder(box, borders, rightPrimaryColor, rightSecondaryColor)
+            rightTopRoundCorner(box, borders, true)
+            rightBottomRoundCorner(box, borders, true)
 
-
+        }
         val bottomPrimaryColor = borders.bottomBorderStyle.rightBottomPrimaryColor(borders.bottomBorderColor)
         val bottomSecondaryColor = borders.bottomBorderStyle.rightBottomSecondaryColor(borders.bottomBorderColor)
         bottomBorder(box, borders, bottomPrimaryColor, bottomSecondaryColor)
@@ -237,10 +238,6 @@ fun PdfBoxRenderingContext.leftBottomRoundCorner(
     borders: Borders,
     isLeftBorderStyle: Boolean
 ) {
-    val color = if (isLeftBorderStyle) borders.leftBorderColor else borders.bottomBorderColor
-    val style = if (isLeftBorderStyle) borders.leftBorderStyle else borders.bottomBorderStyle
-    val width = if (isLeftBorderStyle) borders.leftBorderWidth else borders.bottomBorderHeight
-    val radius = borders.leftBottomBorderCornerRadius
     val color = if (isLeftBorderStyle) borders.leftBorderColor else borders.bottomBorderColor
     val style = if (isLeftBorderStyle) borders.leftBorderStyle else borders.bottomBorderStyle
     val width = if (isLeftBorderStyle) borders.leftBorderWidth else borders.bottomBorderHeight
@@ -573,6 +570,18 @@ private fun PdfBoxRenderingContext.rightCompositeBorder(
     )
 }
 
+private fun PdfBoxRenderingContext.rightBorderClippingPath(box: BoxLayout, block: () -> Unit) {
+    val x1 = box.outerRightTopX
+    val y1 = box.outerRightTopY
+    val x2 = x1 - maxOf(box.borders!!.rightBorderWidth.value, box.rightTopCornerRadiusOrZero)
+    val y2 = y1 - maxOf(box.borders.topBorderHeight.value, box.rightTopCornerRadiusOrZero)
+    val x3 = x2
+    val y3 = box.outerRightBottomY + maxOf(box.borders.bottomBorderHeight.value, box.rightBottomCornerRadiusOrZero)
+    val x4 = box.outerRightBottomX
+    val y4 = box.outerRightTopY
+    pathClipped(x1, y1, x2, y2, x3, y3, x4, y4, x1, y1) { block() }
+}
+
 private fun PdfBoxRenderingContext.rightBorder(
     box: BoxLayout,
     borders: Borders,
@@ -587,9 +596,9 @@ private fun PdfBoxRenderingContext.rightBorder(
                 setBorderStyle(borders.rightBorderStyle, borders.rightBorderColor, borders.rightBorderWidth)
                 drawLine(
                     box.outerRightTopX - box.rightBorderHalfThickness,
-                    (box.outerRightTopY - box.leftTopCornerRadiusOrZero),
+                    (box.outerRightTopY - box.rightTopCornerRadiusOrZero),
                     box.outerRightBottomX - box.rightBorderHalfThickness,
-                    (box.outerRightBottomY + box.leftBottomCornerRadiusOrZero)
+                    (box.outerRightBottomY + box.rightBottomCornerRadiusOrZero)
                 )
             }
         }
