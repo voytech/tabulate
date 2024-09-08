@@ -95,23 +95,27 @@ fun <A : AttributedEntity> PdfBoxRenderingContext.drawBorders(context: A, border
         val leftPrimaryColor = borders.leftBorderStyle.leftTopPrimaryColor(borders.leftBorderColor)
         val leftSecondaryColor = borders.leftBorderStyle.leftTopSecondaryColor(borders.leftBorderColor)
         leftBorder(box, borders, leftPrimaryColor, leftSecondaryColor)
+        leftTopRoundCorner(box, borders, true)
+        leftBottomRoundCorner(box, borders, true)
 
         val topPrimaryColor = borders.topBorderStyle.leftTopPrimaryColor(borders.topBorderColor)
         val topSecondaryColor = borders.topBorderStyle.leftTopSecondaryColor(borders.topBorderColor)
         topBorder(box, borders, topPrimaryColor, topSecondaryColor)
+        leftTopRoundCorner(box, borders, false)
+        rightTopRoundCorner(box, borders, false)
 
         val rightPrimaryColor = borders.rightBorderStyle.rightBottomPrimaryColor(borders.rightBorderColor)
         val rightSecondaryColor = borders.rightBorderStyle.rightBottomSecondaryColor(borders.rightBorderColor)
-        rightBorder(box, borders, rightPrimaryColor, rightSecondaryColor)
+        // rightBorder(box, borders, rightPrimaryColor, rightSecondaryColor)
+        rightTopRoundCorner(box, borders, true)
+        rightBottomRoundCorner(box, borders, true)
+
 
         val bottomPrimaryColor = borders.bottomBorderStyle.rightBottomPrimaryColor(borders.bottomBorderColor)
         val bottomSecondaryColor = borders.bottomBorderStyle.rightBottomSecondaryColor(borders.bottomBorderColor)
         bottomBorder(box, borders, bottomPrimaryColor, bottomSecondaryColor)
-
-        leftTopRoundCorner(box, borders, leftPrimaryColor, leftSecondaryColor)
-        rightTopRoundCorner(box, borders, topPrimaryColor, topSecondaryColor)
-        rightBottomRoundCorner(box, borders, rightPrimaryColor, rightSecondaryColor)
-        leftBottomRoundCorner(box, borders, bottomPrimaryColor, bottomSecondaryColor)
+        leftBottomRoundCorner(box, borders, false)
+        rightBottomRoundCorner(box, borders, false)
 
         getCurrentContentStream().restoreGraphicsState()
     }
@@ -150,12 +154,11 @@ fun BorderStyle?.rightBottomSecondaryColor(original: Color?): Color? =
 fun PdfBoxRenderingContext.leftTopRoundCorner(
     box: BoxLayout,
     borders: Borders,
-    leftPrimaryColor: Color?,
-    leftSecondaryColor: Color?,
+    isLeftBorderStyle: Boolean
 ) {
-    val color = borders.leftTopBorderCornerColor
-    val style = borders.leftTopBorderCornerStyle
-    val width = borders.leftTopBorderCornerWidth
+    val color = if (isLeftBorderStyle) borders.leftBorderColor else borders.topBorderColor
+    val style = if (isLeftBorderStyle) borders.leftBorderStyle else borders.topBorderStyle
+    val width = if (isLeftBorderStyle) borders.leftBorderWidth else borders.topBorderHeight
     val radius = borders.leftTopBorderCornerRadius
     setCornerStyle(style, color, width)
     drawLeftTopCorner(
@@ -168,12 +171,11 @@ fun PdfBoxRenderingContext.leftTopRoundCorner(
 fun PdfBoxRenderingContext.rightTopRoundCorner(
     box: BoxLayout,
     borders: Borders,
-    rightPrimaryColor: Color?,
-    rightSecondaryColor: Color?,
+    isRightBorderStyle: Boolean
 ) {
-    val color = borders.rightTopBorderCornerColor
-    val style = borders.rightTopBorderCornerStyle
-    val width = borders.rightTopBorderCornerWidth
+    val color = if (isRightBorderStyle) borders.rightBorderColor else borders.topBorderColor
+    val style = if (isRightBorderStyle) borders.rightBorderStyle else borders.topBorderStyle
+    val width = if (isRightBorderStyle) borders.rightBorderWidth else borders.topBorderHeight
     val radius = borders.rightTopBorderCornerRadius
     setCornerStyle(style, color, width)
     drawRightTopCorner(box.outerRightTopX, box.outerRightTopY, radius.value)
@@ -182,26 +184,34 @@ fun PdfBoxRenderingContext.rightTopRoundCorner(
 fun PdfBoxRenderingContext.rightBottomRoundCorner(
     box: BoxLayout,
     borders: Borders,
-    bottomPrimaryColor: Color?,
-    bottomSecondaryColor: Color?,
+    isRightBorderStyle: Boolean
 ) {
-    val color = borders.rightBottomBorderCornerColor
-    val style = borders.rightBottomBorderCornerStyle
-    val width = borders.rightBottomBorderCornerWidth
+    val color = if (isRightBorderStyle) borders.rightBorderColor else borders.bottomBorderColor
+    val style = if (isRightBorderStyle) borders.rightBorderStyle else borders.bottomBorderStyle
+    val width = if (isRightBorderStyle) borders.rightBorderWidth else borders.bottomBorderHeight
     val radius = borders.rightBottomBorderCornerRadius
-    setCornerStyle(style, color, width)
-    drawRightBottomCorner(box.outerRightBottomX, box.outerRightBottomY, radius.value)
+    val baseBottom = box.outerRightBottomY - box.bottomBorderHalfThickness
+    val baseRight = box.outerRightBottomX + box.rightBorderHalfThickness
+    pathClipped(
+        baseRight - box.outerHalfWidth, baseBottom,
+        baseRight, baseBottom,
+        baseRight, baseBottom + box.outerHalfHeight,
+        baseRight - box.outerHalfWidth, baseBottom + box.outerHalfHeight,
+        baseRight - box.outerHalfWidth, baseBottom,
+    ) {
+        setCornerStyle(style, color, width)
+        drawRightBottomCorner(box.outerRightBottomX, box.outerRightBottomY, radius.value)
+    }
 }
 
 fun PdfBoxRenderingContext.leftBottomRoundCorner(
     box: BoxLayout,
     borders: Borders,
-    leftPrimaryColor: Color?,
-    leftSecondaryColor: Color?,
+    isLeftBorderStyle: Boolean
 ) {
-    val color = borders.leftBottomBorderCornerColor
-    val style = borders.leftBottomBorderCornerStyle
-    val width = borders.leftBottomBorderCornerWidth
+    val color = if (isLeftBorderStyle) borders.leftBorderColor else borders.bottomBorderColor
+    val style = if (isLeftBorderStyle) borders.leftBorderStyle else borders.bottomBorderStyle
+    val width = if (isLeftBorderStyle) borders.leftBorderWidth else borders.bottomBorderHeight
     val radius = borders.leftBottomBorderCornerRadius
     setCornerStyle(style, color, width)
     drawLeftBottomCorner(box.outerLeftBottomX, box.outerLeftBottomY, radius.value)
