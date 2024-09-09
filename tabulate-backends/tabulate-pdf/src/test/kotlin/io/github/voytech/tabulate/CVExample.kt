@@ -13,7 +13,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.LocalDate
-import kotlin.math.abs
 
 @DisplayName("CV Generator test.")
 class CVExample {
@@ -76,7 +75,7 @@ class CVExample {
                 vertical {
                     attributes {
                         background { lightGray }
-                        borders { leftTopCorner { 150.radiusPt(); } }
+                        borders { all { 1.pt() }; radius { 10.pt(); } }
                     }
                     textValue { attributes { text { bold; fontSize = 16 } }; "Profile" }
                     textValue {
@@ -105,7 +104,10 @@ class CVExample {
     private fun ContainerBuilderApi.employmentEntry(builder: EmploymentEntryBuilder.() -> Unit) {
         EmploymentEntryBuilder().apply { builder() }.let {
             vertical {
-                attributes { background { lighterGray } }
+                attributes {
+                    background { lighterGray }
+                    borders { all { 1.pt() }; radius { 10.pt(); } }
+                }
                 attributes { margins { all { 5.pt() } } }
                 textValue {
                     attributes {
@@ -265,7 +267,11 @@ class CVExample {
                     }
                     align { right; top; width25 } vertical {
                         attributes {
+                            margins { all { 5.pt() } }
                             width { 100.percents() }
+                            height { 100.percents() }
+                            background { lightGray }
+                            borders { all { 1.pt() }; radius { 10.pt(); } }
                         }
                         textValue { attributes { text { bold; fontSize = 16 } };"Skills" }
                     }

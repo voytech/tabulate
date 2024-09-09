@@ -34,13 +34,32 @@ class BordersTests {
 
                 textValue {
                     attributes {
+                        width { 100.pt() }
+                        height { 100.pt() }
                         margins { all { 5.pt() } }
                         borders {
-                            right { solid; 1.pt(); black; }
-                            top { solid; 1.pt(); black; }
-                            bottom { solid; 1.pt(); black; }
-                            left { solid; 1.pt(); black; }
-                            corners { solid; 2.pt(); black; 1.radiusPt() }
+                            right { solid; 1.pt(); red; }
+                            top { solid; 1.pt(); green; }
+                            bottom { solid; 1.pt(); orange; }
+                            left { solid; 1.pt(); blue; }
+                            radius { 100.pt() }
+                        }
+                    }
+                    "Circle"
+                }
+                textValue {
+                    attributes {
+                        margins { all { 5.pt() } }
+                        borders {
+                            right { double; 2.pt(); red; }
+                            top { double; 2.pt(); green; }
+                            bottom { double; 2.pt(); orange; }
+                            left { double; 2.pt(); blue; }
+                            radius { 10.pt() }
+                            leftTopRadius { 10.pt() }
+                            rightTopRadius { 5.pt() }
+                            rightBottomRadius { 2.pt() }
+
                         }
                     }
                     "Solid borders"
@@ -51,7 +70,7 @@ class BordersTests {
                         margins { all { 5.pt() } }
                         borders {
                             all { solid; 2.pt(); black }
-                            corners { solid; 2.pt(); black; 15.radiusPt() }
+                            radius { 15.pt() }
 
                         }
                     }

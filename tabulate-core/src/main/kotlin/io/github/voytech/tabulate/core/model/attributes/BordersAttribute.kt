@@ -29,8 +29,8 @@ data class BordersAttribute(
     override val bottomBorderHeight: Height = Height(1F, UnitsOfMeasure.PT),
     override val leftTopBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
     override val leftBottomBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
-    override val rightBottomBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
     override val rightTopBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
+    override val rightBottomBorderCornerRadius: Width = Width(0F, UnitsOfMeasure.PT),
 
     ) : Attribute<BordersAttribute>(), Borders {
 
@@ -54,9 +54,12 @@ data class BordersAttribute(
     }
 
     @TabulateMarker
-    class CornerBorderBuilder : DefaultBorderStyleWords, DefaultColorWords {
-        private var uom: UnitsOfMeasure = UnitsOfMeasure.PT
-        private var radius: Float = 0F
+    class CornerBorderBuilder {
+        @JvmSynthetic
+        internal var uom: UnitsOfMeasure = UnitsOfMeasure.PT
+
+        @JvmSynthetic
+        internal var radius: Float = 0F
 
         fun Number.pt() {
             radius = toFloat()
@@ -73,39 +76,27 @@ data class BordersAttribute(
 
     @TabulateMarker
     class Builder(target: Set<Class<out AttributeAware>>) : AttributeBuilder<BordersAttribute>(target) {
+
         var leftBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
         var leftBorderColor: Color? by observable(null)
         var leftBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
+
         var rightBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
         var rightBorderColor: Color? by observable(null)
         var rightBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
+
         var topBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
         var topBorderColor: Color? by observable(null)
         var topBorderHeight: Height by observable(Height(1F, UnitsOfMeasure.PT))
+
         var bottomBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
         var bottomBorderColor: Color? by observable(null)
         var bottomBorderHeight: Height by observable(Height(1F, UnitsOfMeasure.PT))
 
-        var leftTopBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
-        var leftTopBorderColor: Color? by observable(null)
-        var leftTopBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
-
-        var rightTopBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
-        var rightTopBorderColor: Color? by observable(null)
-        var rightTopBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
-
-        var leftBottomBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
-        var leftBottomBorderColor: Color? by observable(null)
-        var leftBottomBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
-
-        var rightBottomBorderStyle: BorderStyle by observable(DefaultBorderStyle.NONE)
-        var rightBottomBorderColor: Color? by observable(null)
-        var rightBottomBorderWidth: Width by observable(Width(1F, UnitsOfMeasure.PT))
-
-        var leftTopBorderCornerRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
-        var rightTopBorderCornerRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
-        var leftBottomBorderCornerRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
-        var rightBottomBorderCornerRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var leftTopBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var leftBottomBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var rightTopBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
+        var rightBottomBorderRadius: Width by observable(Width(0F, UnitsOfMeasure.PT))
 
         fun all(block: SingleBorderBuilder.() -> Unit) {
             top(block)
@@ -114,19 +105,16 @@ data class BordersAttribute(
             bottom(block)
         }
 
-        fun corners(block: CornerBorderBuilder.() -> Unit) {
-            leftTopCorner(block)
-            leftBottomCorner(block)
-            rightTopCorner(block)
-            rightBottomCorner(block)
+        fun radius(block: CornerBorderBuilder.() -> Unit) {
+            leftTopRadius(block)
+            leftBottomRadius(block)
+            rightTopRadius(block)
+            rightBottomRadius(block)
         }
 
-        fun leftTopCorner(block: CornerBorderBuilder.() -> Unit) {
+        fun leftTopRadius(block: CornerBorderBuilder.() -> Unit) {
             CornerBorderBuilder().apply(block).let {
-                leftTopBorderCornerRadius = Width(it.radius, it.uom)
-                rightTopBorderCornerRadius = Width(it.radius, it.uom)
-                rightBottomBorderCornerRadius = Width(it.radius, it.uom)
-                leftBottomBorderCornerRadius = Width(it.radius, it.uom)
+                leftTopBorderRadius = Width(it.radius, it.uom)
             }
         }
 
@@ -138,8 +126,9 @@ data class BordersAttribute(
             }
         }
 
-        fun rightTopCorner(block: CornerBorderBuilder.() -> Unit) {
+        fun rightTopRadius(block: CornerBorderBuilder.() -> Unit) {
             CornerBorderBuilder().apply(block).let {
+                rightTopBorderRadius = Width(it.radius, it.uom)
             }
         }
 
@@ -151,8 +140,9 @@ data class BordersAttribute(
             }
         }
 
-        fun rightBottomCorner(block: CornerBorderBuilder.() -> Unit) {
+        fun rightBottomRadius(block: CornerBorderBuilder.() -> Unit) {
             CornerBorderBuilder().apply(block).let {
+                rightBottomBorderRadius = Width(it.radius, it.uom)
             }
         }
 
@@ -164,8 +154,9 @@ data class BordersAttribute(
             }
         }
 
-        fun leftBottomCorner(block: CornerBorderBuilder.() -> Unit) {
+        fun leftBottomRadius(block: CornerBorderBuilder.() -> Unit) {
             CornerBorderBuilder().apply(block).let {
+                leftBottomBorderRadius = Width(it.radius, it.uom)
             }
         }
 
@@ -183,10 +174,7 @@ data class BordersAttribute(
             rightBorderStyle, rightBorderColor, rightBorderWidth,
             topBorderStyle, topBorderColor, topBorderHeight,
             bottomBorderStyle, bottomBorderColor, bottomBorderHeight,
-            leftTopBorderCornerRadius, leftTopBorderStyle, leftTopBorderColor, leftTopBorderWidth,
-            rightTopBorderCornerRadius, rightTopBorderStyle, rightTopBorderColor, rightTopBorderWidth,
-            leftBottomBorderCornerRadius, leftBottomBorderStyle, leftBottomBorderColor, leftBottomBorderWidth,
-            rightBottomBorderCornerRadius, rightBottomBorderStyle, rightBottomBorderColor, rightBottomBorderWidth,
+            leftTopBorderRadius, leftBottomBorderRadius, rightTopBorderRadius, rightBottomBorderRadius,
         )
     }
 
@@ -204,21 +192,9 @@ data class BordersAttribute(
         bottomBorderColor = takeIfChanged(other, BordersAttribute::bottomBorderColor),
         bottomBorderHeight = takeIfChanged(other, BordersAttribute::bottomBorderHeight),
         leftTopBorderCornerRadius = takeIfChanged(other, BordersAttribute::leftTopBorderCornerRadius),
-        leftTopBorderCornerStyle = takeIfChanged(other, BordersAttribute::leftTopBorderCornerStyle),
-        leftTopBorderCornerColor = takeIfChanged(other, BordersAttribute::leftTopBorderCornerColor),
-        leftTopBorderCornerWidth = takeIfChanged(other, BordersAttribute::leftTopBorderCornerWidth),
         rightTopBorderCornerRadius = takeIfChanged(other, BordersAttribute::rightTopBorderCornerRadius),
-        rightTopBorderCornerStyle = takeIfChanged(other, BordersAttribute::rightTopBorderCornerStyle),
-        rightTopBorderCornerColor = takeIfChanged(other, BordersAttribute::rightTopBorderCornerColor),
-        rightTopBorderCornerWidth = takeIfChanged(other, BordersAttribute::rightTopBorderCornerWidth),
         rightBottomBorderCornerRadius = takeIfChanged(other, BordersAttribute::rightBottomBorderCornerRadius),
-        rightBottomBorderCornerStyle = takeIfChanged(other, BordersAttribute::rightBottomBorderCornerStyle),
-        rightBottomBorderCornerColor = takeIfChanged(other, BordersAttribute::rightBottomBorderCornerColor),
-        rightBottomBorderCornerWidth = takeIfChanged(other, BordersAttribute::rightBottomBorderCornerWidth),
         leftBottomBorderCornerRadius = takeIfChanged(other, BordersAttribute::leftBottomBorderCornerRadius),
-        leftBottomBorderCornerStyle = takeIfChanged(other, BordersAttribute::leftBottomBorderCornerStyle),
-        leftBottomBorderCornerWidth = takeIfChanged(other, BordersAttribute::leftBottomBorderCornerWidth),
-        leftBottomBorderCornerColor = takeIfChanged(other, BordersAttribute::leftBottomBorderCornerColor),
     )
 
     companion object {
@@ -247,14 +223,10 @@ fun BorderStyle?.isSingleLine(): Boolean =
 
 fun Borders.hasOnlySingleLineStyle(): Boolean =
     leftBorderStyle.isSingleLine() &&
-    rightBorderStyle.isSingleLine() &&
-    topBorderStyle.isSingleLine() &&
-    bottomBorderStyle.isSingleLine() &&
-    rightBorderStyle.isSingleLine() &&
-    leftTopBorderCornerStyle.isSingleLine() &&
-    rightTopBorderCornerStyle.isSingleLine() &&
-    leftBottomBorderCornerStyle.isSingleLine() &&
-    rightBottomBorderCornerStyle.isSingleLine()
+            rightBorderStyle.isSingleLine() &&
+            topBorderStyle.isSingleLine() &&
+            bottomBorderStyle.isSingleLine() &&
+            rightBorderStyle.isSingleLine()
 
 
 fun BordersAttribute.areAllEqual(): Boolean = haveEqualStyles() && haveEqualColors() && haveEqualWidths()
@@ -267,3 +239,57 @@ fun BordersAttribute.width(): Width =
 
 fun BordersAttribute.style(): BorderStyle? =
     if (haveEqualStyles()) leftBorderStyle else error("Cannot determine line style of all kinds of borders")
+
+enum class BorderType {
+    LEFT,
+    TOP,
+    RIGHT,
+    BOTTOM;
+}
+
+fun Borders.getColor(type: BorderType): Color? {
+    return when (type) {
+        BorderType.LEFT -> leftBorderColor
+        BorderType.RIGHT -> rightBorderColor
+        BorderType.TOP -> topBorderColor
+        BorderType.BOTTOM -> bottomBorderColor
+    }
+}
+
+fun Borders.getWidth(type: BorderType): Measure<*> {
+    return when (type) {
+        BorderType.LEFT -> leftBorderWidth
+        BorderType.RIGHT -> rightBorderWidth
+        BorderType.TOP -> topBorderHeight
+        BorderType.BOTTOM -> bottomBorderHeight
+    }
+}
+
+fun Borders.getStyle(type: BorderType): BorderStyle {
+    return when (type) {
+        BorderType.LEFT -> leftBorderStyle
+        BorderType.RIGHT -> rightBorderStyle
+        BorderType.TOP -> topBorderStyle
+        BorderType.BOTTOM -> bottomBorderStyle
+    }
+}
+
+data class BorderRadiusPair(val first: Measure<*>, val second: Measure<*>)
+
+fun Borders.getRadius(type: BorderType): BorderRadiusPair {
+    return when (type) {
+        BorderType.LEFT -> BorderRadiusPair(leftTopBorderCornerRadius, leftBottomBorderCornerRadius)
+        BorderType.RIGHT -> BorderRadiusPair(rightTopBorderCornerRadius, rightBottomBorderCornerRadius)
+        BorderType.TOP -> BorderRadiusPair(leftTopBorderCornerRadius, rightTopBorderCornerRadius)
+        BorderType.BOTTOM -> BorderRadiusPair(leftBottomBorderCornerRadius, rightBottomBorderCornerRadius)
+    }
+}
+
+fun isHorizontal(type: BorderType): Boolean {
+    return when (type) {
+        BorderType.TOP -> true
+        BorderType.BOTTOM ->true
+        else -> false
+    }
+}
+

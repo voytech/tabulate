@@ -23,22 +23,8 @@ interface Borders {
     val bottomBorderHeight: Height
 
     val leftTopBorderCornerRadius: Width
-    val leftTopBorderCornerWidth: Width
-    val leftTopBorderCornerColor: Color?
-    val leftTopBorderCornerStyle: BorderStyle
-
     val rightTopBorderCornerRadius: Width
-    val rightTopBorderCornerWidth: Width
-    val rightTopBorderCornerColor: Color?
-    val rightTopBorderCornerStyle: BorderStyle
-
     val leftBottomBorderCornerRadius: Width
-    val leftBottomBorderCornerWidth: Width
-    val leftBottomBorderCornerColor: Color?
-    val leftBottomBorderCornerStyle: BorderStyle
-
     val rightBottomBorderCornerRadius: Width
-    val rightBottomBorderCornerWidth: Width
-    val rightBottomBorderCornerColor: Color?
-    val rightBottomBorderCornerStyle: BorderStyle
+
 }
